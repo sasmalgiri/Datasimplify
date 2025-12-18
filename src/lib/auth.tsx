@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 // ============================================
 // TYPES
@@ -24,6 +25,7 @@ export interface AuthContextType {
   isConfigured: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   canDownload: () => boolean;
@@ -40,10 +42,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // CHECK CONFIG
 // ============================================
 
-const isSupabaseConfigured = !!(
-  process.env.NEXT_PUBLIC_SUPABASE_URL && 
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const isSupabaseConfigured = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // Check if values exist and are not placeholders
+  const isConfigured = !!(
+    url && 
+    key && 
+    url.includes('supabase.co') &&
+    key.startsWith('eyJ')
+  );
+  
+  return isConfigured;
+};
 
 // ============================================
 // PROVIDER
@@ -54,7 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [supabase, setSupabase] = useState<ReturnType<typeof import('@supabase/auth-helpers-nextjs').createClientComponentClient> | null>(null);
+  const [supabase] = useState(() => {
+    if (isSupabaseConfigured()) {
+      return createClientComponentClient();
+    }
+    return null;
+  });
 
   // Download limits by tier
   const downloadLimits: Record<string, number> = {
@@ -64,53 +81,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     business: 999999,
   };
 
-  // Initialize Supabase client
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Dynamically import to avoid build errors
-    import('@supabase/auth-helpers-nextjs').then(({ createClientComponentClient }) => {
-      const client = createClientComponentClient();
-      setSupabase(client);
-    });
-  }, []);
-
   // Fetch user profile from database
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, userEmail?: string) => {
     if (!supabase) return;
 
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      // Profile doesn't exist, create it
-      const { data: newProfile } = await supabase
+    try {
+      const { data, error } = await supabase
         .from('user_profiles')
-        .insert({
-          id: userId,
-          email: user?.email,
-          subscription_tier: 'free',
-          downloads_this_month: 0,
-          downloads_limit: downloadLimits.free,
-        })
-        .select()
+        .select('*')
+        .eq('id', userId)
         .single();
-      
-      setProfile(newProfile);
-    } else if (data) {
-      setProfile(data);
+
+      if (error && error.code === 'PGRST116') {
+        // Profile doesn't exist, create it
+        const { data: newProfile } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: userId,
+            email: userEmail || user?.email,
+            subscription_tier: 'free',
+            downloads_this_month: 0,
+            downloads_limit: downloadLimits.free,
+          })
+          .select()
+          .single();
+        
+        setProfile(newProfile);
+      } else if (data) {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
     }
   };
 
   // Initialize auth state
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    }
 
     const initAuth = async () => {
       try {
@@ -119,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user.email);
         }
       } catch (error) {
         console.error('Auth init error:', error);
@@ -137,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user.email);
         } else {
           setProfile(null);
         }
@@ -147,10 +157,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  // Sign up
+  // Sign up with email/password
   const signUp = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Auth not configured') };
+      return { error: new Error('Authentication not configured. Please check your environment variables.') };
     }
     try {
       const { error } = await supabase.auth.signUp({
@@ -166,15 +176,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign in
+  // Sign in with email/password
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Auth not configured') };
+      return { error: new Error('Authentication not configured. Please check your environment variables.') };
     }
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  // Sign in with Google
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { error: new Error('Authentication not configured. Please check your environment variables.') };
+    }
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
       return { error };
     } catch (error) {
@@ -194,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Refresh profile
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user.id, user.email);
     }
   };
 
@@ -223,9 +251,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         session,
         isLoading,
-        isConfigured: isSupabaseConfigured,
+        isConfigured: isSupabaseConfigured(),
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
         refreshProfile,
         canDownload,

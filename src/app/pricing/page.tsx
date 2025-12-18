@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import Script from 'next/script';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 interface PricingInfo {
   available: boolean;
@@ -74,8 +75,9 @@ export default function PricingPage() {
   };
 
   const handleSubscribe = async (tier: string) => {
+    // Always redirect to signup first (users create account then pay)
     if (!user) {
-      window.location.href = '/login?redirect=/pricing';
+      window.location.href = `/signup?plan=${tier}`;
       return;
     }
 
@@ -197,25 +199,7 @@ export default function PricingPage() {
       />
 
       <div className="min-h-screen bg-gray-900 text-white">
-        {/* Header */}
-        <header className="bg-gray-800 border-b border-gray-700">
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="text-2xl font-bold text-blue-400">
-                DataSimplify
-              </Link>
-              <div className="flex items-center gap-4">
-                <Link href="/download" className="text-gray-400 hover:text-white">Downloads</Link>
-                <Link href="/chat" className="text-gray-400 hover:text-white">AI Chat</Link>
-                {user ? (
-                  <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
-                ) : (
-                  <Link href="/login" className="text-gray-400 hover:text-white">Login</Link>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
+        <FreeNavbar />
 
         {/* India Waitlist Banner */}
         {pricingInfo?.blocked && (

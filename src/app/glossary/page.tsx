@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 interface GlossaryTerm {
   term: string;
@@ -296,14 +297,17 @@ export default function GlossaryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
+      <FreeNavbar />
+      
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-4xl font-bold mb-4">📖 Crypto Glossary</h1>
-          <p className="text-xl text-purple-100 mb-6">
+          <p className="text-xl text-purple-100 mb-2">
             {glossaryTerms.length}+ terms explained in simple English
           </p>
+          <p className="text-purple-200 mb-6">No login required • 100% Free</p>
           
           {/* Search */}
           <div className="relative max-w-md">

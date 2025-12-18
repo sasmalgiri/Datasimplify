@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 
@@ -14,6 +14,8 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const plan = searchParams.get('plan');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +51,17 @@ export default function SignupPage() {
             <div className="text-6xl mb-4">📧</div>
             <h2 className="text-2xl font-bold text-white mb-4">Check your email!</h2>
             <p className="text-gray-400 mb-6">
-              We've sent a confirmation link to <strong>{email}</strong>. 
+              We&apos;ve sent a confirmation link to <strong className="text-white">{email}</strong>. 
               Click the link to activate your account.
             </p>
+            {plan && (
+              <p className="text-emerald-400 mb-4">
+                After confirming, you&apos;ll be able to subscribe to the <strong>{plan}</strong> plan.
+              </p>
+            )}
             <Link
-              href="/login"
-              className="inline-block py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+              href={plan ? `/login?plan=${plan}` : '/login'}
+              className="inline-block py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition"
             >
               Go to Login
             </Link>
@@ -69,17 +76,30 @@ export default function SignupPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-blue-400">
-            DataSimplify
+          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-400">
+            <span>📊</span>
+            <span>DataSimplify</span>
           </Link>
-          <p className="text-gray-400 mt-2">Create your free account</p>
+          <p className="text-gray-400 mt-2">
+            {plan ? `Create account to subscribe to ${plan.charAt(0).toUpperCase() + plan.slice(1)}` : 'Create your account'}
+          </p>
         </div>
+
+        {/* Selected Plan Banner */}
+        {plan && (
+          <div className="mb-6 bg-emerald-900/30 border border-emerald-700 rounded-lg p-4 text-center">
+            <p className="text-emerald-400">
+              ✓ Selected plan: <strong>{plan.charAt(0).toUpperCase() + plan.slice(1)}</strong>
+            </p>
+            <p className="text-gray-400 text-sm">You&apos;ll proceed to payment after signup</p>
+          </div>
+        )}
 
         {/* Form */}
         <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded">
+              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded text-sm">
                 {error}
               </div>
             )}
@@ -94,7 +114,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 placeholder="you@example.com"
               />
             </div>
@@ -109,7 +129,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 placeholder="••••••••"
               />
             </div>
@@ -124,7 +144,7 @@ export default function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 placeholder="••••••••"
               />
             </div>
@@ -132,32 +152,39 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition"
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition"
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isLoading ? 'Creating account...' : plan ? 'Create Account & Continue' : 'Create account'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
               Already have an account?{' '}
-              <Link href="/login" className="text-blue-400 hover:text-blue-300">
+              <Link 
+                href={plan ? `/login?plan=${plan}` : '/login'} 
+                className="text-emerald-400 hover:text-emerald-300"
+              >
                 Sign in
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Free tier info */}
-        <div className="mt-6 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-          <h3 className="text-white font-medium mb-2">🎁 Free tier includes:</h3>
-          <ul className="text-gray-400 text-sm space-y-1">
-            <li>✓ 5 downloads per month</li>
-            <li>✓ Basic market data</li>
-            <li>✓ AI chat (limited)</li>
-            <li>✓ No credit card required</li>
-          </ul>
+        {/* Back to free features */}
+        <div className="mt-6 text-center">
+          <Link href="/market" className="text-gray-400 hover:text-white text-sm">
+            ← Back to free features
+          </Link>
         </div>
+
+        {/* Terms */}
+        <p className="mt-4 text-center text-gray-500 text-xs">
+          By signing up, you agree to our{' '}
+          <Link href="/terms" className="text-emerald-400 hover:underline">Terms</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="text-emerald-400 hover:underline">Privacy Policy</Link>
+        </p>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 // Interfaces
 interface CompareData {
@@ -226,13 +227,15 @@ export default function ComparePage() {
   }, [selectedCoins]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
+      <FreeNavbar />
+      
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">⚖️ Compare Cryptocurrencies</h1>
-          <p className="text-gray-600">
-            Select up to 10 coins for side-by-side comparison. Customize metrics and download results.
+          <h1 className="text-3xl font-bold mb-2">⚖️ Compare Cryptocurrencies</h1>
+          <p className="text-gray-400">
+            Select up to 10 coins for side-by-side comparison • No login required
           </p>
         </div>
 
@@ -240,12 +243,12 @@ export default function ComparePage() {
           {/* Left Sidebar - Controls */}
           <div className="lg:col-span-1 space-y-6">
             {/* Category Filter */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">Filter by Category</h3>
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+              <h3 className="font-semibold mb-3">Filter by Category</h3>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-white"
               >
                 <option value="all">All Categories</option>
                 <option value="layer1">Layer 1</option>

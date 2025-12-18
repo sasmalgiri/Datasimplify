@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 
@@ -12,6 +12,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const plan = searchParams.get('plan');
+  const redirect = searchParams.get('redirect') || '/dashboard';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +27,12 @@ export default function LoginPage() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      router.push('/dashboard');
+      // Redirect to checkout if plan selected, otherwise dashboard
+      if (plan) {
+        router.push(`/pricing?plan=${plan}&checkout=true`);
+      } else {
+        router.push(redirect);
+      }
     }
   };
 
@@ -33,17 +41,20 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="text-3xl font-bold text-blue-400">
-            DataSimplify
+          <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-400">
+            <span>📊</span>
+            <span>DataSimplify</span>
           </Link>
-          <p className="text-gray-400 mt-2">Sign in to your account</p>
+          <p className="text-gray-400 mt-2">
+            {plan ? `Sign in to subscribe to ${plan}` : 'Sign in to your account'}
+          </p>
         </div>
 
         {/* Form */}
         <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded">
+              <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded text-sm">
                 {error}
               </div>
             )}
@@ -58,7 +69,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 placeholder="you@example.com"
               />
             </div>
@@ -73,7 +84,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
                 placeholder="••••••••"
               />
             </div>
@@ -81,7 +92,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition"
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white font-medium rounded-lg transition"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
@@ -89,19 +100,22 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-blue-400 hover:text-blue-300">
+              Don&apos;t have an account?{' '}
+              <Link 
+                href={plan ? `/signup?plan=${plan}` : '/signup'} 
+                className="text-emerald-400 hover:text-emerald-300"
+              >
                 Sign up
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Demo Account */}
+        {/* Back to free features */}
         <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm">
-            Demo: Use any email to create a free account
-          </p>
+          <Link href="/market" className="text-gray-400 hover:text-white text-sm">
+            ← Back to free features
+          </Link>
         </div>
       </div>
     </div>
