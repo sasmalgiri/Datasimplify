@@ -1,8 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 
 // ============================================
 // TYPES
@@ -25,7 +24,6 @@ export interface AuthContextType {
   isConfigured: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   canDownload: () => boolean;
@@ -39,22 +37,36 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ============================================
-// CHECK CONFIG
+// SUPABASE CLIENT (with trimmed env vars)
 // ============================================
 
-const isSupabaseConfigured = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const getSupabaseClient = (): SupabaseClient | null => {
+  // Trim whitespace from env vars (common issue when copying to Vercel)
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
   
-  // Check if values exist and are not placeholders
-  const isConfigured = !!(
-    url && 
-    key && 
-    url.includes('supabase.co') &&
-    key.startsWith('eyJ')
-  );
+  // Validate
+  if (!url || !key) {
+    console.log('Supabase not configured: missing URL or key');
+    return null;
+  }
   
-  return isConfigured;
+  if (!url.includes('supabase.co')) {
+    console.log('Supabase not configured: invalid URL');
+    return null;
+  }
+  
+  if (!key.startsWith('eyJ')) {
+    console.log('Supabase not configured: invalid key format');
+    return null;
+  }
+  
+  try {
+    return createClient(url, key);
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error);
+    return null;
+  }
 };
 
 // ============================================
@@ -66,12 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [supabase] = useState(() => {
-    if (isSupabaseConfigured()) {
-      return createClientComponentClient();
-    }
-    return null;
-  });
+  const [supabase] = useState<SupabaseClient | null>(() => getSupabaseClient());
+  const [isConfigured] = useState(() => supabase !== null);
 
   // Download limits by tier
   const downloadLimits: Record<string, number> = {
@@ -98,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('user_profiles')
           .insert({
             id: userId,
-            email: userEmail || user?.email,
+            email: userEmail || '',
             subscription_tier: 'free',
             downloads_this_month: 0,
             downloads_limit: downloadLimits.free,
@@ -160,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign up with email/password
   const signUp = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Authentication not configured. Please check your environment variables.') };
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
       const { error } = await supabase.auth.signUp({
@@ -170,7 +178,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      return { error };
+      if (error) {
+        // Make error message more user-friendly
+        if (error.message.includes('Invalid API key')) {
+          return { error: new Error('Server configuration error. Please contact support.') };
+        }
+        return { error: new Error(error.message) };
+      }
+      return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
@@ -179,32 +194,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign in with email/password
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: new Error('Authentication not configured. Please check your environment variables.') };
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      return { error };
-    } catch (error) {
-      return { error: error as Error };
-    }
-  };
-
-  // Sign in with Google
-  const signInWithGoogle = async () => {
-    if (!supabase) {
-      return { error: new Error('Authentication not configured. Please check your environment variables.') };
-    }
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      return { error };
+      if (error) {
+        if (error.message.includes('Invalid API key')) {
+          return { error: new Error('Server configuration error. Please contact support.') };
+        }
+        return { error: new Error(error.message) };
+      }
+      return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
@@ -228,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user can download
   const canDownload = () => {
-    if (!profile) return true; // Allow for non-logged-in users (free tier)
+    if (!profile) return true;
     if (profile.subscription_tier === 'pro' || profile.subscription_tier === 'business') {
       return true;
     }
@@ -237,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Get remaining downloads
   const remainingDownloads = () => {
-    if (!profile) return 5; // Default free tier
+    if (!profile) return 5;
     if (profile.subscription_tier === 'pro' || profile.subscription_tier === 'business') {
       return 999999;
     }
@@ -251,10 +254,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         session,
         isLoading,
-        isConfigured: isSupabaseConfigured(),
+        isConfigured,
         signUp,
         signIn,
-        signInWithGoogle,
         signOut,
         refreshProfile,
         canDownload,

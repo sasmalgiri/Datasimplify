@@ -1,22 +1,31 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Environment variables (set in .env.local)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+// Environment variables (trim whitespace - common issue when copying to Vercel)
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 // Check if Supabase is configured
-export const isSupabaseConfigured = !!(supabaseUrl && supabaseAnonKey);
+export const isSupabaseConfigured = !!(
+  supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl.includes('supabase.co') &&
+  supabaseAnonKey.startsWith('eyJ')
+);
 
 // Create a dummy client or real client based on config
 let supabaseInstance: SupabaseClient | null = null;
 let supabaseAdminInstance: SupabaseClient | null = null;
 
 if (isSupabaseConfigured) {
-  supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
-  supabaseAdminInstance = supabaseServiceKey 
-    ? createClient(supabaseUrl, supabaseServiceKey)
-    : supabaseInstance;
+  try {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    supabaseAdminInstance = supabaseServiceKey 
+      ? createClient(supabaseUrl, supabaseServiceKey)
+      : supabaseInstance;
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error);
+  }
 }
 
 // Export clients (may be null if not configured)

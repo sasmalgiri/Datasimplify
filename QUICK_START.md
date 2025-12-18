@@ -60,7 +60,5 @@ ollama pull llama3.2
 
 If you see errors:
 1. Make sure you ran `npm install`
-2. Make sure `.env.local` exists (it should!)
+2. Create `.env.local` from `.env.example` and set values
 3. Check that Supabase schema was created
-
-Your Supabase URL: https://gadspittitmuqmysiawu.supabase.co

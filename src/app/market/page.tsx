@@ -112,6 +112,7 @@ export default function MarketPage() {
               <Link href="/compare" className="text-gray-300 hover:text-white">Compare</Link>
               <Link href="/chat" className="text-gray-300 hover:text-white">AI Chat</Link>
               <Link href="/glossary" className="text-gray-300 hover:text-white">Glossary</Link>
+              <Link href="/learn" className="text-gray-300 hover:text-white">Learn</Link>
               <Link href="/pricing" className="text-gray-300 hover:text-white">Pricing</Link>
               <Link href="/login" className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600">
                 Login

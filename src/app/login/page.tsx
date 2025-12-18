@@ -27,6 +27,7 @@ function LoginForm() {
       setError(error.message);
       setIsLoading(false);
     } else {
+      // Redirect to checkout if plan selected, otherwise dashboard
       if (plan) {
         router.push(`/pricing?plan=${plan}&checkout=true`);
       } else {
@@ -37,6 +38,7 @@ function LoginForm() {
 
   return (
     <div className="max-w-md w-full">
+      {/* Logo */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-400">
           <span>📊</span>
@@ -47,6 +49,7 @@ function LoginForm() {
         </p>
       </div>
 
+      {/* Form */}
       <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -107,6 +110,7 @@ function LoginForm() {
         </div>
       </div>
 
+      {/* Back to free features */}
       <div className="mt-6 text-center">
         <Link href="/market" className="text-gray-400 hover:text-white text-sm">
           ← Back to free features
@@ -119,7 +123,12 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <Suspense fallback={<div className="text-white">Loading...</div>}>
+      <Suspense fallback={
+        <div className="text-white text-center">
+          <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          Loading...
+        </div>
+      }>
         <LoginForm />
       </Suspense>
     </div>
