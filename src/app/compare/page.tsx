@@ -3,31 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Tooltip Component - Shows on hover with better visibility
-function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  return (
-    <span
-      className="relative inline-flex items-center"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-    >
-      <span className="cursor-help border-b-2 border-dotted border-emerald-500 hover:border-emerald-400 hover:text-emerald-400 transition-colors">
-        {children}
-      </span>
-      {/* Tooltip popup */}
-      {isVisible && (
-        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[200px] max-w-[300px] text-center">
-          {text}
-          {/* Arrow */}
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
-        </span>
-      )}
-    </span>
-  );
-}
-
 // Help icon with tooltip for coin selection
 function HelpIcon({ text }: { text: string }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -286,6 +261,24 @@ export default function ComparePage() {
           </div>
         )}
 
+        {/* Column Guide - shown above table to avoid overflow clipping */}
+        {!loading && coins.length > 0 && (
+          <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700">
+            <p className="text-gray-400 text-sm mb-2 font-medium">📊 Column Guide:</p>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Coin:</span> Name & symbol</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Price:</span> Current USD price</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">24h Change:</span> Price change in 24h</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Market Cap:</span> Price × Supply</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Volume:</span> 24h trading activity</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Circulating:</span> Coins in circulation</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">Max Supply:</span> Total coins ever</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">ATH:</span> All-time high price</span>
+              <span className="text-gray-300"><span className="text-emerald-400 font-medium">From ATH:</span> Distance from peak</span>
+            </div>
+          </div>
+        )}
+
         {/* Comparison Table */}
         {!loading && coins.length > 0 && (
           <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
@@ -293,33 +286,15 @@ export default function ComparePage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-900/50 border-b border-gray-700">
-                    <th className="px-6 py-4 text-left text-gray-400 font-medium">
-                      <Tooltip text="The cryptocurrency name and symbol">Coin</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Current price in US Dollars">Price</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Price change in the last 24 hours">24h Change</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Total value = price × circulating supply">Market Cap</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Total trading volume in last 24 hours">Volume (24h)</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Number of coins currently in circulation">Circulating Supply</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="Maximum coins that will ever exist">Max Supply</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="All-Time High price ever reached">ATH</Tooltip>
-                    </th>
-                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
-                      <Tooltip text="How far current price is from all-time high">From ATH</Tooltip>
-                    </th>
+                    <th className="px-6 py-4 text-left text-emerald-400 font-medium">Coin</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">Price</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">24h Change</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">Market Cap</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">Volume (24h)</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">Circulating Supply</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">Max Supply</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">ATH</th>
+                    <th className="px-6 py-4 text-right text-emerald-400 font-medium">From ATH</th>
                   </tr>
                 </thead>
                 <tbody>
