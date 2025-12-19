@@ -160,8 +160,7 @@ export default function DashboardPage() {
             </p>
             <div className="mt-2 bg-gray-700 rounded-full h-2">
               <div
-                className="bg-blue-500 rounded-full h-2 progress-bar"
-                style={{ '--progress-width': `${Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100)}%` } as React.CSSProperties}
+                className={`bg-blue-500 rounded-full h-2 progress-bar progress-w-${Math.round(Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100) / 5) * 5}`}
               />
             </div>
             <p className="mt-2 text-gray-400 text-sm">

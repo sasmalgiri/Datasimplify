@@ -146,8 +146,7 @@ export default function LearnPage() {
             </div>
             <div className="h-3 bg-white/20 rounded-full overflow-hidden">
               <div
-                className="h-full bg-white rounded-full progress-bar"
-                style={{ '--progress-width': `${overallProgress}%` } as React.CSSProperties}
+                className={`h-full bg-white rounded-full progress-bar progress-w-${Math.round(overallProgress / 5) * 5}`}
               />
             </div>
             <p className="text-green-100 text-sm mt-2">

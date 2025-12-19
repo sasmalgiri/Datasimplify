@@ -275,8 +275,7 @@ export function ProgressBar({
       )}
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className={`h-full ${colorClasses[color]} progress-bar`}
-          style={{ '--progress-width': `${percentage}%` } as React.CSSProperties}
+          className={`h-full ${colorClasses[color]} progress-bar progress-w-${Math.round(percentage / 5) * 5}`}
         />
       </div>
     </div>
