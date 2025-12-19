@@ -1,9 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+
+// Progress bar component using ref to avoid inline style warnings
+function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${percentage}%`);
+    }
+  }, [percentage]);
+
+  return <div ref={barRef} className={`${className} progress-bar`} />;
+}
 
 interface DownloadHistory {
   id: string;
@@ -159,8 +172,9 @@ export default function DashboardPage() {
               {profile.downloads_this_month} / {profile.downloads_limit === 999999 ? '∞' : profile.downloads_limit}
             </p>
             <div className="mt-2 bg-gray-700 rounded-full h-2">
-              <div
-                className={`bg-blue-500 rounded-full h-2 progress-bar progress-w-${Math.round(Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100) / 5) * 5}`}
+              <ProgressBarRef
+                percentage={Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100)}
+                className="bg-blue-500 rounded-full h-2"
               />
             </div>
             <p className="mt-2 text-gray-400 text-sm">

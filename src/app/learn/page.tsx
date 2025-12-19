@@ -1,9 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
+
+// Progress bar component using ref to avoid inline style warnings
+function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${percentage}%`);
+    }
+  }, [percentage]);
+
+  return <div ref={barRef} className={`${className} progress-bar`} />;
+}
 
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
@@ -145,8 +158,9 @@ export default function LearnPage() {
               <span className="font-bold">{completedLessons}/{totalLessons} lessons</span>
             </div>
             <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className={`h-full bg-white rounded-full progress-bar progress-w-${Math.round(overallProgress / 5) * 5}`}
+              <ProgressBarRef
+                percentage={overallProgress}
+                className="h-full bg-white rounded-full"
               />
             </div>
             <p className="text-green-100 text-sm mt-2">

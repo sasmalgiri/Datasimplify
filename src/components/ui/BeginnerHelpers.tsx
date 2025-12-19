@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 
 // Traffic Light Indicator Component
 export function TrafficLight({ 
@@ -245,7 +245,7 @@ export function UserLevelSelector({
   );
 }
 
-// Progress Bar Component
+// Progress Bar Component - uses ref to avoid inline style warnings
 export function ProgressBar({
   value,
   max,
@@ -258,12 +258,19 @@ export function ProgressBar({
   color?: 'blue' | 'green' | 'red' | 'yellow';
 }) {
   const percentage = Math.min((value / max) * 100, 100);
+  const barRef = useRef<HTMLDivElement>(null);
   const colorClasses = {
     blue: 'bg-blue-500',
     green: 'bg-green-500',
     red: 'bg-red-500',
     yellow: 'bg-yellow-500'
   };
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${percentage}%`);
+    }
+  }, [percentage]);
 
   return (
     <div>
@@ -275,7 +282,8 @@ export function ProgressBar({
       )}
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
         <div
-          className={`h-full ${colorClasses[color]} progress-bar progress-w-${Math.round(percentage / 5) * 5}`}
+          ref={barRef}
+          className={`h-full ${colorClasses[color]} progress-bar`}
         />
       </div>
     </div>

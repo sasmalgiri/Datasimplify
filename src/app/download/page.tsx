@@ -1,9 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory } from '@/lib/dataTypes';
+
+// Progress bar component using ref to avoid inline style warnings
+function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${percentage}%`);
+    }
+  }, [percentage]);
+
+  return <div ref={barRef} className={`${className} progress-bar`} />;
+}
 
 // Icons (inline SVG for simplicity)
 const DownloadIcon = () => (
@@ -780,8 +793,9 @@ export default function DownloadPage() {
                     <span>{Math.max(0, 5 - downloadCount)} remaining</span>
                   </div>
                   <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full bg-emerald-500 progress-bar progress-w-${Math.round(Math.min((downloadCount / 5) * 100, 100) / 5) * 5}`}
+                    <ProgressBarRef
+                      percentage={Math.min((downloadCount / 5) * 100, 100)}
+                      className="h-full bg-emerald-500"
                     />
                   </div>
                 </div>
