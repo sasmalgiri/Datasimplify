@@ -2,18 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory } from '@/lib/dataTypes';
 
 // Icons (inline SVG for simplicity)
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
   </svg>
 );
 
@@ -71,9 +66,6 @@ export default function DownloadPage() {
     setSelectedFields([]);
   };
 
-  // Get unique coin categories
-  const coinCategories = ['all', ...new Set(SUPPORTED_COINS.map(c => c.category))];
-  
   // Filter coins by category
   const filteredCoins = selectedCoinCategory === 'all' 
     ? SUPPORTED_COINS 
@@ -101,41 +93,36 @@ export default function DownloadPage() {
   const filteredPreviewData = previewData?.map(row => {
     const filtered: Record<string, unknown> = {};
     selectedFields.forEach(field => {
-      if (row.hasOwnProperty(field)) {
+      if (Object.prototype.hasOwnProperty.call(row, field)) {
         filtered[field] = row[field];
       }
     });
     return filtered;
   });
 
-  // Auto-fetch preview when category changes
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchPreview();
-    }, 500); // Debounce 500ms
-    return () => clearTimeout(timer);
-  }, [selectedCategory, selectedInterval, selectedLimit, selectedDepth]);
+  // Get first selected coin for dependency tracking
+  const firstSelectedCoin = selectedCoins[0] || 'BTC';
 
   // Fetch preview data
   const fetchPreview = async () => {
     setIsLoading(true);
     try {
       let url = `/api/download?category=${selectedCategory}&format=json&preview=true`;
-      
+
       if (selectedCategory === 'market_overview') {
         if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
         if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
         url += `&sortBy=${sortBy}&minMarketCap=${minMarketCap}`;
       } else if (selectedCategory === 'historical_prices') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&interval=${selectedInterval}&limit=${selectedLimit}`;
+        url += `&symbol=${firstSelectedCoin}&interval=${selectedInterval}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'order_book') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&depth=${selectedDepth}`;
+        url += `&symbol=${firstSelectedCoin}&depth=${selectedDepth}`;
       } else if (selectedCategory === 'recent_trades') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&limit=${selectedLimit}`;
+        url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'gainers_losers') {
         url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
       }
-      
+
       const response = await fetch(url);
       const data = await response.json();
       setPreviewData(data.data?.slice(0, 5) || []);
@@ -145,28 +132,37 @@ export default function DownloadPage() {
     setIsLoading(false);
   };
 
+  // Auto-fetch preview when filters change (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPreview();
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, firstSelectedCoin, selectedInterval, selectedLimit, selectedDepth, selectedGainerType]);
+
   // Download data
   const handleDownload = async () => {
     setIsLoading(true);
     try {
       let url = `/api/download?category=${selectedCategory}&format=${selectedFormat}`;
-      
+
       if (selectedCategory === 'market_overview') {
         if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
         if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
         url += `&sortBy=${sortBy}&minMarketCap=${minMarketCap}`;
       } else if (selectedCategory === 'historical_prices') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&interval=${selectedInterval}&limit=${selectedLimit}`;
+        url += `&symbol=${firstSelectedCoin}&interval=${selectedInterval}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'order_book') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&depth=${selectedDepth}`;
+        url += `&symbol=${firstSelectedCoin}&depth=${selectedDepth}`;
       } else if (selectedCategory === 'recent_trades') {
-        url += `&symbol=${selectedCoins[0] || 'BTC'}&limit=${selectedLimit}`;
+        url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'gainers_losers') {
         url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (selectedFormat === 'json') {
         const data = await response.json();
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -176,7 +172,7 @@ export default function DownloadPage() {
         const ext = selectedFormat === 'xlsx' ? 'xlsx' : 'csv';
         downloadBlob(blob, `datasimplify_${selectedCategory}.${ext}`);
       }
-      
+
       setDownloadCount(prev => prev + 1);
     } catch (error) {
       console.error('Download error:', error);
@@ -195,11 +191,6 @@ export default function DownloadPage() {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   };
-
-  // Load preview on category change
-  useEffect(() => {
-    fetchPreview();
-  }, [selectedCategory, selectedCoins.slice(0, 1).join(','), selectedInterval, selectedLimit, selectedDepth, selectedGainerType]);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -302,8 +293,9 @@ export default function DownloadPage() {
                 <div className="space-y-4">
                   {/* Category Filter */}
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Coin Category</label>
+                    <label htmlFor="coin-category" className="block text-sm text-gray-400 mb-2">Coin Category</label>
                     <select
+                      id="coin-category"
                       value={selectedCoinCategory}
                       onChange={(e) => setSelectedCoinCategory(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -321,8 +313,9 @@ export default function DownloadPage() {
                   
                   {/* Sort By */}
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Sort By</label>
+                    <label htmlFor="sort-by" className="block text-sm text-gray-400 mb-2">Sort By</label>
                     <select
+                      id="sort-by"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -336,8 +329,9 @@ export default function DownloadPage() {
                   
                   {/* Min Market Cap */}
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Min Market Cap</label>
+                    <label htmlFor="min-market-cap" className="block text-sm text-gray-400 mb-2">Min Market Cap</label>
                     <select
+                      id="min-market-cap"
                       value={minMarketCap}
                       onChange={(e) => setMinMarketCap(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -374,7 +368,7 @@ export default function DownloadPage() {
                             onChange={() => toggleCoin(coin.symbol)}
                             className="w-4 h-4 rounded border-gray-600 text-emerald-500 focus:ring-emerald-500"
                           />
-                          <img src={coin.image} alt={coin.name} className="w-5 h-5 rounded-full" />
+                          <Image src={coin.image} alt={coin.name} width={20} height={20} className="rounded-full" />
                           <span className="text-sm text-white">{coin.symbol}</span>
                           <span className="text-xs text-gray-500">{coin.name}</span>
                         </label>
@@ -388,8 +382,9 @@ export default function DownloadPage() {
               {selectedCategory === 'historical_prices' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Select Coin</label>
+                    <label htmlFor="historical-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
                     <select
+                      id="historical-coin"
                       value={selectedCoins[0] || 'BTC'}
                       onChange={(e) => setSelectedCoins([e.target.value])}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -403,8 +398,9 @@ export default function DownloadPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Time Interval</label>
+                    <label htmlFor="time-interval" className="block text-sm text-gray-400 mb-2">Time Interval</label>
                     <select
+                      id="time-interval"
                       value={selectedInterval}
                       onChange={(e) => setSelectedInterval(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -420,10 +416,11 @@ export default function DownloadPage() {
                       <option value="1M">1 Month</option>
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Number of Candles</label>
+                    <label htmlFor="num-candles" className="block text-sm text-gray-400 mb-2">Number of Candles</label>
                     <select
+                      id="num-candles"
                       value={selectedLimit}
                       onChange={(e) => setSelectedLimit(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -441,8 +438,9 @@ export default function DownloadPage() {
               {selectedCategory === 'order_book' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Select Coin</label>
+                    <label htmlFor="orderbook-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
                     <select
+                      id="orderbook-coin"
                       value={selectedCoins[0] || 'BTC'}
                       onChange={(e) => setSelectedCoins([e.target.value])}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -456,8 +454,9 @@ export default function DownloadPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Order Book Depth</label>
+                    <label htmlFor="orderbook-depth" className="block text-sm text-gray-400 mb-2">Order Book Depth</label>
                     <select
+                      id="orderbook-depth"
                       value={selectedDepth}
                       onChange={(e) => setSelectedDepth(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -476,8 +475,9 @@ export default function DownloadPage() {
               {selectedCategory === 'recent_trades' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Select Coin</label>
+                    <label htmlFor="trades-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
                     <select
+                      id="trades-coin"
                       value={selectedCoins[0] || 'BTC'}
                       onChange={(e) => setSelectedCoins([e.target.value])}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -491,8 +491,9 @@ export default function DownloadPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Number of Trades</label>
+                    <label htmlFor="num-trades" className="block text-sm text-gray-400 mb-2">Number of Trades</label>
                     <select
+                      id="num-trades"
                       value={selectedLimit}
                       onChange={(e) => setSelectedLimit(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -510,8 +511,9 @@ export default function DownloadPage() {
               {selectedCategory === 'gainers_losers' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Show</label>
+                    <label htmlFor="gainer-type" className="block text-sm text-gray-400 mb-2">Show</label>
                     <select
+                      id="gainer-type"
                       value={selectedGainerType}
                       onChange={(e) => setSelectedGainerType(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -521,10 +523,11 @@ export default function DownloadPage() {
                       <option value="losers">Top Losers Only</option>
                     </select>
                   </div>
-                  
+
                   <div>
-                    <label className="block text-sm text-gray-400 mb-2">Number of Coins</label>
+                    <label htmlFor="num-coins" className="block text-sm text-gray-400 mb-2">Number of Coins</label>
                     <select
+                      id="num-coins"
                       value={selectedLimit}
                       onChange={(e) => setSelectedLimit(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
@@ -628,7 +631,7 @@ export default function DownloadPage() {
               ) : selectedFields.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-yellow-400 text-sm">⚠️ Select at least 1 field</p>
-                  <p className="text-gray-500 text-xs mt-1">Choose fields from "Select Fields" below</p>
+                  <p className="text-gray-500 text-xs mt-1">Choose fields from &quot;Select Fields&quot; below</p>
                 </div>
               ) : (
                 <div className="text-center py-8">

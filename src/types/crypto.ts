@@ -127,8 +127,8 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   tier: 'free' | 'starter' | 'pro' | 'business';
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
+  paddle_customer_id?: string;
+  paddle_subscription_id?: string;
   status: 'active' | 'canceled' | 'past_due';
   current_period_end?: string;
 }
@@ -139,7 +139,7 @@ export interface SubscriptionTier {
   price: number;
   downloads_per_month: number;
   features: string[];
-  stripe_price_id?: string;
+  paddle_price_id?: string;
 }
 
 // API Response types

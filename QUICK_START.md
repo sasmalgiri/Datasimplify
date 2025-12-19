@@ -63,4 +63,4 @@ If you see errors:
 2. Make sure `.env.local` exists (it should!)
 3. Check that Supabase schema was created
 
-If Supabase isn't connecting, confirm your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`.
+Your Supabase URL: https://gadspittitmuqmysiawu.supabase.co

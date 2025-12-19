@@ -13,7 +13,7 @@ interface DownloadHistory {
 }
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, signOut, remainingDownloads, refreshProfile } = useAuth();
+  const { user, profile, isLoading, signOut, remainingDownloads } = useAuth();
   const [downloads, setDownloads] = useState<DownloadHistory[]>([]);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const router = useRouter();
@@ -45,14 +45,14 @@ export default function DashboardPage() {
   const handleUpgrade = async (tier: string) => {
     setIsUpgrading(true);
     try {
-      const res = await fetch('/api/stripe/checkout', {
+      const res = await fetch('/api/paddle/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tier }),
       });
       const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
       }
     } catch (error) {
       console.error('Checkout error:', error);
@@ -63,13 +63,9 @@ export default function DashboardPage() {
 
   const handleManageBilling = async () => {
     try {
-      const res = await fetch('/api/stripe/portal', {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
+      // Paddle uses their own billing portal - redirect to Paddle customer portal
+      // For now, redirect to pricing page to change plans
+      window.location.href = '/pricing';
     } catch (error) {
       console.error('Portal error:', error);
     }
