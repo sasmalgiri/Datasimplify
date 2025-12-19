@@ -2,18 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import * as XLSX from 'xlsx';
 
-interface CoinData {
+// Tooltip Component
+function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  return (
+    <span className="relative inline-flex items-center">
+      <span
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+        className="cursor-help border-b border-dotted border-gray-500"
+      >
+        {children}
+      </span>
+      {isVisible && (
+        <span className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg whitespace-nowrap shadow-lg">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+interface Coin {
   id: string;
   symbol: string;
   name: string;
   image: string;
   current_price: number;
-  market_cap: number;
-  market_cap_rank: number;
   price_change_percentage_24h: number;
-  price_change_percentage_7d_in_currency?: number;
+  market_cap: number;
   total_volume: number;
   circulating_supply: number;
   max_supply: number | null;
@@ -21,340 +41,344 @@ interface CoinData {
   ath_change_percentage: number;
 }
 
-// Top coins for selection
+// Top coins to select from
 const TOP_COINS = [
-  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png' },
-  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/small/ethereum.png' },
-  { id: 'solana', symbol: 'SOL', name: 'Solana', image: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
-  { id: 'binancecoin', symbol: 'BNB', name: 'BNB', image: 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png' },
-  { id: 'ripple', symbol: 'XRP', name: 'XRP', image: 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png' },
-  { id: 'cardano', symbol: 'ADA', name: 'Cardano', image: 'https://assets.coingecko.com/coins/images/975/small/cardano.png' },
-  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche', image: 'https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png' },
-  { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', image: 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png' },
-  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot', image: 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png' },
-  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink', image: 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png' },
-  { id: 'tron', symbol: 'TRX', name: 'TRON', image: 'https://assets.coingecko.com/coins/images/1094/small/tron-logo.png' },
-  { id: 'litecoin', symbol: 'LTC', name: 'Litecoin', image: 'https://assets.coingecko.com/coins/images/2/small/litecoin.png' },
-  { id: 'uniswap', symbol: 'UNI', name: 'Uniswap', image: 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg' },
-  { id: 'matic-network', symbol: 'MATIC', name: 'Polygon', image: 'https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png' },
-  { id: 'cosmos', symbol: 'ATOM', name: 'Cosmos', image: 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png' },
-  { id: 'stellar', symbol: 'XLM', name: 'Stellar', image: 'https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png' },
+  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+  { id: 'solana', symbol: 'SOL', name: 'Solana' },
+  { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+  { id: 'ripple', symbol: 'XRP', name: 'XRP' },
+  { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
+  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche' },
+  { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' },
+  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
+  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
+  { id: 'tron', symbol: 'TRX', name: 'TRON' },
+  { id: 'litecoin', symbol: 'LTC', name: 'Litecoin' },
+  { id: 'uniswap', symbol: 'UNI', name: 'Uniswap' },
+  { id: 'matic-network', symbol: 'MATIC', name: 'Polygon' },
+  { id: 'cosmos', symbol: 'ATOM', name: 'Cosmos' },
+  { id: 'stellar', symbol: 'XLM', name: 'Stellar' },
 ];
 
 export default function ComparePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
-  const [coinData, setCoinData] = useState<CoinData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [coins, setCoins] = useState<Coin[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchCoinData();
-  }, [selectedIds]);
-
-  const fetchCoinData = async () => {
+  const fetchCoins = async () => {
     if (selectedIds.length === 0) {
-      setCoinData([]);
-      setIsLoading(false);
+      setCoins([]);
       return;
     }
-
-    setIsLoading(true);
+    
+    setLoading(true);
+    setError('');
+    
     try {
       const ids = selectedIds.join(',');
-      const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d`
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc`
       );
-      const data = await response.json();
-      setCoinData(data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      const data = await res.json();
+      
+      if (Array.isArray(data)) {
+        setCoins(data);
+      } else {
+        setError('Failed to load data');
+      }
+    } catch (err) {
+      setError('Failed to fetch data. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setIsLoading(false);
   };
+
+  useEffect(() => {
+    fetchCoins();
+  }, [selectedIds]);
 
   const toggleCoin = (id: string) => {
-    setSelectedIds(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(i => i !== id);
-      }
-      if (prev.length >= 10) {
-        alert('Maximum 10 coins for comparison');
-        return prev;
-      }
-      return [...prev, id];
-    });
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(i => i !== id));
+    } else if (selectedIds.length < 10) {
+      setSelectedIds([...selectedIds, id]);
+    }
   };
 
-  const formatNumber = (num: number | null) => {
-    if (num === null) return 'N/A';
+  // Format helpers
+  const formatPrice = (price: number) => {
+    if (price >= 1000) return `$${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    if (price >= 1) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `$${price.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 6 })}`;
+  };
+
+  const formatLargeNumber = (num: number) => {
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
-    if (num >= 1) return `$${num.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-    return `$${num.toLocaleString(undefined, { maximumFractionDigits: 6 })}`;
+    return `$${num.toLocaleString()}`;
   };
 
-  const formatSupply = (num: number | null) => {
-    if (num === null) return 'N/A';
+  const formatSupply = (num: number) => {
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
     return num.toLocaleString();
   };
 
-  const downloadExcel = () => {
-    const headers = ['Metric', ...coinData.map(c => c.symbol.toUpperCase())];
-    const rows = [
-      ['Price', ...coinData.map(c => c.current_price)],
-      ['Market Cap', ...coinData.map(c => c.market_cap)],
-      ['24h Change %', ...coinData.map(c => c.price_change_percentage_24h)],
-      ['Volume (24h)', ...coinData.map(c => c.total_volume)],
-      ['Circulating Supply', ...coinData.map(c => c.circulating_supply)],
-      ['Max Supply', ...coinData.map(c => c.max_supply || 'N/A')],
-      ['ATH', ...coinData.map(c => c.ath)],
-      ['ATH Change %', ...coinData.map(c => c.ath_change_percentage)],
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Comparison');
-    XLSX.writeFile(wb, `crypto-comparison-${new Date().toISOString().split('T')[0]}.xlsx`);
+  const formatPercent = (pct: number) => {
+    const sign = pct >= 0 ? '+' : '';
+    return `${sign}${pct.toFixed(2)}%`;
   };
+
+  // Download as Excel/CSV
+  const downloadExcel = () => {
+    if (coins.length === 0) return;
+    
+    const headers = ['Name', 'Symbol', 'Price (USD)', '24h Change %', 'Market Cap', 'Volume (24h)', 'Circulating Supply', 'Max Supply', 'ATH', 'From ATH %'];
+    const rows = coins.map(coin => [
+      coin.name,
+      coin.symbol.toUpperCase(),
+      coin.current_price,
+      coin.price_change_percentage_24h?.toFixed(2) || '0',
+      coin.market_cap,
+      coin.total_volume,
+      coin.circulating_supply,
+      coin.max_supply || 'Unlimited',
+      coin.ath,
+      coin.ath_change_percentage?.toFixed(2) || '0'
+    ]);
+    
+    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crypto-comparison-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  // Find best/worst for highlighting
+  const getBestWorst = (field: keyof Coin) => {
+    if (coins.length === 0) return { best: '', worst: '' };
+    const values = coins.map(c => ({ id: c.id, val: Number(c[field]) || 0 }));
+    values.sort((a, b) => b.val - a.val);
+    return { best: values[0]?.id, worst: values[values.length - 1]?.id };
+  };
+
+  const priceChangeBW = getBestWorst('price_change_percentage_24h');
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Navigation */}
-      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">📊</span>
-              <span className="text-xl font-bold text-emerald-400">DataSimplify</span>
+      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-2xl">📊</span>
+            <span className="text-xl font-bold text-emerald-400">DataSimplify</span>
+          </Link>
+          <div className="flex items-center gap-6">
+            <Link href="/market" className="text-gray-300 hover:text-white transition-colors">Market</Link>
+            <Link href="/compare" className="text-emerald-400 font-medium">Compare</Link>
+            <Link href="/download" className="text-gray-300 hover:text-white transition-colors">Download</Link>
+            <Link href="/chat" className="text-gray-300 hover:text-white transition-colors">AI Chat</Link>
+            <Link href="/glossary" className="text-gray-300 hover:text-white transition-colors">Glossary</Link>
+            <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">Learn</Link>
+            <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</Link>
+            <Link href="/login" className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-colors">
+              Login
             </Link>
-            <div className="flex items-center gap-6">
-              <Link href="/market" className="text-gray-300 hover:text-white">Market</Link>
-              <Link href="/compare" className="text-emerald-400 font-medium">Compare</Link>
-              <Link href="/chat" className="text-gray-300 hover:text-white">AI Chat</Link>
-              <Link href="/glossary" className="text-gray-300 hover:text-white">Glossary</Link>
-              <Link href="/learn" className="text-gray-300 hover:text-white">Learn</Link>
-              <Link href="/pricing" className="text-gray-300 hover:text-white">Pricing</Link>
-              <Link href="/login" className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600">
-                Login
-              </Link>
-            </div>
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <span>⚖️</span> Compare Cryptocurrencies
-          </h1>
-          <p className="text-gray-400">Select up to 10 coins for side-by-side comparison • No login required</p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Compare Cryptocurrencies</h1>
+            <p className="text-gray-400">Select up to 10 coins to compare side-by-side • No login required</p>
+          </div>
+          <button
+            onClick={downloadExcel}
+            disabled={coins.length === 0}
+            className="mt-4 md:mt-0 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium flex items-center gap-2 transition-colors"
+          >
+            <span>📥</span> Download Excel
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Panel - Coin Selection */}
-          <div className="lg:col-span-1">
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-400 mb-2">Filter by Category</label>
-                <select 
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="layer1">Layer 1</option>
-                  <option value="defi">DeFi</option>
-                  <option value="meme">Meme</option>
-                </select>
-              </div>
+        {/* Beginner Tip */}
+        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
+          <p className="text-blue-300 text-sm flex items-start gap-2">
+            <span>💡</span>
+            <span>
+              <strong>Beginner Tip:</strong> Compare coins to see which has better performance, market cap, or trading volume. 
+              The <span className="text-green-400">green highlighted</span> values show the best performer in each category!
+            </span>
+          </p>
+        </div>
 
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-sm font-medium">Select Coins ({selectedIds.length}/10)</span>
-                <button 
-                  onClick={() => setSelectedIds([])}
-                  className="text-xs text-gray-400 hover:text-white"
+        {/* Coin Selection */}
+        <div className="bg-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
+          <h2 className="text-lg font-semibold mb-4">Select Coins to Compare ({selectedIds.length}/10)</h2>
+          <div className="flex flex-wrap gap-3">
+            {TOP_COINS.map((coin) => {
+              const isSelected = selectedIds.includes(coin.id);
+              return (
+                <button
+                  key={coin.id}
+                  onClick={() => toggleCoin(coin.id)}
+                  className={`px-4 py-2 rounded-lg border transition-all ${
+                    isSelected 
+                      ? 'bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                      : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-500 hover:bg-gray-600'
+                  }`}
                 >
-                  Clear all
+                  <span className="font-medium">{coin.symbol}</span>
+                  <span className="text-sm opacity-75 ml-1">({coin.name})</span>
                 </button>
-              </div>
+              );
+            })}
+          </div>
+        </div>
 
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {TOP_COINS.map(coin => (
-                  <label
-                    key={coin.id}
-                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${
-                      selectedIds.includes(coin.id) 
-                        ? 'bg-emerald-500/20 border border-emerald-500/50' 
-                        : 'hover:bg-gray-700'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(coin.id)}
-                      onChange={() => toggleCoin(coin.id)}
-                      className="w-4 h-4 rounded bg-gray-700 border-gray-600 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <img src={coin.image} alt={coin.name} className="w-6 h-6 rounded-full" />
-                    <div>
-                      <span className="font-medium">{coin.symbol}</span>
-                      <span className="text-gray-400 text-sm ml-2">{coin.name}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
+        {/* Error */}
+        {error && (
+          <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 mb-6 text-red-300">
+            {error}
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+          </div>
+        )}
+
+        {/* Comparison Table */}
+        {!loading && coins.length > 0 && (
+          <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-900/50 border-b border-gray-700">
+                    <th className="px-6 py-4 text-left text-gray-400 font-medium">
+                      <Tooltip text="The cryptocurrency name and symbol">Coin</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Current price in US Dollars">Price</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Price change in the last 24 hours">24h Change</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Total value = price × circulating supply">Market Cap</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Total trading volume in last 24 hours">Volume (24h)</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Number of coins currently in circulation">Circulating Supply</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="Maximum coins that will ever exist">Max Supply</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="All-Time High price ever reached">ATH</Tooltip>
+                    </th>
+                    <th className="px-6 py-4 text-right text-gray-400 font-medium">
+                      <Tooltip text="How far current price is from all-time high">From ATH</Tooltip>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coins.map((coin) => (
+                    <tr 
+                      key={coin.id} 
+                      className="border-b border-gray-700 hover:bg-gray-700/50 transition-colors group"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={coin.image} 
+                            alt={coin.name} 
+                            className="w-10 h-10 rounded-full group-hover:scale-110 transition-transform"
+                          />
+                          <div>
+                            <span className="font-medium group-hover:text-emerald-400 transition-colors">{coin.name}</span>
+                            <span className="text-gray-500 ml-2 uppercase text-sm">{coin.symbol}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right font-medium">{formatPrice(coin.current_price)}</td>
+                      <td className={`px-6 py-4 text-right font-medium ${
+                        coin.id === priceChangeBW.best ? 'text-green-400 bg-green-400/10 rounded' :
+                        coin.id === priceChangeBW.worst && coins.length > 2 ? 'text-red-400 bg-red-400/10 rounded' :
+                        coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {formatPercent(coin.price_change_percentage_24h || 0)}
+                        {coin.id === priceChangeBW.best && <span className="ml-1">🏆</span>}
+                      </td>
+                      <td className="px-6 py-4 text-right text-gray-300">{formatLargeNumber(coin.market_cap)}</td>
+                      <td className="px-6 py-4 text-right text-gray-300">{formatLargeNumber(coin.total_volume)}</td>
+                      <td className="px-6 py-4 text-right text-gray-300">{formatSupply(coin.circulating_supply)}</td>
+                      <td className="px-6 py-4 text-right text-gray-300">
+                        {coin.max_supply ? formatSupply(coin.max_supply) : '∞'}
+                      </td>
+                      <td className="px-6 py-4 text-right text-gray-300">{formatPrice(coin.ath)}</td>
+                      <td className={`px-6 py-4 text-right ${coin.ath_change_percentage >= -10 ? 'text-green-400' : coin.ath_change_percentage >= -50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {formatPercent(coin.ath_change_percentage || 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
+        )}
 
-          {/* Right Panel - Comparison */}
-          <div className="lg:col-span-3">
-            {/* Selected Coins Tags */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-4">
-              <div className="flex flex-wrap gap-2">
-                {selectedIds.map(id => {
-                  const coin = TOP_COINS.find(c => c.id === id);
-                  return coin ? (
-                    <span 
-                      key={id}
-                      className="inline-flex items-center gap-2 px-3 py-1 bg-gray-700 rounded-full"
-                    >
-                      <img src={coin.image} alt={coin.name} className="w-5 h-5 rounded-full" />
-                      <span>{coin.symbol}</span>
-                      <button 
-                        onClick={() => toggleCoin(id)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
+        {/* No Selection */}
+        {!loading && coins.length === 0 && selectedIds.length === 0 && (
+          <div className="text-center py-20 text-gray-500">
+            <p className="text-6xl mb-4">📊</p>
+            <p className="text-xl">Select coins above to compare them</p>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="mt-8 bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+          <h3 className="font-medium mb-2">Understanding the Data:</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-400">
+            <div>
+              <span className="text-green-400">🏆 Green highlight</span> = Best performer in that category
             </div>
-
-            {/* Comparison Table */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-              {isLoading ? (
-                <div className="p-12 text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading comparison data...</p>
-                </div>
-              ) : coinData.length === 0 ? (
-                <div className="p-12 text-center text-gray-400">
-                  Select coins from the left panel to compare
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-900">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-gray-400 font-medium">Metric</th>
-                        {coinData.map(coin => (
-                          <th key={coin.id} className="text-right px-4 py-3 text-white font-medium">
-                            <div className="flex items-center justify-end gap-2">
-                              <img src={coin.image} alt={coin.name} className="w-5 h-5 rounded-full" />
-                              {coin.symbol.toUpperCase()}
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-t border-gray-700">
-                        <td className="px-4 py-3 text-gray-400">Price</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right font-mono">
-                            {formatNumber(coin.current_price)}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700 bg-gray-800/50">
-                        <td className="px-4 py-3 text-gray-400">24h Change</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className={`px-4 py-3 text-right font-medium ${
-                            coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'
-                          }`}>
-                            {coin.price_change_percentage_24h >= 0 ? '+' : ''}{coin.price_change_percentage_24h?.toFixed(2)}%
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700">
-                        <td className="px-4 py-3 text-gray-400">Market Cap</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right">
-                            {formatNumber(coin.market_cap)}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700 bg-gray-800/50">
-                        <td className="px-4 py-3 text-gray-400">Volume (24h)</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right">
-                            {formatNumber(coin.total_volume)}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700">
-                        <td className="px-4 py-3 text-gray-400">Circulating Supply</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right">
-                            {formatSupply(coin.circulating_supply)} {coin.symbol.toUpperCase()}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700 bg-gray-800/50">
-                        <td className="px-4 py-3 text-gray-400">Max Supply</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right">
-                            {coin.max_supply ? formatSupply(coin.max_supply) : '∞'}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700">
-                        <td className="px-4 py-3 text-gray-400">All-Time High</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right font-mono">
-                            {formatNumber(coin.ath)}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-t border-gray-700 bg-gray-800/50">
-                        <td className="px-4 py-3 text-gray-400">From ATH</td>
-                        {coinData.map(coin => (
-                          <td key={coin.id} className="px-4 py-3 text-right text-red-400">
-                            {coin.ath_change_percentage?.toFixed(2)}%
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Download Button */}
-              {coinData.length > 0 && (
-                <div className="p-4 border-t border-gray-700 flex justify-end">
-                  <button
-                    onClick={downloadExcel}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-medium transition"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Download Excel
-                  </button>
-                </div>
-              )}
+            <div>
+              <span className="text-yellow-400">Yellow</span> = Within 50% of ATH (close to peak)
+            </div>
+            <div>
+              <span className="text-red-400">Red</span> = More than 50% below ATH
+            </div>
+            <div>
+              <span>∞</span> = No maximum supply (inflationary token)
+            </div>
+            <div>
+              <span>ATH</span> = All-Time High (highest price ever)
+            </div>
+            <div>
+              <span>From ATH</span> = How far below the peak price
             </div>
           </div>
         </div>
 
-        {/* Footer Note */}
+        {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data provided by CoinGecko API • Real-time prices</p>
+          <p>Data from CoinGecko • Updates in real-time</p>
+          <p className="mt-2">
+            Need advanced comparisons? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for historical charts, more coins, and AI insights!
+          </p>
         </div>
       </div>
     </div>

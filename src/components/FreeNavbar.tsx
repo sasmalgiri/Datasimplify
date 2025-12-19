@@ -11,6 +11,7 @@ export function FreeNavbar() {
   const navLinks = [
     { href: '/market', label: 'Market' },
     { href: '/compare', label: 'Compare' },
+    { href: '/download', label: 'Download' },
     { href: '/chat', label: 'AI Chat' },
     { href: '/glossary', label: 'Glossary' },
     { href: '/learn', label: 'Learn' },
