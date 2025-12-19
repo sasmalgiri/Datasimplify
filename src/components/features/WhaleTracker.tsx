@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BeginnerTip, InfoButton, TrafficLight } from '../ui/BeginnerHelpers';
 
 interface WhaleTransaction {
@@ -25,78 +25,122 @@ interface WalletDistribution {
   trend: 'up' | 'down' | 'stable';
 }
 
+interface ExchangeFlow {
+  exchange: string;
+  inflow24h: number;
+  outflow24h: number;
+  netFlow24h: number;
+}
+
 interface WhaleTrackerProps {
   showBeginnerTips?: boolean;
 }
 
+// Static distribution data (would need paid API like Glassnode for real data)
+const DISTRIBUTION_DATA: WalletDistribution[] = [
+  { category: 'Shrimps', emoji: '🦐', description: 'Small retail investors like you and me', percentage: 8, btc_range: '< 1 BTC', trend: 'up' },
+  { category: 'Crabs', emoji: '🦀', description: 'Serious individual investors', percentage: 11, btc_range: '1-10 BTC', trend: 'stable' },
+  { category: 'Fish', emoji: '🐟', description: 'High net worth individuals', percentage: 15, btc_range: '10-100 BTC', trend: 'stable' },
+  { category: 'Sharks', emoji: '🦈', description: 'Small funds and early adopters', percentage: 18, btc_range: '100-1K BTC', trend: 'down' },
+  { category: 'Whales', emoji: '🐳', description: 'Large funds, exchanges', percentage: 25, btc_range: '1K-10K BTC', trend: 'stable' },
+  { category: 'Humpbacks', emoji: '🐋', description: 'Mega institutions, Satoshi', percentage: 23, btc_range: '> 10K BTC', trend: 'down' }
+];
+
 export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
   const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
-  const [distribution, setDistribution] = useState<WalletDistribution[]>([]);
+  const [distribution] = useState<WalletDistribution[]>(DISTRIBUTION_DATA);
+  const [exchangeFlows, setExchangeFlows] = useState<ExchangeFlow[]>([]);
   const [activeTab, setActiveTab] = useState<'alerts' | 'distribution' | 'flows'>('alerts');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  // Sample data - in production, this would come from an API
-  useEffect(() => {
-    const sampleTransactions: WhaleTransaction[] = [
-      {
-        id: '1',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        type: 'buy',
-        coin: 'BTC',
-        amount: 500,
-        value_usd: 48500000,
-        to_label: 'Unknown Whale',
-        signal: 'bullish',
-        explanation: 'Large purchase suggests confidence in price increase'
-      },
-      {
-        id: '2',
-        timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-        type: 'transfer',
-        coin: 'BTC',
-        amount: 2000,
-        value_usd: 194000000,
-        from_label: 'Unknown Whale',
-        to_label: 'Coinbase',
-        signal: 'bearish',
-        explanation: 'Moving to exchange might indicate intent to sell'
-      },
-      {
-        id: '3',
-        timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-        type: 'sell',
-        coin: 'ETH',
-        amount: 5000,
-        value_usd: 19500000,
-        from_label: 'Early DeFi Investor',
-        signal: 'bearish',
-        explanation: 'Smart money taking profits'
-      },
-      {
-        id: '4',
-        timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-        type: 'transfer',
-        coin: 'BTC',
-        amount: 1500,
-        value_usd: 145500000,
-        from_label: 'Binance',
-        to_label: 'Unknown Wallet',
-        signal: 'bullish',
-        explanation: 'Withdrawal from exchange = likely long-term holding'
+  const fetchWhaleData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [dashboardRes, flowsRes] = await Promise.all([
+        fetch('/api/whales?type=dashboard'),
+        fetch('/api/whales?type=exchange-flows')
+      ]);
+
+      if (dashboardRes.ok) {
+        const dashboardData = await dashboardRes.json();
+        if (dashboardData.data?.recentWhaleTransactions) {
+          // Transform API data to component format
+          const transformedTxs: WhaleTransaction[] = dashboardData.data.recentWhaleTransactions
+            .slice(0, 10)
+            .map((tx: {
+              hash: string;
+              timestamp: string;
+              type: string;
+              symbol: string;
+              amount: number;
+              amountUsd: number;
+              fromLabel: string;
+              toLabel: string;
+            }, index: number) => {
+              // Determine signal based on transaction type
+              let signal: 'bullish' | 'bearish' | 'neutral' = 'neutral';
+              let type: 'buy' | 'sell' | 'transfer' = 'transfer';
+              let explanation = 'Large transaction detected';
+
+              if (tx.type === 'exchange_inflow') {
+                signal = 'bearish';
+                type = 'sell';
+                explanation = 'Moving to exchange might indicate intent to sell';
+              } else if (tx.type === 'exchange_outflow') {
+                signal = 'bullish';
+                type = 'buy';
+                explanation = 'Withdrawal from exchange = likely long-term holding';
+              } else if (tx.type === 'whale_transfer') {
+                signal = 'neutral';
+                type = 'transfer';
+                explanation = 'Large whale transfer between wallets';
+              }
+
+              return {
+                id: tx.hash || `tx-${index}`,
+                timestamp: new Date(tx.timestamp),
+                type,
+                coin: tx.symbol,
+                amount: tx.amount,
+                value_usd: tx.amountUsd,
+                from_label: tx.fromLabel !== 'Unknown' ? tx.fromLabel : undefined,
+                to_label: tx.toLabel !== 'Unknown' ? tx.toLabel : undefined,
+                signal,
+                explanation
+              };
+            });
+
+          setTransactions(transformedTxs);
+        }
+      } else {
+        console.error('Failed to fetch whale dashboard:', dashboardRes.status);
       }
-    ];
 
-    const sampleDistribution: WalletDistribution[] = [
-      { category: 'Shrimps', emoji: '🦐', description: 'Small retail investors like you and me', percentage: 8, btc_range: '< 1 BTC', trend: 'up' },
-      { category: 'Crabs', emoji: '🦀', description: 'Serious individual investors', percentage: 11, btc_range: '1-10 BTC', trend: 'stable' },
-      { category: 'Fish', emoji: '🐟', description: 'High net worth individuals', percentage: 15, btc_range: '10-100 BTC', trend: 'stable' },
-      { category: 'Sharks', emoji: '🦈', description: 'Small funds and early adopters', percentage: 18, btc_range: '100-1K BTC', trend: 'down' },
-      { category: 'Whales', emoji: '🐳', description: 'Large funds, exchanges', percentage: 25, btc_range: '1K-10K BTC', trend: 'stable' },
-      { category: 'Humpbacks', emoji: '🐋', description: 'Mega institutions, Satoshi', percentage: 23, btc_range: '> 10K BTC', trend: 'down' }
-    ];
+      if (flowsRes.ok) {
+        const flowsData = await flowsRes.json();
+        if (flowsData.data && Array.isArray(flowsData.data)) {
+          setExchangeFlows(flowsData.data);
+        }
+      }
 
-    setTransactions(sampleTransactions);
-    setDistribution(sampleDistribution);
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Error fetching whale data:', err);
+      setError('Failed to load whale data');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchWhaleData();
+    const interval = setInterval(fetchWhaleData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchWhaleData]);
 
   // Format time ago
   const timeAgo = (date: Date) => {
@@ -118,17 +162,52 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
     return `$${value.toFixed(2)}`;
   };
 
+  // Loading skeleton
+  if (loading && transactions.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+        <p className="text-gray-500 text-sm mt-4 text-center">Loading whale transactions...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          🐋 Whale Watch
-          <InfoButton explanation="Track what the big players (whales) are doing with their crypto. Large movements often signal upcoming price changes." />
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            🐋 Whale Watch
+            <InfoButton explanation="Track what the big players (whales) are doing with their crypto. Large movements often signal upcoming price changes." />
+          </h2>
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <span className="text-xs text-gray-400">Updated: {lastUpdated}</span>
+            )}
+            <button
+              type="button"
+              onClick={fetchWhaleData}
+              disabled={loading}
+              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+            >
+              {loading ? '⏳' : '🔄'} Refresh
+            </button>
+          </div>
+        </div>
         <p className="text-gray-500 text-sm mt-1">
           Monitor large transactions and smart money movements
         </p>
+        {error && (
+          <p className="text-red-500 text-xs mt-1">⚠️ {error}</p>
+        )}
       </div>
 
       {/* Beginner Tip */}
@@ -146,30 +225,33 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-gray-200">
         <button
+          type="button"
           onClick={() => setActiveTab('alerts')}
           className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'alerts' 
-              ? 'text-blue-600 border-b-2 border-blue-600' 
+            activeTab === 'alerts'
+              ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           🚨 Whale Alerts
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('distribution')}
           className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'distribution' 
-              ? 'text-blue-600 border-b-2 border-blue-600' 
+            activeTab === 'distribution'
+              ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
           👥 Who Owns Bitcoin
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('flows')}
           className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === 'flows' 
-              ? 'text-blue-600 border-b-2 border-blue-600' 
+            activeTab === 'flows'
+              ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -232,7 +314,7 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
           ))}
 
           <div className="text-center pt-4">
-            <button className="text-blue-600 hover:text-blue-800 font-medium">
+            <button type="button" className="text-blue-600 hover:text-blue-800 font-medium">
               View More Alerts →
             </button>
           </div>
@@ -318,63 +400,82 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
             </div>
           )}
 
-          {/* Flow Stats */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-              <p className="text-red-600 text-sm font-medium">Exchange Inflows (24h)</p>
-              <p className="text-2xl font-bold text-red-700">12,450 BTC</p>
-              <p className="text-sm text-red-600">$1.21B moved to exchanges</p>
-              <TrafficLight status="bad" label="Bearish Signal" />
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <p className="text-green-600 text-sm font-medium">Exchange Outflows (24h)</p>
-              <p className="text-2xl font-bold text-green-700">15,230 BTC</p>
-              <p className="text-sm text-green-600">$1.48B withdrawn from exchanges</p>
-              <TrafficLight status="good" label="Bullish Signal" />
-            </div>
-          </div>
+          {/* Flow Stats - Using real data when available */}
+          {(() => {
+            const totalInflow = exchangeFlows.reduce((sum, f) => sum + f.inflow24h, 0);
+            const totalOutflow = exchangeFlows.reduce((sum, f) => sum + f.outflow24h, 0);
+            const netFlow = totalOutflow - totalInflow;
+            const isBullish = netFlow > 0;
 
-          {/* Net Flow */}
-          <div className="bg-green-100 p-4 rounded-lg border border-green-300">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-green-800 font-medium">Net Flow (24h)</p>
-                <p className="text-3xl font-bold text-green-700">+2,780 BTC Out</p>
-              </div>
-              <div className="text-right">
-                <p className="text-green-700 font-bold text-xl">🟢 Bullish</p>
-                <p className="text-sm text-green-600">More BTC leaving than entering</p>
-              </div>
-            </div>
-            
-            <div className="mt-4 pt-4 border-t border-green-200">
-              <p className="text-sm text-green-800">
-                <strong>What this means:</strong> More Bitcoin is being withdrawn from exchanges 
-                than deposited. This suggests investors are moving to long-term storage (bullish).
-              </p>
-            </div>
-          </div>
+            return (
+              <>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="text-red-600 text-sm font-medium">Exchange Inflows (Recent)</p>
+                    <p className="text-2xl font-bold text-red-700">
+                      {totalInflow > 0 ? `${totalInflow.toFixed(1)} ETH` : 'Loading...'}
+                    </p>
+                    <p className="text-sm text-red-600">Moved to exchanges</p>
+                    <TrafficLight status="bad" label="Bearish Signal" />
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p className="text-green-600 text-sm font-medium">Exchange Outflows (Recent)</p>
+                    <p className="text-2xl font-bold text-green-700">
+                      {totalOutflow > 0 ? `${totalOutflow.toFixed(1)} ETH` : 'Loading...'}
+                    </p>
+                    <p className="text-sm text-green-600">Withdrawn from exchanges</p>
+                    <TrafficLight status="good" label="Bullish Signal" />
+                  </div>
+                </div>
+
+                {/* Net Flow */}
+                <div className={`p-4 rounded-lg border ${isBullish ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'}`}>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className={`font-medium ${isBullish ? 'text-green-800' : 'text-red-800'}`}>Net Flow (Recent)</p>
+                      <p className={`text-3xl font-bold ${isBullish ? 'text-green-700' : 'text-red-700'}`}>
+                        {netFlow !== 0 ? `${netFlow > 0 ? '+' : ''}${netFlow.toFixed(1)} ETH ${isBullish ? 'Out' : 'In'}` : 'Loading...'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={`font-bold text-xl ${isBullish ? 'text-green-700' : 'text-red-700'}`}>
+                        {isBullish ? '🟢 Bullish' : '🔴 Bearish'}
+                      </p>
+                      <p className={`text-sm ${isBullish ? 'text-green-600' : 'text-red-600'}`}>
+                        {isBullish ? 'More leaving than entering' : 'More entering than leaving'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={`mt-4 pt-4 border-t ${isBullish ? 'border-green-200' : 'border-red-200'}`}>
+                    <p className={`text-sm ${isBullish ? 'text-green-800' : 'text-red-800'}`}>
+                      <strong>What this means:</strong> {isBullish
+                        ? 'More crypto is being withdrawn from exchanges than deposited. This suggests investors are moving to long-term storage (bullish).'
+                        : 'More crypto is being deposited to exchanges than withdrawn. This could indicate selling pressure (bearish).'}
+                    </p>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Top Exchanges */}
           <div className="mt-6">
-            <h4 className="font-semibold text-gray-700 mb-3">Top Exchanges by Volume</h4>
+            <h4 className="font-semibold text-gray-700 mb-3">Exchange Flows (ETH)</h4>
             <div className="space-y-2">
-              {[
-                { name: 'Binance', inflow: 5200, outflow: 6100 },
-                { name: 'Coinbase', inflow: 3100, outflow: 4200 },
-                { name: 'Kraken', inflow: 1800, outflow: 2100 },
-                { name: 'OKX', inflow: 2350, outflow: 2830 }
-              ].map((exchange) => {
-                const netFlow = exchange.outflow - exchange.inflow;
-                const isPositive = netFlow > 0;
+              {(exchangeFlows.length > 0 ? exchangeFlows : [
+                { exchange: 'Loading...', inflow24h: 0, outflow24h: 0, netFlow24h: 0 }
+              ]).map((flow, idx) => {
+                const flowNetFlow = flow.outflow24h - flow.inflow24h;
+                const isPositive = flowNetFlow > 0;
                 return (
-                  <div key={exchange.name} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">{exchange.name}</span>
+                  <div key={flow.exchange || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">{flow.exchange}</span>
                     <div className="flex items-center gap-4">
-                      <span className="text-red-600 text-sm">↓{exchange.inflow.toLocaleString()}</span>
-                      <span className="text-green-600 text-sm">↑{exchange.outflow.toLocaleString()}</span>
+                      <span className="text-red-600 text-sm">↓{flow.inflow24h.toFixed(1)}</span>
+                      <span className="text-green-600 text-sm">↑{flow.outflow24h.toFixed(1)}</span>
                       <span className={`font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                        {isPositive ? '+' : ''}{netFlow.toLocaleString()}
+                        {isPositive ? '+' : ''}{flowNetFlow.toFixed(1)}
                       </span>
                     </div>
                   </div>

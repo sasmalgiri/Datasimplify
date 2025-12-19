@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
@@ -108,14 +109,24 @@ interface FearGreed {
   value_classification: string;
 }
 
+interface CoinPrediction {
+  coinId: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+}
+
 export default function MarketPage() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [globalData, setGlobalData] = useState<GlobalData | null>(null);
   const [fearGreed, setFearGreed] = useState<FearGreed | null>(null);
+  const [predictions, setPredictions] = useState<Map<string, CoinPrediction>>(new Map());
+  const [predictionsLoading, setPredictionsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'market_cap' | 'price_change' | 'volume'>('market_cap');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [predictionFilter, setPredictionFilter] = useState<'all' | 'BULLISH' | 'BEARISH' | 'NEUTRAL'>('all');
 
   useEffect(() => {
     fetchData();
@@ -123,6 +134,49 @@ export default function MarketPage() {
     const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch predictions when coins are loaded
+  useEffect(() => {
+    if (coins.length > 0) {
+      fetchPredictions();
+    }
+  }, [coins]);
+
+  const fetchPredictions = async () => {
+    setPredictionsLoading(true);
+    try {
+      // Fetch predictions for top 20 coins to limit API calls
+      const topCoins = coins.slice(0, 20).map(c => ({ id: c.id, name: c.name }));
+
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coins: topCoins })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          const predMap = new Map<string, CoinPrediction>();
+          result.data.forEach((pred: { coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }) => {
+            if (pred.coinId && pred.prediction) {
+              predMap.set(pred.coinId, {
+                coinId: pred.coinId,
+                prediction: pred.prediction,
+                confidence: pred.confidence || 50,
+                riskLevel: pred.riskLevel || 'MEDIUM'
+              });
+            }
+          });
+          setPredictions(predMap);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+    } finally {
+      setPredictionsLoading(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -185,10 +239,16 @@ export default function MarketPage() {
 
   // Filter and sort
   const filteredCoins = coins
-    .filter(coin => 
+    .filter(coin =>
       coin.name.toLowerCase().includes(search.toLowerCase()) ||
       coin.symbol.toLowerCase().includes(search.toLowerCase())
     )
+    .filter(coin => {
+      // Apply prediction filter
+      if (predictionFilter === 'all') return true;
+      const pred = predictions.get(coin.id);
+      return pred?.prediction === predictionFilter;
+    })
     .sort((a, b) => {
       let aVal, bVal;
       switch (sortBy) {
@@ -206,6 +266,36 @@ export default function MarketPage() {
       }
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
+
+  // Get prediction badge component
+  const getPredictionBadge = (coinId: string) => {
+    const pred = predictions.get(coinId);
+    if (!pred) {
+      return predictionsLoading ? (
+        <span className="text-gray-500 text-xs">Loading...</span>
+      ) : (
+        <span className="text-gray-500 text-xs">-</span>
+      );
+    }
+
+    const { prediction, confidence } = pred;
+    const styles = {
+      BULLISH: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', Icon: TrendingUp },
+      BEARISH: { bg: 'bg-red-500/20', text: 'text-red-400', Icon: TrendingDown },
+      NEUTRAL: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', Icon: Minus }
+    };
+
+    const style = styles[prediction];
+    const Icon = style.Icon;
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+        <Icon className="w-3 h-3" />
+        <span>{prediction === 'BULLISH' ? 'Bull' : prediction === 'BEARISH' ? 'Bear' : 'Neutral'}</span>
+        <span className="opacity-60">{confidence}%</span>
+      </span>
+    );
+  };
 
   // Download as CSV
   const downloadCSV = () => {
@@ -366,7 +456,7 @@ export default function MarketPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
           <div className="relative flex-1">
             <input
               type="text"
@@ -378,24 +468,66 @@ export default function MarketPage() {
           </div>
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => handleSort('market_cap')}
               className={`px-4 py-2 rounded-lg border transition-all ${sortBy === 'market_cap' ? 'bg-emerald-600 border-emerald-600' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
             >
               Market Cap {sortBy === 'market_cap' && (sortOrder === 'desc' ? '↓' : '↑')}
             </button>
             <button
+              type="button"
               onClick={() => handleSort('price_change')}
               className={`px-4 py-2 rounded-lg border transition-all ${sortBy === 'price_change' ? 'bg-emerald-600 border-emerald-600' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
             >
               24h Change {sortBy === 'price_change' && (sortOrder === 'desc' ? '↓' : '↑')}
             </button>
             <button
+              type="button"
               onClick={() => handleSort('volume')}
               className={`px-4 py-2 rounded-lg border transition-all ${sortBy === 'volume' ? 'bg-emerald-600 border-emerald-600' : 'bg-gray-800 border-gray-700 hover:border-gray-600'}`}
             >
               Volume {sortBy === 'volume' && (sortOrder === 'desc' ? '↓' : '↑')}
             </button>
           </div>
+        </div>
+
+        {/* AI Prediction Filters */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="text-gray-400 text-sm mr-2">🤖 AI Prediction:</span>
+          <button
+            type="button"
+            onClick={() => setPredictionFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${predictionFilter === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            onClick={() => setPredictionFilter('BULLISH')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'BULLISH' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-emerald-400 hover:bg-emerald-900/50'}`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" /> Bullish
+          </button>
+          <button
+            type="button"
+            onClick={() => setPredictionFilter('BEARISH')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'BEARISH' ? 'bg-red-600 text-white' : 'bg-gray-800 text-red-400 hover:bg-red-900/50'}`}
+          >
+            <TrendingDown className="w-3.5 h-3.5" /> Bearish
+          </button>
+          <button
+            type="button"
+            onClick={() => setPredictionFilter('NEUTRAL')}
+            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'NEUTRAL' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-yellow-400 hover:bg-yellow-900/50'}`}
+          >
+            <Minus className="w-3.5 h-3.5" /> Neutral
+          </button>
+          {predictionsLoading && (
+            <span className="text-gray-500 text-sm ml-2 flex items-center gap-1">
+              <span className="animate-spin h-3 w-3 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
+              Loading predictions...
+            </span>
+          )}
         </div>
 
         {/* Beginner Tip */}
@@ -416,6 +548,7 @@ export default function MarketPage() {
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Coin:</span> Name & symbol</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Price:</span> Current USD price</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">24h %:</span> Price change in 24 hours</span>
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">AI Signal:</span> AI prediction (Bull/Bear/Neutral)</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Market Cap:</span> Price × Supply</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Volume:</span> 24h trading activity</span>
           </div>
@@ -435,6 +568,7 @@ export default function MarketPage() {
                   <th className="px-4 py-4 text-left text-emerald-400 font-medium">Coin</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Price</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">24h %</th>
+                  <th className="px-4 py-4 text-center text-emerald-400 font-medium">AI Signal</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Market Cap</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Volume (24h)</th>
                   <th className="px-4 py-4 text-center text-gray-400 font-medium">Action</th>
@@ -464,6 +598,9 @@ export default function MarketPage() {
                     <td className="px-4 py-4 text-right font-medium">{formatPrice(coin.current_price)}</td>
                     <td className={`px-4 py-4 text-right font-medium ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {formatPercent(coin.price_change_percentage_24h || 0)}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      {getPredictionBadge(coin.id)}
                     </td>
                     <td className="px-4 py-4 text-right text-gray-300">{formatLargeNumber(coin.market_cap)}</td>
                     <td className="px-4 py-4 text-right text-gray-300">{formatLargeNumber(coin.total_volume)}</td>

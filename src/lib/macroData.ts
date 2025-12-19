@@ -7,6 +7,16 @@
 let macroCache: { data: MacroData | null; timestamp: number } = { data: null, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Track API failures for debugging
+const apiStatus: Record<string, { lastSuccess: string | null; lastError: string | null; consecutiveFailures: number }> = {
+  fedFunds: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+  treasury10Y: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+  dxy: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+  vix: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+  sp500: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+  nasdaq: { lastSuccess: null, lastError: null, consecutiveFailures: 0 },
+};
+
 export interface MacroData {
   fedFundsRate: number | null;
   treasury10Y: number | null;
@@ -16,6 +26,8 @@ export interface MacroData {
   nasdaqChange: number | null;
   lastUpdated: string;
   riskEnvironment: 'risk-on' | 'risk-off' | 'neutral';
+  dataQuality: 'good' | 'partial' | 'stale';
+  errors?: string[];
 }
 
 /**
@@ -255,6 +267,25 @@ export async function fetchMacroData(): Promise<MacroData> {
     fetchNasdaqChange()
   ]);
 
+  // Track errors
+  const errors: string[] = [];
+  if (fedFundsRate === null) errors.push('Fed Funds Rate unavailable');
+  if (treasury10Y === null) errors.push('10Y Treasury unavailable');
+  if (dxy === null) errors.push('DXY unavailable');
+  if (vix === null) errors.push('VIX unavailable');
+  if (sp500Change === null) errors.push('S&P 500 unavailable');
+  if (nasdaqChange === null) errors.push('Nasdaq unavailable');
+
+  // Determine data quality
+  const availableCount = [fedFundsRate, treasury10Y, dxy, vix, sp500Change, nasdaqChange]
+    .filter(v => v !== null).length;
+  let dataQuality: 'good' | 'partial' | 'stale' = 'good';
+  if (availableCount < 3) {
+    dataQuality = 'stale';
+  } else if (availableCount < 5) {
+    dataQuality = 'partial';
+  }
+
   const data: MacroData = {
     fedFundsRate,
     treasury10Y,
@@ -263,13 +294,20 @@ export async function fetchMacroData(): Promise<MacroData> {
     sp500Change,
     nasdaqChange,
     lastUpdated: new Date().toISOString(),
-    riskEnvironment: 'neutral'
+    riskEnvironment: 'neutral',
+    dataQuality,
+    errors: errors.length > 0 ? errors : undefined
   };
 
   data.riskEnvironment = determineRiskEnvironment(data);
 
   // Update cache
   macroCache = { data, timestamp: now };
+
+  // Log data quality for debugging
+  if (dataQuality !== 'good') {
+    console.warn(`Macro data quality: ${dataQuality}. Missing: ${errors.join(', ')}`);
+  }
 
   return data;
 }

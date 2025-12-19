@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
 
 interface Protocol {
@@ -24,42 +24,134 @@ interface Chain {
   change_24h: number;
 }
 
+interface YieldPool {
+  protocol: string;
+  chain: string;
+  symbol: string;
+  tvl: number;
+  apy: number;
+}
+
+// Map protocol names to emojis/logos
+const PROTOCOL_LOGOS: Record<string, string> = {
+  'lido': '🔵', 'aave': '👻', 'makerdao': '🏛️', 'uniswap': '🦄',
+  'eigenlayer': '🔷', 'rocket pool': '🚀', 'compound': '🏦', 'curve': '🌀',
+  'gmx': '💹', 'pendle': '⏰', 'pancakeswap': '🥞', 'convex': '⚡',
+  'instadapp': '📱', 'morpho': '🦋', 'spark': '✨', 'summer.fi': '☀️',
+  'default': '🔗'
+};
+
+const getCategoryDescription = (category: string): string => {
+  const descriptions: Record<string, string> = {
+    'Liquid Staking': 'Stake tokens and receive liquid derivatives',
+    'Lending': 'Lend and borrow crypto assets',
+    'CDP': 'Collateralized Debt Position protocols',
+    'DEX': 'Decentralized Exchange',
+    'Derivatives': 'Trade perpetuals and options',
+    'Yield': 'Yield optimization and farming',
+    'Bridge': 'Cross-chain bridge protocol',
+    'Restaking': 'Restake assets for additional yield',
+  };
+  return descriptions[category] || category;
+};
+
 export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
   const [protocols, setProtocols] = useState<Protocol[]>([]);
   const [chains, setChains] = useState<Chain[]>([]);
+  const [yields, setYields] = useState<YieldPool[]>([]);
   const [activeTab, setActiveTab] = useState<'protocols' | 'chains' | 'yields'>('protocols');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [chainFilter, setChainFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  const fetchDeFiData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Fetch protocols and chains in parallel
+      const [protocolsRes, chainsRes, yieldsRes] = await Promise.all([
+        fetch('/api/onchain?type=defi-protocols&limit=50'),
+        fetch('/api/onchain?type=defi-tvl'),
+        fetch('/api/onchain?type=yields&limit=20')
+      ]);
+
+      // Handle protocols
+      if (protocolsRes.ok) {
+        const protocolsData = await protocolsRes.json();
+        if (protocolsData.data && Array.isArray(protocolsData.data)) {
+          const formattedProtocols: Protocol[] = protocolsData.data.map((p: {
+            name: string;
+            chain: string;
+            category: string;
+            tvl: number;
+            tvlChange24h: number;
+            tvlChange7d: number;
+            symbol: string;
+          }) => ({
+            id: p.name.toLowerCase().replace(/\s+/g, '-'),
+            name: p.name,
+            logo: PROTOCOL_LOGOS[p.name.toLowerCase()] || PROTOCOL_LOGOS['default'],
+            category: p.category || 'Unknown',
+            chain: p.chain || 'Multi-chain',
+            tvl: p.tvl || 0,
+            tvl_change_24h: p.tvlChange24h || 0,
+            tvl_change_7d: p.tvlChange7d || 0,
+            description: getCategoryDescription(p.category || 'Unknown')
+          }));
+          setProtocols(formattedProtocols);
+        }
+      } else {
+        console.error('Failed to fetch protocols:', protocolsRes.status);
+      }
+
+      // Handle chains
+      if (chainsRes.ok) {
+        const chainsData = await chainsRes.json();
+        if (chainsData.data?.chains && Array.isArray(chainsData.data.chains)) {
+          const formattedChains: Chain[] = chainsData.data.chains.map((c: {
+            name: string;
+            tvl: number;
+          }, index: number) => ({
+            id: c.name.toLowerCase().replace(/\s+/g, '-'),
+            name: c.name,
+            tvl: c.tvl || 0,
+            protocols: Math.max(50, 850 - index * 80), // Estimate based on rank
+            change_24h: 0 // DefiLlama doesn't provide this in chains endpoint
+          }));
+          setChains(formattedChains);
+        }
+      } else {
+        console.error('Failed to fetch chains:', chainsRes.status);
+      }
+
+      // Handle yields
+      if (yieldsRes.ok) {
+        const yieldsData = await yieldsRes.json();
+        if (yieldsData.data?.pools && Array.isArray(yieldsData.data.pools)) {
+          setYields(yieldsData.data.pools);
+        }
+      } else {
+        console.error('Failed to fetch yields:', yieldsRes.status);
+      }
+
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Error fetching DeFi data:', err);
+      setError('Failed to load DeFi data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Sample data - in production would come from DeFiLlama API
-    const sampleProtocols: Protocol[] = [
-      { id: 'lido', name: 'Lido', logo: '🔵', category: 'Liquid Staking', chain: 'Ethereum', tvl: 35200000000, tvl_change_24h: 1.2, tvl_change_7d: 3.5, apy: 3.8, description: 'Stake ETH and receive stETH' },
-      { id: 'aave', name: 'Aave', logo: '👻', category: 'Lending', chain: 'Multi-chain', tvl: 12800000000, tvl_change_24h: 0.8, tvl_change_7d: 2.1, apy: 4.5, description: 'Lend and borrow crypto' },
-      { id: 'makerdao', name: 'MakerDAO', logo: '🏛️', category: 'CDP', chain: 'Ethereum', tvl: 8500000000, tvl_change_24h: -0.5, tvl_change_7d: 1.2, description: 'Mint DAI stablecoin' },
-      { id: 'uniswap', name: 'Uniswap', logo: '🦄', category: 'DEX', chain: 'Multi-chain', tvl: 6200000000, tvl_change_24h: 2.1, tvl_change_7d: 5.8, apy: 12, description: 'Swap any tokens' },
-      { id: 'eigenlayer', name: 'EigenLayer', logo: '🔷', category: 'Restaking', chain: 'Ethereum', tvl: 15800000000, tvl_change_24h: 3.2, tvl_change_7d: 8.5, description: 'Restake ETH for extra yield' },
-      { id: 'rocket-pool', name: 'Rocket Pool', logo: '🚀', category: 'Liquid Staking', chain: 'Ethereum', tvl: 4200000000, tvl_change_24h: 0.5, tvl_change_7d: 1.8, apy: 3.5, description: 'Decentralized ETH staking' },
-      { id: 'compound', name: 'Compound', logo: '🏦', category: 'Lending', chain: 'Ethereum', tvl: 2800000000, tvl_change_24h: 0.3, tvl_change_7d: 0.8, apy: 3.2, description: 'Earn interest on deposits' },
-      { id: 'curve', name: 'Curve', logo: '🌀', category: 'DEX', chain: 'Multi-chain', tvl: 2100000000, tvl_change_24h: -0.8, tvl_change_7d: -1.2, apy: 8, description: 'Stablecoin swaps' },
-      { id: 'gmx', name: 'GMX', logo: '💹', category: 'Derivatives', chain: 'Arbitrum', tvl: 580000000, tvl_change_24h: 1.5, tvl_change_7d: 4.2, apy: 25, description: 'Perpetual trading' },
-      { id: 'pendle', name: 'Pendle', logo: '⏰', category: 'Yield', chain: 'Multi-chain', tvl: 4500000000, tvl_change_24h: 5.2, tvl_change_7d: 12.5, apy: 35, description: 'Trade future yield' },
-    ];
-
-    const sampleChains: Chain[] = [
-      { id: 'ethereum', name: 'Ethereum', tvl: 62500000000, protocols: 850, change_24h: 1.2 },
-      { id: 'bsc', name: 'BNB Chain', tvl: 5200000000, protocols: 620, change_24h: 0.8 },
-      { id: 'solana', name: 'Solana', tvl: 4800000000, protocols: 180, change_24h: 3.5 },
-      { id: 'arbitrum', name: 'Arbitrum', tvl: 3200000000, protocols: 420, change_24h: 2.1 },
-      { id: 'polygon', name: 'Polygon', tvl: 1100000000, protocols: 380, change_24h: -0.5 },
-      { id: 'avalanche', name: 'Avalanche', tvl: 950000000, protocols: 280, change_24h: 1.8 },
-      { id: 'base', name: 'Base', tvl: 2800000000, protocols: 150, change_24h: 8.5 },
-      { id: 'optimism', name: 'Optimism', tvl: 850000000, protocols: 180, change_24h: 1.2 },
-    ];
-
-    setProtocols(sampleProtocols);
-    setChains(sampleChains);
-  }, []);
+    fetchDeFiData();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchDeFiData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchDeFiData]);
 
   const formatTVL = (tvl: number) => {
     if (tvl >= 1e12) return `$${(tvl / 1e12).toFixed(2)}T`;
@@ -77,16 +169,66 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
     return true;
   });
 
+  // Loading skeleton
+  if (loading && protocols.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+        <p className="text-gray-500 text-sm mt-4 text-center">Loading DeFi data from DefiLlama...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && protocols.length === 0) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="text-center py-8">
+          <p className="text-red-500 text-lg mb-4">⚠️ {error}</p>
+          <button
+            onClick={fetchDeFiData}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-          🏦 DeFi TVL Tracker
-          <InfoButton explanation="TVL (Total Value Locked) shows how much money is deposited in DeFi protocols. Higher TVL generally means more trust and usage." />
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            🏦 DeFi TVL Tracker
+            <InfoButton explanation="TVL (Total Value Locked) shows how much money is deposited in DeFi protocols. Higher TVL generally means more trust and usage." />
+          </h2>
+          <div className="flex items-center gap-2">
+            {lastUpdated && (
+              <span className="text-xs text-gray-400">Updated: {lastUpdated}</span>
+            )}
+            <button
+              type="button"
+              onClick={fetchDeFiData}
+              disabled={loading}
+              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors disabled:opacity-50"
+            >
+              {loading ? '⏳' : '🔄'} Refresh
+            </button>
+          </div>
+        </div>
         <p className="text-gray-500 text-sm mt-1">
-          Track money flowing into decentralized finance
+          Track money flowing into decentralized finance • Data from DefiLlama
         </p>
       </div>
 
@@ -248,32 +390,38 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
           {showBeginnerTips && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
               <p className="text-sm text-yellow-800">
-                ⚠️ <strong>Warning:</strong> Higher APY = Higher Risk! 
-                Yields above 20% often come with significant risks like smart contract bugs, 
+                ⚠️ <strong>Warning:</strong> Higher APY = Higher Risk!
+                Yields above 20% often come with significant risks like smart contract bugs,
                 impermanent loss, or token inflation. Start with lower, safer yields.
               </p>
             </div>
           )}
 
           <div className="space-y-3">
-            {protocols
-              .filter(p => p.apy)
-              .sort((a, b) => (b.apy || 0) - (a.apy || 0))
-              .map((protocol) => (
-                <div key={protocol.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-green-300">
+            {yields.length > 0 ? (
+              yields.map((pool, index) => (
+                <div key={`${pool.protocol}-${pool.symbol}-${index}`} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-green-300">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{protocol.logo}</span>
+                    <span className="text-2xl">{PROTOCOL_LOGOS[pool.protocol.toLowerCase()] || '💰'}</span>
                     <div>
-                      <p className="font-medium">{protocol.name}</p>
-                      <p className="text-xs text-gray-500">{protocol.description}</p>
+                      <p className="font-medium">{pool.protocol}</p>
+                      <p className="text-xs text-gray-500">{pool.symbol} on {pool.chain}</p>
+                      <p className="text-xs text-gray-400">TVL: {formatTVL(pool.tvl)}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-green-600">{protocol.apy}%</p>
+                    <p className={`text-2xl font-bold ${
+                      pool.apy > 20 ? 'text-red-500' :
+                      pool.apy > 10 ? 'text-yellow-500' : 'text-green-600'
+                    }`}>{pool.apy.toFixed(2)}%</p>
                     <p className="text-xs text-gray-500">APY</p>
+                    {pool.apy > 20 && <p className="text-xs text-red-400">⚠️ High Risk</p>}
                   </div>
                 </div>
-              ))}
+              ))
+            ) : (
+              <p className="text-center text-gray-500 py-8">Loading yield pools...</p>
+            )}
           </div>
 
           {/* Risk Levels */}

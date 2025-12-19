@@ -106,11 +106,25 @@ export async function fetchFearGreedIndex(): Promise<{
   value: number;
   label: string;
   timestamp: string;
+  error?: string;
 }> {
   try {
-    const response = await fetch(FREE_ONCHAIN_APIS.fearGreed);
+    const response = await fetch(FREE_ONCHAIN_APIS.fearGreed, {
+      next: { revalidate: 300 } // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      console.error(`Fear & Greed API returned ${response.status}`);
+      return { value: 50, label: 'Neutral (API unavailable)', timestamp: new Date().toISOString(), error: `API returned ${response.status}` };
+    }
+
     const data = await response.json();
-    
+
+    if (!data.data || !data.data[0]) {
+      console.error('Fear & Greed API returned invalid data:', data);
+      return { value: 50, label: 'Neutral (Invalid response)', timestamp: new Date().toISOString(), error: 'Invalid API response' };
+    }
+
     return {
       value: parseInt(data.data[0].value),
       label: data.data[0].value_classification,
@@ -118,7 +132,7 @@ export async function fetchFearGreedIndex(): Promise<{
     };
   } catch (error) {
     console.error('Error fetching fear & greed:', error);
-    return { value: 50, label: 'Neutral', timestamp: new Date().toISOString() };
+    return { value: 50, label: 'Neutral (Error)', timestamp: new Date().toISOString(), error: String(error) };
   }
 }
 
@@ -126,13 +140,27 @@ export async function fetchFearGreedIndex(): Promise<{
 export async function fetchDeFiTVL(): Promise<{
   totalTVL: number;
   chains: { name: string; tvl: number }[];
+  error?: string;
 }> {
   try {
-    const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/v2/chains`);
+    const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/v2/chains`, {
+      next: { revalidate: 300 }
+    });
+
+    if (!response.ok) {
+      console.error(`DeFiLlama chains API returned ${response.status}`);
+      return { totalTVL: 0, chains: [], error: `API returned ${response.status}` };
+    }
+
     const chains = await response.json();
-    
+
+    if (!Array.isArray(chains)) {
+      console.error('DeFiLlama returned invalid chains data');
+      return { totalTVL: 0, chains: [], error: 'Invalid API response' };
+    }
+
     const totalTVL = chains.reduce((sum: number, c: { tvl: number }) => sum + (c.tvl || 0), 0);
-    
+
     return {
       totalTVL,
       chains: chains
@@ -145,7 +173,7 @@ export async function fetchDeFiTVL(): Promise<{
     };
   } catch (error) {
     console.error('Error fetching DeFi TVL:', error);
-    return { totalTVL: 0, chains: [] };
+    return { totalTVL: 0, chains: [], error: String(error) };
   }
 }
 
@@ -248,16 +276,46 @@ export async function fetchBitcoinStats(): Promise<{
   avgBlockTime: number;
   unconfirmedTxs: number;
   memPoolSize: number;
+  error?: string;
 }> {
   try {
-    const response = await fetch(`${FREE_ONCHAIN_APIS.blockchainInfo}/stats?format=json`);
+    const response = await fetch(`${FREE_ONCHAIN_APIS.blockchainInfo}/stats?format=json`, {
+      next: { revalidate: 60 } // Cache for 1 minute
+    });
+
+    if (!response.ok) {
+      console.error(`Blockchain.info API returned ${response.status}`);
+      return {
+        hashRate: 0,
+        difficulty: 0,
+        blockHeight: 0,
+        avgBlockTime: 10,
+        unconfirmedTxs: 0,
+        memPoolSize: 0,
+        error: `API returned ${response.status}`
+      };
+    }
+
     const data = await response.json();
-    
+
+    if (!data || typeof data !== 'object') {
+      console.error('Blockchain.info returned invalid data');
+      return {
+        hashRate: 0,
+        difficulty: 0,
+        blockHeight: 0,
+        avgBlockTime: 10,
+        unconfirmedTxs: 0,
+        memPoolSize: 0,
+        error: 'Invalid API response'
+      };
+    }
+
     return {
-      hashRate: data.hash_rate,
-      difficulty: data.difficulty,
-      blockHeight: data.n_blocks_total,
-      avgBlockTime: data.minutes_between_blocks,
+      hashRate: data.hash_rate || 0,
+      difficulty: data.difficulty || 0,
+      blockHeight: data.n_blocks_total || 0,
+      avgBlockTime: data.minutes_between_blocks || 10,
       unconfirmedTxs: data.n_tx_unconfirmed || 0,
       memPoolSize: data.mempool_size || 0,
     };
@@ -270,6 +328,7 @@ export async function fetchBitcoinStats(): Promise<{
       avgBlockTime: 10,
       unconfirmedTxs: 0,
       memPoolSize: 0,
+      error: String(error)
     };
   }
 }

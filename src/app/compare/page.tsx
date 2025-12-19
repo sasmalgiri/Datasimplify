@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -171,6 +172,7 @@ const COLUMN_OPTIONS = [
   { id: 'change_24h', label: '24h Change', default: true },
   { id: 'change_7d', label: '7d Change', default: true },
   { id: 'change_30d', label: '30d Change', default: false },
+  { id: 'ai_signal', label: 'AI Signal', default: true },
   { id: 'market_cap', label: 'Market Cap', default: true },
   { id: 'fdv', label: 'Fully Diluted Val.', default: false },
   { id: 'volume', label: '24h Volume', default: true },
@@ -182,9 +184,19 @@ const COLUMN_OPTIONS = [
   { id: 'from_atl', label: 'From ATL', default: false },
 ];
 
+// Prediction interface
+interface CoinPrediction {
+  coinId: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+}
+
 export default function ComparePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
   const [coins, setCoins] = useState<Coin[]>([]);
+  const [predictions, setPredictions] = useState<Map<string, CoinPrediction>>(new Map());
+  const [predictionsLoading, setPredictionsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -250,6 +262,78 @@ export default function ComparePage() {
   useEffect(() => {
     fetchCoins();
   }, [selectedIds, sortBy]);
+
+  // Fetch predictions when coins are loaded
+  useEffect(() => {
+    if (coins.length > 0) {
+      fetchPredictions();
+    }
+  }, [coins]);
+
+  const fetchPredictions = async () => {
+    setPredictionsLoading(true);
+    try {
+      const coinsToPredict = coins.map(c => ({ id: c.id, name: c.name }));
+
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coins: coinsToPredict })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          const predMap = new Map<string, CoinPrediction>();
+          result.data.forEach((pred: { coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }) => {
+            if (pred.coinId && pred.prediction) {
+              predMap.set(pred.coinId, {
+                coinId: pred.coinId,
+                prediction: pred.prediction,
+                confidence: pred.confidence || 50,
+                riskLevel: pred.riskLevel || 'MEDIUM'
+              });
+            }
+          });
+          setPredictions(predMap);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+    } finally {
+      setPredictionsLoading(false);
+    }
+  };
+
+  // Get prediction badge for a coin
+  const getPredictionBadge = (coinId: string) => {
+    const pred = predictions.get(coinId);
+    if (!pred) {
+      return predictionsLoading ? (
+        <span className="text-gray-500 text-xs">...</span>
+      ) : (
+        <span className="text-gray-500 text-xs">-</span>
+      );
+    }
+
+    const { prediction, confidence } = pred;
+    const styles = {
+      BULLISH: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', Icon: TrendingUp },
+      BEARISH: { bg: 'bg-red-500/20', text: 'text-red-400', Icon: TrendingDown },
+      NEUTRAL: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', Icon: Minus }
+    };
+
+    const style = styles[prediction];
+    const Icon = style.Icon;
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
+        <Icon className="w-3 h-3" />
+        <span>{prediction === 'BULLISH' ? 'Bull' : prediction === 'BEARISH' ? 'Bear' : 'Neut'}</span>
+        <span className="opacity-60">{confidence}%</span>
+      </span>
+    );
+  };
 
   const toggleCoin = (id: string) => {
     if (selectedIds.includes(id)) {
@@ -600,6 +684,7 @@ export default function ComparePage() {
               {visibleColumns.includes('change_24h') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">24h:</span> Day change</span>}
               {visibleColumns.includes('change_7d') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">7d:</span> Week change</span>}
               {visibleColumns.includes('change_30d') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">30d:</span> Month change</span>}
+              {visibleColumns.includes('ai_signal') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">AI:</span> AI prediction signal</span>}
               {visibleColumns.includes('market_cap') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">MCap:</span> Market cap</span>}
               {visibleColumns.includes('fdv') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">FDV:</span> Fully diluted value</span>}
               {visibleColumns.includes('volume') && <span className="text-gray-300"><span className="text-emerald-400 font-medium">Vol:</span> 24h volume</span>}
@@ -624,6 +709,7 @@ export default function ComparePage() {
                     {visibleColumns.includes('change_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h</th>}
                     {visibleColumns.includes('change_7d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">7d</th>}
                     {visibleColumns.includes('change_30d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">30d</th>}
+                    {visibleColumns.includes('ai_signal') && <th className="px-4 py-3 text-center text-emerald-400 font-medium">AI Signal</th>}
                     {visibleColumns.includes('market_cap') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Market Cap</th>}
                     {visibleColumns.includes('fdv') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">FDV</th>}
                     {visibleColumns.includes('volume') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Volume 24h</th>}
@@ -676,6 +762,11 @@ export default function ComparePage() {
                           (coin.price_change_percentage_30d_in_currency || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                         }`}>
                           {formatPercent(coin.price_change_percentage_30d_in_currency)}
+                        </td>
+                      )}
+                      {visibleColumns.includes('ai_signal') && (
+                        <td className="px-4 py-3 text-center">
+                          {getPredictionBadge(coin.id)}
                         </td>
                       )}
                       {visibleColumns.includes('market_cap') && (

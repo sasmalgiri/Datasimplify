@@ -22,6 +22,7 @@ export interface LiquidationData {
   shortLiquidations24h: number;
   totalLiquidations24h: number;
   largestLiquidation: number | null;
+  isEstimated: boolean; // Flag to indicate this is estimated data
 }
 
 export interface DerivativesData {
@@ -33,6 +34,7 @@ export interface DerivativesData {
   fundingHeatLevel: 'extreme_long' | 'bullish' | 'neutral' | 'bearish' | 'extreme_short';
   liquidations: LiquidationData[];
   lastUpdated: string;
+  dataNote?: string; // Note about data quality/source
 }
 
 /**
@@ -177,8 +179,9 @@ function determineFundingHeatLevel(rate: number | null): 'extreme_long' | 'bulli
 }
 
 /**
- * Fetch liquidation data (simulated from recent price movements)
- * Note: Real liquidation data requires paid APIs like CoinGlass Pro
+ * Fetch liquidation data (ESTIMATED from recent price movements)
+ * Note: Real liquidation data requires paid APIs like CoinGlass Pro ($200+/mo)
+ * This is an APPROXIMATION based on volume and price volatility
  */
 async function fetchLiquidationEstimates(): Promise<LiquidationData[]> {
   // We'll estimate liquidations based on price volatility and OI
@@ -209,7 +212,8 @@ async function fetchLiquidationEstimates(): Promise<LiquidationData[]> {
           longLiquidations24h: estimatedLiqs * longBias,
           shortLiquidations24h: estimatedLiqs * (1 - longBias),
           totalLiquidations24h: estimatedLiqs,
-          largestLiquidation: estimatedLiqs * 0.1 // Top 10% estimate
+          largestLiquidation: estimatedLiqs * 0.1, // Top 10% estimate
+          isEstimated: true // Mark as estimated data
         });
       }
     } catch (error) {
@@ -252,7 +256,8 @@ export async function fetchDerivativesData(): Promise<DerivativesData> {
     aggregatedFundingRate: avgFunding,
     fundingHeatLevel: determineFundingHeatLevel(avgFunding),
     liquidations,
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
+    dataNote: 'Liquidation data is estimated from volume and volatility. Real liquidation data requires CoinGlass Pro API.'
   };
 
   // Update cache

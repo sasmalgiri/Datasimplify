@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { TrendingUp, TrendingDown, Minus, Brain, Target, Shield } from 'lucide-react';
 
 // Types
 interface MacroData {
@@ -68,6 +69,24 @@ interface TokenUnlock {
   next7dUnlockPercent: number;
   next30dUnlockPercent: number;
   riskLevel: string;
+}
+
+interface MarketPrediction {
+  direction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+  reasons: string[];
+  overallScore: number;
+}
+
+interface CoinPrediction {
+  coinId: string;
+  coinName: string;
+  symbol: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  confidence: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+  priceChange24h: number;
 }
 
 // Format helpers
@@ -177,15 +196,85 @@ export default function MonitorPage() {
   const [onchain, setOnchain] = useState<OnChainData | null>(null);
   const [sentiment, setSentiment] = useState<SentimentData | null>(null);
   const [unlocks, setUnlocks] = useState<TokenUnlock[]>([]);
+  const [marketPrediction, setMarketPrediction] = useState<MarketPrediction | null>(null);
+  const [topPredictions, setTopPredictions] = useState<CoinPrediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+
+  // Fetch predictions for top coins
+  const fetchPredictions = async () => {
+    try {
+      // Fetch predictions for top 10 coins
+      const topCoins = [
+        { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' },
+        { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' },
+        { id: 'solana', name: 'Solana', symbol: 'SOL' },
+        { id: 'binancecoin', name: 'BNB', symbol: 'BNB' },
+        { id: 'ripple', name: 'XRP', symbol: 'XRP' },
+        { id: 'cardano', name: 'Cardano', symbol: 'ADA' },
+        { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE' },
+        { id: 'avalanche-2', name: 'Avalanche', symbol: 'AVAX' }
+      ];
+
+      const predictionsRes = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coins: topCoins })
+      });
+
+      const predictionsData = await predictionsRes.json();
+
+      if (predictionsData.success && predictionsData.data) {
+        // Extract predictions
+        const predictions: CoinPrediction[] = predictionsData.data
+          .filter((p: { error?: string }) => !p.error)
+          .map((p: { coinId: string; coinName: string; prediction: string; confidence: number; riskLevel: string }) => ({
+            coinId: p.coinId,
+            coinName: p.coinName,
+            symbol: topCoins.find(c => c.id === p.coinId)?.symbol || '',
+            prediction: p.prediction,
+            confidence: p.confidence,
+            riskLevel: p.riskLevel,
+            priceChange24h: 0
+          }));
+
+        setTopPredictions(predictions);
+
+        // Calculate overall market prediction based on aggregated signals
+        const bullishCount = predictions.filter((p: CoinPrediction) => p.prediction === 'BULLISH').length;
+        const bearishCount = predictions.filter((p: CoinPrediction) => p.prediction === 'BEARISH').length;
+        const avgConfidence = predictions.reduce((sum: number, p: CoinPrediction) => sum + p.confidence, 0) / predictions.length;
+
+        let direction: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
+        if (bullishCount > bearishCount + 2) direction = 'BULLISH';
+        else if (bearishCount > bullishCount + 2) direction = 'BEARISH';
+
+        const overallScore = ((bullishCount - bearishCount) / predictions.length) * 50 + 50;
+
+        setMarketPrediction({
+          direction,
+          confidence: Math.round(avgConfidence),
+          riskLevel: avgConfidence > 60 ? 'LOW' : avgConfidence > 40 ? 'MEDIUM' : 'HIGH',
+          reasons: [
+            `${bullishCount} of ${predictions.length} top coins show bullish signals`,
+            direction === 'BULLISH' ? 'Overall market momentum positive' :
+            direction === 'BEARISH' ? 'Overall market momentum negative' :
+            'Mixed signals across major assets'
+          ],
+          overallScore: Math.round(overallScore)
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+    }
+  };
 
   // Fetch all data
   const fetchAllData = async () => {
     setLoading(true);
 
     try {
-      // Fetch all data in parallel
+      // Fetch all data in parallel (including predictions)
       const [macroRes, derivativesRes, onchainRes, sentimentRes, unlocksRes, stablecoinRes, defiRes] = await Promise.allSettled([
         fetch('/api/macro').then(r => r.json()),
         fetch('/api/derivatives').then(r => r.json()),
@@ -195,6 +284,9 @@ export default function MonitorPage() {
         fetch('https://api.llama.fi/stablecoins').then(r => r.json()),
         fetch('https://api.llama.fi/protocols').then(r => r.json())
       ]);
+
+      // Also fetch predictions
+      fetchPredictions();
 
       // Process macro data
       if (macroRes.status === 'fulfilled' && macroRes.value.success) {
@@ -414,6 +506,110 @@ export default function MonitorPage() {
                 <p className="text-sm text-gray-400">{macro.interpretation}</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* AI Market Prediction Banner */}
+        {marketPrediction && (
+          <div className={`mb-6 p-5 rounded-xl border ${
+            marketPrediction.direction === 'BULLISH'
+              ? 'bg-emerald-900/20 border-emerald-700/50'
+              : marketPrediction.direction === 'BEARISH'
+                ? 'bg-red-900/20 border-red-700/50'
+                : 'bg-yellow-900/20 border-yellow-700/50'
+          }`}>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${
+                  marketPrediction.direction === 'BULLISH' ? 'bg-emerald-500/20' :
+                  marketPrediction.direction === 'BEARISH' ? 'bg-red-500/20' : 'bg-yellow-500/20'
+                }`}>
+                  {marketPrediction.direction === 'BULLISH' ? (
+                    <TrendingUp className="w-8 h-8 text-emerald-400" />
+                  ) : marketPrediction.direction === 'BEARISH' ? (
+                    <TrendingDown className="w-8 h-8 text-red-400" />
+                  ) : (
+                    <Minus className="w-8 h-8 text-yellow-400" />
+                  )}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-purple-400" />
+                    <span className="text-gray-400 text-sm">AI Market Prediction</span>
+                  </div>
+                  <p className={`text-2xl font-bold ${
+                    marketPrediction.direction === 'BULLISH' ? 'text-emerald-400' :
+                    marketPrediction.direction === 'BEARISH' ? 'text-red-400' : 'text-yellow-400'
+                  }`}>
+                    {marketPrediction.direction}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <div className="flex items-center gap-1 text-gray-400 text-xs mb-1">
+                    <Target className="w-3 h-3" />
+                    Confidence
+                  </div>
+                  <p className="text-xl font-bold text-white">{marketPrediction.confidence}%</p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center gap-1 text-gray-400 text-xs mb-1">
+                    <Shield className="w-3 h-3" />
+                    Risk
+                  </div>
+                  <span className={`px-2 py-1 rounded text-sm font-medium ${
+                    marketPrediction.riskLevel === 'LOW' ? 'bg-emerald-500/20 text-emerald-400' :
+                    marketPrediction.riskLevel === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-red-500/20 text-red-400'
+                  }`}>
+                    {marketPrediction.riskLevel}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {marketPrediction.reasons.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-700/50">
+                <p className="text-gray-400 text-sm">{marketPrediction.reasons[0]}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Top Predictions Quick View */}
+        {topPredictions.length > 0 && (
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            {topPredictions.map((pred) => (
+              <Link
+                key={pred.coinId}
+                href={`/coin/${pred.coinId}`}
+                className={`p-3 rounded-lg border transition-all hover:scale-105 ${
+                  pred.prediction === 'BULLISH'
+                    ? 'bg-emerald-900/20 border-emerald-700/50 hover:bg-emerald-900/30'
+                    : pred.prediction === 'BEARISH'
+                      ? 'bg-red-900/20 border-red-700/50 hover:bg-red-900/30'
+                      : 'bg-gray-800 border-gray-700 hover:bg-gray-700'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-white">{pred.symbol}</span>
+                  {pred.prediction === 'BULLISH' ? (
+                    <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  ) : pred.prediction === 'BEARISH' ? (
+                    <TrendingDown className="w-4 h-4 text-red-400" />
+                  ) : (
+                    <Minus className="w-4 h-4 text-yellow-400" />
+                  )}
+                </div>
+                <p className={`text-xs ${
+                  pred.prediction === 'BULLISH' ? 'text-emerald-400' :
+                  pred.prediction === 'BEARISH' ? 'text-red-400' : 'text-yellow-400'
+                }`}>
+                  {pred.confidence}% conf
+                </p>
+              </Link>
+            ))}
           </div>
         )}
 
