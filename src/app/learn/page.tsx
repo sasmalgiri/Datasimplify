@@ -2,8 +2,31 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ProgressBar, BeginnerTip } from '@/components/ui/BeginnerHelpers';
+import { ProgressBar } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
+
+// Help Icon with tooltip for explanations
+function HelpIcon({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-green-700 text-green-200 text-xs flex items-center justify-center hover:bg-green-500 hover:text-white transition-colors font-bold">
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-green-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
 
 interface Lesson {
   id: string;
@@ -103,16 +126,22 @@ export default function LearnPage() {
       {/* Hero */}
       <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">📚 Crypto Academy</h1>
+          <div className="flex items-center gap-2 mb-4">
+            <h1 className="text-4xl font-bold">📚 Crypto Academy</h1>
+            <HelpIcon text="Free educational courses to learn cryptocurrency from scratch. Start with Basics and progress to advanced topics at your own pace." />
+          </div>
           <p className="text-xl text-green-100 mb-2">
             Learn crypto at your own pace. From absolute beginner to advanced trader.
           </p>
           <p className="text-green-200 mb-6">No login required • 100% Free</p>
-          
+
           {/* Overall Progress */}
           <div className="bg-white/10 backdrop-blur rounded-xl p-6 max-w-lg">
             <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">Your Progress</span>
+              <span className="font-medium flex items-center">
+                Your Progress
+                <HelpIcon text="Tracks how many lessons you've completed across all courses. Progress is saved in your browser." />
+              </span>
               <span className="font-bold">{completedLessons}/{totalLessons} lessons</span>
             </div>
             <div className="h-3 bg-white/20 rounded-full overflow-hidden">
@@ -135,11 +164,26 @@ export default function LearnPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Beginner Tip */}
+        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
+          <p className="text-blue-300 text-sm flex items-start gap-2">
+            <span>💡</span>
+            <span>
+              <strong>How to use:</strong> Click on any course card to see its lessons.
+              🔒 Locked lessons unlock as you complete previous ones.
+              ✓ Completed lessons can be reviewed anytime. Start with &quot;Crypto Basics&quot; if you&apos;re new!
+            </span>
+          </p>
+        </div>
+
         {/* Course Grid */}
         {!selectedCourse ? (
           <>
-            <h2 className="text-2xl font-bold mb-6">Choose a Course</h2>
-            
+            <h2 className="text-2xl font-bold mb-6 flex items-center">
+              Choose a Course
+              <HelpIcon text="Select a course based on your experience level. Beginner courses are great starting points, intermediate builds on basics, and advanced covers complex topics." />
+            </h2>
+
             <div className="grid md:grid-cols-2 gap-6">
               {courses.map((course) => (
                 <button

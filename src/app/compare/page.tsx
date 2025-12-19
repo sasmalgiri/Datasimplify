@@ -3,29 +3,50 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Tooltip Component - Shows on hover
+// Tooltip Component - Shows on hover with better visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
   const [isVisible, setIsVisible] = useState(false);
-  
+
   return (
-    <span 
-      className="relative inline-flex items-center group"
+    <span
+      className="relative inline-flex items-center"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
-      <span className="cursor-help border-b-2 border-dotted border-emerald-500/50 hover:border-emerald-400 transition-colors">
+      <span className="cursor-help border-b-2 border-dotted border-emerald-500 hover:border-emerald-400 hover:text-emerald-400 transition-colors">
         {children}
       </span>
       {/* Tooltip popup */}
-      <span 
-        className={`absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 text-sm text-white bg-gray-950 rounded-lg shadow-xl border border-gray-700 whitespace-nowrap transition-all duration-200 ${
-          isVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-1'
-        }`}
-      >
-        {text}
-        {/* Arrow */}
-        <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[200px] max-w-[300px] text-center">
+          {text}
+          {/* Arrow */}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Help icon with tooltip for coin selection
+function HelpIcon({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-gray-700 text-emerald-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors font-bold">
+        ?
       </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[250px] max-w-[350px] text-left">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
     </span>
   );
 }
@@ -226,7 +247,10 @@ export default function ComparePage() {
 
         {/* Coin Selection */}
         <div className="bg-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
-          <h2 className="text-lg font-semibold mb-4">Select Coins to Compare ({selectedIds.length}/10)</h2>
+          <h2 className="text-lg font-semibold mb-4 flex items-center">
+            Select Coins to Compare ({selectedIds.length}/10)
+            <HelpIcon text="Click on any coin to add or remove it from comparison. You can select up to 10 coins at once. Selected coins appear in green." />
+          </h2>
           <div className="flex flex-wrap gap-3">
             {TOP_COINS.map((coin) => {
               const isSelected = selectedIds.includes(coin.id);

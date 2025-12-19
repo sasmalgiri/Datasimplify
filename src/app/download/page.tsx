@@ -19,6 +19,41 @@ const SpinnerIcon = () => (
   </svg>
 );
 
+// Help Icon with Tooltip
+function HelpTooltip({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-gray-700 text-emerald-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors font-bold">
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Category explanations for tooltips
+const CATEGORY_EXPLANATIONS: Record<string, string> = {
+  'all': 'Show all available cryptocurrencies without any filter',
+  'layer1': 'Base blockchain networks like Bitcoin, Ethereum, Solana that process transactions directly',
+  'layer2': 'Solutions built on top of Layer 1 to improve speed and reduce costs (e.g., Polygon, Arbitrum)',
+  'defi': 'Decentralized Finance tokens for lending, trading, and earning interest without banks',
+  'gaming': 'Tokens used in blockchain games and virtual worlds (metaverse)',
+  'meme': 'Community-driven tokens often started as jokes (e.g., Dogecoin, Shiba Inu)',
+  'exchange': 'Tokens issued by crypto exchanges (e.g., BNB, FTT)',
+  'payments': 'Cryptocurrencies designed for fast, cheap payments (e.g., XRP, Litecoin)'
+};
+
 export default function DownloadPage() {
   // State
   const [selectedCategory, setSelectedCategory] = useState<DataCategory>('market_overview');
@@ -231,7 +266,10 @@ export default function DownloadPage() {
           <div className="lg:col-span-1 space-y-6">
             {/* Data Category */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">1️⃣ Select Data Type</h2>
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                1️⃣ Select Data Type
+                <HelpTooltip text="Choose what kind of data you want to download. Each type contains different information about cryptocurrencies." />
+              </h2>
               <div className="space-y-2">
                 {DATA_CATEGORIES.filter(c => !c.isPremium).map(category => (
                   <button
@@ -259,7 +297,10 @@ export default function DownloadPage() {
 
             {/* Format Selection */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">2️⃣ Select Format</h2>
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                2️⃣ Select Format
+                <HelpTooltip text="XLSX works with Excel/Google Sheets. CSV is universal and works anywhere. JSON is for programmers and APIs." />
+              </h2>
               <div className="flex space-x-2">
                 {(['xlsx', 'csv', 'json'] as const).map(format => (
                   <button
@@ -286,14 +327,20 @@ export default function DownloadPage() {
           {/* Middle Column - Filters */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">3️⃣ Customize Filters</h2>
-              
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                3️⃣ Customize Filters
+                <HelpTooltip text="Use these filters to narrow down the data you want to download. Each filter helps you get exactly what you need." />
+              </h2>
+
               {/* Market Overview Filters */}
               {selectedCategory === 'market_overview' && (
                 <div className="space-y-4">
                   {/* Category Filter */}
                   <div>
-                    <label htmlFor="coin-category" className="block text-sm text-gray-400 mb-2">Coin Category</label>
+                    <label htmlFor="coin-category" className="flex items-center text-sm text-gray-400 mb-2">
+                      Coin Category
+                      <HelpTooltip text={CATEGORY_EXPLANATIONS[selectedCoinCategory] || 'Filter coins by their type or use case'} />
+                    </label>
                     <select
                       id="coin-category"
                       value={selectedCoinCategory}
@@ -301,9 +348,9 @@ export default function DownloadPage() {
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
                     >
                       <option value="all">All Categories</option>
-                      <option value="layer1">Layer 1</option>
-                      <option value="layer2">Layer 2</option>
-                      <option value="defi">DeFi</option>
+                      <option value="layer1">Layer 1 (Base blockchains)</option>
+                      <option value="layer2">Layer 2 (Scaling solutions)</option>
+                      <option value="defi">DeFi (Decentralized Finance)</option>
                       <option value="gaming">Gaming/Metaverse</option>
                       <option value="meme">Meme Coins</option>
                       <option value="exchange">Exchange Tokens</option>
@@ -313,23 +360,29 @@ export default function DownloadPage() {
                   
                   {/* Sort By */}
                   <div>
-                    <label htmlFor="sort-by" className="block text-sm text-gray-400 mb-2">Sort By</label>
+                    <label htmlFor="sort-by" className="flex items-center text-sm text-gray-400 mb-2">
+                      Sort By
+                      <HelpTooltip text="Choose how to order the coins in your download. Market Cap shows the biggest coins first." />
+                    </label>
                     <select
                       id="sort-by"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
                     >
-                      <option value="market_cap">Market Cap</option>
-                      <option value="volume">24h Volume</option>
-                      <option value="price_change">Price Change %</option>
-                      <option value="price">Price</option>
+                      <option value="market_cap">Market Cap (Total Value)</option>
+                      <option value="volume">24h Volume (Trading Activity)</option>
+                      <option value="price_change">Price Change % (Performance)</option>
+                      <option value="price">Price (Current USD Value)</option>
                     </select>
                   </div>
-                  
+
                   {/* Min Market Cap */}
                   <div>
-                    <label htmlFor="min-market-cap" className="block text-sm text-gray-400 mb-2">Min Market Cap</label>
+                    <label htmlFor="min-market-cap" className="flex items-center text-sm text-gray-400 mb-2">
+                      Min Market Cap
+                      <HelpTooltip text="Filter out small coins. $1B+ shows only large, established cryptocurrencies. Smaller caps are riskier but may have more growth potential." />
+                    </label>
                     <select
                       id="min-market-cap"
                       value={minMarketCap}

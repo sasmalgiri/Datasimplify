@@ -6,6 +6,54 @@ import { useAuth } from '@/lib/auth';
 import Script from 'next/script';
 import { FreeNavbar } from '@/components/FreeNavbar';
 
+// Help Icon with tooltip for explanations
+function HelpIcon({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-gray-700 text-emerald-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors font-bold">
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Feature explanations for tooltips
+const FEATURE_EXPLANATIONS: Record<string, string> = {
+  '5 downloads per month': 'Download crypto data as Excel/CSV files. Great for trying out the service.',
+  '50 downloads per month': 'Export more data for regular analysis and research.',
+  'Unlimited downloads': 'No limits! Download as much data as you need.',
+  'Basic market data': 'Access to top 100 cryptocurrency prices and basic metrics.',
+  'All market data': 'Full access to all coins, historical data, and advanced metrics.',
+  'Limited AI chat': 'Ask 10 questions per day to our AI assistant about crypto.',
+  'AI chat (100 queries/day)': 'Get more AI-powered insights and analysis daily.',
+  'Full AI analysis': 'Unlimited AI queries plus advanced analysis features.',
+  'Community support': 'Get help through our community forum and guides.',
+  'Email support': 'Direct email support with 24-hour response time.',
+  'Priority support': 'Fast-track support with 4-hour response time.',
+  'Comparison tools': 'Compare multiple cryptocurrencies side by side.',
+  'Whale tracking alerts': 'Get notified when large investors make big moves.',
+  'Sentiment analysis': 'See market mood from social media and news analysis.',
+  'Custom templates': 'Create and save your own data export templates.',
+  'Everything in Pro': 'All features from the Pro plan included.',
+  'API access': 'Programmatic access to our data for developers.',
+  'White-label exports': 'Remove DataSimplify branding from your exports.',
+  'Custom data requests': 'Request specific data sets tailored to your needs.',
+  'Dedicated account manager': 'Personal contact for all your account needs.',
+  'SLA guarantee': 'Guaranteed 99.9% uptime with compensation for downtime.',
+};
+
 interface PricingInfo {
   available: boolean;
   country: string;
@@ -219,9 +267,23 @@ export default function PricingPage() {
         )}
 
         <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Beginner Tip */}
+          <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-8">
+            <p className="text-blue-300 text-sm flex items-start gap-2">
+              <span>💡</span>
+              <span>
+                <strong>Not sure which plan?</strong> Start with Free to try our features.
+                Hover over any feature to see what it includes. You can upgrade anytime!
+              </span>
+            </p>
+          </div>
+
           {/* Title */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <h1 className="text-4xl font-bold">Simple, Transparent Pricing</h1>
+              <HelpIcon text="Choose a plan based on your needs. All paid plans include a 7-day money-back guarantee. You can cancel or change plans anytime." />
+            </div>
             <p className="text-gray-400 text-lg mb-2">
               Start free, upgrade when you need more. Cancel anytime.
             </p>
@@ -258,7 +320,12 @@ export default function PricingPage() {
                   {tier.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="text-green-400 mt-1">✓</span>
-                      <span className="text-gray-300">{feature}</span>
+                      <span className="text-gray-300 flex items-center">
+                        {feature}
+                        {FEATURE_EXPLANATIONS[feature] && (
+                          <HelpIcon text={FEATURE_EXPLANATIONS[feature]} />
+                        )}
+                      </span>
                     </li>
                   ))}
                 </ul>

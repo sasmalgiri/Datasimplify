@@ -1,8 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
+
+// Help Icon with tooltip for explanations
+function HelpIcon({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-purple-700 text-purple-200 text-xs flex items-center justify-center hover:bg-purple-500 hover:text-white transition-colors font-bold">
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
 
 interface GlossaryTerm {
   term: string;
@@ -303,12 +325,15 @@ export default function GlossaryPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">📖 Crypto Glossary</h1>
+          <div className="flex items-center gap-2 mb-4">
+            <h1 className="text-4xl font-bold">📖 Crypto Glossary</h1>
+            <HelpIcon text="This glossary explains crypto terms in simple language. Click any term to see a detailed explanation with examples." />
+          </div>
           <p className="text-xl text-purple-100 mb-2">
             {glossaryTerms.length}+ terms explained in simple English
           </p>
           <p className="text-purple-200 mb-6">No login required • 100% Free</p>
-          
+
           {/* Search */}
           <div className="relative max-w-md">
             <input
@@ -326,6 +351,18 @@ export default function GlossaryPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Beginner Tip */}
+        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
+          <p className="text-blue-300 text-sm flex items-start gap-2">
+            <span>💡</span>
+            <span>
+              <strong>How to use:</strong> Search for any crypto term or click a category below to filter.
+              Click on any term to expand it and see a detailed explanation with real examples.
+              Related terms at the bottom let you explore connected concepts!
+            </span>
+          </p>
+        </div>
+
         {/* Categories */}
         <div className="flex flex-wrap gap-2 mb-6">
           {categories.map((cat) => (

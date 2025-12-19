@@ -117,28 +117,67 @@ export function ExplanationCard({
 }
 
 // Simple Tooltip Component
-export function Tooltip({ 
-  children, 
-  text 
-}: { 
-  children: ReactNode; 
+export function Tooltip({
+  children,
+  text,
+  position = 'top'
+}: {
+  children: ReactNode;
   text: string;
+  position?: 'top' | 'bottom' | 'left' | 'right';
 }) {
   const [isVisible, setIsVisible] = useState(false);
 
+  const positionClasses = {
+    top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
+    bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
+    left: 'right-full top-1/2 -translate-y-1/2 mr-2',
+    right: 'left-full top-1/2 -translate-y-1/2 ml-2'
+  };
+
+  const arrowClasses = {
+    top: 'top-full left-1/2 -translate-x-1/2 border-t-gray-800',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-800',
+    left: 'left-full top-1/2 -translate-y-1/2 border-l-gray-800',
+    right: 'right-full top-1/2 -translate-y-1/2 border-r-gray-800'
+  };
+
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-flex items-center">
       <span
         onMouseEnter={() => setIsVisible(true)}
         onMouseLeave={() => setIsVisible(false)}
-        className="cursor-help border-b border-dotted border-gray-400"
+        className="cursor-help border-b border-dotted border-emerald-400 text-emerald-400"
       >
         {children}
       </span>
       {isVisible && (
-        <span className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg whitespace-nowrap">
+        <span className={`absolute z-[100] ${positionClasses[position]} px-3 py-2 text-sm text-white bg-gray-800 rounded-lg shadow-lg max-w-xs`}>
           {text}
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
+          <span className={`absolute ${arrowClasses[position]} border-4 border-transparent`}></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Help Icon with Tooltip (for inline help)
+export function HelpTooltip({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span className="relative inline-flex items-center ml-1">
+      <span
+        onMouseEnter={() => setIsVisible(true)}
+        onMouseLeave={() => setIsVisible(false)}
+        className="cursor-help w-4 h-4 rounded-full bg-gray-700 text-gray-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors"
+      >
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[100] bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-gray-800 rounded-lg shadow-lg max-w-xs whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></span>
         </span>
       )}
     </span>

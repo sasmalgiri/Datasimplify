@@ -3,37 +3,58 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Tooltip Component for hover explanations
+// Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
   const [isVisible, setIsVisible] = useState(false);
-  
+
   return (
-    <span 
-      className="relative inline-flex items-center group"
+    <span
+      className="relative inline-flex items-center"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
     >
-      <span className="cursor-help border-b-2 border-dotted border-emerald-500/50 hover:border-emerald-400 transition-colors">
+      <span className="cursor-help border-b-2 border-dotted border-emerald-500 hover:border-emerald-400 hover:text-emerald-400 transition-colors">
         {children}
       </span>
       {/* Tooltip popup */}
-      <span 
-        className={`absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 text-sm text-white bg-gray-950 rounded-lg shadow-xl border border-gray-700 whitespace-nowrap transition-all duration-200 ${
-          isVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-1'
-        }`}
-      >
-        {text}
-        {/* Arrow */}
-        <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
-      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[200px] max-w-[300px] text-center whitespace-normal">
+          {text}
+          {/* Arrow */}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
     </span>
   );
 }
 
-// Info Button for mobile-friendly tooltips
+// Help Icon with tooltip
+function HelpIcon({ text }: { text: string }) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  return (
+    <span
+      className="relative inline-flex items-center ml-2"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help w-5 h-5 rounded-full bg-gray-700 text-emerald-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors font-bold">
+        ?
+      </span>
+      {isVisible && (
+        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
+          {text}
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Info Button for mobile-friendly tooltips (click to show)
 function InfoButton({ text }: { text: string }) {
   const [isVisible, setIsVisible] = useState(false);
-  
+
   return (
     <span className="relative inline-flex ml-1">
       <button
@@ -43,15 +64,15 @@ function InfoButton({ text }: { text: string }) {
         ?
       </button>
       {isVisible && (
-        <div className="absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-950 rounded-lg w-56 shadow-xl border border-gray-700">
+        <div className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg w-64 shadow-2xl border border-emerald-500/50">
           {text}
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); setIsVisible(false); }}
             className="absolute top-2 right-2 text-gray-400 hover:text-white text-lg leading-none"
           >
             ×
           </button>
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
         </div>
       )}
     </span>
