@@ -780,9 +780,9 @@ export default function DownloadPage() {
                     <span>{Math.max(0, 5 - downloadCount)} remaining</span>
                   </div>
                   <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-500 transition-all"
-                      style={{ width: `${Math.min((downloadCount / 5) * 100, 100)}%` }}
+                    <div
+                      className="h-full bg-emerald-500 progress-bar"
+                      style={{ '--progress-width': `${Math.min((downloadCount / 5) * 100, 100)}%` } as React.CSSProperties}
                     />
                   </div>
                 </div>

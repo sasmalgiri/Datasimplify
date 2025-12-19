@@ -145,9 +145,9 @@ export default function LearnPage() {
               <span className="font-bold">{completedLessons}/{totalLessons} lessons</span>
             </div>
             <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-white rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress}%` }}
+              <div
+                className="h-full bg-white rounded-full progress-bar"
+                style={{ '--progress-width': `${overallProgress}%` } as React.CSSProperties}
               />
             </div>
             <p className="text-green-100 text-sm mt-2">

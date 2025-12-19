@@ -274,9 +274,9 @@ export function ProgressBar({
         </div>
       )}
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${colorClasses[color]} transition-all duration-500`}
-          style={{ width: `${percentage}%` }}
+        <div
+          className={`h-full ${colorClasses[color]} progress-bar`}
+          style={{ '--progress-width': `${percentage}%` } as React.CSSProperties}
         />
       </div>
     </div>
