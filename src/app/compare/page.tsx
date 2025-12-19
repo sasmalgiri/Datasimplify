@@ -482,8 +482,10 @@ export default function ComparePage() {
             <div className="border-t border-gray-700 pt-4 mt-4 space-y-4">
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Sort Results By</label>
+                <label htmlFor="sort-select" className="block text-sm font-medium text-gray-400 mb-2">Sort Results By</label>
                 <select
+                  id="sort-select"
+                  title="Sort Results By"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="w-full md:w-64 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
