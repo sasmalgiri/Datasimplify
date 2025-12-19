@@ -35,7 +35,11 @@ export async function GET(request: Request) {
     }
 
     // Get high impact wallets with filters
-    const wallets = await getHighImpactWallets(limit, minImpact, type || undefined);
+    const wallets = await getHighImpactWallets({
+      limit,
+      minImpactScore: minImpact,
+      walletType: type || undefined,
+    });
 
     return NextResponse.json({
       count: wallets.length,

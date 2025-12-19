@@ -183,7 +183,7 @@ const AFFECTED_SECTORS = [
 // ============================================
 
 function checkSupabase() {
-  if (!isSupabaseConfigured() || !supabase) {
+  if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase is not configured');
   }
   return supabase;

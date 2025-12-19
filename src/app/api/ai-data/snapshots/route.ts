@@ -40,9 +40,9 @@ export async function GET(request: Request) {
     }
 
     // Get history
-    const snapshots = await getPredictionHistory(coin, startDate, endDate);
+    const snapshots = await getPredictionHistory(coin, { startDate, endDate, limit });
 
-    // Apply limit
+    // Apply limit (already applied by the function, but ensure consistency)
     const limitedSnapshots = snapshots.slice(0, limit);
 
     return NextResponse.json({

@@ -11,7 +11,7 @@ import { recordAdoptionSnapshot, getAdoptionSignalsForPrediction } from './adopt
 import { getWalletSignals, getHighImpactWallets } from './walletProfiler';
 import { fetchMacroData } from './macroData';
 import { fetchDerivativesData } from './derivativesData';
-import { fetchFearGreedIndex } from './sentiment';
+import { fetchFearGreedIndex } from './onChainData';
 import { rateLimiter } from './rateLimiter';
 
 // ============================================
@@ -230,13 +230,13 @@ async function fetchOnChainSignals(coinSymbol: string): Promise<{
 
     // Determine whale activity
     let whaleActivity = 'neutral';
-    if (walletSignals.whaleSentiment > 60) whaleActivity = 'accumulating';
-    else if (walletSignals.whaleSentiment < 40) whaleActivity = 'distributing';
+    if (walletSignals.whaleSentiment === 'bullish') whaleActivity = 'accumulating';
+    else if (walletSignals.whaleSentiment === 'bearish') whaleActivity = 'distributing';
 
     // Smart money direction
     let activeAddressesTrend = 'stable';
-    if (walletSignals.smartMoneyDirection === 'bullish') activeAddressesTrend = 'increasing';
-    else if (walletSignals.smartMoneyDirection === 'bearish') activeAddressesTrend = 'decreasing';
+    if (walletSignals.smartMoneyDirection === 'accumulating') activeAddressesTrend = 'increasing';
+    else if (walletSignals.smartMoneyDirection === 'distributing') activeAddressesTrend = 'decreasing';
 
     return {
       exchangeNetflow,
@@ -309,48 +309,48 @@ export async function createPredictionSnapshot(
       marketCap: marketData.marketCap,
 
       // Technical Indicators
-      rsi14: technicalData?.rsi14 ?? null,
-      macdSignal: technicalData?.macdSignal ?? 'unknown',
-      ma50Position: technicalData?.ma50Position ?? 'unknown',
-      ma200Position: technicalData?.ma200Position ?? 'unknown',
-      bollingerPosition: technicalData?.bollingerPosition ?? 'unknown',
+      rsi14: technicalData?.rsi14 ?? undefined,
+      macdSignal: technicalData?.macdSignal as 'bullish_cross' | 'bearish_cross' | 'neutral' | undefined,
+      ma50Position: technicalData?.ma50Position as 'above' | 'below' | 'near' | undefined,
+      ma200Position: technicalData?.ma200Position as 'above' | 'below' | 'near' | undefined,
+      bollingerPosition: technicalData?.bollingerPosition as 'upper' | 'middle' | 'lower' | undefined,
 
       // Sentiment Scores
-      fearGreedIndex: fearGreedData?.value ?? null,
+      fearGreedIndex: fearGreedData?.value,
       socialSentimentScore: sentimentSignals.overallScore,
       newsSentimentScore: newsSignals.overallNewsSentiment,
 
       // On-Chain Data
-      exchangeNetflow: onChainData.exchangeNetflow,
-      whaleActivity: onChainData.whaleActivity,
-      activeAddressesTrend: onChainData.activeAddressesTrend,
+      exchangeNetflow: onChainData.exchangeNetflow as 'inflow' | 'outflow' | 'neutral' | undefined,
+      whaleActivity: onChainData.whaleActivity as 'buying' | 'selling' | 'neutral' | undefined,
+      activeAddressesTrend: onChainData.activeAddressesTrend as 'increasing' | 'decreasing' | 'stable' | undefined,
 
       // Macro Environment
-      vix: macroData?.vix ?? null,
-      dxy: macroData?.dxy ?? null,
-      fedFundsRate: macroData?.fedFundsRate ?? null,
-      riskEnvironment: macroData?.riskEnvironment ?? 'unknown',
+      vix: macroData?.vix ?? undefined,
+      dxy: macroData?.dxy ?? undefined,
+      fedFundsRate: macroData?.fedFundsRate ?? undefined,
+      riskEnvironment: macroData?.riskEnvironment as 'risk_on' | 'risk_off' | 'neutral' | undefined,
 
       // Derivatives
-      btcFundingRate: derivativesData?.btcFundingRate ?? null,
-      ethFundingRate: derivativesData?.ethFundingRate ?? null,
-      openInterestChange: derivativesData?.openInterestChange ?? null,
-      liquidations24h: derivativesData?.liquidations24h ?? null,
+      btcFundingRate: derivativesData?.btc?.fundingRate ?? undefined,
+      ethFundingRate: derivativesData?.eth?.fundingRate ?? undefined,
+      openInterestChange: derivativesData?.btc?.openInterestChange24h ?? undefined,
+      liquidations24h: derivativesData?.totalLiquidations24h ?? undefined,
 
       // Prediction (will be filled if not skipped)
-      prediction: options?.skipPrediction ? null : undefined,
-      confidence: options?.skipPrediction ? null : undefined,
-      riskLevel: options?.skipPrediction ? null : undefined,
-      reasons: options?.skipPrediction ? null : undefined,
+      prediction: undefined as 'BULLISH' | 'BEARISH' | 'NEUTRAL' | undefined,
+      confidence: undefined as number | undefined,
+      riskLevel: undefined as 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' | undefined,
+      reasons: undefined as string[] | undefined,
     };
 
     // Generate prediction if not skipped
     if (!options?.skipPrediction) {
-      const prediction = generateLocalPrediction(snapshotData);
-      snapshotData.prediction = prediction.prediction;
-      snapshotData.confidence = prediction.confidence;
-      snapshotData.riskLevel = prediction.riskLevel;
-      snapshotData.reasons = prediction.reasons;
+      const predictionResult = generateLocalPrediction(snapshotData);
+      snapshotData.prediction = predictionResult.prediction as 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+      snapshotData.confidence = predictionResult.confidence;
+      snapshotData.riskLevel = predictionResult.riskLevel as 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
+      snapshotData.reasons = predictionResult.reasons;
     }
 
     // Save to database
@@ -628,7 +628,8 @@ export async function runFullIngestion(
             snapshotId: latest.id!,
             coinId,
             snapshotTimestamp: latest.timestamp,
-            features: latest,
+            features: latest as unknown as Record<string, unknown>,
+            priceAtSnapshot: latest.price ?? 0,
           });
         }
       }
@@ -670,7 +671,11 @@ export async function backfillHistoricalData(): Promise<{
   errors: string[];
 }> {
   const result = await backfillActualResults();
-  return result;
+  return {
+    success: result.errors === 0,
+    updated: result.updated,
+    errors: result.errors > 0 ? [`${result.errors} errors occurred during backfill`] : [],
+  };
 }
 
 /**

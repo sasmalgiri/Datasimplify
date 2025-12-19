@@ -114,7 +114,7 @@ const ADOPTION_PHASES = {
 // ============================================
 
 function checkSupabase() {
-  if (!isSupabaseConfigured() || !supabase) {
+  if (!isSupabaseConfigured || !supabase) {
     throw new Error('Supabase is not configured');
   }
   return supabase;
@@ -447,10 +447,10 @@ export async function getAdoptionTrends(
 
   for (const metric of metrics) {
     const values = history
-      .filter(h => (h as Record<string, unknown>)[metric.key] !== null)
+      .filter(h => (h as unknown as Record<string, unknown>)[metric.key] !== null)
       .map(h => ({
         timestamp: h.timestamp,
-        value: (h as Record<string, unknown>)[metric.key] as number,
+        value: (h as unknown as Record<string, unknown>)[metric.key] as number,
       }))
       .reverse();
 

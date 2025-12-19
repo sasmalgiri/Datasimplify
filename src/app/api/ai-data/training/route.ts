@@ -6,6 +6,21 @@
 import { NextResponse } from 'next/server';
 import { getTrainingData, getTrainingDataStats } from '@/lib/predictionDb';
 
+// Training data record type
+interface TrainingDataRecord {
+  id: string;
+  coinId: string;
+  snapshotTimestamp: Date;
+  features: Record<string, unknown>;
+  price1hLater?: number;
+  price24hLater?: number;
+  price7dLater?: number;
+  actualDirection24h?: string;
+  actualChangePct24h?: number;
+  predictionWasCorrect?: boolean;
+  predictionError?: string;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -23,11 +38,12 @@ export async function GET(request: Request) {
     }
 
     // Get training data
-    const data = await getTrainingData({
+    const rawData = await getTrainingData({
       coinId: coin || undefined,
       limit,
-      onlyWithOutcome: !includeNulls,
+      onlyValidated: !includeNulls,
     });
+    const data = rawData as TrainingDataRecord[];
 
     // Filter for correct predictions if requested
     let filteredData = data;
