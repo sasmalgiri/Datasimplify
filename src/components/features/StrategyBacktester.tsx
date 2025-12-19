@@ -77,9 +77,7 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Generate mock results based on strategy
-    const strategy = presetStrategies.find(s => s.id === selectedStrategy);
-    
+    // Generate mock results based on selected strategy
     let mockResult: BacktestResult;
     
     switch (selectedStrategy) {
@@ -207,11 +205,14 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
           {/* Settings */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Coin</label>
+              <label htmlFor="coin-select" className="block text-sm font-medium text-gray-700 mb-1">Coin</label>
               <select
+                id="coin-select"
                 value={coin}
                 onChange={(e) => setCoin(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                title="Select cryptocurrency to backtest"
+                aria-label="Select cryptocurrency to backtest"
               >
                 <option value="BTC">Bitcoin (BTC)</option>
                 <option value="ETH">Ethereum (ETH)</option>
@@ -219,11 +220,14 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
+              <label htmlFor="period-select" className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
               <select
+                id="period-select"
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                title="Select time period for backtest"
+                aria-label="Select time period for backtest"
               >
                 <option value="6m">6 Months</option>
                 <option value="1y">1 Year</option>
@@ -234,10 +238,11 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="amount-range" className="block text-sm font-medium text-gray-700 mb-1">
               Starting Amount: ${initialAmount.toLocaleString()}
             </label>
             <input
+              id="amount-range"
               type="range"
               min="100"
               max="10000"
@@ -245,10 +250,12 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
               value={initialAmount}
               onChange={(e) => setInitialAmount(Number(e.target.value))}
               className="w-full"
+              aria-label={`Starting amount: $${initialAmount.toLocaleString()}`}
             />
           </div>
 
           <button
+            type="button"
             onClick={runBacktest}
             disabled={!selectedStrategy || isBacktesting}
             className={`w-full py-3 rounded-lg font-bold transition-colors ${

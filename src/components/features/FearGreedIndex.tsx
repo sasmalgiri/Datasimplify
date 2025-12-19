@@ -1,7 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+
+// Bar component using ref to set height dynamically (avoids inline style attribute)
+function HistoryBar({ height, bgClass, title }: { height: number; bgClass: string; title: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safeHeight = Math.round(Math.max(0, Math.min(100, height)));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.height = `${safeHeight}%`;
+    }
+  }, [safeHeight]);
+
+  return (
+    <div
+      ref={barRef}
+      className={`flex-1 ${bgClass} rounded-t transition-all hover:opacity-80`}
+      title={title}
+      role="img"
+      aria-label={title}
+    />
+  );
+}
 
 interface FearGreedData {
   value: number;
@@ -214,16 +236,16 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
           <div className="flex items-end gap-1 h-20">
             {history.slice().reverse().map((item, index) => {
               const height = (parseInt(item.value.toString()) / 100) * 100;
-              const bg = parseInt(item.value.toString()) <= 40 
-                ? 'bg-red-400' 
-                : parseInt(item.value.toString()) <= 60 
-                ? 'bg-yellow-400' 
+              const bg = parseInt(item.value.toString()) <= 40
+                ? 'bg-red-400'
+                : parseInt(item.value.toString()) <= 60
+                ? 'bg-yellow-400'
                 : 'bg-green-400';
               return (
-                <div
+                <HistoryBar
                   key={index}
-                  className={`flex-1 ${bg} rounded-t transition-all hover:opacity-80`}
-                  style={{ height: `${height}%` }}
+                  height={height}
+                  bgClass={bg}
                   title={`${item.value} - ${getEmoji(parseInt(item.value.toString())).label}`}
                 />
               );

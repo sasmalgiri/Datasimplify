@@ -1,7 +1,31 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+
+// Progress bar component that uses CSS custom properties instead of inline styles
+function ProgressBar({ percentage, label }: { percentage: number; label: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const roundedPercentage = Math.round(percentage);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${roundedPercentage}%`);
+    }
+  }, [roundedPercentage]);
+
+  return (
+    <div
+      ref={barRef}
+      className="h-full bg-purple-500 progress-bar"
+      role="progressbar"
+      aria-valuenow={roundedPercentage}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label}
+    />
+  );
+}
 
 interface Protocol {
   id: string;
@@ -61,7 +85,8 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
   const [yields, setYields] = useState<YieldPool[]>([]);
   const [activeTab, setActiveTab] = useState<'protocols' | 'chains' | 'yields'>('protocols');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [chainFilter, setChainFilter] = useState('all');
+  // chainFilter kept for future use
+  const [chainFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -264,6 +289,7 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
           { id: 'yields' as const, label: '💰 Best Yields' },
         ].map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 font-medium transition-colors ${
@@ -286,6 +312,8 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              title="Filter protocols by category"
+              aria-label="Filter protocols by category"
             >
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
@@ -373,9 +401,9 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
               </div>
               <div className="w-32">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-purple-500"
-                    style={{ width: `${(chain.tvl / chains[0].tvl) * 100}%` }}
+                  <ProgressBar
+                    percentage={(chain.tvl / chains[0].tvl) * 100}
+                    label={`${chain.name} TVL percentage`}
                   />
                 </div>
               </div>

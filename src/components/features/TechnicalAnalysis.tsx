@@ -1,7 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+
+// Signal bar segment using ref to set width dynamically (avoids inline style attribute)
+function SignalBarSegment({ width, className }: { width: number; className: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safeWidth = Math.max(0, Math.min(100, width || 0));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${safeWidth}%`;
+    }
+  }, [safeWidth]);
+
+  return <div ref={barRef} className={className} />;
+}
 
 interface TechnicalIndicator {
   name: string;
@@ -216,9 +230,9 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {/* Signal Summary Bar */}
       <div className="mb-6">
         <div className="flex h-4 rounded-full overflow-hidden">
-          <div className="bg-green-500" style={{ width: `${(buySignals / indicators.length) * 100}%` }} />
-          <div className="bg-gray-300" style={{ width: `${(neutralSignals / indicators.length) * 100}%` }} />
-          <div className="bg-red-500" style={{ width: `${(sellSignals / indicators.length) * 100}%` }} />
+          <SignalBarSegment width={(buySignals / indicators.length) * 100} className="bg-green-500" />
+          <SignalBarSegment width={(neutralSignals / indicators.length) * 100} className="bg-gray-300" />
+          <SignalBarSegment width={(sellSignals / indicators.length) * 100} className="bg-red-500" />
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1">
           <span>Buy ({Math.round((buySignals / indicators.length) * 100)}%)</span>

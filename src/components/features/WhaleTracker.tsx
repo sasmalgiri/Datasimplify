@@ -1,7 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { BeginnerTip, InfoButton, TrafficLight } from '../ui/BeginnerHelpers';
+
+// Progress bar using ref to set width dynamically (avoids inline style attribute)
+function DistributionBar({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safeWidth = Math.max(0, Math.min(100, percentage || 0));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${safeWidth}%`;
+    }
+  }, [safeWidth]);
+
+  return <div ref={barRef} className={`h-full rounded-full ${colorClass}`} />;
+}
 
 interface WhaleTransaction {
   id: string;
@@ -352,14 +366,14 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
                     </div>
                   </div>
                   <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${
+                    <DistributionBar
+                      percentage={cat.percentage}
+                      colorClass={
                         cat.category === 'Humpbacks' || cat.category === 'Whales' ? 'bg-blue-600' :
                         cat.category === 'Sharks' ? 'bg-blue-500' :
                         cat.category === 'Fish' ? 'bg-blue-400' :
                         'bg-blue-300'
-                      }`}
-                      style={{ width: `${cat.percentage}%` }}
+                      }
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{cat.description}</p>

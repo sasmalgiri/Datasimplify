@@ -1,7 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BeginnerTip, InfoButton, TrafficLight } from '../ui/BeginnerHelpers';
+
+// Sentiment bar segment using ref to set width dynamically (avoids inline style attribute)
+function SentimentBarSegment({ width, className }: { width: number; className: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safeWidth = Math.max(0, Math.min(100, width || 0));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${safeWidth}%`;
+    }
+  }, [safeWidth]);
+
+  return <div ref={barRef} className={className} />;
+}
 
 interface SocialData {
   id: string;
@@ -208,9 +222,9 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
               
               {/* Mini sentiment bar */}
               <div className="flex h-2 mt-2 rounded-full overflow-hidden">
-                <div className="bg-green-500" style={{ width: `${coin.bullish_percent}%` }} />
-                <div className="bg-gray-300" style={{ width: `${coin.neutral_percent}%` }} />
-                <div className="bg-red-500" style={{ width: `${coin.bearish_percent}%` }} />
+                <SentimentBarSegment width={coin.bullish_percent} className="bg-green-500" />
+                <SentimentBarSegment width={coin.neutral_percent} className="bg-gray-300" />
+                <SentimentBarSegment width={coin.bearish_percent} className="bg-red-500" />
               </div>
             </button>
           ))}
@@ -244,7 +258,7 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                     <span className="font-bold">{selectedCoin.bullish_percent}%</span>
                   </div>
                   <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500" style={{ width: `${selectedCoin.bullish_percent}%` }} />
+                    <SentimentBarSegment width={selectedCoin.bullish_percent} className="h-full bg-green-500" />
                   </div>
                 </div>
                 <div>
@@ -253,7 +267,7 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                     <span className="font-bold">{selectedCoin.neutral_percent}%</span>
                   </div>
                   <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-gray-400" style={{ width: `${selectedCoin.neutral_percent}%` }} />
+                    <SentimentBarSegment width={selectedCoin.neutral_percent} className="h-full bg-gray-400" />
                   </div>
                 </div>
                 <div>
@@ -262,7 +276,7 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                     <span className="font-bold">{selectedCoin.bearish_percent}%</span>
                   </div>
                   <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-red-500" style={{ width: `${selectedCoin.bearish_percent}%` }} />
+                    <SentimentBarSegment width={selectedCoin.bearish_percent} className="h-full bg-red-500" />
                   </div>
                 </div>
               </div>

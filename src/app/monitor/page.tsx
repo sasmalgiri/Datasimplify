@@ -1,8 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus, Brain, Target, Shield } from 'lucide-react';
+
+// Progress bar component using CSS custom properties to avoid inline styles
+function ProgressBarRef({ percentage, className, label }: { percentage: number; className: string; label: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safePercentage = Math.round(Math.max(0, Math.min(100, percentage || 0)));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--progress-width', `${safePercentage}%`);
+    }
+  }, [safePercentage]);
+
+  return (
+    <div
+      ref={barRef}
+      className={`${className} progress-bar`}
+      role="progressbar"
+      aria-valuenow={safePercentage}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label}
+      title={label}
+    />
+  );
+}
+
+// Fear/Greed marker component using ref to set position dynamically (avoids inline style attribute)
+function FearGreedMarker({ position }: { position: number }) {
+  const markerRef = useRef<HTMLDivElement>(null);
+  const safePosition = Math.max(0, Math.min(100, position || 0));
+
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.style.left = `${safePosition}%`;
+    }
+  }, [safePosition]);
+
+  return (
+    <div
+      ref={markerRef}
+      className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-5 bg-white rounded-sm shadow"
+    />
+  );
+}
 
 // Types
 interface MacroData {
@@ -729,9 +773,10 @@ export default function MonitorPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm w-12">USDT</span>
                     <div className="flex-1 bg-gray-700 rounded-full h-3 overflow-hidden">
-                      <div
+                      <ProgressBarRef
+                        percentage={stablecoins?.usdtDominance || 0}
                         className="bg-green-500 h-full rounded-full"
-                        style={{ width: `${stablecoins?.usdtDominance || 0}%` }}
+                        label={`USDT dominance: ${formatNumber(stablecoins?.usdtDominance, 1)}%`}
                       />
                     </div>
                     <span className="text-sm text-gray-400 w-12 text-right">
@@ -741,9 +786,10 @@ export default function MonitorPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm w-12">USDC</span>
                     <div className="flex-1 bg-gray-700 rounded-full h-3 overflow-hidden">
-                      <div
+                      <ProgressBarRef
+                        percentage={stablecoins?.usdcDominance || 0}
                         className="bg-blue-500 h-full rounded-full"
-                        style={{ width: `${stablecoins?.usdcDominance || 0}%` }}
+                        label={`USDC dominance: ${formatNumber(stablecoins?.usdcDominance, 1)}%`}
                       />
                     </div>
                     <span className="text-sm text-gray-400 w-12 text-right">
@@ -830,10 +876,7 @@ export default function MonitorPage() {
               </div>
               <div className="h-3 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full mb-2 relative">
                 {sentiment?.fearGreedIndex && (
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-3 h-5 bg-white rounded-sm shadow"
-                    style={{ left: `${sentiment.fearGreedIndex}%`, transform: 'translate(-50%, -50%)' }}
-                  />
+                  <FearGreedMarker position={sentiment.fearGreedIndex} />
                 )}
               </div>
               <div className="flex justify-between text-xs text-gray-400">
