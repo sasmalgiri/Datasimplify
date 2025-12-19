@@ -409,32 +409,34 @@ export default function MarketPage() {
           </p>
         </div>
 
+        {/* Table Header Explanations - shown above table to avoid overflow clipping */}
+        <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700">
+          <p className="text-gray-400 text-sm mb-2 font-medium">📊 Column Guide:</p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">Coin:</span> Name & symbol</span>
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">Price:</span> Current USD price</span>
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">24h %:</span> Price change in 24 hours</span>
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">Market Cap:</span> Price × Supply</span>
+            <span className="text-gray-300"><span className="text-emerald-400 font-medium">Volume:</span> 24h trading activity</span>
+          </div>
+        </div>
+
         {/* Coins Table */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-lg border border-gray-700">
             <table className="w-full">
-              <thead>
+              <thead className="bg-gray-800">
                 <tr className="border-b border-gray-700">
                   <th className="px-4 py-4 text-left text-gray-400 font-medium">#</th>
-                  <th className="px-4 py-4 text-left text-gray-400 font-medium">
-                    <Tooltip text="The cryptocurrency's name and trading symbol">Coin</Tooltip>
-                  </th>
-                  <th className="px-4 py-4 text-right text-gray-400 font-medium">
-                    <Tooltip text="Current price in US Dollars">Price</Tooltip>
-                  </th>
-                  <th className="px-4 py-4 text-right text-gray-400 font-medium">
-                    <Tooltip text="Percentage change in the last 24 hours">24h %</Tooltip>
-                  </th>
-                  <th className="px-4 py-4 text-right text-gray-400 font-medium">
-                    <Tooltip text="Total value = price × circulating supply">Market Cap</Tooltip>
-                  </th>
-                  <th className="px-4 py-4 text-right text-gray-400 font-medium">
-                    <Tooltip text="Total trading volume in the last 24 hours">Volume (24h)</Tooltip>
-                  </th>
+                  <th className="px-4 py-4 text-left text-emerald-400 font-medium">Coin</th>
+                  <th className="px-4 py-4 text-right text-emerald-400 font-medium">Price</th>
+                  <th className="px-4 py-4 text-right text-emerald-400 font-medium">24h %</th>
+                  <th className="px-4 py-4 text-right text-emerald-400 font-medium">Market Cap</th>
+                  <th className="px-4 py-4 text-right text-emerald-400 font-medium">Volume (24h)</th>
                   <th className="px-4 py-4 text-center text-gray-400 font-medium">Action</th>
                 </tr>
               </thead>
