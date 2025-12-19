@@ -60,5 +60,7 @@ ollama pull llama3.2
 
 If you see errors:
 1. Make sure you ran `npm install`
-2. Create `.env.local` from `.env.example` and set values
+2. Make sure `.env.local` exists (it should!)
 3. Check that Supabase schema was created
+
+If Supabase isn't connecting, confirm your `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`.

@@ -8,20 +8,24 @@ function Tooltip({ children, text }: { children: React.ReactNode; text: string }
   const [isVisible, setIsVisible] = useState(false);
   
   return (
-    <span className="relative inline-flex items-center">
-      <span
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        className="cursor-help border-b border-dotted border-gray-500"
-      >
+    <span 
+      className="relative inline-flex items-center group"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help border-b-2 border-dotted border-emerald-500/50 hover:border-emerald-400 transition-colors">
         {children}
       </span>
-      {isVisible && (
-        <span className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg whitespace-nowrap shadow-lg">
-          {text}
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-        </span>
-      )}
+      {/* Tooltip popup */}
+      <span 
+        className={`absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 text-sm text-white bg-gray-950 rounded-lg shadow-xl border border-gray-700 whitespace-nowrap transition-all duration-200 ${
+          isVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-1'
+        }`}
+      >
+        {text}
+        {/* Arrow */}
+        <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
+      </span>
     </span>
   );
 }
@@ -33,20 +37,21 @@ function InfoButton({ text }: { text: string }) {
   return (
     <span className="relative inline-flex ml-1">
       <button
-        onClick={() => setIsVisible(!isVisible)}
-        className="w-4 h-4 rounded-full bg-gray-700 text-gray-300 text-[10px] hover:bg-emerald-600 hover:text-white transition-colors"
+        onClick={(e) => { e.stopPropagation(); setIsVisible(!isVisible); }}
+        className="w-5 h-5 rounded-full bg-emerald-600/30 text-emerald-400 text-xs font-bold hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/50"
       >
         ?
       </button>
       {isVisible && (
-        <div className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-800 rounded-lg w-48 shadow-lg border border-gray-700">
+        <div className="absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-3 text-sm text-white bg-gray-950 rounded-lg w-56 shadow-xl border border-gray-700">
           {text}
           <button 
-            onClick={() => setIsVisible(false)}
-            className="absolute top-1 right-1 text-gray-400 hover:text-white"
+            onClick={(e) => { e.stopPropagation(); setIsVisible(false); }}
+            className="absolute top-2 right-2 text-gray-400 hover:text-white text-lg leading-none"
           >
             ×
           </button>
+          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
         </div>
       )}
     </span>

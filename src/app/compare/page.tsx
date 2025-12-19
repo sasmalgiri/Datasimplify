@@ -3,25 +3,29 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Tooltip Component
+// Tooltip Component - Shows on hover
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
   const [isVisible, setIsVisible] = useState(false);
   
   return (
-    <span className="relative inline-flex items-center">
-      <span
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        className="cursor-help border-b border-dotted border-gray-500"
-      >
+    <span 
+      className="relative inline-flex items-center group"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      <span className="cursor-help border-b-2 border-dotted border-emerald-500/50 hover:border-emerald-400 transition-colors">
         {children}
       </span>
-      {isVisible && (
-        <span className="absolute z-50 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 text-xs text-white bg-gray-900 rounded-lg whitespace-nowrap shadow-lg">
-          {text}
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></span>
-        </span>
-      )}
+      {/* Tooltip popup */}
+      <span 
+        className={`absolute z-[100] bottom-full left-1/2 transform -translate-x-1/2 mb-3 px-4 py-2 text-sm text-white bg-gray-950 rounded-lg shadow-xl border border-gray-700 whitespace-nowrap transition-all duration-200 ${
+          isVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-1'
+        }`}
+      >
+        {text}
+        {/* Arrow */}
+        <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-950"></span>
+      </span>
     </span>
   );
 }

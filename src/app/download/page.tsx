@@ -39,9 +39,37 @@ export default function DownloadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[] | null>(null);
+  const [selectedFields, setSelectedFields] = useState<string[]>([]);
 
   // Get category info
   const categoryInfo = DATA_CATEGORIES.find(c => c.id === selectedCategory);
+
+  // Initialize selected fields when category changes
+  useEffect(() => {
+    if (categoryInfo?.fields) {
+      setSelectedFields(categoryInfo.fields);
+    }
+  }, [selectedCategory, categoryInfo]);
+
+  // Toggle field selection
+  const toggleField = (field: string) => {
+    setSelectedFields(prev => 
+      prev.includes(field)
+        ? prev.filter(f => f !== field)
+        : [...prev, field]
+    );
+  };
+
+  // Select/Deselect all fields
+  const selectAllFields = () => {
+    if (categoryInfo?.fields) {
+      setSelectedFields(categoryInfo.fields);
+    }
+  };
+
+  const deselectAllFields = () => {
+    setSelectedFields([]);
+  };
 
   // Get unique coin categories
   const coinCategories = ['all', ...new Set(SUPPORTED_COINS.map(c => c.category))];
@@ -68,6 +96,25 @@ export default function DownloadPage() {
         : [...prev, symbol]
     );
   };
+
+  // Filter preview data to only show selected fields
+  const filteredPreviewData = previewData?.map(row => {
+    const filtered: Record<string, unknown> = {};
+    selectedFields.forEach(field => {
+      if (row.hasOwnProperty(field)) {
+        filtered[field] = row[field];
+      }
+    });
+    return filtered;
+  });
+
+  // Auto-fetch preview when category changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchPreview();
+    }, 500); // Debounce 500ms
+    return () => clearTimeout(timer);
+  }, [selectedCategory, selectedInterval, selectedLimit, selectedDepth]);
 
   // Fetch preview data
   const fetchPreview = async () => {
@@ -523,61 +570,125 @@ export default function DownloadPage() {
           <div className="lg:col-span-1 space-y-6">
             {/* Data Preview */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">📋 Data Preview</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">📋 Data Preview</h2>
+                <button
+                  onClick={fetchPreview}
+                  disabled={isLoading}
+                  className="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition disabled:opacity-50"
+                >
+                  {isLoading ? 'Loading...' : '🔄 Refresh'}
+                </button>
+              </div>
               
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <SpinnerIcon />
                   <span className="ml-2 text-gray-400">Loading preview...</span>
                 </div>
-              ) : previewData && previewData.length > 0 ? (
+              ) : filteredPreviewData && filteredPreviewData.length > 0 && selectedFields.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-800">
-                        {Object.keys(previewData[0]).slice(0, 4).map(key => (
-                          <th key={key} className="text-left text-gray-500 py-2 px-1">
+                        {selectedFields.slice(0, 5).map(key => (
+                          <th key={key} className="text-left text-emerald-400 py-2 px-2 font-medium text-xs">
                             {key}
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {previewData.map((row, i) => (
-                        <tr key={i} className="border-b border-gray-800/50">
-                          {Object.values(row).slice(0, 4).map((val, j) => (
-                            <td key={j} className="text-gray-300 py-2 px-1 truncate max-w-[100px]">
-                              {typeof val === 'number' 
-                                ? val > 1000000 
-                                  ? `$${(val / 1000000).toFixed(2)}M`
-                                  : val.toFixed(4)
-                                : String(val).slice(0, 15)}
+                      {filteredPreviewData.slice(0, 5).map((row, i) => (
+                        <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                          {selectedFields.slice(0, 5).map((field, j) => (
+                            <td key={j} className="text-gray-300 py-2 px-2 text-xs truncate max-w-[80px]">
+                              {row[field] !== undefined 
+                                ? typeof row[field] === 'number'
+                                  ? (row[field] as number) > 1000000 
+                                    ? `$${((row[field] as number) / 1000000).toFixed(2)}M`
+                                    : (row[field] as number) > 1
+                                      ? (row[field] as number).toFixed(2)
+                                      : (row[field] as number).toFixed(6)
+                                  : String(row[field]).slice(0, 12)
+                                : '-'}
                             </td>
                           ))}
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  <p className="text-xs text-gray-600 mt-2">Showing first 5 rows...</p>
+                  <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+                    <span>Showing {Math.min(5, filteredPreviewData.length)} rows × {Math.min(5, selectedFields.length)} fields</span>
+                    {selectedFields.length > 5 && (
+                      <span className="text-emerald-400">+{selectedFields.length - 5} more fields in download</span>
+                    )}
+                  </div>
+                </div>
+              ) : selectedFields.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-yellow-400 text-sm">⚠️ Select at least 1 field</p>
+                  <p className="text-gray-500 text-xs mt-1">Choose fields from "Select Fields" below</p>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No preview available</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No preview available</p>
+                  <button
+                    onClick={fetchPreview}
+                    className="mt-2 text-xs text-emerald-400 hover:underline"
+                  >
+                    Click to load preview
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Data Fields Info */}
+            {/* Data Fields Info - Now Interactive! */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">📄 Included Fields</h2>
-              <div className="flex flex-wrap gap-2">
-                {categoryInfo?.fields.map(field => (
-                  <span
-                    key={field}
-                    className="px-2 py-1 bg-gray-800 text-gray-400 text-xs rounded"
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white">📄 Select Fields</h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={selectAllFields}
+                    className="text-xs px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded hover:bg-emerald-600/30 transition"
                   >
-                    {field}
-                  </span>
-                ))}
+                    All
+                  </button>
+                  <button
+                    onClick={deselectAllFields}
+                    className="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 transition"
+                  >
+                    None
+                  </button>
+                </div>
               </div>
+              
+              {/* Toggleable Fields */}
+              <div className="flex flex-wrap gap-2">
+                {categoryInfo?.fields.map(field => {
+                  const isSelected = selectedFields.includes(field);
+                  return (
+                    <button
+                      key={field}
+                      onClick={() => toggleField(field)}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
+                        isSelected
+                          ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+                          : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-600'
+                      }`}
+                    >
+                      {isSelected && <span className="mr-1">✓</span>}
+                      {field}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Selected count */}
+              <p className="text-xs text-gray-500 mt-3">
+                {selectedFields.length} of {categoryInfo?.fields.length || 0} fields selected
+              </p>
+              
               <div className="mt-4 pt-4 border-t border-gray-800">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Source:</span>
@@ -600,11 +711,28 @@ export default function DownloadPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400">Plan:</span>
-                  <span className="text-green-400 font-medium">Free (Unlimited)</span>
+                  <span className="text-emerald-400 font-medium">Free Tier</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Limit:</span>
+                  <span className="text-white font-medium">5 downloads/month</span>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-2">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Used: {downloadCount}/5</span>
+                    <span>{Math.max(0, 5 - downloadCount)} remaining</span>
+                  </div>
+                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all"
+                      style={{ width: `${Math.min((downloadCount / 5) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
-                ✨ All downloads are FREE - powered by Binance public API
+                💡 <a href="/signup" className="text-emerald-400 hover:underline">Create an account</a> to track your usage and unlock more downloads!
               </p>
             </div>
           </div>
