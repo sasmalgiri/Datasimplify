@@ -26,6 +26,7 @@ export interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
   canDownload: () => boolean;
   remainingDownloads: () => number;
 }
@@ -202,9 +203,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
       if (error) {
+        // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
           return { error: new Error('Server configuration error. Please contact support.') };
         }
+        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+          return { error: new Error('EMAIL_NOT_VERIFIED') };
+        }
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
+        }
+        return { error: new Error(error.message) };
+      }
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  // Resend verification email
+  const resendVerificationEmail = async (email: string) => {
+    if (!supabase) {
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
+    }
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
         return { error: new Error(error.message) };
       }
       return { error: null };
@@ -259,6 +289,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         refreshProfile,
+        resendVerificationEmail,
         canDownload,
         remainingDownloads,
       }}

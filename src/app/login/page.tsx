@@ -10,7 +10,10 @@ function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const { signIn, resendVerificationEmail } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
@@ -19,12 +22,18 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowVerificationMessage(false);
+    setResendSuccess(false);
     setIsLoading(true);
 
     const { error } = await signIn(email, password);
 
     if (error) {
-      setError(error.message);
+      if (error.message === 'EMAIL_NOT_VERIFIED') {
+        setShowVerificationMessage(true);
+      } else {
+        setError(error.message);
+      }
       setIsLoading(false);
     } else {
       // Redirect to checkout if plan selected, otherwise dashboard
@@ -34,6 +43,24 @@ function LoginForm() {
         router.push(redirect);
       }
     }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    setResendLoading(true);
+    setResendSuccess(false);
+
+    const { error } = await resendVerificationEmail(email);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setResendSuccess(true);
+    }
+    setResendLoading(false);
   };
 
   return (
@@ -55,6 +82,31 @@ function LoginForm() {
           {error && (
             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded text-sm">
               {error}
+            </div>
+          )}
+
+          {/* Email not verified message */}
+          {showVerificationMessage && (
+            <div className="bg-yellow-900/50 border border-yellow-600 text-yellow-200 px-4 py-4 rounded">
+              <p className="font-medium mb-2">📧 Email not verified</p>
+              <p className="text-sm mb-3">
+                Please check your inbox and click the verification link we sent you.
+                Check your spam folder if you don&apos;t see it.
+              </p>
+              {resendSuccess ? (
+                <p className="text-sm text-green-400">
+                  ✓ Verification email sent! Check your inbox.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resendLoading}
+                  className="text-sm bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 px-4 py-2 rounded transition"
+                >
+                  {resendLoading ? 'Sending...' : 'Resend verification email'}
+                </button>
+              )}
             </div>
           )}
 
