@@ -279,8 +279,8 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Limit to 10 coins per request
-    const coinsToProcess = coins.slice(0, 10);
+    // Limit to 50 coins per request (reasonable for batch predictions)
+    const coinsToProcess = coins.slice(0, 50);
 
     // Check cache for existing predictions
     const predictions: (ReturnType<typeof generateQuickPrediction> | { coinId: string; coinName: string; error: string })[] = [];

@@ -145,8 +145,8 @@ export default function MarketPage() {
   const fetchPredictions = async () => {
     setPredictionsLoading(true);
     try {
-      // Fetch predictions for top 20 coins to limit API calls
-      const topCoins = coins.slice(0, 20).map(c => ({ id: c.id, name: c.name }));
+      // Fetch predictions for top 50 coins
+      const topCoins = coins.slice(0, 50).map(c => ({ id: c.id, name: c.name }));
 
       const response = await fetch('/api/predict', {
         method: 'POST',
