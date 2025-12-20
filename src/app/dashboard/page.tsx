@@ -120,6 +120,9 @@ export default function DashboardPage() {
               DataSimplify
             </Link>
             <div className="flex items-center gap-4">
+              <Link href="/charts" className="text-gray-400 hover:text-white">
+                Charts
+              </Link>
               <Link href="/download" className="text-gray-400 hover:text-white">
                 Downloads
               </Link>

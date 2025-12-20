@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Shield,
   AlertTriangle,
@@ -15,6 +15,25 @@ import {
   Users,
   Lock
 } from 'lucide-react';
+
+// Progress bar component using refs to avoid inline style warnings
+function ProgressBarFill({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safePercentage = Math.max(0, Math.min(100, percentage || 0));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${safePercentage}%`;
+    }
+  }, [safePercentage]);
+
+  return (
+    <div
+      ref={barRef}
+      className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
+    />
+  );
+}
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
 
@@ -162,10 +181,7 @@ export function RiskScoreCard({
             <div className="w-1/4 bg-red-500/30" />
           </div>
           {/* Fill */}
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${overallStyle.barColor}`}
-            style={{ width: `${displayScore}%` }}
-          />
+          <ProgressBarFill percentage={displayScore} colorClass={overallStyle.barColor} />
         </div>
         <div className="flex justify-between mt-1 text-xs text-gray-500">
           <span>Low</span>

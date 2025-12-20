@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory } from '@/lib/dataTypes';
+import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory, getFieldDisplayName } from '@/lib/dataTypes';
 
 // Progress bar component using ref to avoid inline style warnings
 function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
@@ -83,6 +83,17 @@ export default function DownloadPage() {
   const [downloadCount, setDownloadCount] = useState(0);
   const [previewData, setPreviewData] = useState<Record<string, unknown>[] | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
+
+  // New customization options
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [minVolume, setMinVolume] = useState('');
+  const [numberFormat, setNumberFormat] = useState<'full' | 'abbreviated' | 'scientific'>('abbreviated');
+  const [decimalPlaces, setDecimalPlaces] = useState('2');
+  const [includeMetadata, setIncludeMetadata] = useState(true);
+  const [columnRenames, setColumnRenames] = useState<Record<string, string>>({});
 
   // Get category info
   const categoryInfo = DATA_CATEGORIES.find(c => c.id === selectedCategory);
@@ -334,6 +345,75 @@ export default function DownloadPage() {
                 {selectedFormat === 'csv' && '📄 Universal format, works everywhere'}
                 {selectedFormat === 'json' && '💻 Best for developers & APIs'}
               </p>
+
+              {/* Advanced Options */}
+              <details className="mt-4">
+                <summary className="text-sm text-gray-400 cursor-pointer hover:text-gray-300 flex items-center gap-2">
+                  <span>⚙️ Advanced Options</span>
+                </summary>
+                <div className="mt-3 space-y-4 pt-3 border-t border-gray-800">
+                  {/* Number Format */}
+                  <div>
+                    <label htmlFor="number-format" className="flex items-center text-sm text-gray-400 mb-2">
+                      Number Format
+                      <HelpTooltip text="Choose how numbers are displayed in your export" />
+                    </label>
+                    <select
+                      id="number-format"
+                      value={numberFormat}
+                      onChange={(e) => setNumberFormat(e.target.value as 'full' | 'abbreviated' | 'scientific')}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="abbreviated">Abbreviated ($1.5M, $2.3B)</option>
+                      <option value="full">Full Numbers (1500000)</option>
+                      <option value="scientific">Scientific (1.5e6)</option>
+                    </select>
+                  </div>
+
+                  {/* Decimal Places */}
+                  <div>
+                    <label htmlFor="decimal-places" className="flex items-center text-sm text-gray-400 mb-2">
+                      Decimal Places
+                      <HelpTooltip text="How many decimal places to show for numbers" />
+                    </label>
+                    <select
+                      id="decimal-places"
+                      value={decimalPlaces}
+                      onChange={(e) => setDecimalPlaces(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                    >
+                      <option value="0">0 (No decimals)</option>
+                      <option value="2">2 (Standard)</option>
+                      <option value="4">4 (Precise)</option>
+                      <option value="8">8 (Crypto prices)</option>
+                    </select>
+                  </div>
+
+                  {/* Metadata Toggle (XLSX only) */}
+                  {selectedFormat === 'xlsx' && (
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="include-metadata" className="flex items-center text-sm text-gray-400">
+                        Include Metadata Sheet
+                        <HelpTooltip text="Add a second sheet with export info (date, source, etc.)" />
+                      </label>
+                      <button
+                        id="include-metadata"
+                        type="button"
+                        onClick={() => setIncludeMetadata(!includeMetadata)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          includeMetadata ? 'bg-emerald-500' : 'bg-gray-600'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            includeMetadata ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
           </div>
 
@@ -409,6 +489,58 @@ export default function DownloadPage() {
                     </select>
                   </div>
                   
+                  {/* Value Filters */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="min-price" className="flex items-center text-sm text-gray-400 mb-2">
+                        Min Price
+                        <HelpTooltip text="Only include coins with price above this value" />
+                      </label>
+                      <input
+                        id="min-price"
+                        type="number"
+                        placeholder="e.g., 0.01"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="max-price" className="flex items-center text-sm text-gray-400 mb-2">
+                        Max Price
+                        <HelpTooltip text="Only include coins with price below this value" />
+                      </label>
+                      <input
+                        id="max-price"
+                        type="number"
+                        placeholder="e.g., 100000"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Min Volume Filter */}
+                  <div>
+                    <label htmlFor="min-volume" className="flex items-center text-sm text-gray-400 mb-2">
+                      Min 24h Volume
+                      <HelpTooltip text="Only include coins with 24h trading volume above this value" />
+                    </label>
+                    <select
+                      id="min-volume"
+                      value={minVolume}
+                      onChange={(e) => setMinVolume(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                    >
+                      <option value="">Any</option>
+                      <option value="1000000">$1M+</option>
+                      <option value="10000000">$10M+</option>
+                      <option value="100000000">$100M+</option>
+                      <option value="1000000000">$1B+</option>
+                    </select>
+                  </div>
+
                   {/* Coin Selection */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -462,7 +594,7 @@ export default function DownloadPage() {
                       ))}
                     </select>
                   </div>
-                  
+
                   <div>
                     <label htmlFor="time-interval" className="block text-sm text-gray-400 mb-2">Time Interval</label>
                     <select
@@ -496,6 +628,36 @@ export default function DownloadPage() {
                       <option value="500">500 candles</option>
                       <option value="1000">1000 candles (max)</option>
                     </select>
+                  </div>
+
+                  {/* Date Range Picker */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="start-date" className="flex items-center text-sm text-gray-400 mb-2">
+                        Start Date
+                        <HelpTooltip text="Filter data starting from this date. Leave empty to get the most recent data." />
+                      </label>
+                      <input
+                        id="start-date"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="end-date" className="flex items-center text-sm text-gray-400 mb-2">
+                        End Date
+                        <HelpTooltip text="Filter data up to this date. Leave empty for current date." />
+                      </label>
+                      <input
+                        id="end-date"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
@@ -661,8 +823,8 @@ export default function DownloadPage() {
                     <thead>
                       <tr className="border-b border-gray-800">
                         {selectedFields.slice(0, 5).map(key => (
-                          <th key={key} className="text-left text-emerald-400 py-2 px-2 font-medium text-xs">
-                            {key}
+                          <th key={key} className="text-left text-emerald-400 py-2 px-2 font-medium text-xs" title={key}>
+                            {getFieldDisplayName(key)}
                           </th>
                         ))}
                       </tr>
@@ -671,15 +833,15 @@ export default function DownloadPage() {
                       {filteredPreviewData.slice(0, 5).map((row, i) => (
                         <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                           {selectedFields.slice(0, 5).map((field, j) => (
-                            <td key={j} className="text-gray-300 py-2 px-2 text-xs truncate max-w-[80px]">
-                              {row[field] !== undefined 
+                            <td key={j} className="text-gray-300 py-2 px-2 text-xs truncate max-w-[100px]" title={String(row[field] ?? '')}>
+                              {row[field] !== undefined
                                 ? typeof row[field] === 'number'
-                                  ? (row[field] as number) > 1000000 
+                                  ? (row[field] as number) > 1000000
                                     ? `$${((row[field] as number) / 1000000).toFixed(2)}M`
                                     : (row[field] as number) > 1
                                       ? (row[field] as number).toFixed(2)
                                       : (row[field] as number).toFixed(6)
-                                  : String(row[field]).slice(0, 12)
+                                  : String(row[field]).slice(0, 15)
                                 : '-'}
                             </td>
                           ))}
@@ -740,6 +902,7 @@ export default function DownloadPage() {
                     <button
                       key={field}
                       onClick={() => toggleField(field)}
+                      title={field}
                       className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
                         isSelected
                           ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
@@ -747,7 +910,7 @@ export default function DownloadPage() {
                       }`}
                     >
                       {isSelected && <span className="mr-1">✓</span>}
-                      {field}
+                      {getFieldDisplayName(field)}
                     </button>
                   );
                 })}

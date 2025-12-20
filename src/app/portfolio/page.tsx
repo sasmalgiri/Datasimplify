@@ -190,12 +190,14 @@ export default function PortfolioBuilderPage() {
               </h2>
               
               <div className="flex items-center gap-4">
-                <span className="text-2xl">$</span>
+                <label htmlFor="investment-amount" className="text-2xl">$</label>
                 <input
+                  id="investment-amount"
                   type="number"
                   value={investmentAmount}
                   onChange={(e) => setInvestmentAmount(Number(e.target.value) || 0)}
                   className="text-3xl font-bold w-40 border-b-2 border-gray-300 focus:border-blue-500 outline-none"
+                  aria-label="Investment amount in dollars"
                 />
               </div>
 
@@ -260,18 +262,21 @@ export default function PortfolioBuilderPage() {
                       />
                       <div className="flex-1">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="font-medium">{alloc.name}</span>
+                          <label htmlFor={`allocation-${alloc.id}`} className="font-medium">{alloc.name}</label>
                           <span className="text-sm text-gray-500">
                             ${Math.round(investmentAmount * alloc.percentage / 100).toLocaleString()}
                           </span>
                         </div>
                         <input
+                          id={`allocation-${alloc.id}`}
                           type="range"
                           min="0"
                           max="80"
                           value={alloc.percentage}
                           onChange={(e) => updateAllocation(alloc.id, Number(e.target.value))}
                           className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          aria-label={`${alloc.name} allocation percentage`}
+                          title={`Adjust ${alloc.name} allocation`}
                         />
                       </div>
                       <span className="font-bold w-12 text-right">{alloc.percentage}%</span>

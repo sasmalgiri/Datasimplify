@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useRef, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -13,6 +13,25 @@ import {
   Shield,
   ChevronRight
 } from 'lucide-react';
+
+// Progress bar component using refs to avoid inline style warnings
+function ProgressBarFill({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+  const safePercentage = Math.max(0, Math.min(100, percentage || 0));
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${safePercentage}%`;
+    }
+  }, [safePercentage]);
+
+  return (
+    <div
+      ref={barRef}
+      className={`h-full rounded-full transition-all duration-500 ${colorClass}`}
+    />
+  );
+}
 
 export type PredictionDirection = 'BULLISH' | 'BEARISH' | 'NEUTRAL';
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
@@ -149,15 +168,15 @@ export function PredictionCard({
           </span>
         </div>
         <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${
+          <ProgressBarFill
+            percentage={confidence}
+            colorClass={
               prediction === 'BULLISH'
                 ? 'bg-emerald-500'
                 : prediction === 'BEARISH'
                 ? 'bg-red-500'
                 : 'bg-yellow-500'
-            }`}
-            style={{ width: `${confidence}%` }}
+            }
           />
         </div>
       </div>
@@ -246,10 +265,7 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
         <span className="text-gray-300 text-xs font-medium">{score}</span>
       </div>
       <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-500 ${getScoreColor(score)}`}
-          style={{ width: `${score}%` }}
-        />
+        <ProgressBarFill percentage={score} colorClass={getScoreColor(score)} />
       </div>
     </div>
   );

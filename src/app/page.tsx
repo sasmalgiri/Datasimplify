@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -18,6 +17,7 @@ export default function LandingPage() {
             </div>
             <div className="hidden md:flex items-center gap-8">
               <Link href="/market" className="text-gray-300 hover:text-white transition">Market</Link>
+              <Link href="/charts" className="text-gray-300 hover:text-white transition">Charts</Link>
               <Link href="/compare" className="text-gray-300 hover:text-white transition">Compare</Link>
               <Link href="/download" className="text-gray-300 hover:text-white transition">Download</Link>
               <Link href="/chat" className="text-gray-300 hover:text-white transition">AI Chat</Link>

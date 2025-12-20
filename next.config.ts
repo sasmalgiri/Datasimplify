@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Transpile ECharts for Next.js compatibility
+  transpilePackages: ['echarts', 'zrender', 'echarts-gl'],
 };
 
 export default nextConfig;

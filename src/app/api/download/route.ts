@@ -64,27 +64,21 @@ export async function GET(request: Request) {
           sortBy,
         });
         data = marketData.map(d => ({
-          Symbol: d.symbol,
-          Name: d.name,
-          Category: d.category,
-          Price: d.price,
-          'Price Change 24h': d.priceChange24h,
-          'Price Change % 24h': d.priceChangePercent24h,
-          'Open 24h': d.open24h,
-          'High 24h': d.high24h,
-          'Low 24h': d.low24h,
-          'Volume 24h': d.volume24h,
-          'Quote Volume 24h': d.quoteVolume24h,
-          'Trades Count 24h': d.tradesCount24h,
-          'Market Cap': d.marketCap,
-          'Circulating Supply': d.circulatingSupply,
-          'Max Supply': d.maxSupply,
-          'Bid Price': d.bidPrice,
-          'Ask Price': d.askPrice,
-          Spread: d.spread,
-          'Spread %': d.spreadPercent,
-          VWAP: d.vwap,
-          'Updated At': d.updatedAt,
+          symbol: d.symbol,
+          name: d.name,
+          price: d.price,
+          price_change_24h: d.priceChange24h,
+          price_change_percent_24h: d.priceChangePercent24h,
+          high_24h: d.high24h,
+          low_24h: d.low24h,
+          volume_24h: d.volume24h,
+          market_cap: d.marketCap,
+          circulating_supply: d.circulatingSupply,
+          bid_price: d.bidPrice,
+          ask_price: d.askPrice,
+          spread: d.spread,
+          vwap: d.vwap,
+          trades_count_24h: d.tradesCount24h,
         }));
         filename = `market_overview_${new Date().toISOString().split('T')[0]}`;
         break;
@@ -92,19 +86,17 @@ export async function GET(request: Request) {
       case 'historical_prices':
         const histData = await fetchHistoricalPrices({ symbol, interval, limit });
         data = histData.map(d => ({
-          Symbol: d.symbol,
-          Interval: d.interval,
-          'Open Time': d.openTime,
-          Open: d.open,
-          High: d.high,
-          Low: d.low,
-          Close: d.close,
-          Volume: d.volume,
-          'Close Time': d.closeTime,
-          'Quote Volume': d.quoteVolume,
-          'Trades Count': d.tradesCount,
-          'Taker Buy Base Volume': d.takerBuyBaseVolume,
-          'Taker Buy Quote Volume': d.takerBuyQuoteVolume,
+          symbol: d.symbol,
+          timestamp: d.openTime,
+          open: d.open,
+          high: d.high,
+          low: d.low,
+          close: d.close,
+          volume: d.volume,
+          quote_volume: d.quoteVolume,
+          trades_count: d.tradesCount,
+          taker_buy_volume: d.takerBuyBaseVolume,
+          taker_sell_volume: d.takerBuyQuoteVolume,
         }));
         filename = `${symbol}_${interval}_ohlcv`;
         break;
@@ -118,34 +110,17 @@ export async function GET(request: Request) {
             const bid = orderBook.bids[i];
             const ask = orderBook.asks[i];
             data.push({
-              Level: i + 1,
-              'Bid Price': bid?.price || '',
-              'Bid Quantity': bid?.quantity || '',
-              'Bid Total': bid?.total || '',
-              'Ask Price': ask?.price || '',
-              'Ask Quantity': ask?.quantity || '',
-              'Ask Total': ask?.total || '',
+              symbol: symbol,
+              bid_price: bid?.price || '',
+              bid_quantity: bid?.quantity || '',
+              ask_price: ask?.price || '',
+              ask_quantity: ask?.quantity || '',
+              spread: i === 0 ? orderBook.spread : '',
+              spread_percent: i === 0 ? orderBook.spreadPercent : '',
+              total_bid_volume: i === 0 ? orderBook.totalBidVolume : '',
+              total_ask_volume: i === 0 ? orderBook.totalAskVolume : '',
             });
           }
-          // Add summary row
-          data.push({
-            Level: 'TOTAL',
-            'Bid Price': '',
-            'Bid Quantity': '',
-            'Bid Total': orderBook.totalBidVolume,
-            'Ask Price': '',
-            'Ask Quantity': '',
-            'Ask Total': orderBook.totalAskVolume,
-          });
-          data.push({
-            Level: 'SPREAD',
-            'Bid Price': orderBook.spread.toFixed(8),
-            'Bid Quantity': `${orderBook.spreadPercent.toFixed(4)}%`,
-            'Bid Total': '',
-            'Ask Price': 'Mid Price:',
-            'Ask Quantity': orderBook.midPrice.toFixed(8),
-            'Ask Total': '',
-          });
         }
         filename = `${symbol}_order_book`;
         break;
@@ -153,14 +128,14 @@ export async function GET(request: Request) {
       case 'recent_trades':
         const trades = await fetchRecentTrades({ symbol, limit });
         data = trades.map(t => ({
-          Symbol: t.symbol,
-          'Trade ID': t.tradeId,
-          Price: t.price,
-          Quantity: t.quantity,
-          'Quote Quantity': t.quoteQuantity,
-          Time: t.time,
-          'Trade Type': t.tradeType,
-          'Is Buyer Maker': t.isBuyerMaker,
+          symbol: t.symbol,
+          trade_id: t.tradeId,
+          price: t.price,
+          quantity: t.quantity,
+          quote_quantity: t.quoteQuantity,
+          timestamp: t.time,
+          trade_type: t.tradeType,
+          is_buyer_maker: t.isBuyerMaker,
         }));
         filename = `${symbol}_recent_trades`;
         break;
@@ -169,23 +144,13 @@ export async function GET(request: Request) {
         const globalStats = await fetchGlobalStats();
         if (globalStats) {
           data = [{
-            Metric: 'Total Market Cap',
-            Value: globalStats.totalMarketCap,
-          }, {
-            Metric: 'Total 24h Volume',
-            Value: globalStats.totalVolume24h,
-          }, {
-            Metric: 'BTC Dominance %',
-            Value: globalStats.btcDominance,
-          }, {
-            Metric: 'ETH Dominance %',
-            Value: globalStats.ethDominance,
-          }, {
-            Metric: 'Active Cryptocurrencies',
-            Value: globalStats.activeCryptocurrencies,
-          }, {
-            Metric: 'Updated At',
-            Value: globalStats.updatedAt,
+            total_market_cap: globalStats.totalMarketCap,
+            total_volume_24h: globalStats.totalVolume24h,
+            btc_dominance: globalStats.btcDominance,
+            eth_dominance: globalStats.ethDominance,
+            market_cap_change_24h: 0,
+            active_cryptocurrencies: globalStats.activeCryptocurrencies,
+            active_markets: 0,
           }];
         }
         filename = `global_stats_${new Date().toISOString().split('T')[0]}`;
@@ -194,13 +159,13 @@ export async function GET(request: Request) {
       case 'gainers_losers':
         const gainersLosers = await fetchGainersLosers({ type: gainerType, limit });
         data = gainersLosers.map(d => ({
-          Type: d.type.toUpperCase(),
-          Symbol: d.symbol,
-          Name: d.name,
-          Price: d.price,
-          'Price Change % 24h': d.priceChangePercent24h,
-          'Volume 24h': d.volume24h,
-          'Market Cap': d.marketCap,
+          symbol: d.symbol,
+          name: d.name,
+          price: d.price,
+          price_change_percent_24h: d.priceChangePercent24h,
+          volume_24h: d.volume24h,
+          market_cap: d.marketCap,
+          rank_type: d.type.toUpperCase(),
         }));
         filename = `${gainerType}_${new Date().toISOString().split('T')[0]}`;
         break;
@@ -208,13 +173,12 @@ export async function GET(request: Request) {
       case 'categories':
         const categoryStats = await fetchCategoryStats();
         data = categoryStats.map(c => ({
-          Category: c.categoryName,
-          'Coin Count': c.coinCount,
-          'Total Market Cap': c.totalMarketCap,
-          'Total Volume 24h': c.totalVolume24h,
-          'Avg Price Change 24h %': c.avgPriceChange24h,
-          'Top Performer': c.topPerformer,
-          'Worst Performer': c.worstPerformer,
+          category: c.categoryName,
+          coin_count: c.coinCount,
+          total_market_cap: c.totalMarketCap,
+          total_volume_24h: c.totalVolume24h,
+          avg_price_change_24h: c.avgPriceChange24h,
+          top_performers: c.topPerformer,
         }));
         filename = `category_analysis_${new Date().toISOString().split('T')[0]}`;
         break;
@@ -222,17 +186,17 @@ export async function GET(request: Request) {
       case 'exchange_info':
         const exchangeInfo = await fetchExchangeInfo();
         data = exchangeInfo.map(e => ({
-          Symbol: e.symbol,
-          'Base Asset': e.baseAsset,
-          'Quote Asset': e.quoteAsset,
-          Status: e.status,
-          'Min Price': e.minPrice,
-          'Max Price': e.maxPrice,
-          'Tick Size': e.tickSize,
-          'Min Quantity': e.minQty,
-          'Max Quantity': e.maxQty,
-          'Step Size': e.stepSize,
-          'Min Notional': e.minNotional,
+          symbol: e.symbol,
+          base_asset: e.baseAsset,
+          quote_asset: e.quoteAsset,
+          status: e.status,
+          min_price: e.minPrice,
+          max_price: e.maxPrice,
+          tick_size: e.tickSize,
+          min_qty: e.minQty,
+          max_qty: e.maxQty,
+          step_size: e.stepSize,
+          min_notional: e.minNotional,
         }));
         filename = 'exchange_trading_info';
         break;
@@ -243,107 +207,77 @@ export async function GET(request: Request) {
       
       case 'defi_protocols':
         const defiProtocols = await fetchTopDeFiProtocols(limit);
-        data = defiProtocols.map((p, i) => ({
-          Rank: i + 1,
-          Name: p.name,
-          Chain: p.chain,
-          Category: p.category,
-          Symbol: p.symbol,
-          'TVL (USD)': p.tvl,
-          'TVL Change 24h %': p.tvlChange24h,
-          'TVL Change 7d %': p.tvlChange7d,
+        data = defiProtocols.map((p) => ({
+          name: p.name,
+          chain: p.chain,
+          tvl: p.tvl,
+          tvl_change_24h: p.tvlChange24h,
+          tvl_change_7d: p.tvlChange7d,
+          category: p.category,
+          symbol: p.symbol,
         }));
         filename = `defi_protocols_top${limit}`;
         break;
 
       case 'defi_yields':
         const yields = await fetchYieldData(limit);
-        data = yields.pools.map((p, i) => ({
-          Rank: i + 1,
-          Protocol: p.protocol,
-          Chain: p.chain,
-          Pool: p.symbol,
-          'TVL (USD)': p.tvl,
-          'APY %': p.apy,
-          'Base APY %': p.apyBase,
-          'Reward APY %': p.apyReward,
+        data = yields.pools.map((p) => ({
+          protocol: p.protocol,
+          chain: p.chain,
+          symbol: p.symbol,
+          tvl: p.tvl,
+          apy: p.apy,
+          apy_base: p.apyBase,
+          apy_reward: p.apyReward,
         }));
         filename = `defi_yields_top${limit}`;
         break;
 
       case 'stablecoins':
         const stableData = await fetchStablecoinData();
-        data = stableData.stablecoins.map((s, i) => ({
-          Rank: i + 1,
-          Name: s.name,
-          Symbol: s.symbol,
-          'Market Cap (USD)': s.marketCap,
-          Chain: s.chain,
+        data = stableData.stablecoins.map((s) => ({
+          name: s.name,
+          symbol: s.symbol,
+          market_cap: s.marketCap,
+          chain: s.chain,
+          peg_deviation: 0,
         }));
-        // Add total row
-        data.push({
-          Rank: 'TOTAL',
-          Name: '',
-          Symbol: '',
-          'Market Cap (USD)': stableData.totalMarketCap,
-          Chain: '',
-        });
         filename = 'stablecoin_market';
         break;
 
       case 'fear_greed':
         const fearGreed = await fetchFearGreedIndex();
         data = [{
-          'Current Value': fearGreed.value,
-          'Current Label': fearGreed.label,
-          'Timestamp': fearGreed.timestamp,
-          'Interpretation': fearGreed.value <= 25 ? 'Extreme Fear - Potential buying opportunity' :
-                           fearGreed.value <= 45 ? 'Fear - Market is cautious' :
-                           fearGreed.value <= 55 ? 'Neutral' :
-                           fearGreed.value <= 75 ? 'Greed - Market is optimistic' :
-                           'Extreme Greed - Potential selling opportunity',
+          value: fearGreed.value,
+          label: fearGreed.label,
+          timestamp: fearGreed.timestamp,
+          previous_value: fearGreed.value,
+          previous_label: fearGreed.label,
         }];
         filename = 'fear_greed_index';
         break;
 
       case 'chain_tvl':
         const chainTvl = await fetchDeFiTVL();
-        data = chainTvl.chains.map((c, i) => ({
-          Rank: i + 1,
-          Chain: c.name,
-          'TVL (USD)': c.tvl,
-          'Dominance %': ((c.tvl / chainTvl.totalTVL) * 100).toFixed(2),
+        data = chainTvl.chains.map((c) => ({
+          chain: c.name,
+          tvl: c.tvl,
+          tvl_change_24h: 0,
+          protocols_count: 0,
+          dominance: ((c.tvl / chainTvl.totalTVL) * 100),
         }));
-        // Add total row
-        data.push({
-          Rank: 'TOTAL',
-          Chain: 'All Chains',
-          'TVL (USD)': chainTvl.totalTVL,
-          'Dominance %': '100.00',
-        });
         filename = 'chain_tvl_rankings';
         break;
 
       case 'bitcoin_onchain':
         const btcStats = await fetchBitcoinStats();
         data = [{
-          Metric: 'Hash Rate (EH/s)',
-          Value: (btcStats.hashRate / 1e18).toFixed(2),
-        }, {
-          Metric: 'Difficulty',
-          Value: btcStats.difficulty.toExponential(2),
-        }, {
-          Metric: 'Block Height',
-          Value: btcStats.blockHeight,
-        }, {
-          Metric: 'Avg Block Time (minutes)',
-          Value: btcStats.avgBlockTime.toFixed(2),
-        }, {
-          Metric: 'Unconfirmed Transactions',
-          Value: btcStats.unconfirmedTxs,
-        }, {
-          Metric: 'Mempool Size (bytes)',
-          Value: btcStats.memPoolSize,
+          hash_rate: (btcStats.hashRate / 1e18),
+          difficulty: btcStats.difficulty,
+          block_height: btcStats.blockHeight,
+          avg_block_time: btcStats.avgBlockTime,
+          unconfirmed_txs: btcStats.unconfirmedTxs,
+          mempool_size: btcStats.memPoolSize,
         }];
         filename = 'bitcoin_onchain_stats';
         break;
@@ -351,21 +285,11 @@ export async function GET(request: Request) {
       case 'eth_gas':
         const gasData = await fetchEthGasPrices();
         data = [{
-          'Speed': 'Slow',
-          'Gas Price (Gwei)': gasData.slow.toFixed(2),
-          'Estimated Time': '~5 minutes',
-        }, {
-          'Speed': 'Standard',
-          'Gas Price (Gwei)': gasData.standard.toFixed(2),
-          'Estimated Time': '~3 minutes',
-        }, {
-          'Speed': 'Fast',
-          'Gas Price (Gwei)': gasData.fast.toFixed(2),
-          'Estimated Time': '~1 minute',
-        }, {
-          'Speed': 'Base Fee',
-          'Gas Price (Gwei)': gasData.baseFee.toFixed(2),
-          'Estimated Time': 'Network base',
+          slow_gwei: gasData.slow,
+          standard_gwei: gasData.standard,
+          fast_gwei: gasData.fast,
+          base_fee: gasData.baseFee,
+          block_number: 0,
         }];
         filename = 'ethereum_gas_prices';
         break;
@@ -376,26 +300,16 @@ export async function GET(request: Request) {
       
       case 'sentiment_aggregated':
         const aggregatedSentiment = await aggregateAllSentiment();
-        // Summary data
         data = [{
-          'Overall Score': aggregatedSentiment.overallScore,
-          'Overall Label': aggregatedSentiment.overallLabel,
-          'Confidence': (aggregatedSentiment.confidence * 100).toFixed(1) + '%',
-          'Total Posts Analyzed': aggregatedSentiment.totalPosts,
-          'Trending Coins': aggregatedSentiment.trendingTopics.join(', '),
-          'Timestamp': aggregatedSentiment.timestamp,
+          overall_score: aggregatedSentiment.overallScore,
+          overall_label: aggregatedSentiment.overallLabel,
+          total_posts: aggregatedSentiment.totalPosts,
+          by_source: JSON.stringify(aggregatedSentiment.bySource),
+          by_coin: '',
+          top_bullish: '',
+          top_bearish: '',
+          trending_topics: aggregatedSentiment.trendingTopics.join(', '),
         }];
-        // Add by source breakdown
-        for (const source of aggregatedSentiment.bySource) {
-          data.push({
-            'Source': source.source,
-            'Posts': source.postCount,
-            'Avg Sentiment': (source.avgSentiment * 100).toFixed(1),
-            'Bullish': source.bullishCount,
-            'Bearish': source.bearishCount,
-            'Neutral': source.neutralCount,
-          });
-        }
         filename = 'social_sentiment_aggregated';
         break;
 
@@ -404,18 +318,15 @@ export async function GET(request: Request) {
           ['cryptocurrency', 'bitcoin', 'ethtrader', 'CryptoMarkets', 'altcoin'],
           100
         );
-        data = redditPosts.map((p, i) => ({
-          Rank: i + 1,
-          Title: p.title.slice(0, 100),
-          Subreddit: p.platform,
-          'Sentiment Score': (p.sentiment.score * 100).toFixed(1),
-          'Sentiment Label': p.sentiment.label,
-          Upvotes: p.engagement.likes,
-          Comments: p.engagement.comments,
-          'Coins Mentioned': p.coins.join(', '),
-          Keywords: p.keywords.slice(0, 5).join(', '),
-          URL: p.url,
-          Timestamp: p.timestamp,
+        data = redditPosts.map((p) => ({
+          title: p.title.slice(0, 100),
+          sentiment_score: (p.sentiment.score * 100),
+          sentiment_label: p.sentiment.label,
+          subreddit: p.platform,
+          upvotes: p.engagement.likes,
+          comments: p.engagement.comments,
+          coins_mentioned: p.coins.join(', '),
+          url: p.url,
         }));
         filename = 'reddit_sentiment';
         break;
@@ -423,16 +334,14 @@ export async function GET(request: Request) {
       case 'sentiment_news':
         const newsFilter = (searchParams.get('filter') || 'hot') as 'hot' | 'rising' | 'bullish' | 'bearish' | 'important';
         const newsPosts = await fetchCryptoPanicSentiment(newsFilter);
-        data = newsPosts.map((p, i) => ({
-          Rank: i + 1,
-          Title: p.title,
-          Source: p.platform,
-          'Sentiment Score': (p.sentiment.score * 100).toFixed(1),
-          'Sentiment Label': p.sentiment.label,
-          'Positive Votes': p.engagement.likes,
-          'Coins Mentioned': p.coins.join(', '),
-          URL: p.url,
-          Timestamp: p.timestamp,
+        data = newsPosts.map((p) => ({
+          title: p.title,
+          sentiment_score: (p.sentiment.score * 100),
+          sentiment_label: p.sentiment.label,
+          source: p.platform,
+          votes: p.engagement.likes,
+          coins_mentioned: p.coins.join(', '),
+          url: p.url,
         }));
         filename = `news_sentiment_${newsFilter}`;
         break;
@@ -441,31 +350,15 @@ export async function GET(request: Request) {
         const coinSymbol = searchParams.get('symbol') || 'BTC';
         const coinSentiment = await getCoinDeepSentiment(coinSymbol);
         data = [{
-          'Coin': coinSentiment.coin,
-          'Overall Sentiment': coinSentiment.overallSentiment,
-          'Sentiment Label': coinSentiment.sentimentLabel,
-          'Social Volume (24h)': coinSentiment.socialVolume,
-          'Trending': coinSentiment.trending ? 'Yes' : 'No',
-          'Top Keywords': coinSentiment.keywords.join(', '),
+          coin: coinSentiment.coin,
+          overall_sentiment: coinSentiment.overallSentiment,
+          sentiment_label: coinSentiment.sentimentLabel,
+          social_volume: coinSentiment.socialVolume,
+          sources_breakdown: JSON.stringify(coinSentiment.sources),
+          recent_posts: coinSentiment.recentPosts.length,
+          trending: coinSentiment.trending ? 'Yes' : 'No',
+          keywords: coinSentiment.keywords.join(', '),
         }];
-        // Add source breakdown
-        for (const [source, stats] of Object.entries(coinSentiment.sources)) {
-          data.push({
-            'Source': source,
-            'Posts': stats.count,
-            'Sentiment': stats.sentiment,
-          });
-        }
-        // Add recent posts
-        data.push({ '---': '--- Recent Posts ---' });
-        for (const post of coinSentiment.recentPosts.slice(0, 20)) {
-          data.push({
-            'Title': post.title.slice(0, 80),
-            'Source': post.source,
-            'Sentiment': (post.sentiment.score * 100).toFixed(1),
-            'URL': post.url,
-          });
-        }
         filename = `${coinSymbol.toLowerCase()}_sentiment_deep_dive`;
         break;
 
@@ -475,19 +368,15 @@ export async function GET(request: Request) {
 
       case 'whale_transactions':
         const whaleDashboard = await getWhaleDashboard();
-        data = whaleDashboard.recentWhaleTransactions.map((tx, i) => ({
-          Rank: i + 1,
-          Blockchain: tx.blockchain,
-          'From': tx.from.slice(0, 20) + '...',
-          'From Label': tx.fromLabel,
-          'To': tx.to.slice(0, 20) + '...',
-          'To Label': tx.toLabel,
-          Amount: tx.amount.toFixed(4),
-          Symbol: tx.symbol,
-          'Amount USD': tx.amountUsd.toFixed(2),
-          Type: tx.type,
-          Timestamp: tx.timestamp,
-          'Tx Hash': tx.hash,
+        data = whaleDashboard.recentWhaleTransactions.map((tx) => ({
+          hash: tx.hash,
+          blockchain: tx.blockchain,
+          from: tx.from,
+          to: tx.to,
+          amount: tx.amount,
+          amount_usd: tx.amountUsd,
+          type: tx.type,
+          timestamp: tx.timestamp,
         }));
         filename = 'whale_transactions';
         break;
@@ -495,14 +384,13 @@ export async function GET(request: Request) {
       case 'exchange_flows':
         const flows = await estimateExchangeFlows();
         data = flows.map(f => ({
-          Exchange: f.exchange,
-          'Inflow (24h)': f.inflow24h.toFixed(4),
-          'Outflow (24h)': f.outflow24h.toFixed(4),
-          'Net Flow (24h)': f.netFlow24h.toFixed(4),
-          'Inflow USD': f.inflowUsd24h.toFixed(2),
-          'Outflow USD': f.outflowUsd24h.toFixed(2),
-          'Net Flow USD': f.netFlowUsd24h.toFixed(2),
-          'Signal': f.netFlowUsd24h > 0 ? '🔴 Sell Pressure' : '🟢 Accumulation',
+          exchange: f.exchange,
+          inflow_24h: f.inflow24h,
+          outflow_24h: f.outflow24h,
+          net_flow_24h: f.netFlow24h,
+          inflow_usd: f.inflowUsd24h,
+          outflow_usd: f.outflowUsd24h,
+          net_flow_usd: f.netFlowUsd24h,
         }));
         filename = 'exchange_flows';
         break;

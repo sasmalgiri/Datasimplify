@@ -679,3 +679,167 @@ export function getCoinsByCategory(category: string): CoinInfo[] {
 export function getAllBinanceSymbols(): string[] {
   return SUPPORTED_COINS.map(c => c.binanceSymbol);
 }
+
+// ============================================
+// FIELD DISPLAY NAME MAPPING
+// Maps internal snake_case field names to user-friendly display names
+// ============================================
+
+export const FIELD_DISPLAY_NAMES: Record<string, string> = {
+  // Market Overview
+  'symbol': 'Symbol',
+  'name': 'Name',
+  'price': 'Price',
+  'price_change_24h': 'Price Change (24h)',
+  'price_change_percent_24h': 'Change % (24h)',
+  'high_24h': 'High (24h)',
+  'low_24h': 'Low (24h)',
+  'volume_24h': 'Volume (24h)',
+  'market_cap': 'Market Cap',
+  'circulating_supply': 'Circulating Supply',
+  'bid_price': 'Bid Price',
+  'ask_price': 'Ask Price',
+  'spread': 'Spread',
+  'vwap': 'VWAP',
+  'trades_count_24h': 'Trades (24h)',
+
+  // Historical Prices
+  'timestamp': 'Timestamp',
+  'open': 'Open',
+  'high': 'High',
+  'low': 'Low',
+  'close': 'Close',
+  'volume': 'Volume',
+  'quote_volume': 'Quote Volume',
+  'trades_count': 'Trades Count',
+  'taker_buy_volume': 'Taker Buy Volume',
+  'taker_sell_volume': 'Taker Sell Volume',
+
+  // Order Book
+  'bid_quantity': 'Bid Quantity',
+  'ask_quantity': 'Ask Quantity',
+  'spread_percent': 'Spread %',
+  'total_bid_volume': 'Total Bid Volume',
+  'total_ask_volume': 'Total Ask Volume',
+
+  // Recent Trades
+  'trade_id': 'Trade ID',
+  'quantity': 'Quantity',
+  'quote_quantity': 'Quote Quantity',
+  'trade_type': 'Trade Type',
+  'is_buyer_maker': 'Is Buyer Maker',
+
+  // Global Stats
+  'total_market_cap': 'Total Market Cap',
+  'total_volume_24h': 'Total Volume (24h)',
+  'btc_dominance': 'BTC Dominance %',
+  'eth_dominance': 'ETH Dominance %',
+  'market_cap_change_24h': 'Market Cap Change (24h)',
+  'active_cryptocurrencies': 'Active Cryptocurrencies',
+  'active_markets': 'Active Markets',
+
+  // Gainers/Losers
+  'rank_type': 'Rank Type',
+
+  // Categories
+  'category': 'Category',
+  'coin_count': 'Coin Count',
+  'avg_price_change_24h': 'Avg Change % (24h)',
+  'top_performers': 'Top Performers',
+
+  // Exchange Info
+  'base_asset': 'Base Asset',
+  'quote_asset': 'Quote Asset',
+  'status': 'Status',
+  'min_price': 'Min Price',
+  'max_price': 'Max Price',
+  'tick_size': 'Tick Size',
+  'min_qty': 'Min Quantity',
+  'max_qty': 'Max Quantity',
+  'step_size': 'Step Size',
+  'min_notional': 'Min Notional',
+
+  // DeFi
+  'chain': 'Chain',
+  'tvl': 'TVL (USD)',
+  'tvl_change_24h': 'TVL Change (24h)',
+  'tvl_change_7d': 'TVL Change (7d)',
+  'apy': 'APY %',
+  'apy_base': 'Base APY %',
+  'apy_reward': 'Reward APY %',
+  'protocol': 'Protocol',
+  'peg_deviation': 'Peg Deviation',
+  'protocols_count': 'Protocols Count',
+  'dominance': 'Dominance %',
+
+  // Fear & Greed
+  'value': 'Value',
+  'label': 'Label',
+  'previous_value': 'Previous Value',
+  'previous_label': 'Previous Label',
+
+  // Bitcoin On-Chain
+  'hash_rate': 'Hash Rate (EH/s)',
+  'difficulty': 'Difficulty',
+  'block_height': 'Block Height',
+  'avg_block_time': 'Avg Block Time (min)',
+  'unconfirmed_txs': 'Unconfirmed TXs',
+  'mempool_size': 'Mempool Size',
+
+  // ETH Gas
+  'slow_gwei': 'Slow (Gwei)',
+  'standard_gwei': 'Standard (Gwei)',
+  'fast_gwei': 'Fast (Gwei)',
+  'base_fee': 'Base Fee (Gwei)',
+  'block_number': 'Block Number',
+
+  // Sentiment
+  'overall_score': 'Overall Score',
+  'overall_label': 'Overall Label',
+  'total_posts': 'Total Posts',
+  'by_source': 'By Source',
+  'by_coin': 'By Coin',
+  'top_bullish': 'Top Bullish',
+  'top_bearish': 'Top Bearish',
+  'trending_topics': 'Trending Topics',
+  'title': 'Title',
+  'sentiment_score': 'Sentiment Score',
+  'sentiment_label': 'Sentiment Label',
+  'subreddit': 'Subreddit',
+  'upvotes': 'Upvotes',
+  'comments': 'Comments',
+  'coins_mentioned': 'Coins Mentioned',
+  'url': 'URL',
+  'source': 'Source',
+  'votes': 'Votes',
+  'coin': 'Coin',
+  'overall_sentiment': 'Overall Sentiment',
+  'social_volume': 'Social Volume',
+  'sources_breakdown': 'Sources Breakdown',
+  'recent_posts': 'Recent Posts',
+  'trending': 'Trending',
+  'keywords': 'Keywords',
+
+  // Whale Tracking
+  'hash': 'Transaction Hash',
+  'blockchain': 'Blockchain',
+  'from': 'From',
+  'to': 'To',
+  'amount': 'Amount',
+  'amount_usd': 'Amount (USD)',
+  'type': 'Type',
+
+  // Exchange Flows
+  'exchange': 'Exchange',
+  'inflow_24h': 'Inflow (24h)',
+  'outflow_24h': 'Outflow (24h)',
+  'net_flow_24h': 'Net Flow (24h)',
+  'inflow_usd': 'Inflow (USD)',
+  'outflow_usd': 'Outflow (USD)',
+  'net_flow_usd': 'Net Flow (USD)',
+};
+
+// Get display name for a field
+export function getFieldDisplayName(field: string): string {
+  return FIELD_DISPLAY_NAMES[field] || field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}

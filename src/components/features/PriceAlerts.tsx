@@ -266,8 +266,9 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
             <div className="space-y-4">
               {/* Coin Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Coin</label>
+                <label htmlFor="alert-coin-select" className="block text-sm font-medium text-gray-700 mb-1">Coin</label>
                 <select
+                  id="alert-coin-select"
                   value={newAlert.coin}
                   onChange={(e) => setNewAlert({ ...newAlert, coin: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -282,8 +283,9 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
 
               {/* Alert Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Alert Type</label>
+                <label htmlFor="alert-type-select" className="block text-sm font-medium text-gray-700 mb-1">Alert Type</label>
                 <select
+                  id="alert-type-select"
                   value={newAlert.type}
                   onChange={(e) => setNewAlert({ ...newAlert, type: e.target.value as Alert['type'] })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -299,10 +301,11 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
 
               {/* Value */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="alert-value-input" className="block text-sm font-medium text-gray-700 mb-1">
                   {newAlert.type.includes('percent') ? 'Percentage (%)' : 'Price ($)'}
                 </label>
                 <input
+                  id="alert-value-input"
                   type="number"
                   value={newAlert.value}
                   onChange={(e) => setNewAlert({ ...newAlert, value: Number(e.target.value) })}
@@ -340,6 +343,7 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
 
               {/* Create Button */}
               <button
+                type="button"
                 onClick={createAlert}
                 className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
               >
