@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=market",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=sentiment",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=whales",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=defi",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=onchain",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
