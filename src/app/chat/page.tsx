@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CryptoAIChat } from '@/components/features/CryptoAIChat';
+import CryptoAIChatRAG from '@/components/features/CryptoAIChatRAG';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import Link from 'next/link';
 
@@ -56,7 +56,7 @@ export default function ChatPage() {
         <div className="grid md:grid-cols-3 gap-6">
           {/* Main Chat */}
           <div className="md:col-span-2">
-            <CryptoAIChat showBeginnerTips={true} />
+            <CryptoAIChatRAG />
           </div>
 
           {/* Sidebar */}
@@ -93,14 +93,16 @@ export default function ChatPage() {
 
             <div className="bg-blue-900/30 rounded-xl border border-blue-700 p-4">
               <h3 className="font-bold text-blue-400 mb-3 flex items-center">
-                📚 Data Sources:
-                <HelpIcon text="The AI pulls real-time data from these trusted sources to give you accurate, up-to-date information." />
+                📚 Live Data Access:
+                <HelpIcon text="The AI has real-time access to your Supabase database, providing accurate and current information." />
               </h3>
               <ul className="text-sm text-blue-300 space-y-1">
-                <li>• CoinGecko API</li>
-                <li>• Fear & Greed Index</li>
-                <li>• Crypto News Feeds</li>
-                <li>• On-Chain Analytics</li>
+                <li>• 📊 Market Data (prices, caps)</li>
+                <li>• 😰 Fear & Greed Index</li>
+                <li>• 🐋 Whale Transactions</li>
+                <li>• 📈 Derivatives & Funding</li>
+                <li>• 🏛️ Macro Indicators</li>
+                <li>• 🔮 AI Predictions</li>
               </ul>
             </div>
 
