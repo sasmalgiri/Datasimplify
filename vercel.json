@@ -20,6 +20,10 @@
     {
       "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=onchain",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/sync?secret=${SYNC_SECRET_KEY}&type=cleanup",
+      "schedule": "0 4 * * *"
     }
   ]
 }

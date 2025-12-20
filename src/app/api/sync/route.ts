@@ -8,6 +8,7 @@ import {
   syncWhaleData,
   syncOnChainMetrics,
 } from '@/lib/syncService';
+import { cleanupOldData, getDatabaseStats } from '@/lib/dbCleanup';
 
 // Secret key to protect sync endpoint
 const SYNC_SECRET = process.env.SYNC_SECRET_KEY || 'dev-secret-change-in-production';
@@ -55,9 +56,17 @@ export async function GET(request: Request) {
       case 'onchain':
         result = await syncOnChainMetrics();
         break;
+      case 'cleanup':
+        // Remove old data that Groq already knows
+        result = await cleanupOldData();
+        break;
+      case 'stats':
+        // Get database size stats
+        result = await getDatabaseStats();
+        break;
       default:
         return NextResponse.json(
-          { error: 'Invalid sync type' },
+          { error: 'Invalid sync type', validTypes: ['all', 'market', 'defi', 'sentiment', 'whales', 'onchain', 'cleanup', 'stats'] },
           { status: 400 }
         );
     }
