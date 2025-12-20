@@ -17,6 +17,7 @@ const RETENTION = {
   exchange_balances: 7,       // Week of balance history
   market_sentiment: 7,        // Week of market mood
   sync_log: 3,                // Cleanup sync logs too
+  daily_summaries: 7,         // AI-generated summaries
 };
 
 // Tables that use UPSERT (no cleanup needed - always latest)
@@ -64,6 +65,7 @@ export async function cleanupOldData(): Promise<{
       if (table === 'whale_transactions') timestampCol = 'tx_time';
       if (table === 'sentiment_posts') timestampCol = 'posted_at';
       if (table === 'sync_log') timestampCol = 'started_at';
+      if (table === 'daily_summaries') timestampCol = 'summary_date';
 
       const { data, error } = await supabaseAdmin
         .from(table)

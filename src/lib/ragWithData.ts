@@ -172,6 +172,27 @@ async function getPredictionData(coinId?: string): Promise<string> {
   }
 }
 
+async function getDailySummaries(): Promise<string> {
+  if (!isSupabaseConfigured || !supabase) return '';
+
+  try {
+    const { data, error } = await supabase
+      .from('daily_summaries')
+      .select('category, summary, key_points, sentiment_label, summary_date')
+      .order('summary_date', { ascending: false })
+      .limit(5);
+
+    if (error || !data || data.length === 0) return '';
+
+    return data.map(s => {
+      const points = Array.isArray(s.key_points) ? s.key_points.slice(0, 3).join('; ') : '';
+      return `[${s.category.toUpperCase()} - ${s.summary_date}] ${s.summary}${points ? ` Key points: ${points}` : ''} (Outlook: ${s.sentiment_label})`;
+    }).join('\n');
+  } catch {
+    return '';
+  }
+}
+
 // ============================================
 // CONTEXT BUILDER - Determine what data to fetch
 // ============================================
@@ -263,6 +284,13 @@ async function buildContext(query: string): Promise<{ context: string; dataUsed:
       contextParts.push(`🔮 AI PREDICTIONS:\n${predData}`);
       dataUsed.push('predictions');
     }
+  }
+
+  // Always try to include recent AI summaries for richer context
+  const summaryData = await getDailySummaries();
+  if (summaryData) {
+    contextParts.push(`📋 AI MARKET ANALYSIS:\n${summaryData}`);
+    dataUsed.push('daily_summaries');
   }
 
   return {

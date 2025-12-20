@@ -7,18 +7,19 @@
 
 import { supabaseAdmin, isSupabaseConfigured } from './supabase';
 import { fetchMarketOverview } from './dataApi';
-import { 
-  fetchTopDeFiProtocols, 
-  fetchYieldData, 
+import {
+  fetchTopDeFiProtocols,
+  fetchYieldData,
   fetchStablecoinData,
   fetchDeFiTVL,
   fetchFearGreedIndex,
   fetchBitcoinStats,
-  fetchEthGasPrices 
+  fetchEthGasPrices
 } from './onChainData';
 import { aggregateAllSentiment } from './comprehensiveSentiment';
 import { getWhaleDashboard } from './whaleTracking';
 import { SUPPORTED_COINS } from './dataTypes';
+import { generateMarketAnalysis, isGroqConfigured } from './groqAI';
 
 // Check if Supabase is configured
 function checkSupabaseAdmin() {
@@ -56,6 +57,57 @@ async function logSyncComplete(logId: string, recordsSynced: number, error?: str
       completed_at: new Date().toISOString()
     })
     .eq('id', logId);
+}
+
+// ============================================
+// DAILY SUMMARY GENERATION (AI-Powered)
+// ============================================
+
+async function saveDailySummary(
+  category: string,
+  summary: string,
+  keyPoints: string[],
+  sentimentScore: number,
+  sentimentLabel: string,
+  metrics?: Record<string, number>
+): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    await checkSupabaseAdmin()
+      .from('daily_summaries')
+      .upsert({
+        summary_date: today,
+        category,
+        summary,
+        key_points: keyPoints,
+        sentiment_score: sentimentScore,
+        sentiment_label: sentimentLabel,
+        metrics: metrics || {},
+        created_at: new Date().toISOString(),
+      }, { onConflict: 'summary_date,category' });
+
+    console.log(`📝 Saved ${category} daily summary`);
+  } catch (error) {
+    console.error(`Failed to save ${category} summary:`, error);
+  }
+}
+
+async function shouldGenerateDailySummary(category: string): Promise<boolean> {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    const { data } = await checkSupabaseAdmin()
+      .from('daily_summaries')
+      .select('id')
+      .eq('summary_date', today)
+      .eq('category', category)
+      .single();
+
+    return !data; // Generate if no summary exists for today
+  } catch {
+    return true; // Generate on error (likely no row found)
+  }
 }
 
 // ============================================
@@ -105,8 +157,41 @@ export async function syncMarketData(): Promise<{ success: boolean; count: numbe
     if (error) throw error;
     
     console.log(`✅ Synced ${records.length} coins`);
+
+    // Generate daily AI summary (once per day)
+    if (isGroqConfigured() && await shouldGenerateDailySummary('market')) {
+      try {
+        console.log('🤖 Generating AI market summary...');
+        const fearGreed = await fetchFearGreedIndex();
+
+        const analysis = await generateMarketAnalysis({
+          topCoins: marketData.slice(0, 10).map(c => ({
+            symbol: c.symbol,
+            price: c.price,
+            change24h: c.priceChangePercent24h,
+          })),
+          fearGreedIndex: fearGreed.value,
+          fearGreedLabel: fearGreed.label,
+        });
+
+        const sentimentScore = analysis.outlook === 'bullish' ? 0.5 :
+                               analysis.outlook === 'bearish' ? -0.5 : 0;
+
+        await saveDailySummary(
+          'market',
+          analysis.summary,
+          analysis.keyInsights,
+          sentimentScore,
+          analysis.outlook,
+          { riskLevel: analysis.riskLevel === 'high' ? 3 : analysis.riskLevel === 'medium' ? 2 : 1 }
+        );
+      } catch (aiError) {
+        console.error('AI summary generation failed:', aiError);
+      }
+    }
+
     await logSyncComplete(logId, records.length);
-    
+
     return { success: true, count: records.length };
     
   } catch (error) {
