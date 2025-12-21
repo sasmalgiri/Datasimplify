@@ -29,6 +29,25 @@ import {
   getWhaleDashboard,
   estimateExchangeFlows,
 } from '@/lib/whaleTracking';
+import {
+  fetchFundingRatesForDownload,
+  fetchOpenInterestForDownload,
+  fetchLongShortRatioForDownload,
+  fetchLiquidationsForDownload,
+} from '@/lib/derivativesData';
+import {
+  fetchTechnicalIndicatorsForDownload,
+  fetchCorrelationMatrixForDownload,
+  fetchSupportResistanceForDownload,
+} from '@/lib/technicalIndicators';
+import {
+  fetchTokenUnlocksForDownload,
+  fetchStakingRewardsForDownload,
+} from '@/lib/tokenUnlocks';
+import {
+  fetchNFTCollectionsForDownload,
+  fetchNFTStatsForDownload,
+} from '@/lib/nftData';
 import { DataCategory } from '@/lib/dataTypes';
 
 export async function GET(request: Request) {
@@ -393,6 +412,188 @@ export async function GET(request: Request) {
           net_flow_usd: f.netFlowUsd24h,
         }));
         filename = 'exchange_flows';
+        break;
+
+      // ============================================
+      // DERIVATIVES DATA (NEW)
+      // ============================================
+
+      case 'funding_rates':
+        const fundingData = await fetchFundingRatesForDownload(symbols);
+        data = fundingData.map(f => ({
+          symbol: f.symbol,
+          funding_rate: f.fundingRate,
+          funding_rate_annualized: f.fundingRateAnnualized,
+          next_funding_time: f.nextFundingTime,
+          mark_price: f.markPrice,
+          index_price: f.indexPrice,
+          open_interest: f.openInterest,
+          volume_24h: f.volume24h,
+        }));
+        filename = 'funding_rates';
+        break;
+
+      case 'open_interest':
+        const oiData = await fetchOpenInterestForDownload(symbols);
+        data = oiData.map(o => ({
+          symbol: o.symbol,
+          open_interest: o.openInterest,
+          open_interest_usd: o.openInterestUsd,
+          oi_change_24h: o.oiChange24h,
+          price: o.price,
+          volume_24h: o.volume24h,
+        }));
+        filename = 'open_interest';
+        break;
+
+      case 'long_short_ratio':
+        const lsData = await fetchLongShortRatioForDownload(symbols);
+        data = lsData.map(l => ({
+          symbol: l.symbol,
+          long_ratio: l.longRatio,
+          short_ratio: l.shortRatio,
+          long_short_ratio: l.longShortRatio,
+          top_trader_long_ratio: l.topTraderLongRatio,
+          top_trader_short_ratio: l.topTraderShortRatio,
+          timestamp: l.timestamp,
+        }));
+        filename = 'long_short_ratio';
+        break;
+
+      case 'liquidations':
+        const liqData = await fetchLiquidationsForDownload(symbols);
+        data = liqData.map(l => ({
+          symbol: l.symbol,
+          long_liquidations: l.longLiquidations24h,
+          short_liquidations: l.shortLiquidations24h,
+          total_liquidations: l.totalLiquidations24h,
+          largest_liquidation: l.largestLiquidation,
+          is_estimated: l.isEstimated,
+        }));
+        filename = 'liquidations';
+        break;
+
+      // ============================================
+      // TECHNICAL ANALYSIS (NEW)
+      // ============================================
+
+      case 'technical_indicators':
+        const techData = await fetchTechnicalIndicatorsForDownload(symbols);
+        data = techData.map(t => ({
+          symbol: t.symbol,
+          price: t.price,
+          rsi: t.rsi,
+          rsi_signal: t.rsiSignal,
+          macd: t.macd,
+          macd_signal: t.macdSignal,
+          macd_histogram: t.macdHistogram,
+          sma_20: t.sma20,
+          sma_50: t.sma50,
+          sma_200: t.sma200,
+          ema_12: t.ema12,
+          ema_26: t.ema26,
+          bollinger_upper: t.bollingerUpper,
+          bollinger_lower: t.bollingerLower,
+          bollinger_width: t.bollingerWidth,
+          atr: t.atr,
+          stoch_k: t.stochK,
+          stoch_d: t.stochD,
+          overall_signal: t.overallSignal,
+        }));
+        filename = 'technical_indicators';
+        break;
+
+      case 'correlation_matrix':
+        const corrData = await fetchCorrelationMatrixForDownload(symbols);
+        data = corrData.map(c => ({
+          symbol_1: c.symbol1,
+          symbol_2: c.symbol2,
+          correlation: c.correlation,
+          relationship: c.relationship,
+        }));
+        filename = 'correlation_matrix';
+        break;
+
+      case 'support_resistance':
+        const srData = await fetchSupportResistanceForDownload(symbols);
+        data = srData.map(s => ({
+          symbol: s.symbol,
+          price_level: s.price,
+          type: s.type,
+          strength: s.strength,
+          touches: s.touches,
+          last_tested: s.lastTested,
+        }));
+        filename = 'support_resistance';
+        break;
+
+      // ============================================
+      // TOKEN ECONOMICS (NEW)
+      // ============================================
+
+      case 'token_unlocks':
+        const unlockData = await fetchTokenUnlocksForDownload(limit);
+        data = unlockData.map(u => ({
+          name: u.name,
+          symbol: u.symbol,
+          unlock_date: u.unlockDate,
+          days_until: u.daysUntil,
+          unlock_amount: u.unlockAmount,
+          unlock_value_usd: u.unlockValueUsd,
+          percent_of_total: u.percentOfTotal,
+          percent_of_circulating: u.percentOfCirculating,
+          unlock_type: u.unlockType,
+          risk_level: u.riskLevel,
+        }));
+        filename = 'token_unlocks';
+        break;
+
+      case 'staking_rewards':
+        const stakingData = await fetchStakingRewardsForDownload();
+        data = stakingData.map(s => ({
+          name: s.name,
+          symbol: s.symbol,
+          staking_apy: s.stakingApy,
+          inflation_rate: s.inflationRate,
+          total_staked: s.totalStaked,
+          staked_percent: s.stakedPercent,
+          lockup_period: s.lockupPeriod,
+          min_stake: s.minStake,
+        }));
+        filename = 'staking_rewards';
+        break;
+
+      // ============================================
+      // NFT MARKET (NEW)
+      // ============================================
+
+      case 'nft_collections':
+        const chain = searchParams.get('chain') || undefined;
+        const nftData = await fetchNFTCollectionsForDownload(limit, chain);
+        data = nftData.map(n => ({
+          name: n.name,
+          chain: n.chain,
+          floor_price: n.floorPrice,
+          floor_price_usd: n.floorPriceUsd,
+          volume_24h: n.volume24h,
+          volume_change_24h: n.volumeChange24h,
+          sales_24h: n.sales24h,
+          owners: n.owners,
+          total_supply: n.totalSupply,
+          listed_percent: n.listedPercent,
+          market_cap: n.marketCap,
+        }));
+        filename = 'nft_collections';
+        break;
+
+      case 'nft_stats':
+        const nftStats = await fetchNFTStatsForDownload();
+        data = nftStats.map(s => ({
+          metric: s.metric,
+          value: s.value,
+          change_24h: s.change24h || '',
+        }));
+        filename = 'nft_market_stats';
         break;
 
       default:

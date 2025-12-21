@@ -291,3 +291,173 @@ export function estimateUnlockPriceImpact(
     return { impact: `Heavy sell pressure - ${daysToAbsorb.toFixed(0)}+ days to absorb`, severity: 'high' };
   }
 }
+
+// ============================================
+// DOWNLOAD CENTER EXPORTS
+// ============================================
+
+export interface TokenUnlockDownload {
+  name: string;
+  symbol: string;
+  unlockDate: string;
+  daysUntil: number;
+  unlockAmount: number;
+  unlockValueUsd: number | null;
+  percentOfTotal: number;
+  percentOfCirculating: number;
+  unlockType: string;
+  riskLevel: string;
+}
+
+export interface StakingRewardDownload {
+  name: string;
+  symbol: string;
+  stakingApy: number;
+  inflationRate: number;
+  totalStaked: number;
+  stakedPercent: number;
+  lockupPeriod: string;
+  minStake: number;
+}
+
+/**
+ * Fetch token unlocks for download (flattened format)
+ */
+export async function fetchTokenUnlocksForDownload(limit: number = 50): Promise<TokenUnlockDownload[]> {
+  const allUnlocks = await fetchAllUnlocks();
+  const results: TokenUnlockDownload[] = [];
+  const now = Date.now();
+
+  for (const token of allUnlocks.slice(0, limit)) {
+    for (const unlock of token.upcomingUnlocks.slice(0, 5)) { // Max 5 unlocks per token
+      const daysUntil = Math.ceil((unlock.timestamp - now) / (24 * 60 * 60 * 1000));
+
+      results.push({
+        name: token.name,
+        symbol: token.symbol,
+        unlockDate: unlock.date,
+        daysUntil,
+        unlockAmount: unlock.amount,
+        unlockValueUsd: unlock.amountUSD,
+        percentOfTotal: unlock.percentOfTotal,
+        percentOfCirculating: unlock.percentOfCirculating,
+        unlockType: unlock.unlockType,
+        riskLevel: token.riskLevel,
+      });
+    }
+  }
+
+  // Sort by unlock date
+  return results.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
+/**
+ * Fetch staking rewards comparison (mock data - would need StakingRewards API)
+ */
+export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDownload[]> {
+  // Static data for popular PoS coins - would ideally come from StakingRewards API
+  const stakingData: StakingRewardDownload[] = [
+    {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      stakingApy: 3.8,
+      inflationRate: 0.5,
+      totalStaked: 34000000,
+      stakedPercent: 28,
+      lockupPeriod: 'Variable (withdrawals enabled)',
+      minStake: 32,
+    },
+    {
+      name: 'Solana',
+      symbol: 'SOL',
+      stakingApy: 7.2,
+      inflationRate: 5.5,
+      totalStaked: 390000000,
+      stakedPercent: 72,
+      lockupPeriod: '~2-3 days',
+      minStake: 0,
+    },
+    {
+      name: 'Cardano',
+      symbol: 'ADA',
+      stakingApy: 3.5,
+      inflationRate: 2.0,
+      totalStaked: 23000000000,
+      stakedPercent: 63,
+      lockupPeriod: 'No lockup',
+      minStake: 0,
+    },
+    {
+      name: 'Polkadot',
+      symbol: 'DOT',
+      stakingApy: 14.5,
+      inflationRate: 10.0,
+      totalStaked: 750000000,
+      stakedPercent: 52,
+      lockupPeriod: '28 days',
+      minStake: 10,
+    },
+    {
+      name: 'Cosmos',
+      symbol: 'ATOM',
+      stakingApy: 18.0,
+      inflationRate: 14.0,
+      totalStaked: 250000000,
+      stakedPercent: 64,
+      lockupPeriod: '21 days',
+      minStake: 0,
+    },
+    {
+      name: 'Avalanche',
+      symbol: 'AVAX',
+      stakingApy: 8.5,
+      inflationRate: 7.0,
+      totalStaked: 260000000,
+      stakedPercent: 58,
+      lockupPeriod: '2 weeks - 1 year',
+      minStake: 25,
+    },
+    {
+      name: 'Near Protocol',
+      symbol: 'NEAR',
+      stakingApy: 9.0,
+      inflationRate: 5.0,
+      totalStaked: 550000000,
+      stakedPercent: 45,
+      lockupPeriod: '52-65 hours',
+      minStake: 0,
+    },
+    {
+      name: 'Polygon',
+      symbol: 'MATIC',
+      stakingApy: 4.5,
+      inflationRate: 2.5,
+      totalStaked: 4000000000,
+      stakedPercent: 39,
+      lockupPeriod: '80 checkpoints (~2 days)',
+      minStake: 1,
+    },
+    {
+      name: 'Sui',
+      symbol: 'SUI',
+      stakingApy: 3.2,
+      inflationRate: 4.0,
+      totalStaked: 7500000000,
+      stakedPercent: 75,
+      lockupPeriod: '~1 day',
+      minStake: 0,
+    },
+    {
+      name: 'Aptos',
+      symbol: 'APT',
+      stakingApy: 7.0,
+      inflationRate: 7.0,
+      totalStaked: 900000000,
+      stakedPercent: 82,
+      lockupPeriod: '~30 days',
+      minStake: 10,
+    },
+  ];
+
+  return stakingData.sort((a, b) => b.stakingApy - a.stakingApy);
+}

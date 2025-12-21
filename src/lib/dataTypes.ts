@@ -12,7 +12,7 @@
 // DATA CATEGORIES
 // ============================================
 
-export type DataCategory = 
+export type DataCategory =
   | 'market_overview'      // Current prices, market cap, volume
   | 'historical_prices'    // OHLCV candlestick data
   | 'order_book'          // Bid/Ask depth
@@ -39,6 +39,21 @@ export type DataCategory =
   // Whale Tracking (FREE - Glassnode alternative!)
   | 'whale_transactions'   // Large transactions
   | 'exchange_flows'       // Exchange inflow/outflow
+  // Derivatives Data (NEW - Trader favorites!)
+  | 'funding_rates'        // Perpetual futures funding rates
+  | 'liquidations'         // Long/short liquidations
+  | 'open_interest'        // Futures open interest
+  | 'long_short_ratio'     // Trader positioning
+  // Technical Analysis (NEW)
+  | 'technical_indicators' // RSI, MACD, MA, Bollinger
+  | 'correlation_matrix'   // Price correlations
+  | 'support_resistance'   // Key price levels
+  // Token Economics (NEW)
+  | 'token_unlocks'        // Upcoming vesting unlocks
+  | 'staking_rewards'      // Staking APY comparison
+  // NFT Market (NEW)
+  | 'nft_collections'      // Top NFT collections
+  | 'nft_stats'            // Market-wide NFT stats
 
 export interface DataCategoryInfo {
   id: DataCategory;
@@ -580,6 +595,209 @@ export const DATA_CATEGORIES: DataCategoryInfo[] = [
     ],
     filters: [],
     isPremium: false
+  },
+  // ============================================
+  // DERIVATIVES DATA (NEW - Most requested by traders!)
+  // ============================================
+  {
+    id: 'funding_rates',
+    name: 'Funding Rates',
+    description: 'Perpetual futures funding rates - shows market sentiment and cost of holding positions',
+    source: 'binance',
+    updateFrequency: 'Every 8 hours (funding interval)',
+    fields: [
+      'symbol', 'funding_rate', 'funding_rate_annualized', 'next_funding_time',
+      'mark_price', 'index_price', 'open_interest', 'volume_24h'
+    ],
+    filters: [
+      {
+        id: 'coins',
+        name: 'Select Coins',
+        type: 'multiselect',
+        options: []
+      }
+    ],
+    isPremium: false
+  },
+  {
+    id: 'liquidations',
+    name: 'Liquidations',
+    description: 'Long and short liquidation data - shows forced position closures',
+    source: 'calculated',
+    updateFrequency: 'Every 5 minutes',
+    fields: [
+      'symbol', 'long_liquidations', 'short_liquidations', 'total_liquidations_usd',
+      'long_liquidations_usd', 'short_liquidations_usd', 'is_estimated'
+    ],
+    filters: [],
+    isPremium: false
+  },
+  {
+    id: 'open_interest',
+    name: 'Open Interest',
+    description: 'Total value of outstanding futures contracts by coin',
+    source: 'binance',
+    updateFrequency: 'Real-time',
+    fields: [
+      'symbol', 'open_interest', 'open_interest_usd', 'oi_change_24h', 'price', 'volume_24h'
+    ],
+    filters: [
+      {
+        id: 'coins',
+        name: 'Select Coins',
+        type: 'multiselect',
+        options: []
+      }
+    ],
+    isPremium: false
+  },
+  {
+    id: 'long_short_ratio',
+    name: 'Long/Short Ratio',
+    description: 'Trader positioning - percentage of longs vs shorts',
+    source: 'binance',
+    updateFrequency: 'Every hour',
+    fields: [
+      'symbol', 'long_ratio', 'short_ratio', 'long_short_ratio',
+      'top_trader_long_ratio', 'top_trader_short_ratio', 'timestamp'
+    ],
+    filters: [],
+    isPremium: false
+  },
+  // ============================================
+  // TECHNICAL ANALYSIS (NEW)
+  // ============================================
+  {
+    id: 'technical_indicators',
+    name: 'Technical Indicators',
+    description: 'RSI, MACD, Moving Averages, Bollinger Bands and trading signals',
+    source: 'calculated',
+    updateFrequency: 'Based on interval',
+    fields: [
+      'symbol', 'price', 'rsi', 'rsi_signal', 'macd', 'macd_signal', 'macd_histogram',
+      'sma_20', 'sma_50', 'sma_200', 'ema_12', 'ema_26',
+      'bollinger_upper', 'bollinger_lower', 'bollinger_width',
+      'atr', 'stoch_k', 'stoch_d', 'overall_signal'
+    ],
+    filters: [
+      {
+        id: 'coins',
+        name: 'Select Coins',
+        type: 'multiselect',
+        options: []
+      }
+    ],
+    isPremium: false
+  },
+  {
+    id: 'correlation_matrix',
+    name: 'Correlation Matrix',
+    description: 'Price correlation between cryptocurrencies over time',
+    source: 'calculated',
+    updateFrequency: 'Daily',
+    fields: [
+      'symbol_1', 'symbol_2', 'correlation', 'relationship', 'period'
+    ],
+    filters: [
+      {
+        id: 'coins',
+        name: 'Select Coins',
+        type: 'multiselect',
+        options: []
+      }
+    ],
+    isPremium: false
+  },
+  {
+    id: 'support_resistance',
+    name: 'Support & Resistance Levels',
+    description: 'Key price levels identified from historical data',
+    source: 'calculated',
+    updateFrequency: 'Daily',
+    fields: [
+      'symbol', 'price_level', 'type', 'strength', 'touches', 'last_tested'
+    ],
+    filters: [
+      {
+        id: 'coins',
+        name: 'Select Coins',
+        type: 'multiselect',
+        options: []
+      }
+    ],
+    isPremium: false
+  },
+  // ============================================
+  // TOKEN ECONOMICS (NEW)
+  // ============================================
+  {
+    id: 'token_unlocks',
+    name: 'Token Unlocks',
+    description: 'Upcoming token vesting and unlock events - supply dilution risk',
+    source: 'calculated',
+    updateFrequency: 'Daily',
+    fields: [
+      'name', 'symbol', 'unlock_date', 'days_until', 'unlock_amount',
+      'unlock_value_usd', 'percent_of_total', 'percent_of_circulating',
+      'unlock_type', 'risk_level'
+    ],
+    filters: [],
+    isPremium: false
+  },
+  {
+    id: 'staking_rewards',
+    name: 'Staking Rewards',
+    description: 'Staking APY comparison across Proof-of-Stake networks',
+    source: 'calculated',
+    updateFrequency: 'Daily',
+    fields: [
+      'name', 'symbol', 'staking_apy', 'inflation_rate', 'total_staked',
+      'staked_percent', 'lockup_period', 'min_stake'
+    ],
+    filters: [],
+    isPremium: false
+  },
+  // ============================================
+  // NFT MARKET DATA (NEW)
+  // ============================================
+  {
+    id: 'nft_collections',
+    name: 'NFT Collections',
+    description: 'Top NFT collections by volume, floor price, and market cap',
+    source: 'calculated',
+    updateFrequency: 'Every 5 minutes',
+    fields: [
+      'name', 'chain', 'floor_price', 'floor_price_usd', 'volume_24h',
+      'volume_change_24h', 'sales_24h', 'owners', 'total_supply',
+      'listed_percent', 'market_cap'
+    ],
+    filters: [
+      {
+        id: 'chain',
+        name: 'Blockchain',
+        type: 'select',
+        options: [
+          { value: 'all', label: 'All Chains' },
+          { value: 'ethereum', label: 'Ethereum' },
+          { value: 'solana', label: 'Solana' },
+          { value: 'bitcoin', label: 'Bitcoin (Ordinals)' },
+          { value: 'polygon', label: 'Polygon' },
+        ]
+      }
+    ],
+    isPremium: false
+  },
+  {
+    id: 'nft_stats',
+    name: 'NFT Market Stats',
+    description: 'Aggregate NFT market statistics across all chains',
+    source: 'calculated',
+    updateFrequency: 'Every 5 minutes',
+    fields: [
+      'metric', 'value', 'change_24h'
+    ],
+    filters: [],
+    isPremium: false
   }
 ];
 
@@ -837,6 +1055,96 @@ export const FIELD_DISPLAY_NAMES: Record<string, string> = {
   'inflow_usd': 'Inflow (USD)',
   'outflow_usd': 'Outflow (USD)',
   'net_flow_usd': 'Net Flow (USD)',
+
+  // Derivatives - Funding Rates
+  'funding_rate': 'Funding Rate %',
+  'funding_rate_annualized': 'Annualized Rate %',
+  'next_funding_time': 'Next Funding',
+  'mark_price': 'Mark Price',
+  'index_price': 'Index Price',
+
+  // Derivatives - Liquidations
+  'long_liquidations': 'Long Liquidations',
+  'short_liquidations': 'Short Liquidations',
+  'total_liquidations_usd': 'Total Liquidations (USD)',
+  'long_liquidations_usd': 'Long Liquidations (USD)',
+  'short_liquidations_usd': 'Short Liquidations (USD)',
+  'is_estimated': 'Is Estimated',
+
+  // Derivatives - Open Interest
+  'open_interest': 'Open Interest',
+  'open_interest_usd': 'Open Interest (USD)',
+  'oi_change_24h': 'OI Change (24h)',
+
+  // Derivatives - Long/Short Ratio
+  'long_ratio': 'Long Ratio %',
+  'short_ratio': 'Short Ratio %',
+  'long_short_ratio': 'Long/Short Ratio',
+  'top_trader_long_ratio': 'Top Traders Long %',
+  'top_trader_short_ratio': 'Top Traders Short %',
+
+  // Technical Indicators
+  'rsi': 'RSI',
+  'rsi_signal': 'RSI Signal',
+  'macd': 'MACD',
+  'macd_signal': 'MACD Signal',
+  'macd_histogram': 'MACD Histogram',
+  'sma_20': 'SMA 20',
+  'sma_50': 'SMA 50',
+  'sma_200': 'SMA 200',
+  'ema_12': 'EMA 12',
+  'ema_26': 'EMA 26',
+  'bollinger_upper': 'Bollinger Upper',
+  'bollinger_lower': 'Bollinger Lower',
+  'bollinger_width': 'Bollinger Width %',
+  'atr': 'ATR',
+  'stoch_k': 'Stochastic %K',
+  'stoch_d': 'Stochastic %D',
+  'overall_signal': 'Overall Signal',
+
+  // Correlation Matrix
+  'symbol_1': 'Coin 1',
+  'symbol_2': 'Coin 2',
+  'correlation': 'Correlation',
+  'relationship': 'Relationship',
+  'period': 'Period',
+
+  // Support & Resistance
+  'price_level': 'Price Level',
+  'strength': 'Strength',
+  'touches': 'Touches',
+  'last_tested': 'Last Tested',
+
+  // Token Unlocks
+  'unlock_date': 'Unlock Date',
+  'days_until': 'Days Until',
+  'unlock_amount': 'Unlock Amount',
+  'unlock_value_usd': 'Unlock Value (USD)',
+  'percent_of_total': '% of Total Supply',
+  'percent_of_circulating': '% of Circulating',
+  'unlock_type': 'Unlock Type',
+  'risk_level': 'Risk Level',
+
+  // Staking Rewards
+  'staking_apy': 'Staking APY %',
+  'inflation_rate': 'Inflation Rate %',
+  'total_staked': 'Total Staked',
+  'staked_percent': 'Staked %',
+  'lockup_period': 'Lockup Period',
+  'min_stake': 'Min Stake',
+
+  // NFT Collections
+  'floor_price': 'Floor Price',
+  'floor_price_usd': 'Floor Price (USD)',
+  'volume_change_24h': 'Volume Change (24h)',
+  'sales_24h': 'Sales (24h)',
+  'owners': 'Owners',
+  'total_supply': 'Total Supply',
+  'listed_percent': 'Listed %',
+
+  // NFT Stats
+  'metric': 'Metric',
+  'change_24h': 'Change (24h)',
 };
 
 // Get display name for a field

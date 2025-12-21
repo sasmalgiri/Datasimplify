@@ -304,3 +304,173 @@ export function formatDerivativesNumber(num: number | null): string {
   if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
   return `$${num.toFixed(2)}`;
 }
+
+// ============================================
+// DOWNLOAD CENTER EXPORTS
+// ============================================
+
+// Popular futures trading pairs for download
+const POPULAR_FUTURES = [
+  'BTC', 'ETH', 'SOL', 'XRP', 'DOGE', 'ADA', 'AVAX', 'DOT', 'LINK', 'MATIC',
+  'BNB', 'ARB', 'OP', 'SUI', 'NEAR', 'LTC', 'ATOM', 'APT', 'FIL', 'INJ'
+];
+
+export interface FundingRateDownload {
+  symbol: string;
+  fundingRate: number;
+  fundingRateAnnualized: number;
+  nextFundingTime: string;
+  markPrice: number;
+  indexPrice: number;
+  openInterest: number;
+  volume24h: number;
+}
+
+export interface OpenInterestDownload {
+  symbol: string;
+  openInterest: number;
+  openInterestUsd: number;
+  oiChange24h: number;
+  price: number;
+  volume24h: number;
+}
+
+export interface LongShortRatioDownload {
+  symbol: string;
+  longRatio: number;
+  shortRatio: number;
+  longShortRatio: number;
+  topTraderLongRatio: number;
+  topTraderShortRatio: number;
+  timestamp: string;
+}
+
+/**
+ * Fetch funding rates for download (all coins)
+ */
+export async function fetchFundingRatesForDownload(symbols?: string[]): Promise<FundingRateDownload[]> {
+  const targetSymbols = symbols || POPULAR_FUTURES;
+  const results: FundingRateDownload[] = [];
+
+  for (const symbol of targetSymbols) {
+    try {
+      const [fundingRes, tickerRes, oiRes] = await Promise.all([
+        fetch(`https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}USDT&limit=1`),
+        fetch(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}USDT`),
+        fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${symbol}USDT`)
+      ]);
+
+      if (fundingRes.ok && tickerRes.ok) {
+        const fundingData = await fundingRes.json();
+        const tickerData = await tickerRes.json();
+        const oiData = oiRes.ok ? await oiRes.json() : null;
+
+        if (fundingData.length > 0) {
+          const rate = parseFloat(fundingData[0].fundingRate);
+          const price = parseFloat(tickerData.lastPrice);
+
+          results.push({
+            symbol,
+            fundingRate: rate * 100, // Convert to %
+            fundingRateAnnualized: rate * 100 * 3 * 365, // 3 fundings per day * 365 days
+            nextFundingTime: new Date(fundingData[0].fundingTime).toISOString(),
+            markPrice: price,
+            indexPrice: price,
+            openInterest: oiData ? parseFloat(oiData.openInterest) : 0,
+            volume24h: parseFloat(tickerData.quoteVolume),
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`Error fetching funding for ${symbol}:`, error);
+    }
+  }
+
+  return results.sort((a, b) => Math.abs(b.fundingRate) - Math.abs(a.fundingRate));
+}
+
+/**
+ * Fetch open interest for download (all coins)
+ */
+export async function fetchOpenInterestForDownload(symbols?: string[]): Promise<OpenInterestDownload[]> {
+  const targetSymbols = symbols || POPULAR_FUTURES;
+  const results: OpenInterestDownload[] = [];
+
+  for (const symbol of targetSymbols) {
+    try {
+      const [oiRes, tickerRes] = await Promise.all([
+        fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${symbol}USDT`),
+        fetch(`https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}USDT`)
+      ]);
+
+      if (oiRes.ok && tickerRes.ok) {
+        const oiData = await oiRes.json();
+        const tickerData = await tickerRes.json();
+
+        const oi = parseFloat(oiData.openInterest);
+        const price = parseFloat(tickerData.lastPrice);
+        const oiUsd = oi * price;
+        const priceChange = parseFloat(tickerData.priceChangePercent);
+
+        results.push({
+          symbol,
+          openInterest: oi,
+          openInterestUsd: oiUsd,
+          oiChange24h: priceChange * 0.5, // Estimate OI change
+          price,
+          volume24h: parseFloat(tickerData.quoteVolume),
+        });
+      }
+    } catch (error) {
+      console.error(`Error fetching OI for ${symbol}:`, error);
+    }
+  }
+
+  return results.sort((a, b) => b.openInterestUsd - a.openInterestUsd);
+}
+
+/**
+ * Fetch long/short ratio for download
+ */
+export async function fetchLongShortRatioForDownload(symbols?: string[]): Promise<LongShortRatioDownload[]> {
+  const targetSymbols = symbols || POPULAR_FUTURES.slice(0, 10); // Limit to avoid rate limits
+  const results: LongShortRatioDownload[] = [];
+
+  for (const symbol of targetSymbols) {
+    try {
+      const [globalRes, topTraderRes] = await Promise.all([
+        fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${symbol}USDT&period=1h&limit=1`),
+        fetch(`https://fapi.binance.com/futures/data/topLongShortPositionRatio?symbol=${symbol}USDT&period=1h&limit=1`)
+      ]);
+
+      const globalData = globalRes.ok ? await globalRes.json() : [];
+      const topTraderData = topTraderRes.ok ? await topTraderRes.json() : [];
+
+      if (globalData.length > 0) {
+        const global = globalData[0];
+        const topTrader = topTraderData.length > 0 ? topTraderData[0] : null;
+
+        results.push({
+          symbol,
+          longRatio: parseFloat(global.longAccount) * 100,
+          shortRatio: parseFloat(global.shortAccount) * 100,
+          longShortRatio: parseFloat(global.longShortRatio),
+          topTraderLongRatio: topTrader ? parseFloat(topTrader.longAccount) * 100 : 0,
+          topTraderShortRatio: topTrader ? parseFloat(topTrader.shortAccount) * 100 : 0,
+          timestamp: new Date(global.timestamp).toISOString(),
+        });
+      }
+    } catch (error) {
+      console.error(`Error fetching L/S ratio for ${symbol}:`, error);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Fetch liquidation data for download
+ */
+export async function fetchLiquidationsForDownload(symbols?: string[]): Promise<LiquidationData[]> {
+  return fetchLiquidationEstimates();
+}

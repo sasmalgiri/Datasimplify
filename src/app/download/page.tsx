@@ -168,6 +168,7 @@ export default function DownloadPage() {
     try {
       let url = `/api/download?category=${selectedCategory}&format=json&preview=true`;
 
+      // Build URL based on category
       if (selectedCategory === 'market_overview') {
         if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
         if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
@@ -180,6 +181,30 @@ export default function DownloadPage() {
         url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'gainers_losers') {
         url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
+      } else if (selectedCategory === 'sentiment_coin') {
+        url += `&symbol=${firstSelectedCoin}`;
+      } else if (selectedCategory === 'sentiment_news') {
+        url += `&filter=hot`;
+      }
+      // Derivatives data
+      else if (['funding_rates', 'open_interest', 'long_short_ratio', 'liquidations'].includes(selectedCategory)) {
+        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
+      }
+      // Technical analysis
+      else if (['technical_indicators', 'correlation_matrix', 'support_resistance'].includes(selectedCategory)) {
+        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
+      }
+      // Token economics
+      else if (selectedCategory === 'token_unlocks') {
+        url += `&limit=${selectedLimit}`;
+      }
+      // NFT data
+      else if (selectedCategory === 'nft_collections') {
+        url += `&limit=${selectedLimit}`;
+      }
+      // Other categories with limit support
+      else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
+        url += `&limit=${selectedLimit}`;
       }
 
       const response = await fetch(url);
@@ -206,6 +231,7 @@ export default function DownloadPage() {
     try {
       let url = `/api/download?category=${selectedCategory}&format=${selectedFormat}`;
 
+      // Build URL based on category
       if (selectedCategory === 'market_overview') {
         if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
         if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
@@ -218,6 +244,30 @@ export default function DownloadPage() {
         url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
       } else if (selectedCategory === 'gainers_losers') {
         url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
+      } else if (selectedCategory === 'sentiment_coin') {
+        url += `&symbol=${firstSelectedCoin}`;
+      } else if (selectedCategory === 'sentiment_news') {
+        url += `&filter=hot`;
+      }
+      // Derivatives data
+      else if (['funding_rates', 'open_interest', 'long_short_ratio', 'liquidations'].includes(selectedCategory)) {
+        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
+      }
+      // Technical analysis
+      else if (['technical_indicators', 'correlation_matrix', 'support_resistance'].includes(selectedCategory)) {
+        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
+      }
+      // Token economics
+      else if (selectedCategory === 'token_unlocks') {
+        url += `&limit=${selectedLimit}`;
+      }
+      // NFT data
+      else if (selectedCategory === 'nft_collections') {
+        url += `&limit=${selectedLimit}`;
+      }
+      // Other categories with limit support
+      else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
+        url += `&limit=${selectedLimit}`;
       }
 
       const response = await fetch(url);

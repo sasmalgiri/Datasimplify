@@ -18,6 +18,7 @@ const RETENTION = {
   market_sentiment: 7,        // Week of market mood
   sync_log: 3,                // Cleanup sync logs too
   daily_summaries: 7,         // AI-generated summaries
+  rag_query_history: 30,      // 30-day RAG query history for analytics
 };
 
 // Tables that use UPSERT (no cleanup needed - always latest)
@@ -66,6 +67,7 @@ export async function cleanupOldData(): Promise<{
       if (table === 'sentiment_posts') timestampCol = 'posted_at';
       if (table === 'sync_log') timestampCol = 'started_at';
       if (table === 'daily_summaries') timestampCol = 'summary_date';
+      if (table === 'rag_query_history') timestampCol = 'created_at';
 
       const { data, error } = await supabaseAdmin
         .from(table)

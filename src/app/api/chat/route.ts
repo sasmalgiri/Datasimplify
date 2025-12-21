@@ -1,12 +1,39 @@
 import { NextResponse } from 'next/server';
-import { ragQuery, getMarketSummary, getCoinAnalysis, getRiskAssessment } from '@/lib/ragWithData';
+import { ragQuery, getMarketSummary, getCoinAnalysis, getRiskAssessment, UserLevel } from '@/lib/ragWithData';
 
 export const dynamic = 'force-dynamic';
+
+// Validate user level
+function parseUserLevel(level: unknown): UserLevel {
+  if (level === 'beginner' || level === 'intermediate' || level === 'pro') {
+    return level;
+  }
+  return 'intermediate'; // Default
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { message, history, action } = body;
+    const {
+      message,
+      history,
+      action,
+      userLevel: rawUserLevel,
+      coinSymbol,
+      watchlist,
+      portfolioHoldings,
+      userId
+    } = body;
+
+    // Parse user level
+    const userLevel = parseUserLevel(rawUserLevel);
+    const options = {
+      userLevel,
+      coinSymbol,
+      watchlist: Array.isArray(watchlist) ? watchlist : undefined,
+      portfolioHoldings: Array.isArray(portfolioHoldings) ? portfolioHoldings : undefined,
+      userId: typeof userId === 'string' ? userId : undefined,
+    };
 
     // Handle quick actions
     if (action) {
@@ -34,6 +61,7 @@ export async function POST(request: Request) {
           answer: result.answer,
           dataUsed: result.dataUsed,
           confidence: result.confidence,
+          userLevel: result.userLevel,
         },
       });
     }
@@ -51,7 +79,7 @@ export async function POST(request: Request) {
         }))
       : [];
 
-    const result = await ragQuery(message, conversationHistory);
+    const result = await ragQuery(message, conversationHistory, options);
 
     return NextResponse.json({
       success: true,
@@ -60,6 +88,13 @@ export async function POST(request: Request) {
         dataUsed: result.dataUsed,
         confidence: result.confidence,
         tokensUsed: result.tokensUsed,
+        userLevel: result.userLevel,
+        // Enhanced fields
+        suggestedQuestions: result.suggestedQuestions,
+        sourceQuality: result.sourceQuality,
+        marketSession: result.marketSession,
+        queryType: result.queryType,
+        comparisonData: result.comparisonData,
       },
     });
   } catch (error) {
@@ -98,6 +133,12 @@ export async function GET() {
       derivatives: true,
       macroIndicators: true,
       predictions: true,
+      // Enhanced RAG features
+      aiSummaries: process.env.ENABLE_AI_SUMMARIES !== 'false',
+      sentimentSignals: process.env.ENABLE_SENTIMENT_SIGNALS !== 'false',
+      smartMoney: process.env.ENABLE_SMART_MONEY !== 'false',
+      userAdaptation: process.env.ENABLE_USER_ADAPTATION !== 'false',
     },
+    userLevels: ['beginner', 'intermediate', 'pro'],
   });
 }
