@@ -363,7 +363,7 @@ export default function PortfolioBuilderPage() {
 
               {/* Allocation Table */}
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-gray-900">
                   <tr className="border-b">
                     <th className="text-left py-3">Asset</th>
                     <th className="text-right py-3">Allocation</th>

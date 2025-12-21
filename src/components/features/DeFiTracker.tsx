@@ -326,7 +326,7 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
           {/* Protocol Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10 bg-white">
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-2">#</th>
                   <th className="text-left py-3 px-2">Protocol</th>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
 import { Providers } from '@/components/Providers';
+import DisclaimerBanner from '@/components/ui/DisclaimerBanner';
 
 export const metadata: Metadata = {
   title: 'DataSimplify - Crypto Data Made Simple',
@@ -58,8 +59,30 @@ function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
-          <p>© {new Date().getFullYear()} DataSimplify. All rights reserved.</p>
+        {/* Compliance Section */}
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <div className="bg-gray-800/30 rounded-lg p-4 mb-6">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              <span className="text-yellow-500 font-medium">⚠️ Important Disclaimer:</span> DataSimplify provides educational content only.
+              Nothing on this platform constitutes financial, investment, tax, or legal advice.
+              Cryptocurrency investments are highly volatile and risky - you may lose some or all of your investment.
+              Past performance is not indicative of future results. Always DYOR (Do Your Own Research)
+              and consult with qualified financial advisors before making any investment decisions.
+            </p>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+            <p>© {new Date().getFullYear()} DataSimplify. All rights reserved.</p>
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+              <span>🔒 We do not sell your data</span>
+              <span>|</span>
+              <Link href="/terms" className="hover:text-white">Terms</Link>
+              <span>|</span>
+              <Link href="/privacy" className="hover:text-white">Privacy</Link>
+              <span>|</span>
+              <span>Not available in all jurisdictions</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
@@ -75,6 +98,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-900">
         <Providers>
+          <DisclaimerBanner />
           <main className="min-h-screen">
             {children}
           </main>

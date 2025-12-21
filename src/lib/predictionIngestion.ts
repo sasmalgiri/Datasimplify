@@ -44,18 +44,99 @@ export interface IngestionOptions {
   storeTrainingData?: boolean;
 }
 
-// Default coins to track
+// Default coins to track - expanded to 50+ coins across categories
 const DEFAULT_COINS = [
+  // Major Layer 1s
   'bitcoin',
   'ethereum',
   'solana',
   'cardano',
   'polkadot',
   'avalanche-2',
+  'cosmos',
+  'near',
+  'sui',
+  'aptos',
+  'internet-computer',
+  'toncoin',
+  'tron',
+  'algorand',
+  'hedera-hashgraph',
+  'fantom',
+  'stellar',
+  'vechain',
+  'elrond-erd-2',
+  'flow',
+
+  // Layer 2s & Scaling
   'polygon',
+  'arbitrum',
+  'optimism',
+  'immutable-x',
+  'starknet',
+  'mantle',
+  'base',
+  'zksync',
+
+  // DeFi Protocols
   'chainlink',
   'uniswap',
-  'arbitrum',
+  'aave',
+  'maker',
+  'lido-dao',
+  'curve-dao-token',
+  'synthetix-network-token',
+  'compound-governance-token',
+  'pancakeswap-token',
+  'the-graph',
+  '1inch',
+  'gmx',
+  'dydx',
+  'rocket-pool',
+  'frax-share',
+
+  // Exchange Tokens
+  'binancecoin',
+  'okb',
+  'crypto-com-chain',
+  'kucoin-shares',
+  'bitget-token',
+
+  // Meme Coins
+  'dogecoin',
+  'shiba-inu',
+  'pepe',
+  'bonk',
+  'floki',
+  'dogwifcoin',
+
+  // AI & Infrastructure
+  'render-token',
+  'fetch-ai',
+  'singularitynet',
+  'ocean-protocol',
+  'filecoin',
+  'arweave',
+  'theta-token',
+  'akash-network',
+
+  // Gaming & Metaverse
+  'axie-infinity',
+  'the-sandbox',
+  'decentraland',
+  'gala',
+  'illuvium',
+  'enjincoin',
+
+  // Privacy & Others
+  'monero',
+  'zcash',
+  'kaspa',
+  'injective-protocol',
+  'sei-network',
+  'celestia',
+  'jupiter-exchange-solana',
+  'jito-governance-token',
 ];
 
 // ============================================

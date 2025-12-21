@@ -58,7 +58,7 @@ function DynamicBar({
   );
 }
 
-// Chart type definitions
+// Chart type definitions - expanded to 20 chart types
 type ChartType =
   | 'price_history'
   | 'candlestick'
@@ -69,25 +69,59 @@ type ChartType =
   | 'prediction_accuracy'
   | 'price_prediction'
   | 'volume_analysis'
-  | 'momentum';
+  | 'momentum'
+  // New chart types
+  | 'fibonacci'
+  | 'volume_profile'
+  | 'funding_rate'
+  | 'open_interest'
+  | 'liquidation_heatmap'
+  | 'whale_flow'
+  | 'active_addresses'
+  | 'fear_greed_history'
+  | 'social_volume'
+  | 'btc_dominance';
 
 interface ChartConfig {
   type: ChartType;
   title: string;
   description: string;
   icon: string;
-  category: 'historical' | 'volatility' | 'prediction' | 'comparison';
+  category: 'historical' | 'volatility' | 'prediction' | 'comparison' | 'onchain' | 'derivatives' | 'sentiment';
 }
 
 const CHART_CONFIGS: ChartConfig[] = [
+  // Historical Charts
   { type: 'price_history', title: 'Price History', description: 'Historical price trends with moving averages', icon: '📈', category: 'historical' },
   { type: 'candlestick', title: 'Candlestick', description: 'OHLC candlestick chart for trading analysis', icon: '🕯️', category: 'historical' },
   { type: 'volume_analysis', title: 'Volume Analysis', description: 'Trading volume with price overlay', icon: '📊', category: 'historical' },
+
+  // Technical Analysis Charts
   { type: 'volatility', title: 'Volatility Index', description: 'Price volatility over time', icon: '📉', category: 'volatility' },
   { type: 'momentum', title: 'Momentum Indicators', description: 'RSI, MACD, and other momentum metrics', icon: '⚡', category: 'volatility' },
+  { type: 'fibonacci', title: 'Fibonacci Retracement', description: 'Key support/resistance levels', icon: '🔢', category: 'volatility' },
+  { type: 'volume_profile', title: 'Volume Profile', description: 'Volume distribution at price levels', icon: '📶', category: 'volatility' },
+
+  // Comparison Charts
   { type: 'correlation', title: 'Correlation Matrix', description: 'Asset correlation heatmap', icon: '🔗', category: 'comparison' },
   { type: 'racing_bar', title: 'Racing Bar Chart', description: 'Animated market cap ranking over time', icon: '🏎️', category: 'comparison' },
   { type: 'market_dominance', title: 'Market Dominance', description: 'Market share distribution', icon: '🥧', category: 'comparison' },
+  { type: 'btc_dominance', title: 'BTC Dominance History', description: 'Bitcoin dominance over time', icon: '👑', category: 'comparison' },
+
+  // Derivatives Charts
+  { type: 'funding_rate', title: 'Funding Rate History', description: 'Futures funding rates over time', icon: '💹', category: 'derivatives' },
+  { type: 'open_interest', title: 'Open Interest', description: 'OI changes with price overlay', icon: '📋', category: 'derivatives' },
+  { type: 'liquidation_heatmap', title: 'Liquidation Heatmap', description: 'Predicted liquidation levels', icon: '🔥', category: 'derivatives' },
+
+  // On-Chain Charts
+  { type: 'whale_flow', title: 'Whale Flow', description: 'Exchange in/out flows by whales', icon: '🐋', category: 'onchain' },
+  { type: 'active_addresses', title: 'Active Addresses', description: 'Network activity over time', icon: '👥', category: 'onchain' },
+
+  // Sentiment Charts
+  { type: 'fear_greed_history', title: 'Fear & Greed History', description: 'Historical fear/greed index', icon: '😱', category: 'sentiment' },
+  { type: 'social_volume', title: 'Social Volume', description: 'Social mentions & engagement', icon: '📣', category: 'sentiment' },
+
+  // Prediction Charts
   { type: 'prediction_accuracy', title: 'AI Prediction Accuracy', description: 'Historical prediction performance', icon: '🎯', category: 'prediction' },
   { type: 'price_prediction', title: 'Price Prediction', description: 'AI-powered price forecasts', icon: '🔮', category: 'prediction' },
 ];
@@ -654,7 +688,7 @@ export default function ChartsPage() {
           <div className="p-4">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-gray-900">
                   <tr>
                     <th className="p-2 text-left text-gray-400"></th>
                     {COINS.slice(0, 6).map(coin => (

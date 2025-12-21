@@ -276,7 +276,7 @@ export default function DashboardPage() {
               </p>
             ) : (
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-gray-900">
                   <tr className="text-left text-gray-400 text-sm">
                     <th className="pb-3">Category</th>
                     <th className="pb-3">Format</th>

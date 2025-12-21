@@ -166,22 +166,43 @@ const SORT_OPTIONS = [
   { id: 'ath_change_asc', label: 'Furthest from ATH' },
 ];
 
-// Visible columns configuration
+// Visible columns configuration - expanded to match Download page parity
 const COLUMN_OPTIONS = [
-  { id: 'price', label: 'Price', default: true },
-  { id: 'change_24h', label: '24h Change', default: true },
-  { id: 'change_7d', label: '7d Change', default: true },
-  { id: 'change_30d', label: '30d Change', default: false },
-  { id: 'ai_signal', label: 'AI Signal', default: true },
-  { id: 'market_cap', label: 'Market Cap', default: true },
-  { id: 'fdv', label: 'Fully Diluted Val.', default: false },
-  { id: 'volume', label: '24h Volume', default: true },
-  { id: 'circulating', label: 'Circulating Supply', default: false },
-  { id: 'max_supply', label: 'Max Supply', default: false },
-  { id: 'ath', label: 'ATH', default: true },
-  { id: 'from_ath', label: 'From ATH', default: true },
-  { id: 'atl', label: 'ATL', default: false },
-  { id: 'from_atl', label: 'From ATL', default: false },
+  // Market Data
+  { id: 'price', label: 'Price', default: true, category: 'Market' },
+  { id: 'change_24h', label: '24h Change', default: true, category: 'Market' },
+  { id: 'change_7d', label: '7d Change', default: true, category: 'Market' },
+  { id: 'change_30d', label: '30d Change', default: false, category: 'Market' },
+  { id: 'change_1y', label: '1Y Change', default: false, category: 'Market' },
+  { id: 'market_cap', label: 'Market Cap', default: true, category: 'Market' },
+  { id: 'fdv', label: 'Fully Diluted Val.', default: false, category: 'Market' },
+  { id: 'volume', label: '24h Volume', default: true, category: 'Market' },
+  { id: 'vol_mcap_ratio', label: 'Vol/MCap Ratio', default: false, category: 'Market' },
+  { id: 'circulating', label: 'Circulating Supply', default: false, category: 'Market' },
+  { id: 'max_supply', label: 'Max Supply', default: false, category: 'Market' },
+  { id: 'supply_ratio', label: 'Circ/Max Supply %', default: false, category: 'Market' },
+
+  // Price Levels
+  { id: 'ath', label: 'ATH', default: true, category: 'Price Levels' },
+  { id: 'from_ath', label: 'From ATH', default: true, category: 'Price Levels' },
+  { id: 'atl', label: 'ATL', default: false, category: 'Price Levels' },
+  { id: 'from_atl', label: 'From ATL', default: false, category: 'Price Levels' },
+  { id: 'high_24h', label: '24h High', default: false, category: 'Price Levels' },
+  { id: 'low_24h', label: '24h Low', default: false, category: 'Price Levels' },
+  { id: 'price_range_24h', label: '24h Range %', default: false, category: 'Price Levels' },
+
+  // AI & Signals
+  { id: 'ai_signal', label: 'AI Signal', default: true, category: 'AI' },
+  { id: 'ai_confidence', label: 'AI Confidence', default: false, category: 'AI' },
+  { id: 'risk_level', label: 'Risk Level', default: false, category: 'AI' },
+
+  // Technical Indicators (simulated)
+  { id: 'rsi', label: 'RSI (14)', default: false, category: 'Technical' },
+  { id: 'volatility', label: 'Volatility', default: false, category: 'Technical' },
+  { id: 'momentum', label: 'Momentum', default: false, category: 'Technical' },
+
+  // Market Dominance
+  { id: 'dominance', label: 'Market Dominance', default: false, category: 'Dominance' },
 ];
 
 // Prediction interface
@@ -701,7 +722,7 @@ export default function ComparePage() {
           <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-gray-900">
                   <tr className="bg-gray-900/50 border-b border-gray-700">
                     <th className="px-4 py-3 text-left text-emerald-400 font-medium sticky left-0 bg-gray-900/95">#</th>
                     <th className="px-4 py-3 text-left text-emerald-400 font-medium">Coin</th>

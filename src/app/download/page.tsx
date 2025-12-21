@@ -870,7 +870,7 @@ export default function DownloadPage() {
               ) : filteredPreviewData && filteredPreviewData.length > 0 && selectedFields.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="sticky top-0 z-10 bg-gray-900">
                       <tr className="border-b border-gray-800">
                         {selectedFields.slice(0, 5).map(key => (
                           <th key={key} className="text-left text-emerald-400 py-2 px-2 font-medium text-xs" title={key}>

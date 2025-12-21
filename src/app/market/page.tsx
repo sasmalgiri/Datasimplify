@@ -562,7 +562,7 @@ export default function MarketPage() {
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-700">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-gray-800 sticky top-0 z-10">
                 <tr className="border-b border-gray-700">
                   <th className="px-4 py-4 text-left text-gray-400 font-medium">#</th>
                   <th className="px-4 py-4 text-left text-emerald-400 font-medium">Coin</th>
