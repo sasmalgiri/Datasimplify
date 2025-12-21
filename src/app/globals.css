@@ -94,3 +94,24 @@ body {
   width: var(--progress-width, 0%);
   transition: width 0.5s ease;
 }
+
+/* Animation delay utilities (avoids inline style warnings) */
+.animation-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+/* Dynamic bar with CSS custom properties */
+.dynamic-bar {
+  width: var(--bar-width, 0%);
+  background-color: var(--bar-color, #6366f1);
+  transition: width 0.5s ease;
+}
+
+/* Dynamic color dot */
+.color-dot {
+  background-color: var(--dot-color, #6366f1);
+}

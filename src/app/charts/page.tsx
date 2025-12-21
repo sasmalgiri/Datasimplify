@@ -30,6 +30,34 @@ import {
   Scatter,
 } from 'recharts';
 
+// Dynamic bar component using ref to avoid inline style warnings
+function DynamicBar({
+  width,
+  color,
+  children,
+  className = ''
+}: {
+  width: number;
+  color: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.setProperty('--bar-width', `${width}%`);
+      barRef.current.style.setProperty('--bar-color', color);
+    }
+  }, [width, color]);
+
+  return (
+    <div ref={barRef} className={`dynamic-bar ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 // Chart type definitions
 type ChartType =
   | 'price_history'
@@ -683,15 +711,13 @@ export default function ChartsPage() {
                   <div className="w-8 text-center text-gray-400 font-bold">#{index + 1}</div>
                   <div className="w-16 font-medium">{coin.symbol}</div>
                   <div className="flex-1">
-                    <div
+                    <DynamicBar
+                      width={(coin.marketCap / maxCap) * 100}
+                      color={CHART_COLORS[index % CHART_COLORS.length]}
                       className="h-8 rounded transition-all duration-500 flex items-center px-2 text-white text-sm font-medium"
-                      style={{
-                        width: `${(coin.marketCap / maxCap) * 100}%`,
-                        backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
-                      }}
                     >
                       {formatValue(coin.marketCap, 'volume')}
-                    </div>
+                    </DynamicBar>
                   </div>
                 </div>
               ))}

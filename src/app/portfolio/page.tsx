@@ -1,7 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BeginnerTip, InfoButton, RiskMeter, TrafficLight } from '@/components/ui/BeginnerHelpers';
+
+// Color dot component using ref to avoid inline style warnings
+function ColorDot({ color, className = '' }: { color: string; className?: string }) {
+  const dotRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (dotRef.current) {
+      dotRef.current.style.setProperty('--dot-color', color);
+    }
+  }, [color]);
+
+  return <div ref={dotRef} className={`color-dot ${className}`} />;
+}
 
 interface Allocation {
   id: string;
@@ -256,10 +269,7 @@ export default function PortfolioBuilderPage() {
                 <div className="flex-1 space-y-3">
                   {allocations.map((alloc) => (
                     <div key={alloc.id} className="flex items-center gap-4">
-                      <div 
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: alloc.color }}
-                      />
+                      <ColorDot color={alloc.color} className="w-4 h-4 rounded" />
                       <div className="flex-1">
                         <div className="flex justify-between items-center mb-1">
                           <label htmlFor={`allocation-${alloc.id}`} className="font-medium">{alloc.name}</label>
@@ -366,7 +376,7 @@ export default function PortfolioBuilderPage() {
                     <tr key={alloc.id} className="border-b border-gray-100">
                       <td className="py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded" style={{ backgroundColor: alloc.color }} />
+                          <ColorDot color={alloc.color} className="w-3 h-3 rounded" />
                           <span className="font-medium">{alloc.name}</span>
                           <span className="text-gray-400">({alloc.symbol})</span>
                         </div>
