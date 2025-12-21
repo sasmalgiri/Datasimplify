@@ -25,6 +25,8 @@ import {
   Bell,
   DollarSign,
   Sparkles,
+  Users,
+  Trophy,
 } from 'lucide-react';
 
 interface NavDropdownProps {
@@ -120,6 +122,15 @@ export function FreeNavbar() {
         { href: '/alerts', label: 'Price Alerts', description: 'Get notified on price moves', icon: <Bell className="w-4 h-4" /> },
       ],
     },
+    community: {
+      label: 'Community',
+      icon: <Users className="w-4 h-4" />,
+      paths: ['/community'],
+      items: [
+        { href: '/community', label: 'Prediction Forum', description: 'Share & discuss predictions', icon: <Users className="w-4 h-4" /> },
+        { href: '/community?tab=leaderboard', label: 'Leaderboard', description: 'Top predictors ranking', icon: <Trophy className="w-4 h-4" /> },
+      ],
+    },
     learn: {
       label: 'Learn',
       icon: <BookOpen className="w-4 h-4" />,
@@ -138,11 +149,11 @@ export function FreeNavbar() {
     { href: '/compare', label: 'Compare', icon: <Scale className="w-4 h-4" /> },
     { href: '/download', label: 'Download', icon: <Download className="w-4 h-4" /> },
     { href: '/monitor', label: 'AI Monitor', icon: <Brain className="w-4 h-4" /> },
-    { href: '/predictions', label: 'Prediction Center', icon: <Sparkles className="w-4 h-4" /> },
+    { href: '/predictions', label: 'Predictions', icon: <Sparkles className="w-4 h-4" /> },
+    { href: '/community', label: 'Community', icon: <Users className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
     { href: '/chat', label: 'AI Chat', icon: <MessageSquare className="w-4 h-4" /> },
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
-    { href: '/glossary', label: 'Glossary', icon: <BookOpen className="w-4 h-4" /> },
   ];
 
   return (
