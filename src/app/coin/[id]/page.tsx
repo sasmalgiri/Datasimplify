@@ -115,6 +115,14 @@ export default function CoinDetailPage() {
     try {
       const coinRes = await fetch(`/api/crypto/${coinId}`);
       const coinData = await coinRes.json();
+
+      // Check if the response contains an error or is invalid
+      if (!coinRes.ok || coinData.error || !coinData.id) {
+        setCoin(null);
+        setLoading(false);
+        return;
+      }
+
       setCoin(coinData);
 
       const historyRes = await fetch(`/api/crypto/${coinId}/history?days=30`);
@@ -122,6 +130,7 @@ export default function CoinDetailPage() {
       setPriceHistory(historyData.prices || []);
     } catch (error) {
       console.error('Error fetching coin data:', error);
+      setCoin(null);
     } finally {
       setLoading(false);
     }
