@@ -177,6 +177,18 @@ export function FreeNavbar() {
                 isActive={isInSection(section.paths)}
               />
             ))}
+            {/* Prominent AI Predictions link */}
+            <Link
+              href="/predictions"
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition ${
+                isActive('/predictions')
+                  ? 'text-purple-400 bg-purple-500/10'
+                  : 'text-purple-300 hover:text-purple-200 hover:bg-purple-700/30 border border-purple-500/30'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              AI Predictions
+            </Link>
             <Link
               href="/pricing"
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition ${
