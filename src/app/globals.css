@@ -104,6 +104,14 @@ body {
   animation-delay: 0.2s;
 }
 
+.animation-delay-150 {
+  animation-delay: 0.15s;
+}
+
+.animation-delay-300 {
+  animation-delay: 0.3s;
+}
+
 /* Dynamic bar with CSS custom properties */
 .dynamic-bar {
   width: var(--bar-width, 0%);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+import { BeginnerTip } from '../ui/BeginnerHelpers';
 
 interface Message {
   id: string;

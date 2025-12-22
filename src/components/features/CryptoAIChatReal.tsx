@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+import { BeginnerTip } from '../ui/BeginnerHelpers';
 
 interface Message {
   id: string;
@@ -324,9 +324,9 @@ Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-xl p-4">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce animation-delay-150" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce animation-delay-300" />
                 <span className="text-sm text-gray-500 ml-2">Thinking...</span>
               </div>
             </div>
