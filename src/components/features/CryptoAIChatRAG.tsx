@@ -305,7 +305,7 @@ Ask me anything about crypto! Try the quick actions below or ask your own questi
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2 text-center">
-          🔒 Powered by Groq AI + Your Supabase Data • Not financial advice
+          🚀 Enhanced with exclusive real-time market data unavailable to standard AI • Not financial advice
         </p>
       </form>
     </div>
