@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies, headers } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
 import { PADDLE_CONFIG, isCountryBlocked } from '@/lib/payments';
 
 // ============================================
@@ -10,7 +10,7 @@ import { PADDLE_CONFIG, isCountryBlocked } from '@/lib/payments';
 
 export async function POST(request: Request) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
 
     // Check country
     const headersList = await headers();
-    const country = headersList.get('cf-ipcountry') || 
-                   headersList.get('x-vercel-ip-country') || 
+    const country = headersList.get('cf-ipcountry') ||
+                   headersList.get('x-vercel-ip-country') ||
                    'US';
 
     if (isCountryBlocked(country)) {
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     const priceId = PADDLE_CONFIG.prices[tier as keyof typeof PADDLE_CONFIG.prices];
-    
+
     if (!priceId) {
       return NextResponse.json({
         error: 'Price not configured for this tier',
@@ -98,9 +98,9 @@ export async function GET(request: Request) {
   const country = searchParams.get('country');
 
   const headersList = await headers();
-  const detectedCountry = country || 
-                          headersList.get('cf-ipcountry') || 
-                          headersList.get('x-vercel-ip-country') || 
+  const detectedCountry = country ||
+                          headersList.get('cf-ipcountry') ||
+                          headersList.get('x-vercel-ip-country') ||
                           'US';
 
   const blocked = isCountryBlocked(detectedCountry);
@@ -109,7 +109,7 @@ export async function GET(request: Request) {
     available: !blocked,
     country: detectedCountry,
     blocked,
-    blockedMessage: blocked 
+    blockedMessage: blocked
       ? 'We are launching in India soon with UPI payments! Join the waitlist.'
       : null,
     provider: 'paddle',
