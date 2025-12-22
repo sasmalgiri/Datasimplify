@@ -618,3 +618,290 @@ CREATE TABLE IF NOT EXISTS token_unlocks (
 CREATE INDEX idx_token_unlocks_date ON token_unlocks(unlock_date);
 ALTER TABLE token_unlocks ENABLE ROW LEVEL SECURITY;
 CREATE POLICY tu_all ON token_unlocks FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================
+-- COMMUNITY PREDICTIONS TABLES
+-- ============================================
+
+-- User prediction submissions
+CREATE TABLE IF NOT EXISTS community_predictions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Coin info
+  coin_id VARCHAR(100) NOT NULL,
+  coin_symbol VARCHAR(20) NOT NULL,
+  coin_name VARCHAR(200),
+
+  -- Prediction details
+  prediction VARCHAR(20) NOT NULL, -- BULLISH, BEARISH, NEUTRAL
+  target_price DECIMAL(30, 10),
+  current_price DECIMAL(30, 10),
+  timeframe VARCHAR(10) NOT NULL, -- 24h, 7d, 30d
+  confidence INTEGER NOT NULL CHECK (confidence >= 0 AND confidence <= 100),
+  reasoning TEXT,
+
+  -- Outcome tracking
+  outcome VARCHAR(20) DEFAULT 'pending', -- pending, correct, incorrect
+  outcome_price DECIMAL(30, 10),
+  outcome_at TIMESTAMPTZ,
+
+  -- Engagement
+  likes INTEGER DEFAULT 0,
+  dislikes INTEGER DEFAULT 0,
+  comments_count INTEGER DEFAULT 0,
+
+  -- Timestamps
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_community_predictions_user ON community_predictions(user_id);
+CREATE INDEX idx_community_predictions_coin ON community_predictions(coin_id);
+CREATE INDEX idx_community_predictions_created ON community_predictions(created_at DESC);
+CREATE INDEX idx_community_predictions_outcome ON community_predictions(outcome);
+
+ALTER TABLE community_predictions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY cp_read ON community_predictions FOR SELECT USING (true);
+CREATE POLICY cp_insert ON community_predictions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY cp_update ON community_predictions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY cp_delete ON community_predictions FOR DELETE USING (auth.uid() = user_id);
+
+-- User prediction statistics (leaderboard)
+CREATE TABLE IF NOT EXISTS user_prediction_stats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+
+  -- Profile
+  display_name VARCHAR(100),
+  avatar_emoji VARCHAR(10) DEFAULT '🎯',
+
+  -- Stats
+  total_predictions INTEGER DEFAULT 0,
+  correct_predictions INTEGER DEFAULT 0,
+  accuracy DECIMAL(5, 2) DEFAULT 0,
+
+  -- Streaks & Points
+  current_streak INTEGER DEFAULT 0,
+  best_streak INTEGER DEFAULT 0,
+  points INTEGER DEFAULT 0,
+
+  -- Rank
+  rank INTEGER,
+
+  -- Badges (JSON array of earned badges)
+  badges JSONB DEFAULT '[]'::jsonb,
+
+  -- Social
+  followers INTEGER DEFAULT 0,
+  following INTEGER DEFAULT 0,
+  is_verified BOOLEAN DEFAULT false,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_prediction_stats_rank ON user_prediction_stats(rank);
+CREATE INDEX idx_user_prediction_stats_accuracy ON user_prediction_stats(accuracy DESC);
+CREATE INDEX idx_user_prediction_stats_points ON user_prediction_stats(points DESC);
+
+ALTER TABLE user_prediction_stats ENABLE ROW LEVEL SECURITY;
+CREATE POLICY ups_read ON user_prediction_stats FOR SELECT USING (true);
+CREATE POLICY ups_insert ON user_prediction_stats FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY ups_update ON user_prediction_stats FOR UPDATE USING (auth.uid() = user_id);
+
+-- Prediction votes (likes/dislikes)
+CREATE TABLE IF NOT EXISTS prediction_votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  prediction_id UUID NOT NULL REFERENCES community_predictions(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  vote_type VARCHAR(10) NOT NULL, -- like, dislike
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(prediction_id, user_id)
+);
+
+CREATE INDEX idx_prediction_votes_prediction ON prediction_votes(prediction_id);
+CREATE INDEX idx_prediction_votes_user ON prediction_votes(user_id);
+
+ALTER TABLE prediction_votes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pv_read ON prediction_votes FOR SELECT USING (true);
+CREATE POLICY pv_insert ON prediction_votes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY pv_delete ON prediction_votes FOR DELETE USING (auth.uid() = user_id);
+
+-- Prediction comments
+CREATE TABLE IF NOT EXISTS prediction_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  prediction_id UUID NOT NULL REFERENCES community_predictions(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  likes INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_prediction_comments_prediction ON prediction_comments(prediction_id);
+CREATE INDEX idx_prediction_comments_created ON prediction_comments(created_at DESC);
+
+ALTER TABLE prediction_comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pc_read ON prediction_comments FOR SELECT USING (true);
+CREATE POLICY pc_insert ON prediction_comments FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY pc_update ON prediction_comments FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY pc_delete ON prediction_comments FOR DELETE USING (auth.uid() = user_id);
+
+-- User follows
+CREATE TABLE IF NOT EXISTS user_follows (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  follower_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(follower_id, following_id)
+);
+
+CREATE INDEX idx_user_follows_follower ON user_follows(follower_id);
+CREATE INDEX idx_user_follows_following ON user_follows(following_id);
+
+ALTER TABLE user_follows ENABLE ROW LEVEL SECURITY;
+CREATE POLICY uf_read ON user_follows FOR SELECT USING (true);
+CREATE POLICY uf_insert ON user_follows FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY uf_delete ON user_follows FOR DELETE USING (auth.uid() = follower_id);
+
+-- Prediction contests
+CREATE TABLE IF NOT EXISTS prediction_contests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  contest_type VARCHAR(20) NOT NULL, -- weekly, monthly, special
+  prize VARCHAR(100),
+  prize_amount DECIMAL(20, 2),
+
+  -- Requirements
+  min_predictions INTEGER DEFAULT 5,
+  allowed_coins JSONB, -- null = all coins allowed
+
+  -- Dates
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+
+  -- Status
+  status VARCHAR(20) DEFAULT 'upcoming', -- upcoming, active, ended
+  participants_count INTEGER DEFAULT 0,
+
+  -- Winners (JSON array of user_ids and ranks)
+  winners JSONB,
+
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_prediction_contests_status ON prediction_contests(status);
+CREATE INDEX idx_prediction_contests_dates ON prediction_contests(starts_at, ends_at);
+
+ALTER TABLE prediction_contests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pct_read ON prediction_contests FOR SELECT USING (true);
+
+-- Contest participants
+CREATE TABLE IF NOT EXISTS contest_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  contest_id UUID NOT NULL REFERENCES prediction_contests(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  predictions_count INTEGER DEFAULT 0,
+  correct_count INTEGER DEFAULT 0,
+  accuracy DECIMAL(5, 2) DEFAULT 0,
+  points INTEGER DEFAULT 0,
+  rank INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(contest_id, user_id)
+);
+
+CREATE INDEX idx_contest_participants_contest ON contest_participants(contest_id);
+CREATE INDEX idx_contest_participants_rank ON contest_participants(contest_id, rank);
+
+ALTER TABLE contest_participants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY cpt_read ON contest_participants FOR SELECT USING (true);
+CREATE POLICY cpt_insert ON contest_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ============================================
+-- COMMUNITY FUNCTIONS
+-- ============================================
+
+-- Function to update prediction stats after new prediction
+CREATE OR REPLACE FUNCTION update_user_prediction_stats()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Upsert user stats
+  INSERT INTO user_prediction_stats (user_id, total_predictions)
+  VALUES (NEW.user_id, 1)
+  ON CONFLICT (user_id) DO UPDATE
+  SET total_predictions = user_prediction_stats.total_predictions + 1,
+      updated_at = NOW();
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger for new predictions
+CREATE TRIGGER tr_update_user_stats
+AFTER INSERT ON community_predictions
+FOR EACH ROW EXECUTE FUNCTION update_user_prediction_stats();
+
+-- Function to update likes/dislikes count
+CREATE OR REPLACE FUNCTION update_prediction_votes_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.vote_type = 'like' THEN
+      UPDATE community_predictions SET likes = likes + 1 WHERE id = NEW.prediction_id;
+    ELSE
+      UPDATE community_predictions SET dislikes = dislikes + 1 WHERE id = NEW.prediction_id;
+    END IF;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.vote_type = 'like' THEN
+      UPDATE community_predictions SET likes = GREATEST(0, likes - 1) WHERE id = OLD.prediction_id;
+    ELSE
+      UPDATE community_predictions SET dislikes = GREATEST(0, dislikes - 1) WHERE id = OLD.prediction_id;
+    END IF;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_update_votes_count
+AFTER INSERT OR DELETE ON prediction_votes
+FOR EACH ROW EXECUTE FUNCTION update_prediction_votes_count();
+
+-- Function to update comments count
+CREATE OR REPLACE FUNCTION update_prediction_comments_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE community_predictions SET comments_count = comments_count + 1 WHERE id = NEW.prediction_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE community_predictions SET comments_count = GREATEST(0, comments_count - 1) WHERE id = OLD.prediction_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_update_comments_count
+AFTER INSERT OR DELETE ON prediction_comments
+FOR EACH ROW EXECUTE FUNCTION update_prediction_comments_count();
+
+-- Function to update follower counts
+CREATE OR REPLACE FUNCTION update_follower_counts()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE user_prediction_stats SET followers = followers + 1 WHERE user_id = NEW.following_id;
+    UPDATE user_prediction_stats SET following = following + 1 WHERE user_id = NEW.follower_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE user_prediction_stats SET followers = GREATEST(0, followers - 1) WHERE user_id = OLD.following_id;
+    UPDATE user_prediction_stats SET following = GREATEST(0, following - 1) WHERE user_id = OLD.follower_id;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tr_update_follower_counts
+AFTER INSERT OR DELETE ON user_follows
+FOR EACH ROW EXECUTE FUNCTION update_follower_counts();

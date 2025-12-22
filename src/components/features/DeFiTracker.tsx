@@ -23,6 +23,7 @@ function ProgressBar({ percentage, label }: { percentage: number; label: string 
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label}
+      title={`${label}: ${roundedPercentage}%`}
     />
   );
 }

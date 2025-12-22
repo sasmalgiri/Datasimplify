@@ -866,6 +866,10 @@ export const SUPPORTED_COINS: CoinInfo[] = [
   // Meme
   { symbol: 'DOGE', binanceSymbol: 'DOGEUSDT', name: 'Dogecoin', image: 'https://assets.coingecko.com/coins/images/5/large/dogecoin.png', category: 'meme', circulatingSupply: 147000000000, maxSupply: null },
   { symbol: 'SHIB', binanceSymbol: 'SHIBUSDT', name: 'Shiba Inu', image: 'https://assets.coingecko.com/coins/images/11939/large/shiba.png', category: 'meme', circulatingSupply: 589000000000000, maxSupply: null },
+  { symbol: 'PEPE', binanceSymbol: 'PEPEUSDT', name: 'Pepe', image: 'https://assets.coingecko.com/coins/images/29850/large/pepe-token.jpeg', category: 'meme', circulatingSupply: 420690000000000, maxSupply: 420690000000000 },
+  { symbol: 'BONK', binanceSymbol: 'BONKUSDT', name: 'Bonk', image: 'https://assets.coingecko.com/coins/images/28600/large/bonk.png', category: 'meme', circulatingSupply: 69000000000000, maxSupply: 100000000000000 },
+  { symbol: 'FLOKI', binanceSymbol: 'FLOKIUSDT', name: 'Floki Inu', image: 'https://assets.coingecko.com/coins/images/16746/large/FLOKI.png', category: 'meme', circulatingSupply: 9700000000000, maxSupply: 10000000000000 },
+  { symbol: 'WIF', binanceSymbol: 'WIFUSDT', name: 'dogwifhat', image: 'https://assets.coingecko.com/coins/images/33566/large/dogwifhat.png', category: 'meme', circulatingSupply: 998900000, maxSupply: 998900000 },
   
   // Exchange Tokens
   { symbol: 'BNB', binanceSymbol: 'BNBUSDT', name: 'BNB', image: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png', category: 'exchange', circulatingSupply: 145000000, maxSupply: 200000000 },
@@ -882,9 +886,24 @@ export const SUPPORTED_COINS: CoinInfo[] = [
   // Privacy
   { symbol: 'ZEC', binanceSymbol: 'ZECUSDT', name: 'Zcash', image: 'https://assets.coingecko.com/coins/images/486/large/circle-zcash-color.png', category: 'privacy', circulatingSupply: 16500000, maxSupply: 21000000 },
   
+  // AI & Compute
+  { symbol: 'FET', binanceSymbol: 'FETUSDT', name: 'Fetch.ai', image: 'https://assets.coingecko.com/coins/images/5681/large/Fetch.jpg', category: 'ai', circulatingSupply: 2630000000, maxSupply: 2630000000 },
+  { symbol: 'AGIX', binanceSymbol: 'AGIXUSDT', name: 'SingularityNET', image: 'https://assets.coingecko.com/coins/images/2138/large/singularitynet.png', category: 'ai', circulatingSupply: 1280000000, maxSupply: 2000000000 },
+  { symbol: 'OCEAN', binanceSymbol: 'OCEANUSDT', name: 'Ocean Protocol', image: 'https://assets.coingecko.com/coins/images/3687/large/ocean-protocol-logo.jpg', category: 'ai', circulatingSupply: 613000000, maxSupply: 1410000000 },
+  { symbol: 'TAO', binanceSymbol: 'TAOUSDT', name: 'Bittensor', image: 'https://assets.coingecko.com/coins/images/28452/large/Taostake.png', category: 'ai', circulatingSupply: 7000000, maxSupply: 21000000 },
+  { symbol: 'ARKM', binanceSymbol: 'ARKMUSDT', name: 'Arkham', image: 'https://assets.coingecko.com/coins/images/30929/large/arkham.png', category: 'ai', circulatingSupply: 225000000, maxSupply: 1000000000 },
+
   // Other
   { symbol: 'BAT', binanceSymbol: 'BATUSDT', name: 'Basic Attention Token', image: 'https://assets.coingecko.com/coins/images/677/large/basic-attention-token.png', category: 'other', circulatingSupply: 1500000000, maxSupply: 1500000000 },
   { symbol: 'ONE', binanceSymbol: 'ONEUSDT', name: 'Harmony', image: 'https://assets.coingecko.com/coins/images/4344/large/Y88JAze.png', category: 'other', circulatingSupply: 14000000000, maxSupply: null },
+  { symbol: 'HBAR', binanceSymbol: 'HBARUSDT', name: 'Hedera', image: 'https://assets.coingecko.com/coins/images/3688/large/hbar.png', category: 'other', circulatingSupply: 35700000000, maxSupply: 50000000000 },
+  { symbol: 'VET', binanceSymbol: 'VETUSDT', name: 'VeChain', image: 'https://assets.coingecko.com/coins/images/1167/large/VeChain-Logo-768x725.png', category: 'other', circulatingSupply: 72700000000, maxSupply: 86700000000 },
+  { symbol: 'THETA', binanceSymbol: 'THETAUSDT', name: 'Theta Network', image: 'https://assets.coingecko.com/coins/images/2538/large/theta-token-logo.png', category: 'other', circulatingSupply: 1000000000, maxSupply: 1000000000 },
+  { symbol: 'KAS', binanceSymbol: 'KASUSDT', name: 'Kaspa', image: 'https://assets.coingecko.com/coins/images/25751/large/kaspa-icon-exchanges.png', category: 'other', circulatingSupply: 24000000000, maxSupply: 28700000000 },
+  { symbol: 'SEI', binanceSymbol: 'SEIUSDT', name: 'Sei', image: 'https://assets.coingecko.com/coins/images/28205/large/Sei_Logo_-_Transparent.png', category: 'layer1', circulatingSupply: 5800000000, maxSupply: 10000000000 },
+  { symbol: 'TIA', binanceSymbol: 'TIAUSDT', name: 'Celestia', image: 'https://assets.coingecko.com/coins/images/31967/large/tia.png', category: 'layer1', circulatingSupply: 206000000, maxSupply: 1000000000 },
+  { symbol: 'STX', binanceSymbol: 'STXUSDT', name: 'Stacks', image: 'https://assets.coingecko.com/coins/images/2069/large/Stacks_logo_full.png', category: 'layer2', circulatingSupply: 1500000000, maxSupply: 1818000000 },
+  { symbol: 'RUNE', binanceSymbol: 'RUNEUSDT', name: 'THORChain', image: 'https://assets.coingecko.com/coins/images/6595/large/RUNE.png', category: 'defi', circulatingSupply: 336000000, maxSupply: 500000000 },
 ];
 
 // Helper to get coins by category

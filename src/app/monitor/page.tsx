@@ -24,7 +24,7 @@ function ProgressBarRef({ percentage, className, label }: { percentage: number; 
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={label}
-      title={label}
+      title={`${label}: ${safePercentage}%`}
     />
   );
 }

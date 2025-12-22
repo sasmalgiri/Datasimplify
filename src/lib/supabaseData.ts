@@ -999,3 +999,577 @@ export async function saveCoinMarketDataToCache(coinId: string, marketData: {
     return false;
   }
 }
+
+// ============================================
+// COMMUNITY PREDICTIONS
+// ============================================
+
+export interface CommunityPrediction {
+  id: string;
+  user_id: string;
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  target_price?: number;
+  current_price?: number;
+  timeframe: '24h' | '7d' | '30d';
+  confidence: number;
+  reasoning?: string;
+  outcome: 'pending' | 'correct' | 'incorrect';
+  likes: number;
+  dislikes: number;
+  comments_count: number;
+  expires_at: string;
+  created_at: string;
+  // Joined data
+  user?: UserPredictionStats;
+}
+
+export interface UserPredictionStats {
+  id: string;
+  user_id: string;
+  display_name: string;
+  avatar_emoji: string;
+  total_predictions: number;
+  correct_predictions: number;
+  accuracy: number;
+  current_streak: number;
+  best_streak: number;
+  points: number;
+  rank: number;
+  badges: string[];
+  followers: number;
+  following: number;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface PredictionComment {
+  id: string;
+  prediction_id: string;
+  user_id: string;
+  content: string;
+  likes: number;
+  created_at: string;
+  user?: UserPredictionStats;
+}
+
+export interface PredictionContest {
+  id: string;
+  title: string;
+  description?: string;
+  contest_type: 'weekly' | 'monthly' | 'special';
+  prize: string;
+  prize_amount?: number;
+  min_predictions: number;
+  starts_at: string;
+  ends_at: string;
+  status: 'upcoming' | 'active' | 'ended';
+  participants_count: number;
+}
+
+export interface CommunityStats {
+  total_predictions: number;
+  active_predictors: number;
+  bullish_percent: number;
+  bearish_percent: number;
+  neutral_percent: number;
+  avg_accuracy: number;
+}
+
+// Get community predictions with user data
+export async function getCommunityPredictions(options?: {
+  coinId?: string;
+  prediction?: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  userId?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<CommunityPrediction[]> {
+  try {
+    const db = checkSupabase();
+
+    let query = db
+      .from('community_predictions')
+      .select(`
+        *,
+        user:user_prediction_stats(*)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (options?.coinId) {
+      query = query.eq('coin_id', options.coinId);
+    }
+
+    if (options?.prediction) {
+      query = query.eq('prediction', options.prediction);
+    }
+
+    if (options?.userId) {
+      query = query.eq('user_id', options.userId);
+    }
+
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+
+    if (options?.offset) {
+      query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching community predictions:', error);
+      return [];
+    }
+
+    return (data || []) as CommunityPrediction[];
+  } catch {
+    return [];
+  }
+}
+
+// Create a new prediction
+export async function createCommunityPrediction(prediction: {
+  userId: string;
+  coinId: string;
+  coinSymbol: string;
+  coinName: string;
+  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  targetPrice?: number;
+  currentPrice?: number;
+  timeframe: '24h' | '7d' | '30d';
+  confidence: number;
+  reasoning?: string;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    // Calculate expiry based on timeframe
+    const expiresAt = new Date();
+    if (prediction.timeframe === '24h') {
+      expiresAt.setHours(expiresAt.getHours() + 24);
+    } else if (prediction.timeframe === '7d') {
+      expiresAt.setDate(expiresAt.getDate() + 7);
+    } else {
+      expiresAt.setDate(expiresAt.getDate() + 30);
+    }
+
+    const { data, error } = await db
+      .from('community_predictions')
+      .insert({
+        user_id: prediction.userId,
+        coin_id: prediction.coinId,
+        coin_symbol: prediction.coinSymbol,
+        coin_name: prediction.coinName,
+        prediction: prediction.prediction,
+        target_price: prediction.targetPrice,
+        current_price: prediction.currentPrice,
+        timeframe: prediction.timeframe,
+        confidence: prediction.confidence,
+        reasoning: prediction.reasoning,
+        expires_at: expiresAt.toISOString()
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating prediction:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Vote on a prediction
+export async function votePrediction(
+  predictionId: string,
+  userId: string,
+  voteType: 'like' | 'dislike'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    // Check if user already voted
+    const { data: existing } = await db
+      .from('prediction_votes')
+      .select('id, vote_type')
+      .eq('prediction_id', predictionId)
+      .eq('user_id', userId)
+      .single();
+
+    if (existing) {
+      if (existing.vote_type === voteType) {
+        // Remove vote
+        await db
+          .from('prediction_votes')
+          .delete()
+          .eq('id', existing.id);
+      } else {
+        // Change vote
+        await db
+          .from('prediction_votes')
+          .update({ vote_type: voteType })
+          .eq('id', existing.id);
+      }
+    } else {
+      // New vote
+      const { error } = await db
+        .from('prediction_votes')
+        .insert({
+          prediction_id: predictionId,
+          user_id: userId,
+          vote_type: voteType
+        });
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Get leaderboard
+export async function getLeaderboard(options?: {
+  limit?: number;
+  sortBy?: 'points' | 'accuracy' | 'predictions';
+}): Promise<UserPredictionStats[]> {
+  try {
+    const db = checkSupabase();
+
+    const sortColumn = options?.sortBy === 'accuracy' ? 'accuracy' :
+      options?.sortBy === 'predictions' ? 'total_predictions' : 'points';
+
+    const { data, error } = await db
+      .from('user_prediction_stats')
+      .select('*')
+      .order(sortColumn, { ascending: false })
+      .limit(options?.limit || 50);
+
+    if (error) {
+      console.error('Error fetching leaderboard:', error);
+      return [];
+    }
+
+    return (data || []) as UserPredictionStats[];
+  } catch {
+    return [];
+  }
+}
+
+// Get user stats
+export async function getUserPredictionStats(userId: string): Promise<UserPredictionStats | null> {
+  try {
+    const db = checkSupabase();
+
+    const { data, error } = await db
+      .from('user_prediction_stats')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      console.error('Error fetching user stats:', error);
+      return null;
+    }
+
+    return data as UserPredictionStats;
+  } catch {
+    return null;
+  }
+}
+
+// Update user profile
+export async function updateUserPredictionProfile(
+  userId: string,
+  profile: { displayName?: string; avatarEmoji?: string }
+): Promise<boolean> {
+  try {
+    const db = checkSupabase();
+
+    const updates: Record<string, string> = {};
+    if (profile.displayName) updates.display_name = profile.displayName;
+    if (profile.avatarEmoji) updates.avatar_emoji = profile.avatarEmoji;
+
+    const { error } = await db
+      .from('user_prediction_stats')
+      .upsert({
+        user_id: userId,
+        ...updates,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id'
+      });
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// Get community stats
+export async function getCommunityStats(): Promise<CommunityStats> {
+  try {
+    const db = checkSupabase();
+
+    // Get recent predictions (last 24h)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data: predictions, error } = await db
+      .from('community_predictions')
+      .select('prediction, user_id')
+      .gte('created_at', oneDayAgo);
+
+    if (error || !predictions) {
+      return {
+        total_predictions: 0,
+        active_predictors: 0,
+        bullish_percent: 33,
+        bearish_percent: 33,
+        neutral_percent: 34,
+        avg_accuracy: 0
+      };
+    }
+
+    const total = predictions.length;
+    const bullish = predictions.filter(p => p.prediction === 'BULLISH').length;
+    const bearish = predictions.filter(p => p.prediction === 'BEARISH').length;
+    const neutral = predictions.filter(p => p.prediction === 'NEUTRAL').length;
+    const uniqueUsers = new Set(predictions.map(p => p.user_id)).size;
+
+    // Get total predictions all time
+    const { count: totalPredictions } = await db
+      .from('community_predictions')
+      .select('id', { count: 'exact', head: true });
+
+    // Get average accuracy from leaderboard
+    const { data: stats } = await db
+      .from('user_prediction_stats')
+      .select('accuracy')
+      .gt('total_predictions', 5);
+
+    const avgAccuracy = stats && stats.length > 0
+      ? stats.reduce((sum, s) => sum + Number(s.accuracy), 0) / stats.length
+      : 0;
+
+    return {
+      total_predictions: totalPredictions || 0,
+      active_predictors: uniqueUsers,
+      bullish_percent: total > 0 ? Math.round((bullish / total) * 100) : 33,
+      bearish_percent: total > 0 ? Math.round((bearish / total) * 100) : 33,
+      neutral_percent: total > 0 ? Math.round((neutral / total) * 100) : 34,
+      avg_accuracy: Math.round(avgAccuracy * 10) / 10
+    };
+  } catch {
+    return {
+      total_predictions: 0,
+      active_predictors: 0,
+      bullish_percent: 33,
+      bearish_percent: 33,
+      neutral_percent: 34,
+      avg_accuracy: 0
+    };
+  }
+}
+
+// Get prediction comments
+export async function getPredictionComments(predictionId: string): Promise<PredictionComment[]> {
+  try {
+    const db = checkSupabase();
+
+    const { data, error } = await db
+      .from('prediction_comments')
+      .select(`
+        *,
+        user:user_prediction_stats(*)
+      `)
+      .eq('prediction_id', predictionId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching comments:', error);
+      return [];
+    }
+
+    return (data || []) as PredictionComment[];
+  } catch {
+    return [];
+  }
+}
+
+// Add comment
+export async function addPredictionComment(
+  predictionId: string,
+  userId: string,
+  content: string
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    const { data, error } = await db
+      .from('prediction_comments')
+      .insert({
+        prediction_id: predictionId,
+        user_id: userId,
+        content
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Get active contests
+export async function getActiveContests(): Promise<PredictionContest[]> {
+  try {
+    const db = checkSupabase();
+
+    const now = new Date().toISOString();
+
+    const { data, error } = await db
+      .from('prediction_contests')
+      .select('*')
+      .or(`status.eq.active,and(status.eq.upcoming,starts_at.lte.${now})`)
+      .order('ends_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching contests:', error);
+      return [];
+    }
+
+    return (data || []) as PredictionContest[];
+  } catch {
+    return [];
+  }
+}
+
+// Follow/unfollow user
+export async function toggleFollowUser(
+  followerId: string,
+  followingId: string
+): Promise<{ success: boolean; isFollowing: boolean }> {
+  try {
+    const db = checkSupabase();
+
+    // Check if already following
+    const { data: existing } = await db
+      .from('user_follows')
+      .select('id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single();
+
+    if (existing) {
+      // Unfollow
+      await db.from('user_follows').delete().eq('id', existing.id);
+      return { success: true, isFollowing: false };
+    } else {
+      // Follow
+      const { error } = await db
+        .from('user_follows')
+        .insert({ follower_id: followerId, following_id: followingId });
+
+      if (error) {
+        return { success: false, isFollowing: false };
+      }
+      return { success: true, isFollowing: true };
+    }
+  } catch {
+    return { success: false, isFollowing: false };
+  }
+}
+
+// Check if user is following another
+export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  try {
+    const db = checkSupabase();
+
+    const { data } = await db
+      .from('user_follows')
+      .select('id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single();
+
+    return !!data;
+  } catch {
+    return false;
+  }
+}
+
+// Get trending coins by community predictions
+export async function getTrendingCoinsByCommunity(limit: number = 10): Promise<Array<{
+  coin_id: string;
+  coin_symbol: string;
+  coin_name: string;
+  predictions_count: number;
+  bullish_percent: number;
+}>> {
+  try {
+    const db = checkSupabase();
+
+    // Get predictions from last 24h
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { data, error } = await db
+      .from('community_predictions')
+      .select('coin_id, coin_symbol, coin_name, prediction')
+      .gte('created_at', oneDayAgo);
+
+    if (error || !data) return [];
+
+    // Aggregate by coin
+    const coinMap = new Map<string, {
+      coin_id: string;
+      coin_symbol: string;
+      coin_name: string;
+      total: number;
+      bullish: number;
+    }>();
+
+    for (const p of data) {
+      const existing = coinMap.get(p.coin_id) || {
+        coin_id: p.coin_id,
+        coin_symbol: p.coin_symbol,
+        coin_name: p.coin_name || '',
+        total: 0,
+        bullish: 0
+      };
+
+      existing.total++;
+      if (p.prediction === 'BULLISH') existing.bullish++;
+
+      coinMap.set(p.coin_id, existing);
+    }
+
+    // Convert to array and sort
+    return Array.from(coinMap.values())
+      .map(c => ({
+        coin_id: c.coin_id,
+        coin_symbol: c.coin_symbol,
+        coin_name: c.coin_name,
+        predictions_count: c.total,
+        bullish_percent: c.total > 0 ? Math.round((c.bullish / c.total) * 100) : 50
+      }))
+      .sort((a, b) => b.predictions_count - a.predictions_count)
+      .slice(0, limit);
+  } catch {
+    return [];
+  }
+}

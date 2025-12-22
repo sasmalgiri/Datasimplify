@@ -1,6 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+// Bar component that uses ref to avoid inline style warnings
+function FlowBar({ height, isPositive, title }: { height: number; isPositive: boolean; title: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = `${height}%`;
+    }
+  }, [height]);
+  return (
+    <div
+      ref={ref}
+      className={`flex-1 rounded-t ${isPositive ? 'bg-green-400' : 'bg-red-400'}`}
+      title={title}
+    />
+  );
+}
 import { BeginnerTip, InfoButton, TrafficLight } from '../ui/BeginnerHelpers';
 
 interface ETFData {
@@ -211,10 +228,10 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
             const value = Math.sin(i * 0.3) * 100 + Math.random() * 50;
             const isPositive = value > 50;
             return (
-              <div
+              <FlowBar
                 key={i}
-                className={`flex-1 rounded-t ${isPositive ? 'bg-green-400' : 'bg-red-400'}`}
-                style={{ height: `${Math.abs(value - 50) + 20}%` }}
+                height={Math.abs(value - 50) + 20}
+                isPositive={isPositive}
                 title={`Day ${30 - i}`}
               />
             );

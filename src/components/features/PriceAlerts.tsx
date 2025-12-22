@@ -1,7 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+
+// Progress bar component using ref to avoid inline style warnings
+function AlertProgressBar({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.width = `${percentage}%`;
+    }
+  }, [percentage]);
+  return <div ref={ref} className={`h-full ${colorClass}`} />;
+}
 
 interface Alert {
   id: string;
@@ -230,13 +241,11 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
                     <span>Target</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${alert.type === 'price_above' ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ 
-                        width: alert.type === 'price_above' 
-                          ? `${Math.min((alert.currentValue / alert.value) * 100, 100)}%`
-                          : `${Math.min((alert.value / alert.currentValue) * 100, 100)}%`
-                      }}
+                    <AlertProgressBar
+                      percentage={alert.type === 'price_above'
+                        ? Math.min((alert.currentValue / alert.value) * 100, 100)
+                        : Math.min((alert.value / alert.currentValue) * 100, 100)}
+                      colorClass={alert.type === 'price_above' ? 'bg-green-500' : 'bg-red-500'}
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1 text-center">

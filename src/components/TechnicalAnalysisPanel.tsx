@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -11,6 +11,24 @@ import {
   ArrowDownRight,
   Target
 } from 'lucide-react';
+
+// RSI pointer component using ref to avoid inline style warnings
+function RSIPointer({ position }: { position: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const safePosition = Math.min(100, Math.max(0, position));
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.left = `${safePosition}%`;
+      ref.current.style.transform = 'translateX(-50%)';
+    }
+  }, [safePosition]);
+  return (
+    <div
+      ref={ref}
+      className="absolute top-0 bottom-0 w-1 bg-white rounded-full shadow-lg transition-all duration-500"
+    />
+  );
+}
 
 interface TechnicalIndicator {
   name: string;
@@ -280,10 +298,7 @@ export function TechnicalAnalysisPanel({
               <div className="w-[30%] bg-red-500/30" />
             </div>
             {/* Pointer */}
-            <div
-              className="absolute top-0 bottom-0 w-1 bg-white rounded-full shadow-lg transition-all duration-500"
-              style={{ left: `${Math.min(100, Math.max(0, rsi))}%`, transform: 'translateX(-50%)' }}
-            />
+            <RSIPointer position={rsi} />
           </div>
           <div className="flex justify-between mt-1 text-xs text-gray-500">
             <span>Oversold</span>

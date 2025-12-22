@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   Brain,
@@ -217,19 +217,27 @@ function RiskBadge({ level }: { level: string }) {
 }
 
 function ScoreBar({ score, label }: { score: number; label: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
   const getColor = () => {
     if (score >= 70) return 'bg-emerald-500';
     if (score >= 50) return 'bg-yellow-500';
     return 'bg-red-500';
   };
 
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${score}%`;
+    }
+  }, [score]);
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-gray-400 w-16">{label}</span>
       <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
         <div
+          ref={barRef}
           className={`h-full rounded-full transition-all ${getColor()}`}
-          style={{ width: `${score}%` }}
         />
       </div>
       <span className="text-xs text-gray-300 w-8 text-right">{score}</span>
@@ -600,11 +608,14 @@ export default function PredictionsPage() {
             {/* Sort & Filter */}
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-sm">Sort by:</span>
+                <label htmlFor="sort-select" className="text-gray-400 text-sm">Sort by:</label>
                 <select
+                  id="sort-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  aria-label="Sort predictions by"
+                  title="Sort predictions by"
                 >
                   {SORT_OPTIONS.map(opt => (
                     <option key={opt.id} value={opt.id}>{opt.label}</option>

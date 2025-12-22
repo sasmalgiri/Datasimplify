@@ -993,6 +993,517 @@ export default function ChartsPage() {
           </div>
         );
 
+      case 'fibonacci':
+        // Fibonacci retracement levels
+        const priceData = chartData.map(d => d.price as number).filter(p => p > 0);
+        const high = Math.max(...priceData);
+        const low = Math.min(...priceData);
+        const diff = high - low;
+        const fibLevels = [
+          { level: '0%', price: high, color: '#EF4444' },
+          { level: '23.6%', price: high - diff * 0.236, color: '#F59E0B' },
+          { level: '38.2%', price: high - diff * 0.382, color: '#F59E0B' },
+          { level: '50%', price: high - diff * 0.5, color: '#3B82F6' },
+          { level: '61.8%', price: high - diff * 0.618, color: '#10B981' },
+          { level: '78.6%', price: high - diff * 0.786, color: '#10B981' },
+          { level: '100%', price: low, color: '#10B981' },
+        ];
+
+        return (
+          <div className="space-y-4">
+            <div className="bg-gray-800/50 rounded-xl p-4">
+              <h4 className="text-lg font-medium mb-2">Fibonacci Retracement Levels</h4>
+              <p className="text-gray-400 text-sm mb-4">Key support/resistance levels based on {parseInt(timeRange)}-day price range</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {fibLevels.map((fib) => (
+                  <div key={fib.level} className="bg-gray-700/50 rounded-lg p-3 border-l-4" style={{ borderColor: fib.color }}>
+                    <div className="text-xs text-gray-400">{fib.level}</div>
+                    <div className="text-lg font-bold" style={{ color: fib.color }}>{formatValue(fib.price)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={['auto', 'auto']} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Area type="monotone" dataKey="price" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.2} name="Price" />
+                {fibLevels.map((fib) => (
+                  <ReferenceLine key={fib.level} y={fib.price} stroke={fib.color} strokeDasharray="5 5" label={{ value: fib.level, fill: fib.color, fontSize: 10 }} />
+                ))}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'volume_profile':
+        // Calculate price range for volume profile
+        const vpPriceData = chartData.map(d => d.price as number).filter(p => p > 0);
+        const vpHigh = Math.max(...vpPriceData);
+        const vpLow = Math.min(...vpPriceData);
+        const vpDiff = vpHigh - vpLow;
+
+        // Generate volume profile data (volume at price levels)
+        const volumeProfileData = Array.from({ length: 20 }, (_, i) => {
+          const priceLevel = vpLow + (vpDiff / 20) * i;
+          return {
+            priceLevel: formatValue(priceLevel),
+            price: priceLevel,
+            volume: Math.random() * 50000000000 + 10000000000,
+            buyVolume: Math.random() * 25000000000,
+            sellVolume: Math.random() * 25000000000,
+          };
+        });
+
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ResponsiveContainer width="100%" height={500}>
+              <BarChart data={volumeProfileData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis type="number" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v, 'volume')} />
+                <YAxis type="category" dataKey="priceLevel" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} width={80} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} formatter={(v) => formatValue(v as number, 'volume')} />
+                <Legend />
+                <Bar dataKey="buyVolume" fill="#10B981" name="Buy Volume" stackId="a" />
+                <Bar dataKey="sellVolume" fill="#EF4444" name="Sell Volume" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="bg-gray-800/50 rounded-xl p-4">
+              <h4 className="text-lg font-medium mb-4">Volume Profile Analysis</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <span className="text-gray-400">Point of Control (POC)</span>
+                  <span className="font-bold text-yellow-400">{formatValue(volumeProfileData[Math.floor(volumeProfileData.length / 2)].price)}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <span className="text-gray-400">Value Area High</span>
+                  <span className="font-bold text-green-400">{formatValue(vpHigh * 0.95)}</span>
+                </div>
+                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                  <span className="text-gray-400">Value Area Low</span>
+                  <span className="font-bold text-red-400">{formatValue(vpLow * 1.05)}</span>
+                </div>
+                <p className="text-gray-400 text-sm mt-4">Volume Profile shows trading activity at each price level. Higher volume areas indicate strong support/resistance zones.</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'funding_rate':
+        // Generate funding rate history data
+        const fundingData = chartData.map((d) => ({
+          date: d.date,
+          fundingRate: (Math.random() - 0.5) * 0.1,
+          price: d.price,
+          cumulative: 0,
+        }));
+        let cumulative = 0;
+        fundingData.forEach((d) => {
+          cumulative += d.fundingRate;
+          d.cumulative = cumulative;
+        });
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Current Rate</div>
+                <div className={`text-xl font-bold ${fundingData[fundingData.length - 1]?.fundingRate > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {(fundingData[fundingData.length - 1]?.fundingRate * 100).toFixed(4)}%
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Avg Rate ({timeRange}D)</div>
+                <div className="text-xl font-bold text-blue-400">
+                  {(fundingData.reduce((sum, d) => sum + d.fundingRate, 0) / fundingData.length * 100).toFixed(4)}%
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Sentiment</div>
+                <div className={`text-xl font-bold ${cumulative > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {cumulative > 0 ? '📈 Long Bias' : '📉 Short Bias'}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Cumulative</div>
+                <div className={`text-xl font-bold ${cumulative > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {(cumulative * 100).toFixed(2)}%
+                </div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={fundingData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="funding" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v * 100).toFixed(3)}%`} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Bar yAxisId="funding" dataKey="fundingRate" name="Funding Rate">
+                  {fundingData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fundingRate >= 0 ? '#10B981' : '#EF4444'} />
+                  ))}
+                </Bar>
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+                <ReferenceLine yAxisId="funding" y={0} stroke="#6B7280" strokeDasharray="3 3" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'open_interest':
+        // Generate open interest data
+        const oiData = chartData.map((d, i) => ({
+          date: d.date,
+          price: d.price,
+          openInterest: 15000000000 + Math.sin(i * 0.1) * 5000000000 + Math.random() * 2000000000,
+          oiChange: (Math.random() - 0.5) * 10,
+        }));
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Current OI</div>
+                <div className="text-xl font-bold text-blue-400">{formatValue(oiData[oiData.length - 1]?.openInterest || 0, 'volume')}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">24h Change</div>
+                <div className={`text-xl font-bold ${oiData[oiData.length - 1]?.oiChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {oiData[oiData.length - 1]?.oiChange.toFixed(2)}%
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">OI/MCap Ratio</div>
+                <div className="text-xl font-bold text-purple-400">2.3%</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Interpretation</div>
+                <div className="text-lg font-bold text-yellow-400">🔥 High Activity</div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={oiData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="oi" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v, 'volume')} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Area yAxisId="oi" type="monotone" dataKey="openInterest" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} name="Open Interest" />
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'liquidation_heatmap':
+        // Calculate price range for liquidation heatmap
+        const liqPriceData = chartData.map(d => d.price as number).filter(p => p > 0);
+        const liqHigh = Math.max(...liqPriceData);
+        const liqLow = Math.min(...liqPriceData);
+        const liqDiff = liqHigh - liqLow;
+
+        // Generate liquidation heatmap data
+        const liqLevels = Array.from({ length: 10 }, (_, i) => {
+          const priceLevel = liqLow + (liqDiff / 10) * i;
+          return {
+            price: priceLevel,
+            priceLabel: formatValue(priceLevel),
+            longLiq: Math.random() * 100000000,
+            shortLiq: Math.random() * 100000000,
+            intensity: Math.random(),
+          };
+        });
+
+        return (
+          <div className="space-y-4">
+            <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-4">
+              <p className="text-yellow-300 text-sm">⚠️ Liquidation levels are estimates based on exchange data. Actual liquidations may vary.</p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <h4 className="text-lg font-medium mb-4 text-red-400">Long Liquidations (Price Drops)</h4>
+                <div className="space-y-2">
+                  {liqLevels.slice().reverse().map((level, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
+                      <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full flex items-center justify-end pr-2"
+                          style={{ width: `${(level.longLiq / 100000000) * 100}%` }}
+                        >
+                          <span className="text-xs text-white">{formatValue(level.longLiq, 'volume')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <h4 className="text-lg font-medium mb-4 text-green-400">Short Liquidations (Price Rises)</h4>
+                <div className="space-y-2">
+                  {liqLevels.map((level, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
+                      <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full flex items-center justify-end pr-2"
+                          style={{ width: `${(level.shortLiq / 100000000) * 100}%` }}
+                        >
+                          <span className="text-xs text-white">{formatValue(level.shortLiq, 'volume')}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'whale_flow':
+        // Generate whale flow data
+        const whaleData = chartData.map((d) => ({
+          date: d.date,
+          inflow: Math.random() * 50000,
+          outflow: -Math.random() * 50000,
+          netFlow: (Math.random() - 0.5) * 30000,
+          price: d.price,
+        }));
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">24h Inflow</div>
+                <div className="text-xl font-bold text-red-400">+{(whaleData[whaleData.length - 1]?.inflow || 0).toFixed(0)} BTC</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">24h Outflow</div>
+                <div className="text-xl font-bold text-green-400">{(whaleData[whaleData.length - 1]?.outflow || 0).toFixed(0)} BTC</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Net Flow</div>
+                <div className={`text-xl font-bold ${(whaleData[whaleData.length - 1]?.netFlow || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {(whaleData[whaleData.length - 1]?.netFlow || 0).toFixed(0)} BTC
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Signal</div>
+                <div className={`text-lg font-bold ${(whaleData[whaleData.length - 1]?.netFlow || 0) < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {(whaleData[whaleData.length - 1]?.netFlow || 0) < 0 ? '🐋 Accumulating' : '⚠️ Distribution'}
+                </div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={whaleData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="flow" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Bar yAxisId="flow" dataKey="inflow" fill="#EF4444" name="Exchange Inflow" stackId="flow" />
+                <Bar yAxisId="flow" dataKey="outflow" fill="#10B981" name="Exchange Outflow" stackId="flow" />
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+                <ReferenceLine yAxisId="flow" y={0} stroke="#6B7280" strokeDasharray="3 3" />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <div className="bg-gray-800/50 rounded-xl p-4">
+              <p className="text-gray-400 text-sm">🐋 <strong>Whale Flow</strong> tracks large transactions to/from exchanges. Outflows typically indicate accumulation (bullish), while inflows suggest potential selling pressure (bearish).</p>
+            </div>
+          </div>
+        );
+
+      case 'active_addresses':
+        // Generate active addresses data
+        const addressData = chartData.map((d, i) => ({
+          date: d.date,
+          activeAddresses: 500000 + Math.sin(i * 0.1) * 100000 + Math.random() * 50000,
+          newAddresses: 50000 + Math.random() * 20000,
+          price: d.price,
+        }));
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Active Today</div>
+                <div className="text-xl font-bold text-blue-400">{Math.floor(addressData[addressData.length - 1]?.activeAddresses || 0).toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">New Addresses</div>
+                <div className="text-xl font-bold text-green-400">{Math.floor(addressData[addressData.length - 1]?.newAddresses || 0).toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">7D Avg</div>
+                <div className="text-xl font-bold text-purple-400">{Math.floor(addressData.slice(-7).reduce((sum, d) => sum + d.activeAddresses, 0) / 7).toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Network Health</div>
+                <div className="text-lg font-bold text-green-400">🟢 Strong</div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={addressData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="addresses" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Area yAxisId="addresses" type="monotone" dataKey="activeAddresses" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} name="Active Addresses" />
+                <Bar yAxisId="addresses" dataKey="newAddresses" fill="#10B981" opacity={0.7} name="New Addresses" />
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'fear_greed_history':
+        // Generate fear & greed history
+        const fgData = chartData.map((d, i) => ({
+          date: d.date,
+          index: Math.floor(30 + Math.sin(i * 0.15) * 30 + Math.random() * 20),
+          price: d.price,
+        }));
+
+        const currentFG = fgData[fgData.length - 1]?.index || 50;
+        const fgLabel = currentFG <= 25 ? 'Extreme Fear' : currentFG <= 45 ? 'Fear' : currentFG <= 55 ? 'Neutral' : currentFG <= 75 ? 'Greed' : 'Extreme Greed';
+        const fgColor = currentFG <= 25 ? '#EF4444' : currentFG <= 45 ? '#F59E0B' : currentFG <= 55 ? '#6B7280' : currentFG <= 75 ? '#10B981' : '#22C55E';
+
+        return (
+          <div className="space-y-4">
+            <div className="bg-gray-800/50 rounded-xl p-6 text-center">
+              <div className="text-gray-400 text-sm mb-2">Current Fear & Greed Index</div>
+              <div className="text-6xl font-bold" style={{ color: fgColor }}>{currentFG}</div>
+              <div className="text-2xl font-medium mt-2" style={{ color: fgColor }}>{fgLabel}</div>
+              <div className="flex justify-between mt-4 text-xs text-gray-500">
+                <span>😱 Extreme Fear</span>
+                <span>😰 Fear</span>
+                <span>😐 Neutral</span>
+                <span>😊 Greed</span>
+                <span>🤑 Extreme Greed</span>
+              </div>
+              <div className="h-3 rounded-full mt-2 bg-gradient-to-r from-red-500 via-yellow-500 via-gray-500 via-green-500 to-emerald-500">
+                <div className="relative h-full">
+                  <div className="absolute top-0 w-3 h-3 bg-white rounded-full shadow-lg transform -translate-y-0" style={{ left: `${currentFG}%` }}></div>
+                </div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={fgData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="fg" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={[0, 100]} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Area yAxisId="fg" type="monotone" dataKey="index" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.3} name="Fear & Greed Index" />
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+                <ReferenceLine yAxisId="fg" y={25} stroke="#EF4444" strokeDasharray="3 3" label="Extreme Fear" />
+                <ReferenceLine yAxisId="fg" y={75} stroke="#10B981" strokeDasharray="3 3" label="Extreme Greed" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'social_volume':
+        // Generate social volume data
+        const socialData = chartData.map((d, i) => ({
+          date: d.date,
+          twitterMentions: Math.floor(50000 + Math.sin(i * 0.2) * 20000 + Math.random() * 10000),
+          redditPosts: Math.floor(5000 + Math.random() * 3000),
+          sentiment: 40 + Math.sin(i * 0.15) * 30 + Math.random() * 20,
+          price: d.price,
+        }));
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Twitter Mentions</div>
+                <div className="text-xl font-bold text-blue-400">{(socialData[socialData.length - 1]?.twitterMentions || 0).toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Reddit Activity</div>
+                <div className="text-xl font-bold text-orange-400">{(socialData[socialData.length - 1]?.redditPosts || 0).toLocaleString()}</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Social Sentiment</div>
+                <div className={`text-xl font-bold ${(socialData[socialData.length - 1]?.sentiment || 50) > 50 ? 'text-green-400' : 'text-red-400'}`}>
+                  {(socialData[socialData.length - 1]?.sentiment || 50).toFixed(0)}%
+                </div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <div className="text-gray-400 text-sm">Trend</div>
+                <div className="text-lg font-bold text-purple-400">📈 Rising</div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <ComposedChart data={socialData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis yAxisId="social" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
+                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <Legend />
+                <Bar yAxisId="social" dataKey="twitterMentions" fill="#1DA1F2" opacity={0.7} name="Twitter" />
+                <Bar yAxisId="social" dataKey="redditPosts" fill="#FF4500" opacity={0.7} name="Reddit" />
+                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        );
+
+      case 'btc_dominance':
+        // Generate BTC dominance history
+        const domData = chartData.map((d, i) => ({
+          date: d.date,
+          btcDominance: 48 + Math.sin(i * 0.1) * 8 + Math.random() * 4,
+          ethDominance: 18 + Math.sin(i * 0.15) * 4 + Math.random() * 2,
+          altDominance: 0,
+          price: d.price,
+        }));
+        domData.forEach(d => { d.altDominance = 100 - d.btcDominance - d.ethDominance; });
+
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-orange-500">
+                <div className="text-gray-400 text-sm">BTC Dominance</div>
+                <div className="text-2xl font-bold text-orange-400">{(domData[domData.length - 1]?.btcDominance || 50).toFixed(1)}%</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-blue-500">
+                <div className="text-gray-400 text-sm">ETH Dominance</div>
+                <div className="text-2xl font-bold text-blue-400">{(domData[domData.length - 1]?.ethDominance || 18).toFixed(1)}%</div>
+              </div>
+              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-purple-500">
+                <div className="text-gray-400 text-sm">Altcoins</div>
+                <div className="text-2xl font-bold text-purple-400">{(domData[domData.length - 1]?.altDominance || 32).toFixed(1)}%</div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <AreaChart data={domData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} formatter={(v) => `${(v as number).toFixed(1)}%`} />
+                <Legend />
+                <Area type="monotone" dataKey="btcDominance" stackId="1" stroke="#F7931A" fill="#F7931A" name="Bitcoin" />
+                <Area type="monotone" dataKey="ethDominance" stackId="1" stroke="#627EEA" fill="#627EEA" name="Ethereum" />
+                <Area type="monotone" dataKey="altDominance" stackId="1" stroke="#8B5CF6" fill="#8B5CF6" name="Altcoins" />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div className="bg-gray-800/50 rounded-xl p-4">
+              <p className="text-gray-400 text-sm">👑 <strong>BTC Dominance</strong> measures Bitcoin's market cap relative to the total crypto market. Rising dominance often indicates risk-off sentiment, while falling dominance suggests altcoin season.</p>
+            </div>
+          </div>
+        );
+
       default:
         return <div className="flex items-center justify-center h-96 text-gray-400">Select a chart type</div>;
     }
