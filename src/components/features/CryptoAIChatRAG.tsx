@@ -254,8 +254,8 @@ Ask me anything about crypto! Try the quick actions below or ask your own questi
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
                   <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></span>
-                  <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                  <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                  <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce animation-delay-100"></span>
+                  <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce animation-delay-200"></span>
                 </div>
                 <span className="text-sm text-gray-500">Analyzing data...</span>
               </div>
