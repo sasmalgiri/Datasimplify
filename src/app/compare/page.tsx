@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -479,26 +480,7 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Navigation */}
-      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
-            <span className="text-xl font-bold text-emerald-400">DataSimplify</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/market" className="text-gray-300 hover:text-white transition-colors">Market</Link>
-            <Link href="/compare" className="text-emerald-400 font-medium">Compare</Link>
-            <Link href="/download" className="text-gray-300 hover:text-white transition-colors">Download</Link>
-            <Link href="/chat" className="text-gray-300 hover:text-white transition-colors">AI Chat</Link>
-            <Link href="/glossary" className="text-gray-300 hover:text-white transition-colors">Glossary</Link>
-            <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">Learn</Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</Link>
-            <Link href="/login" className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-colors">
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <FreeNavbar />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}

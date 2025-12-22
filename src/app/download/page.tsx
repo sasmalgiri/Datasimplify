@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import { FreeNavbar } from '@/components/FreeNavbar';
 import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory, getFieldDisplayName } from '@/lib/dataTypes';
 
 // Progress bar component using ref to avoid inline style warnings
@@ -303,28 +303,8 @@ export default function DownloadPage() {
 
   return (
     <div className="min-h-screen bg-gray-950">
-      {/* Header */}
       {/* Navigation */}
-      <nav className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
-            <span className="text-xl font-bold text-emerald-400">DataSimplify</span>
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/market" className="text-gray-300 hover:text-white transition-colors">Market</Link>
-            <Link href="/compare" className="text-gray-300 hover:text-white transition-colors">Compare</Link>
-            <Link href="/download" className="text-emerald-400 font-medium">Download</Link>
-            <Link href="/chat" className="text-gray-300 hover:text-white transition-colors">AI Chat</Link>
-            <Link href="/glossary" className="text-gray-300 hover:text-white transition-colors">Glossary</Link>
-            <Link href="/learn" className="text-gray-300 hover:text-white transition-colors">Learn</Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</Link>
-            <Link href="/login" className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition-colors">
-              Login
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <FreeNavbar />
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
