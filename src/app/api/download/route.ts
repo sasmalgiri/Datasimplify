@@ -49,6 +49,18 @@ import {
   fetchNFTStatsForDownload,
 } from '@/lib/nftData';
 import { DataCategory } from '@/lib/dataTypes';
+// Supabase cache imports - Use cached data first, fallback to direct API
+import { isSupabaseConfigured } from '@/lib/supabase';
+import {
+  getMarketDataFromCache,
+  getDefiProtocolsFromCache,
+  getDefiYieldsFromCache,
+  getChainTvlFromCache,
+  getStablecoinsFromCache,
+  getWhaleTransactionsFromCache,
+  getExchangeFlowsFromCache,
+  getFearGreedHistoryFromCache,
+} from '@/lib/supabaseData';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -76,7 +88,45 @@ export async function GET(request: Request) {
     // Fetch data based on category
     switch (category) {
       case 'market_overview':
-        const marketData = await fetchMarketOverview({
+        // Try Supabase cache first, fallback to direct API
+        let marketData;
+        try {
+          if (isSupabaseConfigured) {
+            const cachedData = await getMarketDataFromCache({
+              symbols,
+              category: coinCategory || undefined,
+              sortBy: sortBy as 'market_cap' | 'price_change' | 'volume',
+              limit: 100,
+            });
+            if (cachedData && cachedData.length > 0) {
+              // Use cached data from Supabase
+              data = cachedData.map(d => ({
+                symbol: d.symbol,
+                name: d.name || d.symbol,
+                price: d.price,
+                price_change_24h: d.price_change_24h,
+                price_change_percent_24h: d.price_change_percent_24h,
+                high_24h: d.high_24h,
+                low_24h: d.low_24h,
+                volume_24h: d.volume_24h,
+                market_cap: d.market_cap,
+                circulating_supply: d.circulating_supply,
+                bid_price: d.bid_price,
+                ask_price: d.ask_price,
+                spread: d.spread,
+                vwap: 0,
+                trades_count_24h: 0,
+              }));
+              filename = `market_overview_${new Date().toISOString().split('T')[0]}`;
+              break;
+            }
+          }
+        } catch (cacheError) {
+          console.log('Cache miss, falling back to direct API:', cacheError);
+        }
+
+        // Fallback to direct API
+        marketData = await fetchMarketOverview({
           symbols,
           category: coinCategory || undefined,
           minMarketCap,
