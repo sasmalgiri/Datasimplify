@@ -26,7 +26,7 @@ export default function CryptoAIChatRAG() {
       role: 'assistant',
       content: `👋 **Welcome to DataSimplify AI!**
 
-I have **real-time access** to your data:
+I'm enhanced with **exclusive market data** that standard AI can't access:
 • 📊 Live market prices & trends
 • 😰 Fear & Greed index
 • 🐋 Whale transactions

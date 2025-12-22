@@ -47,7 +47,7 @@ export default function ChatPage() {
 
         <div className="flex items-center gap-2 mb-2">
           <h1 className="text-3xl font-bold">🤖 Crypto AI Assistant</h1>
-          <HelpIcon text="Our AI assistant is trained on cryptocurrency knowledge and has access to real-time market data. Ask about prices, trends, concepts, or investment strategies." />
+          <HelpIcon text="Our AI is enhanced with exclusive market data that standard AI models don't have. Ask about prices, trends, concepts, or investment strategies." />
         </div>
         <p className="text-gray-400 mb-6">
           Ask anything about cryptocurrency and investing. No login required!
@@ -94,7 +94,7 @@ export default function ChatPage() {
             <div className="bg-blue-900/30 rounded-xl border border-blue-700 p-4">
               <h3 className="font-bold text-blue-400 mb-3 flex items-center">
                 📚 Live Data Access:
-                <HelpIcon text="The AI has real-time access to your Supabase database, providing accurate and current information." />
+                <HelpIcon text="Our AI is enhanced with DataSimplify's exclusive market database - data that standard AI models cannot access." />
               </h3>
               <ul className="text-sm text-blue-300 space-y-1">
                 <li>• 📊 Market Data (prices, caps)</li>

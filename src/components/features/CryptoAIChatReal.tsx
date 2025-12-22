@@ -63,7 +63,7 @@ export function CryptoAIChatReal({ showBeginnerTips = true }: { showBeginnerTips
       role: 'assistant',
       content: `👋 **Hi! I'm your Crypto AI Assistant!**
 
-I have access to:
+I'm powered by exclusive DataSimplify data:
 • 📊 Real-time market data
 • 📰 Latest crypto news
 • 😱 Sentiment analysis

@@ -323,7 +323,7 @@ export function CryptoAIChat({ showBeginnerTips = true }: { showBeginnerTips?: b
     {
       id: '1',
       role: 'assistant',
-      content: `👋 **Hi! I'm your Crypto AI Assistant!**\n\nI have access to real-time crypto data, news, and market analysis. I can help you with:\n\n• 📊 Price checks and market data\n• 📰 Latest crypto news\n• 😱 Market sentiment (Fear & Greed)\n• 💼 Portfolio advice for beginners\n• 🎓 Learning about crypto\n\n**Note:** I ONLY answer crypto and investment questions. Ask me anything! 🚀`,
+      content: `👋 **Hi! I'm your Crypto AI Assistant!**\n\nI'm powered by DataSimplify's exclusive market data that standard AI can't access. I can help you with:\n\n• 📊 Price checks and market data\n• 📰 Latest crypto news\n• 😱 Market sentiment (Fear & Greed)\n• 💼 Portfolio advice for beginners\n• 🎓 Learning about crypto\n\n**Note:** I ONLY answer crypto and investment questions. Ask me anything! 🚀`,
       timestamp: new Date(),
     }
   ]);
