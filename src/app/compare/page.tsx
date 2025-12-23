@@ -240,14 +240,14 @@ export default function ComparePage() {
 
     try {
       const ids = selectedIds.join(',');
-      const res = await fetch(
-        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d,30d,1y`
-      );
-      const data = await res.json();
+      // Use internal API which checks Supabase cache first, then falls back to CoinGecko
+      const res = await fetch(`/api/crypto?ids=${ids}`);
+      const json = await res.json();
+      const data = json.data;
 
       if (Array.isArray(data)) {
         // Sort data based on selection
-        let sortedData = [...data];
+        const sortedData = [...data];
         switch (sortBy) {
           case 'market_cap_asc':
             sortedData.sort((a, b) => a.market_cap - b.market_cap);
@@ -274,7 +274,7 @@ export default function ComparePage() {
       } else {
         setError('Failed to load data');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch data. Please try again.');
     } finally {
       setLoading(false);

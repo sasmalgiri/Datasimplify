@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white py-16 px-4">
@@ -257,9 +259,9 @@ export default function PrivacyPage() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-700 flex gap-4">
-          <a href="/" className="text-emerald-400 hover:text-emerald-300">← Back to Home</a>
+          <Link href="/" className="text-emerald-400 hover:text-emerald-300">← Back to Home</Link>
           <span className="text-gray-600">|</span>
-          <a href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</a>
+          <Link href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</Link>
         </div>
       </div>
     </div>

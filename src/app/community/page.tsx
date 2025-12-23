@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Progress bar segment component using refs to avoid inline style warnings
 function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
@@ -777,9 +777,11 @@ export default function CommunityPage() {
   // Mock user ID for demo - in production this would come from auth
   const currentUserId = 'demo-user-123';
 
-  const fetchAllData = useCallback(async () => {
-    setLoading(true);
+  // Ref to track if component is mounted
+  const mountedRef = useRef(true);
 
+  const fetchAllData = async () => {
+    setLoading(true);
     const [predictionsData, leaderboardData, statsData, contestsData, trendingData] = await Promise.all([
       fetchCommunityData<CommunityPrediction[]>('predictions', { limit: '30' }),
       fetchCommunityData<UserPredictionStats[]>('leaderboard', { limit: '20' }),
@@ -788,18 +790,22 @@ export default function CommunityPage() {
       fetchCommunityData<TrendingCoin[]>('trending', { limit: '5' }),
     ]);
 
-    if (predictionsData) setPredictions(predictionsData);
-    if (leaderboardData) setLeaderboard(leaderboardData);
-    if (statsData) setStats(statsData);
-    if (contestsData) setContests(contestsData);
-    if (trendingData) setTrending(trendingData);
-
-    setLoading(false);
-  }, []);
+    if (mountedRef.current) {
+      if (predictionsData) setPredictions(predictionsData);
+      if (leaderboardData) setLeaderboard(leaderboardData);
+      if (statsData) setStats(statsData);
+      if (contestsData) setContests(contestsData);
+      if (trendingData) setTrending(trendingData);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
+    mountedRef.current = true;
     fetchAllData();
-  }, [fetchAllData]);
+    return () => { mountedRef.current = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleVote = async (predictionId: string, voteType: 'like' | 'dislike') => {
     await votePrediction(predictionId, currentUserId, voteType);

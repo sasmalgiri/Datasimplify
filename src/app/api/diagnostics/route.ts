@@ -63,7 +63,7 @@ export async function GET() {
           diagnostics.pipeline.issues.push(`Table '${table}' is empty`);
         }
       }
-    } catch (err) {
+    } catch {
       diagnostics.tables[table] = { exists: false, rowCount: 0 };
       diagnostics.pipeline.issues.push(`Table '${table}' check failed`);
     }

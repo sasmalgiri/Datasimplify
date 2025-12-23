@@ -1,7 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+
+// Sentiment bar component using ref to avoid inline style warnings
+function SentimentBar({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+    }
+  }, [percentage]);
+
+  return <div ref={barRef} className={`h-full ${colorClass}`} />;
+}
 import { Treemap } from '@/components/features/Treemap';
 import { FearGreedIndex } from '@/components/features/FearGreedIndex';
 import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap';
@@ -29,7 +42,7 @@ export default function HomePage() {
   const [userLevel, setUserLevel] = useState<'beginner' | 'intermediate' | 'pro'>('beginner');
   const [marketData, setMarketData] = useState<MarketData | null>(null);
   const [coins, setCoins] = useState<CoinData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true); // Loading state set but UI handles loading inline
   const [activeSection, setActiveSection] = useState('overview');
 
   // Fetch market data
@@ -219,9 +232,9 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full ${item.sentiment >= 70 ? 'bg-green-500' : item.sentiment >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                            style={{ width: `${item.sentiment}%` }}
+                          <SentimentBar
+                            percentage={item.sentiment}
+                            colorClass={item.sentiment >= 70 ? 'bg-green-500' : item.sentiment >= 50 ? 'bg-yellow-500' : 'bg-red-500'}
                           />
                         </div>
                         <span className={`text-sm font-medium ${item.sentiment >= 70 ? 'text-green-600' : 'text-gray-600'}`}>

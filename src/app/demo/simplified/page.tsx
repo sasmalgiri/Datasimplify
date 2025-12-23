@@ -309,7 +309,7 @@ export default function SimplifiedDemoPage() {
                   <span className="font-medium">Caution Advised</span>
                 </div>
                 <p className="text-sm text-gray-400">
-                  High <JargonTooltip term="fear-greed-index">Fear & Greed</JargonTooltip>. Don't <JargonTooltip term="fomo">FOMO</JargonTooltip> into positions.
+                  High <JargonTooltip term="fear-greed-index">Fear & Greed</JargonTooltip>. Don&apos;t <JargonTooltip term="fomo">FOMO</JargonTooltip> into positions.
                 </p>
               </div>
               <div className="bg-gray-800/50 rounded-lg p-4">

@@ -51,16 +51,7 @@ import {
 import { DataCategory } from '@/lib/dataTypes';
 // Supabase cache imports - Use cached data first, fallback to direct API
 import { isSupabaseConfigured } from '@/lib/supabase';
-import {
-  getMarketDataFromCache,
-  getDefiProtocolsFromCache,
-  getDefiYieldsFromCache,
-  getChainTvlFromCache,
-  getStablecoinsFromCache,
-  getWhaleTransactionsFromCache,
-  getExchangeFlowsFromCache,
-  getFearGreedHistoryFromCache,
-} from '@/lib/supabaseData';
+import { getMarketDataFromCache } from '@/lib/supabaseData';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -89,7 +80,6 @@ export async function GET(request: Request) {
     switch (category) {
       case 'market_overview':
         // Try Supabase cache first, fallback to direct API
-        let marketData;
         try {
           if (isSupabaseConfigured) {
             const cachedData = await getMarketDataFromCache({
@@ -126,7 +116,7 @@ export async function GET(request: Request) {
         }
 
         // Fallback to direct API
-        marketData = await fetchMarketOverview({
+        const marketData = await fetchMarketOverview({
           symbols,
           category: coinCategory || undefined,
           minMarketCap,

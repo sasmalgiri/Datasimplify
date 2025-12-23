@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { BeginnerTip, InfoButton, RiskMeter, TrafficLight } from '@/components/ui/BeginnerHelpers';
+import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelpers';
 
 // Color dot component using ref to avoid inline style warnings
 function ColorDot({ color, className = '' }: { color: string; className?: string }) {

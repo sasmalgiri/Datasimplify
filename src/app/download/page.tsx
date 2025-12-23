@@ -93,7 +93,8 @@ export default function DownloadPage() {
   const [numberFormat, setNumberFormat] = useState<'full' | 'abbreviated' | 'scientific'>('abbreviated');
   const [decimalPlaces, setDecimalPlaces] = useState('2');
   const [includeMetadata, setIncludeMetadata] = useState(true);
-  const [columnRenames, setColumnRenames] = useState<Record<string, string>>({});
+  // Column renaming reserved for future feature
+  // const [columnRenames, setColumnRenames] = useState<Record<string, string>>({});
 
   // Get category info
   const categoryInfo = DATA_CATEGORIES.find(c => c.id === selectedCategory);

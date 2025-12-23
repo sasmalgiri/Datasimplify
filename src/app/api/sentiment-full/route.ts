@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'aggregated';
   const symbol = searchParams.get('symbol') || 'BTC';
-  const source = searchParams.get('source') || 'all';
+  const _source = searchParams.get('source') || 'all'; // Reserved for future filtering
 
   try {
     let data;

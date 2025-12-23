@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
   try {
     let data;
-    let source = 'supabase_cache';
+    const source = 'supabase_cache';
 
     switch (type) {
       // === DASHBOARD ===

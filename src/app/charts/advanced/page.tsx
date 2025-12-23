@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
@@ -55,11 +55,6 @@ const COINS_DATA = [
 
 export default function AdvancedChartsPage() {
   const [selectedChart, setSelectedChart] = useState<AdvancedChartType>('treemap');
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   // Chart options generators
   const getChartOption = useMemo(() => {
@@ -460,13 +455,17 @@ export default function AdvancedChartsPage() {
 
       case 'calendar':
         // Generate calendar data for the past 6 months
+        // Use deterministic values based on date to avoid Math.random() impurity
         const calendarData: [string, number][] = [];
         const today = new Date();
         for (let i = 180; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
-          const value = Math.floor(Math.random() * 10000);
+          // Deterministic pseudo-random based on date components
+          const dateParts = dateStr.split('-');
+          const seed = parseInt(dateParts[0]) + parseInt(dateParts[1]) * 31 + parseInt(dateParts[2]) * 12;
+          const value = Math.floor(Math.abs(Math.sin(seed) * 10000));
           calendarData.push([dateStr, value]);
         }
 
@@ -630,14 +629,12 @@ export default function AdvancedChartsPage() {
               </div>
 
               <div className="h-[500px]">
-                {isClient && (
-                  <ReactECharts
-                    option={getChartOption}
-                    style={{ height: '100%', width: '100%' }}
-                    opts={{ renderer: 'canvas' }}
-                    theme="dark"
-                  />
-                )}
+                <ReactECharts
+                  option={getChartOption}
+                  style={{ height: '100%', width: '100%' }}
+                  opts={{ renderer: 'canvas' }}
+                  theme="dark"
+                />
               </div>
             </div>
 

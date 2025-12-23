@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 
@@ -13,30 +13,28 @@ interface PriceChartProps {
 
 type TimeRange = '24h' | '7d' | '30d' | '90d' | '1y';
 
-export default function PriceChart({ 
-  data, 
-  height = 300, 
+const TIME_RANGES: Record<TimeRange, number> = {
+  '24h': 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+  '90d': 90 * 24 * 60 * 60 * 1000,
+  '1y': 365 * 24 * 60 * 60 * 1000,
+};
+
+export default function PriceChart({
+  data,
+  height = 300,
   showAxis = true,
-  color = '#F7931A'
+  color: _color = '#F7931A' // Prefixed - uses dynamic chartColor based on price change
 }: PriceChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('7d');
 
-  // Filter data based on time range
-  const filterData = (range: TimeRange) => {
+  // Memoize filtered data to avoid Date.now() impurity during render
+  const filteredData = useMemo(() => {
     const now = Date.now();
-    const ranges: Record<TimeRange, number> = {
-      '24h': 24 * 60 * 60 * 1000,
-      '7d': 7 * 24 * 60 * 60 * 1000,
-      '30d': 30 * 24 * 60 * 60 * 1000,
-      '90d': 90 * 24 * 60 * 60 * 1000,
-      '1y': 365 * 24 * 60 * 60 * 1000,
-    };
-    
-    const cutoff = now - ranges[range];
+    const cutoff = now - TIME_RANGES[timeRange];
     return data.filter(d => d.timestamp >= cutoff);
-  };
-
-  const filteredData = filterData(timeRange);
+  }, [data, timeRange]);
   
   // Calculate price change for the period
   const priceChange = filteredData.length > 1

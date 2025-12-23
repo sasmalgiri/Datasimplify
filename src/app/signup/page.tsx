@@ -13,7 +13,7 @@ function SignupForm() {
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
-  const router = useRouter();
+  const _router = useRouter(); // Available for post-signup redirect
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
 

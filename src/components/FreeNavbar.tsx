@@ -19,7 +19,6 @@ import {
   MessageSquare,
   GraduationCap,
   HelpCircle,
-  Shield,
   Activity,
   Zap,
   Bell,

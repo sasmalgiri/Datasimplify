@@ -16,8 +16,6 @@ import {
   Target,
   Shield,
   Activity,
-  Zap,
-  Info,
   CheckCircle,
   XCircle,
   Clock,

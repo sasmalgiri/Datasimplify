@@ -26,8 +26,6 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Brush,
-  ScatterChart,
-  Scatter,
 } from 'recharts';
 
 // Dynamic bar component using ref to avoid inline style warnings
@@ -56,6 +54,68 @@ function DynamicBar({
       {children}
     </div>
   );
+}
+
+// Fibonacci card component using ref for dynamic border and text color
+function FibCard({ level, price, color, formatFn }: { level: string; price: number; color: string; formatFn: (v: number) => string }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cardRef.current) {
+      cardRef.current.style.borderColor = color;
+    }
+    if (textRef.current) {
+      textRef.current.style.color = color;
+    }
+  }, [color]);
+
+  return (
+    <div ref={cardRef} className="bg-gray-700/50 rounded-lg p-3 border-l-4">
+      <div className="text-xs text-gray-400">{level}</div>
+      <div ref={textRef} className="text-lg font-bold">{formatFn(price)}</div>
+    </div>
+  );
+}
+
+// Progress bar with dynamic width using ref
+function WidthBar({ percentage, className = '', children }: { percentage: number; className?: string; children?: React.ReactNode }) {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (barRef.current) {
+      barRef.current.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+    }
+  }, [percentage]);
+
+  return <div ref={barRef} className={className}>{children}</div>;
+}
+
+// Fear/Greed colored text using ref
+function FGColoredText({ value, className = '', children }: { value: number; className?: string; children?: React.ReactNode }) {
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (textRef.current) {
+      const color = value <= 25 ? '#EF4444' : value <= 45 ? '#F59E0B' : value <= 55 ? '#6B7280' : value <= 75 ? '#10B981' : '#22C55E';
+      textRef.current.style.color = color;
+    }
+  }, [value]);
+
+  return <div ref={textRef} className={className}>{children}</div>;
+}
+
+// Fear/Greed gauge marker position
+function FGMarker({ position }: { position: number }) {
+  const markerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.style.left = `${Math.max(0, Math.min(100, position))}%`;
+    }
+  }, [position]);
+
+  return <div ref={markerRef} className="absolute top-0 w-3 h-3 bg-white rounded-full shadow-lg transform -translate-y-0" />;
 }
 
 // Chart type definitions - expanded to 20 chart types
@@ -380,7 +440,10 @@ export default function ChartsPage() {
           }, 'image/png');
         };
 
-        img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        // Convert SVG to base64 (handle UTF-8 characters)
+        const bytes = new TextEncoder().encode(svgData);
+        const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
+        img.src = 'data:image/svg+xml;base64,' + btoa(binString);
       }
     } catch (error) {
       console.error('Error downloading chart:', error);
@@ -606,7 +669,7 @@ export default function ChartsPage() {
 
       case 'momentum':
         // Generate RSI-like data
-        const momentumData = chartData.map((d, i) => {
+        const momentumData = chartData.map((d) => {
           const rsi = 30 + Math.random() * 40 + (d.price && chartData[0].price ? ((d.price as number) / (chartData[0].price as number) - 1) * 50 : 0);
           return {
             ...d,
@@ -1016,10 +1079,7 @@ export default function ChartsPage() {
               <p className="text-gray-400 text-sm mb-4">Key support/resistance levels based on {parseInt(timeRange)}-day price range</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {fibLevels.map((fib) => (
-                  <div key={fib.level} className="bg-gray-700/50 rounded-lg p-3 border-l-4" style={{ borderColor: fib.color }}>
-                    <div className="text-xs text-gray-400">{fib.level}</div>
-                    <div className="text-lg font-bold" style={{ color: fib.color }}>{formatValue(fib.price)}</div>
-                  </div>
+                  <FibCard key={fib.level} level={fib.level} price={fib.price} color={fib.color} formatFn={formatValue} />
                 ))}
               </div>
             </div>
@@ -1231,12 +1291,12 @@ export default function ChartsPage() {
                     <div key={i} className="flex items-center gap-3">
                       <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
                       <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
-                        <div
+                        <WidthBar
+                          percentage={(level.longLiq / 100000000) * 100}
                           className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full flex items-center justify-end pr-2"
-                          style={{ width: `${(level.longLiq / 100000000) * 100}%` }}
                         >
                           <span className="text-xs text-white">{formatValue(level.longLiq, 'volume')}</span>
-                        </div>
+                        </WidthBar>
                       </div>
                     </div>
                   ))}
@@ -1249,12 +1309,12 @@ export default function ChartsPage() {
                     <div key={i} className="flex items-center gap-3">
                       <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
                       <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
-                        <div
+                        <WidthBar
+                          percentage={(level.shortLiq / 100000000) * 100}
                           className="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full flex items-center justify-end pr-2"
-                          style={{ width: `${(level.shortLiq / 100000000) * 100}%` }}
                         >
                           <span className="text-xs text-white">{formatValue(level.shortLiq, 'volume')}</span>
-                        </div>
+                        </WidthBar>
                       </div>
                     </div>
                   ))}
@@ -1373,14 +1433,13 @@ export default function ChartsPage() {
 
         const currentFG = fgData[fgData.length - 1]?.index || 50;
         const fgLabel = currentFG <= 25 ? 'Extreme Fear' : currentFG <= 45 ? 'Fear' : currentFG <= 55 ? 'Neutral' : currentFG <= 75 ? 'Greed' : 'Extreme Greed';
-        const fgColor = currentFG <= 25 ? '#EF4444' : currentFG <= 45 ? '#F59E0B' : currentFG <= 55 ? '#6B7280' : currentFG <= 75 ? '#10B981' : '#22C55E';
 
         return (
           <div className="space-y-4">
             <div className="bg-gray-800/50 rounded-xl p-6 text-center">
               <div className="text-gray-400 text-sm mb-2">Current Fear & Greed Index</div>
-              <div className="text-6xl font-bold" style={{ color: fgColor }}>{currentFG}</div>
-              <div className="text-2xl font-medium mt-2" style={{ color: fgColor }}>{fgLabel}</div>
+              <FGColoredText value={currentFG} className="text-6xl font-bold">{currentFG}</FGColoredText>
+              <FGColoredText value={currentFG} className="text-2xl font-medium mt-2">{fgLabel}</FGColoredText>
               <div className="flex justify-between mt-4 text-xs text-gray-500">
                 <span>😱 Extreme Fear</span>
                 <span>😰 Fear</span>
@@ -1390,7 +1449,7 @@ export default function ChartsPage() {
               </div>
               <div className="h-3 rounded-full mt-2 bg-gradient-to-r from-red-500 via-yellow-500 via-gray-500 via-green-500 to-emerald-500">
                 <div className="relative h-full">
-                  <div className="absolute top-0 w-3 h-3 bg-white rounded-full shadow-lg transform -translate-y-0" style={{ left: `${currentFG}%` }}></div>
+                  <FGMarker position={currentFG} />
                 </div>
               </div>
             </div>
@@ -1499,7 +1558,7 @@ export default function ChartsPage() {
               </AreaChart>
             </ResponsiveContainer>
             <div className="bg-gray-800/50 rounded-xl p-4">
-              <p className="text-gray-400 text-sm">👑 <strong>BTC Dominance</strong> measures Bitcoin's market cap relative to the total crypto market. Rising dominance often indicates risk-off sentiment, while falling dominance suggests altcoin season.</p>
+              <p className="text-gray-400 text-sm">👑 <strong>BTC Dominance</strong> measures Bitcoin&apos;s market cap relative to the total crypto market. Rising dominance often indicates risk-off sentiment, while falling dominance suggests altcoin season.</p>
             </div>
           </div>
         );

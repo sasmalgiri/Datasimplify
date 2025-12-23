@@ -380,7 +380,7 @@ export default function PricingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 className="font-bold mb-2">Can I cancel anytime?</h3>
-                <p className="text-gray-400">Yes! Cancel anytime. You'll keep access until the end of your billing period.</p>
+                <p className="text-gray-400">Yes! Cancel anytime. You&apos;ll keep access until the end of your billing period.</p>
               </div>
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 className="font-bold mb-2">What payment methods do you accept?</h3>
@@ -388,7 +388,7 @@ export default function PricingPage() {
               </div>
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 className="font-bold mb-2">Do you offer refunds?</h3>
-                <p className="text-gray-400">Yes, 7-day money-back guarantee if you're not satisfied.</p>
+                <p className="text-gray-400">Yes, 7-day money-back guarantee if you&apos;re not satisfied.</p>
               </div>
               <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
                 <h3 className="font-bold mb-2">Is tax included?</h3>
@@ -406,14 +406,14 @@ export default function PricingPage() {
                 <div className="text-5xl mb-4">🇮🇳</div>
                 <h3 className="text-2xl font-bold mb-2">Coming Soon to India!</h3>
                 <p className="text-gray-400 mb-6">
-                  We're launching with UPI, cards, and all your favorite payment methods. 
+                  We&apos;re launching with UPI, cards, and all your favorite payment methods.
                   Join the waitlist to get early access and a special discount!
                 </p>
 
                 {waitlistSubmitted ? (
                   <div className="text-green-400 py-4">
                     <div className="text-4xl mb-2">✓</div>
-                    <p>You're on the list! We'll notify you when we launch.</p>
+                    <p>You&apos;re on the list! We&apos;ll notify you when we launch.</p>
                   </div>
                 ) : (
                   <form onSubmit={handleWaitlistSubmit} className="space-y-4">

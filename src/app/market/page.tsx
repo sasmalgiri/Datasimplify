@@ -30,7 +30,8 @@ function Tooltip({ children, text }: { children: React.ReactNode; text: string }
   );
 }
 
-// Help Icon with tooltip
+// Help Icon with tooltip - Reserved for future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function HelpIcon({ text }: { text: string }) {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -181,36 +182,55 @@ export default function MarketPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch coins
-      const coinsRes = await fetch(
-        'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false'
-      );
-      const coinsData = await coinsRes.json();
-      if (Array.isArray(coinsData)) {
-        setCoins(coinsData);
+      // Fetch coins from internal API (uses Supabase cache first, then CoinGecko)
+      const coinsRes = await fetch('/api/crypto?limit=100');
+      const coinsJson = await coinsRes.json();
+      if (coinsJson?.data && Array.isArray(coinsJson.data)) {
+        setCoins(coinsJson.data);
       }
 
-      // Fetch global data
-      const globalRes = await fetch('https://api.coingecko.com/api/v3/global');
+      // Fetch global data from internal cached endpoint
+      const globalRes = await fetch('/api/cached?type=dashboard');
       const globalJson = await globalRes.json();
-      if (globalJson?.data) {
+      if (globalJson?.data?.marketOverview) {
+        const overview = globalJson.data.marketOverview;
         setGlobalData({
-          total_market_cap: globalJson.data.total_market_cap?.usd || 0,
-          total_volume: globalJson.data.total_volume?.usd || 0,
-          market_cap_change_percentage_24h: globalJson.data.market_cap_change_percentage_24h_usd || 0,
-          active_cryptocurrencies: globalJson.data.active_cryptocurrencies || 0,
-          btc_dominance: globalJson.data.market_cap_percentage?.btc || 0,
+          total_market_cap: overview.totalMarketCap || 0,
+          total_volume: overview.totalVolume24h || 0,
+          market_cap_change_percentage_24h: overview.marketCapChange24h || 0,
+          active_cryptocurrencies: overview.activeCryptocurrencies || 0,
+          btc_dominance: overview.btcDominance || 0,
         });
-      }
+        // Also get Fear & Greed from dashboard
+        if (globalJson.data.fearGreed) {
+          setFearGreed({
+            value: globalJson.data.fearGreed.value || 50,
+            value_classification: globalJson.data.fearGreed.label || 'Neutral',
+          });
+        }
+      } else {
+        // Fallback to direct API if cache is empty
+        const directGlobalRes = await fetch('https://api.coingecko.com/api/v3/global');
+        const directGlobalJson = await directGlobalRes.json();
+        if (directGlobalJson?.data) {
+          setGlobalData({
+            total_market_cap: directGlobalJson.data.total_market_cap?.usd || 0,
+            total_volume: directGlobalJson.data.total_volume?.usd || 0,
+            market_cap_change_percentage_24h: directGlobalJson.data.market_cap_change_percentage_24h_usd || 0,
+            active_cryptocurrencies: directGlobalJson.data.active_cryptocurrencies || 0,
+            btc_dominance: directGlobalJson.data.market_cap_percentage?.btc || 0,
+          });
+        }
 
-      // Fetch Fear & Greed
-      const fgRes = await fetch('https://api.alternative.me/fng/');
-      const fgData = await fgRes.json();
-      if (fgData?.data?.[0]) {
-        setFearGreed({
-          value: parseInt(fgData.data[0].value),
-          value_classification: fgData.data[0].value_classification,
-        });
+        // Fallback Fear & Greed
+        const fgRes = await fetch('https://api.alternative.me/fng/');
+        const fgData = await fgRes.json();
+        if (fgData?.data?.[0]) {
+          setFearGreed({
+            value: parseInt(fgData.data[0].value),
+            value_classification: fgData.data[0].value_classification,
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);

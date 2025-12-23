@@ -55,6 +55,58 @@ interface RiskScoreCardProps {
   compact?: boolean;
 }
 
+// Moved outside component to avoid recreation on each render
+const getRiskStyle = (level: RiskLevel) => {
+  switch (level) {
+    case 'LOW':
+      return {
+        bg: 'bg-emerald-500/20',
+        border: 'border-emerald-500/30',
+        text: 'text-emerald-400',
+        barColor: 'bg-emerald-500'
+      };
+    case 'MEDIUM':
+      return {
+        bg: 'bg-yellow-500/20',
+        border: 'border-yellow-500/30',
+        text: 'text-yellow-400',
+        barColor: 'bg-yellow-500'
+      };
+    case 'HIGH':
+      return {
+        bg: 'bg-orange-500/20',
+        border: 'border-orange-500/30',
+        text: 'text-orange-400',
+        barColor: 'bg-orange-500'
+      };
+    case 'EXTREME':
+      return {
+        bg: 'bg-red-500/20',
+        border: 'border-red-500/30',
+        text: 'text-red-400',
+        barColor: 'bg-red-500'
+      };
+  }
+};
+
+const RISK_ICONS = {
+  LOW: CheckCircle,
+  MEDIUM: Info,
+  HIGH: AlertTriangle,
+  EXTREME: XCircle,
+} as const;
+
+const getStatusStyle = (status: 'safe' | 'warning' | 'danger') => {
+  switch (status) {
+    case 'safe':
+      return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle };
+    case 'warning':
+      return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: AlertTriangle };
+    case 'danger':
+      return { bg: 'bg-red-500/20', text: 'text-red-400', icon: XCircle };
+  }
+};
+
 export function RiskScoreCard({
   overallRisk,
   riskScore,
@@ -65,65 +117,8 @@ export function RiskScoreCard({
   factors,
   compact = false
 }: RiskScoreCardProps) {
-  const getRiskStyle = (level: RiskLevel) => {
-    switch (level) {
-      case 'LOW':
-        return {
-          bg: 'bg-emerald-500/20',
-          border: 'border-emerald-500/30',
-          text: 'text-emerald-400',
-          barColor: 'bg-emerald-500'
-        };
-      case 'MEDIUM':
-        return {
-          bg: 'bg-yellow-500/20',
-          border: 'border-yellow-500/30',
-          text: 'text-yellow-400',
-          barColor: 'bg-yellow-500'
-        };
-      case 'HIGH':
-        return {
-          bg: 'bg-orange-500/20',
-          border: 'border-orange-500/30',
-          text: 'text-orange-400',
-          barColor: 'bg-orange-500'
-        };
-      case 'EXTREME':
-        return {
-          bg: 'bg-red-500/20',
-          border: 'border-red-500/30',
-          text: 'text-red-400',
-          barColor: 'bg-red-500'
-        };
-    }
-  };
-
-  const getRiskIcon = (level: RiskLevel) => {
-    switch (level) {
-      case 'LOW':
-        return CheckCircle;
-      case 'MEDIUM':
-        return Info;
-      case 'HIGH':
-        return AlertTriangle;
-      case 'EXTREME':
-        return XCircle;
-    }
-  };
-
-  const getStatusStyle = (status: 'safe' | 'warning' | 'danger') => {
-    switch (status) {
-      case 'safe':
-        return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', icon: CheckCircle };
-      case 'warning':
-        return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', icon: AlertTriangle };
-      case 'danger':
-        return { bg: 'bg-red-500/20', text: 'text-red-400', icon: XCircle };
-    }
-  };
-
   const overallStyle = getRiskStyle(overallRisk);
-  const OverallIcon = getRiskIcon(overallRisk);
+  const OverallIcon = RISK_ICONS[overallRisk];
 
   // Calculate risk score if not provided
   const displayScore = riskScore ?? (() => {
