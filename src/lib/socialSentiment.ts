@@ -14,8 +14,8 @@
 // - Our own Fear & Greed calculation
 
 const SENTIMENT_APIS = {
-  // CryptoPanic - FREE (200 calls/hour)
-  cryptoPanic: 'https://cryptopanic.com/api/free/v1',
+  // CryptoPanic API (Developer tier with API key: 1000 calls/hour)
+  cryptoPanic: 'https://cryptopanic.com/api/v1',
   
   // Reddit (free with OAuth)
   reddit: 'https://www.reddit.com',
@@ -83,7 +83,8 @@ export async function getCryptoPanicNews(
   currencies?: string // e.g., "BTC,ETH"
 ): Promise<SocialPost[]> {
   try {
-    let url = `${SENTIMENT_APIS.cryptoPanic}/posts/?auth_token=FREE&filter=${filter}&public=true`;
+    const authToken = process.env.CRYPTOPANIC_API_KEY || 'FREE';
+    let url = `${SENTIMENT_APIS.cryptoPanic}/posts/?auth_token=${authToken}&filter=${filter}&public=true`;
     if (currencies) {
       url += `&currencies=${currencies}`;
     }

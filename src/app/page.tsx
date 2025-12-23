@@ -1,7 +1,145 @@
 'use client';
 
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+
+// Progress bar component using refs
+function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.width = `${percentage}%`;
+    }
+  }, [percentage]);
+  return <div ref={ref} className={`${colorClass} transition-all duration-500`} />;
+}
+
+// Community Stats Interface
+interface CommunityStats {
+  total_predictions: number;
+  active_predictors: number;
+  bullish_percent: number;
+  bearish_percent: number;
+  neutral_percent: number;
+  avg_accuracy: number;
+}
+
+// Community Preview Component
+function CommunityPreview() {
+  const [stats, setStats] = useState<CommunityStats>({
+    total_predictions: 0,
+    active_predictors: 0,
+    bullish_percent: 33,
+    bearish_percent: 33,
+    neutral_percent: 34,
+    avg_accuracy: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/community?action=stats');
+        const result = await response.json();
+        if (result.success && result.data) {
+          setStats(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching community stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  return (
+    <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span className="text-xl">👥</span>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Community Predictions</h3>
+            <p className="text-gray-400 text-sm">Live market sentiment</p>
+          </div>
+        </div>
+        <Link
+          href="/community"
+          className="text-emerald-400 text-sm hover:text-emerald-300 transition"
+        >
+          View All →
+        </Link>
+      </div>
+
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+          <p className="text-gray-400 text-xs mb-1">Total Predictions</p>
+          <p className="text-2xl font-bold text-white">
+            {loading ? '...' : stats.total_predictions.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+          <p className="text-gray-400 text-xs mb-1">Active Predictors</p>
+          <p className="text-2xl font-bold text-white">
+            {loading ? '...' : stats.active_predictors.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+          <p className="text-gray-400 text-xs mb-1">Community Accuracy</p>
+          <p className="text-2xl font-bold text-emerald-400">
+            {loading ? '...' : `${stats.avg_accuracy}%`}
+          </p>
+        </div>
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+          <p className="text-gray-400 text-xs mb-1">Bullish Sentiment</p>
+          <p className="text-2xl font-bold text-emerald-400">
+            {loading ? '...' : `${stats.bullish_percent}%`}
+          </p>
+        </div>
+      </div>
+
+      {/* Sentiment Bar */}
+      <div className="mb-4">
+        <p className="text-gray-400 text-sm mb-2">Community Sentiment</p>
+        <div className="flex h-3 rounded-full overflow-hidden bg-gray-700">
+          <ProgressSegment percentage={stats.bullish_percent} colorClass="bg-emerald-500" />
+          <ProgressSegment percentage={stats.neutral_percent} colorClass="bg-yellow-500" />
+          <ProgressSegment percentage={stats.bearish_percent} colorClass="bg-red-500" />
+        </div>
+        <div className="flex justify-between text-xs mt-2">
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span className="text-gray-400">Bullish</span>
+            <span className="text-emerald-400 font-bold">{stats.bullish_percent}%</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+            <span className="text-gray-400">Neutral</span>
+            <span className="text-yellow-400 font-bold">{stats.neutral_percent}%</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            <span className="text-gray-400">Bearish</span>
+            <span className="text-red-400 font-bold">{stats.bearish_percent}%</span>
+          </span>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <Link
+        href="/community"
+        className="block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-center transition mt-4"
+      >
+        + Submit Your Prediction
+      </Link>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   return (
@@ -9,56 +147,70 @@ export default function LandingPage() {
       {/* Navigation */}
       <FreeNavbar />
 
-      {/* Hero Section */}
-      <section className="pt-12 pb-20 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-sm mb-8">
-            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-            Trusted by 500+ crypto investors
+      {/* Hero Section - Split Layout */}
+      <section className="pt-8 pb-16 px-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Trust Badge - Centered */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-sm">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+              Trusted by 500+ crypto investors
+            </div>
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-              PROFESSIONAL CRYPTO DATA
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              WITHOUT THE $1,000/mo PRICE TAG
-            </span>
-          </h1>
+          {/* Split Layout */}
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            {/* Left: Hero Content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+                  PROFESSIONAL CRYPTO DATA
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  WITHOUT THE $1,000/mo PRICE TAG
+                </span>
+              </h1>
 
-          <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-8">
-            Why pay $800-$1,299/month for Glassnode or Nansen when you can get 
-            <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
-          </p>
+              <p className="text-lg md:text-xl text-gray-400 mb-8">
+                Why pay $800-$1,299/month for Glassnode or Nansen when you can get
+                <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
+              </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link 
-              href="/signup"
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-lg shadow-blue-500/25"
-            >
-              Start Free Trial →
-            </Link>
-            <Link 
-              href="/chat"
-              className="px-8 py-4 bg-white/10 border border-white/20 rounded-xl font-semibold text-lg hover:bg-white/20 transition"
-            >
-              Try AI Demo
-            </Link>
-          </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+                <Link
+                  href="/signup"
+                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-lg shadow-blue-500/25"
+                >
+                  Start Free Trial →
+                </Link>
+                <Link
+                  href="/chat"
+                  className="px-8 py-4 bg-white/10 border border-white/20 rounded-xl font-semibold text-lg hover:bg-white/20 transition"
+                >
+                  Try AI Demo
+                </Link>
+              </div>
 
-          <div className="flex flex-wrap justify-center gap-8 text-gray-400">
-            <div className="flex items-center gap-2">
-              <span className="text-yellow-400">★★★★★</span>
-              <span>4.9/5 Rating</span>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-gray-400 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-400">★★★★★</span>
+                  <span>4.9/5 Rating</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  <span>No Credit Card</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">🔒</span>
+                  <span>Bank-Level Security</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-400">✓</span>
-              <span>No Credit Card Required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-400">🔒</span>
-              <span>Bank-Level Security</span>
+
+            {/* Right: Community Predictions Preview */}
+            <div className="lg:pl-4">
+              <CommunityPreview />
             </div>
           </div>
         </div>
@@ -273,7 +425,7 @@ export default function LandingPage() {
           <p className="text-xl text-gray-400 mb-8">
             Join 500+ investors who stopped overpaying for data.
           </p>
-          <Link 
+          <Link
             href="/signup"
             className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-lg shadow-lg"
           >

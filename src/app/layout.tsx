@@ -3,11 +3,85 @@ import Link from 'next/link';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import DisclaimerBanner from '@/components/ui/DisclaimerBanner';
+import { AllJsonLd } from '@/components/JsonLd';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://datasimplify.com';
 
 export const metadata: Metadata = {
-  title: 'DataSimplify - Crypto Data Made Simple',
-  description: 'Download crypto market data in Excel/CSV format. No coding required. AI-powered analysis.',
-  keywords: ['crypto', 'cryptocurrency', 'bitcoin', 'ethereum', 'market data', 'excel', 'csv', 'download'],
+  // Basic SEO
+  title: {
+    default: 'DataSimplify - Crypto Data & AI Analytics Platform',
+    template: '%s | DataSimplify'
+  },
+  description: 'Download crypto market data in Excel/CSV. AI-powered predictions, Fear & Greed Index, whale tracking, and DeFi analytics. No coding required. Start free today!',
+  keywords: ['crypto data', 'cryptocurrency analytics', 'bitcoin price', 'ethereum data', 'crypto excel download', 'AI crypto predictions', 'fear and greed index', 'whale tracking', 'DeFi analytics', 'crypto market data', 'cryptocurrency API'],
+
+  // Favicon & Icons
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
+  },
+
+  // Open Graph (Facebook, LinkedIn)
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: 'DataSimplify',
+    title: 'DataSimplify - Crypto Data & AI Analytics Made Simple',
+    description: 'Download crypto market data in Excel/CSV. AI-powered predictions, real-time analytics, and whale tracking. No coding required.',
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'DataSimplify - Crypto Data Platform',
+      },
+    ],
+  },
+
+  // Twitter Card
+  twitter: {
+    card: 'summary_large_image',
+    title: 'DataSimplify - Crypto Data & AI Analytics',
+    description: 'Download crypto data in Excel/CSV. AI predictions, Fear & Greed Index, whale tracking. Start free!',
+    images: [`${siteUrl}/og-image.png`],
+    creator: '@datasimplify',
+  },
+
+  // Additional SEO
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  // Canonical & Alternates
+  alternates: {
+    canonical: siteUrl,
+  },
+
+  // Verification (add your IDs later)
+  verification: {
+    google: 'your-google-verification-code',
+    // yandex: 'your-yandex-code',
+    // bing: 'your-bing-code',
+  },
+
+  // App Info
+  applicationName: 'DataSimplify',
+  category: 'Finance',
+  creator: 'DataSimplify',
+  publisher: 'DataSimplify',
 };
 
 function Footer() {
@@ -96,6 +170,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <AllJsonLd />
+      </head>
       <body className="bg-gray-900">
         <Providers>
           <DisclaimerBanner />
@@ -104,6 +181,8 @@ export default function RootLayout({
           </main>
           <Footer />
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

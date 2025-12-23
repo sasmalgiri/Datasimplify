@@ -1,0 +1,41 @@
+# DataSimplify Robots.txt
+# https://datasimplify.com
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://datasimplify.com/sitemap.xml
+
+# Disallow API routes
+Disallow: /api/
+Disallow: /auth/
+
+# Disallow admin/internal pages
+Disallow: /demo/
+
+# Allow search engines to crawl everything else
+Allow: /market
+Allow: /compare
+Allow: /chat
+Allow: /pricing
+Allow: /glossary
+Allow: /learn
+Allow: /sentiment
+Allow: /predictions
+Allow: /community
+Allow: /whales
+Allow: /defi
+Allow: /onchain
+Allow: /technical
+Allow: /correlation
+Allow: /backtest
+Allow: /etf
+Allow: /screener
+Allow: /portfolio
+Allow: /charts
+Allow: /download
+Allow: /tools
+
+# Crawl delay for rate limiting
+Crawl-delay: 1

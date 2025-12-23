@@ -20,10 +20,10 @@ export const SENTIMENT_SOURCES = {
     quality: 5,
   },
   
-  // CryptoPanic - Official free API
+  // CryptoPanic - Developer API (with API key)
   cryptoPanic: {
-    baseUrl: 'https://cryptopanic.com/api/free/v1',
-    rateLimit: '200 requests/hour',
+    baseUrl: 'https://cryptopanic.com/api/v1',
+    rateLimit: '1000 requests/hour',
     legal: true,
     quality: 5,
   },
@@ -360,8 +360,9 @@ export async function fetchCryptoPanicSentiment(
   filter: 'rising' | 'hot' | 'bullish' | 'bearish' | 'important' = 'hot'
 ): Promise<SentimentPost[]> {
   try {
+    const authToken = process.env.CRYPTOPANIC_API_KEY || 'FREE';
     const response = await fetch(
-      `https://cryptopanic.com/api/free/v1/posts/?auth_token=FREE&filter=${filter}&public=true`
+      `https://cryptopanic.com/api/v1/posts/?auth_token=${authToken}&filter=${filter}&public=true`
     );
     
     if (!response.ok) return [];
