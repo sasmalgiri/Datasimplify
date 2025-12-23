@@ -199,20 +199,54 @@ export default function DownloadPage() {
       else if (selectedCategory === 'token_unlocks') {
         url += `&limit=${selectedLimit}`;
       }
+      // Staking rewards - no specific params needed
+      else if (selectedCategory === 'staking_rewards') {
+        // No additional params
+      }
       // NFT data
       else if (selectedCategory === 'nft_collections') {
         url += `&limit=${selectedLimit}`;
+      }
+      // NFT stats - no params needed
+      else if (selectedCategory === 'nft_stats') {
+        // No additional params
       }
       // Other categories with limit support
       else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
         url += `&limit=${selectedLimit}`;
       }
+      // On-chain data - no specific params needed
+      else if (['global_stats', 'stablecoins', 'fear_greed', 'chain_tvl', 'bitcoin_onchain', 'eth_gas'].includes(selectedCategory)) {
+        // No additional params
+      }
+      // Exchange info - no params needed
+      else if (selectedCategory === 'exchange_info') {
+        // No additional params
+      }
+      // Sentiment data
+      else if (selectedCategory === 'sentiment_aggregated' || selectedCategory === 'sentiment_reddit') {
+        // No additional params
+      }
+      // Whale tracking
+      else if (selectedCategory === 'whale_transactions' || selectedCategory === 'exchange_flows') {
+        // No additional params
+      }
 
       const response = await fetch(url);
       const data = await response.json();
-      setPreviewData(data.data?.slice(0, 5) || []);
+
+      // Handle both array data and single object data
+      if (Array.isArray(data.data)) {
+        setPreviewData(data.data.slice(0, 5));
+      } else if (data.data && typeof data.data === 'object') {
+        // For single object responses (like global_stats), wrap in array
+        setPreviewData([data.data]);
+      } else {
+        setPreviewData([]);
+      }
     } catch (error) {
       console.error('Preview error:', error);
+      setPreviewData([]);
     }
     setIsLoading(false);
   };
@@ -262,14 +296,25 @@ export default function DownloadPage() {
       else if (selectedCategory === 'token_unlocks') {
         url += `&limit=${selectedLimit}`;
       }
+      // Staking rewards - no specific params
+      else if (selectedCategory === 'staking_rewards') {
+        // No additional params
+      }
       // NFT data
       else if (selectedCategory === 'nft_collections') {
         url += `&limit=${selectedLimit}`;
+      }
+      // NFT stats - no params needed
+      else if (selectedCategory === 'nft_stats') {
+        // No additional params
       }
       // Other categories with limit support
       else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
         url += `&limit=${selectedLimit}`;
       }
+      // On-chain data, sentiment, whale tracking, exchange info - no params needed
+      // (global_stats, stablecoins, fear_greed, chain_tvl, bitcoin_onchain, eth_gas,
+      //  sentiment_aggregated, sentiment_reddit, whale_transactions, exchange_flows, exchange_info)
 
       const response = await fetch(url);
 
