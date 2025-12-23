@@ -17,6 +17,7 @@ import {
   type CachedPrediction
 } from '@/lib/supabaseData';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { validationError, internalError } from '@/lib/apiErrors';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 120; // 2 minutes
@@ -197,7 +198,8 @@ export async function GET(request: Request) {
     if (!marketData) {
       return NextResponse.json({
         success: false,
-        error: `Could not fetch market data for ${coinId}`,
+        error: `Could not fetch market data for "${coinId}". Please check the coin ID is correct (e.g., bitcoin, ethereum, solana).`,
+        code: 'E002',
         data: null
       }, { status: 404 });
     }
@@ -257,11 +259,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     console.error('Prediction API error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to generate prediction',
-      data: null
-    }, { status: 500 });
+    return internalError('Unable to generate prediction. Please try again later.');
   }
 }
 
@@ -272,11 +270,7 @@ export async function POST(request: Request) {
     const { coins } = body; // Array of { id, name }
 
     if (!coins || !Array.isArray(coins) || coins.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Please provide an array of coins',
-        data: null
-      }, { status: 400 });
+      return validationError('Please provide an array of coins. Example: { "coins": [{ "id": "bitcoin", "name": "Bitcoin" }] }');
     }
 
     // Limit to 50 coins per request (reasonable for batch predictions)
@@ -374,10 +368,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Batch prediction API error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to generate predictions',
-      data: null
-    }, { status: 500 });
+    return internalError('Unable to generate batch predictions. Please try again later.');
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getFearGreedFromCache, saveFearGreedToCache } from '@/lib/supabaseData';
+import { externalApiError } from '@/lib/apiErrors';
 
 // Alternative.me Fear & Greed Index API (FREE)
 const FEAR_GREED_API = 'https://api.alternative.me/fng/';
@@ -12,6 +13,7 @@ export async function GET() {
       const cached = await getFearGreedFromCache();
       if (cached) {
         return NextResponse.json({
+          success: true,
           value: cached.value,
           classification: cached.classification,
           timestamp: cached.recorded_at,
@@ -28,14 +30,35 @@ export async function GET() {
 
     if (!response.ok) {
       console.error('Fear & Greed API error:', response.status);
-      return NextResponse.json({ value: null, classification: 'Unknown' }, { status: response.status });
+
+      // Return cached data if available, even if stale
+      if (isSupabaseConfigured) {
+        const staleCache = await getFearGreedFromCache();
+        if (staleCache) {
+          return NextResponse.json({
+            success: true,
+            value: staleCache.value,
+            classification: staleCache.classification,
+            timestamp: staleCache.recorded_at,
+            source: 'stale-cache',
+          });
+        }
+      }
+
+      return externalApiError('Fear & Greed Index');
     }
 
     const result = await response.json();
     const data = result.data?.[0];
 
     if (!data) {
-      return NextResponse.json({ value: 50, classification: 'Neutral' });
+      return NextResponse.json({
+        success: true,
+        value: 50,
+        classification: 'Neutral',
+        source: 'default',
+        note: 'No data available, showing neutral value'
+      });
     }
 
     const fearGreedData = {
@@ -49,6 +72,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      success: true,
       value: fearGreedData.value,
       classification: fearGreedData.classification,
       timestamp: data.timestamp,
@@ -58,6 +82,32 @@ export async function GET() {
 
   } catch (error) {
     console.error('Sentiment API error:', error);
-    return NextResponse.json({ value: 50, classification: 'Neutral', error: 'Failed to fetch' });
+
+    // Try to return cached data on error
+    if (isSupabaseConfigured) {
+      try {
+        const staleCache = await getFearGreedFromCache();
+        if (staleCache) {
+          return NextResponse.json({
+            success: true,
+            value: staleCache.value,
+            classification: staleCache.classification,
+            timestamp: staleCache.recorded_at,
+            source: 'stale-cache',
+          });
+        }
+      } catch {
+        // Ignore cache errors
+      }
+    }
+
+    // Return neutral as fallback
+    return NextResponse.json({
+      success: true,
+      value: 50,
+      classification: 'Neutral',
+      source: 'fallback',
+      note: 'Unable to fetch live data, showing neutral value'
+    });
   }
 }

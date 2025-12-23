@@ -131,9 +131,9 @@ export default function ToolsPage() {
   const advancedTools = tools.filter(t => !t.forBeginner);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12 border-b border-gray-700">
         <div className="max-w-6xl mx-auto px-4">
           <h1 className="text-4xl font-bold mb-4">🛠️ Analysis Tools</h1>
           <p className="text-xl text-gray-300">
@@ -159,13 +159,13 @@ export default function ToolsPage() {
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <span className="text-green-500">🔰</span> Beginner Friendly
           </h2>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {beginnerTools.map((tool) => (
               <Link
                 key={tool.id}
                 href={tool.href}
-                className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group"
+                className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all group"
               >
                 <div className={`bg-gradient-to-r ${tool.color} p-6 text-white`}>
                   <span className="text-4xl">{tool.emoji}</span>
@@ -174,12 +174,12 @@ export default function ToolsPage() {
                   </h3>
                 </div>
                 <div className="p-4">
-                  <p className="text-gray-600 text-sm mb-3">{tool.description}</p>
+                  <p className="text-gray-400 text-sm mb-3">{tool.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {tool.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
+                        className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full"
                       >
                         {feature}
                       </span>
@@ -196,13 +196,13 @@ export default function ToolsPage() {
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <span className="text-purple-500">🎯</span> Advanced Analytics
           </h2>
-          
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {advancedTools.map((tool) => (
               <Link
                 key={tool.id}
                 href={tool.href}
-                className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg transition-all group"
+                className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all group"
               >
                 <div className={`bg-gradient-to-r ${tool.color} p-6 text-white`}>
                   <span className="text-4xl">{tool.emoji}</span>
@@ -214,12 +214,12 @@ export default function ToolsPage() {
                   </span>
                 </div>
                 <div className="p-4">
-                  <p className="text-gray-600 text-sm mb-3">{tool.description}</p>
+                  <p className="text-gray-400 text-sm mb-3">{tool.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {tool.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full"
+                        className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full"
                       >
                         {feature}
                       </span>
@@ -247,7 +247,7 @@ export default function ToolsPage() {
 
         {/* Coming Soon */}
         <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-400 mb-4">🔮 Coming Soon</h2>
+          <h2 className="text-xl font-bold text-gray-500 mb-4">🔮 Coming Soon</h2>
           <div className="grid md:grid-cols-4 gap-4">
             {[
               { name: 'Price Alerts', emoji: '🔔' },
@@ -257,7 +257,7 @@ export default function ToolsPage() {
             ].map((item) => (
               <div
                 key={item.name}
-                className="bg-gray-100 rounded-lg p-4 text-center opacity-60"
+                className="bg-gray-800 rounded-lg p-4 text-center opacity-60 border border-gray-700"
               >
                 <span className="text-3xl">{item.emoji}</span>
                 <p className="text-sm text-gray-500 mt-2">{item.name}</p>

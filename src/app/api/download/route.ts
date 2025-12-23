@@ -52,15 +52,43 @@ import { DataCategory } from '@/lib/dataTypes';
 // Supabase cache imports - Use cached data first, fallback to direct API
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getMarketDataFromCache } from '@/lib/supabaseData';
+import { validationError, internalError, validateEnum } from '@/lib/apiErrors';
+
+// Valid export formats
+const VALID_FORMATS = ['xlsx', 'csv', 'json'] as const;
+
+// Valid data categories
+const VALID_CATEGORIES = [
+  'market_overview', 'historical_prices', 'order_book', 'recent_trades',
+  'global_stats', 'gainers_losers', 'categories', 'exchange_info',
+  'defi_protocols', 'defi_yields', 'stablecoins', 'fear_greed', 'chain_tvl',
+  'bitcoin_onchain', 'eth_gas', 'sentiment_aggregated', 'sentiment_reddit',
+  'sentiment_news', 'sentiment_coin', 'whale_transactions', 'exchange_flows',
+  'funding_rates', 'open_interest', 'long_short_ratio', 'liquidations',
+  'technical_indicators', 'correlation_matrix', 'support_resistance',
+  'token_unlocks', 'staking_rewards', 'nft_collections', 'nft_stats'
+] as const;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  
+
   // Get parameters
-  const category = searchParams.get('category') as DataCategory || 'market_overview';
-  const format = searchParams.get('format') as 'xlsx' | 'csv' | 'json' || 'xlsx';
+  const category = searchParams.get('category') || 'market_overview';
+  const format = searchParams.get('format') || 'xlsx';
   const preview = searchParams.get('preview') === 'true';
-  
+
+  // Validate format parameter
+  const formatError = validateEnum(format, VALID_FORMATS, 'Format');
+  if (formatError) {
+    return validationError(formatError);
+  }
+
+  // Validate category parameter
+  const categoryError = validateEnum(category, VALID_CATEGORIES, 'Category');
+  if (categoryError) {
+    return validationError(categoryError);
+  }
+
   // Category-specific parameters
   const symbols = searchParams.get('symbols')?.split(',').filter(Boolean);
   const coinCategory = searchParams.get('coinCategory');
@@ -637,7 +665,8 @@ export async function GET(request: Request) {
         break;
 
       default:
-        return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
+        // This case should not be reached due to validation above
+        return validationError(`Invalid category. Use one of: ${VALID_CATEGORIES.slice(0, 5).join(', ')}... (see API docs for full list)`);
     }
 
     // Return preview (JSON only, limited rows)
@@ -707,9 +736,6 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Download API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to generate download' },
-      { status: 500 }
-    );
+    return internalError(`Unable to generate ${format.toUpperCase()} export for ${category}. Please try again or choose a different category.`);
   }
 }

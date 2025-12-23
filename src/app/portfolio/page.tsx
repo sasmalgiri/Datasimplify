@@ -67,7 +67,7 @@ export default function PortfolioBuilderPage() {
   };
 
   const updateAllocation = (id: string, newPercentage: number) => {
-    const updated = allocations.map(a => 
+    const updated = allocations.map(a =>
       a.id === id ? { ...a, percentage: newPercentage } : a
     );
     // Normalize to 100%
@@ -146,7 +146,7 @@ https://datasimplify.vercel.app
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">
@@ -163,39 +163,40 @@ https://datasimplify.vercel.app
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                step >= s ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                step >= s ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400'
               }`}>
                 {step > s ? '✓' : s}
               </div>
-              <span className={`ml-2 font-medium ${step >= s ? 'text-gray-900' : 'text-gray-400'}`}>
+              <span className={`ml-2 font-medium ${step >= s ? 'text-white' : 'text-gray-500'}`}>
                 {s === 1 ? 'Your Goals' : s === 2 ? 'Customize' : 'Review'}
               </span>
-              {s < 3 && <div className={`w-20 h-1 mx-4 ${step > s ? 'bg-blue-600' : 'bg-gray-200'}`} />}
+              {s < 3 && <div className={`w-20 h-1 mx-4 ${step > s ? 'bg-blue-600' : 'bg-gray-700'}`} />}
             </div>
           ))}
         </div>
 
         {/* Step 1: Risk Tolerance */}
         {step === 1 && (
-          <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-200">
+          <div className="bg-gray-800 rounded-xl p-8 border border-gray-700">
             <h2 className="text-2xl font-bold mb-2">What&apos;s your investment style?</h2>
-            <p className="text-gray-600 mb-6">Choose the approach that matches how you feel about risk.</p>
+            <p className="text-gray-400 mb-6">Choose the approach that matches how you feel about risk.</p>
 
             <BeginnerTip>
-              <strong>Don&apos;t know which to pick?</strong> If you&apos;re new to crypto, start with &quot;Conservative&quot; or &quot;Balanced.&quot; 
+              <strong>Don&apos;t know which to pick?</strong> If you&apos;re new to crypto, start with &quot;Conservative&quot; or &quot;Balanced.&quot;
               You can always adjust later as you learn more!
             </BeginnerTip>
 
             <div className="grid md:grid-cols-3 gap-4 mt-6">
               <button
+                type="button"
                 onClick={() => handleRiskSelect('conservative')}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
-                  riskTolerance === 'conservative' ? 'border-green-500 bg-green-50' : 'border-gray-200'
+                  riskTolerance === 'conservative' ? 'border-green-500 bg-green-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
               >
                 <div className="text-4xl mb-4">🛡️</div>
                 <h3 className="text-xl font-bold">Conservative</h3>
-                <p className="text-gray-600 text-sm mt-2">
+                <p className="text-gray-400 text-sm mt-2">
                   Lower risk, steady growth. Focuses on Bitcoin and Ethereum.
                 </p>
                 <div className="mt-4">
@@ -209,14 +210,15 @@ https://datasimplify.vercel.app
               </button>
 
               <button
+                type="button"
                 onClick={() => handleRiskSelect('balanced')}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
-                  riskTolerance === 'balanced' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                  riskTolerance === 'balanced' ? 'border-blue-500 bg-blue-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
               >
                 <div className="text-4xl mb-4">⚖️</div>
                 <h3 className="text-xl font-bold">Balanced</h3>
-                <p className="text-gray-600 text-sm mt-2">
+                <p className="text-gray-400 text-sm mt-2">
                   Mix of stability and growth. Good for most investors.
                 </p>
                 <div className="mt-4">
@@ -231,14 +233,15 @@ https://datasimplify.vercel.app
               </button>
 
               <button
+                type="button"
                 onClick={() => handleRiskSelect('aggressive')}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
-                  riskTolerance === 'aggressive' ? 'border-orange-500 bg-orange-50' : 'border-gray-200'
+                  riskTolerance === 'aggressive' ? 'border-orange-500 bg-orange-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
               >
                 <div className="text-4xl mb-4">🚀</div>
                 <h3 className="text-xl font-bold">Aggressive</h3>
-                <p className="text-gray-600 text-sm mt-2">
+                <p className="text-gray-400 text-sm mt-2">
                   Higher risk, higher potential. For experienced investors.
                 </p>
                 <div className="mt-4">
@@ -259,12 +262,12 @@ https://datasimplify.vercel.app
         {step === 2 && (
           <div className="space-y-6">
             {/* Investment Amount */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                 💰 How much are you investing?
                 <InfoButton explanation="Only invest what you can afford to lose completely. Crypto is volatile and can go to zero." />
               </h2>
-              
+
               <div className="flex items-center gap-4">
                 <label htmlFor="investment-amount" className="text-2xl">$</label>
                 <input
@@ -272,7 +275,7 @@ https://datasimplify.vercel.app
                   type="number"
                   value={investmentAmount}
                   onChange={(e) => setInvestmentAmount(Number(e.target.value) || 0)}
-                  className="text-3xl font-bold w-40 border-b-2 border-gray-300 focus:border-blue-500 outline-none"
+                  className="text-3xl font-bold w-40 border-b-2 border-gray-600 bg-transparent focus:border-blue-500 outline-none"
                   aria-label="Investment amount in dollars"
                 />
               </div>
@@ -280,10 +283,11 @@ https://datasimplify.vercel.app
               <div className="flex gap-2 mt-4">
                 {[100, 500, 1000, 5000, 10000].map((amount) => (
                   <button
+                    type="button"
                     key={amount}
                     onClick={() => setInvestmentAmount(amount)}
                     className={`px-3 py-1 rounded-lg text-sm ${
-                      investmentAmount === amount ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                      investmentAmount === amount ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
                     ${amount.toLocaleString()}
@@ -293,9 +297,9 @@ https://datasimplify.vercel.app
             </div>
 
             {/* Allocation Customizer */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold mb-4">📊 Your Allocation</h2>
-              
+
               {/* Pie Chart Visual */}
               <div className="flex flex-col md:flex-row gap-8 items-center mb-6">
                 <div className="relative w-48 h-48">
@@ -304,7 +308,7 @@ https://datasimplify.vercel.app
                       const prevTotal = allocations.slice(0, index).reduce((sum, a) => sum + a.percentage, 0);
                       const dashArray = `${alloc.percentage} ${100 - alloc.percentage}`;
                       const dashOffset = -prevTotal;
-                      
+
                       return [...acc, (
                         <circle
                           key={alloc.id}
@@ -336,7 +340,7 @@ https://datasimplify.vercel.app
                       <div className="flex-1">
                         <div className="flex justify-between items-center mb-1">
                           <label htmlFor={`allocation-${alloc.id}`} className="font-medium">{alloc.name}</label>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-gray-400">
                             ${Math.round(investmentAmount * alloc.percentage / 100).toLocaleString()}
                           </span>
                         </div>
@@ -347,7 +351,7 @@ https://datasimplify.vercel.app
                           max="80"
                           value={alloc.percentage}
                           onChange={(e) => updateAllocation(alloc.id, Number(e.target.value))}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                           aria-label={`${alloc.name} allocation percentage`}
                           title={`Adjust ${alloc.name} allocation`}
                         />
@@ -359,18 +363,18 @@ https://datasimplify.vercel.app
               </div>
 
               {/* Portfolio Risk Score */}
-              <div className="bg-gray-50 rounded-lg p-4 mt-4">
+              <div className="bg-gray-700/50 rounded-lg p-4 mt-4">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Portfolio Risk Score:</span>
                   <span className={`font-bold text-lg ${
-                    portfolioRisk <= 2 ? 'text-green-600' :
-                    portfolioRisk <= 3 ? 'text-yellow-600' :
-                    'text-red-600'
+                    portfolioRisk <= 2 ? 'text-green-400' :
+                    portfolioRisk <= 3 ? 'text-yellow-400' :
+                    'text-red-400'
                   }`}>
                     {portfolioRisk}/5
                   </span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-400 mt-1">
                   {portfolioRisk <= 2 ? 'Low risk - Good for long-term holding' :
                    portfolioRisk <= 3 ? 'Moderate risk - Balanced approach' :
                    'Higher risk - Prepare for volatility'}
@@ -381,12 +385,14 @@ https://datasimplify.vercel.app
             {/* Navigation */}
             <div className="flex justify-between">
               <button
+                type="button"
                 onClick={() => setStep(1)}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800"
+                className="px-6 py-3 text-gray-400 hover:text-white"
               >
                 ← Back
               </button>
               <button
+                type="button"
                 onClick={() => setStep(3)}
                 className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
               >
@@ -399,24 +405,24 @@ https://datasimplify.vercel.app
         {/* Step 3: Review */}
         {step === 3 && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-2xl font-bold mb-6">🎉 Your Portfolio Summary</h2>
 
               {/* Summary Cards */}
               <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-blue-600 text-sm">Total Investment</p>
+                <div className="bg-blue-900/30 border border-blue-800 p-4 rounded-lg">
+                  <p className="text-blue-400 text-sm">Total Investment</p>
                   <p className="text-2xl font-bold">${investmentAmount.toLocaleString()}</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-green-600 text-sm">Number of Assets</p>
+                <div className="bg-green-900/30 border border-green-800 p-4 rounded-lg">
+                  <p className="text-green-400 text-sm">Number of Assets</p>
                   <p className="text-2xl font-bold">{allocations.length} coins</p>
                 </div>
-                <div className={`p-4 rounded-lg ${
-                  portfolioRisk <= 2 ? 'bg-green-50' : portfolioRisk <= 3 ? 'bg-yellow-50' : 'bg-red-50'
+                <div className={`p-4 rounded-lg border ${
+                  portfolioRisk <= 2 ? 'bg-green-900/30 border-green-800' : portfolioRisk <= 3 ? 'bg-yellow-900/30 border-yellow-800' : 'bg-red-900/30 border-red-800'
                 }`}>
                   <p className={`text-sm ${
-                    portfolioRisk <= 2 ? 'text-green-600' : portfolioRisk <= 3 ? 'text-yellow-600' : 'text-red-600'
+                    portfolioRisk <= 2 ? 'text-green-400' : portfolioRisk <= 3 ? 'text-yellow-400' : 'text-red-400'
                   }`}>Risk Level</p>
                   <p className="text-2xl font-bold">
                     {portfolioRisk <= 2 ? '🛡️ Low' : portfolioRisk <= 3 ? '⚖️ Medium' : '🚀 High'}
@@ -426,33 +432,33 @@ https://datasimplify.vercel.app
 
               {/* Allocation Table */}
               <table className="w-full">
-                <thead className="sticky top-0 z-10 bg-gray-50">
-                  <tr className="border-b">
-                    <th className="text-left py-3">Asset</th>
-                    <th className="text-right py-3">Allocation</th>
-                    <th className="text-right py-3">Amount</th>
-                    <th className="text-right py-3">Risk</th>
+                <thead className="sticky top-0 z-10 bg-gray-700">
+                  <tr className="border-b border-gray-600">
+                    <th className="text-left py-3 px-2">Asset</th>
+                    <th className="text-right py-3 px-2">Allocation</th>
+                    <th className="text-right py-3 px-2">Amount</th>
+                    <th className="text-right py-3 px-2">Risk</th>
                   </tr>
                 </thead>
                 <tbody>
                   {allocations.map((alloc) => (
-                    <tr key={alloc.id} className="border-b border-gray-100">
-                      <td className="py-3">
+                    <tr key={alloc.id} className="border-b border-gray-700">
+                      <td className="py-3 px-2">
                         <div className="flex items-center gap-2">
                           <ColorDot color={alloc.color} className="w-3 h-3 rounded" />
                           <span className="font-medium">{alloc.name}</span>
-                          <span className="text-gray-400">({alloc.symbol})</span>
+                          <span className="text-gray-500">({alloc.symbol})</span>
                         </div>
                       </td>
-                      <td className="text-right py-3 font-medium">{alloc.percentage}%</td>
-                      <td className="text-right py-3">
+                      <td className="text-right py-3 px-2 font-medium">{alloc.percentage}%</td>
+                      <td className="text-right py-3 px-2">
                         ${Math.round(investmentAmount * alloc.percentage / 100).toLocaleString()}
                       </td>
-                      <td className="text-right py-3">
+                      <td className="text-right py-3 px-2">
                         <span className={`px-2 py-1 rounded text-xs ${
-                          alloc.riskLevel <= 2 ? 'bg-green-100 text-green-700' :
-                          alloc.riskLevel <= 3 ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
+                          alloc.riskLevel <= 2 ? 'bg-green-900/50 text-green-400' :
+                          alloc.riskLevel <= 3 ? 'bg-yellow-900/50 text-yellow-400' :
+                          'bg-red-900/50 text-red-400'
                         }`}>
                           {alloc.riskLevel <= 2 ? 'Low' : alloc.riskLevel <= 3 ? 'Med' : 'High'}
                         </span>
@@ -463,9 +469,9 @@ https://datasimplify.vercel.app
               </table>
 
               {/* Important Notes */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
-                <h3 className="font-bold text-yellow-800 mb-2">⚠️ Important Reminders</h3>
-                <ul className="text-sm text-yellow-700 space-y-1">
+              <div className="bg-yellow-900/30 border border-yellow-800 rounded-lg p-4 mt-6">
+                <h3 className="font-bold text-yellow-400 mb-2">⚠️ Important Reminders</h3>
+                <ul className="text-sm text-yellow-300 space-y-1">
                   <li>• Never invest more than you can afford to lose completely</li>
                   <li>• Crypto is highly volatile - expect 50%+ swings</li>
                   <li>• This is not financial advice - DYOR (Do Your Own Research)</li>
@@ -477,18 +483,21 @@ https://datasimplify.vercel.app
             {/* Action Buttons */}
             <div className="flex flex-col md:flex-row gap-4">
               <button
+                type="button"
                 onClick={() => setStep(2)}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50"
+                className="px-6 py-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800"
               >
                 ← Modify Portfolio
               </button>
               <button
+                type="button"
                 onClick={downloadPortfolioPDF}
                 className="flex-1 px-8 py-4 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700"
               >
                 📥 Download Portfolio Plan (PDF)
               </button>
               <button
+                type="button"
                 onClick={trackPortfolio}
                 className="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
               >

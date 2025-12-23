@@ -13,12 +13,32 @@ import {
   getWhaleDataFreshness,
   getExchangeFlowsFromCache
 } from '@/lib/supabaseData';
+import { validationError, internalError, validateEnum, validatePositiveNumber } from '@/lib/apiErrors';
+
+// Valid whale tracking types
+const VALID_TYPES = ['dashboard', 'eth-whales', 'btc-whales', 'exchange-balances', 'exchange-flows'] as const;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'dashboard';
-  const minValue = parseFloat(searchParams.get('minValue') || '100');
+  const minValueParam = searchParams.get('minValue');
   const apiKey = searchParams.get('apiKey');
+
+  // Validate type parameter
+  const typeError = validateEnum(type, VALID_TYPES, 'Type');
+  if (typeError) {
+    return validationError(typeError);
+  }
+
+  // Validate minValue parameter
+  let minValue = 100; // default
+  if (minValueParam) {
+    const minValueError = validatePositiveNumber(minValueParam, 'Minimum value', 0.01, 1000000);
+    if (minValueError) {
+      return validationError(minValueError);
+    }
+    minValue = parseFloat(minValueParam);
+  }
 
   try {
     // 1. Try cache first for whale transactions
@@ -81,7 +101,8 @@ export async function GET(request: Request) {
         break;
 
       default:
-        return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+        // This case should not be reached due to validation above
+        return validationError(`Invalid type. Use: ${VALID_TYPES.join(', ')}`);
     }
 
     // 3. Save whale transactions to cache
@@ -121,9 +142,6 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Whale tracking API error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch whale data' },
-      { status: 500 }
-    );
+    return internalError('Unable to fetch whale data. This may be due to rate limits on blockchain APIs. Please try again in a moment.');
   }
 }
