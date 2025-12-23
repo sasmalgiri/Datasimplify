@@ -30,13 +30,13 @@ function HelpIcon({ text }: { text: string }) {
 
 export default function ChatPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <FreeNavbar />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Beginner Tip */}
-        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
-          <p className="text-blue-300 text-sm flex items-start gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-700 text-sm flex items-start gap-2">
             <span>💡</span>
             <span>
               <strong>How to use:</strong> Type your crypto question below and press Enter or click Send.
@@ -49,7 +49,7 @@ export default function ChatPage() {
           <h1 className="text-3xl font-bold">🤖 Crypto AI Assistant</h1>
           <HelpIcon text="Our AI is enhanced with exclusive market data that standard AI models don't have. Ask about prices, trends, concepts, or investment strategies." />
         </div>
-        <p className="text-gray-400 mb-6">
+        <p className="text-gray-600 mb-6">
           Ask anything about cryptocurrency and investing. No login required!
         </p>
 
@@ -61,12 +61,12 @@ export default function ChatPage() {
 
           {/* Sidebar */}
           <div className="space-y-4">
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <h3 className="font-bold mb-3 flex items-center">
                 ✅ What I Know:
                 <HelpIcon text="These are topics the AI can help you with. Try asking questions about any of these!" />
               </h3>
-              <ul className="text-sm text-gray-300 space-y-2">
+              <ul className="text-sm text-gray-700 space-y-2">
                 <li>📊 Real-time crypto prices</li>
                 <li>📰 Latest crypto news</li>
                 <li>😱 Fear & Greed Index</li>
@@ -78,12 +78,12 @@ export default function ChatPage() {
               </ul>
             </div>
 
-            <div className="bg-red-900/30 rounded-xl border border-red-700 p-4">
-              <h3 className="font-bold text-red-400 mb-3 flex items-center">
+            <div className="bg-red-50 rounded-xl border border-red-200 p-4">
+              <h3 className="font-bold text-red-700 mb-3 flex items-center">
                 🚫 Won&apos;t Answer:
                 <HelpIcon text="The AI is focused on crypto education and won't help with off-topic requests or give specific financial advice." />
               </h3>
-              <ul className="text-sm text-red-300 space-y-2">
+              <ul className="text-sm text-red-600 space-y-2">
                 <li>❌ Non-crypto questions</li>
                 <li>❌ Specific buy/sell advice</li>
                 <li>❌ Coding/programming</li>
@@ -91,12 +91,12 @@ export default function ChatPage() {
               </ul>
             </div>
 
-            <div className="bg-blue-900/30 rounded-xl border border-blue-700 p-4">
-              <h3 className="font-bold text-blue-400 mb-3 flex items-center">
+            <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
+              <h3 className="font-bold text-blue-700 mb-3 flex items-center">
                 📚 Live Data Access:
                 <HelpIcon text="Our AI is enhanced with DataSimplify's exclusive market database - data that standard AI models cannot access." />
               </h3>
-              <ul className="text-sm text-blue-300 space-y-1">
+              <ul className="text-sm text-blue-600 space-y-1">
                 <li>• 📊 Market Data (prices, caps)</li>
                 <li>• 😰 Fear & Greed Index</li>
                 <li>• 🐋 Whale Transactions</li>
@@ -106,16 +106,16 @@ export default function ChatPage() {
               </ul>
             </div>
 
-            <div className="bg-yellow-900/30 rounded-xl border border-yellow-700 p-4">
-              <p className="text-xs text-yellow-300">
-                ⚠️ <strong>Disclaimer:</strong> Educational info only. 
+            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4">
+              <p className="text-xs text-yellow-700">
+                ⚠️ <strong>Disclaimer:</strong> Educational info only.
                 NOT financial advice. Always DYOR.
               </p>
             </div>
 
             {/* Sign up CTA */}
-            <div className="bg-gradient-to-r from-emerald-500/20 to-blue-500/20 border border-emerald-500/30 rounded-xl p-4 text-center">
-              <p className="text-sm text-gray-300 mb-2">Want to save chat history?</p>
+            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-xl p-4 text-center">
+              <p className="text-sm text-gray-600 mb-2">Want to save chat history?</p>
               <Link
                 href="/signup"
                 className="inline-block px-4 py-2 bg-emerald-500 rounded-lg text-sm font-medium hover:bg-emerald-600 transition"

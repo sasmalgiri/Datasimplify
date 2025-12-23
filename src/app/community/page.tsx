@@ -200,11 +200,11 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
   const getPredictionStyle = () => {
     switch (prediction.prediction) {
       case 'BULLISH':
-        return { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' };
+        return { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-600' };
       case 'BEARISH':
-        return { bg: 'bg-red-500/10', border: 'border-red-500/30', text: 'text-red-400' };
+        return { bg: 'bg-red-50', border: 'border-red-300', text: 'text-red-600' };
       default:
-        return { bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', text: 'text-yellow-400' };
+        return { bg: 'bg-yellow-50', border: 'border-yellow-300', text: 'text-yellow-600' };
     }
   };
 
@@ -247,21 +247,21 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
   };
 
   return (
-    <div className={`bg-gray-800 rounded-xl border ${style.border} p-4 hover:bg-gray-800/80 transition`}>
+    <div className={`bg-white rounded-xl border ${style.border} p-4 hover:bg-gray-50 transition shadow-sm`}>
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">
             {user?.avatar_emoji || '🎯'}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-white">{user?.display_name || 'Anonymous'}</span>
+              <span className="font-medium text-gray-900">{user?.display_name || 'Anonymous'}</span>
               {user?.is_verified && (
-                <CheckCircle className="w-4 h-4 text-blue-400" />
+                <CheckCircle className="w-4 h-4 text-blue-500" />
               )}
               {user?.rank && user.rank <= 100 && (
-                <span className="text-xs px-2 py-0.5 bg-gray-700 rounded-full text-gray-400">
+                <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full text-gray-600">
                   #{user.rank}
                 </span>
               )}
@@ -273,7 +273,7 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
             </div>
           </div>
         </div>
-        <button type="button" className="p-1 hover:bg-gray-700 rounded" title="More options" aria-label="More options">
+        <button type="button" className="p-1 hover:bg-gray-100 rounded" title="More options" aria-label="More options">
           <MoreHorizontal className="w-5 h-5 text-gray-500" />
         </button>
       </div>
@@ -294,15 +294,15 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
       {/* Coin & Target */}
       <div className="flex items-center gap-4 mb-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-white">{prediction.coin_symbol}</span>
+          <span className="text-lg font-bold text-gray-900">{prediction.coin_symbol}</span>
           <span className="text-gray-500">{prediction.coin_name}</span>
         </div>
         {prediction.target_price && prediction.current_price && (
           <div className="flex items-center gap-2 text-sm">
             <Target className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-400">Target:</span>
+            <span className="text-gray-500">Target:</span>
             <span className={style.text}>${prediction.target_price.toLocaleString()}</span>
-            <span className="text-gray-600">
+            <span className="text-gray-500">
               ({prediction.prediction === 'BULLISH' ? '+' : ''}
               {((prediction.target_price - prediction.current_price) / prediction.current_price * 100).toFixed(1)}%)
             </span>
@@ -312,29 +312,29 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
 
       {/* Reasoning */}
       {prediction.reasoning && (
-        <p className="text-gray-300 text-sm mb-3">{prediction.reasoning}</p>
+        <p className="text-gray-600 text-sm mb-3">{prediction.reasoning}</p>
       )}
 
       {/* Timeframe & Outcome */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-700 rounded text-gray-400">
+        <span className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">
           <Clock className="w-3 h-3" />
           {prediction.timeframe}
         </span>
         {prediction.outcome === 'correct' && (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-emerald-500/20 rounded text-emerald-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-emerald-50 rounded text-emerald-600">
             <CheckCircle className="w-3 h-3" />
             Correct
           </span>
         )}
         {prediction.outcome === 'incorrect' && (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-red-500/20 rounded text-red-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-red-50 rounded text-red-600">
             <XCircle className="w-3 h-3" />
             Incorrect
           </span>
         )}
         {prediction.outcome === 'pending' && (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-yellow-500/20 rounded text-yellow-400">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 bg-yellow-50 rounded text-yellow-600">
             <AlertCircle className="w-3 h-3" />
             Pending
           </span>
@@ -342,12 +342,12 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={handleLike}
-            className={`flex items-center gap-1.5 text-sm ${liked ? 'text-emerald-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`flex items-center gap-1.5 text-sm ${liked ? 'text-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
             title="Like this prediction"
             aria-label={`Like this prediction, ${localLikes} likes`}
           >
@@ -357,7 +357,7 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
           <button
             type="button"
             onClick={handleDislike}
-            className={`flex items-center gap-1.5 text-sm ${disliked ? 'text-red-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`flex items-center gap-1.5 text-sm ${disliked ? 'text-red-600' : 'text-gray-500 hover:text-gray-700'}`}
             title="Dislike this prediction"
             aria-label={`Dislike this prediction, ${localDislikes} dislikes`}
           >
@@ -366,7 +366,7 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
           </button>
           <button
             type="button"
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700"
             title="View comments"
             aria-label={`View comments, ${prediction.comments_count} comments`}
           >
@@ -378,13 +378,13 @@ function PredictionCard({ prediction, onVote, currentUserId }: {
           <button
             type="button"
             onClick={() => setSaved(!saved)}
-            className={`p-1.5 rounded ${saved ? 'text-yellow-400' : 'text-gray-500 hover:text-gray-300'}`}
+            className={`p-1.5 rounded ${saved ? 'text-yellow-500' : 'text-gray-500 hover:text-gray-700'}`}
             title={saved ? 'Remove bookmark' : 'Bookmark prediction'}
             aria-label={saved ? 'Remove bookmark' : 'Bookmark prediction'}
           >
             <Bookmark className="w-4 h-4" />
           </button>
-          <button type="button" className="p-1.5 rounded text-gray-500 hover:text-gray-300" title="Share prediction" aria-label="Share prediction">
+          <button type="button" className="p-1.5 rounded text-gray-500 hover:text-gray-700" title="Share prediction" aria-label="Share prediction">
             <Share2 className="w-4 h-4" />
           </button>
         </div>
@@ -402,16 +402,16 @@ function LeaderboardCard({ user, rank, onFollow, currentUserId }: {
   const [isFollowing, setIsFollowing] = useState(false);
 
   const getRankStyle = () => {
-    if (rank === 1) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-    if (rank === 2) return 'bg-gray-400/20 text-gray-300 border-gray-400/30';
-    if (rank === 3) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-    return 'bg-gray-700/50 text-gray-400 border-gray-600';
+    if (rank === 1) return 'bg-yellow-50 text-yellow-700 border-yellow-300';
+    if (rank === 2) return 'bg-gray-100 text-gray-700 border-gray-300';
+    if (rank === 3) return 'bg-orange-50 text-orange-700 border-orange-300';
+    return 'bg-white text-gray-600 border-gray-200';
   };
 
   const getRankIcon = () => {
-    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-400" />;
-    if (rank === 2) return <Medal className="w-5 h-5 text-gray-300" />;
-    if (rank === 3) return <Medal className="w-5 h-5 text-orange-400" />;
+    if (rank === 1) return <Crown className="w-5 h-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="w-5 h-5 text-gray-500" />;
+    if (rank === 3) return <Medal className="w-5 h-5 text-orange-500" />;
     return <span className="text-gray-500 font-mono">#{rank}</span>;
   };
 
@@ -422,17 +422,17 @@ function LeaderboardCard({ user, rank, onFollow, currentUserId }: {
   };
 
   return (
-    <div className={`flex items-center gap-4 p-3 rounded-lg border ${getRankStyle()} hover:bg-gray-800/50 transition`}>
+    <div className={`flex items-center gap-4 p-3 rounded-lg border ${getRankStyle()} hover:bg-gray-50 transition shadow-sm`}>
       <div className="w-8 flex justify-center">
         {getRankIcon()}
       </div>
-      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl">
+      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">
         {user.avatar_emoji}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-white truncate">{user.display_name}</span>
-          {user.is_verified && <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />}
+          <span className="font-medium text-gray-900 truncate">{user.display_name}</span>
+          {user.is_verified && <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />}
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span>{user.accuracy?.toFixed(1) || 0}% accuracy</span>
@@ -444,12 +444,12 @@ function LeaderboardCard({ user, rank, onFollow, currentUserId }: {
       </div>
       <div className="text-right flex items-center gap-3">
         <div>
-          <div className="flex items-center gap-1 text-emerald-400">
+          <div className="flex items-center gap-1 text-emerald-600">
             <Zap className="w-4 h-4" />
             <span className="font-bold">{(user.points || 0).toLocaleString()}</span>
           </div>
           {user.current_streak > 0 && (
-            <div className="flex items-center gap-1 text-xs text-orange-400">
+            <div className="flex items-center gap-1 text-xs text-orange-500">
               <Flame className="w-3 h-3" />
               <span>{user.current_streak} streak</span>
             </div>
@@ -461,8 +461,8 @@ function LeaderboardCard({ user, rank, onFollow, currentUserId }: {
             onClick={handleFollow}
             className={`p-2 rounded-lg transition ${
               isFollowing
-                ? 'bg-emerald-500/20 text-emerald-400'
-                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                ? 'bg-emerald-50 text-emerald-600'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
             title={isFollowing ? `Unfollow ${user.display_name}` : `Follow ${user.display_name}`}
             aria-label={isFollowing ? `Unfollow ${user.display_name}` : `Follow ${user.display_name}`}
@@ -477,9 +477,9 @@ function LeaderboardCard({ user, rank, onFollow, currentUserId }: {
 
 function CommunityMeter({ stats }: { stats: CommunityStats }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <PieChart className="w-5 h-5 text-emerald-400" />
+    <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <PieChart className="w-5 h-5 text-emerald-600" />
         Community Sentiment
       </h3>
 
@@ -496,30 +496,30 @@ function CommunityMeter({ stats }: { stats: CommunityStats }) {
       <div className="flex justify-between text-sm">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-emerald-500" />
-          <span className="text-gray-400">Bullish</span>
-          <span className="text-emerald-400 font-bold">{stats.bullish_percent}%</span>
+          <span className="text-gray-500">Bullish</span>
+          <span className="text-emerald-600 font-bold">{stats.bullish_percent}%</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
-          <span className="text-gray-400">Neutral</span>
-          <span className="text-yellow-400 font-bold">{stats.neutral_percent}%</span>
+          <span className="text-gray-500">Neutral</span>
+          <span className="text-yellow-600 font-bold">{stats.neutral_percent}%</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full bg-red-500" />
-          <span className="text-gray-400">Bearish</span>
-          <span className="text-red-400 font-bold">{stats.bearish_percent}%</span>
+          <span className="text-gray-500">Bearish</span>
+          <span className="text-red-600 font-bold">{stats.bearish_percent}%</span>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-700">
+      <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-200">
         <div>
           <p className="text-gray-500 text-sm">Total Predictions</p>
-          <p className="text-xl font-bold text-white">{stats.total_predictions.toLocaleString()}</p>
+          <p className="text-xl font-bold text-gray-900">{stats.total_predictions.toLocaleString()}</p>
         </div>
         <div>
           <p className="text-gray-500 text-sm">Active Predictors</p>
-          <p className="text-xl font-bold text-white">{stats.active_predictors.toLocaleString()}</p>
+          <p className="text-xl font-bold text-gray-900">{stats.active_predictors.toLocaleString()}</p>
         </div>
       </div>
     </div>
@@ -578,22 +578,22 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-700 sticky top-0 bg-gray-800">
-          <h2 className="text-xl font-bold text-white">Submit Prediction</h2>
-          <p className="text-gray-400 text-sm mt-1">Share your analysis with the community</p>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="p-6 border-b border-gray-200 sticky top-0 bg-white">
+          <h2 className="text-xl font-bold text-gray-900">Submit Prediction</h2>
+          <p className="text-gray-500 text-sm mt-1">Share your analysis with the community</p>
         </div>
 
         <div className="p-6 space-y-4">
           {/* Coin Selection */}
           <div>
-            <label htmlFor="coin-select" className="block text-sm font-medium text-gray-300 mb-2">Select Coin</label>
+            <label htmlFor="coin-select" className="block text-sm font-medium text-gray-700 mb-2">Select Coin</label>
             <select
               id="coin-select"
               value={coin}
               onChange={(e) => setCoin(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2 text-gray-900"
               aria-label="Select cryptocurrency"
             >
               {coins.map(c => (
@@ -604,7 +604,7 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 
           {/* Prediction Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Your Prediction</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Your Prediction</label>
             <div className="grid grid-cols-3 gap-2">
               {(['BULLISH', 'BEARISH', 'NEUTRAL'] as const).map(p => (
                 <button
@@ -614,11 +614,11 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
                   className={`py-2 px-4 rounded-lg border transition ${
                     prediction === p
                       ? p === 'BULLISH'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-600'
                         : p === 'BEARISH'
-                          ? 'bg-red-500/20 border-red-500 text-red-400'
-                          : 'bg-yellow-500/20 border-yellow-500 text-yellow-400'
-                      : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                          ? 'bg-red-50 border-red-500 text-red-600'
+                          : 'bg-yellow-50 border-yellow-500 text-yellow-600'
+                      : 'bg-gray-50 border-gray-300 text-gray-600 hover:border-gray-400'
                   }`}
                 >
                   {p === 'BULLISH' && <TrendingUp className="w-4 h-4 inline mr-1" />}
@@ -632,7 +632,7 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 
           {/* Timeframe */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Timeframe</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Timeframe</label>
             <div className="grid grid-cols-3 gap-2">
               {(['24h', '7d', '30d'] as const).map(t => (
                 <button
@@ -641,8 +641,8 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
                   onClick={() => setTimeframe(t)}
                   className={`py-2 px-4 rounded-lg border transition ${
                     timeframe === t
-                      ? 'bg-blue-500/20 border-blue-500 text-blue-400'
-                      : 'bg-gray-700 border-gray-600 text-gray-400 hover:border-gray-500'
+                      ? 'bg-blue-50 border-blue-500 text-blue-600'
+                      : 'bg-gray-50 border-gray-300 text-gray-600 hover:border-gray-400'
                   }`}
                 >
                   {t}
@@ -653,7 +653,7 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 
           {/* Confidence */}
           <div>
-            <label htmlFor="confidence-slider" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="confidence-slider" className="block text-sm font-medium text-gray-700 mb-2">
               Confidence: {confidence}%
             </label>
             <input
@@ -671,25 +671,25 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 
           {/* Reasoning */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Your Analysis <span className="text-red-400">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Your Analysis <span className="text-red-500">*</span>
             </label>
             <textarea
               value={reasoning}
               onChange={(e) => setReasoning(e.target.value)}
               placeholder="Share your reasoning (technical analysis, on-chain data, news, etc.)"
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white h-24 resize-none"
+              className="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2 text-gray-900 h-24 resize-none placeholder-gray-400"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">{reasoning.length}/500 characters</p>
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-700 flex gap-3 sticky bottom-0 bg-gray-800">
+        <div className="p-6 border-t border-gray-200 flex gap-3 sticky bottom-0 bg-white">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2 px-4 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+            className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
           >
             Cancel
           </button>
@@ -710,9 +710,9 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 function ContestCard({ contest }: { contest: PredictionContest }) {
   const getTypeStyle = () => {
     switch (contest.contest_type) {
-      case 'weekly': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'monthly': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'special': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 'weekly': return 'bg-blue-50 text-blue-700 border-blue-300';
+      case 'monthly': return 'bg-purple-50 text-purple-700 border-purple-300';
+      case 'special': return 'bg-yellow-50 text-yellow-700 border-yellow-300';
     }
   };
 
@@ -728,20 +728,20 @@ function ContestCard({ contest }: { contest: PredictionContest }) {
   };
 
   return (
-    <div className={`bg-gray-800 rounded-xl border p-4 ${getTypeStyle()}`}>
+    <div className={`bg-white rounded-xl border p-4 shadow-sm ${getTypeStyle()}`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <Trophy className="w-5 h-5" />
           <span className="text-xs uppercase font-bold">{contest.contest_type}</span>
         </div>
-        <span className="text-xs px-2 py-1 bg-gray-700 rounded">{getTimeRemaining()}</span>
+        <span className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">{getTimeRemaining()}</span>
       </div>
-      <h4 className="text-white font-semibold mb-2">{contest.title}</h4>
+      <h4 className="text-gray-900 font-semibold mb-2">{contest.title}</h4>
       {contest.description && (
-        <p className="text-gray-400 text-sm mb-2">{contest.description}</p>
+        <p className="text-gray-600 text-sm mb-2">{contest.description}</p>
       )}
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-400">{contest.participants_count} participants</span>
+        <span className="text-gray-500">{contest.participants_count} participants</span>
         <span className="font-bold">{contest.prize}</span>
       </div>
     </div>
@@ -846,19 +846,19 @@ export default function CommunityPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <FreeNavbar />
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-emerald-900/30 via-gray-900 to-purple-900/30 border-b border-gray-800">
+      <div className="bg-gradient-to-br from-emerald-50 via-white to-purple-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                <Users className="w-10 h-10 text-emerald-400" />
+              <h1 className="text-4xl font-bold mb-2 flex items-center gap-3 text-gray-900">
+                <Users className="w-10 h-10 text-emerald-600" />
                 Community Predictions
               </h1>
-              <p className="text-gray-400 text-lg">
+              <p className="text-gray-600 text-lg">
                 Share predictions, compete with traders, and track your accuracy
               </p>
             </div>
@@ -866,7 +866,7 @@ export default function CommunityPage() {
               <button
                 type="button"
                 onClick={fetchAllData}
-                className="flex items-center gap-2 px-4 py-3 bg-gray-700 rounded-xl hover:bg-gray-600 transition"
+                className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-sm text-gray-700"
                 disabled={loading}
               >
                 <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -875,7 +875,7 @@ export default function CommunityPage() {
               <button
                 type="button"
                 onClick={() => setShowSubmitModal(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-500 rounded-xl hover:bg-emerald-600 transition font-semibold"
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-500 rounded-xl hover:bg-emerald-600 transition font-semibold text-white"
               >
                 <Plus className="w-5 h-5" />
                 Submit Prediction
@@ -886,21 +886,21 @@ export default function CommunityPage() {
           {/* Quick Stats */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                 <p className="text-gray-500 text-sm">Total Predictions</p>
-                <p className="text-2xl font-bold text-white">{stats.total_predictions.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total_predictions.toLocaleString()}</p>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                 <p className="text-gray-500 text-sm">Active Predictors</p>
-                <p className="text-2xl font-bold text-white">{stats.active_predictors.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.active_predictors.toLocaleString()}</p>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                 <p className="text-gray-500 text-sm">Community Accuracy</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.avg_accuracy}%</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.avg_accuracy}%</p>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+              <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                 <p className="text-gray-500 text-sm">Bullish Sentiment</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.bullish_percent}%</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.bullish_percent}%</p>
               </div>
             </div>
           )}
@@ -910,7 +910,7 @@ export default function CommunityPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Tabs */}
-        <div className="flex items-center gap-2 mb-6 border-b border-gray-800 pb-4">
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-200 pb-4">
           {[
             { id: 'feed', label: 'Prediction Feed', icon: <BarChart3 className="w-4 h-4" /> },
             { id: 'leaderboard', label: 'Leaderboard', icon: <Trophy className="w-4 h-4" /> },
@@ -922,8 +922,8 @@ export default function CommunityPage() {
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                 activeTab === tab.id
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? 'bg-emerald-50 text-emerald-600'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               {tab.icon}
@@ -940,13 +940,13 @@ export default function CommunityPage() {
                 {/* Filters */}
                 <div className="flex flex-wrap gap-3 mb-6">
                   <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search predictions..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white"
+                      className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-2 text-gray-900 placeholder-gray-400"
                       aria-label="Search predictions"
                       title="Search predictions"
                     />
@@ -954,7 +954,7 @@ export default function CommunityPage() {
                   <select
                     value={filterCoin}
                     onChange={(e) => setFilterCoin(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900"
                     aria-label="Filter by coin"
                     title="Filter by coin"
                   >
@@ -966,7 +966,7 @@ export default function CommunityPage() {
                   <select
                     value={filterPrediction}
                     onChange={(e) => setFilterPrediction(e.target.value)}
-                    className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white"
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900"
                     aria-label="Filter by prediction type"
                     title="Filter by prediction type"
                   >
@@ -981,22 +981,22 @@ export default function CommunityPage() {
                 {loading ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map(i => (
-                      <div key={i} className="bg-gray-800 rounded-xl p-6 animate-pulse">
-                        <div className="h-4 bg-gray-700 rounded w-1/3 mb-4" />
-                        <div className="h-3 bg-gray-700 rounded w-full mb-2" />
-                        <div className="h-3 bg-gray-700 rounded w-2/3" />
+                      <div key={i} className="bg-white rounded-xl p-6 animate-pulse border border-gray-200 shadow-sm">
+                        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
+                        <div className="h-3 bg-gray-200 rounded w-full mb-2" />
+                        <div className="h-3 bg-gray-200 rounded w-2/3" />
                       </div>
                     ))}
                   </div>
                 ) : filteredPredictions.length === 0 ? (
-                  <div className="bg-gray-800 rounded-xl p-12 text-center">
-                    <Eye className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No predictions found</h3>
-                    <p className="text-gray-400 mb-4">Be the first to share your analysis!</p>
+                  <div className="bg-white rounded-xl p-12 text-center border border-gray-200 shadow-sm">
+                    <Eye className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No predictions found</h3>
+                    <p className="text-gray-500 mb-4">Be the first to share your analysis!</p>
                     <button
                       type="button"
                       onClick={() => setShowSubmitModal(true)}
-                      className="px-6 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition"
+                      className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition"
                     >
                       Submit Prediction
                     </button>
@@ -1018,9 +1018,9 @@ export default function CommunityPage() {
 
             {activeTab === 'leaderboard' && (
               <div className="space-y-3">
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6">
-                  <h3 className="text-lg font-semibold text-white mb-2">How Rankings Work</h3>
-                  <p className="text-gray-400 text-sm">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 shadow-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">How Rankings Work</h3>
+                  <p className="text-gray-600 text-sm">
                     Points are earned based on prediction accuracy, confidence level, and streaks.
                     Higher accuracy predictions with higher confidence earn more points.
                     Follow top predictors to learn from the best!
@@ -1029,8 +1029,8 @@ export default function CommunityPage() {
                 {loading ? (
                   <div className="space-y-3">
                     {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="bg-gray-800 rounded-lg p-4 animate-pulse">
-                        <div className="h-4 bg-gray-700 rounded w-1/3" />
+                      <div key={i} className="bg-white rounded-lg p-4 animate-pulse border border-gray-200">
+                        <div className="h-4 bg-gray-200 rounded w-1/3" />
                       </div>
                     ))}
                   </div>
@@ -1050,12 +1050,12 @@ export default function CommunityPage() {
 
             {activeTab === 'contests' && (
               <div className="space-y-6">
-                <div className="bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-xl border border-yellow-500/30 p-6">
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-300 p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <Trophy className="w-8 h-8 text-yellow-400" />
+                    <Trophy className="w-8 h-8 text-yellow-500" />
                     <div>
-                      <h3 className="text-xl font-bold text-white">Active Contests</h3>
-                      <p className="text-gray-400">Compete for prizes and glory</p>
+                      <h3 className="text-xl font-bold text-gray-900">Active Contests</h3>
+                      <p className="text-gray-600">Compete for prizes and glory</p>
                     </div>
                   </div>
                 </div>
@@ -1063,17 +1063,17 @@ export default function CommunityPage() {
                 {loading ? (
                   <div className="space-y-4">
                     {[1, 2].map(i => (
-                      <div key={i} className="bg-gray-800 rounded-xl p-6 animate-pulse">
-                        <div className="h-4 bg-gray-700 rounded w-1/3 mb-4" />
-                        <div className="h-3 bg-gray-700 rounded w-full" />
+                      <div key={i} className="bg-white rounded-xl p-6 animate-pulse border border-gray-200">
+                        <div className="h-4 bg-gray-200 rounded w-1/3 mb-4" />
+                        <div className="h-3 bg-gray-200 rounded w-full" />
                       </div>
                     ))}
                   </div>
                 ) : contests.length === 0 ? (
-                  <div className="bg-gray-800 rounded-xl p-12 text-center">
-                    <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No active contests</h3>
-                    <p className="text-gray-400">Check back soon for new competitions!</p>
+                  <div className="bg-white rounded-xl p-12 text-center border border-gray-200 shadow-sm">
+                    <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No active contests</h3>
+                    <p className="text-gray-500">Check back soon for new competitions!</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
@@ -1083,23 +1083,23 @@ export default function CommunityPage() {
                   </div>
                 )}
 
-                <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-                  <h4 className="font-semibold text-white mb-4">Contest Rules</h4>
-                  <ul className="space-y-2 text-gray-400 text-sm">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                  <h4 className="font-semibold text-gray-900 mb-4">Contest Rules</h4>
+                  <ul className="space-y-2 text-gray-600 text-sm">
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       Submit predictions during the contest period
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       Minimum 5 predictions required to qualify
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       Winners determined by accuracy and points
                     </li>
                     <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                       Prizes distributed within 48 hours of contest end
                     </li>
                   </ul>
@@ -1114,30 +1114,30 @@ export default function CommunityPage() {
             {stats && <CommunityMeter stats={stats} />}
 
             {/* Top Predictors */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-400" />
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
                 Top Predictors
               </h3>
               <div className="space-y-3">
                 {leaderboard.slice(0, 5).map((user, i) => (
                   <div key={user.user_id} className="flex items-center gap-3">
                     <span className={`w-6 text-center font-bold ${
-                      i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-400' : 'text-gray-600'
+                      i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-orange-500' : 'text-gray-400'
                     }`}>
                       {i + 1}
                     </span>
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                       {user.avatar_emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{user.display_name}</p>
+                      <p className="text-gray-900 text-sm font-medium truncate">{user.display_name}</p>
                       <p className="text-gray-500 text-xs">{user.accuracy?.toFixed(1) || 0}% accuracy</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleFollow(user.user_id)}
-                      className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded hover:bg-emerald-500/30 transition"
+                      className="text-xs px-2 py-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition"
                     >
                       Follow
                     </button>
@@ -1147,16 +1147,16 @@ export default function CommunityPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('leaderboard')}
-                className="block w-full text-center text-emerald-400 text-sm mt-4 hover:underline"
+                className="block w-full text-center text-emerald-600 text-sm mt-4 hover:underline"
               >
                 View Full Leaderboard
               </button>
             </div>
 
             {/* Trending Coins */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-400" />
+            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
                 Trending in Community
               </h3>
               <div className="space-y-3">
@@ -1166,15 +1166,15 @@ export default function CommunityPage() {
                   { coin_symbol: 'SOL', coin_name: 'Solana', bullish_percent: 78, predictions_count: 98 },
                 ]).map(coin => (
                   <div key={coin.coin_symbol} className="flex items-center gap-3">
-                    <span className="text-lg font-bold text-white w-12">{coin.coin_symbol}</span>
+                    <span className="text-lg font-bold text-gray-900 w-12">{coin.coin_symbol}</span>
                     <div className="flex-1">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-400">{coin.predictions_count} predictions</span>
-                        <span className={coin.bullish_percent >= 50 ? 'text-emerald-400' : 'text-red-400'}>
+                        <span className="text-gray-500">{coin.predictions_count} predictions</span>
+                        <span className={coin.bullish_percent >= 50 ? 'text-emerald-600' : 'text-red-600'}>
                           {coin.bullish_percent}% bullish
                         </span>
                       </div>
-                      <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                         <ProgressSegment
                           percentage={coin.bullish_percent}
                           colorClass={`h-full ${coin.bullish_percent >= 50 ? 'bg-emerald-500' : 'bg-red-500'}`}

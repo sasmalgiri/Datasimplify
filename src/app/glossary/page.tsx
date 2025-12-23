@@ -319,9 +319,9 @@ export default function GlossaryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <FreeNavbar />
-      
+
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">
@@ -352,8 +352,8 @@ export default function GlossaryPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Beginner Tip */}
-        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
-          <p className="text-blue-300 text-sm flex items-start gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-700 text-sm flex items-start gap-2">
             <span>💡</span>
             <span>
               <strong>How to use:</strong> Search for any crypto term or click a category below to filter.

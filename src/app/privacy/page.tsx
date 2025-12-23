@@ -4,16 +4,16 @@ import Link from 'next/link';
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-16 px-4">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-        <p className="text-gray-400 mb-8">Last updated: December 2024</p>
+        <p className="text-gray-600 mb-8">Last updated: December 2024</p>
 
-        <div className="space-y-8 text-gray-300 leading-relaxed">
+        <div className="space-y-8 text-gray-700 leading-relaxed">
           
           {/* Introduction */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">1. Introduction</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
               DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy 
               and personal data. This Privacy Policy explains how we collect, use, disclose, and 
@@ -29,9 +29,9 @@ export default function PrivacyPage() {
 
           {/* Information We Collect */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">2. Information We Collect</h2>
-            
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">2.1 Information You Provide</h3>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Information We Collect</h2>
+
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.1 Information You Provide</h3>
             <p className="mb-4">We collect information you voluntarily provide, including:</p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Account Information:</strong> Email address, name (optional), password</li>
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
             </ul>
 
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">2.2 Information Collected Automatically</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.2 Information Collected Automatically</h3>
             <p className="mb-4">When you use our Services, we automatically collect:</p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Device Information:</strong> Browser type, operating system, device identifiers</li>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
               <li><strong>Cookies:</strong> Session identifiers and preference data (see Section 6)</li>
             </ul>
 
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">2.3 Information from Third Parties</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.3 Information from Third Parties</h3>
             <p>
               We may receive information from third-party services if you connect them to your account, 
               such as wallet addresses (if you choose to link them) or social login providers.
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
 
           {/* How We Use Your Information */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">3. How We Use Your Information</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. How We Use Your Information</h2>
             <p className="mb-4">We use your information to:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Provide, maintain, and improve our Services</li>
@@ -77,8 +77,8 @@ export default function PrivacyPage() {
 
           {/* Data Sharing */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">4. How We Share Your Information</h2>
-            <p className="mb-4 text-emerald-300 font-semibold">We do NOT sell your personal data.</p>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. How We Share Your Information</h2>
+            <p className="mb-4 text-emerald-600 font-semibold">We do NOT sell your personal data.</p>
             <p className="mb-4">We may share your information with:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
 
           {/* Data Security */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">5. Data Security</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data Security</h2>
             <p className="mb-4">We implement industry-standard security measures to protect your data:</p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li>All data transmitted via HTTPS/TLS encryption</li>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
 
           {/* Cookies */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Cookies and Tracking Technologies</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Cookies and Tracking Technologies</h2>
             <p className="mb-4">We use cookies and similar technologies to:</p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Essential Cookies:</strong> Keep you signed in and remember your preferences</li>
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
 
           {/* Data Retention */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">7. Data Retention</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Data Retention</h2>
             <p className="mb-4">
               We retain your personal data for as long as your account is active or as needed to 
               provide you with our Services. We may also retain data as necessary to:
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
 
           {/* Your Rights */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">8. Your Rights and Choices</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Your Rights and Choices</h2>
             <p className="mb-4">Depending on your location, you may have the right to:</p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Access:</strong> Request a copy of your personal data</li>
@@ -163,14 +163,14 @@ export default function PrivacyPage() {
               <li><strong>Restrict Processing:</strong> Limit how we use your data in certain circumstances</li>
             </ul>
             <p>
-              To exercise these rights, contact us at <span className="text-emerald-400">support@datasimplify.com</span>. 
+              To exercise these rights, contact us at <span className="text-emerald-600">support@datasimplify.com</span>.
               We will respond to your request within 30 days.
             </p>
           </section>
 
           {/* Children's Privacy */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">9. Children&apos;s Privacy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children&apos;s Privacy</h2>
             <p>
               Our Services are not intended for users under 18 years of age. We do not knowingly 
               collect personal data from children. If we learn that we have collected data from a 
@@ -181,7 +181,7 @@ export default function PrivacyPage() {
 
           {/* International Transfers */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">10. International Data Transfers</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. International Data Transfers</h2>
             <p>
               Our Services are operated globally, and your data may be processed in countries other 
               than your own. By using our Services, you consent to the transfer of your information 
@@ -193,7 +193,7 @@ export default function PrivacyPage() {
 
           {/* Third-Party Links */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">11. Third-Party Links</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Third-Party Links</h2>
             <p>
               Our Services may contain links to third-party websites, services, or applications. 
               We are not responsible for the privacy practices of these third parties. We encourage 
@@ -203,7 +203,7 @@ export default function PrivacyPage() {
 
           {/* Changes to Policy */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">12. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Changes to This Privacy Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of material 
               changes by posting the updated policy on our website and updating the &quot;Last updated&quot; date. 
@@ -214,54 +214,54 @@ export default function PrivacyPage() {
 
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">13. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contact Us</h2>
             <p className="mb-4">
-              If you have any questions, concerns, or requests regarding this Privacy Policy or 
+              If you have any questions, concerns, or requests regarding this Privacy Policy or
               our data practices, please contact us:
             </p>
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <p className="text-emerald-400 font-semibold">DataSimplify</p>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+              <p className="text-emerald-600 font-semibold">DataSimplify</p>
               <p>Email: support@datasimplify.com</p>
             </div>
           </section>
 
           {/* Summary Box */}
-          <section className="bg-gray-800 border border-gray-700 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold text-white mb-4">Privacy at a Glance</h2>
+          <section className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Privacy at a Glance</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-emerald-400 font-semibold">✓ What we collect:</p>
-                <p>Email, usage data, payment info (via Paddle)</p>
+                <p className="text-emerald-600 font-semibold">✓ What we collect:</p>
+                <p className="text-gray-600">Email, usage data, payment info (via Paddle)</p>
               </div>
               <div>
-                <p className="text-emerald-400 font-semibold">✓ Why we collect:</p>
-                <p>Provide services, process payments, improve UX</p>
+                <p className="text-emerald-600 font-semibold">✓ Why we collect:</p>
+                <p className="text-gray-600">Provide services, process payments, improve UX</p>
               </div>
               <div>
-                <p className="text-emerald-400 font-semibold">✓ Who we share with:</p>
-                <p>Only service providers (Paddle, Supabase, Vercel)</p>
+                <p className="text-emerald-600 font-semibold">✓ Who we share with:</p>
+                <p className="text-gray-600">Only service providers (Paddle, Supabase, Vercel)</p>
               </div>
               <div>
-                <p className="text-emerald-400 font-semibold">✓ Your rights:</p>
-                <p>Access, correct, delete, export your data</p>
+                <p className="text-emerald-600 font-semibold">✓ Your rights:</p>
+                <p className="text-gray-600">Access, correct, delete, export your data</p>
               </div>
               <div>
-                <p className="text-red-400 font-semibold">✗ What we DON&apos;T do:</p>
-                <p>Sell your data, share with advertisers</p>
+                <p className="text-red-600 font-semibold">✗ What we DON&apos;T do:</p>
+                <p className="text-gray-600">Sell your data, share with advertisers</p>
               </div>
               <div>
-                <p className="text-emerald-400 font-semibold">✓ Security:</p>
-                <p>HTTPS, encryption, secure password hashing</p>
+                <p className="text-emerald-600 font-semibold">✓ Security:</p>
+                <p className="text-gray-600">HTTPS, encryption, secure password hashing</p>
               </div>
             </div>
           </section>
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-700 flex gap-4">
-          <Link href="/" className="text-emerald-400 hover:text-emerald-300">← Back to Home</Link>
-          <span className="text-gray-600">|</span>
-          <Link href="/terms" className="text-emerald-400 hover:text-emerald-300">Terms of Service</Link>
+        <div className="mt-12 pt-8 border-t border-gray-200 flex gap-4">
+          <Link href="/" className="text-emerald-600 hover:text-emerald-700">← Back to Home</Link>
+          <span className="text-gray-400">|</span>
+          <Link href="/terms" className="text-emerald-600 hover:text-emerald-700">Terms of Service</Link>
         </div>
       </div>
     </div>

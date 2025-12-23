@@ -86,8 +86,8 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-900">Loading...</div>
       </div>
     );
   }
@@ -111,27 +111,27 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-blue-400">
+            <Link href="/" className="text-2xl font-bold text-blue-600">
               DataSimplify
             </Link>
             <div className="flex items-center gap-4">
-              <Link href="/charts" className="text-gray-400 hover:text-white">
+              <Link href="/charts" className="text-gray-600 hover:text-gray-900">
                 Charts
               </Link>
-              <Link href="/download" className="text-gray-400 hover:text-white">
+              <Link href="/download" className="text-gray-600 hover:text-gray-900">
                 Downloads
               </Link>
-              <Link href="/chat" className="text-gray-400 hover:text-white">
+              <Link href="/chat" className="text-gray-600 hover:text-gray-900">
                 AI Chat
               </Link>
               <button
                 onClick={signOut}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-600 hover:text-gray-900"
               >
                 Sign Out
               </button>
@@ -146,9 +146,9 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Subscription */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-400 text-sm">Current Plan</h3>
+              <h3 className="text-gray-600 text-sm">Current Plan</h3>
               <span className={`px-3 py-1 rounded-full text-sm ${tierColors[profile.subscription_tier]}`}>
                 {tierLabels[profile.subscription_tier]}
               </span>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
             {profile.subscription_tier !== 'free' && (
               <button
                 onClick={handleManageBilling}
-                className="mt-4 text-blue-400 hover:text-blue-300 text-sm"
+                className="mt-4 text-blue-600 hover:text-blue-700 text-sm"
               >
                 Manage billing →
               </button>
@@ -169,42 +169,42 @@ export default function DashboardPage() {
           </div>
 
           {/* Downloads */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-gray-400 text-sm mb-4">Downloads This Month</h3>
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-gray-600 text-sm mb-4">Downloads This Month</h3>
             <p className="text-2xl font-bold">
               {profile.downloads_this_month} / {profile.downloads_limit === 999999 ? '∞' : profile.downloads_limit}
             </p>
-            <div className="mt-2 bg-gray-700 rounded-full h-2">
+            <div className="mt-2 bg-gray-200 rounded-full h-2">
               <ProgressBarRef
                 percentage={Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100)}
                 className="bg-blue-500 rounded-full h-2"
               />
             </div>
-            <p className="mt-2 text-gray-400 text-sm">
+            <p className="mt-2 text-gray-600 text-sm">
               {remainingDownloads() === 999999 ? 'Unlimited' : `${remainingDownloads()} remaining`}
             </p>
           </div>
 
           {/* Member Since */}
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-gray-400 text-sm mb-4">Member Since</h3>
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-gray-600 text-sm mb-4">Member Since</h3>
             <p className="text-2xl font-bold">
               {new Date(profile.created_at).toLocaleDateString('en-US', {
                 month: 'short',
                 year: 'numeric',
               })}
             </p>
-            <p className="mt-2 text-gray-400 text-sm">{user.email}</p>
+            <p className="mt-2 text-gray-600 text-sm">{user.email}</p>
           </div>
         </div>
 
         {/* Upgrade Section (for free users) */}
         {profile.subscription_tier === 'free' && (
-          <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-lg p-6 border border-blue-700 mb-8">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200 mb-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h3 className="text-xl font-bold mb-2">🚀 Upgrade for More Downloads</h3>
-                <p className="text-gray-300">
+                <p className="text-gray-600">
                   Get unlimited downloads, AI analysis, and priority support.
                 </p>
               </div>
@@ -232,52 +232,52 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Link
             href="/download"
-            className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition"
+            className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
           >
             <div className="text-3xl mb-2">📊</div>
             <h3 className="font-medium">Download Data</h3>
-            <p className="text-gray-400 text-sm">Excel, CSV, JSON</p>
+            <p className="text-gray-600 text-sm">Excel, CSV, JSON</p>
           </Link>
           <Link
             href="/chat"
-            className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition"
+            className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
           >
             <div className="text-3xl mb-2">🤖</div>
             <h3 className="font-medium">AI Chat</h3>
-            <p className="text-gray-400 text-sm">Ask anything</p>
+            <p className="text-gray-600 text-sm">Ask anything</p>
           </Link>
           <Link
             href="/compare"
-            className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition"
+            className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
           >
             <div className="text-3xl mb-2">⚖️</div>
             <h3 className="font-medium">Compare</h3>
-            <p className="text-gray-400 text-sm">Side by side</p>
+            <p className="text-gray-600 text-sm">Side by side</p>
           </Link>
           <Link
             href="/templates"
-            className="bg-gray-800 rounded-lg p-6 border border-gray-700 hover:border-blue-500 transition"
+            className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
           >
             <div className="text-3xl mb-2">📋</div>
             <h3 className="font-medium">Templates</h3>
-            <p className="text-gray-400 text-sm">Pre-built reports</p>
+            <p className="text-gray-600 text-sm">Pre-built reports</p>
           </Link>
         </div>
 
         {/* Recent Downloads */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700">
-          <div className="px-6 py-4 border-b border-gray-700">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="font-medium">Recent Downloads</h3>
           </div>
           <div className="p-6">
             {downloads.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">
-                No downloads yet. <Link href="/download" className="text-blue-400">Start downloading →</Link>
+              <p className="text-gray-600 text-center py-8">
+                No downloads yet. <Link href="/download" className="text-blue-600">Start downloading →</Link>
               </p>
             ) : (
               <table className="w-full">
-                <thead className="sticky top-0 z-10 bg-gray-900">
-                  <tr className="text-left text-gray-400 text-sm">
+                <thead className="sticky top-0 z-10 bg-gray-50">
+                  <tr className="text-left text-gray-600 text-sm">
                     <th className="pb-3">Category</th>
                     <th className="pb-3">Format</th>
                     <th className="pb-3">Date</th>
@@ -285,14 +285,14 @@ export default function DashboardPage() {
                 </thead>
                 <tbody>
                   {downloads.slice(0, 10).map((download) => (
-                    <tr key={download.id} className="border-t border-gray-700">
+                    <tr key={download.id} className="border-t border-gray-200">
                       <td className="py-3">{download.category}</td>
                       <td className="py-3">
-                        <span className="px-2 py-1 bg-gray-700 rounded text-sm">
+                        <span className="px-2 py-1 bg-gray-100 rounded text-sm">
                           {download.format.toUpperCase()}
                         </span>
                       </td>
-                      <td className="py-3 text-gray-400">
+                      <td className="py-3 text-gray-600">
                         {new Date(download.created_at).toLocaleDateString()}
                       </td>
                     </tr>

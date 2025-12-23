@@ -260,16 +260,16 @@ export default function PricingPage() {
         onLoad={initPaddle}
       />
 
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-50 text-gray-900">
         <FreeNavbar />
 
         {/* India Waitlist Banner */}
         {pricingInfo?.blocked && (
-          <div className="bg-gradient-to-r from-orange-600 to-orange-500 py-4">
-            <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-400 py-4">
+            <div className="max-w-6xl mx-auto px-4 text-center text-white">
               <p className="text-lg font-medium">
-                🇮🇳 Launching in India soon with UPI payments! 
-                <button 
+                🇮🇳 Launching in India soon with UPI payments!
+                <button
                   onClick={() => setShowWaitlist(true)}
                   className="underline ml-2 hover:no-underline"
                 >
@@ -282,8 +282,8 @@ export default function PricingPage() {
 
         <div className="max-w-6xl mx-auto px-4 py-12">
           {/* Beginner Tip */}
-          <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-8">
-            <p className="text-blue-300 text-sm flex items-start gap-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+            <p className="text-blue-700 text-sm flex items-start gap-2">
               <span>💡</span>
               <span>
                 <strong>Not sure which plan?</strong> Start with Free to try our features.
@@ -298,7 +298,7 @@ export default function PricingPage() {
               <h1 className="text-4xl font-bold">Simple, Transparent Pricing</h1>
               <HelpIcon text="Choose a plan based on your needs. All paid plans include a 7-day money-back guarantee. You can cancel or change plans anytime." />
             </div>
-            <p className="text-gray-400 text-lg mb-2">
+            <p className="text-gray-600 text-lg mb-2">
               Start free, upgrade when you need more. Cancel anytime.
             </p>
             <p className="text-gray-500">
@@ -311,9 +311,9 @@ export default function PricingPage() {
             {tiers.map((tier) => (
               <div
                 key={tier.key}
-                className={`bg-gray-800 rounded-lg border ${
-                  tier.popular ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-700'
-                } p-6 relative`}
+                className={`bg-white rounded-lg border ${
+                  tier.popular ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-200'
+                } p-6 relative shadow-sm`}
               >
                 {tier.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -327,14 +327,14 @@ export default function PricingPage() {
                 
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${tier.price}</span>
-                  {tier.price > 0 && <span className="text-gray-400">/month</span>}
+                  {tier.price > 0 && <span className="text-gray-600">/month</span>}
                 </div>
 
                 <ul className="space-y-3 mb-6">
                   {tier.features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2">
-                      <span className="text-green-400 mt-1">✓</span>
-                      <span className="text-gray-300 flex items-center">
+                      <span className="text-green-600 mt-1">✓</span>
+                      <span className="text-gray-700 flex items-center">
                         {feature}
                         {FEATURE_EXPLANATIONS[feature] && (
                           <HelpIcon text={FEATURE_EXPLANATIONS[feature]} />
@@ -347,7 +347,7 @@ export default function PricingPage() {
                 {tier.key === 'free' ? (
                   <Link
                     href="/signup"
-                    className="block w-full py-3 text-center bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition"
+                    className="block w-full py-3 text-center bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg font-medium transition"
                   >
                     {tier.cta}
                   </Link>
@@ -357,8 +357,8 @@ export default function PricingPage() {
                     disabled={isProcessing || profile?.subscription_tier === tier.key || pricingInfo?.blocked}
                     className={`w-full py-3 rounded-lg font-medium transition ${
                       tier.popular
-                        ? 'bg-blue-600 hover:bg-blue-700'
-                        : 'bg-gray-700 hover:bg-gray-600'
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isProcessing && selectedTier === tier.key
@@ -376,12 +376,12 @@ export default function PricingPage() {
 
           {/* Payment Info */}
           <div className="mt-12 text-center">
-            <p className="text-gray-400 mb-4">Secure payments powered by</p>
+            <p className="text-gray-600 mb-4">Secure payments powered by</p>
             <div className="flex items-center justify-center gap-8">
-              <div className="text-gray-400">🏦 Paddle</div>
-              <div className="text-gray-400">💳 Cards</div>
-              <div className="text-gray-400">🅿️ PayPal</div>
-              <div className="text-gray-400">🌍 190+ Countries</div>
+              <div className="text-gray-600">🏦 Paddle</div>
+              <div className="text-gray-600">💳 Cards</div>
+              <div className="text-gray-600">🅿️ PayPal</div>
+              <div className="text-gray-600">🌍 190+ Countries</div>
             </div>
             <p className="text-gray-500 text-sm mt-4">
               Paddle is our merchant of record and handles all billing, taxes, and compliance.
@@ -392,21 +392,21 @@ export default function PricingPage() {
           <div className="mt-16">
             <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Can I cancel anytime?</h3>
-                <p className="text-gray-400">Yes! Cancel anytime. You&apos;ll keep access until the end of your billing period.</p>
+                <p className="text-gray-600">Yes! Cancel anytime. You&apos;ll keep access until the end of your billing period.</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">What payment methods do you accept?</h3>
-                <p className="text-gray-400">Credit/debit cards and PayPal. All major currencies supported.</p>
+                <p className="text-gray-600">Credit/debit cards and PayPal. All major currencies supported.</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Do you offer refunds?</h3>
-                <p className="text-gray-400">Yes, 7-day money-back guarantee if you&apos;re not satisfied.</p>
+                <p className="text-gray-600">Yes, 7-day money-back guarantee if you&apos;re not satisfied.</p>
               </div>
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Is tax included?</h3>
-                <p className="text-gray-400">Paddle adds applicable taxes at checkout based on your location.</p>
+                <p className="text-gray-600">Paddle adds applicable taxes at checkout based on your location.</p>
               </div>
             </div>
           </div>

@@ -4,16 +4,16 @@ import Link from 'next/link';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-16 px-4">
+    <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
-        <p className="text-gray-400 mb-8">Last updated: December 2024</p>
+        <p className="text-gray-600 mb-8">Last updated: December 2024</p>
 
-        <div className="space-y-8 text-gray-300 leading-relaxed">
+        <div className="space-y-8 text-gray-700 leading-relaxed">
           
           {/* Introduction */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">1. Introduction</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
               Welcome to DataSimplify, operated by DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). 
               These Terms of Service (&quot;Terms&quot;) govern your access to and use of our website, 
@@ -28,7 +28,7 @@ export default function TermsPage() {
 
           {/* Definitions */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">2. Definitions</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Definitions</h2>
             <ul className="list-disc list-inside space-y-2">
               <li><strong>&quot;Services&quot;</strong> means the DataSimplify platform, website, APIs, analytics tools, downloadable reports, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
@@ -39,7 +39,7 @@ export default function TermsPage() {
 
           {/* Eligibility */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">3. Eligibility</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Eligibility</h2>
             <p className="mb-4">
               To use our Services, you must be at least 18 years of age and legally capable of entering 
               into binding contracts. By using our Services, you represent and warrant that you meet 
@@ -52,9 +52,9 @@ export default function TermsPage() {
           </section>
 
           {/* IMPORTANT DISCLAIMER */}
-          <section className="bg-yellow-900/30 border border-yellow-600 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-yellow-400 mb-4">4. IMPORTANT: Not Financial Advice</h2>
-            <p className="mb-4 text-yellow-100">
+          <section className="bg-yellow-50 border border-yellow-300 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-yellow-800 mb-4">4. IMPORTANT: Not Financial Advice</h2>
+            <p className="mb-4 text-yellow-900">
               <strong>DATASIMPLIFY DOES NOT PROVIDE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE.</strong>
             </p>
             <p className="mb-4">
@@ -75,15 +75,15 @@ export default function TermsPage() {
               <strong>Cryptocurrency investments are highly volatile and risky.</strong> You may lose some 
               or all of your investment. Past performance is not indicative of future results.
             </p>
-            <p className="text-yellow-200 font-semibold">
-              Always conduct your own research (DYOR) and consult with qualified financial advisors 
+            <p className="text-yellow-800 font-semibold">
+              Always conduct your own research (DYOR) and consult with qualified financial advisors
               before making any investment decisions. You are solely responsible for your investment choices.
             </p>
           </section>
 
           {/* Account Registration */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">5. Account Registration</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Account Registration</h2>
             <p className="mb-4">To access certain features, you must create an account. When registering, you agree to:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Provide accurate, current, and complete information</li>
@@ -100,29 +100,29 @@ export default function TermsPage() {
 
           {/* Subscriptions and Payments */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">6. Subscriptions and Payments</h2>
-            
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">6.1 Billing</h3>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Subscriptions and Payments</h2>
+
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.1 Billing</h3>
             <p className="mb-4">
               Paid Subscriptions are billed in advance on a monthly or annual basis, depending on your 
               selected plan. Payments are processed securely through our payment provider, Paddle, 
               which acts as our Merchant of Record.
             </p>
             
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">6.2 Automatic Renewal</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.2 Automatic Renewal</h3>
             <p className="mb-4">
               Subscriptions automatically renew at the end of each billing period unless cancelled 
               before the renewal date. You may cancel your Subscription at any time through your 
               account settings or by contacting support.
             </p>
             
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">6.3 Price Changes</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.3 Price Changes</h3>
             <p className="mb-4">
               We reserve the right to modify Subscription prices. Any price changes will be communicated 
               to you in advance and will apply to subsequent billing periods.
             </p>
             
-            <h3 className="text-xl font-medium text-white mt-4 mb-2">6.4 Refund Policy</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.4 Refund Policy</h3>
             <p>
               We offer a <strong>7-day money-back guarantee</strong> for new Subscribers. If you are not 
               satisfied within the first 7 days of your initial Subscription, contact us for a full refund. 
@@ -133,7 +133,7 @@ export default function TermsPage() {
 
           {/* Acceptable Use */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">7. Acceptable Use</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Acceptable Use</h2>
             <p className="mb-4">You agree NOT to:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Use the Services for any illegal or unauthorized purpose</li>
@@ -150,7 +150,7 @@ export default function TermsPage() {
 
           {/* Intellectual Property */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">8. Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Intellectual Property</h2>
             <p className="mb-4">
               All Content, features, and functionality of our Services, including but not limited to 
               text, graphics, logos, data, software, and analytics, are owned by DataSimplify or our 
@@ -165,7 +165,7 @@ export default function TermsPage() {
 
           {/* Data Accuracy */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">9. Data Accuracy and Third-Party Sources</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Data Accuracy and Third-Party Sources</h2>
             <p className="mb-4">
               Our Content is compiled from various third-party sources including cryptocurrency exchanges, 
               market data providers, and public blockchain data. While we strive to provide accurate 
@@ -181,7 +181,7 @@ export default function TermsPage() {
 
           {/* Limitation of Liability */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">10. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Limitation of Liability</h2>
             <p className="mb-4">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, DATASIMPLIFY SHALL NOT BE LIABLE FOR ANY 
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT 
@@ -202,7 +202,7 @@ export default function TermsPage() {
 
           {/* Indemnification */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">11. Indemnification</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Indemnification</h2>
             <p>
               You agree to indemnify, defend, and hold harmless DataSimplify and its officers, directors, 
               employees, and agents from any claims, damages, losses, costs, and expenses (including 
@@ -213,7 +213,7 @@ export default function TermsPage() {
 
           {/* Disclaimer of Warranties */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">12. Disclaimer of Warranties</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Disclaimer of Warranties</h2>
             <p className="mb-4">
               THE SERVICES ARE PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, 
               EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF 
@@ -227,7 +227,7 @@ export default function TermsPage() {
 
           {/* Termination */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">13. Termination</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Termination</h2>
             <p className="mb-4">
               We may suspend or terminate your access to the Services at any time, with or without 
               cause, and with or without notice. You may terminate your account at any time by 
@@ -242,7 +242,7 @@ export default function TermsPage() {
 
           {/* Modifications */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">14. Modifications to Terms</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Modifications to Terms</h2>
             <p>
               We reserve the right to modify these Terms at any time. We will notify you of material 
               changes by posting the updated Terms on our website or by email. Your continued use of 
@@ -253,7 +253,7 @@ export default function TermsPage() {
 
           {/* Governing Law */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">15. Governing Law and Disputes</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Governing Law and Disputes</h2>
             <p className="mb-4">
               These Terms shall be governed by and construed in accordance with the laws of India, 
               without regard to conflict of law principles.
@@ -267,7 +267,7 @@ export default function TermsPage() {
 
           {/* Severability */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">16. Severability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid, that provision 
               shall be limited or eliminated to the minimum extent necessary, and the remaining 
@@ -277,21 +277,21 @@ export default function TermsPage() {
 
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-white mb-4">17. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Contact Us</h2>
             <p className="mb-4">
               If you have any questions about these Terms, please contact us:
             </p>
-            <p className="text-emerald-400">
+            <p className="text-emerald-600">
               Email: support@datasimplify.com
             </p>
           </section>
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-700 flex gap-4">
-          <Link href="/" className="text-emerald-400 hover:text-emerald-300">← Back to Home</Link>
-          <span className="text-gray-600">|</span>
-          <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300">Privacy Policy</Link>
+        <div className="mt-12 pt-8 border-t border-gray-200 flex gap-4">
+          <Link href="/" className="text-emerald-600 hover:text-emerald-700">← Back to Home</Link>
+          <span className="text-gray-400">|</span>
+          <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700">Privacy Policy</Link>
         </div>
       </div>
     </div>

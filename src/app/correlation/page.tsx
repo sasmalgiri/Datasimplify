@@ -4,10 +4,10 @@ import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap
 
 export default function CorrelationPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-2">🔗 Correlation Analysis</h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-gray-600 mb-8">
           See how different cryptocurrencies move in relation to each other.
         </p>
         

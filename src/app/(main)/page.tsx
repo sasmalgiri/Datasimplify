@@ -100,7 +100,7 @@ export default function HomePage() {
   const showTips = userLevel === 'beginner';
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Hero Section for First Time Users */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -179,7 +179,7 @@ export default function HomePage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6 bg-gray-800 p-2 rounded-xl border border-gray-700">
+        <div className="flex flex-wrap gap-2 mb-6 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
           {[
             { id: 'overview', label: '🗺️ Market Map', desc: 'Visual overview' },
             { id: 'sentiment', label: '😱 Fear & Greed', desc: 'Market mood' },
@@ -194,7 +194,7 @@ export default function HomePage() {
               className={`px-4 py-3 rounded-lg font-medium transition-all ${
                 activeSection === tab.id
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <span className="block">{tab.label}</span>
@@ -219,8 +219,8 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-6">
               <FearGreedIndex showBeginnerTips={showTips} />
 
-              <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-                <h3 className="text-lg font-bold mb-4">📱 Social Sentiment</h3>
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h3 className="text-lg font-bold mb-4 text-gray-900">📱 Social Sentiment</h3>
 
                 {showTips && (
                   <BeginnerTip>
@@ -236,19 +236,19 @@ export default function HomePage() {
                     { coin: 'SOL', sentiment: 81, trend: 'up', mentions: '28K' },
                     { coin: 'DOGE', sentiment: 85, trend: 'up', mentions: '52K' },
                   ].map((item) => (
-                    <div key={item.coin} className="flex items-center justify-between p-3 bg-gray-700/50 rounded-lg">
+                    <div key={item.coin} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <span className="font-bold">{item.coin}</span>
-                        <span className="text-sm text-gray-400">{item.mentions} mentions</span>
+                        <span className="font-bold text-gray-900">{item.coin}</span>
+                        <span className="text-sm text-gray-500">{item.mentions} mentions</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-gray-600 rounded-full overflow-hidden">
+                        <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                           <SentimentBar
                             percentage={item.sentiment}
                             colorClass={item.sentiment >= 70 ? 'bg-green-500' : item.sentiment >= 50 ? 'bg-yellow-500' : 'bg-red-500'}
                           />
                         </div>
-                        <span className={`text-sm font-medium ${item.sentiment >= 70 ? 'text-green-400' : 'text-gray-400'}`}>
+                        <span className={`text-sm font-medium ${item.sentiment >= 70 ? 'text-green-600' : 'text-gray-500'}`}>
                           {item.sentiment}% 😊
                         </span>
                       </div>
@@ -258,7 +258,7 @@ export default function HomePage() {
 
                 <Link
                   href="/social"
-                  className="block text-center text-blue-400 hover:text-blue-300 font-medium mt-4"
+                  className="block text-center text-blue-600 hover:text-blue-700 font-medium mt-4"
                 >
                   View Full Social Dashboard →
                 </Link>
@@ -285,8 +285,8 @@ export default function HomePage() {
           {/* Right Side - AI Community Sidebar */}
           <div className="space-y-6">
             {/* Leaderboard Preview */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 sticky top-20">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-20 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-500" />
                 Top Predictors
               </h3>
@@ -299,7 +299,7 @@ export default function HomePage() {
                   { rank: 5, user: 'WhaleHunter', emoji: '🐋', points: 8720, accuracy: 71 },
                 ].map((user) => (
                   <div key={user.rank} className={`flex items-center gap-3 p-2 rounded-lg ${
-                    user.rank <= 3 ? 'bg-gradient-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-800' : 'bg-gray-700/50'
+                    user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-gray-50'
                   }`}>
                     <div className="w-6 flex justify-center text-sm">
                       {user.rank === 1 ? <Crown className="w-4 h-4 text-yellow-500" /> :
@@ -307,15 +307,15 @@ export default function HomePage() {
                        user.rank === 3 ? <Medal className="w-4 h-4 text-orange-400" /> :
                        <span className="text-gray-500 font-mono text-xs">#{user.rank}</span>}
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-purple-900/50 flex items-center justify-center text-sm">
+                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
                       {user.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{user.user}</p>
-                      <p className="text-xs text-gray-400">{user.accuracy}% acc</p>
+                      <p className="font-medium text-gray-900 text-sm truncate">{user.user}</p>
+                      <p className="text-xs text-gray-500">{user.accuracy}% acc</p>
                     </div>
                     <div className="text-right">
-                      <div className="flex items-center gap-1 text-purple-400 font-bold text-sm">
+                      <div className="flex items-center gap-1 text-purple-600 font-bold text-sm">
                         <Zap className="w-3 h-3" />
                         {user.points.toLocaleString()}
                       </div>
@@ -325,15 +325,15 @@ export default function HomePage() {
               </div>
               <Link
                 href="/community?tab=leaderboard"
-                className="block text-center text-purple-400 hover:text-purple-300 font-medium mt-4 text-sm"
+                className="block text-center text-purple-600 hover:text-purple-700 font-medium mt-4 text-sm"
               >
                 View Full Leaderboard →
               </Link>
             </div>
 
             {/* Recent Predictions Mini */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Flame className="w-5 h-5 text-orange-500" />
                 Hot Predictions
               </h3>
@@ -343,19 +343,19 @@ export default function HomePage() {
                   { user: 'WhaleHunter', emoji: '🐋', coin: 'ETH', prediction: 'BULLISH', target: '$4.2K' },
                   { user: 'SolanaFan', emoji: '☀️', coin: 'SOL', prediction: 'BEARISH', target: '$180' },
                 ].map((pred, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg">
-                    <div className="w-7 h-7 rounded-full bg-purple-900/50 flex items-center justify-center text-sm">
+                  <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
                       {pred.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white text-sm truncate">{pred.user}</p>
+                      <p className="font-medium text-gray-900 text-sm truncate">{pred.user}</p>
                       <div className="flex items-center gap-1">
                         <span className={`text-xs font-medium ${
-                          pred.prediction === 'BULLISH' ? 'text-green-400' : 'text-red-400'
+                          pred.prediction === 'BULLISH' ? 'text-green-600' : 'text-red-600'
                         }`}>
                           {pred.prediction === 'BULLISH' ? '↑' : '↓'} {pred.coin}
                         </span>
-                        <span className="text-xs text-gray-400">→ {pred.target}</span>
+                        <span className="text-xs text-gray-500">→ {pred.target}</span>
                       </div>
                     </div>
                   </div>
@@ -363,7 +363,7 @@ export default function HomePage() {
               </div>
               <Link
                 href="/community"
-                className="block text-center text-purple-400 hover:text-purple-300 font-medium mt-4 text-sm"
+                className="block text-center text-purple-600 hover:text-purple-700 font-medium mt-4 text-sm"
               >
                 View All Predictions →
               </Link>
@@ -394,33 +394,33 @@ export default function HomePage() {
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           <Link
             href="/download"
-            className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all group"
+            className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all group"
           >
             <span className="text-4xl">📥</span>
-            <h3 className="text-lg font-bold mt-3 group-hover:text-blue-400">Download Data</h3>
-            <p className="text-gray-400 text-sm mt-1">
+            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Download Data</h3>
+            <p className="text-gray-600 text-sm mt-1">
               Export crypto data to Excel, CSV, or PDF with one click.
             </p>
           </Link>
 
           <Link
             href="/compare"
-            className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all group"
+            className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all group"
           >
             <span className="text-4xl">⚖️</span>
-            <h3 className="text-lg font-bold mt-3 group-hover:text-blue-400">Compare Coins</h3>
-            <p className="text-gray-400 text-sm mt-1">
+            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Compare Coins</h3>
+            <p className="text-gray-600 text-sm mt-1">
               Side-by-side comparison of different cryptocurrencies.
             </p>
           </Link>
 
           <Link
             href="/chat"
-            className="bg-gray-800 p-6 rounded-xl border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all group"
+            className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all group"
           >
             <span className="text-4xl">🤖</span>
-            <h3 className="text-lg font-bold mt-3 group-hover:text-blue-400">Ask AI</h3>
-            <p className="text-gray-400 text-sm mt-1">
+            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Ask AI</h3>
+            <p className="text-gray-600 text-sm mt-1">
               Get instant answers about crypto in plain English.
             </p>
           </Link>

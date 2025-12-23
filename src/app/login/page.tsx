@@ -67,27 +67,27 @@ function LoginForm() {
     <div className="max-w-md w-full">
       {/* Logo */}
       <div className="text-center mb-8">
-        <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-400">
+        <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-600">
           <span>📊</span>
           <span>DataSimplify</span>
         </Link>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-600 mt-2">
           {plan ? `Sign in to subscribe to ${plan}` : 'Sign in to your account'}
         </p>
       </div>
 
       {/* Form */}
-      <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
+      <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
               {error}
             </div>
           )}
 
           {/* Email not verified message */}
           {showVerificationMessage && (
-            <div className="bg-yellow-900/50 border border-yellow-600 text-yellow-200 px-4 py-4 rounded">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-4 rounded">
               <p className="font-medium mb-2">📧 Email not verified</p>
               <p className="text-sm mb-3">
                 Please check your inbox and click the verification link we sent you.
@@ -111,7 +111,7 @@ function LoginForm() {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               Email address
             </label>
             <input
@@ -120,13 +120,13 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-emerald-500"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <input
@@ -135,7 +135,7 @@ function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-emerald-500"
               placeholder="••••••••"
             />
           </div>
@@ -150,11 +150,11 @@ function LoginForm() {
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-400">
+          <p className="text-gray-600">
             Don&apos;t have an account?{' '}
-            <Link 
-              href={plan ? `/signup?plan=${plan}` : '/signup'} 
-              className="text-emerald-400 hover:text-emerald-300"
+            <Link
+              href={plan ? `/signup?plan=${plan}` : '/signup'}
+              className="text-emerald-600 hover:text-emerald-700"
             >
               Sign up
             </Link>
@@ -164,7 +164,7 @@ function LoginForm() {
 
       {/* Back to free features */}
       <div className="mt-6 text-center">
-        <Link href="/market" className="text-gray-400 hover:text-white text-sm">
+        <Link href="/market" className="text-gray-600 hover:text-gray-900 text-sm">
           ← Back to free features
         </Link>
       </div>
@@ -174,9 +174,9 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <Suspense fallback={
-        <div className="text-white text-center">
+        <div className="text-gray-900 text-center">
           <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
           Loading...
         </div>

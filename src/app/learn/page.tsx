@@ -133,7 +133,7 @@ export default function LearnPage() {
   const selectedCourseData = courses.find(c => c.id === selectedCourse);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       <FreeNavbar />
       
       {/* Hero */}
@@ -178,8 +178,8 @@ export default function LearnPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Beginner Tip */}
-        <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
-          <p className="text-blue-300 text-sm flex items-start gap-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-700 text-sm flex items-start gap-2">
             <span>💡</span>
             <span>
               <strong>How to use:</strong> Click on any course card to see its lessons.
