@@ -1,17 +1,13 @@
 name: Sync Crypto Data
 
 on:
-  # Run every 15 minutes
   schedule:
     - cron: '*/15 * * * *'
-
-  # Allow manual trigger
   workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
       - name: Sync Market Data
         run: |
@@ -54,5 +50,4 @@ jobs:
           echo "On-chain sync complete"
 
       - name: Log Completion
-        run: |
-          echo "All syncs completed at $(date)"
+        run: echo "All syncs completed at $(date)"
