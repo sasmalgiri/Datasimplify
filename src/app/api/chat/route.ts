@@ -125,7 +125,7 @@ export async function GET() {
   return NextResponse.json({
     available: groqConfigured,
     provider: groqConfigured ? 'groq' : null,
-    model: process.env.GROQ_MODEL || 'llama-3.1-70b-versatile',
+    model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
     features: {
       marketData: true,
       fearGreed: true,

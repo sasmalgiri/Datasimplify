@@ -8,7 +8,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 // Token costs per 1M tokens (approximate)
 const TOKEN_COSTS: Record<string, Record<string, { input: number; output: number }>> = {
   'groq': {
-    'llama-3.1-70b-versatile': { input: 0.59, output: 0.79 }, // Free tier, but tracking for limits
+    'llama-3.3-70b-versatile': { input: 0.59, output: 0.79 }, // Free tier, but tracking for limits
     'llama-3.1-8b-instant': { input: 0.05, output: 0.08 },
     'mixtral-8x7b-32768': { input: 0.24, output: 0.24 },
   },

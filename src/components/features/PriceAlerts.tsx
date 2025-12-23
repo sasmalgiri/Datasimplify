@@ -87,9 +87,24 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
   const coins = [
     { symbol: 'BTC', name: 'Bitcoin', price: 97245 },
     { symbol: 'ETH', name: 'Ethereum', price: 3890 },
+    { symbol: 'BNB', name: 'BNB', price: 710 },
     { symbol: 'SOL', name: 'Solana', price: 220 },
     { symbol: 'XRP', name: 'Ripple', price: 2.35 },
+    { symbol: 'ADA', name: 'Cardano', price: 1.05 },
     { symbol: 'DOGE', name: 'Dogecoin', price: 0.41 },
+    { symbol: 'AVAX', name: 'Avalanche', price: 45 },
+    { symbol: 'DOT', name: 'Polkadot', price: 8.50 },
+    { symbol: 'LINK', name: 'Chainlink', price: 25 },
+    { symbol: 'MATIC', name: 'Polygon', price: 0.95 },
+    { symbol: 'SHIB', name: 'Shiba Inu', price: 0.000025 },
+    { symbol: 'LTC', name: 'Litecoin', price: 105 },
+    { symbol: 'UNI', name: 'Uniswap', price: 14 },
+    { symbol: 'ATOM', name: 'Cosmos', price: 10.50 },
+    { symbol: 'FTM', name: 'Fantom', price: 1.10 },
+    { symbol: 'NEAR', name: 'NEAR Protocol', price: 6.50 },
+    { symbol: 'APT', name: 'Aptos', price: 12 },
+    { symbol: 'ARB', name: 'Arbitrum', price: 1.80 },
+    { symbol: 'OP', name: 'Optimism', price: 2.50 },
   ];
 
   const deleteAlert = (id: string) => {

@@ -37,7 +37,7 @@ async function chatGroq(messages: AIMessage[], systemPrompt?: string): Promise<A
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || 'llama-3.1-70b-versatile',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       messages: allMessages,
       temperature: 0.7,
       max_tokens: 2048,

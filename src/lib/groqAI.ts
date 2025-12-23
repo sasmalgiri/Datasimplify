@@ -3,10 +3,10 @@
 // AI utilities using Groq (FREE cloud inference)
 // ============================================
 // Adapted from ollamaAI.ts for cloud deployment
-// Uses llama-3.1-70b-versatile (fast, capable)
+// Uses llama-3.3-70b-versatile (fast, capable)
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-70b-versatile';
+const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
 
 // ============================================
 // TYPES
