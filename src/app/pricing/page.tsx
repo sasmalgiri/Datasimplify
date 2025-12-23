@@ -92,6 +92,7 @@ export default function PricingPage() {
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistError, setWaitlistError] = useState('');
 
   useEffect(() => {
     fetchPricingInfo();
@@ -173,6 +174,19 @@ export default function PricingPage() {
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setWaitlistError('');
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!waitlistEmail.trim()) {
+      setWaitlistError('Please enter your email address');
+      return;
+    }
+    if (!emailRegex.test(waitlistEmail)) {
+      setWaitlistError('Please enter a valid email address');
+      return;
+    }
+
     // TODO: Save to database or email service
     console.log('Waitlist signup:', waitlistEmail);
     setWaitlistSubmitted(true);
@@ -417,14 +431,23 @@ export default function PricingPage() {
                   </div>
                 ) : (
                   <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-                    <input
-                      type="email"
-                      value={waitlistEmail}
-                      onChange={(e) => setWaitlistEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      required
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                    />
+                    <div>
+                      <input
+                        type="email"
+                        value={waitlistEmail}
+                        onChange={(e) => {
+                          setWaitlistEmail(e.target.value);
+                          setWaitlistError('');
+                        }}
+                        placeholder="your@email.com"
+                        className={`w-full px-4 py-3 bg-gray-700 border rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 ${
+                          waitlistError ? 'border-red-500' : 'border-gray-600'
+                        }`}
+                      />
+                      {waitlistError && (
+                        <p className="text-red-400 text-sm mt-1">{waitlistError}</p>
+                      )}
+                    </div>
                     <button
                       type="submit"
                       className="w-full py-3 bg-orange-500 hover:bg-orange-600 rounded-lg font-medium transition"

@@ -811,13 +811,18 @@ export default function DownloadPage() {
             {/* Download Button */}
             <button
               onClick={handleDownload}
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition disabled:opacity-50"
+              disabled={isLoading || selectedFields.length === 0}
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
                   <SpinnerIcon />
                   <span>Generating...</span>
+                </>
+              ) : selectedFields.length === 0 ? (
+                <>
+                  <DownloadIcon />
+                  <span>Select fields to download</span>
                 </>
               ) : (
                 <>
