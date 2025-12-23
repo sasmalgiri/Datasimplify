@@ -23,13 +23,18 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
   const type = searchParams.get('type') || 'all';
+
+  // Get secret from query param OR Authorization header
+  const querySecret = searchParams.get('secret');
+  const authHeader = request.headers.get('Authorization');
+  const headerSecret = authHeader?.replace('Bearer ', '');
+  const secret = querySecret || headerSecret;
 
   // Verify secret (protect from unauthorized access)
   if (secret !== SYNC_SECRET) {
     return NextResponse.json(
-      { error: 'Unauthorized. Provide valid secret key.' },
+      { error: 'Unauthorized. Provide valid secret key via ?secret= or Authorization header.' },
       { status: 401 }
     );
   }
