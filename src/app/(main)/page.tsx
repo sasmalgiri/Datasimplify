@@ -5,17 +5,10 @@ import Link from 'next/link';
 import {
   Users,
   Trophy,
-  TrendingUp,
-  TrendingDown,
-  ThumbsUp,
-  MessageSquare,
   Flame,
-  Star,
-  Target,
   Zap,
   Crown,
-  Medal,
-  CheckCircle
+  Medal
 } from 'lucide-react';
 
 // Sentiment bar component using ref to avoid inline style warnings
@@ -211,12 +204,14 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Content Sections */}
-        <div className="space-y-8">
-          {/* Market Map / Treemap */}
-          {activeSection === 'overview' && (
-            <Treemap coins={coins} showBeginnerTips={showTips} />
-          )}
+        {/* Content Sections - Side by Side Layout */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Side - Main Content (2/3 width) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Market Map / Treemap */}
+            {activeSection === 'overview' && (
+              <Treemap coins={coins} showBeginnerTips={showTips} />
+            )}
 
           {/* Fear & Greed Index */}
           {activeSection === 'sentiment' && (
@@ -284,6 +279,114 @@ export default function HomePage() {
           {activeSection === 'correlation' && (
             <CorrelationHeatmapDemo showBeginnerTips={showTips} />
           )}
+          </div>
+
+          {/* Right Side - AI Community Sidebar */}
+          <div className="space-y-6">
+            {/* Leaderboard Preview */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-20">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-500" />
+                Top Predictors
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { rank: 1, user: 'CryptoKing', emoji: '👑', points: 15420, accuracy: 82 },
+                  { rank: 2, user: 'MoonShot', emoji: '🚀', points: 12850, accuracy: 79 },
+                  { rank: 3, user: 'DiamondHands', emoji: '💎', points: 11200, accuracy: 76 },
+                  { rank: 4, user: 'CryptoWizard', emoji: '🧙', points: 9840, accuracy: 78 },
+                  { rank: 5, user: 'WhaleHunter', emoji: '🐋', points: 8720, accuracy: 71 },
+                ].map((user) => (
+                  <div key={user.rank} className={`flex items-center gap-3 p-2 rounded-lg ${
+                    user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-gray-50'
+                  }`}>
+                    <div className="w-6 flex justify-center text-sm">
+                      {user.rank === 1 ? <Crown className="w-4 h-4 text-yellow-500" /> :
+                       user.rank === 2 ? <Medal className="w-4 h-4 text-gray-400" /> :
+                       user.rank === 3 ? <Medal className="w-4 h-4 text-orange-400" /> :
+                       <span className="text-gray-500 font-mono text-xs">#{user.rank}</span>}
+                    </div>
+                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
+                      {user.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{user.user}</p>
+                      <p className="text-xs text-gray-500">{user.accuracy}% acc</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 text-purple-600 font-bold text-sm">
+                        <Zap className="w-3 h-3" />
+                        {user.points.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/community?tab=leaderboard"
+                className="block text-center text-purple-600 hover:text-purple-800 font-medium mt-4 text-sm"
+              >
+                View Full Leaderboard →
+              </Link>
+            </div>
+
+            {/* Recent Predictions Mini */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Flame className="w-5 h-5 text-orange-500" />
+                Hot Predictions
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { user: 'CryptoWizard', emoji: '🧙', coin: 'BTC', prediction: 'BULLISH', target: '$105K' },
+                  { user: 'WhaleHunter', emoji: '🐋', coin: 'ETH', prediction: 'BULLISH', target: '$4.2K' },
+                  { user: 'SolanaFan', emoji: '☀️', coin: 'SOL', prediction: 'BEARISH', target: '$180' },
+                ].map((pred, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
+                      {pred.emoji}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{pred.user}</p>
+                      <div className="flex items-center gap-1">
+                        <span className={`text-xs font-medium ${
+                          pred.prediction === 'BULLISH' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {pred.prediction === 'BULLISH' ? '↑' : '↓'} {pred.coin}
+                        </span>
+                        <span className="text-xs text-gray-500">→ {pred.target}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link
+                href="/community"
+                className="block text-center text-purple-600 hover:text-purple-800 font-medium mt-4 text-sm"
+              >
+                View All Predictions →
+              </Link>
+            </div>
+
+            {/* Community CTA Mini */}
+            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl p-5 text-white">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold">AI Community</h3>
+                  <p className="text-purple-200 text-xs">Join 2,341 traders</p>
+                </div>
+              </div>
+              <Link
+                href="/community"
+                className="block w-full text-center py-2 bg-white text-purple-600 rounded-lg font-bold text-sm hover:bg-purple-50 transition"
+              >
+                Start Predicting
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -320,200 +423,6 @@ export default function HomePage() {
               Get instant answers about crypto in plain English.
             </p>
           </Link>
-        </div>
-
-        {/* AI Community Section */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <Users className="w-8 h-8 text-purple-600" />
-                AI Community Predictions
-              </h2>
-              <p className="text-gray-500 mt-1">See what traders are predicting and compete for top rankings</p>
-            </div>
-            <Link
-              href="/community"
-              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium"
-            >
-              Join Community →
-            </Link>
-          </div>
-
-          {/* Community Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-purple-600 mb-2">
-                <Target className="w-5 h-5" />
-                <span className="text-sm font-medium">Total Predictions</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">12,847</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-green-600 mb-2">
-                <Users className="w-5 h-5" />
-                <span className="text-sm font-medium">Active Traders</span>
-              </div>
-              <p className="text-2xl font-bold text-gray-900">2,341</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-blue-600 mb-2">
-                <CheckCircle className="w-5 h-5" />
-                <span className="text-sm font-medium">Avg Accuracy</span>
-              </div>
-              <p className="text-2xl font-bold text-green-600">67.2%</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center gap-2 text-orange-600 mb-2">
-                <TrendingUp className="w-5 h-5" />
-                <span className="text-sm font-medium">Bullish Sentiment</span>
-              </div>
-              <p className="text-2xl font-bold text-green-600">68%</p>
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Recent Predictions */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-500" />
-                Recent Predictions
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { user: 'CryptoWizard', emoji: '🧙', coin: 'BTC', prediction: 'BULLISH', confidence: 85, target: '$105,000', likes: 234, comments: 45, accuracy: 78 },
-                  { user: 'WhaleHunter', emoji: '🐋', coin: 'ETH', prediction: 'BULLISH', confidence: 72, target: '$4,200', likes: 189, comments: 32, accuracy: 71 },
-                  { user: 'SolanaFan', emoji: '☀️', coin: 'SOL', prediction: 'BEARISH', confidence: 65, target: '$180', likes: 156, comments: 28, accuracy: 65 },
-                ].map((pred, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-xl">
-                        {pred.emoji}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-gray-900">{pred.user}</span>
-                          <span className="text-xs text-gray-500">{pred.accuracy}% accuracy</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
-                            pred.prediction === 'BULLISH'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {pred.prediction === 'BULLISH' ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            {pred.prediction}
-                          </span>
-                          <span className="font-bold text-gray-900">{pred.coin}</span>
-                          <span className="text-gray-500">→</span>
-                          <span className="text-gray-700">{pred.target}</span>
-                          <span className="text-xs text-gray-500">({pred.confidence}% confident)</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-gray-500 text-sm">
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        {pred.likes}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="w-4 h-4" />
-                        {pred.comments}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/community"
-                className="block text-center text-purple-600 hover:text-purple-800 font-medium mt-4"
-              >
-                View All Predictions →
-              </Link>
-            </div>
-
-            {/* Leaderboard Preview */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Top Predictors
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { rank: 1, user: 'CryptoKing', emoji: '👑', points: 15420, accuracy: 82, streak: 12 },
-                  { rank: 2, user: 'MoonShot', emoji: '🚀', points: 12850, accuracy: 79, streak: 8 },
-                  { rank: 3, user: 'DiamondHands', emoji: '💎', points: 11200, accuracy: 76, streak: 6 },
-                  { rank: 4, user: 'CryptoWizard', emoji: '🧙', points: 9840, accuracy: 78, streak: 5 },
-                  { rank: 5, user: 'WhaleHunter', emoji: '🐋', points: 8720, accuracy: 71, streak: 4 },
-                ].map((user) => (
-                  <div key={user.rank} className={`flex items-center gap-3 p-3 rounded-lg ${
-                    user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-gray-50'
-                  }`}>
-                    <div className="w-8 flex justify-center">
-                      {user.rank === 1 ? <Crown className="w-5 h-5 text-yellow-500" /> :
-                       user.rank === 2 ? <Medal className="w-5 h-5 text-gray-400" /> :
-                       user.rank === 3 ? <Medal className="w-5 h-5 text-orange-400" /> :
-                       <span className="text-gray-500 font-mono">#{user.rank}</span>}
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                      {user.emoji}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{user.user}</p>
-                      <p className="text-xs text-gray-500">{user.accuracy}% accuracy</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-purple-600 font-bold">
-                        <Zap className="w-4 h-4" />
-                        {user.points.toLocaleString()}
-                      </div>
-                      {user.streak > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-orange-500">
-                          <Flame className="w-3 h-3" />
-                          {user.streak} streak
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/community?tab=leaderboard"
-                className="block text-center text-purple-600 hover:text-purple-800 font-medium mt-4"
-              >
-                View Full Leaderboard →
-              </Link>
-            </div>
-          </div>
-
-          {/* Community CTA */}
-          <div className="mt-8 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                  <Star className="w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Join the AI Community</h3>
-                  <p className="text-purple-200">Share predictions, compete with traders, and climb the leaderboard</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Link
-                  href="/community"
-                  className="px-6 py-3 bg-white text-purple-600 rounded-lg font-bold hover:bg-purple-50 transition"
-                >
-                  Start Predicting
-                </Link>
-                <Link
-                  href="/community?tab=contests"
-                  className="px-6 py-3 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 transition"
-                >
-                  View Contests
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Beginner CTA */}
