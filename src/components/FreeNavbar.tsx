@@ -122,22 +122,23 @@ export function FreeNavbar() {
       ],
     },
     community: {
-      label: 'Community',
+      label: 'AI Community',
       icon: <Users className="w-4 h-4" />,
       paths: ['/community'],
       items: [
-        { href: '/community', label: 'Prediction Forum', description: 'Share & discuss predictions', icon: <Users className="w-4 h-4" /> },
+        { href: '/community', label: 'Prediction Forum', description: 'Share & discuss AI predictions', icon: <Users className="w-4 h-4" /> },
         { href: '/community?tab=leaderboard', label: 'Leaderboard', description: 'Top predictors ranking', icon: <Trophy className="w-4 h-4" /> },
       ],
     },
-    learn: {
-      label: 'Learn',
+    more: {
+      label: 'More',
       icon: <BookOpen className="w-4 h-4" />,
-      paths: ['/learn', '/glossary', '/faq'],
+      paths: ['/learn', '/glossary', '/faq', '/pricing'],
       items: [
         { href: '/learn', label: 'Academy', description: 'Crypto education & guides', icon: <GraduationCap className="w-4 h-4" /> },
         { href: '/glossary', label: 'Glossary', description: 'Crypto terms explained', icon: <BookOpen className="w-4 h-4" /> },
         { href: '/faq', label: 'FAQ', description: 'Common questions answered', icon: <HelpCircle className="w-4 h-4" /> },
+        { href: '/pricing', label: 'Pricing', description: 'Plans & subscription options', icon: <DollarSign className="w-4 h-4" /> },
       ],
     },
   };
@@ -149,10 +150,11 @@ export function FreeNavbar() {
     { href: '/download', label: 'Download', icon: <Download className="w-4 h-4" /> },
     { href: '/monitor', label: 'AI Monitor', icon: <Brain className="w-4 h-4" /> },
     { href: '/predictions', label: 'Predictions', icon: <Sparkles className="w-4 h-4" /> },
-    { href: '/community', label: 'Community', icon: <Users className="w-4 h-4" /> },
+    { href: '/community', label: 'AI Community', icon: <Users className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
     { href: '/chat', label: 'AI Chat', icon: <MessageSquare className="w-4 h-4" /> },
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
+    { href: '/pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> },
   ];
 
   return (
@@ -187,17 +189,6 @@ export function FreeNavbar() {
             >
               <Sparkles className="w-4 h-4" />
               AI Predictions
-            </Link>
-            <Link
-              href="/pricing"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition ${
-                isActive('/pricing')
-                  ? 'text-emerald-400 bg-emerald-500/10'
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <DollarSign className="w-4 h-4" />
-              Pricing
             </Link>
           </div>
 
