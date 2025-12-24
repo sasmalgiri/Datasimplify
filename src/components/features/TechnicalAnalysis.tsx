@@ -26,6 +26,17 @@ interface TechnicalIndicator {
   beginnerExplanation: string;
 }
 
+interface TechnicalSummary {
+  buySignals: number;
+  sellSignals: number;
+  neutralSignals: number;
+  overallSignal: string;
+  currentPrice: number;
+  sma20: number;
+  sma50: number;
+  sma200: number;
+}
+
 interface TechnicalAnalysisProps {
   coin?: string;
   showBeginnerTips?: boolean;
@@ -33,116 +44,66 @@ interface TechnicalAnalysisProps {
 
 export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: TechnicalAnalysisProps) {
   const [timeframe, setTimeframe] = useState<'1h' | '4h' | '1d' | '1w'>('1d');
+  const [indicators, setIndicators] = useState<TechnicalIndicator[]>([]);
+  const [summary, setSummary] = useState<TechnicalSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string>('');
 
-  // Sample indicators - in production would be calculated from price data
-  const indicators: TechnicalIndicator[] = [
-    {
-      name: 'Relative Strength Index',
-      shortName: 'RSI (14)',
-      value: 62,
-      signal: 'neutral',
-      description: 'Momentum oscillator measuring speed of price changes',
-      beginnerExplanation: 'Above 70 = overbought (might drop). Below 30 = oversold (might rise). Currently neutral.'
-    },
-    {
-      name: 'Moving Average (20)',
-      shortName: 'SMA 20',
-      value: '$95,200',
-      signal: 'buy',
-      description: 'Average price over last 20 periods',
-      beginnerExplanation: 'Price is ABOVE the 20-day average = bullish trend. Good sign!'
-    },
-    {
-      name: 'Moving Average (50)',
-      shortName: 'SMA 50',
-      value: '$88,500',
-      signal: 'buy',
-      description: 'Average price over last 50 periods',
-      beginnerExplanation: 'Price is ABOVE the 50-day average = longer-term bullish trend.'
-    },
-    {
-      name: 'Moving Average (200)',
-      shortName: 'SMA 200',
-      value: '$62,800',
-      signal: 'buy',
-      description: 'Average price over last 200 periods',
-      beginnerExplanation: 'Price above 200-day average = strong long-term uptrend!'
-    },
-    {
-      name: 'MACD',
-      shortName: 'MACD',
-      value: '+1,250',
-      signal: 'buy',
-      description: 'Moving Average Convergence Divergence',
-      beginnerExplanation: 'Positive MACD = bullish momentum. The trend is your friend!'
-    },
-    {
-      name: 'Bollinger Bands',
-      shortName: 'BB',
-      value: 'Middle',
-      signal: 'neutral',
-      description: 'Volatility bands around price',
-      beginnerExplanation: 'Price is in the middle band = no extreme condition.'
-    },
-    {
-      name: 'Stochastic RSI',
-      shortName: 'StochRSI',
-      value: 58,
-      signal: 'neutral',
-      description: 'RSI applied to RSI for more sensitivity',
-      beginnerExplanation: 'Currently neutral. Neither overbought nor oversold.'
-    },
-    {
-      name: 'Average Directional Index',
-      shortName: 'ADX',
-      value: 42,
-      signal: 'buy',
-      description: 'Measures trend strength',
-      beginnerExplanation: 'Above 25 = strong trend. Currently showing a strong upward trend.'
-    },
-    {
-      name: 'Commodity Channel Index',
-      shortName: 'CCI (20)',
-      value: 85,
-      signal: 'neutral',
-      description: 'Identifies cyclical trends',
-      beginnerExplanation: 'Between -100 and +100 is normal. Currently slightly above average.'
-    },
-    {
-      name: 'Williams %R',
-      shortName: 'Williams %R',
-      value: -35,
-      signal: 'neutral',
-      description: 'Momentum indicator similar to Stochastic',
-      beginnerExplanation: 'Between -20 and -80 is neutral zone. Currently healthy.'
-    },
-    {
-      name: 'Ichimoku Cloud',
-      shortName: 'Ichimoku',
-      value: 'Above Cloud',
-      signal: 'buy',
-      description: 'Japanese indicator showing support/resistance',
-      beginnerExplanation: 'Price above the cloud = bullish! Strong support below.'
-    },
-    {
-      name: 'Pivot Points',
-      shortName: 'Pivot',
-      value: '$94,500',
-      signal: 'buy',
-      description: 'Key support and resistance levels',
-      beginnerExplanation: 'Price above pivot point = bullish for today.'
-    },
-  ];
+  // Map display coin symbol to API coin id
+  const coinMap: Record<string, string> = {
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'SOL': 'solana',
+    'BNB': 'binancecoin',
+    'XRP': 'ripple',
+    'ADA': 'cardano',
+    'DOGE': 'dogecoin',
+    'DOT': 'polkadot',
+  };
 
-  // Calculate overall signal
-  const buySignals = indicators.filter(i => i.signal === 'buy').length;
-  const sellSignals = indicators.filter(i => i.signal === 'sell').length;
-  const neutralSignals = indicators.filter(i => i.signal === 'neutral').length;
+  useEffect(() => {
+    const fetchTechnicalData = async () => {
+      setLoading(true);
+      setError(null);
 
-  const overallSignal = buySignals > sellSignals + 2 ? 'Strong Buy' :
-                       buySignals > sellSignals ? 'Buy' :
-                       sellSignals > buySignals + 2 ? 'Strong Sell' :
-                       sellSignals > buySignals ? 'Sell' : 'Neutral';
+      try {
+        const coinId = coinMap[coin] || coin.toLowerCase();
+        const response = await fetch(`/api/technical?coin=${coinId}&timeframe=${timeframe}`);
+
+        if (response.ok) {
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            setIndicators(result.data.indicators);
+            setSummary(result.data.summary);
+            setDataSource(result.data.meta?.source || 'unknown');
+          } else {
+            setError('Failed to parse technical data');
+          }
+        } else {
+          setError('Failed to fetch technical indicators');
+        }
+      } catch (err) {
+        console.error('Technical analysis fetch error:', err);
+        setError('Failed to load technical analysis');
+      }
+
+      setLoading(false);
+    };
+
+    fetchTechnicalData();
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchTechnicalData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [coin, timeframe]);
+
+  // Calculate signals from indicators
+  const buySignals = summary?.buySignals || indicators.filter(i => i.signal === 'buy').length;
+  const sellSignals = summary?.sellSignals || indicators.filter(i => i.signal === 'sell').length;
+  const neutralSignals = summary?.neutralSignals || indicators.filter(i => i.signal === 'neutral').length;
+  const overallSignal = summary?.overallSignal || 'Loading...';
 
   const getSignalColor = (signal: string) => {
     if (signal.includes('Buy')) return 'text-green-600 bg-green-50';
@@ -182,6 +143,30 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
           <br/><br/>
           ⚠️ <strong>Remember:</strong> No indicator is 100% accurate! Use them as one input, not the only input.
         </BeginnerTip>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Calculating indicators...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Data Source Notice */}
+      {dataSource === 'mock' && !loading && !error && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
+          <span className="text-amber-800">
+            ⚠️ <strong>Note:</strong> Using estimated data. Live price data requires supported trading pairs.
+          </span>
+        </div>
       )}
 
       {/* Timeframe Selector */}
@@ -272,26 +257,37 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       </div>
 
       {/* Moving Average Summary */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-bold text-blue-800 mb-3">📈 Moving Average Summary</h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-sm text-blue-600">Short-term</p>
-            <p className="text-xl">🟢</p>
-            <p className="text-xs text-blue-700">SMA 20: Bullish</p>
-          </div>
-          <div>
-            <p className="text-sm text-blue-600">Medium-term</p>
-            <p className="text-xl">🟢</p>
-            <p className="text-xs text-blue-700">SMA 50: Bullish</p>
-          </div>
-          <div>
-            <p className="text-sm text-blue-600">Long-term</p>
-            <p className="text-xl">🟢</p>
-            <p className="text-xs text-blue-700">SMA 200: Bullish</p>
+      {summary && !loading && (
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <h3 className="font-bold text-blue-800 mb-3">📈 Moving Average Summary</h3>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-sm text-blue-600">Short-term</p>
+              <p className="text-xl">{summary.currentPrice > summary.sma20 ? '🟢' : '🔴'}</p>
+              <p className="text-xs text-blue-700">
+                SMA 20: {summary.currentPrice > summary.sma20 ? 'Bullish' : 'Bearish'}
+              </p>
+              <p className="text-xs text-gray-500">${summary.sma20.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+            </div>
+            <div>
+              <p className="text-sm text-blue-600">Medium-term</p>
+              <p className="text-xl">{summary.currentPrice > summary.sma50 ? '🟢' : '🔴'}</p>
+              <p className="text-xs text-blue-700">
+                SMA 50: {summary.currentPrice > summary.sma50 ? 'Bullish' : 'Bearish'}
+              </p>
+              <p className="text-xs text-gray-500">${summary.sma50.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+            </div>
+            <div>
+              <p className="text-sm text-blue-600">Long-term</p>
+              <p className="text-xl">{summary.currentPrice > summary.sma200 ? '🟢' : '🔴'}</p>
+              <p className="text-xs text-blue-700">
+                SMA 200: {summary.currentPrice > summary.sma200 ? 'Bullish' : 'Bearish'}
+              </p>
+              <p className="text-xs text-gray-500">${summary.sma200.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Disclaimer */}
       <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

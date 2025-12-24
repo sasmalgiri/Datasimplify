@@ -27,25 +27,61 @@ interface ETFData {
   today_flow: number;
   week_flow: number;
   total_aum: number;
-  logo?: string;
+  fee?: number;
+  estimated?: boolean;
+}
+
+interface ETFSummary {
+  total_aum: number;
+  total_today_flow: number;
+  total_week_flow: number;
+  btc_price: number;
+  btc_change_24h: number;
+  market_sentiment: string;
 }
 
 export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
   const [etfs, setEtfs] = useState<ETFData[]>([]);
+  const [summary, setSummary] = useState<ETFSummary | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isEstimated, setIsEstimated] = useState(false);
 
   useEffect(() => {
-    // Sample ETF data - in production this would come from an API
-    const sampleETFs: ETFData[] = [
-      { name: 'iShares Bitcoin Trust', ticker: 'IBIT', provider: 'BlackRock', today_flow: 200000000, week_flow: 1200000000, total_aum: 35000000000 },
-      { name: 'Fidelity Wise Origin', ticker: 'FBTC', provider: 'Fidelity', today_flow: 80000000, week_flow: 400000000, total_aum: 12000000000 },
-      { name: 'ARK 21Shares Bitcoin', ticker: 'ARKB', provider: 'ARK Invest', today_flow: -15000000, week_flow: 50000000, total_aum: 3000000000 },
-      { name: 'Grayscale Bitcoin Trust', ticker: 'GBTC', provider: 'Grayscale', today_flow: -50000000, week_flow: -200000000, total_aum: 20000000000 },
-      { name: 'Bitwise Bitcoin ETF', ticker: 'BITB', provider: 'Bitwise', today_flow: 25000000, week_flow: 100000000, total_aum: 2000000000 },
-      { name: 'VanEck Bitcoin Trust', ticker: 'HODL', provider: 'VanEck', today_flow: 10000000, week_flow: 45000000, total_aum: 800000000 },
-      { name: 'Invesco Galaxy Bitcoin', ticker: 'BTCO', provider: 'Invesco', today_flow: 5000000, week_flow: 30000000, total_aum: 500000000 },
-    ];
-    setEtfs(sampleETFs);
+    const fetchETFData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch('/api/etf');
+
+        if (response.ok) {
+          const result = await response.json();
+
+          if (result.success && result.data) {
+            setEtfs(result.data.etfs);
+            setSummary(result.data.summary);
+            setIsEstimated(result.data.meta?.data_type === 'estimated');
+          } else {
+            setError('Failed to load ETF data');
+          }
+        } else {
+          setError('Unable to fetch ETF data');
+        }
+      } catch (err) {
+        console.error('ETF fetch error:', err);
+        setError('Failed to load ETF data');
+      }
+
+      setLoading(false);
+    };
+
+    fetchETFData();
+
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchETFData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // Calculate totals
@@ -84,8 +120,8 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
       {/* Beginner Explanation */}
       {showBeginnerTips && (
         <BeginnerTip title="💡 What Are Bitcoin ETFs?">
-          <strong>ETFs (Exchange-Traded Funds)</strong> are like stocks that hold Bitcoin for you. 
-          Instead of buying Bitcoin directly, you can buy shares of these ETFs through your regular 
+          <strong>ETFs (Exchange-Traded Funds)</strong> are like stocks that hold Bitcoin for you.
+          Instead of buying Bitcoin directly, you can buy shares of these ETFs through your regular
           stock broker (like Fidelity or Charles Schwab).
           <br/><br/>
           <strong>Why track flows?</strong>
@@ -94,6 +130,51 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           <br/>
           • <span className="text-red-600">Money flowing OUT</span> = Big investors are selling (bearish) 📉
         </BeginnerTip>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Loading ETF data...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      )}
+
+      {/* Estimated Data Notice */}
+      {isEstimated && !loading && !error && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
+          <span className="text-amber-800">
+            ⚠️ <strong>Note:</strong> Flow data is estimated based on AUM and market conditions.
+            Real-time flow data requires premium data sources.
+          </span>
+        </div>
+      )}
+
+      {/* BTC Price Context */}
+      {summary && !loading && (
+        <div className="bg-gray-50 rounded-lg p-3 mb-4 flex items-center justify-between">
+          <span className="text-gray-600 text-sm">BTC Price:</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold">${summary.btc_price?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <span className={`text-sm ${summary.btc_change_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {summary.btc_change_24h >= 0 ? '+' : ''}{summary.btc_change_24h?.toFixed(2)}%
+            </span>
+            <span className={`px-2 py-1 rounded text-xs font-medium ${
+              summary.market_sentiment === 'bullish' ? 'bg-green-100 text-green-700' :
+              summary.market_sentiment === 'bearish' ? 'bg-red-100 text-red-700' :
+              'bg-gray-100 text-gray-700'
+            }`}>
+              {summary.market_sentiment}
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Summary Cards */}

@@ -25,11 +25,65 @@ interface Allocation {
   color: string;
 }
 
+interface CoinPrice {
+  symbol: string;
+  price: number;
+  change_24h: number;
+}
+
 export default function PortfolioBuilderPage() {
   const [investmentAmount, setInvestmentAmount] = useState(1000);
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
   const [allocations, setAllocations] = useState<Allocation[]>([]);
   const [step, setStep] = useState(1);
+  const [coinPrices, setCoinPrices] = useState<Record<string, CoinPrice>>({});
+  const [pricesLoading, setPricesLoading] = useState(true);
+
+  // Fetch real coin prices
+  useEffect(() => {
+    const fetchPrices = async () => {
+      setPricesLoading(true);
+      try {
+        const response = await fetch('/api/crypto?limit=20');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            const priceMap: Record<string, CoinPrice> = {};
+            result.data.forEach((coin: { symbol: string; price: number; price_change_24h: number }) => {
+              priceMap[coin.symbol] = {
+                symbol: coin.symbol,
+                price: coin.price,
+                change_24h: coin.price_change_24h || 0,
+              };
+            });
+            setCoinPrices(priceMap);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch coin prices:', err);
+      }
+      setPricesLoading(false);
+    };
+
+    fetchPrices();
+    // Refresh prices every 2 minutes
+    const interval = setInterval(fetchPrices, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Helper to get coin price
+  const getCoinPrice = (symbol: string): number => {
+    return coinPrices[symbol]?.price || 0;
+  };
+
+  // Helper to calculate how many coins you'd get
+  const getCoinsAmount = (symbol: string, dollarAmount: number): string => {
+    const price = getCoinPrice(symbol);
+    if (price === 0) return '—';
+    const amount = dollarAmount / price;
+    if (amount >= 1) return amount.toFixed(4);
+    return amount.toFixed(8);
+  };
 
   // Preset portfolios based on risk tolerance
   const presetPortfolios = {
@@ -430,41 +484,77 @@ https://datasimplify.vercel.app
                 </div>
               </div>
 
+              {/* Live Prices Banner */}
+              {!pricesLoading && Object.keys(coinPrices).length > 0 && (
+                <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-3 mb-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-blue-400 text-sm font-medium">📊 Live Prices:</span>
+                    <div className="flex gap-4 text-sm">
+                      {['BTC', 'ETH', 'SOL'].map((symbol) => (
+                        coinPrices[symbol] && (
+                          <span key={symbol} className="flex items-center gap-1">
+                            <span className="text-gray-400">{symbol}:</span>
+                            <span className="font-medium">${coinPrices[symbol].price.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                            <span className={coinPrices[symbol].change_24h >= 0 ? 'text-green-400' : 'text-red-400'}>
+                              {coinPrices[symbol].change_24h >= 0 ? '+' : ''}{coinPrices[symbol].change_24h.toFixed(1)}%
+                            </span>
+                          </span>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Allocation Table */}
               <table className="w-full">
                 <thead className="sticky top-0 z-10 bg-gray-700">
                   <tr className="border-b border-gray-600">
                     <th className="text-left py-3 px-2">Asset</th>
+                    <th className="text-right py-3 px-2">Current Price</th>
                     <th className="text-right py-3 px-2">Allocation</th>
                     <th className="text-right py-3 px-2">Amount</th>
+                    <th className="text-right py-3 px-2">You Get</th>
                     <th className="text-right py-3 px-2">Risk</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allocations.map((alloc) => (
-                    <tr key={alloc.id} className="border-b border-gray-700">
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-2">
-                          <ColorDot color={alloc.color} className="w-3 h-3 rounded" />
-                          <span className="font-medium">{alloc.name}</span>
-                          <span className="text-gray-500">({alloc.symbol})</span>
-                        </div>
-                      </td>
-                      <td className="text-right py-3 px-2 font-medium">{alloc.percentage}%</td>
-                      <td className="text-right py-3 px-2">
-                        ${Math.round(investmentAmount * alloc.percentage / 100).toLocaleString()}
-                      </td>
-                      <td className="text-right py-3 px-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          alloc.riskLevel <= 2 ? 'bg-green-900/50 text-green-400' :
-                          alloc.riskLevel <= 3 ? 'bg-yellow-900/50 text-yellow-400' :
-                          'bg-red-900/50 text-red-400'
-                        }`}>
-                          {alloc.riskLevel <= 2 ? 'Low' : alloc.riskLevel <= 3 ? 'Med' : 'High'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {allocations.map((alloc) => {
+                    const dollarAmount = Math.round(investmentAmount * alloc.percentage / 100);
+                    const currentPrice = getCoinPrice(alloc.symbol);
+                    const coinsYouGet = getCoinsAmount(alloc.symbol, dollarAmount);
+
+                    return (
+                      <tr key={alloc.id} className="border-b border-gray-700">
+                        <td className="py-3 px-2">
+                          <div className="flex items-center gap-2">
+                            <ColorDot color={alloc.color} className="w-3 h-3 rounded" />
+                            <span className="font-medium">{alloc.name}</span>
+                            <span className="text-gray-500">({alloc.symbol})</span>
+                          </div>
+                        </td>
+                        <td className="text-right py-3 px-2 text-gray-400">
+                          {currentPrice > 0 ? `$${currentPrice.toLocaleString(undefined, { maximumFractionDigits: currentPrice < 1 ? 4 : 0 })}` : '—'}
+                        </td>
+                        <td className="text-right py-3 px-2 font-medium">{alloc.percentage}%</td>
+                        <td className="text-right py-3 px-2">
+                          ${dollarAmount.toLocaleString()}
+                        </td>
+                        <td className="text-right py-3 px-2 text-blue-400 font-medium">
+                          {coinsYouGet !== '—' ? `${coinsYouGet} ${alloc.symbol}` : '—'}
+                        </td>
+                        <td className="text-right py-3 px-2">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            alloc.riskLevel <= 2 ? 'bg-green-900/50 text-green-400' :
+                            alloc.riskLevel <= 3 ? 'bg-yellow-900/50 text-yellow-400' :
+                            'bg-red-900/50 text-red-400'
+                          }`}>
+                            {alloc.riskLevel <= 2 ? 'Low' : alloc.riskLevel <= 3 ? 'Med' : 'High'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
 
