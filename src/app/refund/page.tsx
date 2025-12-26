@@ -15,9 +15,9 @@ export default function RefundPage() {
           <section className="bg-emerald-50 border border-emerald-200 p-8 rounded-xl">
             <div className="text-center">
               <span className="text-5xl mb-4 block">💰</span>
-              <h2 className="text-3xl font-bold text-emerald-700 mb-4">7-Day Money-Back Guarantee</h2>
+              <h2 className="text-3xl font-bold text-emerald-700 mb-4">30-Day Money-Back Guarantee</h2>
               <p className="text-lg text-gray-700">
-                We offer a <strong>full refund within 7 days</strong> of your initial subscription purchase,
+                We offer a <strong>full refund within 30 days</strong> of your initial subscription purchase,
                 no questions asked.
               </p>
             </div>
@@ -38,7 +38,7 @@ export default function RefundPage() {
                 <div className="text-2xl mb-3">2️⃣</div>
                 <h3 className="font-semibold text-gray-900 mb-2">Request Refund</h3>
                 <p className="text-sm text-gray-600">
-                  Click &quot;Manage Subscription&quot; or &quot;Request Refund&quot; in the receipt email
+                  Click &quot;Manage Subscription&quot; in the receipt email
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -51,49 +51,98 @@ export default function RefundPage() {
             </div>
           </section>
 
-          {/* Eligibility */}
+          {/* Subscription Refunds */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Eligibility</h2>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>Refunds are available within <strong>7 days</strong> from the date of your first payment</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>Request directly through Paddle - no need to email us</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>No questions asked during the 7-day window</span>
-              </li>
-            </ul>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Subscription Refunds</h2>
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-gray-900 mb-2">Monthly & Annual Plans</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-3">
+                    <span className="text-emerald-500 mt-1">✓</span>
+                    <span><strong>30-day window:</strong> Full refund available, no questions asked</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-emerald-500 mt-1">✓</span>
+                    <span><strong>Self-service:</strong> Request directly through Paddle - no need to email us</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-emerald-500 mt-1">✓</span>
+                    <span><strong>After 30 days:</strong> Cancel anytime to stop future billing (no refund for current period)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 p-5 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-gray-900 mb-2">Free Trial Conversions</h3>
+                <p className="text-gray-600">
+                  If you were charged after a free trial ended, you have <strong>30 days</strong> from the first
+                  charge to request a full refund if you forgot to cancel.
+                </p>
+              </div>
+
+              <div className="bg-purple-50 p-5 rounded-lg border border-purple-200">
+                <h3 className="font-semibold text-gray-900 mb-2">Annual Renewals (UK/EU Customers)</h3>
+                <p className="text-gray-600">
+                  In compliance with UK DMCC Act 2024 and EU Consumer Rights Directive, you have an additional
+                  <strong> 14-day cooling-off period</strong> when your annual subscription renews for another
+                  12+ month term.
+                </p>
+              </div>
+            </div>
           </section>
 
-          {/* Request a Refund */}
-          <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+          {/* Digital Downloads */}
+          <section className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Digital Downloads (Data Files)</h2>
+            <p className="mb-4">
+              For one-time data downloads (Excel/CSV files), the following applies:
+            </p>
+            <ul className="space-y-3 mb-4">
+              <li className="flex items-start gap-3">
+                <span className="text-yellow-600 mt-1">⚠️</span>
+                <span>
+                  <strong>Before download:</strong> You have 14 days to request a refund
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-yellow-600 mt-1">⚠️</span>
+                <span>
+                  <strong>After download:</strong> By downloading, you acknowledge that you waive your right
+                  to withdraw, as the digital content has been delivered
+                </span>
+              </li>
+            </ul>
+            <p className="text-sm text-gray-600">
+              <strong>Exceptions:</strong> We will still provide refunds for corrupted files, data significantly
+              different from what was described, or technical errors on our end.
+            </p>
+          </section>
+
+          {/* How to Request */}
+          <section className="bg-gray-100 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">How to Request a Refund</h2>
             <p className="mb-4">
-              You can request a refund directly through Paddle (our payment provider) without contacting us:
+              You can request a refund directly through Paddle (our payment provider):
             </p>
             <ol className="list-decimal list-inside space-y-3 mb-6">
               <li>
-                <strong>Find your receipt email</strong> from Paddle (check your inbox for &quot;Your DataSimplify receipt&quot;)
+                <strong>Find your receipt email</strong> from Paddle (search for &quot;DataSimplify receipt&quot;)
               </li>
               <li>
-                <strong>Click &quot;Manage Subscription&quot;</strong> or &quot;Manage this Subscription&quot; link in the email
+                <strong>Click &quot;Manage Subscription&quot;</strong> or &quot;Manage this Subscription&quot; link
               </li>
               <li>
-                <strong>Select &quot;Request Refund&quot;</strong> or &quot;Cancel Subscription&quot; option
+                <strong>Select &quot;Request Refund&quot;</strong> or &quot;Cancel Subscription&quot;
               </li>
               <li>
-                <strong>Confirm your request</strong> - Paddle will process your refund automatically
+                <strong>Confirm your request</strong> - Paddle will process it automatically
               </li>
             </ol>
-            <div className="bg-white p-4 rounded-lg border border-blue-100">
+            <div className="bg-white p-4 rounded-lg border border-gray-200">
               <p className="text-sm text-gray-600">
-                <strong>Can&apos;t find your receipt?</strong> Check your spam folder or search for emails from
-                &quot;paddle.com&quot; or &quot;paddle.net&quot;. You can also visit{' '}
+                <strong>Can&apos;t find your receipt?</strong> Search for emails from &quot;paddle.com&quot; or
+                visit{' '}
                 <a
                   href="https://paddle.com"
                   target="_blank"
@@ -102,7 +151,7 @@ export default function RefundPage() {
                 >
                   paddle.com
                 </a>
-                {' '}and use their customer lookup feature.
+                {' '}to use their customer lookup feature.
               </p>
             </div>
           </section>
@@ -112,8 +161,7 @@ export default function RefundPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Refund Processing</h2>
             <p className="mb-4">
               Refunds are processed through <strong>Paddle</strong> (our Merchant of Record) and typically
-              appear in your account within <strong>5-10 business days</strong>, depending on your bank or
-              payment provider.
+              appear in your account within:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-600">
               <li>Credit/Debit Cards: 5-10 business days</li>
@@ -122,47 +170,49 @@ export default function RefundPage() {
             </ul>
           </section>
 
-          {/* After 7 Days */}
+          {/* Regional Rights */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">After the 7-Day Window</h2>
-            <p className="mb-4">
-              Payments are <strong>non-refundable</strong> after the 7-day window, except where required
-              by applicable law.
-            </p>
-            <p>
-              You can still cancel your subscription at any time to prevent future charges. Your access
-              will continue until the end of your current billing period.
-            </p>
-          </section>
-
-          {/* Annual Plans */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Annual Subscriptions</h2>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-500 mt-1">✓</span>
-                <span>
-                  <strong>Within 7 days:</strong> Full refund available, no questions asked
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-yellow-500 mt-1">→</span>
-                <span>
-                  <strong>After 7 days:</strong> Cancellation stops future billing, but no refund is provided
-                  for the remaining period
-                </span>
-              </li>
-            </ul>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Regional Rights</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-blue-700 mb-2">🇪🇺 European Union</h3>
+                <p className="text-sm text-gray-600">
+                  Under the EU Consumer Rights Directive, you have a <strong>14-day cooling-off period</strong> for
+                  online purchases. Our 30-day guarantee exceeds this requirement.
+                </p>
+              </div>
+              <div className="bg-white p-5 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-blue-700 mb-2">🇬🇧 United Kingdom</h3>
+                <p className="text-sm text-gray-600">
+                  Under the UK DMCC Act 2024, you have <strong>14-day cooling-off rights</strong> plus additional
+                  protections for subscription renewals. Our policy exceeds these requirements.
+                </p>
+              </div>
+              <div className="bg-white p-5 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-blue-700 mb-2">🇺🇸 United States</h3>
+                <p className="text-sm text-gray-600">
+                  While US federal law doesn&apos;t mandate cooling-off periods for digital services, our 30-day
+                  guarantee provides you with comprehensive protection.
+                </p>
+              </div>
+              <div className="bg-white p-5 rounded-lg border border-gray-200">
+                <h3 className="font-semibold text-blue-700 mb-2">🌍 Other Regions</h3>
+                <p className="text-sm text-gray-600">
+                  Where local law provides greater protection than our policy, your statutory rights will apply.
+                  Our 30-day guarantee is a minimum standard.
+                </p>
+              </div>
+            </div>
           </section>
 
           {/* Chargebacks */}
-          <section className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+          <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Chargebacks</h2>
             <p className="mb-4">
               We encourage you to request refunds through Paddle rather than filing chargebacks with your
-              bank. Our 7-day refund process is quick and hassle-free.
+              bank. Our 30-day refund process is quick and hassle-free.
             </p>
-            <p className="text-yellow-800">
+            <p className="text-gray-600">
               <strong>Note:</strong> Fraudulent chargebacks may result in account termination and may
               affect your ability to use our services in the future.
             </p>
@@ -182,16 +232,16 @@ export default function RefundPage() {
               >
                 Paddle&apos;s Terms of Service
               </a>
-              . This ensures secure payment processing and easy refund management.
+              .
             </p>
           </section>
 
-          {/* Contact - Optional */}
+          {/* Contact */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Need Help?</h2>
             <p className="mb-4">
               While most refunds can be handled directly through Paddle, if you have any questions or
-              issues, you can reach us at:
+              issues, contact us:
             </p>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm inline-block">
               <p className="text-emerald-600 font-semibold">DataSimplify Support</p>
@@ -202,22 +252,22 @@ export default function RefundPage() {
           {/* Summary Box */}
           <section className="bg-white border-2 border-emerald-200 p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Refund Policy Summary</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center p-3 bg-emerald-50 rounded-lg">
-                <p className="text-emerald-700 font-bold text-2xl">7 Days</p>
+                <p className="text-emerald-700 font-bold text-2xl">30 Days</p>
                 <p className="text-gray-600">Money-back guarantee</p>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <p className="text-blue-700 font-bold text-2xl">Self-Service</p>
-                <p className="text-gray-600">Request via Paddle receipt</p>
+                <p className="text-gray-600">Via Paddle receipt</p>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <p className="text-purple-700 font-bold text-2xl">5-10 Days</p>
                 <p className="text-gray-600">Processing time</p>
               </div>
               <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-gray-700 font-bold text-2xl">No Questions</p>
-                <p className="text-gray-600">Asked within 7 days</p>
+                <p className="text-gray-700 font-bold text-2xl">EU/UK</p>
+                <p className="text-gray-600">Compliant</p>
               </div>
             </div>
           </section>

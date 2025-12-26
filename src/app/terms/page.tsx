@@ -151,25 +151,28 @@ export default function TermsPage() {
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.4 Refund Policy</h3>
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
               <p className="mb-3">
-                <strong className="text-green-800">7-Day Money-Back Guarantee:</strong> We offer a full refund
-                within 7 days of your initial subscription purchase, no questions asked.
+                <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> We offer a full refund
+                within 30 days of your initial subscription purchase, no questions asked.
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm mb-3">
-                <li><strong>Eligibility:</strong> Refunds are available within 7 days from the date of your first payment.</li>
-                <li><strong>How to Request:</strong> Email <span className="text-green-700">sasmalgiri@gmail.com</span> with
-                  your account email and &quot;Refund Request&quot; in the subject line.</li>
+                <li><strong>Eligibility:</strong> Refunds are available within 30 days from the date of your first payment.</li>
+                <li><strong>How to Request:</strong> Click &quot;Manage Subscription&quot; in your Paddle receipt email
+                  to request a refund directly - no need to contact us.</li>
                 <li><strong>Processing:</strong> Refunds are processed through Paddle (our payment provider) and typically
                   appear in your account within 5-10 business days.</li>
-                <li><strong>After 7 Days:</strong> Payments are non-refundable after the 7-day window, except where
-                  required by applicable law.</li>
-                <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 7 days, you receive a full refund.
-                  After 7 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
-                <li><strong>Chargebacks:</strong> We encourage you to contact us for refunds rather than filing chargebacks.
+                <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
+                  required by applicable law (e.g., EU/UK statutory rights).</li>
+                <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
+                  After 30 days, cancellation stops future billing but no refund is provided for the remaining period.
+                  UK/EU customers have an additional 14-day cooling-off period on annual renewals.</li>
+                <li><strong>Digital Downloads:</strong> One-time data file purchases are non-refundable once downloaded,
+                  as the digital content has been delivered. Exceptions apply for corrupted or incorrect files.</li>
+                <li><strong>Chargebacks:</strong> We encourage you to use Paddle&apos;s self-service refund rather than filing chargebacks.
                   Fraudulent chargebacks may result in account termination.</li>
               </ul>
               <p className="text-sm text-gray-600">
                 <strong>Note:</strong> Paddle, as our Merchant of Record, handles all payment processing and refunds.
-                By subscribing, you also agree to Paddle&apos;s terms of service.
+                By subscribing, you also agree to Paddle&apos;s terms of service. See our full <a href="/refund" className="text-green-700 underline">Refund Policy</a> for details.
               </p>
             </div>
           </section>
