@@ -11,236 +11,213 @@ export default function RefundPage() {
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
 
-          {/* Introduction */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
-            <p className="mb-4">
-              At DataSimplify, we strive to provide high-quality cryptocurrency data and analytics services.
-              We want you to be completely satisfied with your purchase. This Refund Policy outlines the
-              terms and conditions for refunds on our subscription plans and services.
-            </p>
-            <p>
-              All payments are processed securely through Paddle, our Merchant of Record. Paddle handles
-              all billing, invoicing, and refund processing on our behalf.
-            </p>
-          </section>
-
-          {/* Subscription Refunds */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Subscription Refunds</h2>
-
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.1 Monthly Subscriptions</h3>
-            <p className="mb-4">
-              For monthly subscription plans, you may request a full refund within <strong>7 days</strong> of
-              your initial purchase or renewal date if you are not satisfied with our services. After the
-              7-day period, refunds will be evaluated on a case-by-case basis.
-            </p>
-
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.2 Annual Subscriptions</h3>
-            <p className="mb-4">
-              For annual subscription plans, you may request a full refund within <strong>14 days</strong> of
-              your initial purchase date. After this period, we may offer a prorated refund based on the
-              unused portion of your subscription, minus any discounts applied.
-            </p>
-
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.3 Free Trial</h3>
-            <p>
-              If you signed up for a free trial and were charged after the trial period ended, you may
-              request a refund within <strong>7 days</strong> of the first charge if you forgot to cancel
-              before the trial ended.
-            </p>
-          </section>
-
-          {/* Data Downloads */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Data Download Purchases</h2>
-            <p className="mb-4">
-              Due to the nature of digital products, data downloads (Excel/CSV files) are generally
-              <strong> non-refundable</strong> once downloaded, as the product has been delivered and cannot
-              be &quot;returned.&quot;
-            </p>
-            <p className="mb-4">However, we will provide a full refund if:</p>
-            <ul className="list-disc list-inside space-y-2 mb-4">
-              <li>The downloaded file is corrupted or unusable</li>
-              <li>The data is significantly different from what was described</li>
-              <li>Technical issues on our end prevented you from accessing your purchased data</li>
-              <li>You were charged in error (duplicate charges, wrong amount)</li>
-            </ul>
-            <p>
-              Refund requests for data downloads must be made within <strong>48 hours</strong> of purchase.
-            </p>
-          </section>
-
-          {/* Eligibility */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Refund Eligibility</h2>
-            <p className="mb-4">To be eligible for a refund, you must meet the following criteria:</p>
-            <ul className="list-disc list-inside space-y-2 mb-4">
-              <li>Your refund request is within the applicable time period (see above)</li>
-              <li>You have not violated our Terms of Service</li>
-              <li>You have not previously received a refund for the same product or service</li>
-              <li>Your account has not been suspended or terminated for abuse</li>
-            </ul>
-
-            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mt-4">
-              <p className="text-yellow-800">
-                <strong>Note:</strong> Refunds are not available for accounts terminated due to
-                Terms of Service violations, fraudulent activity, or abuse of our platform.
+          {/* Money-Back Guarantee Hero */}
+          <section className="bg-emerald-50 border border-emerald-200 p-8 rounded-xl">
+            <div className="text-center">
+              <span className="text-5xl mb-4 block">💰</span>
+              <h2 className="text-3xl font-bold text-emerald-700 mb-4">7-Day Money-Back Guarantee</h2>
+              <p className="text-lg text-gray-700">
+                We offer a <strong>full refund within 7 days</strong> of your initial subscription purchase,
+                no questions asked.
               </p>
             </div>
           </section>
 
-          {/* How to Request */}
-          <section className="bg-emerald-50 border border-emerald-200 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. How to Request a Refund</h2>
-            <p className="mb-4">To request a refund, please follow these steps:</p>
-            <ol className="list-decimal list-inside space-y-3 mb-4">
-              <li>
-                <strong>Email us</strong> at{' '}
-                <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">
-                  sasmalgiri@gmail.com
-                </a>
-              </li>
-              <li>
-                <strong>Include in your email:</strong>
-                <ul className="list-disc list-inside ml-6 mt-2 space-y-1 text-gray-600">
-                  <li>Your account email address</li>
-                  <li>Date of purchase</li>
-                  <li>Order number or transaction ID (from your receipt)</li>
-                  <li>Reason for refund request</li>
-                </ul>
-              </li>
-              <li>
-                <strong>Wait for confirmation:</strong> We will review your request and respond within
-                <strong> 3-5 business days</strong>.
-              </li>
-            </ol>
-            <p className="text-sm text-gray-600">
-              You can also request a refund directly through Paddle by locating your receipt email
-              and clicking the &quot;Manage Subscription&quot; or &quot;Request Refund&quot; link.
-            </p>
-          </section>
-
-          {/* Processing Time */}
+          {/* How It Works */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Refund Processing</h2>
-            <p className="mb-4">Once your refund request is approved:</p>
-            <ul className="list-disc list-inside space-y-2 mb-4">
-              <li>
-                <strong>Credit/Debit Cards:</strong> Refunds typically appear within 5-10 business days,
-                depending on your bank or card issuer.
-              </li>
-              <li>
-                <strong>PayPal:</strong> Refunds are typically processed within 3-5 business days.
-              </li>
-              <li>
-                <strong>Other Payment Methods:</strong> Processing times vary; please allow up to 14
-                business days.
-              </li>
-            </ul>
-            <p>
-              Refunds will be issued to the original payment method used for the purchase. We cannot
-              issue refunds to a different payment method or account.
-            </p>
-          </section>
-
-          {/* Cancellation */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Subscription Cancellation</h2>
-            <p className="mb-4">
-              You can cancel your subscription at any time. When you cancel:
-            </p>
-            <ul className="list-disc list-inside space-y-2 mb-4">
-              <li>You will retain access to premium features until the end of your current billing period</li>
-              <li>Your subscription will not automatically renew</li>
-              <li>No further charges will be made to your payment method</li>
-              <li>Cancellation does not automatically entitle you to a refund for the current period</li>
-            </ul>
-            <p>
-              To cancel your subscription, go to your account settings or contact us at{' '}
-              <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">
-                sasmalgiri@gmail.com
-              </a>.
-            </p>
-          </section>
-
-          {/* Currency */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Currency and Exchange Rates</h2>
-            <p>
-              All refunds will be processed in the original currency of the transaction. If the
-              transaction was converted from your local currency, the refund amount may differ
-              slightly due to exchange rate fluctuations. DataSimplify is not responsible for any
-              differences in exchange rates between the time of purchase and the time of refund.
-            </p>
-          </section>
-
-          {/* Disputes */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Chargebacks and Disputes</h2>
-            <p className="mb-4">
-              If you have an issue with your purchase, please contact us first before initiating a
-              chargeback or dispute with your bank or payment provider. We are committed to resolving
-              any issues quickly and fairly.
-            </p>
-            <p>
-              Filing a chargeback without first attempting to resolve the issue with us may result in
-              the suspension of your account and may affect your ability to use our services in the future.
-            </p>
-          </section>
-
-          {/* Contact */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Us</h2>
-            <p className="mb-4">
-              If you have any questions about this Refund Policy or need assistance with a refund request,
-              please contact us:
-            </p>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-emerald-600 font-semibold">DataSimplify Support</p>
-              <p>Email: <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">sasmalgiri@gmail.com</a></p>
-              <p className="text-sm text-gray-500 mt-2">We typically respond within 24-48 hours.</p>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">How It Works</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-2xl mb-3">1️⃣</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Find Your Receipt</h3>
+                <p className="text-sm text-gray-600">
+                  Check your email for the payment receipt from Paddle
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-2xl mb-3">2️⃣</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Request Refund</h3>
+                <p className="text-sm text-gray-600">
+                  Click &quot;Manage Subscription&quot; or &quot;Request Refund&quot; in the receipt email
+                </p>
+              </div>
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <div className="text-2xl mb-3">3️⃣</div>
+                <h3 className="font-semibold text-gray-900 mb-2">Get Your Money Back</h3>
+                <p className="text-sm text-gray-600">
+                  Refund processed within 5-10 business days
+                </p>
+              </div>
             </div>
           </section>
 
-          {/* Changes */}
+          {/* Eligibility */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Policy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Eligibility</h2>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-500 mt-1">✓</span>
+                <span>Refunds are available within <strong>7 days</strong> from the date of your first payment</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-500 mt-1">✓</span>
+                <span>Request directly through Paddle - no need to email us</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-500 mt-1">✓</span>
+                <span>No questions asked during the 7-day window</span>
+              </li>
+            </ul>
+          </section>
+
+          {/* Request a Refund */}
+          <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">How to Request a Refund</h2>
+            <p className="mb-4">
+              You can request a refund directly through Paddle (our payment provider) without contacting us:
+            </p>
+            <ol className="list-decimal list-inside space-y-3 mb-6">
+              <li>
+                <strong>Find your receipt email</strong> from Paddle (check your inbox for &quot;Your DataSimplify receipt&quot;)
+              </li>
+              <li>
+                <strong>Click &quot;Manage Subscription&quot;</strong> or &quot;Manage this Subscription&quot; link in the email
+              </li>
+              <li>
+                <strong>Select &quot;Request Refund&quot;</strong> or &quot;Cancel Subscription&quot; option
+              </li>
+              <li>
+                <strong>Confirm your request</strong> - Paddle will process your refund automatically
+              </li>
+            </ol>
+            <div className="bg-white p-4 rounded-lg border border-blue-100">
+              <p className="text-sm text-gray-600">
+                <strong>Can&apos;t find your receipt?</strong> Check your spam folder or search for emails from
+                &quot;paddle.com&quot; or &quot;paddle.net&quot;. You can also visit{' '}
+                <a
+                  href="https://paddle.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  paddle.com
+                </a>
+                {' '}and use their customer lookup feature.
+              </p>
+            </div>
+          </section>
+
+          {/* Processing */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Refund Processing</h2>
+            <p className="mb-4">
+              Refunds are processed through <strong>Paddle</strong> (our Merchant of Record) and typically
+              appear in your account within <strong>5-10 business days</strong>, depending on your bank or
+              payment provider.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-gray-600">
+              <li>Credit/Debit Cards: 5-10 business days</li>
+              <li>PayPal: 3-5 business days</li>
+              <li>Other methods: Up to 14 business days</li>
+            </ul>
+          </section>
+
+          {/* After 7 Days */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">After the 7-Day Window</h2>
+            <p className="mb-4">
+              Payments are <strong>non-refundable</strong> after the 7-day window, except where required
+              by applicable law.
+            </p>
             <p>
-              We reserve the right to modify this Refund Policy at any time. Changes will be effective
-              immediately upon posting to our website. Your continued use of our services after any
-              changes constitutes acceptance of the updated Refund Policy. We encourage you to review
-              this policy periodically.
+              You can still cancel your subscription at any time to prevent future charges. Your access
+              will continue until the end of your current billing period.
             </p>
           </section>
 
+          {/* Annual Plans */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Annual Subscriptions</h2>
+            <ul className="space-y-3">
+              <li className="flex items-start gap-3">
+                <span className="text-emerald-500 mt-1">✓</span>
+                <span>
+                  <strong>Within 7 days:</strong> Full refund available, no questions asked
+                </span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-yellow-500 mt-1">→</span>
+                <span>
+                  <strong>After 7 days:</strong> Cancellation stops future billing, but no refund is provided
+                  for the remaining period
+                </span>
+              </li>
+            </ul>
+          </section>
+
+          {/* Chargebacks */}
+          <section className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Chargebacks</h2>
+            <p className="mb-4">
+              We encourage you to request refunds through Paddle rather than filing chargebacks with your
+              bank. Our 7-day refund process is quick and hassle-free.
+            </p>
+            <p className="text-yellow-800">
+              <strong>Note:</strong> Fraudulent chargebacks may result in account termination and may
+              affect your ability to use our services in the future.
+            </p>
+          </section>
+
+          {/* Paddle Note */}
+          <section className="bg-gray-100 p-6 rounded-lg">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">About Paddle</h2>
+            <p className="text-sm text-gray-600">
+              <strong>Paddle</strong> is our Merchant of Record and handles all payment processing, billing,
+              and refunds on our behalf. By subscribing to DataSimplify, you also agree to{' '}
+              <a
+                href="https://www.paddle.com/legal/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-600 hover:text-emerald-700 underline"
+              >
+                Paddle&apos;s Terms of Service
+              </a>
+              . This ensures secure payment processing and easy refund management.
+            </p>
+          </section>
+
+          {/* Contact - Optional */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Need Help?</h2>
+            <p className="mb-4">
+              While most refunds can be handled directly through Paddle, if you have any questions or
+              issues, you can reach us at:
+            </p>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm inline-block">
+              <p className="text-emerald-600 font-semibold">DataSimplify Support</p>
+              <p>Email: <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">sasmalgiri@gmail.com</a></p>
+            </div>
+          </section>
+
           {/* Summary Box */}
-          <section className="bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Refund Policy Summary</h2>
+          <section className="bg-white border-2 border-emerald-200 p-6 rounded-xl shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Refund Policy Summary</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-emerald-600 font-semibold">Monthly Subscriptions:</p>
-                <p className="text-gray-600">7-day refund window</p>
+              <div className="text-center p-3 bg-emerald-50 rounded-lg">
+                <p className="text-emerald-700 font-bold text-2xl">7 Days</p>
+                <p className="text-gray-600">Money-back guarantee</p>
               </div>
-              <div>
-                <p className="text-emerald-600 font-semibold">Annual Subscriptions:</p>
-                <p className="text-gray-600">14-day refund window</p>
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-blue-700 font-bold text-2xl">Self-Service</p>
+                <p className="text-gray-600">Request via Paddle receipt</p>
               </div>
-              <div>
-                <p className="text-emerald-600 font-semibold">Data Downloads:</p>
-                <p className="text-gray-600">48-hour window for technical issues</p>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <p className="text-purple-700 font-bold text-2xl">5-10 Days</p>
+                <p className="text-gray-600">Processing time</p>
               </div>
-              <div>
-                <p className="text-emerald-600 font-semibold">Processing Time:</p>
-                <p className="text-gray-600">5-10 business days</p>
-              </div>
-              <div>
-                <p className="text-emerald-600 font-semibold">Contact:</p>
-                <p className="text-gray-600">sasmalgiri@gmail.com</p>
-              </div>
-              <div>
-                <p className="text-emerald-600 font-semibold">Payment Processor:</p>
-                <p className="text-gray-600">Paddle (Merchant of Record)</p>
+              <div className="text-center p-3 bg-gray-50 rounded-lg">
+                <p className="text-gray-700 font-bold text-2xl">No Questions</p>
+                <p className="text-gray-600">Asked within 7 days</p>
               </div>
             </div>
           </section>
