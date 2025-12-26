@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -25,10 +25,22 @@ interface DownloadHistory {
   created_at: string;
 }
 
+interface DeletionPreview {
+  email: string;
+  dataToBeDeleted: Record<string, string | number>;
+  warning: string;
+}
+
 export default function DashboardPage() {
   const { user, profile, isLoading, signOut, remainingDownloads } = useAuth();
   const [downloads, setDownloads] = useState<DownloadHistory[]>([]);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletionPreview, setDeletionPreview] = useState<DeletionPreview | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,6 +64,85 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Failed to fetch downloads:', error);
+    }
+  };
+
+  // Fetch deletion preview when modal opens
+  const fetchDeletionPreview = useCallback(async () => {
+    try {
+      const res = await fetch('/api/user/delete');
+      const data = await res.json();
+      if (!data.error) {
+        setDeletionPreview(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch deletion preview:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showDeleteModal) {
+      fetchDeletionPreview();
+    }
+  }, [showDeleteModal, fetchDeletionPreview]);
+
+  // Handle data export
+  const handleExportData = async () => {
+    setIsExporting(true);
+    try {
+      const res = await fetch('/api/user/export');
+      if (!res.ok) throw new Error('Export failed');
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `datasimplify-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE_MY_ACCOUNT') {
+      alert('Please type DELETE_MY_ACCOUNT to confirm deletion.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/api/user/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirmDelete: 'DELETE_MY_ACCOUNT',
+          confirmEmail: user?.email,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert('Your account has been deleted. You will be redirected to the home page.');
+        router.push('/');
+      } else {
+        alert(data.error || 'Failed to delete account. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Deletion error:', error);
+      alert('Failed to delete account. Please try again or contact support.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setDeleteConfirmation('');
     }
   };
 
@@ -302,7 +393,150 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Privacy & Data Settings */}
+        <div className="mt-8 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div
+            className="px-6 py-4 border-b border-gray-200 cursor-pointer flex items-center justify-between"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            <h3 className="font-medium flex items-center gap-2">
+              <span>🔒</span> Privacy & Data Settings
+            </h3>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${showSettings ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+
+          {showSettings && (
+            <div className="p-6 space-y-6">
+              {/* Data Export */}
+              <div className="flex items-start justify-between pb-6 border-b border-gray-200">
+                <div>
+                  <h4 className="font-medium text-gray-900">Export Your Data</h4>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Download a copy of all your personal data (GDPR/CCPA compliant).
+                  </p>
+                </div>
+                <button
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+                >
+                  {isExporting ? 'Exporting...' : 'Download My Data'}
+                </button>
+              </div>
+
+              {/* Cookie Preferences */}
+              <div className="flex items-start justify-between pb-6 border-b border-gray-200">
+                <div>
+                  <h4 className="font-medium text-gray-900">Cookie Preferences</h4>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Manage your cookie consent settings.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('cookie-consent');
+                    window.location.reload();
+                  }}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition"
+                >
+                  Reset Cookies
+                </button>
+              </div>
+
+              {/* Delete Account */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-medium text-red-600">Delete Account</h4>
+                  <p className="text-gray-600 text-sm mt-1">
+                    Permanently delete your account and all associated data. This action cannot be undone.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition"
+                >
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Delete Account</h3>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-600 mb-4">
+                This action is <span className="font-semibold text-red-600">permanent and irreversible</span>.
+                All your data will be deleted including:
+              </p>
+
+              {deletionPreview ? (
+                <ul className="text-sm text-gray-600 space-y-1 bg-gray-50 rounded-lg p-3">
+                  {Object.entries(deletionPreview.dataToBeDeleted).map(([key, value]) => (
+                    <li key={key} className="flex justify-between">
+                      <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                      <span className="font-medium">{value}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">Loading preview...</div>
+              )}
+
+              <p className="text-sm text-gray-600 mt-4">
+                To confirm, type <span className="font-mono bg-gray-100 px-1 rounded">DELETE_MY_ACCOUNT</span> below:
+              </p>
+
+              <input
+                type="text"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                placeholder="Type DELETE_MY_ACCOUNT"
+                className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmation('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmation !== 'DELETE_MY_ACCOUNT' || isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Forever'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

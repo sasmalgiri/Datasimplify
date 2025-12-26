@@ -3,6 +3,7 @@ import Link from 'next/link';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 import DisclaimerBanner from '@/components/ui/DisclaimerBanner';
+import CookieConsent from '@/components/CookieConsent';
 import { AllJsonLd } from '@/components/JsonLd';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -180,6 +181,7 @@ export default function RootLayout({
             {children}
           </main>
           <Footer />
+          <CookieConsent />
         </Providers>
         <Analytics />
         <SpeedInsights />
