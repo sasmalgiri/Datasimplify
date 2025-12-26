@@ -168,20 +168,82 @@ export default function PrivacyPage() {
             </p>
           </section>
 
+          {/* GDPR Compliance */}
+          <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. GDPR Compliance (European Users)</h2>
+            <p className="mb-4">
+              If you are located in the European Economic Area (EEA), United Kingdom, or Switzerland,
+              you have certain rights under the General Data Protection Regulation (GDPR):
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li><strong>Legal Basis:</strong> We process your data based on: (a) your consent, (b) performance
+                of a contract, (c) compliance with legal obligations, or (d) our legitimate interests.</li>
+              <li><strong>Right to Access:</strong> Request a copy of your personal data we hold.</li>
+              <li><strong>Right to Rectification:</strong> Request correction of inaccurate or incomplete data.</li>
+              <li><strong>Right to Erasure:</strong> Request deletion of your personal data (&quot;right to be forgotten&quot;).</li>
+              <li><strong>Right to Restrict Processing:</strong> Request limitation of how we use your data.</li>
+              <li><strong>Right to Data Portability:</strong> Receive your data in a structured, machine-readable format.</li>
+              <li><strong>Right to Object:</strong> Object to processing based on legitimate interests or direct marketing.</li>
+              <li><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time where processing is based on consent.</li>
+              <li><strong>Right to Lodge a Complaint:</strong> File a complaint with your local data protection authority.</li>
+            </ul>
+            <p className="mb-4">
+              <strong>Data Controller:</strong> DataSimplify is the data controller for your personal data.
+            </p>
+            <p>
+              To exercise these rights, contact us at <span className="text-emerald-600 font-semibold">sasmalgiri@gmail.com</span>.
+              We will respond within 30 days (or as required by law).
+            </p>
+          </section>
+
+          {/* CCPA Compliance */}
+          <section className="bg-purple-50 border border-purple-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. CCPA Compliance (California Residents)</h2>
+            <p className="mb-4">
+              If you are a California resident, you have rights under the California Consumer Privacy Act (CCPA)
+              and California Privacy Rights Act (CPRA):
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li><strong>Right to Know:</strong> You can request information about the categories and specific
+                pieces of personal information we have collected about you.</li>
+              <li><strong>Right to Delete:</strong> You can request deletion of your personal information,
+                subject to certain exceptions.</li>
+              <li><strong>Right to Opt-Out of Sale:</strong> You have the right to opt out of the &quot;sale&quot; of your
+                personal information. <span className="text-emerald-600 font-semibold">Note: We do NOT sell your personal information.</span></li>
+              <li><strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising
+                your privacy rights.</li>
+              <li><strong>Right to Correct:</strong> You can request correction of inaccurate personal information.</li>
+              <li><strong>Right to Limit Use of Sensitive Information:</strong> You can limit the use and disclosure
+                of sensitive personal information.</li>
+            </ul>
+            <p className="mb-4">
+              <strong>Categories of Information Collected:</strong> Identifiers (email), commercial information
+              (subscription data), internet activity (usage logs), and inferences (preferences).
+            </p>
+            <p className="mb-4">
+              <strong>Do Not Sell My Personal Information:</strong> We do not sell, rent, or trade your personal
+              information to third parties for monetary consideration.
+            </p>
+            <p>
+              To exercise your rights, email us at <span className="text-emerald-600 font-semibold">sasmalgiri@gmail.com</span>
+              with subject &quot;CCPA Request&quot;. We will verify your identity and respond within 45 days.
+            </p>
+          </section>
+
           {/* Children's Privacy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children&apos;s Privacy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Children&apos;s Privacy</h2>
             <p>
-              Our Services are not intended for users under 18 years of age. We do not knowingly 
-              collect personal data from children. If we learn that we have collected data from a 
-              child under 18, we will take steps to delete such information promptly. If you believe 
+              Our Services are not intended for users under 18 years of age. We do not knowingly
+              collect personal data from children. If we learn that we have collected data from a
+              child under 18, we will take steps to delete such information promptly. If you believe
               a child has provided us with personal data, please contact us.
             </p>
           </section>
 
           {/* International Transfers */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. International Data Transfers</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. International Data Transfers</h2>
             <p>
               Our Services are operated globally, and your data may be processed in countries other 
               than your own. By using our Services, you consent to the transfer of your information 
@@ -193,7 +255,7 @@ export default function PrivacyPage() {
 
           {/* Third-Party Links */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Third-Party Links</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Third-Party Links</h2>
             <p>
               Our Services may contain links to third-party websites, services, or applications. 
               We are not responsible for the privacy practices of these third parties. We encourage 
@@ -203,7 +265,7 @@ export default function PrivacyPage() {
 
           {/* Changes to Policy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Changes to This Privacy Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of material 
               changes by posting the updated policy on our website and updating the &quot;Last updated&quot; date. 
@@ -214,7 +276,7 @@ export default function PrivacyPage() {
 
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Contact Us</h2>
             <p className="mb-4">
               If you have any questions, concerns, or requests regarding this Privacy Policy or
               our data practices, please contact us:

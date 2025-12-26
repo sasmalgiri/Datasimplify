@@ -58,8 +58,8 @@ export default function TermsPage() {
               <strong>DATASIMPLIFY DOES NOT PROVIDE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE.</strong>
             </p>
             <p className="mb-4">
-              All Content provided through our Services, including but not limited to cryptocurrency data, 
-              analytics, AI-generated insights, charts, reports, and any other information, is for 
+              All Content provided through our Services, including but not limited to cryptocurrency data,
+              analytics, AI-generated insights, charts, reports, and any other information, is for
               <strong> educational and informational purposes only</strong>.
             </p>
             <p className="mb-4">
@@ -72,7 +72,7 @@ export default function TermsPage() {
               <li>A guarantee of future performance or returns</li>
             </ul>
             <p className="mb-4">
-              <strong>Cryptocurrency investments are highly volatile and risky.</strong> You may lose some 
+              <strong>Cryptocurrency investments are highly volatile and risky.</strong> You may lose some
               or all of your investment. Past performance is not indicative of future results.
             </p>
             <p className="text-yellow-800 font-semibold">
@@ -81,9 +81,35 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* AI-Generated Content Disclaimer */}
+          <section className="bg-blue-50 border border-blue-300 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. AI-Generated Content Disclaimer</h2>
+            <p className="mb-4">
+              Our Services use artificial intelligence (&quot;AI&quot;) and machine learning technologies to generate
+              predictions, analysis, insights, and other content. By using our Services, you acknowledge and agree that:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li><strong>No Guarantee of Accuracy:</strong> AI-generated content may contain errors, inaccuracies,
+                or incomplete information. AI predictions are probabilistic estimates based on historical data and
+                algorithms, not guarantees of future outcomes.</li>
+              <li><strong>Not Investment Advice:</strong> AI predictions and analysis should never be relied upon
+                as the sole basis for investment decisions. Past AI prediction accuracy does not guarantee future results.</li>
+              <li><strong>Limitations:</strong> AI systems have inherent limitations and may not account for
+                sudden market changes, black swan events, regulatory changes, or other unpredictable factors.</li>
+              <li><strong>Human Review:</strong> While we strive to maintain quality, AI-generated content may
+                not always be reviewed by humans before publication.</li>
+              <li><strong>Training Data:</strong> Our AI models are trained on historical data which may contain
+                biases or not reflect current market conditions.</li>
+            </ul>
+            <p className="text-blue-800 font-semibold">
+              You assume all risks associated with reliance on AI-generated content. We strongly recommend
+              verifying AI-generated insights with multiple independent sources before taking any action.
+            </p>
+          </section>
+
           {/* Account Registration */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Account Registration</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Account Registration</h2>
             <p className="mb-4">To access certain features, you must create an account. When registering, you agree to:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Provide accurate, current, and complete information</li>
@@ -100,7 +126,7 @@ export default function TermsPage() {
 
           {/* Subscriptions and Payments */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Subscriptions and Payments</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Subscriptions and Payments</h2>
 
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.1 Billing</h3>
             <p className="mb-4">
@@ -133,7 +159,7 @@ export default function TermsPage() {
 
           {/* Acceptable Use */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Acceptable Use</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Acceptable Use</h2>
             <p className="mb-4">You agree NOT to:</p>
             <ul className="list-disc list-inside space-y-2">
               <li>Use the Services for any illegal or unauthorized purpose</li>
@@ -150,7 +176,7 @@ export default function TermsPage() {
 
           {/* Intellectual Property */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Intellectual Property</h2>
             <p className="mb-4">
               All Content, features, and functionality of our Services, including but not limited to 
               text, graphics, logos, data, software, and analytics, are owned by DataSimplify or our 
@@ -165,7 +191,7 @@ export default function TermsPage() {
 
           {/* Data Accuracy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Data Accuracy and Third-Party Sources</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Data Accuracy and Third-Party Sources</h2>
             <p className="mb-4">
               Our Content is compiled from various third-party sources including cryptocurrency exchanges, 
               market data providers, and public blockchain data. While we strive to provide accurate 
@@ -181,7 +207,7 @@ export default function TermsPage() {
 
           {/* Limitation of Liability */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
             <p className="mb-4">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, DATASIMPLIFY SHALL NOT BE LIABLE FOR ANY 
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT 
@@ -202,7 +228,7 @@ export default function TermsPage() {
 
           {/* Indemnification */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Indemnification</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Indemnification</h2>
             <p>
               You agree to indemnify, defend, and hold harmless DataSimplify and its officers, directors, 
               employees, and agents from any claims, damages, losses, costs, and expenses (including 
@@ -213,7 +239,7 @@ export default function TermsPage() {
 
           {/* Disclaimer of Warranties */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Disclaimer of Warranties</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Disclaimer of Warranties</h2>
             <p className="mb-4">
               THE SERVICES ARE PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, 
               EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF 
@@ -227,7 +253,7 @@ export default function TermsPage() {
 
           {/* Termination */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Termination</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Termination</h2>
             <p className="mb-4">
               We may suspend or terminate your access to the Services at any time, with or without 
               cause, and with or without notice. You may terminate your account at any time by 
@@ -242,7 +268,7 @@ export default function TermsPage() {
 
           {/* Modifications */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Modifications to Terms</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Modifications to Terms</h2>
             <p>
               We reserve the right to modify these Terms at any time. We will notify you of material 
               changes by posting the updated Terms on our website or by email. Your continued use of 
@@ -253,7 +279,7 @@ export default function TermsPage() {
 
           {/* Governing Law */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Governing Law and Disputes</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law and Disputes</h2>
             <p className="mb-4">
               These Terms shall be governed by and construed in accordance with the laws of India, 
               without regard to conflict of law principles.
@@ -267,7 +293,7 @@ export default function TermsPage() {
 
           {/* Severability */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Severability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid, that provision 
               shall be limited or eliminated to the minimum extent necessary, and the remaining 
@@ -275,9 +301,98 @@ export default function TermsPage() {
             </p>
           </section>
 
+          {/* Third-Party Content & Advertisements */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Third-Party Content & Advertisements</h2>
+            <p className="mb-4">
+              Our Services may display advertisements, sponsored content, or links to third-party websites,
+              products, or services. You acknowledge and agree that:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li><strong>No Endorsement:</strong> We do not endorse, verify, or guarantee the authenticity,
+                legality, or quality of any third-party advertiser, product, or service displayed on our platform.</li>
+              <li><strong>Scam Warning:</strong> The cryptocurrency industry is susceptible to scams, frauds,
+                and malicious actors. We strongly advise users to conduct thorough due diligence before engaging
+                with any third-party service, investment opportunity, or advertised product.</li>
+              <li><strong>User Responsibility:</strong> Any interactions, transactions, or agreements between
+                you and third parties are solely between you and such third parties. We are not responsible
+                for any loss, damage, or harm resulting from such interactions.</li>
+              <li><strong>Reporting:</strong> If you encounter suspicious or fraudulent content on our platform,
+                please report it to us immediately.</li>
+            </ul>
+            <p className="text-red-600 font-semibold">
+              WARNING: Never share your private keys, seed phrases, or passwords with anyone. Legitimate services
+              will never ask for this information. Be extremely cautious of unsolicited investment opportunities.
+            </p>
+          </section>
+
+          {/* DMCA / Copyright Policy */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">19. DMCA / Copyright Policy</h2>
+            <p className="mb-4">
+              We respect intellectual property rights and expect our users to do the same. If you believe
+              that content on our Services infringes your copyright, please submit a DMCA takedown notice
+              containing the following information:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li>A physical or electronic signature of the copyright owner or authorized representative</li>
+              <li>Identification of the copyrighted work claimed to have been infringed</li>
+              <li>Identification of the infringing material and its location on our Services</li>
+              <li>Your contact information (address, telephone number, email)</li>
+              <li>A statement that you have a good faith belief that the use is not authorized</li>
+              <li>A statement, under penalty of perjury, that the information is accurate and you are authorized to act</li>
+            </ul>
+            <p className="mb-4">
+              Send DMCA notices to: <span className="text-emerald-600 font-semibold">sasmalgiri@gmail.com</span>
+              with subject line &quot;DMCA Takedown Request&quot;
+            </p>
+            <p>
+              We may terminate accounts of users who are found to be repeat infringers of intellectual property rights.
+            </p>
+          </section>
+
+          {/* Dispute Resolution */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Dispute Resolution & Arbitration</h2>
+            <p className="mb-4">
+              <strong>Informal Resolution:</strong> Before initiating any formal dispute resolution, you agree
+              to first contact us at sasmalgiri@gmail.com to attempt to resolve the dispute informally. We will
+              attempt to resolve the dispute within 30 days.
+            </p>
+            <p className="mb-4">
+              <strong>Binding Arbitration:</strong> If informal resolution fails, any dispute, claim, or
+              controversy arising out of or relating to these Terms or the Services shall be resolved by
+              binding arbitration, rather than in court, except that you may assert claims in small claims
+              court if your claims qualify.
+            </p>
+            <p className="mb-4 bg-gray-100 p-4 rounded-lg">
+              <strong>CLASS ACTION WAIVER:</strong> YOU AND DATASIMPLIFY AGREE THAT EACH MAY BRING CLAIMS
+              AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS
+              MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Unless both you and DataSimplify
+              agree otherwise, the arbitrator may not consolidate more than one person&apos;s claims.
+            </p>
+            <p>
+              <strong>Opt-Out:</strong> You may opt out of this arbitration agreement by sending written
+              notice to sasmalgiri@gmail.com within 30 days of first accepting these Terms, stating your
+              name, address, and intent to opt out.
+            </p>
+          </section>
+
+          {/* Entire Agreement */}
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">21. Entire Agreement</h2>
+            <p>
+              These Terms, together with our Privacy Policy and any other agreements expressly incorporated
+              by reference, constitute the entire agreement between you and DataSimplify regarding your use
+              of the Services. These Terms supersede any prior agreements or understandings, whether written
+              or oral, relating to the subject matter hereof. No waiver of any provision shall be deemed a
+              further or continuing waiver of such provision or any other provision.
+            </p>
+          </section>
+
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">22. Contact Us</h2>
             <p className="mb-4">
               If you have any questions about these Terms, please contact us:
             </p>
