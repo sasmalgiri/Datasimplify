@@ -163,7 +163,7 @@ export default function PrivacyPage() {
               <li><strong>Restrict Processing:</strong> Limit how we use your data in certain circumstances</li>
             </ul>
             <p>
-              To exercise these rights, contact us at <span className="text-emerald-600">support@datasimplify.com</span>.
+              To exercise these rights, contact us at <span className="text-emerald-600">sasmalgiri@gmail.com</span>.
               We will respond to your request within 30 days.
             </p>
           </section>
@@ -221,7 +221,7 @@ export default function PrivacyPage() {
             </p>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <p className="text-emerald-600 font-semibold">DataSimplify</p>
-              <p>Email: support@datasimplify.com</p>
+              <p>Email: sasmalgiri@gmail.com</p>
             </div>
           </section>
 

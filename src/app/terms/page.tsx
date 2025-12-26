@@ -282,7 +282,7 @@ export default function TermsPage() {
               If you have any questions about these Terms, please contact us:
             </p>
             <p className="text-emerald-600">
-              Email: support@datasimplify.com
+              Email: sasmalgiri@gmail.com
             </p>
           </section>
 

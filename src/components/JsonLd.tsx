@@ -15,7 +15,7 @@ export function OrganizationJsonLd() {
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      email: 'support@datasimplify.com',
+      email: 'sasmalgiri@gmail.com',
       contactType: 'customer service',
     },
   };
