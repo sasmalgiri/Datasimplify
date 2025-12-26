@@ -149,12 +149,29 @@ export default function TermsPage() {
             </p>
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.4 Refund Policy</h3>
-            <p>
-              We offer a <strong>7-day money-back guarantee</strong> for new Subscribers. If you are not 
-              satisfied within the first 7 days of your initial Subscription, contact us for a full refund. 
-              After 7 days, payments are non-refundable except where required by law. Refunds for 
-              annual plans will be prorated based on usage.
-            </p>
+            <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+              <p className="mb-3">
+                <strong className="text-green-800">7-Day Money-Back Guarantee:</strong> We offer a full refund
+                within 7 days of your initial subscription purchase, no questions asked.
+              </p>
+              <ul className="list-disc list-inside space-y-2 text-sm mb-3">
+                <li><strong>Eligibility:</strong> Refunds are available within 7 days from the date of your first payment.</li>
+                <li><strong>How to Request:</strong> Email <span className="text-green-700">sasmalgiri@gmail.com</span> with
+                  your account email and &quot;Refund Request&quot; in the subject line.</li>
+                <li><strong>Processing:</strong> Refunds are processed through Paddle (our payment provider) and typically
+                  appear in your account within 5-10 business days.</li>
+                <li><strong>After 7 Days:</strong> Payments are non-refundable after the 7-day window, except where
+                  required by applicable law.</li>
+                <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 7 days, you receive a full refund.
+                  After 7 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
+                <li><strong>Chargebacks:</strong> We encourage you to contact us for refunds rather than filing chargebacks.
+                  Fraudulent chargebacks may result in account termination.</li>
+              </ul>
+              <p className="text-sm text-gray-600">
+                <strong>Note:</strong> Paddle, as our Merchant of Record, handles all payment processing and refunds.
+                By subscribing, you also agree to Paddle&apos;s terms of service.
+              </p>
+            </div>
           </section>
 
           {/* Acceptable Use */}
