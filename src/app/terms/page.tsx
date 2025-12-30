@@ -15,8 +15,9 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
-              Welcome to DataSimplify, operated by DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). 
-              These Terms of Service (&quot;Terms&quot;) govern your access to and use of our website, 
+              Welcome to DataSimplify, a product of <strong>Ecosanskriti Innovations (OPC) Private Limited</strong>,
+              a company registered in India (CIN: U27100WB2025OPC279246), referred to as &quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;.
+              These Terms of Service (&quot;Terms&quot;) govern your access to and use of our website,
               applications, APIs, and all related services (collectively, the &quot;Services&quot;).
             </p>
             <p>

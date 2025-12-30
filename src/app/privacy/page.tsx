@@ -15,7 +15,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
-              DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your privacy 
+              <strong>Ecosanskriti Innovations (OPC) Private Limited</strong> (CIN: U27100WB2025OPC279246),
+              operating as DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), is committed to protecting your privacy 
               and personal data. This Privacy Policy explains how we collect, use, disclose, and 
               safeguard your information when you use our cryptocurrency data analytics platform, 
               website, applications, and related services (collectively, the &quot;Services&quot;).
