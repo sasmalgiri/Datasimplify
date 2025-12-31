@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas';
 import {
   LineChart,
   Line,
@@ -537,53 +538,80 @@ function ChartsContent() {
       return;
     }
 
-    // For PNG/SVG, we need to convert the chart
+    // For PNG/SVG, use html2canvas for reliable capture
     try {
-      if (!chartRef.current) return;
-      const svg = chartRef.current.querySelector('svg');
-      if (!svg) return;
-
-      const svgData = new XMLSerializer().serializeToString(svg);
+      if (!chartRef.current) {
+        console.error('Chart ref not available');
+        return;
+      }
 
       if (format === 'svg') {
-        const blob = new Blob([svgData], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.svg`;
-        a.click();
-        URL.revokeObjectURL(url);
+        // Try to get SVG directly
+        const svg = chartRef.current.querySelector('svg');
+        if (svg) {
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const blob = new Blob([svgData], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.svg`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
       } else {
-        // Convert to PNG
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
+        // Use html2canvas for PNG - captures the entire chart container with styles
+        const canvas = await html2canvas(chartRef.current, {
+          backgroundColor: '#1f2937', // Match the dark background
+          scale: 2, // Higher resolution
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+        });
 
-        img.onload = () => {
-          canvas.width = img.width * 2;
-          canvas.height = img.height * 2;
-          ctx?.scale(2, 2);
-          ctx?.drawImage(img, 0, 0);
-
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.png`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }
-          }, 'image/png');
-        };
-
-        // Convert SVG to base64 (handle UTF-8 characters)
-        const bytes = new TextEncoder().encode(svgData);
-        const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
-        img.src = 'data:image/svg+xml;base64,' + btoa(binString);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.png`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/png', 0.95);
       }
     } catch (error) {
       console.error('Error downloading chart:', error);
+      // Fallback: try basic SVG method
+      try {
+        const svg = chartRef.current?.querySelector('svg');
+        if (svg && format === 'png') {
+          const svgData = new XMLSerializer().serializeToString(svg);
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const img = new Image();
+          img.onload = () => {
+            canvas.width = img.width * 2;
+            canvas.height = img.height * 2;
+            ctx?.scale(2, 2);
+            ctx?.drawImage(img, 0, 0);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }
+            }, 'image/png');
+          };
+          const bytes = new TextEncoder().encode(svgData);
+          const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
+          img.src = 'data:image/svg+xml;base64,' + btoa(binString);
+        }
+      } catch (fallbackError) {
+        console.error('Fallback download also failed:', fallbackError);
+      }
     }
   };
 

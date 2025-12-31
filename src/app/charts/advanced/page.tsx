@@ -6,6 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas';
 
 // Dynamic import for ECharts to avoid SSR issues
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
@@ -279,41 +280,56 @@ function AdvancedChartsContent() {
       }
 
       const echartsInstance = chartInstanceRef.current;
-      if (!echartsInstance) {
-        console.error('ECharts instance not available');
-        setIsDownloading(false);
-        return;
-      }
 
       if (format === 'png') {
-        // ECharts built-in PNG export with high resolution
-        const dataURL = echartsInstance.getDataURL({
-          type: 'png',
-          pixelRatio: 2,
-          backgroundColor: '#1f2937'
-        });
-        downloadDataURL(dataURL, `${selectedChart}_chart.png`);
+        if (echartsInstance) {
+          // ECharts built-in PNG export with high resolution
+          const dataURL = echartsInstance.getDataURL({
+            type: 'png',
+            pixelRatio: 2,
+            backgroundColor: '#1f2937'
+          });
+          downloadDataURL(dataURL, `${selectedChart}_chart.png`);
+        } else {
+          // Fallback to html2canvas if ECharts not available
+          const chartContainer = document.querySelector('.echarts-for-react');
+          if (chartContainer) {
+            const canvas = await html2canvas(chartContainer as HTMLElement, {
+              backgroundColor: '#1f2937',
+              scale: 2,
+              logging: false,
+              useCORS: true,
+            });
+            canvas.toBlob((blob) => {
+              if (blob) downloadBlob(blob, `${selectedChart}_chart.png`);
+            }, 'image/png', 0.95);
+          } else {
+            console.error('Chart container not found');
+          }
+        }
       } else if (format === 'svg') {
-        // For SVG export - ECharts can export SVG when using canvas renderer
-        // by converting the canvas to an image
-        const dataURL = echartsInstance.getDataURL({
-          type: 'png', // SVG not directly available from canvas, using PNG
-          pixelRatio: 3, // Higher quality for SVG-like output
-          backgroundColor: '#1f2937'
-        });
-        // Convert to SVG wrapper for better compatibility
-        const img = new Image();
-        img.onload = () => {
-          const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+        if (echartsInstance) {
+          // For SVG export - ECharts can export SVG when using canvas renderer
+          const dataURL = echartsInstance.getDataURL({
+            type: 'png',
+            pixelRatio: 3,
+            backgroundColor: '#1f2937'
+          });
+          const img = new Image();
+          img.onload = () => {
+            const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      width="${img.width}" height="${img.height}" viewBox="0 0 ${img.width} ${img.height}">
   <rect width="100%" height="100%" fill="#1f2937"/>
   <image xlink:href="${dataURL}" width="${img.width}" height="${img.height}"/>
 </svg>`;
-          const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-          downloadBlob(blob, `${selectedChart}_chart.svg`);
-        };
-        img.src = dataURL;
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            downloadBlob(blob, `${selectedChart}_chart.svg`);
+          };
+          img.src = dataURL;
+        } else {
+          console.error('ECharts instance not available for SVG export');
+        }
       }
     } catch (error) {
       console.error('Download error:', error);
