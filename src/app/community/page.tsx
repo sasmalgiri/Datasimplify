@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Progress bar segment component using refs to avoid inline style warnings
 function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
@@ -549,16 +550,12 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
 
   if (!isOpen) return null;
 
-  const coins = [
-    { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
-    { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
-    { id: 'solana', symbol: 'SOL', name: 'Solana' },
-    { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
-    { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche' },
-    { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
-    { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
-    { id: 'polygon', symbol: 'MATIC', name: 'Polygon' },
-  ];
+  // Use all 50+ supported coins from shared config
+  const coins = SUPPORTED_COINS.map(coin => ({
+    id: coin.symbol.toLowerCase(),
+    symbol: coin.symbol,
+    name: coin.name,
+  }));
 
   const selectedCoin = coins.find(c => c.id === coin) || coins[0];
 
