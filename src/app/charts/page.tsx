@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
+import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import {
   LineChart,
   Line,
@@ -133,7 +134,7 @@ function FGMarker({ position }: { position: number }) {
   return <div ref={markerRef} className="absolute top-0 w-3 h-3 bg-white rounded-full shadow-lg transform -translate-y-0" />;
 }
 
-// Chart type definitions - expanded to 20 chart types
+// Chart type definitions - expanded to 21 chart types
 type ChartType =
   | 'price_history'
   | 'candlestick'
@@ -152,6 +153,7 @@ type ChartType =
   | 'open_interest'
   | 'liquidation_heatmap'
   | 'whale_flow'
+  | 'wallet_distribution'
   | 'active_addresses'
   | 'fear_greed_history'
   | 'social_volume'
@@ -190,6 +192,7 @@ const CHART_CONFIGS: ChartConfig[] = [
 
   // On-Chain Charts
   { type: 'whale_flow', title: 'Whale Flow', description: 'Exchange in/out flows by whales', icon: '🐋', category: 'onchain' },
+  { type: 'wallet_distribution', title: 'Wallet Distribution', description: 'BTC holder distribution treemap', icon: '🐳', category: 'onchain' },
   { type: 'active_addresses', title: 'Active Addresses', description: 'Network activity over time', icon: '👥', category: 'onchain' },
 
   // Sentiment Charts
@@ -227,8 +230,8 @@ const VALID_CHART_TYPES: ChartType[] = [
   'price_history', 'candlestick', 'volatility', 'correlation', 'racing_bar',
   'market_dominance', 'prediction_accuracy', 'price_prediction', 'volume_analysis',
   'momentum', 'fibonacci', 'volume_profile', 'funding_rate', 'open_interest',
-  'liquidation_heatmap', 'whale_flow', 'active_addresses', 'fear_greed_history',
-  'social_volume', 'btc_dominance'
+  'liquidation_heatmap', 'whale_flow', 'wallet_distribution', 'active_addresses',
+  'fear_greed_history', 'social_volume', 'btc_dominance'
 ];
 
 function ChartsContent() {
@@ -1539,6 +1542,17 @@ function ChartsContent() {
             </ResponsiveContainer>
             <div className="bg-gray-800/50 rounded-xl p-4">
               <p className="text-gray-400 text-sm">🐋 <strong>Whale Flow</strong> tracks large transactions to/from exchanges. Outflows typically indicate accumulation (bullish), while inflows suggest potential selling pressure (bearish).</p>
+            </div>
+          </div>
+        );
+
+      case 'wallet_distribution':
+        // Render Wallet Distribution Treemap
+        return (
+          <div className="space-y-4">
+            <WalletDistributionTreemap />
+            <div className="bg-gray-800/50 rounded-xl p-4">
+              <p className="text-gray-400 text-sm">🐳 <strong>Wallet Distribution</strong> shows how BTC is distributed among different holder categories - from Humpbacks (largest holders) to Shrimps (smallest). Green indicates accumulation, red indicates distribution.</p>
             </div>
           </div>
         );
