@@ -8,6 +8,7 @@ import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 
 // Dynamic import for ECharts to avoid SSR issues
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
@@ -57,7 +58,8 @@ type AdvancedChartType =
   | 'parallel'
   | 'funnel'
   | 'calendar'
-  | 'whale_tracker';
+  | 'whale_tracker'
+  | 'wallet_distribution';
 
 interface ChartConfig {
   type: AdvancedChartType;
@@ -70,6 +72,7 @@ interface ChartConfig {
 const CHART_CONFIGS: ChartConfig[] = [
   { type: 'globe_3d', title: '3D Globe', description: 'Global crypto adoption visualization', icon: '🌍', category: '3d' },
   { type: 'whale_tracker', title: 'Whale Tracker', description: 'Large transaction monitoring', icon: '🐋', category: 'flow' },
+  { type: 'wallet_distribution', title: 'BTC Distribution', description: 'Finviz-style wallet distribution treemap', icon: '🐳', category: 'hierarchy' },
   { type: 'sankey', title: 'Sankey Flow', description: 'Money flow between exchanges and wallets', icon: '🌊', category: 'flow' },
   { type: 'sunburst', title: 'Sunburst', description: 'Hierarchical market structure', icon: '☀️', category: 'hierarchy' },
   { type: 'treemap', title: 'Treemap', description: 'Market cap weighted visualization', icon: '🗺️', category: 'hierarchy' },
@@ -116,7 +119,7 @@ const COINS_DATA = ALL_COINS.slice(0, 8).map(coin => ({
 }));
 
 // Valid chart types for URL validation
-const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker'];
+const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker', 'wallet_distribution'];
 
 function AdvancedChartsContent() {
   const searchParams = useSearchParams();
@@ -1251,13 +1254,17 @@ function AdvancedChartsContent() {
               </div>
 
               <div className="h-[500px]">
-                <ReactECharts
-                  option={getChartOption}
-                  style={{ height: '100%', width: '100%' }}
-                  opts={{ renderer: 'canvas' }}
-                  theme="dark"
-                  onChartReady={onChartReady}
-                />
+                {selectedChart === 'wallet_distribution' ? (
+                  <WalletDistributionTreemap />
+                ) : (
+                  <ReactECharts
+                    option={getChartOption}
+                    style={{ height: '100%', width: '100%' }}
+                    opts={{ renderer: 'canvas' }}
+                    theme="dark"
+                    onChartReady={onChartReady}
+                  />
+                )}
               </div>
             </div>
 
@@ -1276,6 +1283,7 @@ function AdvancedChartsContent() {
                 {selectedChart === 'calendar' && 'Calendar heatmap shows daily trading activity over the past 6 months. Darker colors indicate higher trading volume.'}
                 {selectedChart === 'globe_3d' && '3D Globe visualization would show global crypto adoption rates by country. This requires WebGL and echarts-gl for full 3D rendering.'}
                 {selectedChart === 'whale_tracker' && 'Whale Tracker monitors large cryptocurrency transactions (>$1M USD). Bubble size represents transaction value. Green border = buy, Red border = sell, Gray border = transfer. Track whale movements between exchanges, wallets, and DeFi protocols.'}
+                {selectedChart === 'wallet_distribution' && 'BTC Wallet Distribution shows the Finviz-style treemap of Bitcoin holdings by wallet size. Categories range from Humpback (>10K BTC) to Shrimp (<1 BTC). Green indicates accumulating, red indicates distributing. Hover for detailed stats.'}
               </p>
             </div>
 
