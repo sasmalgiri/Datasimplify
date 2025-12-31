@@ -271,14 +271,45 @@ function AdvancedChartsContent() {
         wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
         XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
 
-        // Generate and download
+        // Generate and download Excel
         const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-        const blob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        downloadBlob(blob, `${selectedChart}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
+        const excelBlob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        downloadBlob(excelBlob, `${selectedChart}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        // Also download chart image automatically
+        const echartsInstance = chartInstanceRef.current;
+        if (echartsInstance) {
+          const dataURL = echartsInstance.getDataURL({
+            type: 'png',
+            pixelRatio: 2,
+            backgroundColor: '#1f2937'
+          });
+          // Small delay to avoid browser blocking multiple downloads
+          setTimeout(() => {
+            downloadDataURL(dataURL, `${selectedChart}_chart_${new Date().toISOString().split('T')[0]}.png`);
+          }, 500);
+        } else {
+          // Fallback to html2canvas
+          const chartContainer = document.querySelector('.echarts-for-react');
+          if (chartContainer) {
+            const canvas = await html2canvas(chartContainer as HTMLElement, {
+              backgroundColor: '#1f2937',
+              scale: 2,
+              logging: false,
+              useCORS: true,
+            });
+            setTimeout(() => {
+              canvas.toBlob((blob) => {
+                if (blob) downloadBlob(blob, `${selectedChart}_chart_${new Date().toISOString().split('T')[0]}.png`);
+              }, 'image/png', 0.95);
+            }, 500);
+          }
+        }
         setIsDownloading(false);
         return;
       }
 
+      // For PNG/SVG only - Generate and download
       const echartsInstance = chartInstanceRef.current;
 
       if (format === 'png') {
@@ -635,7 +666,17 @@ function AdvancedChartsContent() {
             bottom: 0,
             textStyle: { color: '#9CA3AF' }
           },
-          tooltip: {},
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: { dataType: string; data: { name?: string; source?: string; target?: string }; name?: string }) => {
+              if (params.dataType === 'node') {
+                return `<strong>${params.data.name || params.name}</strong>`;
+              } else if (params.dataType === 'edge') {
+                return `${params.data.source} → ${params.data.target}`;
+              }
+              return params.name || '';
+            }
+          },
           series: [{
             type: 'graph',
             layout: 'force',

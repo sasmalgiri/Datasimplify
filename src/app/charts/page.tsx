@@ -529,7 +529,7 @@ function ChartsContent() {
       wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
       XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
 
-      // Generate and download
+      // Generate and download Excel
       const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
       const blob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
@@ -538,6 +538,33 @@ function ChartsContent() {
       a.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
+
+      // Also download chart image automatically
+      if (chartRef.current) {
+        try {
+          const canvas = await html2canvas(chartRef.current, {
+            backgroundColor: '#1f2937',
+            scale: 2,
+            logging: false,
+            useCORS: true,
+          });
+          // Small delay to avoid browser blocking multiple downloads
+          setTimeout(() => {
+            canvas.toBlob((imgBlob) => {
+              if (imgBlob) {
+                const imgUrl = URL.createObjectURL(imgBlob);
+                const imgLink = document.createElement('a');
+                imgLink.href = imgUrl;
+                imgLink.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.png`;
+                imgLink.click();
+                URL.revokeObjectURL(imgUrl);
+              }
+            }, 'image/png', 0.95);
+          }, 500);
+        } catch (err) {
+          console.error('Chart image capture failed:', err);
+        }
+      }
       return;
     }
 
