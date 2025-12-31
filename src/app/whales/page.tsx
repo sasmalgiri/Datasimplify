@@ -1,6 +1,7 @@
 'use client';
 
 import { WhaleTracker } from '@/components/features/WhaleTracker';
+import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 
@@ -14,6 +15,11 @@ export default function WhalesPage() {
         <p className="text-gray-400 mb-8">
           Track what the big crypto holders are doing with their money.
         </p>
+
+        {/* BTC Wallet Distribution Treemap */}
+        <div className="mb-8">
+          <WalletDistributionTreemap />
+        </div>
 
         <WhaleTracker showBeginnerTips={true} />
       </div>
