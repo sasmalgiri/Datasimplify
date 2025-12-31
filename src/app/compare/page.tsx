@@ -129,7 +129,7 @@ const ALL_COINS = [
   { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', category: 'meme' },
   { id: 'shiba-inu', symbol: 'SHIB', name: 'Shiba Inu', category: 'meme' },
   { id: 'pepe', symbol: 'PEPE', name: 'Pepe', category: 'meme' },
-  { id: 'dogwifhat', symbol: 'WIF', name: 'dogwifhat', category: 'meme' },
+  { id: 'dogwifcoin', symbol: 'WIF', name: 'dogwifhat', category: 'meme' },
   { id: 'bonk', symbol: 'BONK', name: 'Bonk', category: 'meme' },
   { id: 'floki', symbol: 'FLOKI', name: 'Floki', category: 'meme' },
 
