@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory, getFieldDisplayName } from '@/lib/dataTypes';
+import { downloadLiveDataTemplate } from '@/lib/excelTemplate';
 
 // Progress bar component using ref to avoid inline style warnings
 function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
@@ -351,6 +353,7 @@ export default function DownloadPage() {
     <div className="min-h-screen bg-gray-950">
       {/* Navigation */}
       <FreeNavbar />
+      <Breadcrumb />
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
@@ -1047,6 +1050,70 @@ export default function DownloadPage() {
               <p className="text-xs text-gray-500 mt-4">
                 💡 <a href="/signup" className="text-emerald-400 hover:underline">Create an account</a> to track your usage and unlock more downloads!
               </p>
+            </div>
+
+            {/* Live Data Templates */}
+            <div className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 rounded-xl border border-blue-500/20 p-6">
+              <h2 className="text-lg font-semibold text-white mb-2">📊 Live Data Templates</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                Get live, auto-refreshing crypto data in Excel or Google Sheets!
+              </p>
+
+              <button
+                type="button"
+                onClick={() => downloadLiveDataTemplate()}
+                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Excel Template
+              </button>
+
+              <div className="mt-4 space-y-2 text-xs text-gray-400">
+                <p className="flex items-start gap-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Power Query setup instructions</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Google Sheets IMPORTDATA formulas</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>10+ data category URLs included</span>
+                </p>
+                <p className="flex items-start gap-2">
+                  <span className="text-emerald-400">✓</span>
+                  <span>Auto-refresh configuration guide</span>
+                </p>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <p className="text-xs text-gray-500">
+                  <span className="text-blue-400 font-medium">Tip:</span> Use Power Query in Excel for automatic data refresh every few minutes
+                </p>
+              </div>
+            </div>
+
+            {/* Google Sheets Quick Start */}
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+              <h2 className="text-lg font-semibold text-white mb-3">📝 Google Sheets Quick Start</h2>
+              <p className="text-gray-400 text-sm mb-3">
+                Paste this formula in any Google Sheets cell:
+              </p>
+              <div className="bg-gray-800 rounded-lg p-3 font-mono text-xs text-emerald-400 break-all select-all">
+                {`=IMPORTDATA("https://datasimplify.com/api/download?category=market_overview&format=csv")`}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">
+                This imports live market data that refreshes automatically every hour.
+              </p>
+              <div className="mt-3 space-y-1 text-xs text-gray-500">
+                <p><span className="text-purple-400">Other options:</span></p>
+                <p>• Fear &amp; Greed: <code className="text-emerald-400">...category=fear_greed</code></p>
+                <p>• DeFi TVL: <code className="text-emerald-400">...category=defi_protocols</code></p>
+                <p>• Gainers: <code className="text-emerald-400">...category=gainers_losers&amp;type=gainers</code></p>
+              </div>
             </div>
           </div>
         </div>

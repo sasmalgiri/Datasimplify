@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import CryptoAIChatRAG from '@/components/features/CryptoAIChatRAG';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import Link from 'next/link';
 
 // Help Icon with tooltip for explanations
@@ -30,8 +31,9 @@ function HelpIcon({ text }: { text: string }) {
 
 export default function ChatPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
+      <Breadcrumb />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Beginner Tip */}

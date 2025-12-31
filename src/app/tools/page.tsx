@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 export default function ToolsPage() {
   const tools = [
@@ -132,6 +134,8 @@ export default function ToolsPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <FreeNavbar />
+      <Breadcrumb />
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12 border-b border-gray-700">
         <div className="max-w-6xl mx-auto px-4">

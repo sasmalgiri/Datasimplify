@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { FileSpreadsheet, TrendingUp, Wallet, LayoutGrid, Download, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 interface Template {
   id: string;
@@ -101,6 +103,8 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <FreeNavbar />
+      <Breadcrumb />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12">

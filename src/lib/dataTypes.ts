@@ -626,8 +626,8 @@ export const DATA_CATEGORIES: DataCategoryInfo[] = [
     source: 'calculated',
     updateFrequency: 'Every 5 minutes',
     fields: [
-      'symbol', 'long_liquidations', 'short_liquidations', 'total_liquidations_usd',
-      'long_liquidations_usd', 'short_liquidations_usd', 'is_estimated'
+      'symbol', 'long_liquidations', 'short_liquidations', 'total_liquidations',
+      'largest_liquidation', 'is_estimated'
     ],
     filters: [],
     isPremium: false
@@ -696,7 +696,7 @@ export const DATA_CATEGORIES: DataCategoryInfo[] = [
     source: 'calculated',
     updateFrequency: 'Daily',
     fields: [
-      'symbol_1', 'symbol_2', 'correlation', 'relationship', 'period'
+      'symbol_1', 'symbol_2', 'correlation', 'relationship'
     ],
     filters: [
       {
@@ -1085,9 +1085,8 @@ export const FIELD_DISPLAY_NAMES: Record<string, string> = {
   // Derivatives - Liquidations
   'long_liquidations': 'Long Liquidations',
   'short_liquidations': 'Short Liquidations',
-  'total_liquidations_usd': 'Total Liquidations (USD)',
-  'long_liquidations_usd': 'Long Liquidations (USD)',
-  'short_liquidations_usd': 'Short Liquidations (USD)',
+  'total_liquidations': 'Total Liquidations',
+  'largest_liquidation': 'Largest Liquidation',
   'is_estimated': 'Is Estimated',
 
   // Derivatives - Open Interest

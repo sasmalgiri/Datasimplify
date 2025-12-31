@@ -1,11 +1,33 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import type { ECharts } from 'echarts';
 
 // Dynamic import for ECharts to avoid SSR issues
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
+
+// Download helper functions
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadDataURL(dataURL: string, filename: string) {
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 // Chart type definitions
 type AdvancedChartType =
@@ -18,7 +40,8 @@ type AdvancedChartType =
   | 'graph_network'
   | 'parallel'
   | 'funnel'
-  | 'calendar';
+  | 'calendar'
+  | 'whale_tracker';
 
 interface ChartConfig {
   type: AdvancedChartType;
@@ -30,6 +53,7 @@ interface ChartConfig {
 
 const CHART_CONFIGS: ChartConfig[] = [
   { type: 'globe_3d', title: '3D Globe', description: 'Global crypto adoption visualization', icon: '🌍', category: '3d' },
+  { type: 'whale_tracker', title: 'Whale Tracker', description: 'Large transaction monitoring', icon: '🐋', category: 'flow' },
   { type: 'sankey', title: 'Sankey Flow', description: 'Money flow between exchanges and wallets', icon: '🌊', category: 'flow' },
   { type: 'sunburst', title: 'Sunburst', description: 'Hierarchical market structure', icon: '☀️', category: 'hierarchy' },
   { type: 'treemap', title: 'Treemap', description: 'Market cap weighted visualization', icon: '🗺️', category: 'hierarchy' },
@@ -53,8 +77,124 @@ const COINS_DATA = [
   { name: 'Polkadot', symbol: 'DOT', marketCap: 12, price: 7, volume: 1.5, change: 2.1, holders: 12, sentiment: 58 },
 ];
 
+// All available coins for selection
+const ALL_COINS = [
+  { id: 'BTC', name: 'Bitcoin', symbol: 'BTC', marketCap: 900, price: 45000, volume: 25, change: 2.5, holders: 45, sentiment: 78, color: '#F7931A' },
+  { id: 'ETH', name: 'Ethereum', symbol: 'ETH', marketCap: 350, price: 2500, volume: 15, change: 3.2, holders: 35, sentiment: 72, color: '#627EEA' },
+  { id: 'BNB', name: 'BNB', symbol: 'BNB', marketCap: 80, price: 300, volume: 5, change: 1.1, holders: 20, sentiment: 65, color: '#F3BA2F' },
+  { id: 'SOL', name: 'Solana', symbol: 'SOL', marketCap: 60, price: 100, volume: 8, change: 5.5, holders: 15, sentiment: 80, color: '#00D18C' },
+  { id: 'XRP', name: 'XRP', symbol: 'XRP', marketCap: 40, price: 0.5, volume: 3, change: -1.2, holders: 25, sentiment: 55, color: '#23292F' },
+  { id: 'ADA', name: 'Cardano', symbol: 'ADA', marketCap: 20, price: 0.4, volume: 2, change: 0.8, holders: 18, sentiment: 60, color: '#0033AD' },
+  { id: 'DOGE', name: 'Dogecoin', symbol: 'DOGE', marketCap: 15, price: 0.08, volume: 4, change: 8.5, holders: 30, sentiment: 70, color: '#C3A634' },
+  { id: 'DOT', name: 'Polkadot', symbol: 'DOT', marketCap: 12, price: 7, volume: 1.5, change: 2.1, holders: 12, sentiment: 58, color: '#E6007A' },
+  { id: 'AVAX', name: 'Avalanche', symbol: 'AVAX', marketCap: 18, price: 35, volume: 2.5, change: 4.2, holders: 14, sentiment: 68, color: '#E84142' },
+  { id: 'LINK', name: 'Chainlink', symbol: 'LINK', marketCap: 10, price: 15, volume: 1.8, change: 1.5, holders: 16, sentiment: 62, color: '#2A5ADA' },
+  { id: 'MATIC', name: 'Polygon', symbol: 'MATIC', marketCap: 8, price: 0.85, volume: 1.2, change: -0.5, holders: 22, sentiment: 64, color: '#8247E5' },
+  { id: 'UNI', name: 'Uniswap', symbol: 'UNI', marketCap: 6, price: 8, volume: 0.8, change: 2.8, holders: 10, sentiment: 66, color: '#FF007A' },
+];
+
 export default function AdvancedChartsPage() {
   const [selectedChart, setSelectedChart] = useState<AdvancedChartType>('treemap');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+
+  // Chart parameter states
+  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT']);
+  const [maxItems, setMaxItems] = useState(8);
+  const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>('marketCap');
+  const [colorMode, setColorMode] = useState<'change' | 'category'>('change');
+
+  // Get filtered and sorted coins based on parameters
+  const filteredCoins = useMemo(() => {
+    let coins = ALL_COINS.filter(c => selectedCoins.includes(c.id));
+
+    // Sort coins
+    coins = [...coins].sort((a, b) => {
+      if (sortBy === 'marketCap') return b.marketCap - a.marketCap;
+      if (sortBy === 'change') return b.change - a.change;
+      return b.volume - a.volume;
+    });
+
+    // Limit to max items
+    return coins.slice(0, maxItems);
+  }, [selectedCoins, maxItems, sortBy]);
+
+  // Ref to store ECharts instance (set via onChartReady callback)
+  const chartInstanceRef = useRef<ECharts | null>(null);
+
+  // Toggle coin selection
+  const toggleCoin = (coinId: string) => {
+    setSelectedCoins(prev =>
+      prev.includes(coinId)
+        ? prev.filter(id => id !== coinId)
+        : [...prev, coinId]
+    );
+  };
+
+  // Select all / deselect all
+  const selectAllCoins = () => setSelectedCoins(ALL_COINS.map(c => c.id));
+  const deselectAllCoins = () => setSelectedCoins(['BTC', 'ETH']); // Keep at least 2
+
+  // Callback when chart is ready
+  const onChartReady = useCallback((instance: ECharts) => {
+    chartInstanceRef.current = instance;
+  }, []);
+
+  // Download chart function
+  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json') => {
+    setIsDownloading(true);
+    try {
+      if (format === 'json') {
+        // Export chart data as JSON
+        const blob = new Blob([JSON.stringify(COINS_DATA, null, 2)], { type: 'application/json' });
+        downloadBlob(blob, `${selectedChart}_data.json`);
+        setIsDownloading(false);
+        return;
+      }
+
+      const echartsInstance = chartInstanceRef.current;
+      if (!echartsInstance) {
+        console.error('ECharts instance not available');
+        setIsDownloading(false);
+        return;
+      }
+
+      if (format === 'png') {
+        // ECharts built-in PNG export with high resolution
+        const dataURL = echartsInstance.getDataURL({
+          type: 'png',
+          pixelRatio: 2,
+          backgroundColor: '#1f2937'
+        });
+        downloadDataURL(dataURL, `${selectedChart}_chart.png`);
+      } else if (format === 'svg') {
+        // For SVG export - ECharts can export SVG when using canvas renderer
+        // by converting the canvas to an image
+        const dataURL = echartsInstance.getDataURL({
+          type: 'png', // SVG not directly available from canvas, using PNG
+          pixelRatio: 3, // Higher quality for SVG-like output
+          backgroundColor: '#1f2937'
+        });
+        // Convert to SVG wrapper for better compatibility
+        const img = new Image();
+        img.onload = () => {
+          const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="${img.width}" height="${img.height}" viewBox="0 0 ${img.width} ${img.height}">
+  <rect width="100%" height="100%" fill="#1f2937"/>
+  <image xlink:href="${dataURL}" width="${img.width}" height="${img.height}"/>
+</svg>`;
+          const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+          downloadBlob(blob, `${selectedChart}_chart.svg`);
+        };
+        img.src = dataURL;
+      }
+    } catch (error) {
+      console.error('Download error:', error);
+    } finally {
+      setIsDownloading(false);
+    }
+  }, [selectedChart]);
 
   // Chart options generators
   const getChartOption = useMemo(() => {
@@ -73,13 +213,15 @@ export default function AdvancedChartsPage() {
           series: [{
             type: 'treemap',
             roam: 'move',
-            data: COINS_DATA.map(coin => ({
+            data: filteredCoins.map(coin => ({
               name: `${coin.name} (${coin.symbol})`,
               value: coin.marketCap,
               itemStyle: {
-                color: coin.change >= 0 ?
-                  `rgba(16, 185, 129, ${0.4 + coin.change / 20})` :
-                  `rgba(239, 68, 68, ${0.4 + Math.abs(coin.change) / 20})`
+                color: colorMode === 'change'
+                  ? (coin.change >= 0 ?
+                      `rgba(16, 185, 129, ${0.4 + coin.change / 20})` :
+                      `rgba(239, 68, 68, ${0.4 + Math.abs(coin.change) / 20})`)
+                  : coin.color
               }
             })),
             breadcrumb: { show: false },
@@ -396,7 +538,7 @@ export default function AdvancedChartsPage() {
             textStyle: { color: '#fff' }
           },
           parallelAxis: [
-            { dim: 0, name: 'Coin', type: 'category', data: COINS_DATA.map(c => c.symbol) },
+            { dim: 0, name: 'Coin', type: 'category', data: filteredCoins.map(c => c.symbol) },
             { dim: 1, name: 'Market Cap ($B)', min: 0, max: 1000 },
             { dim: 2, name: 'Volume ($B)', min: 0, max: 30 },
             { dim: 3, name: 'Change %', min: -10, max: 10 },
@@ -419,9 +561,9 @@ export default function AdvancedChartsPage() {
           series: [{
             type: 'parallel',
             lineStyle: { width: 2 },
-            data: COINS_DATA.map((coin, i) => ({
+            data: filteredCoins.map((coin, i) => ({
               value: [i, coin.marketCap, coin.volume, coin.change, coin.holders, coin.sentiment],
-              lineStyle: { color: coin.change >= 0 ? '#10B981' : '#EF4444' }
+              lineStyle: { color: colorMode === 'change' ? (coin.change >= 0 ? '#10B981' : '#EF4444') : coin.color }
             }))
           }]
         };
@@ -512,23 +654,138 @@ export default function AdvancedChartsPage() {
           }]
         };
 
+      case 'whale_tracker':
+        // Whale transactions visualization - scatter plot with bubbles
+        const whaleTransactions = [
+          { time: '00:15', coin: 'BTC', amount: 500, type: 'buy', from: 'Exchange', to: 'Wallet' },
+          { time: '01:30', coin: 'ETH', amount: 2500, type: 'sell', from: 'Wallet', to: 'Exchange' },
+          { time: '02:45', coin: 'BTC', amount: 1200, type: 'transfer', from: 'Wallet', to: 'Cold Storage' },
+          { time: '04:00', coin: 'SOL', amount: 150000, type: 'buy', from: 'Exchange', to: 'Wallet' },
+          { time: '05:20', coin: 'BTC', amount: 800, type: 'sell', from: 'Wallet', to: 'Exchange' },
+          { time: '06:45', coin: 'ETH', amount: 5000, type: 'buy', from: 'Exchange', to: 'DeFi' },
+          { time: '08:00', coin: 'BTC', amount: 2000, type: 'transfer', from: 'Exchange', to: 'Cold Storage' },
+          { time: '09:30', coin: 'DOGE', amount: 50000000, type: 'buy', from: 'Exchange', to: 'Wallet' },
+          { time: '10:15', coin: 'BTC', amount: 350, type: 'sell', from: 'Wallet', to: 'Exchange' },
+          { time: '11:45', coin: 'ETH', amount: 8000, type: 'transfer', from: 'DeFi', to: 'Wallet' },
+          { time: '13:00', coin: 'BTC', amount: 1500, type: 'buy', from: 'OTC', to: 'Cold Storage' },
+          { time: '14:30', coin: 'SOL', amount: 200000, type: 'sell', from: 'Wallet', to: 'Exchange' },
+          { time: '16:00', coin: 'BTC', amount: 600, type: 'transfer', from: 'Exchange', to: 'Wallet' },
+          { time: '17:20', coin: 'ETH', amount: 3500, type: 'buy', from: 'Exchange', to: 'DeFi' },
+          { time: '19:00', coin: 'BTC', amount: 950, type: 'sell', from: 'Cold Storage', to: 'Exchange' },
+        ];
+
+        const coinColors: Record<string, string> = {
+          'BTC': '#F7931A',
+          'ETH': '#627EEA',
+          'SOL': '#00D18C',
+          'DOGE': '#C3A634'
+        };
+
+        const typeSymbols: Record<string, string> = {
+          'buy': 'circle',
+          'sell': 'triangle',
+          'transfer': 'diamond'
+        };
+
+        return {
+          title: {
+            text: 'Whale Transaction Tracker (24h)',
+            left: 'center',
+            textStyle: { color: '#fff' }
+          },
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: { data: { value: number[]; coin: string; type: string; amount: number; from: string; to: string } }) => {
+              const d = params.data;
+              const usdValue = d.coin === 'BTC' ? d.amount * 45000 :
+                              d.coin === 'ETH' ? d.amount * 2500 :
+                              d.coin === 'SOL' ? d.amount * 100 : d.amount * 0.08;
+              return `<strong>${d.coin}</strong><br/>
+                      Type: ${d.type.toUpperCase()}<br/>
+                      Amount: ${d.amount.toLocaleString()} ${d.coin}<br/>
+                      Value: $${(usdValue / 1000000).toFixed(2)}M<br/>
+                      ${d.from} → ${d.to}`;
+            }
+          },
+          legend: {
+            data: ['BTC', 'ETH', 'SOL', 'DOGE'],
+            bottom: 10,
+            textStyle: { color: '#9CA3AF' }
+          },
+          grid: {
+            left: '8%',
+            right: '8%',
+            top: '15%',
+            bottom: '18%'
+          },
+          xAxis: {
+            type: 'category',
+            data: whaleTransactions.map(t => t.time),
+            axisLabel: { color: '#9CA3AF' },
+            axisLine: { lineStyle: { color: '#374151' } },
+            name: 'Time (UTC)',
+            nameTextStyle: { color: '#9CA3AF' }
+          },
+          yAxis: {
+            type: 'value',
+            name: 'USD Value (Millions)',
+            nameTextStyle: { color: '#9CA3AF' },
+            axisLabel: {
+              color: '#9CA3AF',
+              formatter: (val: number) => `$${(val / 1000000).toFixed(0)}M`
+            },
+            axisLine: { lineStyle: { color: '#374151' } },
+            splitLine: { lineStyle: { color: '#374151', type: 'dashed' } }
+          },
+          series: ['BTC', 'ETH', 'SOL', 'DOGE'].map(coin => ({
+            name: coin,
+            type: 'scatter',
+            data: whaleTransactions
+              .filter(t => t.coin === coin)
+              .map(t => {
+                const usdValue = coin === 'BTC' ? t.amount * 45000 :
+                                coin === 'ETH' ? t.amount * 2500 :
+                                coin === 'SOL' ? t.amount * 100 : t.amount * 0.08;
+                return {
+                  value: [t.time, usdValue],
+                  coin: t.coin,
+                  type: t.type,
+                  amount: t.amount,
+                  from: t.from,
+                  to: t.to,
+                  symbolSize: Math.min(Math.max(usdValue / 500000, 15), 60),
+                  itemStyle: {
+                    color: coinColors[coin],
+                    opacity: t.type === 'buy' ? 0.9 : t.type === 'sell' ? 0.7 : 0.5,
+                    borderColor: t.type === 'sell' ? '#EF4444' : t.type === 'buy' ? '#10B981' : '#9CA3AF',
+                    borderWidth: 2
+                  }
+                };
+              }),
+            symbol: (_value: unknown, params: { data?: { type?: string } }) => typeSymbols[params.data?.type || 'buy'] || 'circle',
+            emphasis: {
+              scale: 1.5
+            }
+          }))
+        };
+
       case 'globe_3d':
         // For 3D globe, we'll show a message since echarts-gl needs special setup
         return {
           title: {
             text: '3D Globe - Global Crypto Adoption',
             left: 'center',
-            top: 'center',
+            top: 20,
             textStyle: { color: '#fff', fontSize: 24 }
           },
           graphic: [{
             type: 'text',
             left: 'center',
-            top: '60%',
+            bottom: 30,
             style: {
-              text: '🌍 3D Globe visualization\nShowing global crypto adoption rates\n\n(WebGL rendering)',
+              text: '🌍 3D Globe visualization - Showing global crypto adoption rates (Requires WebGL/echarts-gl)',
               fill: '#9CA3AF',
-              fontSize: 16,
+              fontSize: 14,
               textAlign: 'center'
             }
           }]
@@ -537,7 +794,7 @@ export default function AdvancedChartsPage() {
       default:
         return {};
     }
-  }, [selectedChart]);
+  }, [selectedChart, filteredCoins, colorMode]);
 
   const selectedConfig = CHART_CONFIGS.find(c => c.type === selectedChart);
 
@@ -609,6 +866,128 @@ export default function AdvancedChartsPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Chart Controls Panel */}
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowControls(!showControls)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="font-medium">Chart Controls</h3>
+                <span className="text-gray-400">{showControls ? '▼' : '▶'}</span>
+              </button>
+
+              {showControls && (
+                <div className="mt-4 space-y-4">
+                  {/* Coin Selection */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-2">Select Coins</label>
+                    <div className="flex flex-wrap gap-1">
+                      {ALL_COINS.map(coin => (
+                        <button
+                          type="button"
+                          key={coin.id}
+                          onClick={() => toggleCoin(coin.id)}
+                          className={`px-2 py-1 rounded text-xs transition ${
+                            selectedCoins.includes(coin.id)
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          {coin.symbol}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={selectAllCoins}
+                        className="text-xs text-emerald-400 hover:text-emerald-300"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        type="button"
+                        onClick={deselectAllCoins}
+                        className="text-xs text-gray-400 hover:text-gray-300"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Max Items */}
+                  <div>
+                    <label htmlFor="max-items-slider" className="block text-xs text-gray-400 mb-2">
+                      Max Items: {maxItems}
+                    </label>
+                    <input
+                      id="max-items-slider"
+                      type="range"
+                      min="2"
+                      max="12"
+                      value={maxItems}
+                      onChange={(e) => setMaxItems(Number(e.target.value))}
+                      title={`Maximum items to display: ${maxItems}`}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                    />
+                  </div>
+
+                  {/* Sort By */}
+                  <div>
+                    <label htmlFor="sort-by-select" className="block text-xs text-gray-400 mb-2">Sort By</label>
+                    <select
+                      id="sort-by-select"
+                      title="Sort coins by"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as 'marketCap' | 'change' | 'volume')}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    >
+                      <option value="marketCap">Market Cap</option>
+                      <option value="change">Price Change</option>
+                      <option value="volume">Volume</option>
+                    </select>
+                  </div>
+
+                  {/* Color Mode */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-2">Color Mode</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setColorMode('change')}
+                        className={`flex-1 px-3 py-1.5 rounded text-xs transition ${
+                          colorMode === 'change'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        }`}
+                      >
+                        By Change
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setColorMode('category')}
+                        className={`flex-1 px-3 py-1.5 rounded text-xs transition ${
+                          colorMode === 'category'
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        }`}
+                      >
+                        By Coin
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Coins Count */}
+                  <div className="pt-2 border-t border-gray-700">
+                    <p className="text-xs text-gray-500">
+                      Showing {filteredCoins.length} of {selectedCoins.length} selected coins
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Main Chart Area */}
@@ -623,9 +1002,50 @@ export default function AdvancedChartsPage() {
                   </h2>
                   <p className="text-gray-400 text-sm">{selectedConfig?.description}</p>
                 </div>
-                <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
-                  ECharts
-                </span>
+                <div className="flex items-center gap-2">
+                  {/* Download Buttons */}
+                  <div className="flex items-center gap-1 mr-2">
+                    <button
+                      type="button"
+                      onClick={() => downloadChart('png')}
+                      disabled={isDownloading}
+                      className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Download as PNG image"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      PNG
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadChart('svg')}
+                      disabled={isDownloading}
+                      className="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Download as SVG vector"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      SVG
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadChart('json')}
+                      disabled={isDownloading}
+                      className="px-2 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Download chart data as JSON"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      JSON
+                    </button>
+                  </div>
+                  <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
+                    ECharts
+                  </span>
+                </div>
               </div>
 
               <div className="h-[500px]">
@@ -634,6 +1054,7 @@ export default function AdvancedChartsPage() {
                   style={{ height: '100%', width: '100%' }}
                   opts={{ renderer: 'canvas' }}
                   theme="dark"
+                  onChartReady={onChartReady}
                 />
               </div>
             </div>
@@ -652,6 +1073,7 @@ export default function AdvancedChartsPage() {
                 {selectedChart === 'funnel' && 'Funnel chart shows the typical user journey in crypto - from initial awareness to becoming a long-term holder (HODLer).'}
                 {selectedChart === 'calendar' && 'Calendar heatmap shows daily trading activity over the past 6 months. Darker colors indicate higher trading volume.'}
                 {selectedChart === 'globe_3d' && '3D Globe visualization would show global crypto adoption rates by country. This requires WebGL and echarts-gl for full 3D rendering.'}
+                {selectedChart === 'whale_tracker' && 'Whale Tracker monitors large cryptocurrency transactions (>$1M USD). Bubble size represents transaction value. Green border = buy, Red border = sell, Gray border = transfer. Track whale movements between exchanges, wallets, and DeFi protocols.'}
               </p>
             </div>
 

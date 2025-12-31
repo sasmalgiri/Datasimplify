@@ -44,6 +44,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Types matching Supabase schema
 interface CommunityPrediction {
@@ -846,8 +847,9 @@ export default function CommunityPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
+      <Breadcrumb />
 
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-emerald-50 via-white to-purple-50 border-b border-gray-200">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import Script from 'next/script';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
@@ -262,6 +263,7 @@ export default function PricingPage() {
 
       <div className="min-h-screen bg-gray-50 text-gray-900">
         <FreeNavbar />
+        <Breadcrumb />
 
         {/* India Waitlist Banner */}
         {pricingInfo?.blocked && (

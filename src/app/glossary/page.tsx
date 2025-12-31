@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
@@ -319,8 +320,9 @@ export default function GlossaryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
+      <Breadcrumb />
 
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-12">

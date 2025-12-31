@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
@@ -366,6 +367,7 @@ export default function MarketPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
+      <Breadcrumb />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}

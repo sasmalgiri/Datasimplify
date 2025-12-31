@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelpers';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Color dot component using ref to avoid inline style warnings
 function ColorDot({ color, className = '' }: { color: string; className?: string }) {
@@ -201,6 +203,8 @@ https://datasimplify.vercel.app
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <FreeNavbar />
+      <Breadcrumb />
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12">
         <div className="max-w-4xl mx-auto px-4">

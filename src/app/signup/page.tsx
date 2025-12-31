@@ -4,6 +4,8 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 function SignupForm() {
   const [email, setEmail] = useState('');
@@ -188,15 +190,19 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <Suspense fallback={
-        <div className="text-gray-900 text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          Loading...
-        </div>
-      }>
-        <SignupForm />
-      </Suspense>
+    <div className="min-h-screen bg-gray-900">
+      <FreeNavbar />
+      <Breadcrumb />
+      <div className="flex items-center justify-center px-4 py-12">
+        <Suspense fallback={
+          <div className="text-white text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            Loading...
+          </div>
+        }>
+          <SignupForm />
+        </Suspense>
+      </div>
     </div>
   );
 }

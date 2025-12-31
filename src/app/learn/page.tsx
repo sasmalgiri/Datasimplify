@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ProgressBar } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Progress bar component using ref to avoid inline style warnings
 function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
@@ -133,9 +134,10 @@ export default function LearnPage() {
   const selectedCourseData = courses.find(c => c.id === selectedCourse);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
-      
+      <Breadcrumb />
+
       {/* Hero */}
       <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white py-12">
         <div className="max-w-6xl mx-auto px-4">

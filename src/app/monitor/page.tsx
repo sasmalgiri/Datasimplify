@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus, Brain, Target, Shield } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // Progress bar component using refs to avoid inline style warnings and ARIA expression warnings
 function ProgressBarRef({ percentage, className, label }: { percentage: number; className: string; label: string }) {
@@ -485,6 +486,7 @@ export default function MonitorPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
+      <Breadcrumb />
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
