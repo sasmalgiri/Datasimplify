@@ -1,12 +1,26 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { ECharts } from 'echarts';
+import * as XLSX from 'xlsx';
 
 // Dynamic import for ECharts to avoid SSR issues
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
+
+// Loading fallback for Suspense
+function ChartLoading() {
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-400">Loading charts...</p>
+      </div>
+    </div>
+  );
+}
 
 // Download helper functions
 function downloadBlob(blob: Blob, filename: string) {
@@ -93,16 +107,50 @@ const ALL_COINS = [
   { id: 'UNI', name: 'Uniswap', symbol: 'UNI', marketCap: 6, price: 8, volume: 0.8, change: 2.8, holders: 10, sentiment: 66, color: '#FF007A' },
 ];
 
-export default function AdvancedChartsPage() {
-  const [selectedChart, setSelectedChart] = useState<AdvancedChartType>('treemap');
+function AdvancedChartsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Initialize state from URL params or defaults
+  const [selectedChart, setSelectedChart] = useState<AdvancedChartType>(() => {
+    const chart = searchParams.get('chart');
+    const validCharts: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker'];
+    return (chart && validCharts.includes(chart as AdvancedChartType)) ? chart as AdvancedChartType : 'treemap';
+  });
   const [isDownloading, setIsDownloading] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
-  // Chart parameter states
-  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT']);
-  const [maxItems, setMaxItems] = useState(8);
-  const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>('marketCap');
-  const [colorMode, setColorMode] = useState<'change' | 'category'>('change');
+  // Chart parameter states - initialize from URL
+  const [selectedCoins, setSelectedCoins] = useState<string[]>(() => {
+    const coins = searchParams.get('coins');
+    return coins ? coins.split(',').filter(c => ALL_COINS.some(ac => ac.id === c)) : ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT'];
+  });
+  const [maxItems, setMaxItems] = useState(() => {
+    const max = searchParams.get('max');
+    const parsed = max ? parseInt(max) : 8;
+    return parsed >= 2 && parsed <= 12 ? parsed : 8;
+  });
+  const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>(() => {
+    const sort = searchParams.get('sort');
+    return (sort === 'marketCap' || sort === 'change' || sort === 'volume') ? sort : 'marketCap';
+  });
+  const [colorMode, setColorMode] = useState<'change' | 'category'>(() => {
+    const color = searchParams.get('color');
+    return (color === 'change' || color === 'category') ? color : 'change';
+  });
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('chart', selectedChart);
+    params.set('coins', selectedCoins.join(','));
+    params.set('max', maxItems.toString());
+    params.set('sort', sortBy);
+    params.set('color', colorMode);
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  }, [selectedChart, selectedCoins, maxItems, sortBy, colorMode, router]);
 
   // Get filtered and sorted coins based on parameters
   const filteredCoins = useMemo(() => {
@@ -141,13 +189,65 @@ export default function AdvancedChartsPage() {
   }, []);
 
   // Download chart function
-  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json') => {
+  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json' | 'xlsx') => {
     setIsDownloading(true);
     try {
       if (format === 'json') {
         // Export chart data as JSON
-        const blob = new Blob([JSON.stringify(COINS_DATA, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(filteredCoins, null, 2)], { type: 'application/json' });
         downloadBlob(blob, `${selectedChart}_data.json`);
+        setIsDownloading(false);
+        return;
+      }
+
+      if (format === 'xlsx') {
+        // Export chart data as Excel with live data instructions
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Current chart data
+        const chartDataForExcel = filteredCoins.map(coin => ({
+          'Symbol': coin.symbol,
+          'Name': coin.name,
+          'Price (USD)': `$${coin.price.toLocaleString()}`,
+          'Market Cap ($B)': coin.marketCap,
+          'Volume ($B)': coin.volume,
+          '24h Change (%)': coin.change,
+          'Holders (M)': coin.holders,
+          'Sentiment Score': coin.sentiment,
+        }));
+        const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
+        wsData['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
+        XLSX.utils.book_append_sheet(wb, wsData, 'Chart Data');
+
+        // Sheet 2: Live Data Instructions
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
+        const liveDataInstructions = [
+          ['DataSimplify - Live Data Connection'],
+          [''],
+          ['Chart Type:', selectedChart],
+          ['Generated:', new Date().toISOString()],
+          ['Coins:', selectedCoins.join(', ')],
+          [''],
+          ['GET LIVE DATA IN EXCEL (Power Query):'],
+          ['1. Go to Data tab → Get Data → From Web'],
+          ['2. Paste this URL:', `${baseUrl}/api/download?category=market_overview&format=json`],
+          ['3. Click OK and transform JSON to table'],
+          ['4. Right-click query → Properties → Enable auto-refresh'],
+          [''],
+          ['GET LIVE DATA IN GOOGLE SHEETS:'],
+          ['Paste this formula in any cell:'],
+          [`=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
+          [''],
+          ['More data available at:', `${baseUrl}/download`],
+        ];
+        const wsInstructions = XLSX.utils.aoa_to_sheet(liveDataInstructions);
+        wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
+        XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
+
+        // Generate and download
+        const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+        const blob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        downloadBlob(blob, `${selectedChart}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
         setIsDownloading(false);
         return;
       }
@@ -194,7 +294,7 @@ export default function AdvancedChartsPage() {
     } finally {
       setIsDownloading(false);
     }
-  }, [selectedChart]);
+  }, [selectedChart, filteredCoins, selectedCoins]);
 
   // Chart options generators
   const getChartOption = useMemo(() => {
@@ -1041,6 +1141,18 @@ export default function AdvancedChartsPage() {
                       </svg>
                       JSON
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadChart('xlsx')}
+                      disabled={isDownloading}
+                      className="px-2 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Download as Excel with live data connection"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Excel
+                    </button>
                   </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
                     ECharts
@@ -1104,5 +1216,14 @@ export default function AdvancedChartsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Default export wrapped in Suspense for useSearchParams
+export default function AdvancedChartsPage() {
+  return (
+    <Suspense fallback={<ChartLoading />}>
+      <AdvancedChartsContent />
+    </Suspense>
   );
 }

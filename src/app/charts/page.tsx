@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import * as XLSX from 'xlsx';
 import {
   LineChart,
   Line,
@@ -27,6 +29,18 @@ import {
   ReferenceLine,
   Brush,
 } from 'recharts';
+
+// Loading fallback for Suspense
+function ChartLoading() {
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p className="text-gray-400">Loading charts...</p>
+      </div>
+    </div>
+  );
+}
 
 // Dynamic bar component using ref to avoid inline style warnings
 function DynamicBar({
@@ -207,10 +221,32 @@ const TIME_RANGES = [
 
 const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
-export default function ChartsPage() {
-  const [selectedChart, setSelectedChart] = useState<ChartType>('price_history');
-  const [selectedCoin, setSelectedCoin] = useState('bitcoin');
-  const [timeRange, setTimeRange] = useState('30');
+// Valid chart types for URL validation
+const VALID_CHART_TYPES: ChartType[] = [
+  'price_history', 'candlestick', 'volatility', 'correlation', 'racing_bar',
+  'market_dominance', 'prediction_accuracy', 'price_prediction', 'volume_analysis',
+  'momentum', 'fibonacci', 'volume_profile', 'funding_rate', 'open_interest',
+  'liquidation_heatmap', 'whale_flow', 'active_addresses', 'fear_greed_history',
+  'social_volume', 'btc_dominance'
+];
+
+function ChartsContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Initialize state from URL params or defaults
+  const [selectedChart, setSelectedChart] = useState<ChartType>(() => {
+    const chart = searchParams.get('chart');
+    return (chart && VALID_CHART_TYPES.includes(chart as ChartType)) ? chart as ChartType : 'price_history';
+  });
+  const [selectedCoin, setSelectedCoin] = useState(() => {
+    const coin = searchParams.get('coin');
+    return (coin && COINS.some(c => c.id === coin)) ? coin : 'bitcoin';
+  });
+  const [timeRange, setTimeRange] = useState(() => {
+    const range = searchParams.get('range');
+    return (range && TIME_RANGES.some(t => t.value === range)) ? range : '30';
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [chartData, setChartData] = useState<Record<string, unknown>[]>([]);
   const [candlestickData, setCandlestickData] = useState<Record<string, unknown>[]>([]);
@@ -218,10 +254,27 @@ export default function ChartsPage() {
   const [racingData, setRacingData] = useState<Record<string, unknown>[]>([]);
   const [racingFrame, setRacingFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showMA, setShowMA] = useState(true);
-  const [showVolume, setShowVolume] = useState(true);
-  const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
+  const [showMA, setShowMA] = useState(() => searchParams.get('ma') !== 'false');
+  const [showVolume, setShowVolume] = useState(() => searchParams.get('volume') !== 'false');
+  const [chartStyle, setChartStyle] = useState<'line' | 'area'>(() => {
+    const style = searchParams.get('style');
+    return (style === 'line' || style === 'area') ? style : 'area';
+  });
   const chartRef = useRef<HTMLDivElement>(null);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('chart', selectedChart);
+    params.set('coin', selectedCoin);
+    params.set('range', timeRange);
+    params.set('ma', showMA.toString());
+    params.set('volume', showVolume.toString());
+    params.set('style', chartStyle);
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    router.replace(newUrl, { scroll: false });
+  }, [selectedChart, selectedCoin, timeRange, showMA, showVolume, chartStyle, router]);
 
   // Fetch chart data based on selected options
   const fetchChartData = useCallback(async () => {
@@ -387,8 +440,8 @@ export default function ChartsPage() {
   }, [isPlaying, racingData.length]);
 
   // Download chart as image
-  const downloadChart = async (format: 'png' | 'svg' | 'json') => {
-    if (!chartRef.current) return;
+  const downloadChart = async (format: 'png' | 'svg' | 'json' | 'xlsx') => {
+    if (!chartRef.current && format !== 'xlsx' && format !== 'json') return;
 
     if (format === 'json') {
       const blob = new Blob([JSON.stringify(chartData, null, 2)], { type: 'application/json' });
@@ -401,8 +454,65 @@ export default function ChartsPage() {
       return;
     }
 
+    if (format === 'xlsx') {
+      // Export chart data as Excel with live data instructions
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Current chart data
+      const chartDataForExcel = chartData.map((d: Record<string, unknown>) => ({
+        'Date': d.date as string,
+        'Price (USD)': d.price as number,
+        'MA 7-Day': d.ma7 || 'N/A',
+        'MA 30-Day': d.ma30 || 'N/A',
+        'Volatility (%)': typeof d.volatility === 'number' ? (d.volatility as number).toFixed(4) : 'N/A',
+        'Volume (USD)': d.volume as number,
+      }));
+      const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
+      wsData['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
+      XLSX.utils.book_append_sheet(wb, wsData, 'Chart Data');
+
+      // Sheet 2: Live Data Instructions
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
+      const coinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
+      const liveDataInstructions = [
+        ['DataSimplify - Live Data Connection'],
+        [''],
+        ['Coin:', coinName],
+        ['Chart Type:', selectedChart],
+        ['Time Range:', `${timeRange} days`],
+        ['Generated:', new Date().toISOString()],
+        [''],
+        ['GET LIVE DATA IN EXCEL (Power Query):'],
+        ['1. Go to Data tab → Get Data → From Web'],
+        ['2. Paste this URL:', `${baseUrl}/api/charts/history?coin=${selectedCoin}&days=${timeRange}`],
+        ['3. Click OK and transform JSON to table'],
+        ['4. Right-click query → Properties → Enable auto-refresh'],
+        [''],
+        ['GET LIVE DATA IN GOOGLE SHEETS:'],
+        ['Paste this formula in any cell:'],
+        [`=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
+        [''],
+        ['More data available at:', `${baseUrl}/download`],
+      ];
+      const wsInstructions = XLSX.utils.aoa_to_sheet(liveDataInstructions);
+      wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
+      XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
+
+      // Generate and download
+      const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+      const blob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
     // For PNG/SVG, we need to convert the chart
     try {
+      if (!chartRef.current) return;
       const svg = chartRef.current.querySelector('svg');
       if (!svg) return;
 
@@ -1602,22 +1712,33 @@ export default function ChartsPage() {
           {/* Download Buttons */}
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => downloadChart('png')}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition"
             >
-              Download PNG
+              PNG
             </button>
             <button
+              type="button"
               onClick={() => downloadChart('svg')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
             >
-              Download SVG
+              SVG
             </button>
             <button
+              type="button"
               onClick={() => downloadChart('json')}
               className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition"
             >
-              Download Data
+              JSON
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadChart('xlsx')}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
+              title="Download as Excel with live data connection"
+            >
+              Excel
             </button>
           </div>
         </div>
@@ -1784,5 +1905,14 @@ export default function ChartsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Default export wrapped in Suspense for useSearchParams
+export default function ChartsPage() {
+  return (
+    <Suspense fallback={<ChartLoading />}>
+      <ChartsContent />
+    </Suspense>
   );
 }
