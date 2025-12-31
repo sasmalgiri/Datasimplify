@@ -4,10 +4,12 @@ import {
   syncAllData,
   syncMarketData,
   syncCoinGeckoData,
+  syncCoinLoreData, // Commercial-friendly alternative
   syncDefiData,
   syncSentimentData,
   syncWhaleData,
   syncOnChainMetrics,
+  DATA_ATTRIBUTIONS, // Data source attributions for commercial use
 } from '@/lib/syncService';
 import { cleanupOldData, getDatabaseStats } from '@/lib/dbCleanup';
 
@@ -50,7 +52,12 @@ export async function GET(request: Request) {
       case 'market':
         result = await syncMarketData();
         break;
+      case 'coinlore':
+        // Commercial-friendly market data (recommended for production)
+        result = await syncCoinLoreData();
+        break;
       case 'coingecko':
+        // Note: CoinGecko free tier is for personal use only
         result = await syncCoinGeckoData();
         break;
       case 'defi':
@@ -73,9 +80,13 @@ export async function GET(request: Request) {
         // Get database size stats
         result = await getDatabaseStats();
         break;
+      case 'attributions':
+        // Return data source attributions (required for commercial use)
+        result = DATA_ATTRIBUTIONS;
+        break;
       default:
         return NextResponse.json(
-          { error: 'Invalid sync type', validTypes: ['all', 'market', 'coingecko', 'defi', 'sentiment', 'whales', 'onchain', 'cleanup', 'stats'] },
+          { error: 'Invalid sync type', validTypes: ['all', 'market', 'coinlore', 'coingecko', 'defi', 'sentiment', 'whales', 'onchain', 'cleanup', 'stats', 'attributions'] },
           { status: 400 }
         );
     }
