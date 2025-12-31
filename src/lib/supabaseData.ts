@@ -626,8 +626,8 @@ export async function getWhaleDataFreshness(): Promise<boolean> {
 // BULK MARKET DATA CACHE (for /api/crypto)
 // ============================================
 
-// Cache TTL: 1 minute for market data
-const BULK_MARKET_CACHE_TTL_MS = 60 * 1000;
+// Cache TTL: 5 minutes for market data (reduces CoinGecko API calls)
+const BULK_MARKET_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export interface BulkMarketCoin {
   id: string;
@@ -669,7 +669,7 @@ export async function getBulkMarketDataFromCache(limit: number = 100): Promise<B
 
     // Transform to CoinGecko format - match actual schema columns
     return data.map(coin => ({
-      id: coin.symbol?.toLowerCase() || '',
+      id: coin.coingecko_id || coin.symbol?.toLowerCase() || '',
       symbol: coin.symbol?.toLowerCase() || '',
       name: coin.name || '',
       image: '', // Not in actual schema
@@ -717,6 +717,7 @@ export async function saveBulkMarketDataToCache(coins: Array<{
     // Map to actual schema columns
     const records = coins.map(coin => ({
       symbol: coin.symbol.toUpperCase(),
+      coingecko_id: coin.id, // Store CoinGecko ID for proper cache matching
       name: coin.name,
       price: coin.current_price,
       market_cap: coin.market_cap,

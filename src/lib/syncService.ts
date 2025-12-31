@@ -111,6 +111,102 @@ async function shouldGenerateDailySummary(category: string): Promise<boolean> {
 }
 
 // ============================================
+// 0. SYNC COINGECKO MARKET DATA (Every 5 minutes)
+// For Compare page and other CoinGecko-dependent features
+// ============================================
+
+export async function syncCoinGeckoData(): Promise<{ success: boolean; count: number; error?: string }> {
+  const logId = await logSyncStart('coingecko_market');
+
+  try {
+    console.log('🪙 Syncing CoinGecko market data...');
+
+    // Fetch top 250 coins from CoinGecko (free tier limit per call)
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h,7d,30d,1y',
+      {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 300 }, // 5 min cache
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('CoinGecko rate limit exceeded. Will retry on next sync.');
+      }
+      throw new Error(`CoinGecko API error: ${response.status}`);
+    }
+
+    const coins = await response.json();
+
+    if (!Array.isArray(coins) || coins.length === 0) {
+      throw new Error('No CoinGecko data received');
+    }
+
+    // Transform to our cache format - store CoinGecko ID!
+    const timestamp = new Date().toISOString();
+    const records = coins.map((coin: {
+      id: string;
+      symbol: string;
+      name: string;
+      current_price: number;
+      market_cap: number;
+      market_cap_rank: number;
+      price_change_24h: number;
+      price_change_percentage_24h: number;
+      price_change_percentage_7d_in_currency?: number;
+      price_change_percentage_30d_in_currency?: number;
+      price_change_percentage_1y_in_currency?: number;
+      total_volume: number;
+      circulating_supply: number;
+      total_supply: number;
+      max_supply: number | null;
+      ath: number;
+      atl: number;
+      image: string;
+    }) => ({
+      symbol: coin.symbol.toUpperCase(),
+      coingecko_id: coin.id, // Critical: store CoinGecko ID for cache matching
+      name: coin.name,
+      price: coin.current_price,
+      market_cap: coin.market_cap,
+      rank: coin.market_cap_rank,
+      price_change_24h: coin.price_change_percentage_24h || 0,
+      price_change_7d: coin.price_change_percentage_7d_in_currency || 0,
+      price_change_30d: coin.price_change_percentage_30d_in_currency || 0,
+      price_change_1y: coin.price_change_percentage_1y_in_currency || 0,
+      volume_24h: coin.total_volume || 0,
+      circulating_supply: coin.circulating_supply || 0,
+      total_supply: coin.total_supply || null,
+      max_supply: coin.max_supply || null,
+      ath: coin.ath || null,
+      atl: coin.atl || null,
+      image_url: coin.image,
+      updated_at: timestamp,
+      fetched_at: timestamp
+    }));
+
+    // Upsert to Supabase
+    const { error } = await checkSupabaseAdmin()
+      .from('market_data')
+      .upsert(records, { onConflict: 'symbol' });
+
+    if (error) throw error;
+
+    console.log(`✅ Synced ${records.length} coins from CoinGecko`);
+    await logSyncComplete(logId, records.length);
+
+    return { success: true, count: records.length };
+
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ CoinGecko sync failed:', errorMsg);
+    await logSyncComplete(logId, 0, errorMsg);
+    return { success: false, count: 0, error: errorMsg };
+  }
+}
+
+// ============================================
 // 1. SYNC MARKET DATA (Every 1 minute)
 // ============================================
 
@@ -549,8 +645,9 @@ export async function syncAllData(): Promise<{
 }> {
   console.log('🔄 Starting full data sync...');
   console.log('⏰', new Date().toISOString());
-  
+
   const results = {
+    coinGecko: await syncCoinGeckoData(), // Sync CoinGecko data first (for Compare page)
     marketData: await syncMarketData(),
     defiData: await syncDefiData(),
     sentiment: await syncSentimentData(),
@@ -576,6 +673,7 @@ export async function syncAllData(): Promise<{
 // ============================================
 
 export const SYNC_INTERVALS = {
+  coingecko: 5 * 60 * 1000,      // 5 minutes (CoinGecko rate limit friendly)
   market_data: 60 * 1000,        // 1 minute
   defi_data: 10 * 60 * 1000,     // 10 minutes
   sentiment: 15 * 60 * 1000,     // 15 minutes
@@ -586,16 +684,17 @@ export const SYNC_INTERVALS = {
 // Start all sync jobs (for local development)
 export function startSyncJobs() {
   console.log('🚀 Starting sync jobs...');
-  
+
   // Initial sync
   syncAllData();
-  
+
   // Schedule recurring syncs
+  setInterval(syncCoinGeckoData, SYNC_INTERVALS.coingecko);
   setInterval(syncMarketData, SYNC_INTERVALS.market_data);
   setInterval(syncDefiData, SYNC_INTERVALS.defi_data);
   setInterval(syncSentimentData, SYNC_INTERVALS.sentiment);
   setInterval(syncWhaleData, SYNC_INTERVALS.whales);
   setInterval(syncOnChainMetrics, SYNC_INTERVALS.onchain);
-  
+
   console.log('✅ Sync jobs scheduled');
 }

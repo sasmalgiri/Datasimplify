@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   syncAllData,
   syncMarketData,
+  syncCoinGeckoData,
   syncDefiData,
   syncSentimentData,
   syncWhaleData,
@@ -49,6 +50,9 @@ export async function GET(request: Request) {
       case 'market':
         result = await syncMarketData();
         break;
+      case 'coingecko':
+        result = await syncCoinGeckoData();
+        break;
       case 'defi':
         result = await syncDefiData();
         break;
@@ -71,7 +75,7 @@ export async function GET(request: Request) {
         break;
       default:
         return NextResponse.json(
-          { error: 'Invalid sync type', validTypes: ['all', 'market', 'defi', 'sentiment', 'whales', 'onchain', 'cleanup', 'stats'] },
+          { error: 'Invalid sync type', validTypes: ['all', 'market', 'coingecko', 'defi', 'sentiment', 'whales', 'onchain', 'cleanup', 'stats'] },
           { status: 400 }
         );
     }

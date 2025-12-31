@@ -46,9 +46,10 @@ export async function GET(request: Request) {
       if (isSupabaseConfigured) {
         const cached = await getMarketDataFromCache({ limit: MAX_LIMIT });
         if (cached && cached.length > 0) {
-          // Filter cached data for requested IDs
-          const matchedCoins = cached.filter((coin: { id: string }) =>
-            idList.includes(coin.id.toLowerCase())
+          // Filter cached data for requested IDs (match by id or symbol)
+          const matchedCoins = cached.filter((coin: { id: string; symbol: string }) =>
+            idList.includes(coin.id.toLowerCase()) ||
+            idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
           );
 
           // If we have all requested coins in cache, return them
@@ -79,8 +80,9 @@ export async function GET(request: Request) {
         if (isSupabaseConfigured) {
           const staleCache = await getMarketDataFromCache({ limit: MAX_LIMIT });
           if (staleCache && staleCache.length > 0) {
-            const matchedCoins = staleCache.filter((coin: { id: string }) =>
-              idList.includes(coin.id.toLowerCase())
+            const matchedCoins = staleCache.filter((coin: { id: string; symbol: string }) =>
+              idList.includes(coin.id.toLowerCase()) ||
+              idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
             );
             if (matchedCoins.length > 0) {
               return NextResponse.json({
