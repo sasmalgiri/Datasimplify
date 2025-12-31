@@ -25,7 +25,8 @@ export async function GET(request: Request) {
       });
     }
 
-    const limit = days <= 1 ? 24 : days <= 7 ? days * 6 : days;
+    // Binance supports up to 1000 candles per request
+    const limit = Math.min(days <= 1 ? 24 : days <= 7 ? days * 6 : days, 1000);
     const klines = await getBinanceKlines(symbol, interval as '1h' | '4h' | '1d', limit);
 
     if (!klines || klines.length === 0) {

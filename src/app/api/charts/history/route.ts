@@ -1,9 +1,12 @@
 /**
  * Chart History API
  * Returns price history data for charts
+ * Uses Binance API (FREE, Commercial OK) as primary source
+ * Falls back to CoinGecko or mock data if needed
  */
 
 import { NextResponse } from 'next/server';
+import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { getPriceHistory } from '@/lib/coingecko';
 
 export async function GET(request: Request) {
@@ -12,20 +15,49 @@ export async function GET(request: Request) {
     const coin = searchParams.get('coin') || 'bitcoin';
     const days = parseInt(searchParams.get('days') || '30');
 
-    const priceHistory = await getPriceHistory(coin, days);
+    // Try Binance first (commercial-friendly, supports up to 1000 daily candles = ~2.7 years)
+    const binanceSymbol = getCoinSymbol(coin);
 
-    if (!priceHistory || priceHistory.length === 0) {
-      // Return mock data if API fails
-      const mockData = generateMockPriceHistory(coin, days);
-      return NextResponse.json({ prices: mockData, source: 'mock' });
+    if (binanceSymbol) {
+      // Binance supports up to 1000 candles per request
+      const limit = Math.min(days, 1000);
+      const klines = await getBinanceKlines(binanceSymbol, '1d', limit);
+
+      if (klines && klines.length > 0) {
+        const priceHistory = klines.map(k => ({
+          timestamp: k.timestamp,
+          price: k.close,
+          open: k.open,
+          high: k.high,
+          low: k.low,
+          volume: k.volume,
+        }));
+
+        return NextResponse.json({
+          prices: priceHistory,
+          source: 'binance',
+          coin,
+          days: priceHistory.length,
+        });
+      }
     }
 
-    return NextResponse.json({
-      prices: priceHistory,
-      source: 'coingecko',
-      coin,
-      days,
-    });
+    // Fallback to CoinGecko if Binance fails
+    const priceHistory = await getPriceHistory(coin, days);
+
+    if (priceHistory && priceHistory.length > 0) {
+      return NextResponse.json({
+        prices: priceHistory,
+        source: 'coingecko',
+        coin,
+        days,
+      });
+    }
+
+    // Final fallback: mock data
+    const mockData = generateMockPriceHistory(coin, days);
+    return NextResponse.json({ prices: mockData, source: 'mock' });
+
   } catch (error) {
     console.error('Chart history API error:', error);
 
@@ -63,6 +95,10 @@ function generateMockPriceHistory(coin: string, days: number) {
     prices.push({
       timestamp: date.getTime(),
       price: currentPrice,
+      open: currentPrice * (1 - volatility/2),
+      high: currentPrice * (1 + volatility),
+      low: currentPrice * (1 - volatility),
+      volume: Math.random() * 1000000000,
     });
   }
 
