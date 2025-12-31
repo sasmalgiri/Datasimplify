@@ -514,7 +514,7 @@ export default function ComparePage() {
           <p className="text-emerald-400 text-sm flex items-start gap-2">
             <span>🚀</span>
             <span>
-              <strong>More than competitors!</strong> Compare up to 10 coins (CoinGecko allows only 2).
+              <strong>Powerful comparison tools!</strong> Compare up to 10 coins side-by-side.
               Filter by category, 50+ coins, 7d/30d changes, ATH/ATL, FDV, and export to CSV/JSON!
             </span>
           </p>
