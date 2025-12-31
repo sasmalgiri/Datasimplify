@@ -107,40 +107,66 @@ const ALL_COINS = [
   { id: 'UNI', name: 'Uniswap', symbol: 'UNI', marketCap: 6, price: 8, volume: 0.8, change: 2.8, holders: 10, sentiment: 66, color: '#FF007A' },
 ];
 
+// Valid chart types for URL validation
+const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker'];
+
 function AdvancedChartsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isInitialized = useRef(false);
 
-  // Initialize state from URL params or defaults
-  const [selectedChart, setSelectedChart] = useState<AdvancedChartType>(() => {
-    const chart = searchParams.get('chart');
-    const validCharts: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker'];
-    return (chart && validCharts.includes(chart as AdvancedChartType)) ? chart as AdvancedChartType : 'treemap';
-  });
+  // Initialize state with defaults - URL params loaded in useEffect
+  const [selectedChart, setSelectedChart] = useState<AdvancedChartType>('treemap');
   const [isDownloading, setIsDownloading] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
-  // Chart parameter states - initialize from URL
-  const [selectedCoins, setSelectedCoins] = useState<string[]>(() => {
-    const coins = searchParams.get('coins');
-    return coins ? coins.split(',').filter(c => ALL_COINS.some(ac => ac.id === c)) : ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT'];
-  });
-  const [maxItems, setMaxItems] = useState(() => {
-    const max = searchParams.get('max');
-    const parsed = max ? parseInt(max) : 8;
-    return parsed >= 2 && parsed <= 12 ? parsed : 8;
-  });
-  const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>(() => {
-    const sort = searchParams.get('sort');
-    return (sort === 'marketCap' || sort === 'change' || sort === 'volume') ? sort : 'marketCap';
-  });
-  const [colorMode, setColorMode] = useState<'change' | 'category'>(() => {
-    const color = searchParams.get('color');
-    return (color === 'change' || color === 'category') ? color : 'change';
-  });
+  // Chart parameter states - defaults
+  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT']);
+  const [maxItems, setMaxItems] = useState(8);
+  const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>('marketCap');
+  const [colorMode, setColorMode] = useState<'change' | 'category'>('change');
 
-  // Sync state to URL
+  // Initialize state from URL params on mount (client-side only)
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
+    const chart = searchParams.get('chart');
+    if (chart && VALID_ADVANCED_CHART_TYPES.includes(chart as AdvancedChartType)) {
+      setSelectedChart(chart as AdvancedChartType);
+    }
+
+    const coins = searchParams.get('coins');
+    if (coins) {
+      const validCoins = coins.split(',').filter(c => ALL_COINS.some(ac => ac.id === c));
+      if (validCoins.length > 0) {
+        setSelectedCoins(validCoins);
+      }
+    }
+
+    const max = searchParams.get('max');
+    if (max) {
+      const parsed = parseInt(max);
+      if (parsed >= 2 && parsed <= 12) {
+        setMaxItems(parsed);
+      }
+    }
+
+    const sort = searchParams.get('sort');
+    if (sort === 'marketCap' || sort === 'change' || sort === 'volume') {
+      setSortBy(sort);
+    }
+
+    const color = searchParams.get('color');
+    if (color === 'change' || color === 'category') {
+      setColorMode(color);
+    }
+  }, [searchParams]);
+
+  // Sync state to URL (only after initialization)
+  useEffect(() => {
+    if (!isInitialized.current) return;
+
     const params = new URLSearchParams();
     params.set('chart', selectedChart);
     params.set('coins', selectedCoins.join(','));

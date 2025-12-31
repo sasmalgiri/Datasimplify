@@ -233,20 +233,12 @@ const VALID_CHART_TYPES: ChartType[] = [
 function ChartsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isInitialized = useRef(false);
 
-  // Initialize state from URL params or defaults
-  const [selectedChart, setSelectedChart] = useState<ChartType>(() => {
-    const chart = searchParams.get('chart');
-    return (chart && VALID_CHART_TYPES.includes(chart as ChartType)) ? chart as ChartType : 'price_history';
-  });
-  const [selectedCoin, setSelectedCoin] = useState(() => {
-    const coin = searchParams.get('coin');
-    return (coin && COINS.some(c => c.id === coin)) ? coin : 'bitcoin';
-  });
-  const [timeRange, setTimeRange] = useState(() => {
-    const range = searchParams.get('range');
-    return (range && TIME_RANGES.some(t => t.value === range)) ? range : '30';
-  });
+  // Initialize state with defaults - URL params loaded in useEffect
+  const [selectedChart, setSelectedChart] = useState<ChartType>('price_history');
+  const [selectedCoin, setSelectedCoin] = useState('bitcoin');
+  const [timeRange, setTimeRange] = useState('30');
   const [isLoading, setIsLoading] = useState(false);
   const [chartData, setChartData] = useState<Record<string, unknown>[]>([]);
   const [candlestickData, setCandlestickData] = useState<Record<string, unknown>[]>([]);
@@ -254,16 +246,51 @@ function ChartsContent() {
   const [racingData, setRacingData] = useState<Record<string, unknown>[]>([]);
   const [racingFrame, setRacingFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showMA, setShowMA] = useState(() => searchParams.get('ma') !== 'false');
-  const [showVolume, setShowVolume] = useState(() => searchParams.get('volume') !== 'false');
-  const [chartStyle, setChartStyle] = useState<'line' | 'area'>(() => {
-    const style = searchParams.get('style');
-    return (style === 'line' || style === 'area') ? style : 'area';
-  });
+  const [showMA, setShowMA] = useState(true);
+  const [showVolume, setShowVolume] = useState(true);
+  const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
   const chartRef = useRef<HTMLDivElement>(null);
 
-  // Sync state to URL
+  // Initialize state from URL params on mount (client-side only)
   useEffect(() => {
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+
+    const chart = searchParams.get('chart');
+    if (chart && VALID_CHART_TYPES.includes(chart as ChartType)) {
+      setSelectedChart(chart as ChartType);
+    }
+
+    const coin = searchParams.get('coin');
+    if (coin && COINS.some(c => c.id === coin)) {
+      setSelectedCoin(coin);
+    }
+
+    const range = searchParams.get('range');
+    if (range && TIME_RANGES.some(t => t.value === range)) {
+      setTimeRange(range);
+    }
+
+    const ma = searchParams.get('ma');
+    if (ma === 'false') {
+      setShowMA(false);
+    }
+
+    const volume = searchParams.get('volume');
+    if (volume === 'false') {
+      setShowVolume(false);
+    }
+
+    const style = searchParams.get('style');
+    if (style === 'line' || style === 'area') {
+      setChartStyle(style);
+    }
+  }, [searchParams]);
+
+  // Sync state to URL (only after initialization)
+  useEffect(() => {
+    if (!isInitialized.current) return;
+
     const params = new URLSearchParams();
     params.set('chart', selectedChart);
     params.set('coin', selectedCoin);
