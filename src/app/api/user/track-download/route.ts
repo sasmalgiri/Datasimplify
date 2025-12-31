@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Get user
-    const { data: user, error: fetchError } = await supabase
+    const { data: user } = await supabase
       .from('free_users')
       .select('*')
       .eq('email', email.toLowerCase())
@@ -72,12 +72,16 @@ export async function POST(request: Request) {
     }
 
     // Log the download
-    await supabase.from('download_logs').insert({
-      user_email: email.toLowerCase(),
-      download_type: downloadType || 'unknown',
-      file_name: fileName || 'unknown',
-      downloaded_at: now.toISOString(),
-    }).catch(console.error);
+    try {
+      await supabase.from('download_logs').insert({
+        user_email: email.toLowerCase(),
+        download_type: downloadType || 'unknown',
+        file_name: fileName || 'unknown',
+        downloaded_at: now.toISOString(),
+      });
+    } catch (logError) {
+      console.error('Error logging download:', logError);
+    }
 
     return NextResponse.json({
       success: true,
