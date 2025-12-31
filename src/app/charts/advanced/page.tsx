@@ -1258,10 +1258,13 @@ function AdvancedChartsContent() {
                   <WalletDistributionTreemap />
                 ) : (
                   <ReactECharts
+                    key={selectedChart}
                     option={getChartOption}
                     style={{ height: '100%', width: '100%' }}
                     opts={{ renderer: 'canvas' }}
                     theme="dark"
+                    notMerge={true}
+                    lazyUpdate={false}
                     onChartReady={onChartReady}
                   />
                 )}
