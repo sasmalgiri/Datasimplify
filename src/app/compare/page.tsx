@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -74,88 +75,13 @@ const CATEGORIES = [
   { id: 'ai', label: 'AI', color: 'bg-red-600' },
 ];
 
-// Extended coin list with categories - 50+ coins
-const ALL_COINS = [
-  // Layer 1
-  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', category: 'layer1' },
-  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', category: 'layer1' },
-  { id: 'solana', symbol: 'SOL', name: 'Solana', category: 'layer1' },
-  { id: 'cardano', symbol: 'ADA', name: 'Cardano', category: 'layer1' },
-  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche', category: 'layer1' },
-  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot', category: 'layer1' },
-  { id: 'near', symbol: 'NEAR', name: 'NEAR Protocol', category: 'layer1' },
-  { id: 'cosmos', symbol: 'ATOM', name: 'Cosmos', category: 'layer1' },
-  { id: 'internet-computer', symbol: 'ICP', name: 'Internet Computer', category: 'layer1' },
-  { id: 'aptos', symbol: 'APT', name: 'Aptos', category: 'layer1' },
-  { id: 'sui', symbol: 'SUI', name: 'Sui', category: 'layer1' },
-  { id: 'fantom', symbol: 'FTM', name: 'Fantom', category: 'layer1' },
-  { id: 'algorand', symbol: 'ALGO', name: 'Algorand', category: 'layer1' },
-  { id: 'tezos', symbol: 'XTZ', name: 'Tezos', category: 'layer1' },
-  { id: 'hedera-hashgraph', symbol: 'HBAR', name: 'Hedera', category: 'layer1' },
-  { id: 'kaspa', symbol: 'KAS', name: 'Kaspa', category: 'layer1' },
-  { id: 'sei-network', symbol: 'SEI', name: 'Sei', category: 'layer1' },
-  { id: 'injective-protocol', symbol: 'INJ', name: 'Injective', category: 'layer1' },
-
-  // Layer 2
-  { id: 'matic-network', symbol: 'MATIC', name: 'Polygon', category: 'layer2' },
-  { id: 'arbitrum', symbol: 'ARB', name: 'Arbitrum', category: 'layer2' },
-  { id: 'optimism', symbol: 'OP', name: 'Optimism', category: 'layer2' },
-  { id: 'immutable-x', symbol: 'IMX', name: 'Immutable', category: 'layer2' },
-  { id: 'starknet', symbol: 'STRK', name: 'Starknet', category: 'layer2' },
-  { id: 'mantle', symbol: 'MNT', name: 'Mantle', category: 'layer2' },
-
-  // DeFi
-  { id: 'uniswap', symbol: 'UNI', name: 'Uniswap', category: 'defi' },
-  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink', category: 'defi' },
-  { id: 'aave', symbol: 'AAVE', name: 'Aave', category: 'defi' },
-  { id: 'maker', symbol: 'MKR', name: 'Maker', category: 'defi' },
-  { id: 'lido-dao', symbol: 'LDO', name: 'Lido DAO', category: 'defi' },
-  { id: 'the-graph', symbol: 'GRT', name: 'The Graph', category: 'defi' },
-  { id: 'curve-dao-token', symbol: 'CRV', name: 'Curve', category: 'defi' },
-  { id: 'jupiter-exchange-solana', symbol: 'JUP', name: 'Jupiter', category: 'defi' },
-  { id: 'raydium', symbol: 'RAY', name: 'Raydium', category: 'defi' },
-  { id: 'pancakeswap-token', symbol: 'CAKE', name: 'PancakeSwap', category: 'defi' },
-
-  // Gaming / Metaverse
-  { id: 'render-token', symbol: 'RNDR', name: 'Render', category: 'gaming' },
-  { id: 'the-sandbox', symbol: 'SAND', name: 'The Sandbox', category: 'gaming' },
-  { id: 'decentraland', symbol: 'MANA', name: 'Decentraland', category: 'gaming' },
-  { id: 'axie-infinity', symbol: 'AXS', name: 'Axie Infinity', category: 'gaming' },
-  { id: 'gala', symbol: 'GALA', name: 'Gala', category: 'gaming' },
-  { id: 'enjincoin', symbol: 'ENJ', name: 'Enjin Coin', category: 'gaming' },
-  { id: 'illuvium', symbol: 'ILV', name: 'Illuvium', category: 'gaming' },
-
-  // Meme
-  { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', category: 'meme' },
-  { id: 'shiba-inu', symbol: 'SHIB', name: 'Shiba Inu', category: 'meme' },
-  { id: 'pepe', symbol: 'PEPE', name: 'Pepe', category: 'meme' },
-  { id: 'dogwifcoin', symbol: 'WIF', name: 'dogwifhat', category: 'meme' },
-  { id: 'bonk', symbol: 'BONK', name: 'Bonk', category: 'meme' },
-  { id: 'floki', symbol: 'FLOKI', name: 'Floki', category: 'meme' },
-
-  // Exchange Tokens
-  { id: 'binancecoin', symbol: 'BNB', name: 'BNB', category: 'exchange' },
-  { id: 'okb', symbol: 'OKB', name: 'OKB', category: 'exchange' },
-  { id: 'crypto-com-chain', symbol: 'CRO', name: 'Cronos', category: 'exchange' },
-  { id: 'kucoin-shares', symbol: 'KCS', name: 'KuCoin Token', category: 'exchange' },
-
-  // Payments
-  { id: 'ripple', symbol: 'XRP', name: 'XRP', category: 'payments' },
-  { id: 'stellar', symbol: 'XLM', name: 'Stellar', category: 'payments' },
-  { id: 'litecoin', symbol: 'LTC', name: 'Litecoin', category: 'payments' },
-  { id: 'tron', symbol: 'TRX', name: 'TRON', category: 'payments' },
-  { id: 'bitcoin-cash', symbol: 'BCH', name: 'Bitcoin Cash', category: 'payments' },
-
-  // Storage
-  { id: 'filecoin', symbol: 'FIL', name: 'Filecoin', category: 'storage' },
-  { id: 'arweave', symbol: 'AR', name: 'Arweave', category: 'storage' },
-
-  // AI
-  { id: 'fetch-ai', symbol: 'FET', name: 'Fetch.ai', category: 'ai' },
-  { id: 'singularitynet', symbol: 'AGIX', name: 'SingularityNET', category: 'ai' },
-  { id: 'ocean-protocol', symbol: 'OCEAN', name: 'Ocean Protocol', category: 'ai' },
-  { id: 'bittensor', symbol: 'TAO', name: 'Bittensor', category: 'ai' },
-];
+// Use all 67 supported coins from shared config with categories
+const ALL_COINS = SUPPORTED_COINS.map(coin => ({
+  id: coin.symbol.toLowerCase(),
+  symbol: coin.symbol,
+  name: coin.name,
+  category: coin.category,
+}));
 
 // Sort options
 const SORT_OPTIONS = [

@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
+import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Dynamic import for ECharts to avoid SSR issues
 const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
@@ -80,33 +81,39 @@ const CHART_CONFIGS: ChartConfig[] = [
   { type: 'calendar', title: 'Calendar Heatmap', description: 'Daily activity patterns', icon: '📅', category: 'special' },
 ];
 
-// Sample data for charts
-const COINS_DATA = [
-  { name: 'Bitcoin', symbol: 'BTC', marketCap: 900, price: 45000, volume: 25, change: 2.5, holders: 45, sentiment: 78 },
-  { name: 'Ethereum', symbol: 'ETH', marketCap: 350, price: 2500, volume: 15, change: 3.2, holders: 35, sentiment: 72 },
-  { name: 'BNB', symbol: 'BNB', marketCap: 80, price: 300, volume: 5, change: 1.1, holders: 20, sentiment: 65 },
-  { name: 'Solana', symbol: 'SOL', marketCap: 60, price: 100, volume: 8, change: 5.5, holders: 15, sentiment: 80 },
-  { name: 'XRP', symbol: 'XRP', marketCap: 40, price: 0.5, volume: 3, change: -1.2, holders: 25, sentiment: 55 },
-  { name: 'Cardano', symbol: 'ADA', marketCap: 20, price: 0.4, volume: 2, change: 0.8, holders: 18, sentiment: 60 },
-  { name: 'Dogecoin', symbol: 'DOGE', marketCap: 15, price: 0.08, volume: 4, change: 8.5, holders: 30, sentiment: 70 },
-  { name: 'Polkadot', symbol: 'DOT', marketCap: 12, price: 7, volume: 1.5, change: 2.1, holders: 12, sentiment: 58 },
+// Chart color palette for all 67 coins
+const CHART_COLORS = [
+  '#F7931A', '#627EEA', '#F3BA2F', '#00D18C', '#23292F', '#0033AD', '#C3A634', '#E6007A',
+  '#E84142', '#2A5ADA', '#8247E5', '#FF007A', '#00CED1', '#FF6B6B', '#4ECDC4', '#45B7D1',
+  '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8B500',
+  '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#FFDC00', '#FF851B', '#FF4136',
 ];
 
-// All available coins for selection
-const ALL_COINS = [
-  { id: 'BTC', name: 'Bitcoin', symbol: 'BTC', marketCap: 900, price: 45000, volume: 25, change: 2.5, holders: 45, sentiment: 78, color: '#F7931A' },
-  { id: 'ETH', name: 'Ethereum', symbol: 'ETH', marketCap: 350, price: 2500, volume: 15, change: 3.2, holders: 35, sentiment: 72, color: '#627EEA' },
-  { id: 'BNB', name: 'BNB', symbol: 'BNB', marketCap: 80, price: 300, volume: 5, change: 1.1, holders: 20, sentiment: 65, color: '#F3BA2F' },
-  { id: 'SOL', name: 'Solana', symbol: 'SOL', marketCap: 60, price: 100, volume: 8, change: 5.5, holders: 15, sentiment: 80, color: '#00D18C' },
-  { id: 'XRP', name: 'XRP', symbol: 'XRP', marketCap: 40, price: 0.5, volume: 3, change: -1.2, holders: 25, sentiment: 55, color: '#23292F' },
-  { id: 'ADA', name: 'Cardano', symbol: 'ADA', marketCap: 20, price: 0.4, volume: 2, change: 0.8, holders: 18, sentiment: 60, color: '#0033AD' },
-  { id: 'DOGE', name: 'Dogecoin', symbol: 'DOGE', marketCap: 15, price: 0.08, volume: 4, change: 8.5, holders: 30, sentiment: 70, color: '#C3A634' },
-  { id: 'DOT', name: 'Polkadot', symbol: 'DOT', marketCap: 12, price: 7, volume: 1.5, change: 2.1, holders: 12, sentiment: 58, color: '#E6007A' },
-  { id: 'AVAX', name: 'Avalanche', symbol: 'AVAX', marketCap: 18, price: 35, volume: 2.5, change: 4.2, holders: 14, sentiment: 68, color: '#E84142' },
-  { id: 'LINK', name: 'Chainlink', symbol: 'LINK', marketCap: 10, price: 15, volume: 1.8, change: 1.5, holders: 16, sentiment: 62, color: '#2A5ADA' },
-  { id: 'MATIC', name: 'Polygon', symbol: 'MATIC', marketCap: 8, price: 0.85, volume: 1.2, change: -0.5, holders: 22, sentiment: 64, color: '#8247E5' },
-  { id: 'UNI', name: 'Uniswap', symbol: 'UNI', marketCap: 6, price: 8, volume: 0.8, change: 2.8, holders: 10, sentiment: 66, color: '#FF007A' },
-];
+// Generate chart data from all 67 SUPPORTED_COINS with mock visualization data
+const ALL_COINS = SUPPORTED_COINS.map((coin, index) => ({
+  id: coin.symbol,
+  name: coin.name,
+  symbol: coin.symbol,
+  marketCap: Math.max(5, 900 - index * 12),
+  price: coin.symbol === 'BTC' ? 97000 : coin.symbol === 'ETH' ? 3400 : Math.max(0.01, 100 - index * 1.5),
+  volume: Math.max(0.5, 25 - index * 0.3),
+  change: Number((Math.sin(index) * 10 - 2).toFixed(1)),
+  holders: Math.max(5, 45 - Math.floor(index * 0.5)),
+  sentiment: Math.min(95, Math.max(40, Math.floor(78 - index * 0.5 + Math.cos(index) * 10))),
+  color: CHART_COLORS[index % CHART_COLORS.length],
+}));
+
+// Sample data for charts (first 8 coins)
+const COINS_DATA = ALL_COINS.slice(0, 8).map(coin => ({
+  name: coin.name,
+  symbol: coin.symbol,
+  marketCap: coin.marketCap,
+  price: coin.price,
+  volume: coin.volume,
+  change: coin.change,
+  holders: coin.holders,
+  sentiment: coin.sentiment,
+}));
 
 // Valid chart types for URL validation
 const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker'];

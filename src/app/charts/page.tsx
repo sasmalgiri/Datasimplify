@@ -6,6 +6,7 @@ import Link from 'next/link';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
+import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import {
   LineChart,
   Line,
@@ -204,16 +205,12 @@ const CHART_CONFIGS: ChartConfig[] = [
   { type: 'price_prediction', title: 'Price Prediction', description: 'AI-powered price forecasts', icon: '🔮', category: 'prediction' },
 ];
 
-const COINS = [
-  { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' },
-  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' },
-  { id: 'binancecoin', name: 'BNB', symbol: 'BNB' },
-  { id: 'solana', name: 'Solana', symbol: 'SOL' },
-  { id: 'ripple', name: 'XRP', symbol: 'XRP' },
-  { id: 'cardano', name: 'Cardano', symbol: 'ADA' },
-  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE' },
-  { id: 'polkadot', name: 'Polkadot', symbol: 'DOT' },
-];
+// Use all 67 supported coins from shared config
+const COINS = SUPPORTED_COINS.map(coin => ({
+  id: coin.symbol.toLowerCase(),
+  name: coin.name,
+  symbol: coin.symbol,
+}));
 
 const TIME_RANGES = [
   { value: '1', label: '24H' },
