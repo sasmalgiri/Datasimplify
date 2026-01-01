@@ -483,20 +483,58 @@ function ChartsContent() {
     }
 
     if (format === 'xlsx') {
+      // Check if we have data to export
+      if (!chartData || chartData.length === 0) {
+        alert('No chart data available to export. Please wait for the chart to load.');
+        return;
+      }
+
       // Export chart data as Excel with live data instructions
       const wb = XLSX.utils.book_new();
 
-      // Sheet 1: Current chart data
-      const chartDataForExcel = chartData.map((d: Record<string, unknown>) => ({
-        'Date': d.date as string,
-        'Price (USD)': d.price as number,
-        'MA 7-Day': d.ma7 || 'N/A',
-        'MA 30-Day': d.ma30 || 'N/A',
-        'Volatility (%)': typeof d.volatility === 'number' ? (d.volatility as number).toFixed(4) : 'N/A',
-        'Volume (USD)': d.volume as number,
-      }));
+      // Sheet 1: Current chart data - handle different chart types
+      const chartDataForExcel = chartData.map((d: Record<string, unknown>) => {
+        // Build row with all available fields
+        const row: Record<string, unknown> = {};
+
+        // Common fields
+        if (d.date) row['Date'] = d.date;
+        if (d.timestamp) row['Timestamp'] = d.timestamp;
+
+        // Price data
+        if (d.price !== undefined) row['Price (USD)'] = d.price;
+        if (d.open !== undefined) row['Open'] = d.open;
+        if (d.high !== undefined) row['High'] = d.high;
+        if (d.low !== undefined) row['Low'] = d.low;
+        if (d.close !== undefined) row['Close'] = d.close;
+
+        // Technical indicators
+        if (d.ma7 !== undefined && d.ma7 !== null) row['MA 7-Day'] = d.ma7;
+        if (d.ma30 !== undefined && d.ma30 !== null) row['MA 30-Day'] = d.ma30;
+        if (d.volatility !== undefined) row['Volatility (%)'] = typeof d.volatility === 'number' ? d.volatility.toFixed(4) : d.volatility;
+
+        // Volume data
+        if (d.volume !== undefined) row['Volume (USD)'] = d.volume;
+
+        // RSI/Momentum
+        if (d.rsi !== undefined) row['RSI'] = d.rsi;
+        if (d.macd !== undefined) row['MACD'] = d.macd;
+        if (d.signal !== undefined) row['Signal'] = d.signal;
+
+        // Any other numeric fields
+        Object.keys(d).forEach(key => {
+          if (!row[key] && typeof d[key] === 'number') {
+            row[key] = d[key];
+          }
+        });
+
+        return row;
+      });
+
       const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
-      wsData['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
+      // Set column widths based on actual data
+      const colWidths = Object.keys(chartDataForExcel[0] || {}).map(() => ({ wch: 15 }));
+      wsData['!cols'] = colWidths.length > 0 ? colWidths : [{ wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
       XLSX.utils.book_append_sheet(wb, wsData, 'Chart Data');
 
       // Sheet 2: Live Data Instructions
