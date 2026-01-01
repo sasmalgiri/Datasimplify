@@ -1123,7 +1123,7 @@ function AdvancedChartsContent() {
           series: [{
             type: 'bar3D',
             data: bar3DData.map(item => ({
-              value: [item[0], item[1], item[2]],
+              value: item,
               itemStyle: {
                 color: CHART_COLORS[item[0] % CHART_COLORS.length],
                 opacity: 0.8
