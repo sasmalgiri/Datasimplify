@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
@@ -489,117 +489,171 @@ function ChartsContent() {
         return;
       }
 
-      // Export chart data as Excel with live data instructions
-      const wb = XLSX.utils.book_new();
+      // Create ExcelJS workbook with interactive chart
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'DataSimplify';
+      workbook.created = new Date();
 
-      // Sheet 1: Current chart data - handle different chart types
-      const chartDataForExcel = chartData.map((d: Record<string, unknown>) => {
-        // Build row with all available fields
+      // Sheet 1: Chart Data
+      const dataSheet = workbook.addWorksheet('Chart Data');
+      const coinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
+
+      // Determine columns based on chart type and available data
+      const sampleData = chartData[0] as Record<string, unknown>;
+      const columns: { header: string; key: string; width: number }[] = [];
+
+      // Add date column first
+      if (sampleData.date) columns.push({ header: 'Date', key: 'date', width: 12 });
+
+      // Add price columns
+      if (sampleData.price !== undefined) columns.push({ header: 'Price (USD)', key: 'price', width: 15 });
+      if (sampleData.open !== undefined) columns.push({ header: 'Open', key: 'open', width: 12 });
+      if (sampleData.high !== undefined) columns.push({ header: 'High', key: 'high', width: 12 });
+      if (sampleData.low !== undefined) columns.push({ header: 'Low', key: 'low', width: 12 });
+      if (sampleData.close !== undefined) columns.push({ header: 'Close', key: 'close', width: 12 });
+
+      // Add technical indicators
+      if (sampleData.ma7 !== undefined) columns.push({ header: 'MA 7-Day', key: 'ma7', width: 12 });
+      if (sampleData.ma30 !== undefined) columns.push({ header: 'MA 30-Day', key: 'ma30', width: 12 });
+      if (sampleData.volatility !== undefined) columns.push({ header: 'Volatility (%)', key: 'volatility', width: 14 });
+      if (sampleData.volume !== undefined) columns.push({ header: 'Volume (USD)', key: 'volume', width: 18 });
+      if (sampleData.rsi !== undefined) columns.push({ header: 'RSI', key: 'rsi', width: 10 });
+      if (sampleData.macd !== undefined) columns.push({ header: 'MACD', key: 'macd', width: 12 });
+
+      dataSheet.columns = columns;
+
+      // Style header row
+      const headerRow = dataSheet.getRow(1);
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+      headerRow.alignment = { horizontal: 'center' };
+
+      // Add data rows
+      chartData.forEach((d: Record<string, unknown>) => {
         const row: Record<string, unknown> = {};
-
-        // Common fields
-        if (d.date) row['Date'] = d.date;
-        if (d.timestamp) row['Timestamp'] = d.timestamp;
-
-        // Price data
-        if (d.price !== undefined) row['Price (USD)'] = d.price;
-        if (d.open !== undefined) row['Open'] = d.open;
-        if (d.high !== undefined) row['High'] = d.high;
-        if (d.low !== undefined) row['Low'] = d.low;
-        if (d.close !== undefined) row['Close'] = d.close;
-
-        // Technical indicators
-        if (d.ma7 !== undefined && d.ma7 !== null) row['MA 7-Day'] = d.ma7;
-        if (d.ma30 !== undefined && d.ma30 !== null) row['MA 30-Day'] = d.ma30;
-        if (d.volatility !== undefined) row['Volatility (%)'] = typeof d.volatility === 'number' ? d.volatility.toFixed(4) : d.volatility;
-
-        // Volume data
-        if (d.volume !== undefined) row['Volume (USD)'] = d.volume;
-
-        // RSI/Momentum
-        if (d.rsi !== undefined) row['RSI'] = d.rsi;
-        if (d.macd !== undefined) row['MACD'] = d.macd;
-        if (d.signal !== undefined) row['Signal'] = d.signal;
-
-        // Any other numeric fields
-        Object.keys(d).forEach(key => {
-          if (!row[key] && typeof d[key] === 'number') {
-            row[key] = d[key];
+        columns.forEach(col => {
+          const value = d[col.key];
+          if (value !== undefined && value !== null) {
+            row[col.key] = typeof value === 'number' ? Math.round(value * 100) / 100 : value;
           }
         });
-
-        return row;
+        dataSheet.addRow(row);
       });
 
-      const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
-      // Set column widths based on actual data
-      const colWidths = Object.keys(chartDataForExcel[0] || {}).map(() => ({ wch: 15 }));
-      wsData['!cols'] = colWidths.length > 0 ? colWidths : [{ wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 18 }];
-      XLSX.utils.book_append_sheet(wb, wsData, 'Chart Data');
+      // Create the Summary & Instructions sheet
+      const chartSheet = workbook.addWorksheet('Summary');
 
-      // Sheet 2: Live Data Instructions
+      // Determine recommended Excel chart type based on chart category
+      let recommendedChart = 'Line Chart';
+      if (selectedChart === 'volume_analysis' || selectedChart === 'volume_profile') {
+        recommendedChart = 'Column Chart';
+      } else if (selectedChart === 'candlestick') {
+        recommendedChart = 'Stock Chart (OHLC)';
+      } else if (selectedChart === 'market_dominance' || selectedChart === 'wallet_distribution' || selectedChart === 'btc_dominance') {
+        recommendedChart = 'Pie Chart';
+      } else if (selectedChart === 'correlation') {
+        recommendedChart = 'Scatter Chart';
+      } else if (selectedChart === 'racing_bar') {
+        recommendedChart = 'Bar Chart';
+      } else if (selectedChart === 'liquidation_heatmap') {
+        recommendedChart = 'Heatmap (use conditional formatting)';
+      }
+
+      // Title
+      chartSheet.getCell('A1').value = `${coinName} - ${selectedChart.charAt(0).toUpperCase() + selectedChart.slice(1)} Analysis`;
+      chartSheet.getCell('A1').font = { bold: true, size: 18, color: { argb: 'FF2563EB' } };
+      chartSheet.mergeCells('A1:D1');
+
+      // Easy Chart Creation Instructions
+      chartSheet.getCell('A3').value = '📊 CREATE YOUR CHART IN 3 STEPS:';
+      chartSheet.getCell('A3').font = { bold: true, size: 12 };
+
+      chartSheet.getCell('A4').value = '1. Click on "Chart Data" sheet tab below';
+      chartSheet.getCell('A5').value = '2. Select all data: Press Ctrl+A (or Cmd+A on Mac)';
+      chartSheet.getCell('A6').value = `3. Go to Insert → Charts → ${recommendedChart}`;
+      chartSheet.getCell('A7').value = '   Your interactive chart will appear instantly!';
+      chartSheet.getCell('A7').font = { italic: true, color: { argb: 'FF22C55E' } };
+
+      chartSheet.getCell('A9').value = '💡 TIP: The chart auto-updates when you change the data!';
+      chartSheet.getCell('A9').font = { italic: true };
+
+      chartSheet.getCell('A11').value = '📈 QUICK STATS:';
+      chartSheet.getCell('A11').font = { bold: true, size: 12 };
+
+      // Calculate stats from data
+      const prices = chartData
+        .map((d: Record<string, unknown>) => Number(d.price || d.close || 0))
+        .filter((p: number) => !isNaN(p) && p > 0);
+
+      if (prices.length > 0) {
+        const latestPrice = prices[prices.length - 1];
+        const highPrice = Math.max(...prices);
+        const lowPrice = Math.min(...prices);
+        const avgPrice = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+        const priceChange = ((latestPrice - prices[0]) / prices[0]) * 100;
+
+        chartSheet.getCell('A12').value = 'Current Price:';
+        chartSheet.getCell('B12').value = `$${latestPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        chartSheet.getCell('A13').value = 'Period High:';
+        chartSheet.getCell('B13').value = `$${highPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        chartSheet.getCell('A14').value = 'Period Low:';
+        chartSheet.getCell('B14').value = `$${lowPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        chartSheet.getCell('A15').value = 'Average:';
+        chartSheet.getCell('B15').value = `$${avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        chartSheet.getCell('A16').value = 'Change:';
+        chartSheet.getCell('B16').value = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
+        chartSheet.getCell('B16').font = { bold: true, color: { argb: priceChange >= 0 ? 'FF22C55E' : 'FFEF4444' } };
+        chartSheet.getCell('A17').value = 'Data Points:';
+        chartSheet.getCell('B17').value = chartData.length;
+      }
+
+      chartSheet.getColumn('A').width = 25;
+      chartSheet.getColumn('B').width = 30;
+
+      // Sheet 3: Live Data Instructions
+      const instructionSheet = workbook.addWorksheet('Live Data Guide');
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
-      const coinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
-      const liveDataInstructions = [
-        ['DataSimplify - Live Data Connection'],
-        [''],
+
+      const instructions = [
+        ['DataSimplify - Live Data Connection', ''],
+        ['', ''],
         ['Coin:', coinName],
         ['Chart Type:', selectedChart],
         ['Time Range:', `${timeRange} days`],
         ['Generated:', new Date().toISOString()],
-        [''],
-        ['GET LIVE DATA IN EXCEL (Power Query):'],
-        ['1. Go to Data tab → Get Data → From Web'],
+        ['', ''],
+        ['GET LIVE DATA IN EXCEL (Power Query):', ''],
+        ['1. Go to Data tab → Get Data → From Web', ''],
         ['2. Paste this URL:', `${baseUrl}/api/charts/history?coin=${selectedCoin}&days=${timeRange}`],
-        ['3. Click OK and transform JSON to table'],
-        ['4. Right-click query → Properties → Enable auto-refresh'],
-        [''],
-        ['GET LIVE DATA IN GOOGLE SHEETS:'],
-        ['Paste this formula in any cell:'],
-        [`=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
-        [''],
+        ['3. Click OK and transform JSON to table', ''],
+        ['4. Right-click query → Properties → Enable auto-refresh', ''],
+        ['', ''],
+        ['GET LIVE DATA IN GOOGLE SHEETS:', ''],
+        ['Paste this formula in any cell:', ''],
+        ['', `=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
+        ['', ''],
         ['More data available at:', `${baseUrl}/download`],
       ];
-      const wsInstructions = XLSX.utils.aoa_to_sheet(liveDataInstructions);
-      wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
-      XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
 
-      // Generate and download Excel
-      const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-      const blob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      instructions.forEach((row, idx) => {
+        instructionSheet.getRow(idx + 1).values = row;
+      });
+
+      instructionSheet.getColumn(1).width = 40;
+      instructionSheet.getColumn(2).width = 70;
+
+      // Style the instruction header
+      instructionSheet.getCell('A1').font = { bold: true, size: 14 };
+
+      // Generate and download the workbook
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
-
-      // Also download chart image automatically
-      if (chartRef.current) {
-        try {
-          const canvas = await html2canvas(chartRef.current, {
-            backgroundColor: '#1f2937',
-            scale: 2,
-            logging: false,
-            useCORS: true,
-          });
-          // Small delay to avoid browser blocking multiple downloads
-          setTimeout(() => {
-            canvas.toBlob((imgBlob) => {
-              if (imgBlob) {
-                const imgUrl = URL.createObjectURL(imgBlob);
-                const imgLink = document.createElement('a');
-                imgLink.href = imgUrl;
-                imgLink.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.png`;
-                imgLink.click();
-                URL.revokeObjectURL(imgUrl);
-              }
-            }, 'image/png', 0.95);
-          }, 500);
-        } catch (err) {
-          console.error('Chart image capture failed:', err);
-        }
-      }
       return;
     }
 
@@ -1867,7 +1921,7 @@ function ChartsContent() {
               type="button"
               onClick={() => downloadChart('xlsx')}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
-              title="Download as Excel with live data connection"
+              title="Download Excel with chart-ready data"
             >
               Excel
             </button>
