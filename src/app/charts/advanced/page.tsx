@@ -8,6 +8,7 @@ import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
+import 'echarts-gl';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 
@@ -71,7 +72,7 @@ interface ChartConfig {
 }
 
 const CHART_CONFIGS: ChartConfig[] = [
-  { type: 'globe_3d', title: '3D Globe', description: 'Global crypto adoption visualization', icon: '🌍', category: '3d' },
+  { type: 'globe_3d', title: '3D Metrics', description: '3D bar chart comparing coin metrics', icon: '📊', category: '3d' },
   { type: 'whale_tracker', title: 'Whale Tracker', description: 'Large transaction monitoring', icon: '🐋', category: 'flow' },
   { type: 'wallet_distribution', title: 'BTC Distribution', description: 'Finviz-style wallet distribution treemap', icon: '🐳', category: 'hierarchy' },
   { type: 'sankey', title: 'Sankey Flow', description: 'Money flow between exchanges and wallets', icon: '🌊', category: 'flow' },
@@ -978,23 +979,93 @@ function AdvancedChartsContent() {
         };
 
       case 'globe_3d':
-        // For 3D globe, we'll show a message since echarts-gl needs special setup
+        // 3D Bar chart showing crypto metrics by coin
+        const bar3DData: [number, number, number, string, string][] = [];
+        const metrics = ['Market Cap', 'Volume', 'Holders', 'Sentiment'];
+
+        filteredCoins.slice(0, 8).forEach((coin, coinIdx) => {
+          metrics.forEach((metric, metricIdx) => {
+            let value = 0;
+            if (metric === 'Market Cap') value = coin.marketCap / 10;
+            else if (metric === 'Volume') value = coin.volume * 3;
+            else if (metric === 'Holders') value = coin.holders * 2;
+            else if (metric === 'Sentiment') value = coin.sentiment;
+            bar3DData.push([coinIdx, metricIdx, value, coin.symbol, metric]);
+          });
+        });
+
         return {
           title: {
-            text: '3D Globe - Global Crypto Adoption',
+            text: '3D Crypto Metrics Comparison',
             left: 'center',
-            top: 20,
-            textStyle: { color: '#fff', fontSize: 24 }
+            textStyle: { color: '#fff' }
           },
-          graphic: [{
-            type: 'text',
-            left: 'center',
-            bottom: 30,
-            style: {
-              text: '🌍 3D Globe visualization - Showing global crypto adoption rates (Requires WebGL/echarts-gl)',
-              fill: '#9CA3AF',
-              fontSize: 14,
-              textAlign: 'center'
+          tooltip: {
+            formatter: (params: { value: [number, number, number, string, string] }) => {
+              const [, , val, symbol, metric] = params.value;
+              return `${symbol}<br/>${metric}: ${val.toFixed(1)}`;
+            }
+          },
+          visualMap: {
+            max: 100,
+            inRange: {
+              color: ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981']
+            },
+            textStyle: { color: '#9CA3AF' }
+          },
+          xAxis3D: {
+            type: 'category',
+            data: filteredCoins.slice(0, 8).map(c => c.symbol),
+            axisLabel: { color: '#9CA3AF' },
+            axisLine: { lineStyle: { color: '#374151' } }
+          },
+          yAxis3D: {
+            type: 'category',
+            data: metrics,
+            axisLabel: { color: '#9CA3AF' },
+            axisLine: { lineStyle: { color: '#374151' } }
+          },
+          zAxis3D: {
+            type: 'value',
+            axisLabel: { color: '#9CA3AF' },
+            axisLine: { lineStyle: { color: '#374151' } }
+          },
+          grid3D: {
+            boxWidth: 200,
+            boxDepth: 80,
+            viewControl: {
+              projection: 'orthographic',
+              autoRotate: true,
+              autoRotateSpeed: 5
+            },
+            light: {
+              main: { intensity: 1.2 },
+              ambient: { intensity: 0.3 }
+            },
+            environment: '#1f2937'
+          },
+          series: [{
+            type: 'bar3D',
+            data: bar3DData.map(item => ({
+              value: [item[0], item[1], item[2]],
+              itemStyle: {
+                color: CHART_COLORS[item[0] % CHART_COLORS.length],
+                opacity: 0.8
+              }
+            })),
+            shading: 'lambert',
+            label: {
+              show: false
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: 12,
+                color: '#fff'
+              },
+              itemStyle: {
+                color: '#10B981'
+              }
             }
           }]
         };
@@ -1311,7 +1382,7 @@ function AdvancedChartsContent() {
                 {selectedChart === 'parallel' && 'Parallel coordinates chart allows you to see multiple metrics for each coin simultaneously. Each line represents a coin flowing through different metric axes.'}
                 {selectedChart === 'funnel' && 'Funnel chart shows the typical user journey in crypto - from initial awareness to becoming a long-term holder (HODLer).'}
                 {selectedChart === 'calendar' && 'Calendar heatmap shows daily trading activity over the past 6 months. Darker colors indicate higher trading volume.'}
-                {selectedChart === 'globe_3d' && '3D Globe visualization would show global crypto adoption rates by country. This requires WebGL and echarts-gl for full 3D rendering.'}
+                {selectedChart === 'globe_3d' && '3D Metrics visualization shows a rotating 3D bar chart comparing multiple metrics (Market Cap, Volume, Holders, Sentiment) across selected coins. Drag to rotate, scroll to zoom.'}
                 {selectedChart === 'whale_tracker' && 'Whale Tracker monitors large cryptocurrency transactions (>$1M USD). Bubble size represents transaction value. Green border = buy, Red border = sell, Gray border = transfer. Track whale movements between exchanges, wallets, and DeFi protocols.'}
                 {selectedChart === 'wallet_distribution' && 'BTC Wallet Distribution shows the Finviz-style treemap of Bitcoin holdings by wallet size. Categories range from Humpback (>10K BTC) to Shrimp (<1 BTC). Green indicates accumulating, red indicates distributing. Hover for detailed stats.'}
               </p>
