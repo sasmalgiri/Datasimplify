@@ -1,5 +1,5 @@
 // ============================================
-// ON-CHAIN DATA FETCHER - FREE Alternative to Glassnode ($799/mo)
+// ON-CHAIN DATA FETCHER - Professional-grade blockchain analytics
 // ============================================
 // Uses FREE public RPC nodes to get blockchain data
 

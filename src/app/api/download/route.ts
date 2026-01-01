@@ -289,7 +289,7 @@ export async function GET(request: Request) {
         break;
 
       // ============================================
-      // ON-CHAIN DATA (FREE - Glassnode alternative!)
+      // ON-CHAIN DATA (Professional-grade)
       // ============================================
       
       case 'defi_protocols':

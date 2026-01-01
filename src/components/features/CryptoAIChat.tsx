@@ -54,7 +54,7 @@ const getCryptoData = (): CryptoData => ({
   ],
   latestNews: [
     { title: 'Bitcoin ETFs See Record $500M Inflow', source: 'CoinDesk', sentiment: 'positive' },
-    { title: 'SEC Approves New Crypto Custody Rules', source: 'Bloomberg', sentiment: 'positive' },
+    { title: 'SEC Approves New Crypto Custody Rules', source: 'Financial News', sentiment: 'positive' },
     { title: 'Ethereum Upgrade Scheduled for Q1 2025', source: 'Decrypt', sentiment: 'neutral' },
     { title: 'Major Bank Announces Crypto Trading Desk', source: 'Reuters', sentiment: 'positive' },
     { title: 'Regulatory Concerns Grow in Asia', source: 'CoinTelegraph', sentiment: 'negative' }
@@ -179,7 +179,7 @@ const generateResponse = (query: string, data: CryptoData): { content: string; s
         `\n\n**Top Gainers (24h):**\n` +
         data.topGainers.map(g => `🟢 ${g.symbol}: +${g.change}%`).join('\n') +
         `\n\n⚠️ **Warning:** Trending doesn't mean good investment! Many trending coins are highly volatile and risky. DYOR!`,
-      sources: ['CoinGecko Trending', 'LunarCrush Social Data']
+      sources: ['CoinGecko Trending', 'Social Sentiment Data']
     };
   }
 

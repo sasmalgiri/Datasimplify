@@ -5,8 +5,7 @@ import { Providers } from '@/components/Providers';
 import DisclaimerBanner from '@/components/ui/DisclaimerBanner';
 import CookieConsent from '@/components/CookieConsent';
 import { AllJsonLd } from '@/components/JsonLd';
-import { Analytics } from '@vercel/analytics/react';
-import { SpeedInsights } from '@vercel/speed-insights/next';
+import AnalyticsGate from '@/components/AnalyticsGate';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://datasimplify.com';
 
@@ -186,8 +185,7 @@ export default function RootLayout({
           <Footer />
           <CookieConsent />
         </Providers>
-        <Analytics />
-        <SpeedInsights />
+        <AnalyticsGate />
       </body>
     </html>
   );

@@ -1,16 +1,15 @@
 // ============================================
-// SOCIAL SENTIMENT - FREE Alternative to LunarCrush ($99/mo)
+// SOCIAL SENTIMENT - Professional-grade analysis
 // ============================================
-// How LunarCrush works:
-// 1. Scrape Twitter, Reddit, YouTube, TikTok for crypto mentions
+// How it works:
+// 1. Aggregate data from Twitter, Reddit, YouTube, TikTok for crypto mentions
 // 2. Use NLP/AI to determine sentiment (positive/negative/neutral)
 // 3. Calculate engagement metrics (likes, shares, comments)
-// 4. Create "Galaxy Score" and "AltRank"
+// 4. Create combined sentiment scores
 //
-// FREE Alternatives we can use:
+// FREE APIs we use:
 // - Reddit API (free with limits)
 // - CryptoPanic API (free tier)
-// - Santiment (free tier)
 // - Our own Fear & Greed calculation
 
 const SENTIMENT_APIS = {

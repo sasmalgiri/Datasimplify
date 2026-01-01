@@ -7,28 +7,32 @@ import Link from 'next/link';
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
-  const [preferences, setPreferences] = useState({
-    necessary: true, // Always required
-    analytics: false,
-    marketing: false,
+  const [preferences, setPreferences] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { necessary: true, analytics: false, marketing: false };
+    }
+    const consent = window.localStorage.getItem('cookie-consent');
+    if (!consent) return { necessary: true, analytics: false, marketing: false };
+
+    try {
+      return JSON.parse(consent) as { necessary: boolean; analytics: boolean; marketing: boolean };
+    } catch {
+      return { necessary: true, analytics: false, marketing: false };
+    }
   });
 
   useEffect(() => {
-    // Check if user has already made a choice
-    const consent = localStorage.getItem('cookie-consent');
+    // Show banner only if no consent exists; delay to avoid layout shift.
+    const consent = window.localStorage.getItem('cookie-consent');
     if (!consent) {
-      // Small delay to avoid layout shift on page load
-      setTimeout(() => setShowBanner(true), 1000);
-    } else {
-      try {
-        const savedPreferences = JSON.parse(consent);
-        setPreferences(savedPreferences);
-      } catch {
-        // Invalid consent data, show banner again
-        setShowBanner(true);
-      }
+      const timeout = setTimeout(() => setShowBanner(true), 1000);
+      return () => clearTimeout(timeout);
     }
   }, []);
+
+  const broadcastConsentChange = () => {
+    window.dispatchEvent(new Event('cookie-consent-changed'));
+  };
 
   const acceptAll = () => {
     const allAccepted = {
@@ -40,6 +44,7 @@ export default function CookieConsent() {
     setPreferences(allAccepted);
     setShowBanner(false);
     setShowPreferences(false);
+    broadcastConsentChange();
   };
 
   const acceptNecessary = () => {
@@ -52,12 +57,14 @@ export default function CookieConsent() {
     setPreferences(necessaryOnly);
     setShowBanner(false);
     setShowPreferences(false);
+    broadcastConsentChange();
   };
 
   const savePreferences = () => {
     localStorage.setItem('cookie-consent', JSON.stringify(preferences));
     setShowBanner(false);
     setShowPreferences(false);
+    broadcastConsentChange();
   };
 
   if (!showBanner) return null;
@@ -108,6 +115,8 @@ export default function CookieConsent() {
                 <button
                   onClick={() => setShowPreferences(false)}
                   className="text-gray-400 hover:text-white"
+                  aria-label="Close cookie preferences"
+                  title="Close"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -142,6 +151,8 @@ export default function CookieConsent() {
                     checked={preferences.analytics}
                     onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
                     className="sr-only peer"
+                    aria-label="Enable analytics cookies"
+                    title="Analytics cookies"
                   />
                   <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>
@@ -161,6 +172,8 @@ export default function CookieConsent() {
                     checked={preferences.marketing}
                     onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
                     className="sr-only peer"
+                    aria-label="Enable marketing cookies"
+                    title="Marketing cookies"
                   />
                   <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                 </label>

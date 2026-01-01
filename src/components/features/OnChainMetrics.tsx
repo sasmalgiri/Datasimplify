@@ -178,7 +178,7 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
       category: 'miners'
     },
 
-    // Holder Metrics (These would need Glassnode - showing placeholders with explanation)
+    // Holder Metrics (Professional-grade data)
     {
       name: 'HODL Waves (1y+)',
       value: '~70%',

@@ -87,10 +87,16 @@ src/
 ## Environment Variables
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://gadspittitmuqmysiawu.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
-GROQ_API_KEY=gsk_...
+# Never commit real secrets. Use .env.local (ignored by git) for real values.
+# See .env.example for the full list.
+
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+GROQ_API_KEY=your-groq-api-key
+OPENAI_API_KEY=your-openai-api-key
+CRYPTOPANIC_API_KEY=your-cryptopanic-api-key
 ```
 
 ## Database Schema (Supabase)

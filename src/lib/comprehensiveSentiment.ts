@@ -3,7 +3,7 @@
 // Legal scraping from ALL permitted sources
 // ============================================
 // This aggregates sentiment from 10+ sources that legally allow access
-// Combined, this rivals LunarCrush ($99/mo) and Santiment ($49/mo)
+// Professional-grade social sentiment analysis
 
 // ============================================
 // SOURCE CONFIGURATION

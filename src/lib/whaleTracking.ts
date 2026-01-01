@@ -1,5 +1,5 @@
 // ============================================
-// WHALE TRACKING - FREE Alternative to Glassnode ($799/mo)
+// WHALE TRACKING - Professional-grade whale monitoring
 // ============================================
 // How it works: Monitor blockchain for large transactions using FREE APIs
 

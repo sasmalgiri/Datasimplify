@@ -1,21 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 const DISCLAIMER_KEY = 'datasimplify_disclaimer_accepted';
 
 export default function DisclaimerBanner() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const accepted = window.localStorage.getItem(DISCLAIMER_KEY);
+    return !accepted;
+  });
   const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    // Check if user has already accepted
-    const accepted = localStorage.getItem(DISCLAIMER_KEY);
-    if (!accepted) {
-      setIsVisible(true);
-    }
-  }, []);
 
   const handleAccept = () => {
     setIsClosing(true);

@@ -2,11 +2,8 @@
 // ALL DATA TYPES AVAILABLE FROM FREE APIs
 // ============================================
 
-// What competitors charge for vs what we get FREE:
-// CoinGecko Pro: $129/mo - We get most data FREE
-// Glassnode: $799/mo - On-chain data (not available free)
-// Messari: $29.99/mo - We get similar data FREE
-// CryptoCompare: $79/mo - We get similar data FREE
+// Professional-grade crypto data at affordable prices
+// Enterprise platforms charge $800-$2000/month for similar features
 
 // ============================================
 // DATA CATEGORIES
@@ -23,7 +20,7 @@ export type DataCategory =
   | 'gainers_losers'      // Top movers
   | 'categories'          // DeFi, Gaming, L1, L2, etc.
   | 'exchanges'           // Exchange volumes
-  // On-chain data (FREE - Glassnode alternative!)
+  // On-chain data (Professional-grade)
   | 'defi_protocols'      // DeFi TVL rankings
   | 'defi_yields'         // Best yield farming APYs
   | 'stablecoins'         // Stablecoin market caps
@@ -31,12 +28,12 @@ export type DataCategory =
   | 'chain_tvl'           // Chain TVL rankings
   | 'bitcoin_onchain'     // BTC network stats
   | 'eth_gas'             // ETH gas prices
-  // Social Sentiment (FREE - LunarCrush alternative!)
+  // Social Sentiment (Professional-grade)
   | 'sentiment_aggregated' // All sources combined
   | 'sentiment_reddit'     // Reddit sentiment
   | 'sentiment_news'       // News sentiment
   | 'sentiment_coin'       // Specific coin sentiment
-  // Whale Tracking (FREE - Glassnode alternative!)
+  // Whale Tracking (Professional-grade)
   | 'whale_transactions'   // Large transactions
   | 'exchange_flows'       // Exchange inflow/outflow
   // Derivatives Data (NEW - Trader favorites!)
@@ -356,7 +353,7 @@ export const DATA_CATEGORIES: DataCategoryInfo[] = [
     isPremium: true // Requires CoinGecko API key
   },
   // ============================================
-  // NEW: ON-CHAIN DATA (FREE - What Glassnode charges $799/mo for!)
+  // ON-CHAIN DATA (Professional-grade analytics)
   // ============================================
   {
     id: 'defi_protocols',
@@ -468,7 +465,7 @@ export const DATA_CATEGORIES: DataCategoryInfo[] = [
     isPremium: false
   },
   // ============================================
-  // SOCIAL SENTIMENT DATA (FREE - LunarCrush alternative!)
+  // SOCIAL SENTIMENT DATA (Professional-grade)
   // ============================================
   {
     id: 'sentiment_aggregated',

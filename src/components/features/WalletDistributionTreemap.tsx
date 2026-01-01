@@ -27,22 +27,36 @@ const formatNum = (n: number): string =>
 
 interface CellProps {
   data: WalletCategory;
-  width: number;
+  widthClass: string;
+  bgClass: string;
   onHover: (data: WalletCategory | null) => void;
 }
 
-function Cell({ data, width, onHover }: CellProps) {
+const CELL_WIDTH_CLASS: Record<WalletCategory['id'], string> = {
+  // Widths are normalized within each row and are static because CATEGORIES are static.
+  humpback: 'w-[39.3%]',
+  whale: 'w-[33.6%]',
+  shark: 'w-[27.1%]',
+  fish: 'w-[44.4%]',
+  crab: 'w-[32.4%]',
+  shrimp: 'w-[23.1%]',
+};
+
+const CELL_BG_CLASS: Record<WalletCategory['id'], string> = {
+  humpback: 'bg-gradient-to-br from-green-500/30 to-green-700/40',
+  whale: 'bg-gradient-to-br from-red-500/30 to-red-700/40',
+  shark: 'bg-gradient-to-br from-green-500/35 to-green-700/45',
+  fish: 'bg-gradient-to-br from-green-500/25 to-green-700/35',
+  crab: 'bg-gradient-to-br from-green-500/20 to-green-700/30',
+  shrimp: 'bg-gradient-to-br from-green-500/15 to-green-700/25',
+};
+
+function Cell({ data, widthClass, bgClass, onHover }: CellProps) {
   const isUp = data.change >= 0;
 
   return (
     <div
-      className="relative cursor-pointer transition-all hover:brightness-110 border-r border-gray-700 last:border-r-0"
-      style={{
-        width: `${width}%`,
-        background: isUp
-          ? `linear-gradient(135deg, rgba(34,197,94,${0.3 + data.change*0.5}) 0%, rgba(22,163,74,${0.4 + data.change*0.5}) 100%)`
-          : `linear-gradient(135deg, rgba(239,68,68,${0.3 + Math.abs(data.change)*0.5}) 0%, rgba(220,38,38,${0.4 + Math.abs(data.change)*0.5}) 100%)`
-      }}
+      className={`relative flex-none cursor-pointer transition-all hover:brightness-110 border-r border-gray-700 last:border-r-0 ${widthClass} ${bgClass}`}
       onMouseEnter={() => onHover(data)}
       onMouseLeave={() => onHover(null)}
     >
@@ -72,8 +86,6 @@ export function WalletDistributionTreemap({ btcPrice = 97000 }: WalletDistributi
     const total = row.reduce((s, d) => s + d.percent, 0);
     return row.map(d => (d.percent / total) * 100);
   };
-
-  const totalSupply = 19800000; // 19.8M BTC
 
   return (
     <div className="bg-gray-900 text-white rounded-xl border border-gray-700">
@@ -106,12 +118,24 @@ export function WalletDistributionTreemap({ btcPrice = 97000 }: WalletDistributi
         <div className="rounded-xl overflow-hidden border-2 border-gray-700 shadow-2xl">
           <div className="flex h-44">
             {topRow.map((d, i) => (
-              <Cell key={d.id} data={d} width={getWidths(topRow)[i]} onHover={setHovered} />
+              <Cell
+                key={d.id}
+                data={d}
+                widthClass={CELL_WIDTH_CLASS[d.id]}
+                bgClass={CELL_BG_CLASS[d.id]}
+                onHover={setHovered}
+              />
             ))}
           </div>
           <div className="flex h-36 border-t border-gray-700">
             {bottomRow.map((d, i) => (
-              <Cell key={d.id} data={d} width={getWidths(bottomRow)[i]} onHover={setHovered} />
+              <Cell
+                key={d.id}
+                data={d}
+                widthClass={CELL_WIDTH_CLASS[d.id]}
+                bgClass={CELL_BG_CLASS[d.id]}
+                onHover={setHovered}
+              />
             ))}
           </div>
         </div>

@@ -32,7 +32,7 @@ interface SocialData {
   news_articles: number;
   influencer_mentions: number;
   trending_rank: number | null;
-  galaxy_score: number;  // LunarCrush-style combined score
+  galaxy_score: number;  // Combined sentiment score
   change_24h: number;
 }
 

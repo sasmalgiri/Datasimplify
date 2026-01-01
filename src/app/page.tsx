@@ -150,14 +150,6 @@ export default function LandingPage() {
       {/* Hero Section - Split Layout */}
       <section className="pt-8 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
-          {/* Trust Badge - Centered */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-full text-blue-400 text-sm">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              Trusted by 500+ crypto investors
-            </div>
-          </div>
-
           {/* Split Layout */}
           <div className="grid lg:grid-cols-2 gap-8 items-start">
             {/* Left: Hero Content */}
@@ -173,7 +165,7 @@ export default function LandingPage() {
               </h1>
 
               <p className="text-lg md:text-xl text-gray-400 mb-8">
-                Why pay $800-$1,299/month for Glassnode or Nansen when you can get
+                Why pay $800-$1,299/month for enterprise platforms when you can get
                 <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
               </p>
 
@@ -259,15 +251,15 @@ export default function LandingPage() {
               <ul className="space-y-4 text-gray-300">
                 <li className="flex items-start gap-3">
                   <span className="text-red-400 mt-1">✗</span>
-                  <span>Bloomberg Terminal: <strong className="text-red-400">$24,000/year</strong></span>
+                  <span>Financial Terminals: <strong className="text-red-400">$24,000/year</strong></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-400 mt-1">✗</span>
-                  <span>Nansen Pro: <strong className="text-red-400">$1,299/month</strong></span>
+                  <span>Whale Analytics Pro: <strong className="text-red-400">$1,299/month</strong></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-400 mt-1">✗</span>
-                  <span>Glassnode Advanced: <strong className="text-red-400">$799/month</strong></span>
+                  <span>On-Chain Data Advanced: <strong className="text-red-400">$799/month</strong></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-red-400 mt-1">✗</span>
@@ -289,11 +281,11 @@ export default function LandingPage() {
               <ul className="space-y-4 text-gray-300">
                 <li className="flex items-start gap-3">
                   <span className="text-green-400 mt-1">✓</span>
-                  <span>On-chain analytics (like Glassnode)</span>
+                  <span>Professional on-chain analytics</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-400 mt-1">✓</span>
-                  <span>Whale tracking (like Nansen)</span>
+                  <span>Real-time whale tracking</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-green-400 mt-1">✓</span>

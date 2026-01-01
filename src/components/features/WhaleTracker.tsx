@@ -50,7 +50,7 @@ interface WhaleTrackerProps {
   showBeginnerTips?: boolean;
 }
 
-// Static distribution data (would need paid API like Glassnode for real data)
+// Static distribution data (for demonstration purposes)
 const DISTRIBUTION_DATA: WalletDistribution[] = [
   { category: 'Shrimps', emoji: '🦐', description: 'Small retail investors like you and me', percentage: 8, btc_range: '< 1 BTC', trend: 'up' },
   { category: 'Crabs', emoji: '🦀', description: 'Serious individual investors', percentage: 11, btc_range: '1-10 BTC', trend: 'stable' },

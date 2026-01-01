@@ -137,14 +137,10 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
                 ${getTextColor(coin.price_change_percentage_24h)}
                 rounded p-2 flex flex-col items-center justify-center
                 transition-all duration-200 cursor-pointer
-                ${colSpan > 1 ? `col-span-${colSpan}` : ''}
-                ${rowSpan > 1 ? `row-span-${rowSpan}` : ''}
+                ${colSpan === 2 ? 'col-span-2' : colSpan === 3 ? 'col-span-3' : ''}
+                ${rowSpan === 2 ? 'row-span-2' : ''}
                 ${selectedCoin?.id === coin.id ? 'ring-2 ring-blue-500' : ''}
               `}
-              style={{
-                gridColumn: colSpan > 1 ? `span ${Math.min(colSpan, 3)}` : undefined,
-                gridRow: rowSpan > 1 ? `span ${Math.min(rowSpan, 2)}` : undefined
-              }}
             >
               <span className="font-bold text-xs md:text-sm truncate w-full text-center">
                 {coin.symbol.toUpperCase()}

@@ -1021,52 +1021,206 @@ function ChartsContent() {
           name: string;
           [key: string]: string | number;
         }
-        const correlationMatrix: CorrelationRow[] = COINS.slice(0, 6).map(coin1 => ({
+        // Build dynamic coin list: selected coin + top coins (up to 6 total)
+        const selectedCoinData = COINS.find(c => c.id === selectedCoin);
+        const otherCoins = COINS.filter(c => c.id !== selectedCoin).slice(0, 5);
+        const correlationCoins = selectedCoinData
+          ? [selectedCoinData, ...otherCoins]
+          : COINS.slice(0, 6);
+
+        const correlationMatrix: CorrelationRow[] = correlationCoins.map(coin1 => ({
           name: coin1.symbol,
           ...Object.fromEntries(
-            COINS.slice(0, 6).map(coin2 => [
+            correlationCoins.map(coin2 => [
               coin2.symbol,
               coin1.id === coin2.id ? 1 : (Math.random() * 0.6 + 0.2).toFixed(2)
             ])
           )
         }));
 
+        // Download correlation as PNG
+        const downloadCorrelationPNG = async () => {
+          const element = document.getElementById('correlation-chart');
+          if (!element) return;
+
+          const canvas = await html2canvas(element, {
+            backgroundColor: '#1f2937',
+            scale: 2,
+            logging: false,
+          });
+
+          const link = document.createElement('a');
+          link.download = `correlation_${selectedCoinData?.symbol || 'BTC'}_${new Date().toISOString().split('T')[0]}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        };
+
+        // Download correlation as Excel
+        const downloadCorrelationExcel = async () => {
+          const workbook = new ExcelJS.Workbook();
+          workbook.creator = 'DataSimplify';
+          workbook.created = new Date();
+
+          const sheet = workbook.addWorksheet('Correlation Matrix');
+
+          // Add title
+          sheet.mergeCells('A1:G1');
+          const titleCell = sheet.getCell('A1');
+          titleCell.value = `Correlation Matrix - ${selectedCoinData?.name || 'Bitcoin'} & Top Coins`;
+          titleCell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
+          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
+          titleCell.alignment = { horizontal: 'center' };
+
+          // Add headers (row 3)
+          const headerRow = sheet.getRow(3);
+          headerRow.getCell(1).value = '';
+          correlationCoins.forEach((coin, idx) => {
+            const cell = headerRow.getCell(idx + 2);
+            cell.value = coin.symbol;
+            cell.font = { bold: true, color: { argb: coin.id === selectedCoin ? 'FF3B82F6' : 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+            cell.alignment = { horizontal: 'center' };
+          });
+
+          // Add data rows
+          correlationMatrix.forEach((row, i) => {
+            const dataRow = sheet.getRow(i + 4);
+            const isSelectedRow = correlationCoins[i]?.id === selectedCoin;
+
+            // Row header (coin symbol)
+            const labelCell = dataRow.getCell(1);
+            labelCell.value = row.name;
+            labelCell.font = { bold: true, color: { argb: isSelectedRow ? 'FF3B82F6' : 'FFFFFFFF' } };
+            labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+
+            // Correlation values
+            correlationCoins.forEach((coin, j) => {
+              const value = parseFloat(row[coin.symbol] as string);
+              const cell = dataRow.getCell(j + 2);
+              cell.value = value;
+              cell.numFmt = '0.00';
+              cell.alignment = { horizontal: 'center' };
+
+              // Color based on value
+              let bgColor = 'FFDC2626'; // Red (low)
+              if (value === 1) bgColor = 'FF2563EB'; // Blue (self)
+              else if (value > 0.7) bgColor = 'FF16A34A'; // Green (high)
+              else if (value > 0.4) bgColor = 'FFCA8A04'; // Yellow (medium)
+
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+              cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+            });
+          });
+
+          // Set column widths
+          sheet.getColumn(1).width = 8;
+          correlationCoins.forEach((_, idx) => {
+            sheet.getColumn(idx + 2).width = 10;
+          });
+
+          // Add legend
+          const legendRow = sheet.getRow(correlationMatrix.length + 6);
+          legendRow.getCell(1).value = 'Legend:';
+          legendRow.getCell(1).font = { bold: true };
+
+          const legendItems = [
+            { label: 'High (0.7+)', color: 'FF16A34A' },
+            { label: 'Medium (0.4-0.7)', color: 'FFCA8A04' },
+            { label: 'Low (<0.4)', color: 'FFDC2626' },
+          ];
+
+          legendItems.forEach((item, idx) => {
+            const cell = sheet.getCell(correlationMatrix.length + 7 + idx, 1);
+            cell.value = item.label;
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.color } };
+            cell.font = { color: { argb: 'FFFFFFFF' } };
+          });
+
+          // Download
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `correlation_${selectedCoinData?.symbol || 'BTC'}_${new Date().toISOString().split('T')[0]}.xlsx`;
+          link.click();
+          URL.revokeObjectURL(url);
+        };
+
         return (
           <div className="p-4">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="sticky top-0 z-10 bg-gray-900">
-                  <tr>
-                    <th className="p-2 text-left text-gray-400"></th>
-                    {COINS.slice(0, 6).map(coin => (
-                      <th key={coin.id} className="p-2 text-center text-gray-400">{coin.symbol}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {correlationMatrix.map((row, i) => (
-                    <tr key={i}>
-                      <td className="p-2 text-gray-400 font-medium">{row.name}</td>
-                      {COINS.slice(0, 6).map((coin, j) => {
-                        const value = parseFloat(row[coin.symbol] as string);
-                        const color = value === 1 ? 'bg-blue-600' :
-                                     value > 0.7 ? 'bg-green-600' :
-                                     value > 0.4 ? 'bg-yellow-600' : 'bg-red-600';
-                        return (
-                          <td key={j} className={`p-2 text-center ${color} text-white rounded m-1`}>
-                            {value.toFixed(2)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Header with download buttons */}
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-3">
+              <div className="text-center sm:text-left">
+                <span className="text-gray-400">Showing correlation for: </span>
+                <span className="text-blue-400 font-bold">{selectedCoinData?.name || 'Bitcoin'}</span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={downloadCorrelationPNG}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  📷 Download PNG
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadCorrelationExcel}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  📊 Download Excel
+                </button>
+              </div>
             </div>
-            <div className="mt-4 flex gap-4 justify-center text-sm">
-              <span className="flex items-center gap-2"><div className="w-4 h-4 bg-green-600 rounded"></div> High Correlation (0.7+)</span>
-              <span className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-600 rounded"></div> Medium (0.4-0.7)</span>
-              <span className="flex items-center gap-2"><div className="w-4 h-4 bg-red-600 rounded"></div> Low (&lt;0.4)</span>
+
+            {/* Correlation Matrix - with ID for capture */}
+            <div id="correlation-chart" className="bg-gray-900 p-4 rounded-xl">
+              <div className="text-center mb-3 text-white font-bold">
+                {selectedCoinData?.name || 'Bitcoin'} Correlation Matrix
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="sticky top-0 z-10 bg-gray-900">
+                    <tr>
+                      <th className="p-2 text-left text-gray-400"><span className="sr-only">Coin</span></th>
+                      {correlationCoins.map(coin => (
+                        <th key={coin.id} className={`p-2 text-center ${coin.id === selectedCoin ? 'text-blue-400 font-bold' : 'text-gray-400'}`}>
+                          {coin.symbol}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {correlationMatrix.map((row, i) => (
+                      <tr key={i} className={correlationCoins[i]?.id === selectedCoin ? 'bg-blue-900/20' : ''}>
+                        <td className={`p-2 font-medium ${correlationCoins[i]?.id === selectedCoin ? 'text-blue-400' : 'text-gray-400'}`}>
+                          {row.name}
+                        </td>
+                        {correlationCoins.map((coin, j) => {
+                          const value = parseFloat(row[coin.symbol] as string);
+                          const isSelected = coin.id === selectedCoin || correlationCoins[i]?.id === selectedCoin;
+                          const color = value === 1 ? 'bg-blue-600' :
+                                       value > 0.7 ? 'bg-green-600' :
+                                       value > 0.4 ? 'bg-yellow-600' : 'bg-red-600';
+                          return (
+                            <td key={j} className={`p-2 text-center ${color} text-white rounded m-1 ${isSelected ? 'ring-2 ring-blue-400' : ''}`}>
+                              {value.toFixed(2)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 flex gap-4 justify-center text-sm">
+                <span className="flex items-center gap-2"><div className="w-4 h-4 bg-green-600 rounded"></div> High (0.7+)</span>
+                <span className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-600 rounded"></div> Medium (0.4-0.7)</span>
+                <span className="flex items-center gap-2"><div className="w-4 h-4 bg-red-600 rounded"></div> Low (&lt;0.4)</span>
+              </div>
+              <div className="text-center text-xs text-gray-500 mt-2">
+                Generated by DataSimplify • {new Date().toLocaleDateString()}
+              </div>
             </div>
           </div>
         );

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 // Bitcoin ETF Data API
 // Note: Free ETF flow data is very limited. This uses estimated values
 // based on AUM and market conditions. For real-time flow data,
-// services like SoSoValue, CoinGlass, or Bloomberg Terminal are needed.
+// premium data services are recommended.
 
 interface ETFData {
   name: string;

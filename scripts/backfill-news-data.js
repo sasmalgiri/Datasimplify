@@ -10,9 +10,19 @@
 const { createClient } = require('@supabase/supabase-js');
 
 // Configuration
-const SUPABASE_URL = 'https://gadspittitmuqmysiawu.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhZHNwaXR0aXRtdXFteXNpYXd1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTkwMzgzNSwiZXhwIjoyMDgxNDc5ODM1fQ.3SjsCC0Oy9ewfLLfO1lteuERFeU79s7cCnc2HPXCYlM';
-const CRYPTOPANIC_API_KEY = 'cceb2ab5bf11ae327110d8e92dbb7893d8f384df';
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const CRYPTOPANIC_API_KEY = process.env.CRYPTOPANIC_API_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error('Missing Supabase configuration. Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY.');
+  process.exit(1);
+}
+
+if (!CRYPTOPANIC_API_KEY) {
+  console.error('Missing CryptoPanic API key. Set CRYPTOPANIC_API_KEY.');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
