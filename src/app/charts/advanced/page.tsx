@@ -1186,38 +1186,42 @@ function AdvancedChartsContent() {
 
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar - Chart Selection */}
-          <div className="col-span-12 lg:col-span-3">
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 sticky top-4">
+          <div className="col-span-12 lg:col-span-3 lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto lg:sticky lg:top-4">
+            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
               <h3 className="font-medium mb-4">Advanced Chart Types</h3>
 
-              {['3d', 'hierarchy', 'flow', 'metrics', 'special'].map(category => (
-                <div key={category} className="mb-4">
-                  <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                    {category === '3d' ? '3D Visualization' :
-                     category === 'hierarchy' ? 'Hierarchical' :
-                     category === 'flow' ? 'Flow & Network' :
-                     category === 'metrics' ? 'Metrics' : 'Special'}
+              {/* Chart Type Selector with scrollable area */}
+              <div className="max-h-64 overflow-y-auto pr-1">
+                {['3d', 'hierarchy', 'flow', 'metrics', 'special'].map(category => (
+                  <div key={category} className="mb-3">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
+                      {category === '3d' ? '3D Visualization' :
+                       category === 'hierarchy' ? 'Hierarchical' :
+                       category === 'flow' ? 'Flow & Network' :
+                       category === 'metrics' ? 'Metrics' : 'Special'}
+                    </div>
+                    {CHART_CONFIGS.filter(c => c.category === category).map(config => (
+                      <button
+                        type="button"
+                        key={config.type}
+                        onClick={() => setSelectedChart(config.type)}
+                        className={`w-full text-left p-2 rounded-lg mb-1 transition ${
+                          selectedChart === config.type
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{config.icon}</span>
+                          <span className="text-sm font-medium">{config.title}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  {CHART_CONFIGS.filter(c => c.category === category).map(config => (
-                    <button
-                      key={config.type}
-                      onClick={() => setSelectedChart(config.type)}
-                      className={`w-full text-left p-3 rounded-lg mb-1 transition ${
-                        selectedChart === config.type
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>{config.icon}</span>
-                        <span className="text-sm font-medium">{config.title}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              ))}
+                ))}
+              </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-700">
+              <div className="mt-4 pt-4 border-t border-gray-700">
                 <Link
                   href="/charts"
                   className="w-full block text-center py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm"
