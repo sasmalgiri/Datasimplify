@@ -579,9 +579,18 @@ function AdvancedChartsContent() {
         };
 
       case 'gauge':
+        // Calculate dynamic metrics from selected coins
+        const avgSentiment = Math.round(filteredCoins.reduce((sum, c) => sum + (c.sentiment || 50), 0) / filteredCoins.length);
+        const avgChange = filteredCoins.reduce((sum, c) => sum + c.change, 0) / filteredCoins.length;
+        // Derive "market mood" from average change: -10% = 0, 0% = 50, +10% = 100
+        const marketMood = Math.min(100, Math.max(0, Math.round(50 + avgChange * 5)));
+        // Calculate volatility score from change spread
+        const changeSpread = Math.max(...filteredCoins.map(c => c.change)) - Math.min(...filteredCoins.map(c => c.change));
+        const volatilityScore = Math.min(100, Math.round(changeSpread * 5));
+
         return {
           title: {
-            text: 'Market Metrics Dashboard',
+            text: `Market Gauges (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
@@ -613,7 +622,7 @@ function AdvancedChartsContent() {
               anchor: { show: true, size: 20, itemStyle: { borderWidth: 2 } },
               title: { show: true, offsetCenter: [0, '70%'], color: '#fff' },
               detail: { valueAnimation: true, fontSize: 20, offsetCenter: [0, '90%'], color: '#fff', formatter: '{value}' },
-              data: [{ value: 72, name: 'Fear & Greed' }]
+              data: [{ value: marketMood, name: 'Market Mood' }]
             },
             {
               type: 'gauge',
@@ -627,9 +636,9 @@ function AdvancedChartsContent() {
                 lineStyle: {
                   width: 6,
                   color: [
-                    [0.3, '#EF4444'],
+                    [0.3, '#10B981'],
                     [0.7, '#F59E0B'],
-                    [1, '#10B981']
+                    [1, '#EF4444']
                   ]
                 }
               },
@@ -640,7 +649,7 @@ function AdvancedChartsContent() {
               anchor: { show: true, size: 20, itemStyle: { borderWidth: 2 } },
               title: { show: true, offsetCenter: [0, '70%'], color: '#fff' },
               detail: { valueAnimation: true, fontSize: 20, offsetCenter: [0, '90%'], color: '#fff', formatter: '{value}%' },
-              data: [{ value: 68, name: 'AI Confidence' }]
+              data: [{ value: volatilityScore, name: 'Volatility' }]
             }
           ]
         };
@@ -820,64 +829,78 @@ function AdvancedChartsContent() {
         };
 
       case 'funnel':
+        // Funnel showing market dominance of selected coins
+        const totalMarketCap = filteredCoins.reduce((sum, c) => sum + c.marketCap, 0);
+        const funnelData = filteredCoins
+          .sort((a, b) => b.marketCap - a.marketCap)
+          .slice(0, 8)
+          .map((coin, idx) => ({
+            value: Math.round((coin.marketCap / totalMarketCap) * 100),
+            name: `${coin.symbol} ($${coin.marketCap}B)`,
+            itemStyle: { color: coin.color || CHART_COLORS[idx % CHART_COLORS.length] }
+          }));
+
         return {
           title: {
-            text: 'Crypto User Journey',
+            text: `Market Dominance Funnel (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
-          tooltip: { trigger: 'item', formatter: '{b}: {c}%' },
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: { name: string; value: number }) =>
+              `${params.name}<br/>Dominance: ${params.value}%`
+          },
           series: [{
             type: 'funnel',
             left: '10%',
             width: '80%',
-            label: { position: 'inside', color: '#fff' },
+            sort: 'descending',
+            label: { position: 'inside', color: '#fff', formatter: '{b}' },
             labelLine: { show: false },
             itemStyle: { borderWidth: 0 },
-            emphasis: { label: { fontSize: 16 } },
-            data: [
-              { value: 100, name: 'Awareness', itemStyle: { color: '#3B82F6' } },
-              { value: 80, name: 'Interest', itemStyle: { color: '#8B5CF6' } },
-              { value: 60, name: 'Research', itemStyle: { color: '#EC4899' } },
-              { value: 40, name: 'First Purchase', itemStyle: { color: '#F59E0B' } },
-              { value: 25, name: 'Regular Trading', itemStyle: { color: '#10B981' } },
-              { value: 10, name: 'HODLer', itemStyle: { color: '#06B6D4' } }
-            ]
+            emphasis: { label: { fontSize: 14 } },
+            data: funnelData
           }]
         };
 
       case 'calendar':
-        // Generate calendar data for the past 6 months
-        // Use deterministic values based on date to avoid Math.random() impurity
+        // Generate calendar data based on selected coins' combined volume
         const calendarData: [string, number][] = [];
         const today = new Date();
+        // Use total volume of selected coins as base activity level
+        const baseVolume = filteredCoins.reduce((sum, c) => sum + c.volume, 0);
+        const coinCount = filteredCoins.length;
+
         for (let i = 180; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
           const dateStr = date.toISOString().split('T')[0];
-          // Deterministic pseudo-random based on date components
+          // Deterministic pseudo-random based on date + coin selection
           const dateParts = dateStr.split('-');
-          const seed = parseInt(dateParts[0]) + parseInt(dateParts[1]) * 31 + parseInt(dateParts[2]) * 12;
-          const value = Math.floor(Math.abs(Math.sin(seed) * 10000));
+          const seed = parseInt(dateParts[0]) + parseInt(dateParts[1]) * 31 + parseInt(dateParts[2]) * 12 + coinCount;
+          // Scale activity by selected coins' total volume
+          const value = Math.floor(Math.abs(Math.sin(seed) * baseVolume * 100));
           calendarData.push([dateStr, value]);
         }
 
         const startMonth = new Date(today);
         startMonth.setMonth(startMonth.getMonth() - 6);
+        const maxCalendarValue = Math.max(...calendarData.map(d => d[1]));
 
         return {
           title: {
-            text: 'Daily Trading Activity',
+            text: `Trading Activity (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
           tooltip: {
             formatter: (params: { value: [string, number] }) =>
-              `${params.value[0]}: ${params.value[1].toLocaleString()} trades`
+              `${params.value[0]}<br/>Activity: ${params.value[1].toLocaleString()}<br/>Coins: ${filteredCoins.map(c => c.symbol).join(', ')}`
           },
           visualMap: {
             min: 0,
-            max: 10000,
+            max: maxCalendarValue,
             calculable: true,
             orient: 'horizontal',
             left: 'center',
@@ -906,31 +929,45 @@ function AdvancedChartsContent() {
         };
 
       case 'whale_tracker':
-        // Whale transactions visualization - scatter plot with bubbles
-        const whaleTransactions = [
-          { time: '00:15', coin: 'BTC', amount: 500, type: 'buy', from: 'Exchange', to: 'Wallet' },
-          { time: '01:30', coin: 'ETH', amount: 2500, type: 'sell', from: 'Wallet', to: 'Exchange' },
-          { time: '02:45', coin: 'BTC', amount: 1200, type: 'transfer', from: 'Wallet', to: 'Cold Storage' },
-          { time: '04:00', coin: 'SOL', amount: 150000, type: 'buy', from: 'Exchange', to: 'Wallet' },
-          { time: '05:20', coin: 'BTC', amount: 800, type: 'sell', from: 'Wallet', to: 'Exchange' },
-          { time: '06:45', coin: 'ETH', amount: 5000, type: 'buy', from: 'Exchange', to: 'DeFi' },
-          { time: '08:00', coin: 'BTC', amount: 2000, type: 'transfer', from: 'Exchange', to: 'Cold Storage' },
-          { time: '09:30', coin: 'DOGE', amount: 50000000, type: 'buy', from: 'Exchange', to: 'Wallet' },
-          { time: '10:15', coin: 'BTC', amount: 350, type: 'sell', from: 'Wallet', to: 'Exchange' },
-          { time: '11:45', coin: 'ETH', amount: 8000, type: 'transfer', from: 'DeFi', to: 'Wallet' },
-          { time: '13:00', coin: 'BTC', amount: 1500, type: 'buy', from: 'OTC', to: 'Cold Storage' },
-          { time: '14:30', coin: 'SOL', amount: 200000, type: 'sell', from: 'Wallet', to: 'Exchange' },
-          { time: '16:00', coin: 'BTC', amount: 600, type: 'transfer', from: 'Exchange', to: 'Wallet' },
-          { time: '17:20', coin: 'ETH', amount: 3500, type: 'buy', from: 'Exchange', to: 'DeFi' },
-          { time: '19:00', coin: 'BTC', amount: 950, type: 'sell', from: 'Cold Storage', to: 'Exchange' },
-        ];
+        // Generate whale transactions dynamically based on selected coins
+        const timeSlots = ['00:15', '01:30', '02:45', '04:00', '05:20', '06:45', '08:00', '09:30', '10:15', '11:45', '13:00', '14:30', '16:00', '17:20', '19:00'];
+        const txTypes = ['buy', 'sell', 'transfer'] as const;
+        const txLocations = ['Exchange', 'Wallet', 'Cold Storage', 'DeFi', 'OTC'];
 
-        const coinColors: Record<string, string> = {
-          'BTC': '#F7931A',
-          'ETH': '#627EEA',
-          'SOL': '#00D18C',
-          'DOGE': '#C3A634'
-        };
+        // Build coin color map from selected coins
+        const whaleCoinColors: Record<string, string> = {};
+        filteredCoins.forEach(coin => {
+          whaleCoinColors[coin.symbol] = coin.color;
+        });
+
+        // Generate transactions for each selected coin
+        const whaleTransactions: { time: string; coin: string; amount: number; type: 'buy' | 'sell' | 'transfer'; from: string; to: string; price: number }[] = [];
+        filteredCoins.slice(0, 6).forEach((coin, coinIdx) => {
+          // Generate 2-3 transactions per coin
+          const txCount = 2 + (coinIdx % 2);
+          for (let i = 0; i < txCount; i++) {
+            const timeIdx = (coinIdx * 3 + i) % timeSlots.length;
+            const typeIdx = (coinIdx + i) % 3;
+            const fromIdx = (coinIdx + i) % txLocations.length;
+            const toIdx = (coinIdx + i + 1) % txLocations.length;
+            // Amount based on coin price - higher price means lower amount
+            const baseAmount = coin.price > 10000 ? 500 : coin.price > 100 ? 5000 : coin.price > 1 ? 50000 : 5000000;
+            const amount = baseAmount * (1 + (i * 0.5));
+
+            whaleTransactions.push({
+              time: timeSlots[timeIdx],
+              coin: coin.symbol,
+              amount,
+              type: txTypes[typeIdx],
+              from: txLocations[fromIdx],
+              to: txLocations[toIdx],
+              price: coin.price
+            });
+          }
+        });
+
+        // Sort by time
+        whaleTransactions.sort((a, b) => a.time.localeCompare(b.time));
 
         const typeSymbols: Record<string, string> = {
           'buy': 'circle',
@@ -940,17 +977,15 @@ function AdvancedChartsContent() {
 
         return {
           title: {
-            text: 'Whale Transaction Tracker (24h)',
+            text: `Whale Tracker (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
           tooltip: {
             trigger: 'item',
-            formatter: (params: { data: { value: number[]; coin: string; type: string; amount: number; from: string; to: string } }) => {
+            formatter: (params: { data: { value: number[]; coin: string; type: string; amount: number; from: string; to: string; price: number } }) => {
               const d = params.data;
-              const usdValue = d.coin === 'BTC' ? d.amount * 45000 :
-                              d.coin === 'ETH' ? d.amount * 2500 :
-                              d.coin === 'SOL' ? d.amount * 100 : d.amount * 0.08;
+              const usdValue = d.amount * d.price;
               return `<strong>${d.coin}</strong><br/>
                       Type: ${d.type.toUpperCase()}<br/>
                       Amount: ${d.amount.toLocaleString()} ${d.coin}<br/>
@@ -959,7 +994,7 @@ function AdvancedChartsContent() {
             }
           },
           legend: {
-            data: ['BTC', 'ETH', 'SOL', 'DOGE'],
+            data: filteredCoins.slice(0, 6).map(c => c.symbol),
             bottom: 10,
             textStyle: { color: '#9CA3AF' }
           },
@@ -971,7 +1006,7 @@ function AdvancedChartsContent() {
           },
           xAxis: {
             type: 'category',
-            data: whaleTransactions.map(t => t.time),
+            data: [...new Set(whaleTransactions.map(t => t.time))].sort(),
             axisLabel: { color: '#9CA3AF' },
             axisLine: { lineStyle: { color: '#374151' } },
             name: 'Time (UTC)',
@@ -988,15 +1023,13 @@ function AdvancedChartsContent() {
             axisLine: { lineStyle: { color: '#374151' } },
             splitLine: { lineStyle: { color: '#374151', type: 'dashed' } }
           },
-          series: ['BTC', 'ETH', 'SOL', 'DOGE'].map(coin => ({
-            name: coin,
+          series: filteredCoins.slice(0, 6).map(coin => ({
+            name: coin.symbol,
             type: 'scatter',
             data: whaleTransactions
-              .filter(t => t.coin === coin)
+              .filter(t => t.coin === coin.symbol)
               .map(t => {
-                const usdValue = coin === 'BTC' ? t.amount * 45000 :
-                                coin === 'ETH' ? t.amount * 2500 :
-                                coin === 'SOL' ? t.amount * 100 : t.amount * 0.08;
+                const usdValue = t.amount * t.price;
                 return {
                   value: [t.time, usdValue],
                   coin: t.coin,
@@ -1004,9 +1037,10 @@ function AdvancedChartsContent() {
                   amount: t.amount,
                   from: t.from,
                   to: t.to,
+                  price: t.price,
                   symbolSize: Math.min(Math.max(usdValue / 500000, 15), 60),
                   itemStyle: {
-                    color: coinColors[coin],
+                    color: whaleCoinColors[coin.symbol] || coin.color,
                     opacity: t.type === 'buy' ? 0.9 : t.type === 'sell' ? 0.7 : 0.5,
                     borderColor: t.type === 'sell' ? '#EF4444' : t.type === 'buy' ? '#10B981' : '#9CA3AF',
                     borderWidth: 2
