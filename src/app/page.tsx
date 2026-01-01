@@ -1,51 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 
+// Progress bar component using refs
+function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.width = `${percentage}%`;
+    }
+  }, [percentage]);
+  return <div ref={ref} className={`${colorClass} transition-all duration-500`} />;
+}
+
+// Community Stats Interface
+interface CommunityStats {
+  total_predictions: number;
+  active_predictors: number;
+  bullish_percent: number;
+  bearish_percent: number;
+  neutral_percent: number;
+  avg_accuracy: number;
+}
+
 // Verification types
-interface VerificationResult {
-  name: string;
-  type: string;
-  function: string;
-  description: string;
-  status: 'verified' | 'vulnerable' | 'error';
-  result: string;
-  details: string;
-  proofGenerated: boolean;
-}
-
-interface ProofCertificate {
-  certificateId: string;
-  contractHash: string;
-  issuedAt: string;
-  verificationMethod: string;
-  provenProperties: string[];
-  statement: string;
-  disclaimer: string;
-}
-
 interface VerificationResponse {
   success: boolean;
   error?: string;
-  contractHash?: string;
-  timestamp?: string;
-  verificationTime?: number;
-  summary?: {
-    totalChecks: number;
-    verified: number;
-    vulnerable: number;
-    errors: number;
-  };
+  summary?: { totalChecks: number; verified: number; vulnerable: number; errors: number; };
   securityScore?: number;
   overallStatus?: string;
-  results?: VerificationResult[];
-  proofCertificate?: ProofCertificate | null;
-  message?: string;
+  results?: { status: string; description: string; function: string; }[];
 }
 
-export default function LandingPage() {
+// Compact SafeContract Component
+function SafeContractPreview() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<VerificationResponse | null>(null);
@@ -60,16 +51,8 @@ export default function LandingPage() {
     }
   };
 
-  const clearCode = () => {
-    setCode('');
-    setResults(null);
-  };
-
   const verify = async () => {
-    if (!code.trim()) {
-      alert('Please enter some Solidity code');
-      return;
-    }
+    if (!code.trim()) return;
     setLoading(true);
     setResults(null);
     try {
@@ -81,10 +64,7 @@ export default function LandingPage() {
       const data = await res.json();
       setResults(data);
     } catch (e) {
-      setResults({
-        success: false,
-        error: e instanceof Error ? e.message : 'Verification failed'
-      });
+      setResults({ success: false, error: 'Verification failed' });
     } finally {
       setLoading(false);
     }
@@ -96,268 +76,322 @@ export default function LandingPage() {
     return 'border-red-500 bg-red-500/20 text-red-400';
   };
 
-  const getStatusIcon = (status: string) => {
-    if (status === 'verified') return '✓';
-    if (status === 'vulnerable') return '✗';
-    return '!';
-  };
+  return (
+    <div className="bg-gradient-to-br from-green-900/30 to-emerald-800/20 backdrop-blur-sm rounded-2xl border border-green-500/30 p-4 h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-gray-900 font-bold text-sm">
+            SC
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">SafeContract</h3>
+            <p className="text-gray-400 text-xs">Smart Contract Verifier</p>
+          </div>
+        </div>
+        <Link href="/tools/verify" className="text-green-400 text-xs hover:text-green-300 transition">
+          Full Page →
+        </Link>
+      </div>
 
-  const getStatusClass = (status: string) => {
-    if (status === 'verified') return 'bg-green-500/20 text-green-400';
-    if (status === 'vulnerable') return 'bg-red-500/20 text-red-400';
-    return 'bg-yellow-500/20 text-yellow-400';
-  };
+      {/* Code Input */}
+      <div className="mb-3">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-gray-500 text-xs">Solidity Code</span>
+          <button type="button" onClick={loadExample} className="text-green-400 text-xs hover:underline">
+            Load Example
+          </button>
+        </div>
+        <textarea
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="// Paste Solidity code..."
+          className="w-full h-20 p-2 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-200 font-mono text-xs resize-none outline-none focus:border-green-500/50"
+        />
+      </div>
 
+      {/* Verify Button */}
+      <button
+        type="button"
+        onClick={verify}
+        disabled={loading || !code.trim()}
+        className="w-full py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2 mb-3"
+      >
+        {loading ? (
+          <>
+            <span className="w-3 h-3 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+            Verifying...
+          </>
+        ) : (
+          <>🔍 Verify Contract</>
+        )}
+      </button>
+
+      {/* Results */}
+      <div className="bg-gray-900/50 rounded-lg p-3 min-h-[60px]">
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-400 text-xs">Running verification...</p>
+          </div>
+        ) : results ? (
+          results.success ? (
+            <div className="flex items-center gap-3">
+              <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-bold font-mono ${getScoreClass(results.securityScore || 0)}`}>
+                {results.securityScore}%
+              </div>
+              <div className="flex-1">
+                <p className="text-white text-sm font-semibold">{results.overallStatus}</p>
+                <p className="text-gray-400 text-xs">{results.summary?.verified}/{results.summary?.totalChecks} checks passed</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-red-400 text-xs text-center">{results.error}</p>
+          )
+        ) : (
+          <div className="text-center text-gray-500 text-xs">
+            <span className="text-lg">🔐</span>
+            <p>Paste code & verify</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Community Preview Component
+function CommunityPreview() {
+  const [stats, setStats] = useState<CommunityStats>({
+    total_predictions: 0,
+    active_predictors: 0,
+    bullish_percent: 33,
+    bearish_percent: 33,
+    neutral_percent: 34,
+    avg_accuracy: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/community?action=stats');
+        const result = await response.json();
+        if (result.success && result.data) {
+          setStats(result.data);
+        }
+      } catch (error) {
+        console.error('Error fetching community stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  return (
+    <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 h-full">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <span className="text-sm">👥</span>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white">Community</h3>
+            <p className="text-gray-400 text-xs">Live sentiment</p>
+          </div>
+        </div>
+        <Link href="/community" className="text-emerald-400 text-xs hover:text-emerald-300 transition">
+          View All →
+        </Link>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700">
+          <p className="text-gray-400 text-xs">Predictions</p>
+          <p className="text-lg font-bold text-white">{loading ? '...' : stats.total_predictions}</p>
+        </div>
+        <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700">
+          <p className="text-gray-400 text-xs">Accuracy</p>
+          <p className="text-lg font-bold text-emerald-400">{loading ? '...' : `${stats.avg_accuracy}%`}</p>
+        </div>
+      </div>
+
+      {/* Sentiment Bar */}
+      <div className="mb-3">
+        <div className="flex h-2 rounded-full overflow-hidden bg-gray-700">
+          <ProgressSegment percentage={stats.bullish_percent} colorClass="bg-emerald-500" />
+          <ProgressSegment percentage={stats.neutral_percent} colorClass="bg-yellow-500" />
+          <ProgressSegment percentage={stats.bearish_percent} colorClass="bg-red-500" />
+        </div>
+        <div className="flex justify-between text-xs mt-1">
+          <span className="text-emerald-400">{stats.bullish_percent}% Bull</span>
+          <span className="text-yellow-400">{stats.neutral_percent}% Neutral</span>
+          <span className="text-red-400">{stats.bearish_percent}% Bear</span>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <Link
+        href="/community"
+        className="block w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold text-center transition text-sm"
+      >
+        + Submit Prediction
+      </Link>
+    </div>
+  );
+}
+
+export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
 
-      {/* SafeContract Hero Section */}
-      <section className="py-8 px-4">
+      {/* Hero Section */}
+      <section className="pt-8 pb-12 px-4">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-gray-900 font-bold text-xl">
-                SC
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold">
-                Safe<span className="text-green-400">Contract</span>
+          <div className="grid lg:grid-cols-2 gap-6 items-start">
+            {/* Left: Hero Content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+                <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+                  PROFESSIONAL CRYPTO DATA
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  WITHOUT THE $1,000/mo PRICE TAG
+                </span>
               </h1>
-              <span className="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-400 text-sm font-semibold">
-                Z3 Powered
-              </span>
-            </div>
-            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Formal Verification for Smart Contracts. Detect vulnerabilities before deployment.
-            </p>
-            {/* Stats */}
-            <div className="flex justify-center gap-8 mt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400 font-mono">Z3</div>
-                <div className="text-gray-500 text-xs">SMT Solver</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400 font-mono">&lt;30s</div>
-                <div className="text-gray-500 text-xs">Verification</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400 font-mono">100%</div>
-                <div className="text-gray-500 text-xs">Math Proof</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Main Grid - Code + Results */}
-          <div className="grid lg:grid-cols-2 gap-4">
-            {/* Code Input Panel */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-                <span className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Solidity Code</span>
-                <div className="flex gap-2">
-                  <button type="button" onClick={loadExample} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition">
-                    Load Example
-                  </button>
-                  <button type="button" onClick={clearCode} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition">
-                    Clear
-                  </button>
+              <p className="text-base md:text-lg text-gray-400 mb-6">
+                Why pay $800-$1,299/month for enterprise platforms when you can get
+                <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-6">
+                <Link
+                  href="/signup"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold hover:opacity-90 transition shadow-lg shadow-blue-500/25"
+                >
+                  Start Free Trial →
+                </Link>
+                <Link
+                  href="/chat"
+                  className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition"
+                >
+                  Try AI Demo
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap justify-center lg:justify-start gap-4 text-gray-400 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-400">★★★★★</span>
+                  <span>4.9/5</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400">✓</span>
+                  <span>No Credit Card</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-400">🔒</span>
+                  <span>Secure</span>
                 </div>
               </div>
-              <textarea
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder={`// Paste your Solidity code here...
-
-pragma solidity ^0.8.0;
-
-contract MyContract {
-    // Your code
-}`}
-                className="w-full h-64 p-4 bg-transparent text-gray-200 font-mono text-sm resize-none outline-none"
-              />
-              <div className="flex justify-end px-4 py-2 border-t border-gray-700">
-                <button
-                  type="button"
-                  onClick={verify}
-                  disabled={loading}
-                  className="px-5 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold rounded-lg transition flex items-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>🔍 Verify Contract</>
-                  )}
-                </button>
-              </div>
             </div>
 
-            {/* Results Panel */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-                <span className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Results</span>
-                {results?.success && results.summary && (
-                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${results.summary.vulnerable > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
-                    {results.summary.vulnerable > 0 ? 'Issues Found' : 'Verified Safe'}
-                  </span>
-                )}
-              </div>
-              <div className="p-4 h-64 overflow-y-auto">
-                {loading ? (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <div className="w-10 h-10 border-3 border-gray-700 border-t-green-500 rounded-full animate-spin" />
-                    <p className="mt-3 text-gray-400 text-sm">Running verification...</p>
-                  </div>
-                ) : results ? (
-                  results.success ? (
-                    <div className="space-y-3">
-                      {/* Security Score */}
-                      {results.securityScore !== undefined && (
-                        <div className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg">
-                          <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center text-lg font-bold font-mono ${getScoreClass(results.securityScore)}`}>
-                            {results.securityScore}%
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-sm">{results.overallStatus}</h3>
-                            <p className="text-gray-400 text-xs">
-                              {results.summary?.verified}/{results.summary?.totalChecks} verified
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      {/* Check Results */}
-                      {results.results && results.results.slice(0, 4).map((check, i) => (
-                        <div key={i} className="flex items-center gap-2 p-2 bg-gray-900/50 rounded-lg">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${getStatusClass(check.status)}`}>
-                            {getStatusIcon(check.status)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-xs font-medium truncate">{check.description}</div>
-                            <div className="text-xs text-gray-500">{check.function}()</div>
-                          </div>
-                          <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${getStatusClass(check.status)}`}>
-                            {check.status}
-                          </span>
-                        </div>
-                      ))}
-                      {results.results && results.results.length > 4 && (
-                        <Link href="/tools/verify" className="block text-center text-green-400 text-sm hover:underline">
-                          View all {results.results.length} checks →
-                        </Link>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                      <div className="text-3xl mb-2">⚠️</div>
-                      <p className="text-red-400 text-sm">{results.error}</p>
-                    </div>
-                  )
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-500 text-center">
-                    <div className="text-3xl mb-2 opacity-50">🔐</div>
-                    <p className="text-sm">Paste code and click <strong className="text-gray-300">Verify Contract</strong></p>
-                  </div>
-                )}
-              </div>
+            {/* Right: Two Cards Stacked */}
+            <div className="space-y-4">
+              <SafeContractPreview />
+              <CommunityPreview />
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 border-y border-gray-800 bg-gray-800/30">
+      <section className="py-12 border-y border-gray-800 bg-gray-800/30">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-blue-400 mb-2">$50M+</div>
-              <div className="text-gray-400">Data Analyzed Daily</div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">$50M+</div>
+              <div className="text-gray-400 text-sm">Data Analyzed Daily</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-purple-400 mb-2">10,000+</div>
-              <div className="text-gray-400">Tokens Tracked</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">10,000+</div>
+              <div className="text-gray-400 text-sm">Tokens Tracked</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-green-400 mb-2">95%</div>
-              <div className="text-gray-400">Cost Savings</div>
+              <div className="text-3xl md:text-4xl font-bold text-green-400 mb-1">95%</div>
+              <div className="text-gray-400 text-sm">Cost Savings</div>
             </div>
             <div>
-              <div className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2">24/7</div>
-              <div className="text-gray-400">Real-Time Updates</div>
+              <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">24/7</div>
+              <div className="text-gray-400 text-sm">Real-Time Updates</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Problem/Solution Section */}
-      <section className="py-20 px-4">
+      <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
               The <span className="text-red-400">$32,000/year</span> Problem
             </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Professional crypto data is locked behind enterprise paywalls. Until now.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8">
-              <div className="text-red-400 text-sm font-medium mb-4">❌ THE OLD WAY</div>
-              <h3 className="text-2xl font-bold mb-6">Enterprise Platforms</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start gap-3">
-                  <span className="text-red-400 mt-1">✗</span>
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
+              <div className="text-red-400 text-sm font-medium mb-3">❌ THE OLD WAY</div>
+              <h3 className="text-xl font-bold mb-4">Enterprise Platforms</h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">✗</span>
                   <span>Financial Terminals: <strong className="text-red-400">$24,000/year</strong></span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-400 mt-1">✗</span>
-                  <span>Whale Analytics Pro: <strong className="text-red-400">$1,299/month</strong></span>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">✗</span>
+                  <span>Whale Analytics: <strong className="text-red-400">$1,299/month</strong></span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-400 mt-1">✗</span>
-                  <span>On-Chain Data Advanced: <strong className="text-red-400">$799/month</strong></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-red-400 mt-1">✗</span>
-                  <span>Complex interfaces requiring training</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-red-400">✗</span>
+                  <span>On-Chain Data: <strong className="text-red-400">$799/month</strong></span>
                 </li>
               </ul>
-              <div className="mt-8 text-center">
-                <div className="text-4xl font-bold text-red-400">$800-$2,000</div>
-                <div className="text-gray-500">per month</div>
+              <div className="mt-6 text-center">
+                <div className="text-3xl font-bold text-red-400">$800-$2,000</div>
+                <div className="text-gray-500 text-sm">per month</div>
               </div>
             </div>
 
-            <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-8 relative">
-              <div className="absolute top-4 right-4 bg-green-500 text-black text-xs font-bold px-3 py-1 rounded-full">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 relative">
+              <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">
                 SAVE 95%
               </div>
-              <div className="text-green-400 text-sm font-medium mb-4">✓ THE DATASIMPLIFY WAY</div>
-              <h3 className="text-2xl font-bold mb-6">All-In-One Platform</h3>
-              <ul className="space-y-4 text-gray-300">
-                <li className="flex items-start gap-3">
-                  <span className="text-green-400 mt-1">✓</span>
+              <div className="text-green-400 text-sm font-medium mb-3">✓ THE DATASIMPLIFY WAY</div>
+              <h3 className="text-xl font-bold mb-4">All-In-One Platform</h3>
+              <ul className="space-y-3 text-gray-300 text-sm">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">✓</span>
                   <span>Professional on-chain analytics</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-400 mt-1">✓</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">✓</span>
                   <span>Real-time whale tracking</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>AI assistant that explains everything</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-green-400 mt-1">✓</span>
-                  <span>Beginner-friendly with tutorials</span>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">✓</span>
+                  <span>AI assistant + Smart Contract Verifier</span>
                 </li>
               </ul>
-              <div className="mt-8 text-center">
-                <div className="text-4xl font-bold text-green-400">$19-$49</div>
-                <div className="text-gray-500">per month</div>
+              <div className="mt-6 text-center">
+                <div className="text-3xl font-bold text-green-400">$19-$49</div>
+                <div className="text-gray-500 text-sm">per month</div>
               </div>
             </div>
           </div>
@@ -365,34 +399,33 @@ contract MyContract {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-20 px-4 bg-gray-800/30">
+      <section id="features" className="py-16 px-4 bg-gray-800/30">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
               15+ Professional Tools, <span className="text-blue-400">One Platform</span>
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4">
             {[
-              { icon: '🤖', title: 'AI Assistant', desc: 'Ask anything about crypto in plain English.' },
-              { icon: '🗺️', title: 'Market Map', desc: 'Visualize the entire crypto market.' },
-              { icon: '😱', title: 'Fear & Greed', desc: 'Know when to buy and sell.' },
-              { icon: '🐋', title: 'Whale Tracker', desc: 'See what big players are doing.' },
-              { icon: '📊', title: 'Technical Analysis', desc: '12 indicators with explanations.' },
-              { icon: '⛓️', title: 'On-Chain Metrics', desc: 'MVRV, SOPR, HODL Waves.' },
-              { icon: '💰', title: 'DeFi Dashboard', desc: 'Track TVL and yields.' },
+              { icon: '🤖', title: 'AI Assistant', desc: 'Ask anything about crypto.' },
+              { icon: '🗺️', title: 'Market Map', desc: 'Visualize the market.' },
+              { icon: '😱', title: 'Fear & Greed', desc: 'Know when to buy/sell.' },
+              { icon: '🐋', title: 'Whale Tracker', desc: 'See big players.' },
+              { icon: '📊', title: 'Technical Analysis', desc: '12+ indicators.' },
+              { icon: '⛓️', title: 'On-Chain Metrics', desc: 'MVRV, SOPR, HODL.' },
+              { icon: '💰', title: 'DeFi Dashboard', desc: 'Track TVL & yields.' },
               { icon: '🔍', title: 'Token Screener', desc: 'Filter 10,000+ tokens.' },
               { icon: '📈', title: 'ETF Tracker', desc: 'Bitcoin ETF flows.' },
-              { icon: '⚡', title: 'Price Alerts', desc: 'Get notified instantly.' },
-              { icon: '📚', title: 'Crypto Academy', desc: '4 courses, 20 lessons.' },
-              { icon: '🧪', title: 'Backtester', desc: 'Test your strategies.' },
-              { icon: '🔐', title: 'Contract Verifier', desc: 'Smart contract security analysis.' },
+              { icon: '⚡', title: 'Price Alerts', desc: 'Instant notifications.' },
+              { icon: '📚', title: 'Crypto Academy', desc: '20 lessons.' },
+              { icon: '🔐', title: 'Contract Verifier', desc: 'Smart contract security.' },
             ].map((f, i) => (
-              <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-blue-500/50 transition">
-                <div className="text-4xl mb-4">{f.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{f.title}</h3>
-                <p className="text-gray-400">{f.desc}</p>
+              <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-blue-500/50 transition">
+                <div className="text-3xl mb-2">{f.icon}</div>
+                <h3 className="text-lg font-bold mb-1">{f.title}</h3>
+                <p className="text-gray-400 text-sm">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -400,67 +433,66 @@ contract MyContract {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4">
+      <section id="pricing" className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-4xl font-bold mb-3">
               Simple <span className="text-blue-400">Pricing</span>
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="text-sm text-gray-400 mb-2">Free</div>
-              <div className="text-4xl font-bold mb-4">$0</div>
-              <ul className="space-y-3 text-sm text-gray-300 mb-6">
+          <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">
+              <div className="text-sm text-gray-400 mb-1">Free</div>
+              <div className="text-3xl font-bold mb-3">$0</div>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
                 <li>✓ 5 downloads/month</li>
                 <li>✓ Basic data</li>
                 <li>✓ Crypto Academy</li>
               </ul>
-              <Link href="/signup" className="block text-center py-3 border border-gray-600 rounded-lg hover:bg-gray-700">
+              <Link href="/signup" className="block text-center py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-sm">
                 Get Started
               </Link>
             </div>
 
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="text-sm text-gray-400 mb-2">Starter</div>
-              <div className="text-4xl font-bold mb-4">$19<span className="text-lg text-gray-400">/mo</span></div>
-              <ul className="space-y-3 text-sm text-gray-300 mb-6">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">
+              <div className="text-sm text-gray-400 mb-1">Starter</div>
+              <div className="text-3xl font-bold mb-3">$19<span className="text-sm text-gray-400">/mo</span></div>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
                 <li>✓ 50 downloads</li>
                 <li>✓ Technical indicators</li>
                 <li>✓ Token screener</li>
               </ul>
-              <Link href="/signup?plan=starter" className="block text-center py-3 bg-gray-700 rounded-lg hover:bg-gray-600">
+              <Link href="/signup?plan=starter" className="block text-center py-2 bg-gray-700 rounded-lg hover:bg-gray-600 text-sm">
                 Start Trial
               </Link>
             </div>
 
-            <div className="bg-gradient-to-b from-blue-500/20 to-purple-500/20 border-2 border-blue-500 rounded-2xl p-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-xs font-bold px-3 py-1 rounded-full">
+            <div className="bg-gradient-to-b from-blue-500/20 to-purple-500/20 border-2 border-blue-500 rounded-2xl p-5 relative">
+              <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-xs font-bold px-2 py-0.5 rounded-full">
                 POPULAR
               </div>
-              <div className="text-sm text-blue-400 mb-2">Pro</div>
-              <div className="text-4xl font-bold mb-4">$49<span className="text-lg text-gray-400">/mo</span></div>
-              <ul className="space-y-3 text-sm text-gray-300 mb-6">
+              <div className="text-sm text-blue-400 mb-1">Pro</div>
+              <div className="text-3xl font-bold mb-3">$49<span className="text-sm text-gray-400">/mo</span></div>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
                 <li>✓ Unlimited downloads</li>
                 <li>✓ AI Assistant</li>
                 <li>✓ Whale tracking</li>
-                <li>✓ On-chain metrics</li>
               </ul>
-              <Link href="/signup?plan=pro" className="block text-center py-3 bg-blue-500 rounded-lg hover:bg-blue-600 font-semibold">
+              <Link href="/signup?plan=pro" className="block text-center py-2 bg-blue-500 rounded-lg hover:bg-blue-600 font-semibold text-sm">
                 Start Trial
               </Link>
             </div>
 
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-              <div className="text-sm text-gray-400 mb-2">Business</div>
-              <div className="text-4xl font-bold mb-4">$99<span className="text-lg text-gray-400">/mo</span></div>
-              <ul className="space-y-3 text-sm text-gray-300 mb-6">
+            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">
+              <div className="text-sm text-gray-400 mb-1">Business</div>
+              <div className="text-3xl font-bold mb-3">$99<span className="text-sm text-gray-400">/mo</span></div>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
                 <li>✓ Everything in Pro</li>
                 <li>✓ Price alerts</li>
                 <li>✓ API access</li>
               </ul>
-              <Link href="/signup?plan=business" className="block text-center py-3 border border-gray-600 rounded-lg hover:bg-gray-700">
+              <Link href="/signup?plan=business" className="block text-center py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-sm">
                 Start Trial
               </Link>
             </div>
@@ -469,17 +501,17 @@ contract MyContract {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+      <section className="py-16 px-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+          <h2 className="text-2xl md:text-4xl font-bold mb-4">
             Ready to Invest Smarter?
           </h2>
-          <p className="text-xl text-gray-400 mb-8">
+          <p className="text-lg text-gray-400 mb-6">
             Join 500+ investors who stopped overpaying for data.
           </p>
           <Link
             href="/signup"
-            className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-lg shadow-lg"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold shadow-lg"
           >
             Start Free Trial - No Credit Card Required
           </Link>
@@ -487,16 +519,16 @@ contract MyContract {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-12 px-4">
+      <footer className="border-t border-gray-800 py-8 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📊</span>
+            <span className="text-xl">📊</span>
             <span className="font-bold">DataSimplify</span>
           </div>
           <div className="text-gray-400 text-sm">
             © 2024 DataSimplify. All rights reserved.
           </div>
-          <div className="flex gap-4 text-gray-400">
+          <div className="flex gap-4 text-gray-400 text-sm">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>
             <Link href="/terms" className="hover:text-white">Terms</Link>
             <Link href="/support" className="hover:text-white">Support</Link>
