@@ -1,229 +1,267 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 
-// Progress bar component using refs
-function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.width = `${percentage}%`;
-    }
-  }, [percentage]);
-  return <div ref={ref} className={`${colorClass} transition-all duration-500`} />;
+// Verification types
+interface VerificationResult {
+  name: string;
+  type: string;
+  function: string;
+  description: string;
+  status: 'verified' | 'vulnerable' | 'error';
+  result: string;
+  details: string;
+  proofGenerated: boolean;
 }
 
-// Community Stats Interface
-interface CommunityStats {
-  total_predictions: number;
-  active_predictors: number;
-  bullish_percent: number;
-  bearish_percent: number;
-  neutral_percent: number;
-  avg_accuracy: number;
+interface ProofCertificate {
+  certificateId: string;
+  contractHash: string;
+  issuedAt: string;
+  verificationMethod: string;
+  provenProperties: string[];
+  statement: string;
+  disclaimer: string;
 }
 
-// Community Preview Component
-function CommunityPreview() {
-  const [stats, setStats] = useState<CommunityStats>({
-    total_predictions: 0,
-    active_predictors: 0,
-    bullish_percent: 33,
-    bearish_percent: 33,
-    neutral_percent: 34,
-    avg_accuracy: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/community?action=stats');
-        const result = await response.json();
-        if (result.success && result.data) {
-          setStats(result.data);
-        }
-      } catch (error) {
-        console.error('Error fetching community stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStats();
-  }, []);
-
-  return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-            <span className="text-xl">👥</span>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-white">Community Predictions</h3>
-            <p className="text-gray-400 text-sm">Live market sentiment</p>
-          </div>
-        </div>
-        <Link
-          href="/community"
-          className="text-emerald-400 text-sm hover:text-emerald-300 transition"
-        >
-          View All →
-        </Link>
-      </div>
-
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-xs mb-1">Total Predictions</p>
-          <p className="text-2xl font-bold text-white">
-            {loading ? '...' : stats.total_predictions.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-xs mb-1">Active Predictors</p>
-          <p className="text-2xl font-bold text-white">
-            {loading ? '...' : stats.active_predictors.toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-xs mb-1">Community Accuracy</p>
-          <p className="text-2xl font-bold text-emerald-400">
-            {loading ? '...' : `${stats.avg_accuracy}%`}
-          </p>
-        </div>
-        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-          <p className="text-gray-400 text-xs mb-1">Bullish Sentiment</p>
-          <p className="text-2xl font-bold text-emerald-400">
-            {loading ? '...' : `${stats.bullish_percent}%`}
-          </p>
-        </div>
-      </div>
-
-      {/* Sentiment Bar */}
-      <div className="mb-4">
-        <p className="text-gray-400 text-sm mb-2">Community Sentiment</p>
-        <div className="flex h-3 rounded-full overflow-hidden bg-gray-700">
-          <ProgressSegment percentage={stats.bullish_percent} colorClass="bg-emerald-500" />
-          <ProgressSegment percentage={stats.neutral_percent} colorClass="bg-yellow-500" />
-          <ProgressSegment percentage={stats.bearish_percent} colorClass="bg-red-500" />
-        </div>
-        <div className="flex justify-between text-xs mt-2">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span className="text-gray-400">Bullish</span>
-            <span className="text-emerald-400 font-bold">{stats.bullish_percent}%</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-            <span className="text-gray-400">Neutral</span>
-            <span className="text-yellow-400 font-bold">{stats.neutral_percent}%</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-            <span className="text-gray-400">Bearish</span>
-            <span className="text-red-400 font-bold">{stats.bearish_percent}%</span>
-          </span>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <Link
-        href="/community"
-        className="block w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-center transition mt-4"
-      >
-        + Submit Your Prediction
-      </Link>
-    </div>
-  );
+interface VerificationResponse {
+  success: boolean;
+  error?: string;
+  contractHash?: string;
+  timestamp?: string;
+  verificationTime?: number;
+  summary?: {
+    totalChecks: number;
+    verified: number;
+    vulnerable: number;
+    errors: number;
+  };
+  securityScore?: number;
+  overallStatus?: string;
+  results?: VerificationResult[];
+  proofCertificate?: ProofCertificate | null;
+  message?: string;
 }
 
 export default function LandingPage() {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<VerificationResponse | null>(null);
+
+  const loadExample = async () => {
+    try {
+      const res = await fetch('/api/smart-contract/example');
+      const data = await res.json();
+      setCode(data.code);
+    } catch (e) {
+      console.error('Failed to load example:', e);
+    }
+  };
+
+  const clearCode = () => {
+    setCode('');
+    setResults(null);
+  };
+
+  const verify = async () => {
+    if (!code.trim()) {
+      alert('Please enter some Solidity code');
+      return;
+    }
+    setLoading(true);
+    setResults(null);
+    try {
+      const res = await fetch('/api/smart-contract/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      setResults(data);
+    } catch (e) {
+      setResults({
+        success: false,
+        error: e instanceof Error ? e.message : 'Verification failed'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getScoreClass = (score: number) => {
+    if (score >= 80) return 'border-green-500 bg-green-500/20 text-green-400';
+    if (score >= 50) return 'border-yellow-500 bg-yellow-500/20 text-yellow-400';
+    return 'border-red-500 bg-red-500/20 text-red-400';
+  };
+
+  const getStatusIcon = (status: string) => {
+    if (status === 'verified') return '✓';
+    if (status === 'vulnerable') return '✗';
+    return '!';
+  };
+
+  const getStatusClass = (status: string) => {
+    if (status === 'verified') return 'bg-green-500/20 text-green-400';
+    if (status === 'vulnerable') return 'bg-red-500/20 text-red-400';
+    return 'bg-yellow-500/20 text-yellow-400';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
 
-      {/* Hero Section - Split Layout */}
-      <section className="pt-8 pb-16 px-4">
+      {/* SafeContract Hero Section */}
+      <section className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          {/* Split Layout */}
-          <div className="grid lg:grid-cols-2 gap-8 items-start">
-            {/* Left: Hero Content */}
-            <div className="text-center lg:text-left">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                  PROFESSIONAL CRYPTO DATA
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  WITHOUT THE $1,000/mo PRICE TAG
-                </span>
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-gray-900 font-bold text-xl">
+                SC
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                Safe<span className="text-green-400">Contract</span>
               </h1>
-
-              <p className="text-lg md:text-xl text-gray-400 mb-8">
-                Why pay $800-$1,299/month for enterprise platforms when you can get
-                <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-                <Link
-                  href="/signup"
-                  className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-lg hover:opacity-90 transition shadow-lg shadow-blue-500/25"
-                >
-                  Start Free Trial →
-                </Link>
-                <Link
-                  href="/chat"
-                  className="px-8 py-4 bg-white/10 border border-white/20 rounded-xl font-semibold text-lg hover:bg-white/20 transition"
-                >
-                  Try AI Demo
-                </Link>
+              <span className="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-400 text-sm font-semibold">
+                Z3 Powered
+              </span>
+            </div>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Formal Verification for Smart Contracts. Detect vulnerabilities before deployment.
+            </p>
+            {/* Stats */}
+            <div className="flex justify-center gap-8 mt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400 font-mono">Z3</div>
+                <div className="text-gray-500 text-xs">SMT Solver</div>
               </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400 font-mono">&lt;30s</div>
+                <div className="text-gray-500 text-xs">Verification</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-400 font-mono">100%</div>
+                <div className="text-gray-500 text-xs">Math Proof</div>
+              </div>
+            </div>
+          </div>
 
-              <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-gray-400 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-400">★★★★★</span>
-                  <span>4.9/5 Rating</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  <span>No Credit Card</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-400">🔒</span>
-                  <span>Bank-Level Security</span>
+          {/* Main Grid - Code + Results */}
+          <div className="grid lg:grid-cols-2 gap-4">
+            {/* Code Input Panel */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+                <span className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Solidity Code</span>
+                <div className="flex gap-2">
+                  <button type="button" onClick={loadExample} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition">
+                    Load Example
+                  </button>
+                  <button type="button" onClick={clearCode} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs text-gray-300 transition">
+                    Clear
+                  </button>
                 </div>
               </div>
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={`// Paste your Solidity code here...
 
-              {/* Contract Verifier Mini Banner */}
-              <Link href="/tools/verify" className="block mt-6">
-                <div className="bg-gradient-to-r from-green-900/50 to-emerald-800/50 border border-green-500/50 rounded-xl p-4 hover:border-green-400 transition-all hover:shadow-lg hover:shadow-green-500/10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center text-gray-900 font-bold text-lg shrink-0">
-                      SC
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-white">SafeContract Verifier</span>
-                        <span className="px-2 py-0.5 bg-green-500/20 border border-green-500 rounded-full text-green-400 text-xs font-semibold">
-                          NEW
-                        </span>
-                      </div>
-                      <p className="text-gray-400 text-sm">Smart contract security analysis</p>
-                    </div>
-                    <span className="text-green-400 font-semibold text-sm whitespace-nowrap">Try Free →</span>
-                  </div>
-                </div>
-              </Link>
+pragma solidity ^0.8.0;
+
+contract MyContract {
+    // Your code
+}`}
+                className="w-full h-64 p-4 bg-transparent text-gray-200 font-mono text-sm resize-none outline-none"
+              />
+              <div className="flex justify-end px-4 py-2 border-t border-gray-700">
+                <button
+                  type="button"
+                  onClick={verify}
+                  disabled={loading}
+                  className="px-5 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold rounded-lg transition flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>🔍 Verify Contract</>
+                  )}
+                </button>
+              </div>
             </div>
 
-            {/* Right: Community Predictions Preview */}
-            <div className="lg:pl-4">
-              <CommunityPreview />
+            {/* Results Panel */}
+            <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+                <span className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Results</span>
+                {results?.success && results.summary && (
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${results.summary.vulnerable > 0 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                    {results.summary.vulnerable > 0 ? 'Issues Found' : 'Verified Safe'}
+                  </span>
+                )}
+              </div>
+              <div className="p-4 h-64 overflow-y-auto">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="w-10 h-10 border-3 border-gray-700 border-t-green-500 rounded-full animate-spin" />
+                    <p className="mt-3 text-gray-400 text-sm">Running verification...</p>
+                  </div>
+                ) : results ? (
+                  results.success ? (
+                    <div className="space-y-3">
+                      {/* Security Score */}
+                      {results.securityScore !== undefined && (
+                        <div className="flex items-center gap-3 p-3 bg-gray-900/50 rounded-lg">
+                          <div className={`w-14 h-14 rounded-full border-2 flex items-center justify-center text-lg font-bold font-mono ${getScoreClass(results.securityScore)}`}>
+                            {results.securityScore}%
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm">{results.overallStatus}</h3>
+                            <p className="text-gray-400 text-xs">
+                              {results.summary?.verified}/{results.summary?.totalChecks} verified
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {/* Check Results */}
+                      {results.results && results.results.slice(0, 4).map((check, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2 bg-gray-900/50 rounded-lg">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${getStatusClass(check.status)}`}>
+                            {getStatusIcon(check.status)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-medium truncate">{check.description}</div>
+                            <div className="text-xs text-gray-500">{check.function}()</div>
+                          </div>
+                          <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${getStatusClass(check.status)}`}>
+                            {check.status}
+                          </span>
+                        </div>
+                      ))}
+                      {results.results && results.results.length > 4 && (
+                        <Link href="/tools/verify" className="block text-center text-green-400 text-sm hover:underline">
+                          View all {results.results.length} checks →
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="text-3xl mb-2">⚠️</div>
+                      <p className="text-red-400 text-sm">{results.error}</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 text-center">
+                    <div className="text-3xl mb-2 opacity-50">🔐</div>
+                    <p className="text-sm">Paste code and click <strong className="text-gray-300">Verify Contract</strong></p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
