@@ -88,6 +88,16 @@ export default function ToolsPage() {
       features: ['Real-time alerts', 'Wallet distribution', 'Exchange flows']
     },
     {
+      id: 'smart-contract-verifier',
+      name: 'SafeContract',
+      emoji: '🔐',
+      description: 'Formal verification for smart contracts using Z3 SMT solver',
+      href: '/smart-contract-verifier',
+      color: 'from-emerald-600 to-green-500',
+      forBeginner: false,
+      features: ['Overflow detection', 'Reentrancy check', 'Balance verification']
+    },
+    {
       id: 'etf',
       name: 'ETF Flow Tracker',
       emoji: '📊',

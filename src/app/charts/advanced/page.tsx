@@ -1073,8 +1073,18 @@ function AdvancedChartsContent() {
 
               {showControls && (
                 <div className="mt-4 space-y-4">
+                  {/* Notice for BTC Distribution */}
+                  {selectedChart === 'wallet_distribution' && (
+                    <div className="p-3 bg-blue-900/30 border border-blue-700/50 rounded-lg">
+                      <p className="text-xs text-blue-300">
+                        <strong>Note:</strong> BTC Distribution is a specialized Bitcoin-only visualization.
+                        The controls below apply to other chart types.
+                      </p>
+                    </div>
+                  )}
+
                   {/* Coin Selection */}
-                  <div>
+                  <div className={selectedChart === 'wallet_distribution' ? 'opacity-50 pointer-events-none' : ''}>
                     <label className="block text-xs text-gray-400 mb-2">Select Coins</label>
                     <div className="flex flex-wrap gap-1">
                       {ALL_COINS.map(coin => (
@@ -1111,7 +1121,7 @@ function AdvancedChartsContent() {
                   </div>
 
                   {/* Max Items */}
-                  <div>
+                  <div className={selectedChart === 'wallet_distribution' ? 'opacity-50 pointer-events-none' : ''}>
                     <label htmlFor="max-items-slider" className="block text-xs text-gray-400 mb-2">
                       Max Items: {maxItems}
                     </label>
@@ -1128,7 +1138,7 @@ function AdvancedChartsContent() {
                   </div>
 
                   {/* Sort By */}
-                  <div>
+                  <div className={selectedChart === 'wallet_distribution' ? 'opacity-50 pointer-events-none' : ''}>
                     <label htmlFor="sort-by-select" className="block text-xs text-gray-400 mb-2">Sort By</label>
                     <select
                       id="sort-by-select"
@@ -1144,7 +1154,7 @@ function AdvancedChartsContent() {
                   </div>
 
                   {/* Color Mode */}
-                  <div>
+                  <div className={selectedChart === 'wallet_distribution' ? 'opacity-50 pointer-events-none' : ''}>
                     <label className="block text-xs text-gray-400 mb-2">Color Mode</label>
                     <div className="flex gap-2">
                       <button
@@ -1253,9 +1263,11 @@ function AdvancedChartsContent() {
                 </div>
               </div>
 
-              <div className="h-[500px]">
+              <div className={selectedChart === 'wallet_distribution' ? 'min-h-[600px]' : 'h-[500px]'}>
                 {selectedChart === 'wallet_distribution' ? (
-                  <WalletDistributionTreemap />
+                  <div className="h-full">
+                    <WalletDistributionTreemap />
+                  </div>
                 ) : (
                   <ReactECharts
                     key={selectedChart}
