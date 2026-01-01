@@ -328,6 +328,7 @@ export default function LandingPage() {
               { icon: '⚡', title: 'Price Alerts', desc: 'Get notified instantly.' },
               { icon: '📚', title: 'Crypto Academy', desc: '4 courses, 20 lessons.' },
               { icon: '🧪', title: 'Backtester', desc: 'Test your strategies.' },
+              { icon: '🔐', title: 'Contract Verifier', desc: 'Smart contract security analysis.' },
             ].map((f, i) => (
               <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-blue-500/50 transition">
                 <div className="text-4xl mb-4">{f.icon}</div>

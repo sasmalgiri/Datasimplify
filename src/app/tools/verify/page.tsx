@@ -52,7 +52,7 @@ export default function ContractVerifyPage() {
 
   const loadExample = async () => {
     try {
-      const res = await fetch('/api/verify');
+      const res = await fetch('/api/smart-contract/example');
       const data = await res.json();
       setCode(data.code);
     } catch (e) {
@@ -75,7 +75,7 @@ export default function ContractVerifyPage() {
     setResults(null);
 
     try {
-      const res = await fetch('/api/verify', {
+      const res = await fetch('/api/smart-contract/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code })
