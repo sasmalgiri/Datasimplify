@@ -1259,16 +1259,16 @@ function AdvancedChartsContent() {
                     <label className="block text-xs text-gray-400 mb-2">
                       Select Coins ({selectedCoins.length}/{ALL_COINS.length})
                     </label>
-                    <div className="flex flex-wrap gap-1 max-h-48 overflow-y-auto p-1 bg-gray-900/50 rounded-lg">
+                    <div className="flex flex-wrap gap-1 max-h-48 overflow-y-auto p-2 bg-gray-900/50 rounded-lg border border-gray-700">
                       {ALL_COINS.map(coin => (
                         <button
                           type="button"
                           key={coin.id}
                           onClick={() => toggleCoin(coin.id)}
-                          className={`px-2 py-1 rounded text-xs transition ${
+                          className={`px-2 py-1 rounded text-xs cursor-pointer transition-all duration-150 hover:scale-105 active:scale-95 ${
                             selectedCoins.includes(coin.id)
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                              ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-500/30'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
                           }`}
                         >
                           {coin.symbol}
