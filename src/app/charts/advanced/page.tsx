@@ -440,48 +440,53 @@ function AdvancedChartsContent() {
         };
 
       case 'sunburst':
+        // Group selected coins by market cap tiers
+        const megaCap = filteredCoins.filter(c => c.marketCap >= 100000000000); // $100B+
+        const largeCap = filteredCoins.filter(c => c.marketCap >= 10000000000 && c.marketCap < 100000000000); // $10B-$100B
+        const midCap = filteredCoins.filter(c => c.marketCap >= 1000000000 && c.marketCap < 10000000000); // $1B-$10B
+        const smallCap = filteredCoins.filter(c => c.marketCap < 1000000000); // <$1B
+
+        const sunburstColors = ['#F7931A', '#627EEA', '#00D18C', '#8B5CF6', '#EC4899', '#14B8A6', '#F59E0B', '#EF4444'];
+
+        const buildChildren = (coins: typeof filteredCoins) =>
+          coins.map((coin, idx) => ({
+            name: coin.symbol,
+            value: Math.max(1, Math.round(coin.marketCap / 1000000000)), // Value in billions
+            itemStyle: { color: coin.color || sunburstColors[idx % sunburstColors.length] }
+          }));
+
+        const sunburstData = [];
+        if (megaCap.length > 0) {
+          sunburstData.push({ name: 'Mega Cap ($100B+)', children: buildChildren(megaCap), itemStyle: { color: '#3B82F6' } });
+        }
+        if (largeCap.length > 0) {
+          sunburstData.push({ name: 'Large Cap ($10B-$100B)', children: buildChildren(largeCap), itemStyle: { color: '#8B5CF6' } });
+        }
+        if (midCap.length > 0) {
+          sunburstData.push({ name: 'Mid Cap ($1B-$10B)', children: buildChildren(midCap), itemStyle: { color: '#10B981' } });
+        }
+        if (smallCap.length > 0) {
+          sunburstData.push({ name: 'Small Cap (<$1B)', children: buildChildren(smallCap), itemStyle: { color: '#F59E0B' } });
+        }
+
         return {
           title: {
-            text: 'Crypto Ecosystem Structure',
+            text: `Crypto Market Structure (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
-          tooltip: { trigger: 'item' },
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: { name: string; value?: number }) => {
+              if (params.value) {
+                return `${params.name}: $${params.value}B`;
+              }
+              return params.name;
+            }
+          },
           series: [{
             type: 'sunburst',
-            data: [
-              {
-                name: 'Layer 1',
-                children: [
-                  { name: 'Bitcoin', value: 900, itemStyle: { color: '#F7931A' } },
-                  { name: 'Ethereum', value: 350, itemStyle: { color: '#627EEA' } },
-                  { name: 'Solana', value: 60, itemStyle: { color: '#00D18C' } },
-                  { name: 'Cardano', value: 20, itemStyle: { color: '#0033AD' } },
-                ]
-              },
-              {
-                name: 'DeFi',
-                children: [
-                  { name: 'Uniswap', value: 8, itemStyle: { color: '#FF007A' } },
-                  { name: 'Aave', value: 5, itemStyle: { color: '#B6509E' } },
-                  { name: 'Compound', value: 3, itemStyle: { color: '#00D395' } },
-                ]
-              },
-              {
-                name: 'Exchange',
-                children: [
-                  { name: 'BNB', value: 80, itemStyle: { color: '#F3BA2F' } },
-                  { name: 'CRO', value: 10, itemStyle: { color: '#002D74' } },
-                ]
-              },
-              {
-                name: 'Meme',
-                children: [
-                  { name: 'DOGE', value: 15, itemStyle: { color: '#C3A634' } },
-                  { name: 'SHIB', value: 8, itemStyle: { color: '#FFA409' } },
-                ]
-              }
-            ],
+            data: sunburstData,
             radius: ['15%', '90%'],
             label: {
               rotate: 'radial',
@@ -498,47 +503,67 @@ function AdvancedChartsContent() {
         };
 
       case 'sankey':
+        // Dynamic Sankey using selected coins
+        const sankeyNodes: { name: string }[] = [
+          { name: 'Retail' },
+          { name: 'Institutions' },
+          { name: 'Whales' },
+          { name: 'Binance' },
+          { name: 'Coinbase' },
+          { name: 'Kraken' },
+        ];
+        // Add selected coins as nodes
+        filteredCoins.forEach(coin => {
+          sankeyNodes.push({ name: coin.symbol });
+        });
+        sankeyNodes.push({ name: 'HODLers' }, { name: 'DeFi' }, { name: 'Trading' });
+
+        const sankeyLinks: { source: string; target: string; value: number }[] = [];
+        // Investors -> Exchanges
+        sankeyLinks.push(
+          { source: 'Retail', target: 'Binance', value: 30 },
+          { source: 'Retail', target: 'Coinbase', value: 20 },
+          { source: 'Institutions', target: 'Coinbase', value: 40 },
+          { source: 'Institutions', target: 'Kraken', value: 25 },
+          { source: 'Whales', target: 'Binance', value: 50 },
+          { source: 'Whales', target: 'Kraken', value: 15 },
+        );
+        // Exchanges -> Selected Coins (based on volume)
+        filteredCoins.forEach((coin) => {
+          const vol = Math.max(5, coin.volume);
+          sankeyLinks.push(
+            { source: 'Binance', target: coin.symbol, value: vol * 0.5 },
+            { source: 'Coinbase', target: coin.symbol, value: vol * 0.3 },
+            { source: 'Kraken', target: coin.symbol, value: vol * 0.2 },
+          );
+          // Coins -> Destinations
+          sankeyLinks.push(
+            { source: coin.symbol, target: 'HODLers', value: vol * 0.4 },
+            { source: coin.symbol, target: 'DeFi', value: vol * 0.3 },
+            { source: coin.symbol, target: 'Trading', value: vol * 0.3 },
+          );
+        });
+
         return {
           title: {
-            text: 'Crypto Money Flow',
+            text: `Crypto Money Flow (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
-          tooltip: { trigger: 'item' },
+          tooltip: {
+            trigger: 'item',
+            formatter: (params: { data: { source: string; target: string; value: number } }) => {
+              const d = params.data;
+              return `${d.source} → ${d.target}<br/>Volume: $${d.value.toFixed(1)}B`;
+            }
+          },
           series: [{
             type: 'sankey',
             layout: 'none',
             emphasis: { focus: 'adjacency' },
             nodeAlign: 'left',
-            data: [
-              { name: 'Retail Investors' },
-              { name: 'Institutions' },
-              { name: 'Whales' },
-              { name: 'Binance' },
-              { name: 'Coinbase' },
-              { name: 'Kraken' },
-              { name: 'Bitcoin' },
-              { name: 'Ethereum' },
-              { name: 'Altcoins' },
-              { name: 'DeFi Protocols' },
-              { name: 'Cold Storage' },
-            ],
-            links: [
-              { source: 'Retail Investors', target: 'Binance', value: 30 },
-              { source: 'Retail Investors', target: 'Coinbase', value: 25 },
-              { source: 'Institutions', target: 'Coinbase', value: 40 },
-              { source: 'Institutions', target: 'Kraken', value: 20 },
-              { source: 'Whales', target: 'Binance', value: 50 },
-              { source: 'Binance', target: 'Bitcoin', value: 35 },
-              { source: 'Binance', target: 'Ethereum', value: 25 },
-              { source: 'Binance', target: 'Altcoins', value: 20 },
-              { source: 'Coinbase', target: 'Bitcoin', value: 40 },
-              { source: 'Coinbase', target: 'Ethereum', value: 20 },
-              { source: 'Kraken', target: 'Bitcoin', value: 15 },
-              { source: 'Bitcoin', target: 'Cold Storage', value: 50 },
-              { source: 'Ethereum', target: 'DeFi Protocols', value: 30 },
-              { source: 'Ethereum', target: 'Cold Storage', value: 15 },
-            ],
+            data: sankeyNodes,
+            links: sankeyLinks,
             lineStyle: {
               color: 'gradient',
               curveness: 0.5
@@ -621,14 +646,42 @@ function AdvancedChartsContent() {
         };
 
       case 'radar_advanced':
+        // Use filteredCoins for dynamic radar comparison
+        const radarCoins = filteredCoins.slice(0, 6); // Max 6 coins for readability
+        const radarColors = ['#F7931A', '#627EEA', '#00D18C', '#8B5CF6', '#EC4899', '#14B8A6'];
+
+        // Calculate normalized metrics (0-100 scale)
+        const maxMarketCap = Math.max(...radarCoins.map(c => c.marketCap || 0));
+        const maxVolume = Math.max(...radarCoins.map(c => c.volume || 0));
+        const maxHolders = Math.max(...radarCoins.map(c => c.holders || 100000));
+
+        const radarData = radarCoins.map((coin, idx) => {
+          // Normalize metrics to 0-100 scale
+          const marketCapScore = maxMarketCap > 0 ? Math.round((coin.marketCap || 0) / maxMarketCap * 100) : 50;
+          const volumeScore = maxVolume > 0 ? Math.round((coin.volume || 0) / maxVolume * 100) : 50;
+          const holdersScore = maxHolders > 0 ? Math.round((coin.holders || 50000) / maxHolders * 100) : 50;
+          // Derive other metrics from available data
+          const sentimentScore = Math.min(100, Math.max(20, 50 + (coin.change || 0) * 2));
+          const devActivityScore = Math.min(100, Math.max(40, 50 + marketCapScore * 0.3));
+          const adoptionScore = Math.min(100, Math.max(20, marketCapScore * 0.4 + volumeScore * 0.3 + holdersScore * 0.3));
+
+          return {
+            value: [marketCapScore, volumeScore, holdersScore, Math.round(sentimentScore), devActivityScore, Math.round(adoptionScore)],
+            name: coin.symbol,
+            areaStyle: { opacity: 0.2 },
+            lineStyle: { color: radarColors[idx % radarColors.length], width: 2 },
+            itemStyle: { color: radarColors[idx % radarColors.length] }
+          };
+        });
+
         return {
           title: {
-            text: 'Multi-Coin Comparison',
+            text: `Multi-Coin Comparison (${radarCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
           legend: {
-            data: ['Bitcoin', 'Ethereum', 'Solana'],
+            data: radarCoins.map(c => c.symbol),
             bottom: 0,
             textStyle: { color: '#9CA3AF' }
           },
@@ -648,47 +701,59 @@ function AdvancedChartsContent() {
           },
           series: [{
             type: 'radar',
-            data: [
-              {
-                value: [95, 85, 90, 78, 70, 95],
-                name: 'Bitcoin',
-                areaStyle: { opacity: 0.3 },
-                lineStyle: { color: '#F7931A' },
-                itemStyle: { color: '#F7931A' }
-              },
-              {
-                value: [70, 75, 80, 72, 95, 85],
-                name: 'Ethereum',
-                areaStyle: { opacity: 0.3 },
-                lineStyle: { color: '#627EEA' },
-                itemStyle: { color: '#627EEA' }
-              },
-              {
-                value: [40, 60, 45, 80, 85, 60],
-                name: 'Solana',
-                areaStyle: { opacity: 0.3 },
-                lineStyle: { color: '#00D18C' },
-                itemStyle: { color: '#00D18C' }
-              }
-            ]
+            data: radarData
           }]
         };
 
       case 'graph_network':
-        const categories = [
-          { name: 'Layer 1' },
-          { name: 'DeFi' },
-          { name: 'Exchange' },
-          { name: 'Infrastructure' }
+        // Build network from selected coins based on market cap tiers
+        const networkCategories = [
+          { name: 'Mega Cap ($100B+)' },
+          { name: 'Large Cap ($10B-$100B)' },
+          { name: 'Mid Cap ($1B-$10B)' },
+          { name: 'Small Cap (<$1B)' }
         ];
+
+        const getCategoryIndex = (marketCap: number) => {
+          if (marketCap >= 100000000000) return 0;
+          if (marketCap >= 10000000000) return 1;
+          if (marketCap >= 1000000000) return 2;
+          return 3;
+        };
+
+        const maxMC = Math.max(...filteredCoins.map(c => c.marketCap));
+        const networkNodes = filteredCoins.map(coin => ({
+          name: coin.symbol,
+          symbolSize: Math.max(15, Math.min(60, (coin.marketCap / maxMC) * 60)),
+          category: getCategoryIndex(coin.marketCap),
+          itemStyle: { color: coin.color }
+        }));
+
+        // Create links between coins in similar/related tiers
+        const networkLinks: { source: string; target: string }[] = [];
+        filteredCoins.forEach((coin) => {
+          // Link to 2-3 nearest coins by market cap
+          const sorted = [...filteredCoins].sort((a, b) =>
+            Math.abs(a.marketCap - coin.marketCap) - Math.abs(b.marketCap - coin.marketCap)
+          );
+          sorted.slice(1, 3).forEach(target => {
+            if (!networkLinks.some(l =>
+              (l.source === coin.symbol && l.target === target.symbol) ||
+              (l.source === target.symbol && l.target === coin.symbol)
+            )) {
+              networkLinks.push({ source: coin.symbol, target: target.symbol });
+            }
+          });
+        });
+
         return {
           title: {
-            text: 'Crypto Ecosystem Network',
+            text: `Crypto Network (${filteredCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
           legend: {
-            data: categories.map(c => c.name),
+            data: networkCategories.map(c => c.name),
             bottom: 0,
             textStyle: { color: '#9CA3AF' }
           },
@@ -709,32 +774,9 @@ function AdvancedChartsContent() {
             roam: true,
             label: { show: true, position: 'right', color: '#fff' },
             force: { repulsion: 200, edgeLength: 100 },
-            categories,
-            data: [
-              { name: 'Bitcoin', symbolSize: 60, category: 0 },
-              { name: 'Ethereum', symbolSize: 50, category: 0 },
-              { name: 'Solana', symbolSize: 30, category: 0 },
-              { name: 'Uniswap', symbolSize: 25, category: 1 },
-              { name: 'Aave', symbolSize: 20, category: 1 },
-              { name: 'Curve', symbolSize: 18, category: 1 },
-              { name: 'Binance', symbolSize: 40, category: 2 },
-              { name: 'Coinbase', symbolSize: 35, category: 2 },
-              { name: 'Chainlink', symbolSize: 25, category: 3 },
-              { name: 'The Graph', symbolSize: 15, category: 3 },
-            ],
-            links: [
-              { source: 'Ethereum', target: 'Uniswap' },
-              { source: 'Ethereum', target: 'Aave' },
-              { source: 'Ethereum', target: 'Curve' },
-              { source: 'Bitcoin', target: 'Binance' },
-              { source: 'Bitcoin', target: 'Coinbase' },
-              { source: 'Ethereum', target: 'Binance' },
-              { source: 'Ethereum', target: 'Coinbase' },
-              { source: 'Solana', target: 'Binance' },
-              { source: 'Chainlink', target: 'Aave' },
-              { source: 'Chainlink', target: 'Uniswap' },
-              { source: 'The Graph', target: 'Uniswap' },
-            ],
+            categories: networkCategories,
+            data: networkNodes,
+            links: networkLinks,
             lineStyle: { color: 'source', curveness: 0.3 }
           }]
         };
