@@ -232,6 +232,54 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Contract Verifier Featured Banner */}
+      <section className="py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <Link href="/tools/verify" className="block">
+            <div className="bg-gradient-to-r from-green-900/40 to-emerald-800/40 border border-green-500/50 rounded-2xl p-8 hover:border-green-400 transition-all hover:shadow-lg hover:shadow-green-500/20">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                <div className="w-20 h-20 bg-green-500 rounded-2xl flex items-center justify-center text-gray-900 font-bold text-3xl shrink-0">
+                  SC
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <h3 className="text-2xl md:text-3xl font-bold">
+                      Safe<span className="text-green-400">Contract</span> Verifier
+                    </h3>
+                    <span className="px-3 py-1 bg-green-500/20 border border-green-500 rounded-full text-green-400 text-xs font-semibold">
+                      NEW
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-lg mb-4">
+                    Formal verification for smart contracts. Detect vulnerabilities like overflow, underflow, and reentrancy attacks before deployment.
+                  </p>
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm">
+                    <span className="flex items-center gap-2 text-green-400">
+                      <span>✓</span> Overflow Detection
+                    </span>
+                    <span className="flex items-center gap-2 text-green-400">
+                      <span>✓</span> Reentrancy Check
+                    </span>
+                    <span className="flex items-center gap-2 text-green-400">
+                      <span>✓</span> Balance Verification
+                    </span>
+                    <span className="flex items-center gap-2 text-green-400">
+                      <span>✓</span> Security Score
+                    </span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <span className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-gray-900 font-semibold rounded-xl transition">
+                    Try It Free
+                    <span>→</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
       {/* Problem/Solution Section */}
       <section className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
