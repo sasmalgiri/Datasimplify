@@ -26,6 +26,7 @@ import {
   Sparkles,
   Users,
   Trophy,
+  Shield,
 } from 'lucide-react';
 
 interface NavDropdownProps {
@@ -115,10 +116,11 @@ export function FreeNavbar() {
     tools: {
       label: 'Tools',
       icon: <Zap className="w-4 h-4" />,
-      paths: ['/chat', '/alerts'],
+      paths: ['/chat', '/alerts', '/tools/verify'],
       items: [
         { href: '/chat', label: 'AI Chat', description: 'Ask questions about crypto', icon: <MessageSquare className="w-4 h-4" /> },
         { href: '/alerts', label: 'Price Alerts', description: 'Get notified on price moves', icon: <Bell className="w-4 h-4" /> },
+        { href: '/tools/verify', label: 'Contract Verifier', description: 'Formal verification for smart contracts', icon: <Shield className="w-4 h-4" /> },
       ],
     },
     community: {
@@ -153,6 +155,7 @@ export function FreeNavbar() {
     { href: '/community', label: 'AI Community', icon: <Users className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
     { href: '/chat', label: 'AI Chat', icon: <MessageSquare className="w-4 h-4" /> },
+    { href: '/tools/verify', label: 'Contract Verifier', icon: <Shield className="w-4 h-4" /> },
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
     { href: '/pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> },
   ];
