@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic';
 import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 
@@ -238,7 +239,11 @@ function AdvancedChartsContent() {
       }
 
       if (format === 'xlsx') {
-        // Export chart data as Excel with live data instructions
+        // Export chart data as Excel with chart image bundled in ZIP
+        const zip = new JSZip();
+        const dateStr = new Date().toISOString().split('T')[0];
+
+        // Create Excel workbook
         const wb = XLSX.utils.book_new();
 
         // Sheet 1: Current chart data
@@ -276,28 +281,30 @@ function AdvancedChartsContent() {
           [`=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
           [''],
           ['More data available at:', `${baseUrl}/download`],
+          [''],
+          ['NOTE: Chart image is included in this ZIP file as a PNG.'],
         ];
         const wsInstructions = XLSX.utils.aoa_to_sheet(liveDataInstructions);
         wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
         XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
 
-        // Generate and download Excel
+        // Generate Excel buffer
         const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-        const excelBlob = new Blob([new Uint8Array(excelBuffer)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        downloadBlob(excelBlob, `${selectedChart}_data_${new Date().toISOString().split('T')[0]}.xlsx`);
+        zip.file(`${selectedChart}_data.xlsx`, new Uint8Array(excelBuffer));
 
-        // Also download chart image automatically
+        // Get chart image
+        let chartImageBlob: Blob | null = null;
         const echartsInstance = chartInstanceRef.current;
+
         if (echartsInstance) {
           const dataURL = echartsInstance.getDataURL({
             type: 'png',
             pixelRatio: 2,
             backgroundColor: '#1f2937'
           });
-          // Small delay to avoid browser blocking multiple downloads
-          setTimeout(() => {
-            downloadDataURL(dataURL, `${selectedChart}_chart_${new Date().toISOString().split('T')[0]}.png`);
-          }, 500);
+          // Convert data URL to blob
+          const response = await fetch(dataURL);
+          chartImageBlob = await response.blob();
         } else {
           // Fallback to html2canvas
           const chartContainer = document.querySelector('.echarts-for-react');
@@ -308,13 +315,21 @@ function AdvancedChartsContent() {
               logging: false,
               useCORS: true,
             });
-            setTimeout(() => {
-              canvas.toBlob((blob) => {
-                if (blob) downloadBlob(blob, `${selectedChart}_chart_${new Date().toISOString().split('T')[0]}.png`);
-              }, 'image/png', 0.95);
-            }, 500);
+            chartImageBlob = await new Promise<Blob | null>((resolve) => {
+              canvas.toBlob((blob) => resolve(blob), 'image/png', 0.95);
+            });
           }
         }
+
+        // Add chart image to ZIP
+        if (chartImageBlob) {
+          zip.file(`${selectedChart}_chart.png`, chartImageBlob);
+        }
+
+        // Generate and download ZIP
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        downloadBlob(zipBlob, `${selectedChart}_export_${dateStr}.zip`);
+
         setIsDownloading(false);
         return;
       }
@@ -1249,12 +1264,12 @@ function AdvancedChartsContent() {
                       onClick={() => downloadChart('xlsx')}
                       disabled={isDownloading}
                       className="px-2 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Download as Excel with live data connection"
+                      title="Download ZIP with Excel data + Chart image"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      Excel
+                      ZIP
                     </button>
                   </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
