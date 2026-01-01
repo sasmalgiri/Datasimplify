@@ -815,6 +815,79 @@ export interface CoinInfo {
   maxSupply: number | null;
 }
 
+// CoinGecko ID mapping - maps symbol to CoinGecko API slug
+export const COINGECKO_ID_MAP: Record<string, string> = {
+  'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'ADA': 'cardano',
+  'AVAX': 'avalanche-2', 'DOT': 'polkadot', 'NEAR': 'near', 'ATOM': 'cosmos',
+  'ICP': 'internet-computer', 'APT': 'aptos', 'SUI': 'sui', 'ETC': 'ethereum-classic',
+  'FTM': 'fantom', 'ALGO': 'algorand', 'XTZ': 'tezos', 'EGLD': 'elrond-erd-2',
+  'FLOW': 'flow', 'EOS': 'eos', 'MATIC': 'matic-network', 'ARB': 'arbitrum',
+  'OP': 'optimism', 'LRC': 'loopring', 'UNI': 'uniswap', 'LINK': 'chainlink',
+  'AAVE': 'aave', 'MKR': 'maker', 'CRV': 'curve-dao-token', 'SNX': 'havven',
+  'COMP': 'compound-governance-token', 'LDO': 'lido-dao', 'INJ': 'injective-protocol',
+  'GRT': 'the-graph', 'SAND': 'the-sandbox', 'MANA': 'decentraland', 'AXS': 'axie-infinity',
+  'APE': 'apecoin', 'ENJ': 'enjincoin', 'CHZ': 'chiliz', 'RNDR': 'render-token',
+  'DOGE': 'dogecoin', 'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'BONK': 'bonk',
+  'FLOKI': 'floki', 'WIF': 'dogwifcoin', 'BNB': 'binancecoin', 'XRP': 'ripple',
+  'XLM': 'stellar', 'LTC': 'litecoin', 'TRX': 'tron', 'FIL': 'filecoin',
+  'ZEC': 'zcash', 'FET': 'fetch-ai', 'AGIX': 'singularitynet', 'OCEAN': 'ocean-protocol',
+  'TAO': 'bittensor', 'ARKM': 'arkham', 'BAT': 'basic-attention-token', 'ONE': 'harmony',
+  'HBAR': 'hedera-hashgraph', 'VET': 'vechain', 'THETA': 'theta-token', 'KAS': 'kaspa',
+  'SEI': 'sei-network', 'TIA': 'celestia', 'STX': 'blockstack', 'RUNE': 'thorchain',
+  'TON': 'the-open-network', 'KAVA': 'kava', 'CELO': 'celo', 'QTUM': 'qtum',
+  'ZIL': 'zilliqa', 'ICX': 'icon', 'WAVES': 'waves', 'MINA': 'mina-protocol',
+  'XEC': 'ecash', 'XDC': 'xdce-crowd-sale', 'ROSE': 'oasis-network', 'CANTO': 'canto',
+  'KLAY': 'klay-token', 'CFX': 'conflux-token', 'GLMR': 'moonbeam', 'ASTR': 'astar',
+  'IMX': 'immutable-x', 'STRK': 'starknet', 'MNT': 'mantle', 'METIS': 'metis-token',
+  'SKL': 'skale', 'BOBA': 'boba-network', 'MANTA': 'manta-network', 'ZETA': 'zetachain',
+  'DYM': 'dymension', 'SUSHI': 'sushi', 'YFI': 'yearn-finance', 'BAL': 'balancer',
+  '1INCH': '1inch', 'DYDX': 'dydx', 'GMX': 'gmx', 'CAKE': 'pancakeswap-token',
+  'PENDLE': 'pendle', 'JUP': 'jupiter-exchange-solana', 'PYTH': 'pyth-network',
+  'RAY': 'raydium', 'OSMO': 'osmosis', 'LQTY': 'liquity', 'FXS': 'frax-share',
+  'RDNT': 'radiant-capital', 'JOE': 'joe', 'BLUR': 'blur', 'SSV': 'ssv-network',
+  'RPL': 'rocket-pool', 'PERP': 'perpetual-protocol', 'API3': 'api3', 'BAND': 'band-protocol',
+  'UMA': 'uma', 'ANKR': 'ankr', 'WOO': 'woo-network', 'NEXO': 'nexo',
+  'CRO': 'crypto-com-chain', 'OKB': 'okb', 'KCS': 'kucoin-shares', 'GT': 'gatechain-token',
+  'LEO': 'leo-token', 'HT': 'huobi-token', 'MX': 'mx-token', 'ILV': 'illuvium',
+  'MAGIC': 'magic', 'PRIME': 'echelon-prime', 'SUPER': 'superfarm', 'YGG': 'yield-guild-games',
+  'PYR': 'vulcan-forged', 'GODS': 'gods-unchained', 'ALICE': 'my-neighbor-alice',
+  'TLM': 'alien-worlds', 'WAXP': 'wax', 'GMT': 'stepn', 'GST': 'green-satoshi-token',
+  'WLD': 'worldcoin-wld', 'CTXC': 'cortex', 'NMR': 'numeraire', 'ORAI': 'oraichain-token',
+  'PHB': 'phoenix-global', 'BCH': 'bitcoin-cash', 'BSV': 'bitcoin-cash-sv',
+  'DASH': 'dash', 'ZEN': 'horizen', 'DCR': 'decred', 'DGB': 'digibyte',
+  'RVN': 'ravencoin', 'FLUX': 'zelcash', 'AR': 'arweave', 'STORJ': 'storj',
+  'SC': 'siacoin', 'BTT': 'bittorrent', 'HOT': 'holotoken', 'XMR': 'monero',
+  'SCRT': 'secret', 'NYM': 'nym', 'KEEP': 'keep-network', 'ONDO': 'ondo-finance',
+  'QNT': 'quant-network', 'TRB': 'tellor', 'MASK': 'mask-network',
+  'ENS': 'ethereum-name-service', 'LPT': 'livepeer', 'AUDIO': 'audius',
+  'GALA': 'gala', 'JASMY': 'jasmycoin', 'RSR': 'reserve-rights-token',
+  'CELR': 'celer-network', 'COTI': 'coti', 'CTSI': 'cartesi', 'DENT': 'dent',
+  'ERN': 'ethernity-chain', 'FLM': 'flamingo-finance', 'FOR': 'fortube',
+  'FRONT': 'frontier-token', 'HARD': 'hard-protocol', 'HEGIC': 'hegic',
+  // Additional mappings for all SUPPORTED_COINS
+  'ACH': 'alchemy-pay', 'AI': 'sleepless-ai', 'ALT': 'altlayer',
+  'BABYDOGE': 'baby-doge-coin', 'BEAM': 'beam-2', 'BOME': 'book-of-meme',
+  'BRETT': 'brett', 'IO': 'io', 'LSK': 'lisk', 'MEME': 'memecoin',
+  'MEW': 'cat-in-a-dogs-world', 'MOG': 'mog-coin', 'NEIRO': 'neiro-on-eth',
+  'PIXEL': 'pixels', 'POPCAT': 'popcat', 'PORTAL': 'portal-2',
+  'SAFE': 'safe', 'SYS': 'syscoin', 'TURBO': 'turbo', 'XAI': 'xai-blockchain'
+};
+
+// Helper function to get CoinGecko ID from symbol
+export function getCoinGeckoId(symbol: string): string {
+  return COINGECKO_ID_MAP[symbol.toUpperCase()] || symbol.toLowerCase();
+}
+
+// Helper function to find coin by CoinGecko ID
+export function findCoinByGeckoId(geckoId: string): CoinInfo | undefined {
+  const symbol = Object.entries(COINGECKO_ID_MAP).find(([, id]) => id === geckoId)?.[0];
+  if (symbol) {
+    return SUPPORTED_COINS.find(c => c.symbol === symbol);
+  }
+  // Try direct match by lowercase symbol
+  return SUPPORTED_COINS.find(c => c.symbol.toLowerCase() === geckoId.toLowerCase());
+}
+
 export const SUPPORTED_COINS: CoinInfo[] = [
   // Layer 1
   { symbol: 'BTC', binanceSymbol: 'BTCUSDT', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', category: 'layer1', circulatingSupply: 19800000, maxSupply: 21000000 },

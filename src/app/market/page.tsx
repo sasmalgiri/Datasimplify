@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
 
 // Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
@@ -130,23 +131,139 @@ export default function MarketPage() {
   const [sortBy, setSortBy] = useState<'market_cap' | 'price_change' | 'volume'>('market_cap');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [predictionFilter, setPredictionFilter] = useState<'all' | 'BULLISH' | 'BEARISH' | 'NEUTRAL'>('all');
+  const [dataFromCache, setDataFromCache] = useState(false);
+
+  const fetchData = useCallback(async (forceRefresh = false) => {
+    try {
+      // Try cache first for coins (unless forcing refresh)
+      if (!forceRefresh) {
+        const cachedCoins = getClientCache<Coin[]>('market_coins');
+        const cachedGlobal = getClientCache<GlobalData>('market_global');
+        const cachedFearGreed = getClientCache<FearGreed>('market_fear_greed');
+
+        if (cachedCoins && cachedCoins.length > 0) {
+          setCoins(cachedCoins);
+          setDataFromCache(true);
+          setLoading(false);
+
+          if (cachedGlobal) setGlobalData(cachedGlobal);
+          if (cachedFearGreed) setFearGreed(cachedFearGreed);
+
+          // Still fetch in background to update
+          fetchFreshData();
+          return;
+        }
+      }
+
+      setDataFromCache(false);
+      await fetchFreshData();
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchFreshData = async () => {
+    try {
+      // Fetch coins from internal API (uses Supabase cache first, then CoinGecko)
+      const coinsRes = await fetch('/api/crypto?limit=100');
+      const coinsJson = await coinsRes.json();
+      if (coinsJson?.data && Array.isArray(coinsJson.data)) {
+        setCoins(coinsJson.data);
+        // Cache for 5 minutes
+        setClientCache('market_coins', coinsJson.data, CACHE_TTL.PRICE_DATA);
+      }
+
+      // Fetch global data from internal cached endpoint
+      const globalRes = await fetch('/api/cached?type=dashboard');
+      const globalJson = await globalRes.json();
+      if (globalJson?.data?.marketOverview) {
+        const overview = globalJson.data.marketOverview;
+        const globalData = {
+          total_market_cap: overview.totalMarketCap || 0,
+          total_volume: overview.totalVolume24h || 0,
+          market_cap_change_percentage_24h: overview.marketCapChange24h || 0,
+          active_cryptocurrencies: overview.activeCryptocurrencies || 0,
+          btc_dominance: overview.btcDominance || 0,
+        };
+        setGlobalData(globalData);
+        setClientCache('market_global', globalData, CACHE_TTL.MARKET_DATA);
+
+        // Also get Fear & Greed from dashboard
+        if (globalJson.data.fearGreed) {
+          const fg = {
+            value: globalJson.data.fearGreed.value || 50,
+            value_classification: globalJson.data.fearGreed.label || 'Neutral',
+          };
+          setFearGreed(fg);
+          setClientCache('market_fear_greed', fg, CACHE_TTL.MARKET_DATA);
+        }
+      } else {
+        // Fallback to direct API if cache is empty
+        const directGlobalRes = await fetch('https://api.coingecko.com/api/v3/global');
+        const directGlobalJson = await directGlobalRes.json();
+        if (directGlobalJson?.data) {
+          const globalData = {
+            total_market_cap: directGlobalJson.data.total_market_cap?.usd || 0,
+            total_volume: directGlobalJson.data.total_volume?.usd || 0,
+            market_cap_change_percentage_24h: directGlobalJson.data.market_cap_change_percentage_24h_usd || 0,
+            active_cryptocurrencies: directGlobalJson.data.active_cryptocurrencies || 0,
+            btc_dominance: directGlobalJson.data.market_cap_percentage?.btc || 0,
+          };
+          setGlobalData(globalData);
+          setClientCache('market_global', globalData, CACHE_TTL.MARKET_DATA);
+        }
+
+        // Fallback Fear & Greed
+        const fgRes = await fetch('https://api.alternative.me/fng/');
+        const fgData = await fgRes.json();
+        if (fgData?.data?.[0]) {
+          const fg = {
+            value: parseInt(fgData.data[0].value),
+            value_classification: fgData.data[0].value_classification,
+          };
+          setFearGreed(fg);
+          setClientCache('market_fear_greed', fg, CACHE_TTL.MARKET_DATA);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching fresh data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
     // Refresh every 60 seconds
-    const interval = setInterval(fetchData, 60000);
+    const interval = setInterval(() => fetchData(true), 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   // Fetch predictions when coins are loaded
-  useEffect(() => {
-    if (coins.length > 0) {
-      fetchPredictions();
+  const fetchPredictions = useCallback(async (forceRefresh = false) => {
+    // Try cache first (unless forcing refresh)
+    if (!forceRefresh) {
+      const cachedPredictions = getClientCache<Array<{ coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }>>('market_predictions');
+      if (cachedPredictions && cachedPredictions.length > 0) {
+        const predMap = new Map<string, CoinPrediction>();
+        cachedPredictions.forEach(pred => {
+          predMap.set(pred.coinId, pred);
+        });
+        setPredictions(predMap);
+        // Still fetch fresh in background
+        fetchFreshPredictions();
+        return;
+      }
     }
+
+    setPredictionsLoading(true);
+    await fetchFreshPredictions();
   }, [coins]);
 
-  const fetchPredictions = async () => {
-    setPredictionsLoading(true);
+  const fetchFreshPredictions = async () => {
+    if (coins.length === 0) return;
+
     try {
       // Fetch predictions for top 50 coins
       const topCoins = coins.slice(0, 50).map(c => ({ id: c.id, name: c.name }));
@@ -161,17 +278,23 @@ export default function MarketPage() {
         const result = await response.json();
         if (result.success && Array.isArray(result.data)) {
           const predMap = new Map<string, CoinPrediction>();
+          const predArray: Array<{ coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }> = [];
+
           result.data.forEach((pred: { coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }) => {
             if (pred.coinId && pred.prediction) {
-              predMap.set(pred.coinId, {
+              const predData = {
                 coinId: pred.coinId,
                 prediction: pred.prediction,
                 confidence: pred.confidence || 50,
                 riskLevel: pred.riskLevel || 'MEDIUM'
-              });
+              };
+              predMap.set(pred.coinId, predData);
+              predArray.push(predData);
             }
           });
           setPredictions(predMap);
+          // Cache predictions for 10 minutes
+          setClientCache('market_predictions', predArray, CACHE_TTL.MARKET_DATA);
         }
       }
     } catch (error) {
@@ -181,64 +304,11 @@ export default function MarketPage() {
     }
   };
 
-  const fetchData = async () => {
-    try {
-      // Fetch coins from internal API (uses Supabase cache first, then CoinGecko)
-      const coinsRes = await fetch('/api/crypto?limit=100');
-      const coinsJson = await coinsRes.json();
-      if (coinsJson?.data && Array.isArray(coinsJson.data)) {
-        setCoins(coinsJson.data);
-      }
-
-      // Fetch global data from internal cached endpoint
-      const globalRes = await fetch('/api/cached?type=dashboard');
-      const globalJson = await globalRes.json();
-      if (globalJson?.data?.marketOverview) {
-        const overview = globalJson.data.marketOverview;
-        setGlobalData({
-          total_market_cap: overview.totalMarketCap || 0,
-          total_volume: overview.totalVolume24h || 0,
-          market_cap_change_percentage_24h: overview.marketCapChange24h || 0,
-          active_cryptocurrencies: overview.activeCryptocurrencies || 0,
-          btc_dominance: overview.btcDominance || 0,
-        });
-        // Also get Fear & Greed from dashboard
-        if (globalJson.data.fearGreed) {
-          setFearGreed({
-            value: globalJson.data.fearGreed.value || 50,
-            value_classification: globalJson.data.fearGreed.label || 'Neutral',
-          });
-        }
-      } else {
-        // Fallback to direct API if cache is empty
-        const directGlobalRes = await fetch('https://api.coingecko.com/api/v3/global');
-        const directGlobalJson = await directGlobalRes.json();
-        if (directGlobalJson?.data) {
-          setGlobalData({
-            total_market_cap: directGlobalJson.data.total_market_cap?.usd || 0,
-            total_volume: directGlobalJson.data.total_volume?.usd || 0,
-            market_cap_change_percentage_24h: directGlobalJson.data.market_cap_change_percentage_24h_usd || 0,
-            active_cryptocurrencies: directGlobalJson.data.active_cryptocurrencies || 0,
-            btc_dominance: directGlobalJson.data.market_cap_percentage?.btc || 0,
-          });
-        }
-
-        // Fallback Fear & Greed
-        const fgRes = await fetch('https://api.alternative.me/fng/');
-        const fgData = await fgRes.json();
-        if (fgData?.data?.[0]) {
-          setFearGreed({
-            value: parseInt(fgData.data[0].value),
-            value_classification: fgData.data[0].value_classification,
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (coins.length > 0) {
+      fetchPredictions();
     }
-  };
+  }, [coins, fetchPredictions]);
 
   // Format helpers
   const formatPrice = (price: number) => {
@@ -374,14 +444,32 @@ export default function MarketPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Cryptocurrency Market</h1>
-            <p className="text-gray-400">Real-time prices for top 100 cryptocurrencies • No login required</p>
+            <p className="text-gray-400 flex items-center gap-2">
+              Real-time prices for top 100 cryptocurrencies • No login required
+              {dataFromCache && (
+                <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
+                  <Database className="w-3 h-3" />
+                  Cached
+                </span>
+              )}
+            </p>
           </div>
-          <button
-            onClick={downloadCSV}
-            className="mt-4 md:mt-0 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium flex items-center gap-2 transition-colors"
-          >
-            <span>📥</span> Download CSV
-          </button>
+          <div className="flex items-center gap-3 mt-4 md:mt-0">
+            <button
+              type="button"
+              onClick={() => { fetchData(true); fetchPredictions(true); }}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+            >
+              🔄 Refresh
+            </button>
+            <button
+              type="button"
+              onClick={downloadCSV}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            >
+              <span>📥</span> Download CSV
+            </button>
+          </div>
         </div>
 
         {/* Global Stats Cards */}

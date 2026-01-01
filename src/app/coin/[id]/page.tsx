@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,7 +16,8 @@ import {
   Users,
   Zap,
   Clock,
-  Target
+  Target,
+  Database
 } from 'lucide-react';
 import PriceChart from '@/components/PriceChart';
 import DownloadButton from '@/components/DownloadButton';
@@ -26,6 +27,7 @@ import { TechnicalAnalysisPanel } from '@/components/TechnicalAnalysisPanel';
 import { RiskScoreCard, OnChainMetrics } from '@/components/RiskScoreCard';
 import { CoinMarketData } from '@/types/crypto';
 import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChangeColor } from '@/lib/utils';
+import { fetchWithCache, CACHE_TTL, getCacheStats } from '@/lib/clientCache';
 
 // Sentiment Gauge component using ref to avoid inline styles
 function SentimentGauge({ value }: { value: number }) {
@@ -102,6 +104,41 @@ export default function CoinDetailPage() {
   const [predictionLoading, setPredictionLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDetailedPrediction, setShowDetailedPrediction] = useState(false);
+  const [dataFromCache, setDataFromCache] = useState(false);
+
+  const fetchCoinData = useCallback(async (forceRefresh = false) => {
+    try {
+      // Use client-side cache for coin data (30 min cache)
+      const { data: coinData, fromCache, error } = await fetchWithCache<CoinMarketData>(
+        `/api/crypto/${coinId}`,
+        `coin_${coinId}`,
+        forceRefresh ? 0 : CACHE_TTL.COIN_DETAILS
+      );
+
+      if (error || !coinData || (coinData as { error?: string }).error) {
+        setCoin(null);
+        setLoading(false);
+        return;
+      }
+
+      setCoin(coinData);
+      setDataFromCache(fromCache);
+
+      // Use client-side cache for price history (1 hour cache)
+      const { data: historyData } = await fetchWithCache<{ prices: Array<{ timestamp: number; price: number }> }>(
+        `/api/crypto/${coinId}/history?days=30`,
+        `history_${coinId}_30d`,
+        forceRefresh ? 0 : CACHE_TTL.PRICE_HISTORY
+      );
+
+      setPriceHistory(historyData?.prices || []);
+    } catch (error) {
+      console.error('Error fetching coin data:', error);
+      setCoin(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [coinId]);
 
   useEffect(() => {
     if (coinId) {
@@ -109,32 +146,7 @@ export default function CoinDetailPage() {
       fetchPrediction();
       fetchSentiment();
     }
-  }, [coinId]);
-
-  const fetchCoinData = async () => {
-    try {
-      const coinRes = await fetch(`/api/crypto/${coinId}`);
-      const coinData = await coinRes.json();
-
-      // Check if the response contains an error or is invalid
-      if (!coinRes.ok || coinData.error || !coinData.id) {
-        setCoin(null);
-        setLoading(false);
-        return;
-      }
-
-      setCoin(coinData);
-
-      const historyRes = await fetch(`/api/crypto/${coinId}/history?days=30`);
-      const historyData = await historyRes.json();
-      setPriceHistory(historyData.prices || []);
-    } catch (error) {
-      console.error('Error fetching coin data:', error);
-      setCoin(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [coinId, fetchCoinData]);
 
   const fetchPrediction = async () => {
     try {
@@ -166,9 +178,15 @@ export default function CoinDetailPage() {
     }
   };
 
-  const refreshPrediction = async () => {
+  const refreshAllData = async () => {
     setRefreshing(true);
-    await fetchPrediction();
+    setLoading(true);
+    // Force refresh all data (bypass cache)
+    await Promise.all([
+      fetchCoinData(true),
+      fetchPrediction(),
+      fetchSentiment()
+    ]);
     setRefreshing(false);
   };
 
@@ -397,10 +415,16 @@ export default function CoinDetailPage() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            {dataFromCache && (
+              <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-800/50 px-2 py-1 rounded">
+                <Database className="w-3 h-3" />
+                <span>Cached</span>
+              </div>
+            )}
             <button
               type="button"
-              onClick={refreshPrediction}
+              onClick={refreshAllData}
               disabled={refreshing}
               className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors disabled:opacity-50"
             >
