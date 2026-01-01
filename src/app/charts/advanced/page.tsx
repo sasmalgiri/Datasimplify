@@ -8,12 +8,17 @@ import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
-import 'echarts-gl';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 
+// Import echarts-gl after echarts core (must be in this order)
+import 'echarts-gl';
+
 // Dynamic import for ECharts to avoid SSR issues
-const ReactECharts = dynamic(() => import('echarts-for-react'), { ssr: false });
+const ReactECharts = dynamic(
+  () => import('echarts-for-react'),
+  { ssr: false }
+);
 
 // Loading fallback for Suspense
 function ChartLoading() {
@@ -1247,8 +1252,10 @@ function AdvancedChartsContent() {
 
                   {/* Coin Selection */}
                   <div className={selectedChart === 'wallet_distribution' ? 'opacity-50 pointer-events-none' : ''}>
-                    <label className="block text-xs text-gray-400 mb-2">Select Coins</label>
-                    <div className="flex flex-wrap gap-1">
+                    <label className="block text-xs text-gray-400 mb-2">
+                      Select Coins ({selectedCoins.length}/{ALL_COINS.length})
+                    </label>
+                    <div className="flex flex-wrap gap-1 max-h-48 overflow-y-auto p-1 bg-gray-900/50 rounded-lg">
                       {ALL_COINS.map(coin => (
                         <button
                           type="button"
@@ -1430,9 +1437,23 @@ function AdvancedChartsContent() {
                   <div className="h-full">
                     <WalletDistributionTreemap />
                   </div>
+                ) : filteredCoins.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <p className="text-xl mb-2">No coins selected</p>
+                      <p className="text-sm">Select at least one coin from the controls panel to view the chart.</p>
+                    </div>
+                  </div>
+                ) : Object.keys(getChartOption).length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <p className="text-xl mb-2">Chart not available</p>
+                      <p className="text-sm">This chart type is not yet implemented for the selected data.</p>
+                    </div>
+                  </div>
                 ) : (
                   <ReactECharts
-                    key={selectedChart}
+                    key={`${selectedChart}-${selectedCoins.join('-')}`}
                     option={getChartOption}
                     style={{ height: '100%', width: '100%' }}
                     opts={{ renderer: 'canvas' }}
