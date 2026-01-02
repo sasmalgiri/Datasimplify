@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { paddlePriceToTier } from '@/lib/payments';
+import { verifyPaddleWebhookSignature } from '@/lib/paddleWebhook';
 
 // ============================================
 // PADDLE WEBHOOK HANDLER
@@ -22,12 +23,37 @@ function getSupabase() {
 export async function POST(request: Request) {
   try {
     const body = await request.text();
-    
-    // Optional: Verify webhook signature
-    // const signature = request.headers.get('paddle-signature') || '';
-    // if (!verifyPaddleWebhook(body, signature)) {
-    //   return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-    // }
+
+    // Verify Paddle signature (prevents spoofed subscription events)
+    const signatureHeader =
+      request.headers.get('paddle-signature') ||
+      request.headers.get('Paddle-Signature') ||
+      '';
+    const secret = (process.env.PADDLE_WEBHOOK_SECRET || '').trim();
+
+    // Fail closed in production if misconfigured
+    if (process.env.NODE_ENV === 'production' && !secret) {
+      return NextResponse.json(
+        { error: 'Webhook misconfigured' },
+        { status: 500 }
+      );
+    }
+
+    if (secret) {
+      const verification = verifyPaddleWebhookSignature({
+        rawBody: body,
+        signatureHeader,
+        secret,
+        toleranceSeconds: 300,
+      });
+
+      if (!verification.ok) {
+        return NextResponse.json(
+          { error: 'Invalid signature' },
+          { status: 400 }
+        );
+      }
+    }
 
     const event = JSON.parse(body);
     console.log('Paddle webhook received:', event.event_type);

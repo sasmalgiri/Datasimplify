@@ -1,7 +1,14 @@
 import { ragQueryStream, UserLevel } from '@/lib/ragWithData';
+import { enforceMinInterval } from '@/lib/serverRateLimit';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('x-real-ip') || 'unknown';
+}
 
 // Validate user level
 function parseUserLevel(level: unknown): UserLevel {
@@ -13,6 +20,18 @@ function parseUserLevel(level: unknown): UserLevel {
 
 export async function POST(request: Request) {
   try {
+    const ip = getClientIp(request);
+    const limitResult = enforceMinInterval({ key: `chat_stream:${ip}`, minIntervalMs: 3000 });
+    if (!limitResult.ok) {
+      return new Response(JSON.stringify({ error: 'Too many requests. Please wait and try again.' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(limitResult.retryAfterSeconds),
+        },
+      });
+    }
+
     const body = await request.json();
     const {
       message,
@@ -27,6 +46,20 @@ export async function POST(request: Request) {
     // Validate message
     if (!message || typeof message !== 'string') {
       return new Response(JSON.stringify({ error: 'Message is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (message.length > 4000) {
+      return new Response(JSON.stringify({ error: 'Message is too long' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (Array.isArray(history) && history.length > 50) {
+      return new Response(JSON.stringify({ error: 'History is too long' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });

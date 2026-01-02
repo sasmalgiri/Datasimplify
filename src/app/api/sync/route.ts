@@ -14,7 +14,22 @@ import {
 import { cleanupOldData, getDatabaseStats } from '@/lib/dbCleanup';
 
 // Secret key to protect sync endpoint
-const SYNC_SECRET = process.env.SYNC_SECRET_KEY || 'dev-secret-change-in-production';
+const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
+const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
+
+function getExpectedSecret(): string | null {
+  if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
+  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
+  return null;
+}
+
+function getProvidedSecret(request: Request): string | null {
+  const { searchParams } = new URL(request.url);
+  const querySecret = searchParams.get('secret');
+  const authHeader = request.headers.get('Authorization');
+  const headerSecret = authHeader?.replace(/^Bearer\s+/i, '') || null;
+  return headerSecret || querySecret;
+}
 
 export async function GET(request: Request) {
   // Check if Supabase is configured
@@ -25,17 +40,20 @@ export async function GET(request: Request) {
     }, { status: 503 });
   }
 
+  const expectedSecret = getExpectedSecret();
+  if (!expectedSecret) {
+    return NextResponse.json(
+      { error: 'Sync API not configured. Set SYNC_SECRET_KEY.' },
+      { status: 503 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'all';
 
-  // Get secret from query param OR Authorization header
-  const querySecret = searchParams.get('secret');
-  const authHeader = request.headers.get('Authorization');
-  const headerSecret = authHeader?.replace('Bearer ', '');
-  const secret = querySecret || headerSecret;
-
   // Verify secret (protect from unauthorized access)
-  if (secret !== SYNC_SECRET) {
+  const secret = getProvidedSecret(request);
+  if (!secret || secret !== expectedSecret) {
     return NextResponse.json(
       { error: 'Unauthorized. Provide valid secret key via ?secret= or Authorization header.' },
       { status: 401 }

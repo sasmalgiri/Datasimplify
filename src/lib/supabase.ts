@@ -1,3 +1,4 @@
+import 'server-only';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Environment variables (trim whitespace - common issue when copying to Vercel)

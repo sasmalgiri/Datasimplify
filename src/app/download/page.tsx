@@ -78,7 +78,8 @@ export default function DownloadPage() {
   const [selectedLimit, setSelectedLimit] = useState('500');
   const [selectedDepth, setSelectedDepth] = useState('20');
   const [selectedGainerType, setSelectedGainerType] = useState('both');
-  const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv' | 'json'>('xlsx');
+  const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv' | 'iqy'>('xlsx');
+  const [liveKind, setLiveKind] = useState<'excel' | 'csv'>('excel');
   const [sortBy, setSortBy] = useState('market_cap');
   const [minMarketCap, setMinMarketCap] = useState('0');
   const [isLoading, setIsLoading] = useState(false);
@@ -170,6 +171,10 @@ export default function DownloadPage() {
     setIsLoading(true);
     try {
       let url = `/api/download?category=${selectedCategory}&format=json&preview=true`;
+
+      if (selectedFields.length > 0) {
+        url += `&fields=${encodeURIComponent(selectedFields.join(','))}`;
+      }
 
       // Build URL based on category
       if (selectedCategory === 'market_overview') {
@@ -268,6 +273,10 @@ export default function DownloadPage() {
     try {
       let url = `/api/download?category=${selectedCategory}&format=${selectedFormat}`;
 
+      if (selectedFields.length > 0) {
+        url += `&fields=${encodeURIComponent(selectedFields.join(','))}`;
+      }
+
       // Build URL based on category
       if (selectedCategory === 'market_overview') {
         if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
@@ -320,15 +329,10 @@ export default function DownloadPage() {
 
       const response = await fetch(url);
 
-      if (selectedFormat === 'json') {
-        const data = await response.json();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        downloadBlob(blob, `datasimplify_${selectedCategory}.json`);
-      } else {
-        const blob = await response.blob();
-        const ext = selectedFormat === 'xlsx' ? 'xlsx' : 'csv';
-        downloadBlob(blob, `datasimplify_${selectedCategory}.${ext}`);
-      }
+      const blob = await response.blob();
+      const ext = selectedFormat === 'xlsx' ? 'xlsx' : selectedFormat === 'iqy' ? 'iqy' : 'csv';
+      const suffix = selectedFormat === 'iqy' ? `_live_${liveKind}` : '';
+      downloadBlob(blob, `datasimplify_${selectedCategory}${suffix}.${ext}`);
 
       setDownloadCount(prev => prev + 1);
     } catch (error) {
@@ -360,7 +364,7 @@ export default function DownloadPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">📊 Download Center</h1>
           <p className="text-gray-400">
-            Download real-time crypto data in Excel, CSV, or JSON format. No coding required!
+            Download real-time crypto data as Standard files or Live (refreshable) downloads in Excel/CSV. No coding required!
           </p>
         </div>
 
@@ -398,31 +402,77 @@ export default function DownloadPage() {
               </div>
             </div>
 
-            {/* Format Selection */}
+            {/* Download Type + Format */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-                2️⃣ Select Format
-                <HelpTooltip text="XLSX works with Excel/Google Sheets. CSV is universal and works anywhere. JSON is for programmers and APIs." />
+                2️⃣ Download Options
+                <HelpTooltip text="Standard downloads give you a snapshot file (XLSX/CSV). Live downloads give you an Excel Web Query (IQY) that pulls the latest CSV from DataSimplify and supports Refresh inside Excel." />
               </h2>
-              <div className="flex space-x-2">
-                {(['xlsx', 'csv', 'json'] as const).map(format => (
-                  <button
-                    key={format}
-                    onClick={() => setSelectedFormat(format)}
-                    className={`flex-1 py-2 px-3 rounded-lg font-medium transition ${
-                      selectedFormat === format
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                    }`}
-                  >
-                    {format.toUpperCase()}
-                  </button>
-                ))}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedFormat('xlsx')}
+                  className={`w-full text-left p-3 rounded-lg transition border ${
+                    selectedFormat === 'xlsx'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="font-medium">Excel (XLSX)</div>
+                  <div className="text-xs text-gray-500 mt-1">Standard file download</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedFormat('csv')}
+                  className={`w-full text-left p-3 rounded-lg transition border ${
+                    selectedFormat === 'csv'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="font-medium">CSV</div>
+                  <div className="text-xs text-gray-500 mt-1">Standard file download</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFormat('iqy');
+                    setLiveKind('excel');
+                  }}
+                  className={`w-full text-left p-3 rounded-lg transition border ${
+                    selectedFormat === 'iqy' && liveKind === 'excel'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="font-medium">Live Excel (IQY)</div>
+                  <div className="text-xs text-gray-500 mt-1">Refreshable in Excel</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFormat('iqy');
+                    setLiveKind('csv');
+                  }}
+                  className={`w-full text-left p-3 rounded-lg transition border ${
+                    selectedFormat === 'iqy' && liveKind === 'csv'
+                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="font-medium">Live CSV (IQY)</div>
+                  <div className="text-xs text-gray-500 mt-1">CSV feed via Excel Refresh</div>
+                </button>
               </div>
+
               <p className="text-xs text-gray-500 mt-2">
-                {selectedFormat === 'xlsx' && '📊 Best for Excel, Google Sheets'}
-                {selectedFormat === 'csv' && '📄 Universal format, works everywhere'}
-                {selectedFormat === 'json' && '💻 Best for developers & APIs'}
+                {selectedFormat === 'xlsx' && '📊 Standard XLSX snapshot export.'}
+                {selectedFormat === 'csv' && '📄 Standard CSV snapshot export.'}
+                {selectedFormat === 'iqy' && '🔄 Live IQY imports a CSV table and supports Refresh in Excel.'}
               </p>
 
               {/* Advanced Options */}
@@ -875,7 +925,11 @@ export default function DownloadPage() {
               ) : (
                 <>
                   <DownloadIcon />
-                  <span>Download {selectedFormat.toUpperCase()}</span>
+                  <span>
+                    {selectedFormat === 'iqy'
+                      ? `Download Live ${liveKind === 'excel' ? 'Excel' : 'CSV'} (IQY)`
+                      : `Download ${selectedFormat.toUpperCase()}`}
+                  </span>
                 </>
               )}
             </button>

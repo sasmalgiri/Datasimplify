@@ -8,8 +8,49 @@ import {
   fetchGlobalData,
 } from '@/lib/dataIngestion';
 
+// Secret key to protect manual sync endpoints
+const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
+const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
+
+function getExpectedSecret(): string | null {
+  if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
+  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
+  return null;
+}
+
+function getProvidedSecret(request: Request): string | null {
+  const { searchParams } = new URL(request.url);
+  const querySecret = searchParams.get('secret');
+  const authHeader = request.headers.get('Authorization');
+  const headerSecret = authHeader?.replace(/^Bearer\s+/i, '') || null;
+  return headerSecret || querySecret;
+}
+
+function assertAuthorized(request: Request): NextResponse | null {
+  const expected = getExpectedSecret();
+  if (!expected) {
+    return NextResponse.json(
+      { error: 'Sync API not configured. Set SYNC_SECRET_KEY.' },
+      { status: 503 }
+    );
+  }
+
+  const provided = getProvidedSecret(request);
+  if (!provided || provided !== expected) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Provide valid secret key via ?secret= or Authorization header.' },
+      { status: 401 }
+    );
+  }
+
+  return null;
+}
+
 // POST - Trigger data sync
 export async function POST(request: Request) {
+  const authError = assertAuthorized(request);
+  if (authError) return authError;
+
   try {
     const body = await request.json();
     const { action = 'sync', options = {} } = body;
@@ -98,6 +139,9 @@ export async function POST(request: Request) {
 
 // GET - Check sync status and last sync time
 export async function GET(request: Request) {
+  const authError = assertAuthorized(request);
+  if (authError) return authError;
+
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action');
 

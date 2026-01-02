@@ -34,8 +34,8 @@ export const TIER_FEATURES = {
     downloads: 5,
     features: [
       '5 downloads per month',
-      'Basic market data',
-      'Limited AI chat (10 queries/day)',
+      'Standard downloads (XLSX/CSV)',
+      'Live downloads (IQY for Excel refresh)',
       'Community support',
     ],
   },
@@ -45,9 +45,8 @@ export const TIER_FEATURES = {
     downloads: 50,
     features: [
       '50 downloads per month',
-      'All market data',
-      'AI chat (100 queries/day)',
-      'Comparison tools',
+      'Standard + Live downloads',
+      'Customizable exports (choose columns)',
       'Email support',
     ],
   },
@@ -57,10 +56,9 @@ export const TIER_FEATURES = {
     downloads: 999999, // Unlimited
     features: [
       'Unlimited downloads',
-      'Full AI analysis',
-      'Whale tracking alerts',
-      'Sentiment analysis',
-      'Custom templates',
+      'Standard + Live downloads',
+      'Live chart exports to Excel (IQY)',
+      'Faster refresh via authenticated endpoints',
       'Priority support',
     ],
   },
@@ -70,11 +68,10 @@ export const TIER_FEATURES = {
     downloads: 999999, // Unlimited
     features: [
       'Everything in Pro',
-      'API access',
-      'White-label exports',
-      'Custom data requests',
-      'Dedicated account manager',
-      'SLA guarantee',
+      'API access (authenticated)',
+      'Higher limits by request',
+      'Priority onboarding (email)',
+      'Priority support',
     ],
   },
 };

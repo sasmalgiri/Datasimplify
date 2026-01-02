@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
+import { createClient } from '@supabase/supabase-js';
 import {
   fetchMarketOverview,
   fetchHistoricalPrices,
@@ -50,12 +51,53 @@ import {
 } from '@/lib/nftData';
 import { DataCategory } from '@/lib/dataTypes';
 // Supabase cache imports - Use cached data first, fallback to direct API
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
 import { getMarketDataFromCache } from '@/lib/supabaseData';
 import { validationError, internalError, validateEnum } from '@/lib/apiErrors';
+import { enforceMinInterval } from '@/lib/serverRateLimit';
 
 // Valid export formats
-const VALID_FORMATS = ['xlsx', 'csv', 'json'] as const;
+const VALID_FORMATS = ['xlsx', 'csv', 'json', 'iqy'] as const;
+
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('x-real-ip') || 'unknown';
+}
+
+async function resolveTierFromBearerToken(req: Request): Promise<'free' | 'starter' | 'pro' | 'business'> {
+  const authHeader = req.headers.get('authorization') || '';
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1];
+  if (!token) return 'free';
+
+  if (!isSupabaseConfigured || !supabaseAdmin) return 'free';
+
+  const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+  if (!supabaseUrl || !supabaseAnonKey) return 'free';
+
+  try {
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+    if (userError || !userData?.user?.id) return 'free';
+
+    const userId = userData.user.id;
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single();
+
+    const tier = (profile?.subscription_tier || 'free') as 'free' | 'starter' | 'pro' | 'business';
+    return tier;
+  } catch {
+    return 'free';
+  }
+}
 
 // Valid data categories
 const VALID_CATEGORIES = [
@@ -70,17 +112,59 @@ const VALID_CATEGORIES = [
 ] as const;
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+  const requestUrl = new URL(request.url);
+  const { searchParams } = requestUrl;
 
   // Get parameters
   const category = searchParams.get('category') || 'market_overview';
   const format = searchParams.get('format') || 'xlsx';
   const preview = searchParams.get('preview') === 'true';
+  const excelMode = searchParams.get('excel') === 'true';
+
+  // Optional: restrict output columns
+  const fields = searchParams
+    .get('fields')
+    ?.split(',')
+    .map(f => f.trim())
+    .filter(Boolean);
+
+  // IQY: one-click Excel Web Query. It points to this same endpoint as CSV in "excel mode".
+  if (format === 'iqy') {
+    const csvUrl = new URL(requestUrl.toString());
+    csvUrl.searchParams.set('format', 'csv');
+    csvUrl.searchParams.delete('preview');
+    csvUrl.searchParams.set('excel', 'true');
+
+    const iqy = `WEB\n1\n${csvUrl.toString()}\n`;
+
+    const filename = `datasimplify_${category}.iqy`;
+    return new NextResponse(iqy, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        // This file is static (just a pointer URL), so caching is safe.
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+      },
+    });
+  }
 
   // Validate format parameter
   const formatError = validateEnum(format, VALID_FORMATS, 'Format');
   if (formatError) {
     return validationError(formatError);
+  }
+
+  // Best-effort abuse protection for snapshot downloads.
+  // (Excel refresh has a separate, category-parameterized min-interval limiter.)
+  if (!excelMode) {
+    const ip = getClientIp(request);
+    const limitResult = enforceMinInterval({ key: `download:${ip}:${category}:${format}`, minIntervalMs: 1000 });
+    if (!limitResult.ok) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limitResult.retryAfterSeconds) } }
+      );
+    }
   }
 
   // Validate category parameter
@@ -103,6 +187,19 @@ export async function GET(request: Request) {
   try {
     let data: Record<string, unknown>[] = [];
     let filename = `datasimplify_${category}`;
+
+    const applyFieldSelection = (rows: Record<string, unknown>[]) => {
+      if (!fields || fields.length === 0) return rows;
+      return rows.map(row => {
+        const filtered: Record<string, unknown> = {};
+        for (const field of fields) {
+          if (Object.prototype.hasOwnProperty.call(row, field)) {
+            filtered[field] = row[field];
+          }
+        }
+        return filtered;
+      });
+    };
 
     // Fetch data based on category
     switch (category) {
@@ -669,6 +766,41 @@ export async function GET(request: Request) {
         return validationError(`Invalid category. Use one of: ${VALID_CATEGORIES.slice(0, 5).join(', ')}... (see API docs for full list)`);
     }
 
+    // Apply optional field selection after the dataset is built
+    data = applyFieldSelection(data);
+
+    // Excel mode: enforce safe-by-default minimum refresh interval.
+    // Free: 60s, Pro/Business: 10s. (Output data is not personalized.)
+    let excelTier: 'free' | 'starter' | 'pro' | 'business' = 'free';
+    let minIntervalMs = 60_000;
+    if (excelMode) {
+      excelTier = await resolveTierFromBearerToken(request);
+      minIntervalMs = excelTier === 'pro' || excelTier === 'business' ? 10_000 : 60_000;
+
+      const ip = getClientIp(request);
+      const limiterKey = `download_excel:${excelTier}:${ip}:${category}:${(fields || []).join(',')}:${(symbols || []).join(',')}:${symbol}:${interval}:${limit}`;
+      const limitResult = enforceMinInterval({ key: limiterKey, minIntervalMs });
+      if (!limitResult.ok) {
+        return NextResponse.json(
+          {
+            error: 'Too many refresh requests. Please wait and try again.',
+            retryAfterSeconds: limitResult.retryAfterSeconds,
+            tier: excelTier,
+            minRefreshSeconds: Math.ceil(minIntervalMs / 1000),
+          },
+          {
+            status: 429,
+            headers: {
+              'Retry-After': String(limitResult.retryAfterSeconds),
+              'X-Min-Refresh-Seconds': String(Math.ceil(minIntervalMs / 1000)),
+              // Allow caching of this JSON error briefly to avoid thundering herds.
+              'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
+            },
+          }
+        );
+      }
+    }
+
     // Return preview (JSON only, limited rows)
     if (preview) {
       return NextResponse.json({
@@ -687,8 +819,16 @@ export async function GET(request: Request) {
           total: data.length,
           generatedAt: new Date().toISOString(),
           source: 'Binance API',
+          ...(fields && fields.length > 0 ? { fields } : {}),
+          ...(excelMode ? { excel: true, tier: excelTier, minRefreshSeconds: Math.ceil(minIntervalMs / 1000) } : {}),
         },
-      });
+      }, excelMode ? {
+        headers: {
+          // CDN-friendly caching for Excel refresh workflows
+          'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300',
+          'X-Min-Refresh-Seconds': String(Math.ceil(minIntervalMs / 1000)),
+        }
+      } : undefined);
     }
 
     // Create workbook
@@ -721,6 +861,10 @@ export async function GET(request: Request) {
         headers: {
           'Content-Type': 'text/csv',
           'Content-Disposition': `attachment; filename="${filename}.csv"`,
+          ...(excelMode ? {
+            'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300',
+            'X-Min-Refresh-Seconds': String(Math.ceil(minIntervalMs / 1000)),
+          } : {}),
         },
       });
     }

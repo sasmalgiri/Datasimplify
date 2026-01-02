@@ -1,5 +1,3 @@
-'use client';
-
 // JSON-LD Structured Data for SEO
 export function OrganizationJsonLd() {
   const structuredData = {
@@ -65,11 +63,6 @@ export function SoftwareApplicationJsonLd() {
       price: '0',
       priceCurrency: 'USD',
       description: 'Free tier available',
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '150',
     },
     featureList: [
       'Real-time crypto market data',

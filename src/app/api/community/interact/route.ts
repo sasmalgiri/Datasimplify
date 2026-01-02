@@ -9,6 +9,7 @@ import {
   updateUserPredictionProfile,
 } from '@/lib/supabaseData';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { moderateContent } from '@/lib/moderation';
 
 export const dynamic = 'force-dynamic';
 
@@ -149,6 +150,14 @@ export async function POST(request: Request) {
           return NextResponse.json({
             success: false,
             error: 'Comment too long (max 1000 characters)'
+          }, { status: 400 });
+        }
+
+        const moderation = await moderateContent(String(content));
+        if (moderation.blocked) {
+          return NextResponse.json({
+            success: false,
+            error: moderation.reason || 'Comment violates community guidelines'
           }, { status: 400 });
         }
 

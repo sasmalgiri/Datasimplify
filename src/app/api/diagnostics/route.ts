@@ -1,8 +1,49 @@
 import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
+// Protect diagnostics endpoint (avoid exposing internal state publicly)
+const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
+const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
+
+function getExpectedSecret(): string | null {
+  if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
+  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
+  return null;
+}
+
+function getProvidedSecret(request: Request): string | null {
+  const { searchParams } = new URL(request.url);
+  const querySecret = searchParams.get('secret');
+  const authHeader = request.headers.get('Authorization');
+  const headerSecret = authHeader?.replace(/^Bearer\s+/i, '') || null;
+  return headerSecret || querySecret;
+}
+
+function assertAuthorized(request: Request): NextResponse | null {
+  const expected = getExpectedSecret();
+  if (!expected) {
+    return NextResponse.json(
+      { error: 'Diagnostics API not configured. Set SYNC_SECRET_KEY.' },
+      { status: 503 }
+    );
+  }
+
+  const provided = getProvidedSecret(request);
+  if (!provided || provided !== expected) {
+    return NextResponse.json(
+      { error: 'Unauthorized. Provide valid secret key via ?secret= or Authorization header.' },
+      { status: 401 }
+    );
+  }
+
+  return null;
+}
+
 // Diagnostic endpoint to check database state and pipeline health
-export async function GET() {
+export async function GET(request: Request) {
+  const authError = assertAuthorized(request);
+  if (authError) return authError;
+
   const diagnostics: {
     supabase: { configured: boolean; connected: boolean; error?: string };
     tables: Record<string, { exists: boolean; rowCount: number; lastUpdated?: string }>;
@@ -89,6 +130,9 @@ export async function GET() {
 
 // POST - Trigger initial data population
 export async function POST(request: Request) {
+  const authError = assertAuthorized(request);
+  if (authError) return authError;
+
   if (!isSupabaseConfigured || !supabase) {
     return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 });
   }

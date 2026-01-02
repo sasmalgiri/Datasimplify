@@ -467,9 +467,70 @@ function ChartsContent() {
     }
   }, [isPlaying, racingData.length]);
 
-  // Download chart as image
-  const downloadChart = async (format: 'png' | 'svg' | 'json' | 'xlsx') => {
-    if (!chartRef.current && format !== 'xlsx' && format !== 'json') return;
+  const downloadIqy = (csvUrl: string, filename: string) => {
+    const iqy = `WEB\n1\n${csvUrl}\n`;
+    const blob = new Blob([iqy], { type: 'text/plain; charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Download chart as image / data
+  const downloadChart = async (format: 'png' | 'svg' | 'json' | 'xlsx' | 'iqy') => {
+    if (!chartRef.current && (format === 'png' || format === 'svg')) return;
+
+    if (format === 'iqy') {
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
+      const coinSymbol = COINS.find(c => c.id === selectedCoin)?.symbol || 'BTC';
+      const days = Math.min(2000, Math.max(30, Number.parseInt(timeRange, 10) || 30));
+
+      const buildUrl = (category: string, extraParams: Record<string, string>) => {
+        const url = new URL(`${baseUrl}/api/download`);
+        url.searchParams.set('category', category);
+        url.searchParams.set('format', 'csv');
+        url.searchParams.set('excel', 'true');
+        for (const [k, v] of Object.entries(extraParams)) url.searchParams.set(k, v);
+        return url.toString();
+      };
+
+      let csvUrl = buildUrl('market_overview', { fields: 'symbol,name,price,market_cap,volume_24h,price_change_percent_24h' });
+
+      // Map chart types to the closest matching download dataset
+      if (['price_history', 'candlestick', 'volume_analysis', 'volatility', 'momentum', 'fibonacci', 'volume_profile'].includes(selectedChart)) {
+        csvUrl = buildUrl('historical_prices', {
+          symbol: coinSymbol,
+          interval: '1d',
+          limit: String(days),
+          fields: 'timestamp,open,high,low,close,volume',
+        });
+      } else if (selectedChart === 'funding_rate') {
+        csvUrl = buildUrl('funding_rates', { symbols: coinSymbol });
+      } else if (selectedChart === 'open_interest') {
+        csvUrl = buildUrl('open_interest', { symbols: coinSymbol });
+      } else if (selectedChart === 'liquidation_heatmap') {
+        csvUrl = buildUrl('liquidations', { symbols: coinSymbol });
+      } else if (selectedChart === 'correlation') {
+        csvUrl = buildUrl('correlation_matrix', { symbols: 'BTC,ETH,BNB,SOL,XRP' });
+      } else if (selectedChart === 'racing_bar') {
+        csvUrl = buildUrl('market_overview', { sortBy: 'market_cap', minMarketCap: '0', fields: 'symbol,name,price,market_cap' });
+      } else if (selectedChart === 'market_dominance' || selectedChart === 'btc_dominance') {
+        csvUrl = buildUrl('global_stats', {});
+      } else if (selectedChart === 'fear_greed_history') {
+        csvUrl = buildUrl('fear_greed', {});
+      } else if (selectedChart === 'social_volume') {
+        csvUrl = buildUrl('sentiment_aggregated', {});
+      } else if (selectedChart === 'whale_flow') {
+        csvUrl = buildUrl('exchange_flows', {});
+      } else if (selectedChart === 'wallet_distribution' || selectedChart === 'active_addresses') {
+        csvUrl = buildUrl('bitcoin_onchain', {});
+      }
+
+      downloadIqy(csvUrl, `${selectedCoin}_${selectedChart}_${timeRange}d.iqy`);
+      return;
+    }
 
     if (format === 'json') {
       const blob = new Blob([JSON.stringify(chartData, null, 2)], { type: 'application/json' });
@@ -2078,6 +2139,14 @@ function ChartsContent() {
               title="Download Excel with chart-ready data"
             >
               Excel
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadChart('iqy')}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
+              title="Live Excel (IQY): one-click import, refreshable in Excel"
+            >
+              Live Excel
             </button>
           </div>
         </div>

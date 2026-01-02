@@ -18,9 +18,16 @@ import {
 } from '@/lib/supabaseData';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { validationError, internalError } from '@/lib/apiErrors';
+import { enforceMinInterval } from '@/lib/serverRateLimit';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 120; // 2 minutes
+
+function getClientIp(req: Request): string {
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('x-real-ip') || 'unknown';
+}
 
 // Map funding heat level from derivativesData format to predictionEngine format
 function mapFundingHeatLevel(
@@ -169,6 +176,19 @@ export async function GET(request: Request) {
     const coinName = searchParams.get('name') || coinId.charAt(0).toUpperCase() + coinId.slice(1);
     const quick = searchParams.get('quick') === 'true';
     const skipCache = searchParams.get('skipCache') === 'true';
+
+    const ip = getClientIp(request);
+    const minIntervalMs = skipCache ? 30_000 : 5_000;
+    const limitResult = enforceMinInterval({
+      key: `predict:${ip}:${coinId}:${quick ? 'quick' : 'full'}:${skipCache ? 'skip' : 'cache'}`,
+      minIntervalMs,
+    });
+    if (!limitResult.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limitResult.retryAfterSeconds) } }
+      );
+    }
 
     // Check prediction cache first (if not skipped)
     if (isSupabaseConfigured && !skipCache) {

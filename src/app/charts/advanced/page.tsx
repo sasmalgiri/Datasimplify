@@ -233,9 +233,25 @@ function AdvancedChartsContent() {
   }, []);
 
   // Download chart function
-  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json' | 'xlsx') => {
+  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json' | 'xlsx' | 'iqy') => {
     setIsDownloading(true);
     try {
+      if (format === 'iqy') {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
+        const url = new URL(`${baseUrl}/api/download`);
+        url.searchParams.set('category', 'market_overview');
+        url.searchParams.set('format', 'csv');
+        url.searchParams.set('excel', 'true');
+        if (selectedCoins.length > 0) url.searchParams.set('symbols', selectedCoins.join(','));
+        url.searchParams.set('fields', 'symbol,name,price,market_cap,volume_24h,price_change_percent_24h');
+
+        const iqy = `WEB\n1\n${url.toString()}\n`;
+        const blob = new Blob([iqy], { type: 'text/plain; charset=utf-8' });
+        downloadBlob(blob, `${selectedChart}_live.iqy`);
+        setIsDownloading(false);
+        return;
+      }
+
       if (format === 'json') {
         // Export chart data as JSON
         const blob = new Blob([JSON.stringify(filteredCoins, null, 2)], { type: 'application/json' });
@@ -1428,6 +1444,18 @@ function AdvancedChartsContent() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
                       ZIP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadChart('iqy')}
+                      disabled={isDownloading}
+                      className="px-2 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Live Excel (IQY): one-click import, refreshable in Excel"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      LIVE
                     </button>
                   </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">

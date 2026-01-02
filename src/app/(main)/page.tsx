@@ -106,8 +106,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">🌟 DataSimplify</h1>
-              <p className="text-blue-100 mt-1">Crypto investing made simple. No experience needed.</p>
+              <h1 className="text-3xl font-bold">🌟 DataSimplify — Crypto Data to Excel/CSV</h1>
+              <p className="text-blue-100 mt-1">Export customizable datasets (XLSX/CSV/JSON) and refresh in Excel via Power Query.</p>
             </div>
             <UserLevelSelector currentLevel={userLevel} onLevelChange={setUserLevel} />
           </div>

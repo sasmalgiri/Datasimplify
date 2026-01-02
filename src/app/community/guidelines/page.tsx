@@ -187,7 +187,7 @@ export default function CommunityGuidelinesPage() {
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 mt-1">&#9679;</span>
                 <div>
-                  <strong className="text-white">Content Screening:</strong> All predictions are screened for prohibited content before publishing.
+                  <strong className="text-white">Content Screening:</strong> Predictions and comments may be screened for prohibited content before publishing.
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -205,7 +205,7 @@ export default function CommunityGuidelinesPage() {
               <li className="flex items-start gap-3">
                 <span className="text-blue-400 mt-1">&#9679;</span>
                 <div>
-                  <strong className="text-white">Appeals Process:</strong> If your content is flagged incorrectly, you can appeal to human moderators.
+                  <strong className="text-white">Human Review:</strong> If your content is flagged incorrectly, you can request a human review.
                 </div>
               </li>
             </ul>

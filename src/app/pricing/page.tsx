@@ -32,27 +32,22 @@ function HelpIcon({ text }: { text: string }) {
 
 // Feature explanations for tooltips
 const FEATURE_EXPLANATIONS: Record<string, string> = {
-  '5 downloads per month': 'Download crypto data as Excel/CSV files. Great for trying out the service.',
-  '50 downloads per month': 'Export more data for regular analysis and research.',
-  'Unlimited downloads': 'No limits! Download as much data as you need.',
-  'Basic market data': 'Access to top 100 cryptocurrency prices and basic metrics.',
-  'All market data': 'Full access to all coins, historical data, and advanced metrics.',
-  'Limited AI chat': 'Ask 10 questions per day to our AI assistant about crypto.',
-  'AI chat (100 queries/day)': 'Get more AI-powered insights and analysis daily.',
-  'Full AI analysis': 'Unlimited AI queries plus advanced analysis features.',
-  'Community support': 'Get help through our community forum and guides.',
-  'Email support': 'Direct email support with 24-hour response time.',
-  'Priority support': 'Fast-track support with 4-hour response time.',
-  'Comparison tools': 'Compare multiple cryptocurrencies side by side.',
-  'Whale tracking alerts': 'Get notified when large investors make big moves.',
-  'Sentiment analysis': 'See market mood from social media and news analysis.',
-  'Custom templates': 'Create and save your own data export templates.',
-  'Everything in Pro': 'All features from the Pro plan included.',
-  'API access': 'Programmatic access to our data for developers.',
-  'White-label exports': 'Remove DataSimplify branding from your exports.',
-  'Custom data requests': 'Request specific data sets tailored to your needs.',
-  'Dedicated account manager': 'Personal contact for all your account needs.',
-  'SLA guarantee': 'Guaranteed 99.9% uptime with compensation for downtime.',
+  '5 downloads per month': 'Includes standard downloads (XLSX/CSV) and Live (IQY) links for Excel refresh.',
+  '50 downloads per month': 'More monthly downloads for regular Excel/CSV workflows.',
+  'Unlimited downloads': 'No monthly download limits.',
+  'Standard downloads (XLSX/CSV)': 'Get a snapshot file you can open in Excel/Sheets or any tool that supports CSV.',
+  'Live downloads (IQY for Excel refresh)': 'One-click IQY file that imports a refreshable table into Excel (no Power Query setup needed).',
+  'Standard + Live downloads': 'Includes both snapshot files and refreshable Excel IQY downloads.',
+  'Customizable exports (choose columns)': 'Pick the columns you want (server-side filtering) so your exports match your spreadsheet.',
+  'Live chart exports to Excel (IQY)': 'Download a refreshable Excel link for charts so tables update when you refresh.',
+  'Faster refresh via authenticated endpoints': 'When using authenticated requests (e.g., add-in / API), the backend can allow shorter refresh intervals than public refresh.',
+  'Community support': 'Help via community resources and docs.',
+  'Email support': 'Email support for account and billing questions.',
+  'Priority support': 'Faster response times for paid tiers.',
+  'Everything in Pro': 'All Pro features included.',
+  'API access (authenticated)': 'Use authenticated endpoints for integrations and automation.',
+  'Higher limits by request': 'If you need higher limits, we can discuss a tailored setup.',
+  'Priority onboarding (email)': 'Help getting your first dashboard/export workflow set up.',
 };
 
 interface PricingInfo {
@@ -200,8 +195,8 @@ export default function PricingPage() {
       price: 0,
       features: [
         '5 downloads per month',
-        'Basic market data',
-        'Limited AI chat',
+        'Standard downloads (XLSX/CSV)',
+        'Live downloads (IQY for Excel refresh)',
         'Community support',
       ],
       cta: 'Get Started',
@@ -213,9 +208,8 @@ export default function PricingPage() {
       price: 19,
       features: [
         '50 downloads per month',
-        'All market data',
-        'AI chat (100 queries/day)',
-        'Comparison tools',
+        'Standard + Live downloads',
+        'Customizable exports (choose columns)',
         'Email support',
       ],
       cta: 'Subscribe',
@@ -227,10 +221,9 @@ export default function PricingPage() {
       price: 49,
       features: [
         'Unlimited downloads',
-        'Full AI analysis',
-        'Whale tracking alerts',
-        'Sentiment analysis',
-        'Custom templates',
+        'Standard + Live downloads',
+        'Live chart exports to Excel (IQY)',
+        'Faster refresh via authenticated endpoints',
         'Priority support',
       ],
       cta: 'Subscribe',
@@ -242,11 +235,10 @@ export default function PricingPage() {
       price: 99,
       features: [
         'Everything in Pro',
-        'API access',
-        'White-label exports',
-        'Custom data requests',
-        'Dedicated account manager',
-        'SLA guarantee',
+        'API access (authenticated)',
+        'Higher limits by request',
+        'Priority onboarding (email)',
+        'Priority support',
       ],
       cta: 'Subscribe',
       popular: false,
@@ -297,8 +289,8 @@ export default function PricingPage() {
           {/* Title */}
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <h1 className="text-4xl font-bold">Simple, Transparent Pricing</h1>
-              <HelpIcon text="Choose a plan based on your needs. All paid plans include a 7-day money-back guarantee. You can cancel or change plans anytime." />
+              <h1 className="text-4xl font-bold">Simple, Excel-First Pricing</h1>
+              <HelpIcon text="Choose a plan based on how often you download and how much automation you need. You can cancel or change plans anytime. Refunds follow our refund policy." />
             </div>
             <p className="text-gray-600 text-lg mb-2">
               Start free, upgrade when you need more. Cancel anytime.
@@ -326,7 +318,7 @@ export default function PricingPage() {
                 )}
 
                 <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-                
+
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${tier.price}</span>
                   {tier.price > 0 && <span className="text-gray-600">/month</span>}
@@ -404,7 +396,7 @@ export default function PricingPage() {
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Do you offer refunds?</h3>
-                <p className="text-gray-600">Yes, 7-day money-back guarantee if you&apos;re not satisfied.</p>
+                <p className="text-gray-600">Refunds are available according to our refund policy.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Is tax included?</h3>

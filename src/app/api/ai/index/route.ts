@@ -12,15 +12,38 @@ import { getWhaleDashboard } from '@/lib/whaleTracking';
 import { checkOllamaHealth } from '@/lib/ollamaAI';
 
 // Secret key to protect endpoint
-const INDEX_SECRET = process.env.SYNC_SECRET_KEY || 'dev-secret-change-in-production';
+const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
+const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
+
+function getExpectedSecret(): string | null {
+  if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
+  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
+  return null;
+}
+
+function getProvidedSecret(request: Request): string | null {
+  const { searchParams } = new URL(request.url);
+  const querySecret = searchParams.get('secret');
+  const authHeader = request.headers.get('Authorization');
+  const headerSecret = authHeader?.replace(/^Bearer\s+/i, '') || null;
+  return headerSecret || querySecret;
+}
 
 export async function GET(request: Request) {
+  const expectedSecret = getExpectedSecret();
+  if (!expectedSecret) {
+    return NextResponse.json(
+      { error: 'Index API not configured. Set SYNC_SECRET_KEY.' },
+      { status: 503 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
   const type = searchParams.get('type') || 'all';
 
   // Verify secret
-  if (secret !== INDEX_SECRET) {
+  const providedSecret = getProvidedSecret(request);
+  if (!providedSecret || providedSecret !== expectedSecret) {
     return NextResponse.json(
       { error: 'Unauthorized. Provide valid secret key.' },
       { status: 401 }

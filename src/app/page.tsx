@@ -255,46 +255,46 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                PROFESSIONAL CRYPTO DATA
+                DOWNLOAD CRYPTO DATA TO EXCEL & CSV
               </span>
               {' '}
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                WITHOUT THE $1,000/mo PRICE TAG
+                (XLSX, CSV, JSON) — REFRESHABLE VIA POWER QUERY
               </span>
             </h1>
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
-              Why pay $800-$1,299/month for enterprise platforms when you can get
-              <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
+              Pick the fields you need and export market, on-chain, sentiment, derivatives, and chart-ready datasets.
+              <span className="text-white font-semibold"> Your Excel stays up to date with Power Query refresh.</span>
             </p>
 
             <div className="flex flex-row gap-3 justify-center mb-3">
               <Link
-                href="/signup"
+                href="/download"
                 className="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-500/25"
               >
-                Start Free Trial →
+                Download Excel/CSV →
               </Link>
               <Link
-                href="/chat"
+                href="/charts"
                 className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
               >
-                Try AI Demo
+                Export Charts to Excel
               </Link>
             </div>
 
             <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
               <div className="flex items-center gap-1">
-                <span className="text-yellow-400">★★★★★</span>
-                <span>4.9/5</span>
+                <span className="text-green-400">✓</span>
+                <span>Custom columns</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-green-400">✓</span>
-                <span>No Credit Card</span>
+                <span>XLSX / CSV / JSON</span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-blue-400">🔒</span>
-                <span>Secure</span>
+                <span className="text-blue-400">✓</span>
+                <span>Refreshable in Excel</span>
               </div>
             </div>
           </div>
