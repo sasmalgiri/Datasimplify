@@ -166,6 +166,9 @@ export default function DownloadPage() {
   // Get first selected coin for dependency tracking
   const firstSelectedCoin = selectedCoins[0] || 'BTC';
 
+  // Create stable string for coins array to use as dependency
+  const selectedCoinsKey = selectedCoins.join(',');
+
   // Fetch preview data
   const fetchPreview = async () => {
     setIsLoading(true);
@@ -265,7 +268,7 @@ export default function DownloadPage() {
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, firstSelectedCoin, selectedInterval, selectedLimit, selectedDepth, selectedGainerType]);
+  }, [selectedCategory, firstSelectedCoin, selectedCoinsKey, selectedCoinCategory, sortBy, minMarketCap, selectedInterval, selectedLimit, selectedDepth, selectedGainerType]);
 
   // Download data
   const handleDownload = async () => {
