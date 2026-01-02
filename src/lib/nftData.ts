@@ -1,10 +1,11 @@
 // ============================================
-// NFT MARKET DATA
+// NFT MARKET DATA - CoinGecko API
 // Collections, floor prices, volume, stats
 // ============================================
 
 // Cache for NFT data (5 minute TTL)
 let nftCache: { data: NFTMarketStats | null; timestamp: number } = { data: null, timestamp: 0 };
+let collectionsCache: { data: NFTCollection[] | null; timestamp: number } = { data: null, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // ============================================
@@ -27,6 +28,7 @@ export interface NFTCollection {
   averagePrice: number;
   marketCap: number;
   imageUrl?: string;
+  dataSource?: 'live' | 'fallback';
 }
 
 export interface NFTMarketStats {
@@ -38,6 +40,7 @@ export interface NFTMarketStats {
   topCollections: NFTCollection[];
   chainBreakdown: { chain: string; volume: number; percentage: number }[];
   timestamp: string;
+  dataSource: 'live' | 'fallback';
 }
 
 export interface NFTCollectionDownload {
@@ -54,12 +57,47 @@ export interface NFTCollectionDownload {
   marketCap: number;
 }
 
+// CoinGecko API response types
+interface CoinGeckoNFTList {
+  id: string;
+  contract_address: string;
+  name: string;
+  asset_platform_id: string;
+  symbol: string;
+}
+
+interface CoinGeckoNFTDetails {
+  id: string;
+  contract_address: string;
+  name: string;
+  asset_platform_id: string;
+  symbol: string;
+  image?: { small?: string };
+  floor_price?: { native_currency?: number; usd?: number };
+  market_cap?: { native_currency?: number; usd?: number };
+  volume_24h?: { native_currency?: number; usd?: number };
+  floor_price_in_usd_24h_percentage_change?: number;
+  number_of_unique_addresses?: number;
+  total_supply?: number;
+}
+
+// Chain mapping for CoinGecko asset_platform_id
+const CHAIN_MAP: Record<string, string> = {
+  'ethereum': 'Ethereum',
+  'polygon-pos': 'Polygon',
+  'solana': 'Solana',
+  'arbitrum-one': 'Arbitrum',
+  'optimistic-ethereum': 'Optimism',
+  'base': 'Base',
+  'avalanche': 'Avalanche',
+  'binance-smart-chain': 'BNB Chain',
+};
+
 // ============================================
-// TOP NFT COLLECTIONS (Static data with realistic values)
-// Would use OpenSea/Reservoir API in production
+// FALLBACK DATA (used when API fails)
 // ============================================
 
-const TOP_NFT_COLLECTIONS: NFTCollection[] = [
+const FALLBACK_COLLECTIONS: NFTCollection[] = [
   {
     name: 'CryptoPunks',
     slug: 'cryptopunks',
@@ -75,6 +113,7 @@ const TOP_NFT_COLLECTIONS: NFTCollection[] = [
     listedPercent: 8.5,
     averagePrice: 52.3,
     marketCap: 1450000000,
+    dataSource: 'fallback',
   },
   {
     name: 'Bored Ape Yacht Club',
@@ -91,22 +130,24 @@ const TOP_NFT_COLLECTIONS: NFTCollection[] = [
     listedPercent: 6.8,
     averagePrice: 18.5,
     marketCap: 456000000,
+    dataSource: 'fallback',
   },
   {
-    name: 'Mutant Ape Yacht Club',
-    slug: 'mutantapeyachtclub',
+    name: 'Pudgy Penguins',
+    slug: 'pudgy-penguins',
     chain: 'Ethereum',
-    floorPrice: 3.2,
-    floorPriceUsd: 9600,
-    volume24h: 580000,
-    volumeChange24h: 8.3,
-    sales24h: 65,
-    owners: 12850,
-    totalSupply: 20000,
-    listedCount: 1200,
-    listedPercent: 6.0,
-    averagePrice: 3.8,
-    marketCap: 192000000,
+    floorPrice: 12.5,
+    floorPriceUsd: 37500,
+    volume24h: 890000,
+    volumeChange24h: 25.6,
+    sales24h: 45,
+    owners: 4521,
+    totalSupply: 8888,
+    listedCount: 380,
+    listedPercent: 4.3,
+    averagePrice: 14.2,
+    marketCap: 333300000,
+    dataSource: 'fallback',
   },
   {
     name: 'Azuki',
@@ -123,183 +164,39 @@ const TOP_NFT_COLLECTIONS: NFTCollection[] = [
     listedPercent: 5.2,
     averagePrice: 6.2,
     marketCap: 174000000,
+    dataSource: 'fallback',
   },
   {
-    name: 'Pudgy Penguins',
-    slug: 'pudgypenguins',
+    name: 'Mutant Ape Yacht Club',
+    slug: 'mutant-ape-yacht-club',
     chain: 'Ethereum',
-    floorPrice: 12.5,
-    floorPriceUsd: 37500,
-    volume24h: 890000,
-    volumeChange24h: 25.6,
-    sales24h: 45,
-    owners: 4521,
-    totalSupply: 8888,
-    listedCount: 380,
-    listedPercent: 4.3,
-    averagePrice: 14.2,
-    marketCap: 333300000,
+    floorPrice: 3.2,
+    floorPriceUsd: 9600,
+    volume24h: 580000,
+    volumeChange24h: 8.3,
+    sales24h: 65,
+    owners: 12850,
+    totalSupply: 20000,
+    listedCount: 1200,
+    listedPercent: 6.0,
+    averagePrice: 3.8,
+    marketCap: 192000000,
+    dataSource: 'fallback',
   },
-  {
-    name: 'Doodles',
-    slug: 'doodles',
-    chain: 'Ethereum',
-    floorPrice: 2.1,
-    floorPriceUsd: 6300,
-    volume24h: 125000,
-    volumeChange24h: -8.5,
-    sales24h: 18,
-    owners: 5890,
-    totalSupply: 10000,
-    listedCount: 890,
-    listedPercent: 8.9,
-    averagePrice: 2.4,
-    marketCap: 63000000,
-  },
-  {
-    name: 'DeGods',
-    slug: 'degods',
-    chain: 'Ethereum',
-    floorPrice: 4.5,
-    floorPriceUsd: 13500,
-    volume24h: 210000,
-    volumeChange24h: 5.2,
-    sales24h: 22,
-    owners: 6250,
-    totalSupply: 10000,
-    listedCount: 720,
-    listedPercent: 7.2,
-    averagePrice: 4.8,
-    marketCap: 135000000,
-  },
-  {
-    name: 'Milady Maker',
-    slug: 'milady',
-    chain: 'Ethereum',
-    floorPrice: 3.8,
-    floorPriceUsd: 11400,
-    volume24h: 380000,
-    volumeChange24h: 18.9,
-    sales24h: 42,
-    owners: 4120,
-    totalSupply: 10000,
-    listedCount: 650,
-    listedPercent: 6.5,
-    averagePrice: 4.1,
-    marketCap: 114000000,
-  },
-  {
-    name: 'Mad Lads',
-    slug: 'madlads',
-    chain: 'Solana',
-    floorPrice: 85.0,
-    floorPriceUsd: 8500,
-    volume24h: 125000,
-    volumeChange24h: 15.3,
-    sales24h: 35,
-    owners: 4520,
-    totalSupply: 10000,
-    listedCount: 420,
-    listedPercent: 4.2,
-    averagePrice: 92.0,
-    marketCap: 85000000,
-  },
-  {
-    name: 'Tensorians',
-    slug: 'tensorians',
-    chain: 'Solana',
-    floorPrice: 22.5,
-    floorPriceUsd: 2250,
-    volume24h: 85000,
-    volumeChange24h: 8.7,
-    sales24h: 55,
-    owners: 3890,
-    totalSupply: 10000,
-    listedCount: 580,
-    listedPercent: 5.8,
-    averagePrice: 24.0,
-    marketCap: 22500000,
-  },
-  {
-    name: 'Claynosaurz',
-    slug: 'claynosaurz',
-    chain: 'Solana',
-    floorPrice: 35.0,
-    floorPriceUsd: 3500,
-    volume24h: 95000,
-    volumeChange24h: -3.2,
-    sales24h: 28,
-    owners: 4250,
-    totalSupply: 10000,
-    listedCount: 380,
-    listedPercent: 3.8,
-    averagePrice: 38.0,
-    marketCap: 35000000,
-  },
-  {
-    name: 'Ordinal Maxi Biz',
-    slug: 'omb',
-    chain: 'Bitcoin',
-    floorPrice: 0.025,
-    floorPriceUsd: 2450,
-    volume24h: 180000,
-    volumeChange24h: 42.5,
-    sales24h: 85,
-    owners: 2150,
-    totalSupply: 10000,
-    listedCount: 920,
-    listedPercent: 9.2,
-    averagePrice: 0.028,
-    marketCap: 24500000,
-  },
-  {
-    name: 'NodeMonkes',
-    slug: 'nodemonkes',
-    chain: 'Bitcoin',
-    floorPrice: 0.18,
-    floorPriceUsd: 17640,
-    volume24h: 520000,
-    volumeChange24h: 28.3,
-    sales24h: 32,
-    owners: 3850,
-    totalSupply: 10000,
-    listedCount: 650,
-    listedPercent: 6.5,
-    averagePrice: 0.21,
-    marketCap: 176400000,
-  },
-  {
-    name: 'Bitcoin Puppets',
-    slug: 'bitcoin-puppets',
-    chain: 'Bitcoin',
-    floorPrice: 0.085,
-    floorPriceUsd: 8330,
-    volume24h: 280000,
-    volumeChange24h: 15.8,
-    sales24h: 42,
-    owners: 4120,
-    totalSupply: 10001,
-    listedCount: 780,
-    listedPercent: 7.8,
-    averagePrice: 0.092,
-    marketCap: 83300000,
-  },
-  {
-    name: 'y00ts',
-    slug: 'y00ts',
-    chain: 'Polygon',
-    floorPrice: 850,
-    floorPriceUsd: 850,
-    volume24h: 45000,
-    volumeChange24h: -5.8,
-    sales24h: 28,
-    owners: 5680,
-    totalSupply: 15000,
-    listedCount: 1250,
-    listedPercent: 8.3,
-    averagePrice: 920,
-    marketCap: 12750000,
-  },
+];
+
+// Top NFT collection IDs on CoinGecko
+const TOP_NFT_IDS = [
+  'cryptopunks',
+  'bored-ape-yacht-club',
+  'pudgy-penguins',
+  'azuki',
+  'mutant-ape-yacht-club',
+  'degods',
+  'milady-maker',
+  'doodles-official',
+  'cool-cats-nft',
+  'world-of-women-nft',
 ];
 
 // ============================================
@@ -307,36 +204,112 @@ const TOP_NFT_COLLECTIONS: NFTCollection[] = [
 // ============================================
 
 /**
- * Fetch top NFT collections
+ * Fetch NFT collection details from CoinGecko
+ */
+async function fetchNFTFromCoinGecko(nftId: string): Promise<NFTCollection | null> {
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/nfts/${nftId}`,
+      {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 300 }, // Cache for 5 minutes
+      }
+    );
+
+    if (!response.ok) {
+      console.log(`CoinGecko NFT API error for ${nftId}: ${response.status}`);
+      return null;
+    }
+
+    const data: CoinGeckoNFTDetails = await response.json();
+
+    const chain = CHAIN_MAP[data.asset_platform_id] || data.asset_platform_id || 'Unknown';
+    const floorPriceUsd = data.floor_price?.usd || 0;
+    const volume24h = data.volume_24h?.usd || 0;
+    const marketCap = data.market_cap?.usd || 0;
+    const totalSupply = data.total_supply || 0;
+    const owners = data.number_of_unique_addresses || 0;
+
+    return {
+      name: data.name,
+      slug: data.id,
+      chain,
+      floorPrice: data.floor_price?.native_currency || 0,
+      floorPriceUsd,
+      volume24h,
+      volumeChange24h: data.floor_price_in_usd_24h_percentage_change || 0,
+      sales24h: volume24h > 0 && floorPriceUsd > 0 ? Math.round(volume24h / floorPriceUsd) : 0,
+      owners,
+      totalSupply,
+      listedCount: Math.round(totalSupply * 0.05), // Estimate 5% listed
+      listedPercent: 5,
+      averagePrice: floorPriceUsd * 1.1, // Estimate average slightly above floor
+      marketCap,
+      imageUrl: data.image?.small,
+      dataSource: 'live',
+    };
+  } catch (error) {
+    console.error(`Failed to fetch NFT ${nftId} from CoinGecko:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch top NFT collections from CoinGecko
  */
 export async function fetchTopNFTCollections(
   limit: number = 20,
   chain?: string
 ): Promise<NFTCollection[]> {
-  // In production, this would call OpenSea/Reservoir API
-  // For now, return static data with simulated updates
-
-  let collections = [...TOP_NFT_COLLECTIONS];
-
-  // Filter by chain if specified
-  if (chain && chain !== 'all') {
-    collections = collections.filter(c => c.chain.toLowerCase() === chain.toLowerCase());
+  // Check cache first
+  const now = Date.now();
+  if (collectionsCache.data && (now - collectionsCache.timestamp) < CACHE_TTL) {
+    let collections = collectionsCache.data;
+    if (chain && chain !== 'all') {
+      collections = collections.filter(c => c.chain.toLowerCase() === chain.toLowerCase());
+    }
+    return collections.slice(0, limit);
   }
 
-  // Add some randomization to simulate live data
-  collections = collections.map(c => ({
-    ...c,
-    floorPrice: c.floorPrice * (0.98 + Math.random() * 0.04),
-    floorPriceUsd: c.floorPriceUsd * (0.98 + Math.random() * 0.04),
-    volume24h: c.volume24h * (0.9 + Math.random() * 0.2),
-    volumeChange24h: c.volumeChange24h + (Math.random() - 0.5) * 5,
-    sales24h: Math.floor(c.sales24h * (0.8 + Math.random() * 0.4)),
-  }));
+  try {
+    // Fetch details for top NFT collections (with delay to respect rate limits)
+    const collections: NFTCollection[] = [];
 
-  // Sort by volume
-  return collections
-    .sort((a, b) => b.volume24h - a.volume24h)
-    .slice(0, limit);
+    for (const nftId of TOP_NFT_IDS.slice(0, Math.min(limit, 10))) {
+      const collection = await fetchNFTFromCoinGecko(nftId);
+      if (collection) {
+        collections.push(collection);
+      }
+      // Small delay to respect CoinGecko rate limits (10-50 req/min on free tier)
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    if (collections.length > 0) {
+      // Update cache
+      collectionsCache = { data: collections, timestamp: now };
+
+      // Filter by chain if specified
+      let result = collections;
+      if (chain && chain !== 'all') {
+        result = result.filter(c => c.chain.toLowerCase() === chain.toLowerCase());
+      }
+
+      // Sort by volume
+      return result
+        .sort((a, b) => b.volume24h - a.volume24h)
+        .slice(0, limit);
+    }
+  } catch (error) {
+    console.error('Failed to fetch NFT collections from CoinGecko:', error);
+  }
+
+  // Fallback to static data if API fails
+  console.log('Using fallback NFT data');
+  let fallback = [...FALLBACK_COLLECTIONS];
+  if (chain && chain !== 'all') {
+    fallback = fallback.filter(c => c.chain.toLowerCase() === chain.toLowerCase());
+  }
+  return fallback.slice(0, limit);
 }
 
 /**
@@ -350,12 +323,13 @@ export async function fetchNFTMarketStats(): Promise<NFTMarketStats> {
   }
 
   const topCollections = await fetchTopNFTCollections(20);
+  const isLive = topCollections.some(c => c.dataSource === 'live');
 
   // Calculate aggregate stats
   const totalVolume24h = topCollections.reduce((sum, c) => sum + c.volume24h, 0);
   const totalMarketCap = topCollections.reduce((sum, c) => sum + c.marketCap, 0);
   const totalSales24h = topCollections.reduce((sum, c) => sum + c.sales24h, 0);
-  const averagePrice = totalVolume24h / totalSales24h;
+  const averagePrice = totalSales24h > 0 ? totalVolume24h / totalSales24h : 0;
 
   // Calculate volume by chain
   const chainVolumes: Record<string, number> = {};
@@ -364,15 +338,17 @@ export async function fetchNFTMarketStats(): Promise<NFTMarketStats> {
   }
 
   const chainBreakdown = Object.entries(chainVolumes)
-    .map(([chain, volume]) => ({
-      chain,
+    .map(([chainName, volume]) => ({
+      chain: chainName,
       volume,
-      percentage: (volume / totalVolume24h) * 100,
+      percentage: totalVolume24h > 0 ? (volume / totalVolume24h) * 100 : 0,
     }))
     .sort((a, b) => b.volume - a.volume);
 
   // Average volume change
-  const volumeChange24h = topCollections.reduce((sum, c) => sum + c.volumeChange24h, 0) / topCollections.length;
+  const volumeChange24h = topCollections.length > 0
+    ? topCollections.reduce((sum, c) => sum + c.volumeChange24h, 0) / topCollections.length
+    : 0;
 
   const stats: NFTMarketStats = {
     totalMarketCap,
@@ -383,6 +359,7 @@ export async function fetchNFTMarketStats(): Promise<NFTMarketStats> {
     topCollections,
     chainBreakdown,
     timestamp: new Date().toISOString(),
+    dataSource: isLive ? 'live' : 'fallback',
   };
 
   // Update cache
@@ -396,7 +373,8 @@ export async function fetchNFTMarketStats(): Promise<NFTMarketStats> {
  */
 export function searchNFTCollections(query: string): NFTCollection[] {
   const normalizedQuery = query.toLowerCase();
-  return TOP_NFT_COLLECTIONS.filter(c =>
+  const cached = collectionsCache.data || FALLBACK_COLLECTIONS;
+  return cached.filter(c =>
     c.name.toLowerCase().includes(normalizedQuery) ||
     c.slug.toLowerCase().includes(normalizedQuery)
   );
@@ -448,7 +426,7 @@ export async function fetchNFTStatsForDownload(): Promise<{
     { metric: 'Top Chain by Volume', value: stats.chainBreakdown[0]?.chain || 'N/A' },
     { metric: 'Ethereum Volume %', value: stats.chainBreakdown.find(c => c.chain === 'Ethereum')?.percentage || 0 },
     { metric: 'Solana Volume %', value: stats.chainBreakdown.find(c => c.chain === 'Solana')?.percentage || 0 },
-    { metric: 'Bitcoin Volume %', value: stats.chainBreakdown.find(c => c.chain === 'Bitcoin')?.percentage || 0 },
+    { metric: 'Data Source', value: stats.dataSource === 'live' ? 'CoinGecko API' : 'Cached Data' },
     { metric: 'Last Updated', value: stats.timestamp },
   ];
 }
@@ -473,6 +451,10 @@ export function getNFTMarketInterpretation(stats: NFTMarketStats): string {
   const topChain = stats.chainBreakdown[0];
   if (topChain && topChain.percentage > 60) {
     parts.push(`${topChain.chain} dominating with ${topChain.percentage.toFixed(0)}% of volume`);
+  }
+
+  if (stats.dataSource === 'fallback') {
+    parts.push('Note: Using cached data (API temporarily unavailable)');
   }
 
   return parts.length > 0 ? parts.join('. ') : 'NFT market in neutral range';

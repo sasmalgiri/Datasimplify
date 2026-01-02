@@ -351,113 +351,153 @@ export async function fetchTokenUnlocksForDownload(limit: number = 50): Promise<
   return results.sort((a, b) => a.daysUntil - b.daysUntil);
 }
 
+// Cache for staking data
+let stakingCache: { data: StakingRewardDownload[] | null; timestamp: number } = { data: null, timestamp: 0 };
+const STAKING_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// DeFiLlama yields API response type
+interface DeFiLlamaPool {
+  chain: string;
+  project: string;
+  symbol: string;
+  tvlUsd: number;
+  apy: number;
+  apyBase?: number;
+  apyReward?: number;
+  pool?: string;
+  underlyingTokens?: string[];
+}
+
+// Fallback static data
+const FALLBACK_STAKING: StakingRewardDownload[] = [
+  { name: 'Ethereum', symbol: 'ETH', stakingApy: 3.8, inflationRate: 0.5, totalStaked: 34000000, stakedPercent: 28, lockupPeriod: 'Variable', minStake: 32 },
+  { name: 'Solana', symbol: 'SOL', stakingApy: 7.2, inflationRate: 5.5, totalStaked: 390000000, stakedPercent: 72, lockupPeriod: '~2-3 days', minStake: 0 },
+  { name: 'Cardano', symbol: 'ADA', stakingApy: 3.5, inflationRate: 2.0, totalStaked: 23000000000, stakedPercent: 63, lockupPeriod: 'No lockup', minStake: 0 },
+  { name: 'Polkadot', symbol: 'DOT', stakingApy: 14.5, inflationRate: 10.0, totalStaked: 750000000, stakedPercent: 52, lockupPeriod: '28 days', minStake: 10 },
+  { name: 'Cosmos', symbol: 'ATOM', stakingApy: 18.0, inflationRate: 14.0, totalStaked: 250000000, stakedPercent: 64, lockupPeriod: '21 days', minStake: 0 },
+];
+
+// Mapping for chain names to symbol names
+const STAKING_SYMBOL_MAP: Record<string, { name: string; lockup: string; minStake: number }> = {
+  'ETH': { name: 'Ethereum', lockup: 'Variable', minStake: 0.01 },
+  'SOL': { name: 'Solana', lockup: '~2-3 days', minStake: 0 },
+  'ATOM': { name: 'Cosmos', lockup: '21 days', minStake: 0 },
+  'DOT': { name: 'Polkadot', lockup: '28 days', minStake: 10 },
+  'AVAX': { name: 'Avalanche', lockup: '2 weeks', minStake: 25 },
+  'NEAR': { name: 'Near Protocol', lockup: '52-65 hours', minStake: 0 },
+  'MATIC': { name: 'Polygon', lockup: '~2 days', minStake: 1 },
+  'SUI': { name: 'Sui', lockup: '~1 day', minStake: 0 },
+  'APT': { name: 'Aptos', lockup: '~30 days', minStake: 10 },
+  'ADA': { name: 'Cardano', lockup: 'No lockup', minStake: 0 },
+  'BNB': { name: 'BNB Chain', lockup: '7 days', minStake: 1 },
+  'FTM': { name: 'Fantom', lockup: '7 days', minStake: 1 },
+  'OSMO': { name: 'Osmosis', lockup: '14 days', minStake: 0 },
+  'TIA': { name: 'Celestia', lockup: '21 days', minStake: 0 },
+  'SEI': { name: 'Sei', lockup: '21 days', minStake: 0 },
+};
+
 /**
- * Fetch staking rewards comparison (mock data - would need StakingRewards API)
+ * Fetch staking rewards from DeFiLlama Yields API (real data)
  */
 export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDownload[]> {
-  // Static data for popular PoS coins - would ideally come from StakingRewards API
-  const stakingData: StakingRewardDownload[] = [
-    {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      stakingApy: 3.8,
-      inflationRate: 0.5,
-      totalStaked: 34000000,
-      stakedPercent: 28,
-      lockupPeriod: 'Variable (withdrawals enabled)',
-      minStake: 32,
-    },
-    {
-      name: 'Solana',
-      symbol: 'SOL',
-      stakingApy: 7.2,
-      inflationRate: 5.5,
-      totalStaked: 390000000,
-      stakedPercent: 72,
-      lockupPeriod: '~2-3 days',
-      minStake: 0,
-    },
-    {
-      name: 'Cardano',
-      symbol: 'ADA',
-      stakingApy: 3.5,
-      inflationRate: 2.0,
-      totalStaked: 23000000000,
-      stakedPercent: 63,
-      lockupPeriod: 'No lockup',
-      minStake: 0,
-    },
-    {
-      name: 'Polkadot',
-      symbol: 'DOT',
-      stakingApy: 14.5,
-      inflationRate: 10.0,
-      totalStaked: 750000000,
-      stakedPercent: 52,
-      lockupPeriod: '28 days',
-      minStake: 10,
-    },
-    {
-      name: 'Cosmos',
-      symbol: 'ATOM',
-      stakingApy: 18.0,
-      inflationRate: 14.0,
-      totalStaked: 250000000,
-      stakedPercent: 64,
-      lockupPeriod: '21 days',
-      minStake: 0,
-    },
-    {
-      name: 'Avalanche',
-      symbol: 'AVAX',
-      stakingApy: 8.5,
-      inflationRate: 7.0,
-      totalStaked: 260000000,
-      stakedPercent: 58,
-      lockupPeriod: '2 weeks - 1 year',
-      minStake: 25,
-    },
-    {
-      name: 'Near Protocol',
-      symbol: 'NEAR',
-      stakingApy: 9.0,
-      inflationRate: 5.0,
-      totalStaked: 550000000,
-      stakedPercent: 45,
-      lockupPeriod: '52-65 hours',
-      minStake: 0,
-    },
-    {
-      name: 'Polygon',
-      symbol: 'MATIC',
-      stakingApy: 4.5,
-      inflationRate: 2.5,
-      totalStaked: 4000000000,
-      stakedPercent: 39,
-      lockupPeriod: '80 checkpoints (~2 days)',
-      minStake: 1,
-    },
-    {
-      name: 'Sui',
-      symbol: 'SUI',
-      stakingApy: 3.2,
-      inflationRate: 4.0,
-      totalStaked: 7500000000,
-      stakedPercent: 75,
-      lockupPeriod: '~1 day',
-      minStake: 0,
-    },
-    {
-      name: 'Aptos',
-      symbol: 'APT',
-      stakingApy: 7.0,
-      inflationRate: 7.0,
-      totalStaked: 900000000,
-      stakedPercent: 82,
-      lockupPeriod: '~30 days',
-      minStake: 10,
-    },
-  ];
+  // Check cache
+  const now = Date.now();
+  if (stakingCache.data && (now - stakingCache.timestamp) < STAKING_CACHE_TTL) {
+    return stakingCache.data;
+  }
 
-  return stakingData.sort((a, b) => b.stakingApy - a.stakingApy);
+  try {
+    // Fetch from DeFiLlama yields API
+    const response = await fetch('https://yields.llama.fi/pools', {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 600 }, // Cache for 10 minutes
+    });
+
+    if (!response.ok) {
+      console.error('DeFiLlama yields API error:', response.status);
+      return FALLBACK_STAKING;
+    }
+
+    const data = await response.json();
+    const pools: DeFiLlamaPool[] = data.data || [];
+
+    // Filter for staking-related pools (liquid staking and native staking)
+    const stakingPools = pools.filter((pool: DeFiLlamaPool) => {
+      const project = pool.project?.toLowerCase() || '';
+      const symbol = pool.symbol?.toUpperCase() || '';
+
+      // Include liquid staking protocols and native staking
+      const isStaking =
+        project.includes('lido') ||
+        project.includes('rocket') ||
+        project.includes('stader') ||
+        project.includes('stakewise') ||
+        project.includes('marinade') ||
+        project.includes('jito') ||
+        project.includes('benqi') ||
+        project.includes('ankr') ||
+        project === 'stride' ||
+        project === 'persistence' ||
+        // Or single-asset pools with staking-like tokens
+        symbol.startsWith('ST') ||
+        symbol.includes('STAKED');
+
+      // Must have reasonable APY and TVL
+      return isStaking && pool.apy > 0 && pool.apy < 100 && pool.tvlUsd > 1000000;
+    });
+
+    // Group by base token and get best APY for each
+    const tokenMap = new Map<string, StakingRewardDownload>();
+
+    for (const pool of stakingPools) {
+      // Extract base token symbol (e.g., "stETH" -> "ETH")
+      let baseSymbol = pool.symbol?.toUpperCase()
+        .replace(/^ST/i, '')
+        .replace(/^W/i, '')
+        .replace(/^M/i, '')
+        .split('-')[0]
+        .split('/')[0]
+        || 'UNKNOWN';
+
+      // Special cases
+      if (pool.symbol?.toLowerCase().includes('eth')) baseSymbol = 'ETH';
+      if (pool.symbol?.toLowerCase().includes('sol')) baseSymbol = 'SOL';
+      if (pool.symbol?.toLowerCase().includes('atom')) baseSymbol = 'ATOM';
+      if (pool.symbol?.toLowerCase().includes('matic')) baseSymbol = 'MATIC';
+      if (pool.symbol?.toLowerCase().includes('avax')) baseSymbol = 'AVAX';
+
+      const existing = tokenMap.get(baseSymbol);
+      const info = STAKING_SYMBOL_MAP[baseSymbol] || { name: baseSymbol, lockup: 'Variable', minStake: 0 };
+
+      // Update if better APY or doesn't exist
+      if (!existing || pool.apy > existing.stakingApy) {
+        tokenMap.set(baseSymbol, {
+          name: info.name,
+          symbol: baseSymbol,
+          stakingApy: Math.round(pool.apy * 100) / 100,
+          inflationRate: 0, // Not available from this API
+          totalStaked: pool.tvlUsd,
+          stakedPercent: 0, // Not available from this API
+          lockupPeriod: info.lockup,
+          minStake: info.minStake,
+        });
+      }
+    }
+
+    // Convert to array and sort by APY
+    const results = Array.from(tokenMap.values())
+      .sort((a, b) => b.stakingApy - a.stakingApy)
+      .slice(0, 20); // Top 20
+
+    if (results.length > 0) {
+      // Update cache
+      stakingCache = { data: results, timestamp: now };
+      return results;
+    }
+  } catch (error) {
+    console.error('Error fetching staking rewards from DeFiLlama:', error);
+  }
+
+  // Fallback to static data
+  return FALLBACK_STAKING;
 }

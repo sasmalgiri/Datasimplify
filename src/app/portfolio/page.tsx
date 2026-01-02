@@ -33,6 +33,10 @@ interface CoinPrice {
   change_24h: number;
 }
 
+const PRICE_IDS = ['bitcoin', 'ethereum', 'solana', 'usd-coin'] as const;
+const BASKET_SYMBOLS = new Set(['ALTS', 'MEME']);
+const STABLECOIN_DEFAULTS: Record<string, number> = { USDC: 1, USDT: 1, DAI: 1 };
+
 export default function PortfolioBuilderPage() {
   const [investmentAmount, setInvestmentAmount] = useState(1000);
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
@@ -46,16 +50,22 @@ export default function PortfolioBuilderPage() {
     const fetchPrices = async () => {
       setPricesLoading(true);
       try {
-        const response = await fetch('/api/crypto?limit=20');
+        const response = await fetch(`/api/crypto?ids=${PRICE_IDS.join(',')}`);
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
             const priceMap: Record<string, CoinPrice> = {};
-            result.data.forEach((coin: { symbol: string; price: number; price_change_24h: number }) => {
-              priceMap[coin.symbol] = {
-                symbol: coin.symbol,
-                price: coin.price,
-                change_24h: coin.price_change_24h || 0,
+            result.data.forEach((coin: { symbol: string; current_price?: number; price?: number; price_change_percentage_24h?: number; price_change_24h?: number }) => {
+              const symbol = (coin.symbol || '').toUpperCase();
+              if (!symbol) return;
+              const price = (typeof coin.current_price === 'number' ? coin.current_price : coin.price) || 0;
+              const changePct = typeof coin.price_change_percentage_24h === 'number'
+                ? coin.price_change_percentage_24h
+                : (typeof coin.price_change_24h === 'number' ? coin.price_change_24h : 0);
+              priceMap[symbol] = {
+                symbol,
+                price,
+                change_24h: changePct,
               };
             });
             setCoinPrices(priceMap);
@@ -75,13 +85,19 @@ export default function PortfolioBuilderPage() {
 
   // Helper to get coin price
   const getCoinPrice = (symbol: string): number => {
-    return coinPrices[symbol]?.price || 0;
+    if (BASKET_SYMBOLS.has(symbol)) return 0;
+    const mapped = coinPrices[symbol]?.price;
+    if (typeof mapped === 'number' && mapped > 0) return mapped;
+    const stableFallback = STABLECOIN_DEFAULTS[symbol];
+    if (typeof stableFallback === 'number') return stableFallback;
+    return 0;
   };
 
   // Helper to calculate how many coins you'd get
   const getCoinsAmount = (symbol: string, dollarAmount: number): string => {
+    if (BASKET_SYMBOLS.has(symbol)) return 'Varies';
     const price = getCoinPrice(symbol);
-    if (price === 0) return '—';
+    if (price === 0) return pricesLoading ? 'Loading…' : '-';
     const amount = dollarAmount / price;
     if (amount >= 1) return amount.toFixed(4);
     return amount.toFixed(8);
@@ -538,14 +554,22 @@ https://datasimplify.vercel.app
                           </div>
                         </td>
                         <td className="text-right py-3 px-2 text-gray-400">
-                          {currentPrice > 0 ? `$${currentPrice.toLocaleString(undefined, { maximumFractionDigits: currentPrice < 1 ? 4 : 0 })}` : '—'}
+                          {BASKET_SYMBOLS.has(alloc.symbol)
+                            ? 'Varies'
+                            : (currentPrice > 0
+                              ? `$${currentPrice.toLocaleString(undefined, { maximumFractionDigits: currentPrice < 1 ? 4 : 0 })}`
+                              : (pricesLoading ? 'Loading…' : '-'))}
                         </td>
                         <td className="text-right py-3 px-2 font-medium">{alloc.percentage}%</td>
                         <td className="text-right py-3 px-2">
                           ${dollarAmount.toLocaleString()}
                         </td>
                         <td className="text-right py-3 px-2 text-blue-400 font-medium">
-                          {coinsYouGet !== '—' ? `${coinsYouGet} ${alloc.symbol}` : '—'}
+                          {coinsYouGet === 'Varies'
+                            ? 'Varies'
+                            : (coinsYouGet !== '-' && coinsYouGet !== 'Loading…'
+                              ? `${coinsYouGet} ${alloc.symbol}`
+                              : coinsYouGet)}
                         </td>
                         <td className="text-right py-3 px-2">
                           <span className={`px-2 py-1 rounded text-xs ${
