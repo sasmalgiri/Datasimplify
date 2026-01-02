@@ -6,124 +6,91 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 interface ModerationResult {
   approved: boolean;
-  flagged: boolean;
-  categories: {
-    spam: boolean;
-    hate_speech: boolean;
-    scam: boolean;
-    manipulation: boolean;
-    harassment: boolean;
-    illegal: boolean;
-    low_quality: boolean;
-  };
+  blocked: boolean;
   reason?: string;
-  suggestions?: string[];
-  confidence: number;
+  category?: string;
 }
 
-// Fallback moderation using keyword detection
+// Harmful content patterns for fallback detection
+const HARMFUL_PATTERNS = {
+  hate_speech: [
+    /\b(kill|murder|exterminate|genocide)\s+(all|every|the)\s+\w+/i,
+    /\b(hate|despise)\s+(all|every)\s+\w+/i,
+    /\bdeath\s+to\b/i,
+    /\b(n[i1]gg|f[a4]gg|k[i1]ke|sp[i1]c)\b/i,
+  ],
+  terrorism: [
+    /\b(bomb|attack|explode|destroy)\s+(the|a)\s+(building|city|government)/i,
+    /\bjihad\b/i,
+    /\bterror(ist|ism)?\s+(attack|plot|cell)/i,
+    /\b(isis|al.?qaeda|taliban)\s+(support|join|recruit)/i,
+  ],
+  violence: [
+    /\b(how\s+to|ways\s+to)\s+(kill|murder|harm|hurt)\b/i,
+    /\b(shoot|stab|poison)\s+(someone|people|him|her)/i,
+  ],
+  illegal: [
+    /\b(buy|sell|make)\s+(drugs|cocaine|heroin|meth)/i,
+    /\b(launder|laundering)\s+money\b/i,
+    /\bchild\s+(porn|abuse|exploitation)/i,
+  ],
+  extremism: [
+    /\b(white|black)\s+supremacy/i,
+    /\bnazi\s+(party|ideology|support)/i,
+    /\bfascist\s+(movement|ideology)/i,
+    /\bcommunist\s+revolution/i,
+    /\bviolent\s+(revolution|uprising|overthrow)/i,
+  ],
+};
+
+// Fallback moderation using pattern detection
 function fallbackModeration(content: string): ModerationResult {
   const lowerContent = content.toLowerCase();
 
-  // Prohibited keywords/patterns
-  const spamPatterns = [
-    /buy now/i, /limited time/i, /act fast/i, /guaranteed profit/i,
-    /100x gains/i, /moonshot/i, /to the moon/i, /easy money/i,
-    /(.)\1{4,}/i, // Repeated characters (e.g., "MOOOOON")
-  ];
-
-  const scamPatterns = [
-    /send.*wallet/i, /private key/i, /seed phrase/i, /double your/i,
-    /free crypto/i, /airdrop.*click/i, /connect wallet/i,
-    /telegram.*group/i, /whatsapp.*group/i, /dm me/i,
-  ];
-
-  const hatePatterns = [
-    // General hate speech indicators (keeping it generic)
-    /\b(hate|kill|die|death to)\b.*\b(all|every)\b/i,
-  ];
-
-  const manipulationPatterns = [
-    /pump.*dump/i, /coordinated.*buy/i, /everyone.*buy/i,
-    /let's.*pump/i, /group.*buy/i,
-  ];
-
-  const lowQualityPatterns = [
-    /^.{0,20}$/, // Too short (less than 20 chars)
-    /^[A-Z\s!]+$/, // All caps
-    /!{3,}/, // Multiple exclamation marks
-  ];
-
-  const categories = {
-    spam: spamPatterns.some(p => p.test(content)),
-    hate_speech: hatePatterns.some(p => p.test(content)),
-    scam: scamPatterns.some(p => p.test(content)),
-    manipulation: manipulationPatterns.some(p => p.test(content)),
-    harassment: false,
-    illegal: false,
-    low_quality: lowQualityPatterns.some(p => p.test(content)),
-  };
-
-  const flagged = Object.values(categories).some(v => v);
-
-  const reasons: string[] = [];
-  if (categories.spam) reasons.push('Contains spam-like content');
-  if (categories.scam) reasons.push('Contains potential scam indicators');
-  if (categories.hate_speech) reasons.push('Contains potentially harmful language');
-  if (categories.manipulation) reasons.push('Appears to promote market manipulation');
-  if (categories.low_quality) reasons.push('Content quality is too low');
-
-  const suggestions: string[] = [];
-  if (categories.low_quality) suggestions.push('Add more detail and analysis to your prediction');
-  if (categories.spam) suggestions.push('Remove promotional language and focus on analysis');
-  if (categories.manipulation) suggestions.push('Rephrase to share your opinion without coordinating buying');
+  for (const [category, patterns] of Object.entries(HARMFUL_PATTERNS)) {
+    for (const pattern of patterns) {
+      if (pattern.test(content) || pattern.test(lowerContent)) {
+        return {
+          approved: false,
+          blocked: true,
+          reason: 'Content violates community guidelines',
+          category,
+        };
+      }
+    }
+  }
 
   return {
-    approved: !flagged,
-    flagged,
-    categories,
-    reason: reasons.join('; ') || undefined,
-    suggestions: suggestions.length > 0 ? suggestions : undefined,
-    confidence: 0.7, // Lower confidence for fallback
+    approved: true,
+    blocked: false,
   };
 }
 
-// Groq-powered moderation (using Llama or Mixtral for fast inference)
-async function groqModeration(content: string, coinSymbol?: string): Promise<ModerationResult> {
+// Groq-powered moderation for harmful content
+async function groqModeration(content: string): Promise<ModerationResult> {
   if (!GROQ_API_KEY) {
-    console.log('Groq API key not configured, using fallback moderation');
     return fallbackModeration(content);
   }
 
   try {
-    const systemPrompt = `You are a content moderator for a cryptocurrency prediction community. Your job is to review user-submitted predictions and determine if they violate community guidelines.
+    const systemPrompt = `You are a content safety moderator. Your ONLY job is to detect and block harmful content.
 
-GUIDELINES TO CHECK:
-1. SPAM: Excessive promotional content, repeated posts, irrelevant content
-2. SCAM: Phishing links, requests for private keys/seed phrases, "double your crypto" schemes
-3. HATE_SPEECH: Content promoting hatred based on race, religion, gender, etc.
-4. MANIPULATION: Pump-and-dump schemes, coordinated buying/selling calls
-5. HARASSMENT: Personal attacks, threats, bullying
-6. ILLEGAL: Money laundering discussion, tax evasion advice, illegal activities
-7. LOW_QUALITY: Extremely short posts, all caps, no actual analysis
+BLOCK content that contains:
+1. HATE_SPEECH: Racism, sexism, homophobia, religious hatred, discrimination
+2. TERRORISM: Support for terrorist groups, violent extremism, radicalization
+3. VIOLENCE: Threats, incitement to violence, graphic violence descriptions
+4. ILLEGAL: Drug trafficking, money laundering, child exploitation
+5. EXTREMISM: Political extremism (far-left/far-right), calls for violent revolution
 
-RESPONSE FORMAT (JSON only):
-{
-  "approved": boolean,
-  "flagged": boolean,
-  "categories": {
-    "spam": boolean,
-    "hate_speech": boolean,
-    "scam": boolean,
-    "manipulation": boolean,
-    "harassment": boolean,
-    "illegal": boolean,
-    "low_quality": boolean
-  },
-  "reason": "string explaining issues if flagged",
-  "suggestions": ["array of suggestions to improve if flagged"],
-  "confidence": number between 0 and 1
-}`;
+DO NOT block:
+- Normal crypto predictions and analysis
+- Market opinions (bullish/bearish)
+- Technical analysis discussion
+- Price speculation
+
+RESPOND WITH JSON ONLY:
+{"approved": true, "blocked": false} - if content is safe
+{"approved": false, "blocked": true, "reason": "brief reason", "category": "category_name"} - if harmful`;
 
     const response = await fetch(GROQ_API_URL, {
       method: 'POST',
@@ -135,18 +102,15 @@ RESPONSE FORMAT (JSON only):
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content: `Review this crypto prediction${coinSymbol ? ` for ${coinSymbol}` : ''}:\n\n"${content}"\n\nRespond with JSON only.`
-          },
+          { role: 'user', content: `Check this content:\n\n"${content}"` },
         ],
         temperature: 0.1,
-        max_tokens: 500,
+        max_tokens: 150,
       }),
     });
 
     if (!response.ok) {
-      console.error('Groq API error:', response.status, await response.text());
+      console.error('Groq API error:', response.status);
       return fallbackModeration(content);
     }
 
@@ -170,56 +134,30 @@ RESPONSE FORMAT (JSON only):
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { content, coinSymbol, useGrok = true } = body;
+    const { content } = body;
 
     if (!content || typeof content !== 'string') {
-      return NextResponse.json(
-        { error: 'Content is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ approved: true, blocked: false });
     }
 
-    // Trim and check minimum length
     const trimmedContent = content.trim();
-    if (trimmedContent.length < 10) {
-      return NextResponse.json({
-        approved: false,
-        flagged: true,
-        categories: {
-          spam: false,
-          hate_speech: false,
-          scam: false,
-          manipulation: false,
-          harassment: false,
-          illegal: false,
-          low_quality: true,
-        },
-        reason: 'Content is too short. Please provide more detail.',
-        suggestions: ['Add your reasoning and analysis for this prediction'],
-        confidence: 1.0,
-      });
+    if (trimmedContent.length < 5) {
+      return NextResponse.json({ approved: true, blocked: false });
     }
 
-    // Use Groq if enabled and API key is available, otherwise fallback
-    const result = useGrok
-      ? await groqModeration(trimmedContent, coinSymbol)
-      : fallbackModeration(trimmedContent);
-
+    const result = await groqModeration(trimmedContent);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Moderation API error:', error);
-    return NextResponse.json(
-      { error: 'Moderation check failed' },
-      { status: 500 }
-    );
+    // Fail open - allow content if moderation fails
+    return NextResponse.json({ approved: true, blocked: false });
   }
 }
 
-// GET endpoint to check if Groq moderation is available
 export async function GET() {
   return NextResponse.json({
     groqEnabled: !!GROQ_API_KEY,
-    fallbackEnabled: true,
-    version: '1.0.0',
+    purpose: 'Harmful content detection only',
+    version: '2.0.0',
   });
 }

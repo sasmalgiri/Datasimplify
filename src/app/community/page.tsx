@@ -531,22 +531,21 @@ function CommunityMeter({ stats }: { stats: CommunityStats }) {
   );
 }
 
-// Moderation check function
-async function checkModeration(content: string, coinSymbol: string): Promise<{
+// Moderation check - blocks harmful content only (hate, terrorism, etc.)
+async function checkModeration(content: string): Promise<{
   approved: boolean;
+  blocked: boolean;
   reason?: string;
-  suggestions?: string[];
 }> {
   try {
     const response = await fetch('/api/moderation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content, coinSymbol })
+      body: JSON.stringify({ content })
     });
     return await response.json();
   } catch {
-    // If moderation fails, allow the post (fail-open)
-    return { approved: true };
+    return { approved: true, blocked: false };
   }
 }
 
@@ -569,8 +568,7 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   const [confidence, setConfidence] = useState(70);
   const [reasoning, setReasoning] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [moderationError, setModerationError] = useState<string | null>(null);
-  const [moderationSuggestions, setModerationSuggestions] = useState<string[]>([]);
+  const [blocked, setBlocked] = useState(false);
 
   if (!isOpen) return null;
 
@@ -586,15 +584,13 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   const handleSubmit = async () => {
     if (!reasoning.trim()) return;
     setSubmitting(true);
-    setModerationError(null);
-    setModerationSuggestions([]);
+    setBlocked(false);
 
-    // Check moderation first
-    const modResult = await checkModeration(reasoning, selectedCoin.symbol);
+    // Check for harmful content
+    const modResult = await checkModeration(reasoning);
 
-    if (!modResult.approved) {
-      setModerationError(modResult.reason || 'Content violates community guidelines');
-      setModerationSuggestions(modResult.suggestions || []);
+    if (modResult.blocked) {
+      setBlocked(true);
       setSubmitting(false);
       return;
     }
@@ -719,20 +715,14 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
             <p className="text-xs text-gray-500 mt-1">{reasoning.length}/500 characters</p>
           </div>
 
-          {/* Moderation Error */}
-          {moderationError && (
+          {/* Blocked Content Warning */}
+          {blocked && (
             <div className="bg-red-50 border border-red-300 rounded-lg p-4">
               <div className="flex items-start gap-2">
                 <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-red-700 font-medium text-sm">{moderationError}</p>
-                  {moderationSuggestions.length > 0 && (
-                    <ul className="mt-2 text-sm text-red-600 list-disc list-inside">
-                      {moderationSuggestions.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  )}
+                  <p className="text-red-700 font-medium text-sm">Content blocked</p>
+                  <p className="text-red-600 text-sm mt-1">Your message contains content that violates our community guidelines.</p>
                   <Link href="/community/guidelines" className="text-red-600 hover:underline text-sm mt-2 inline-block">
                     View Community Guidelines &rarr;
                   </Link>
