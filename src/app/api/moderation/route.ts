@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Grok API configuration
-const GROK_API_URL = 'https://api.x.ai/v1/chat/completions';
-const GROK_API_KEY = process.env.GROK_API_KEY;
+// Groq API configuration (fast inference)
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 interface ModerationResult {
   approved: boolean;
@@ -88,10 +88,10 @@ function fallbackModeration(content: string): ModerationResult {
   };
 }
 
-// Grok-powered moderation
-async function grokModeration(content: string, coinSymbol?: string): Promise<ModerationResult> {
-  if (!GROK_API_KEY) {
-    console.log('Grok API key not configured, using fallback moderation');
+// Groq-powered moderation (using Llama or Mixtral for fast inference)
+async function groqModeration(content: string, coinSymbol?: string): Promise<ModerationResult> {
+  if (!GROQ_API_KEY) {
+    console.log('Groq API key not configured, using fallback moderation');
     return fallbackModeration(content);
   }
 
@@ -125,14 +125,14 @@ RESPONSE FORMAT (JSON only):
   "confidence": number between 0 and 1
 }`;
 
-    const response = await fetch(GROK_API_URL, {
+    const response = await fetch(GROQ_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROK_API_KEY}`,
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'grok-3',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
           {
@@ -146,7 +146,7 @@ RESPONSE FORMAT (JSON only):
     });
 
     if (!response.ok) {
-      console.error('Grok API error:', response.status, await response.text());
+      console.error('Groq API error:', response.status, await response.text());
       return fallbackModeration(content);
     }
 
@@ -162,7 +162,7 @@ RESPONSE FORMAT (JSON only):
 
     return fallbackModeration(content);
   } catch (error) {
-    console.error('Grok moderation error:', error);
+    console.error('Groq moderation error:', error);
     return fallbackModeration(content);
   }
 }
@@ -200,9 +200,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Use Grok if enabled and API key is available, otherwise fallback
+    // Use Groq if enabled and API key is available, otherwise fallback
     const result = useGrok
-      ? await grokModeration(trimmedContent, coinSymbol)
+      ? await groqModeration(trimmedContent, coinSymbol)
       : fallbackModeration(trimmedContent);
 
     return NextResponse.json(result);
@@ -215,10 +215,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to check if Grok moderation is available
+// GET endpoint to check if Groq moderation is available
 export async function GET() {
   return NextResponse.json({
-    grokEnabled: !!GROK_API_KEY,
+    groqEnabled: !!GROQ_API_KEY,
     fallbackEnabled: true,
     version: '1.0.0',
   });
