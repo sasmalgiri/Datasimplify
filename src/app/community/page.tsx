@@ -43,7 +43,10 @@ import {
   RefreshCw,
   UserPlus,
   Eye,
+  Shield,
+  FileText,
 } from 'lucide-react';
+import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 
@@ -528,6 +531,25 @@ function CommunityMeter({ stats }: { stats: CommunityStats }) {
   );
 }
 
+// Moderation check function
+async function checkModeration(content: string, coinSymbol: string): Promise<{
+  approved: boolean;
+  reason?: string;
+  suggestions?: string[];
+}> {
+  try {
+    const response = await fetch('/api/moderation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, coinSymbol })
+    });
+    return await response.json();
+  } catch {
+    // If moderation fails, allow the post (fail-open)
+    return { approved: true };
+  }
+}
+
 function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   isOpen: boolean;
   onClose: () => void;
@@ -547,6 +569,8 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   const [confidence, setConfidence] = useState(70);
   const [reasoning, setReasoning] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [moderationError, setModerationError] = useState<string | null>(null);
+  const [moderationSuggestions, setModerationSuggestions] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -562,6 +586,19 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
   const handleSubmit = async () => {
     if (!reasoning.trim()) return;
     setSubmitting(true);
+    setModerationError(null);
+    setModerationSuggestions([]);
+
+    // Check moderation first
+    const modResult = await checkModeration(reasoning, selectedCoin.symbol);
+
+    if (!modResult.approved) {
+      setModerationError(modResult.reason || 'Content violates community guidelines');
+      setModerationSuggestions(modResult.suggestions || []);
+      setSubmitting(false);
+      return;
+    }
+
     onSubmit({
       coinId: selectedCoin.id,
       coinSymbol: selectedCoin.symbol,
@@ -680,6 +717,37 @@ function PredictionSubmitModal({ isOpen, onClose, onSubmit }: {
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">{reasoning.length}/500 characters</p>
+          </div>
+
+          {/* Moderation Error */}
+          {moderationError && (
+            <div className="bg-red-50 border border-red-300 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <Shield className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-700 font-medium text-sm">{moderationError}</p>
+                  {moderationSuggestions.length > 0 && (
+                    <ul className="mt-2 text-sm text-red-600 list-disc list-inside">
+                      {moderationSuggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
+                  <Link href="/community/guidelines" className="text-red-600 hover:underline text-sm mt-2 inline-block">
+                    View Community Guidelines &rarr;
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Guidelines Link */}
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <FileText className="w-4 h-4" />
+            <span>By submitting, you agree to our</span>
+            <Link href="/community/guidelines" className="text-emerald-600 hover:underline">
+              Community Guidelines
+            </Link>
           </div>
         </div>
 
@@ -860,6 +928,13 @@ export default function CommunityPage() {
               <p className="text-gray-600 text-lg">
                 Share predictions, compete with traders, and track your accuracy
               </p>
+              <Link
+                href="/community/guidelines"
+                className="inline-flex items-center gap-2 mt-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+              >
+                <FileText className="w-4 h-4" />
+                View Community Guidelines
+              </Link>
             </div>
             <div className="flex items-center gap-3">
               <button
