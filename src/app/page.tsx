@@ -249,50 +249,50 @@ export default function LandingPage() {
       <FreeNavbar />
 
       {/* Hero Section */}
-      <section className="pt-8 pb-8 px-4">
+      <section className="pt-4 pb-4 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Hero Text - Centered at top */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
                 PROFESSIONAL CRYPTO DATA
               </span>
-              <br />
+              {' '}
               <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                 WITHOUT THE $1,000/mo PRICE TAG
               </span>
             </h1>
 
-            <p className="text-base md:text-lg text-gray-400 mb-6 max-w-2xl mx-auto">
+            <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
               Why pay $800-$1,299/month for enterprise platforms when you can get
               <span className="text-white font-semibold"> 90% of the features for just $19/month?</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+            <div className="flex flex-row gap-3 justify-center mb-3">
               <Link
                 href="/signup"
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold hover:opacity-90 transition shadow-lg shadow-blue-500/25"
+                className="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-500/25"
               >
                 Start Free Trial →
               </Link>
               <Link
                 href="/chat"
-                className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition"
+                className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
               >
                 Try AI Demo
               </Link>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
+              <div className="flex items-center gap-1">
                 <span className="text-yellow-400">★★★★★</span>
                 <span>4.9/5</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <span className="text-green-400">✓</span>
                 <span>No Credit Card</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <span className="text-blue-400">🔒</span>
                 <span>Secure</span>
               </div>
