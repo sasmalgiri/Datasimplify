@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server';
 import { fetchAllUnlocks, fetchCoinUnlocks, getUpcomingMajorUnlocks } from '@/lib/tokenUnlocks';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 600; // 10 minutes
 
 export async function GET(request: Request) {
+  if (!isFeatureEnabled('defi')) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Token unlocks are disabled.',
+        reason: 'DeFi domain is not enabled for this deployment.',
+      },
+      { status: 403 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin');

@@ -19,6 +19,8 @@ const RETENTION = {
   sync_log: 3,                // Cleanup sync logs too
   daily_summaries: 7,         // AI-generated summaries
   rag_query_history: 30,      // 30-day RAG query history for analytics
+  prediction_snapshots: 90,   // 3 months of AI snapshots
+  prediction_training_data: 365, // 1 year of training rows
 };
 
 // Tables that use UPSERT (no cleanup needed - always latest)
@@ -68,6 +70,8 @@ export async function cleanupOldData(): Promise<{
       if (table === 'sync_log') timestampCol = 'started_at';
       if (table === 'daily_summaries') timestampCol = 'summary_date';
       if (table === 'rag_query_history') timestampCol = 'created_at';
+      if (table === 'prediction_snapshots') timestampCol = 'timestamp';
+      if (table === 'prediction_training_data') timestampCol = 'snapshot_timestamp';
 
       const { data, error } = await supabaseAdmin
         .from(table)

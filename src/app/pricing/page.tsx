@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import Script from 'next/script';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
@@ -81,6 +82,7 @@ declare global {
 }
 
 export default function PricingPage() {
+  const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
   const [pricingInfo, setPricingInfo] = useState<PricingInfo | null>(null);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -91,8 +93,29 @@ export default function PricingPage() {
   const [waitlistError, setWaitlistError] = useState('');
 
   useEffect(() => {
+    if (!pricingEnabled) return;
     fetchPricingInfo();
-  }, []);
+  }, [pricingEnabled]);
+
+  if (!pricingEnabled) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <FreeNavbar />
+        <Breadcrumb />
+        <div className="max-w-3xl mx-auto px-4 py-16">
+          <h1 className="text-3xl font-bold mb-4">Pricing</h1>
+          <p className="text-gray-700">
+            This product is currently running in free mode. Pricing and payments are disabled.
+          </p>
+          <div className="mt-6">
+            <Link href="/download" className="text-blue-600 hover:text-blue-700 font-medium">
+              Go to Download Center →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const fetchPricingInfo = async () => {
     try {

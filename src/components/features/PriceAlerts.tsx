@@ -21,51 +21,16 @@ interface Alert {
   type: 'price_above' | 'price_below' | 'percent_change' | 'rsi' | 'whale' | 'social';
   condition: string;
   value: number;
-  currentValue: number;
+  currentValue: number | null;
   status: 'active' | 'triggered' | 'paused';
   createdAt: Date;
   notifyVia: ('email' | 'push' | 'telegram')[];
 }
 
 export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
-  const [alerts, setAlerts] = useState<Alert[]>([
-    {
-      id: '1',
-      coin: 'BTC',
-      coinName: 'Bitcoin',
-      type: 'price_above',
-      condition: 'Price goes above',
-      value: 100000,
-      currentValue: 97245,
-      status: 'active',
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      notifyVia: ['email', 'push']
-    },
-    {
-      id: '2',
-      coin: 'ETH',
-      coinName: 'Ethereum',
-      type: 'price_below',
-      condition: 'Price falls below',
-      value: 3500,
-      currentValue: 3890,
-      status: 'active',
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      notifyVia: ['email']
-    },
-    {
-      id: '3',
-      coin: 'BTC',
-      coinName: 'Bitcoin',
-      type: 'percent_change',
-      condition: 'Drops more than',
-      value: 10,
-      currentValue: 2.3,
-      status: 'active',
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      notifyVia: ['telegram', 'push']
-    },
-  ]);
+  // No-fake-data policy: do not show sample alerts or sample prices.
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const nextLocalId = useRef(0);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newAlert, setNewAlert] = useState({
@@ -85,26 +50,26 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
   ];
 
   const coins = [
-    { symbol: 'BTC', name: 'Bitcoin', price: 97245 },
-    { symbol: 'ETH', name: 'Ethereum', price: 3890 },
-    { symbol: 'BNB', name: 'BNB', price: 710 },
-    { symbol: 'SOL', name: 'Solana', price: 220 },
-    { symbol: 'XRP', name: 'Ripple', price: 2.35 },
-    { symbol: 'ADA', name: 'Cardano', price: 1.05 },
-    { symbol: 'DOGE', name: 'Dogecoin', price: 0.41 },
-    { symbol: 'AVAX', name: 'Avalanche', price: 45 },
-    { symbol: 'DOT', name: 'Polkadot', price: 8.50 },
-    { symbol: 'LINK', name: 'Chainlink', price: 25 },
-    { symbol: 'MATIC', name: 'Polygon', price: 0.95 },
-    { symbol: 'SHIB', name: 'Shiba Inu', price: 0.000025 },
-    { symbol: 'LTC', name: 'Litecoin', price: 105 },
-    { symbol: 'UNI', name: 'Uniswap', price: 14 },
-    { symbol: 'ATOM', name: 'Cosmos', price: 10.50 },
-    { symbol: 'FTM', name: 'Fantom', price: 1.10 },
-    { symbol: 'NEAR', name: 'NEAR Protocol', price: 6.50 },
-    { symbol: 'APT', name: 'Aptos', price: 12 },
-    { symbol: 'ARB', name: 'Arbitrum', price: 1.80 },
-    { symbol: 'OP', name: 'Optimism', price: 2.50 },
+    { symbol: 'BTC', name: 'Bitcoin' },
+    { symbol: 'ETH', name: 'Ethereum' },
+    { symbol: 'BNB', name: 'BNB' },
+    { symbol: 'SOL', name: 'Solana' },
+    { symbol: 'XRP', name: 'Ripple' },
+    { symbol: 'ADA', name: 'Cardano' },
+    { symbol: 'DOGE', name: 'Dogecoin' },
+    { symbol: 'AVAX', name: 'Avalanche' },
+    { symbol: 'DOT', name: 'Polkadot' },
+    { symbol: 'LINK', name: 'Chainlink' },
+    { symbol: 'MATIC', name: 'Polygon' },
+    { symbol: 'SHIB', name: 'Shiba Inu' },
+    { symbol: 'LTC', name: 'Litecoin' },
+    { symbol: 'UNI', name: 'Uniswap' },
+    { symbol: 'ATOM', name: 'Cosmos' },
+    { symbol: 'FTM', name: 'Fantom' },
+    { symbol: 'NEAR', name: 'NEAR Protocol' },
+    { symbol: 'APT', name: 'Aptos' },
+    { symbol: 'ARB', name: 'Arbitrum' },
+    { symbol: 'OP', name: 'Optimism' },
   ];
 
   const deleteAlert = (id: string) => {
@@ -119,14 +84,15 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
 
   const createAlert = () => {
     const coin = coins.find(c => c.symbol === newAlert.coin);
+    nextLocalId.current += 1;
     const newAlertObj: Alert = {
-      id: Date.now().toString(),
+      id: String(nextLocalId.current),
       coin: newAlert.coin,
       coinName: coin?.name || newAlert.coin,
       type: newAlert.type,
       condition: alertTypes.find(t => t.id === newAlert.type)?.label.replace(/[📈📉📊📐🐋📱]\s/, '') || '',
       value: newAlert.value,
-      currentValue: coin?.price || 0,
+      currentValue: null,
       status: 'active',
       createdAt: new Date(),
       notifyVia: newAlert.notifyVia
@@ -146,7 +112,7 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
             <InfoButton explanation="Set up custom alerts to notify you when specific conditions are met. Never miss a trading opportunity!" />
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Get notified when prices hit your targets
+            Alerts UI is available; live price + delivery are currently unavailable.
           </p>
         </div>
         <button
@@ -207,7 +173,7 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
                       {alert.condition} ${alert.value.toLocaleString()}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      Current: ${alert.currentValue.toLocaleString()}
+                      Current: {alert.currentValue === null ? 'Unavailable' : `$${alert.currentValue.toLocaleString()}`}
                     </p>
                   </div>
                 </div>
@@ -251,24 +217,30 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
               {/* Progress to Target */}
               {(alert.type === 'price_above' || alert.type === 'price_below') && (
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Current</span>
-                    <span>Target</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <AlertProgressBar
-                      percentage={alert.type === 'price_above'
-                        ? Math.min((alert.currentValue / alert.value) * 100, 100)
-                        : Math.min((alert.value / alert.currentValue) * 100, 100)}
-                      colorClass={alert.type === 'price_above' ? 'bg-green-500' : 'bg-red-500'}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    {alert.type === 'price_above' 
-                      ? `${((alert.value - alert.currentValue) / alert.currentValue * 100).toFixed(1)}% to go`
-                      : `${((alert.currentValue - alert.value) / alert.currentValue * 100).toFixed(1)}% buffer`
-                    }
-                  </p>
+                  {alert.currentValue !== null ? (
+                  <>
+                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                      <span>Current</span>
+                      <span>Target</span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <AlertProgressBar
+                        percentage={alert.type === 'price_above'
+                          ? Math.min((alert.currentValue / alert.value) * 100, 100)
+                          : Math.min((alert.value / alert.currentValue) * 100, 100)}
+                        colorClass={alert.type === 'price_above' ? 'bg-green-500' : 'bg-red-500'}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 text-center">
+                      {alert.type === 'price_above'
+                        ? `${((alert.value - alert.currentValue) / alert.currentValue * 100).toFixed(1)}% to go`
+                        : `${((alert.currentValue - alert.value) / alert.currentValue * 100).toFixed(1)}% buffer`
+                      }
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-gray-400 text-center">Progress unavailable (no live price)</p>
+                )}
                 </div>
               )}
             </div>
@@ -299,7 +271,7 @@ export function PriceAlerts({ showBeginnerTips = true }: { showBeginnerTips?: bo
                 >
                   {coins.map((coin) => (
                     <option key={coin.symbol} value={coin.symbol}>
-                      {coin.name} ({coin.symbol}) - ${coin.price.toLocaleString()}
+                      {coin.name} ({coin.symbol})
                     </option>
                   ))}
                 </select>

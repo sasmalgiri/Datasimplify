@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Progress bar component using refs
 function ProgressSegment({ percentage, colorClass }: { percentage: number; colorClass: string }) {
@@ -26,54 +27,48 @@ interface CommunityStats {
 }
 
 // Verification types
-interface VerificationResponse {
+interface SourcifyVerificationResponse {
   success: boolean;
   error?: string;
-  summary?: { totalChecks: number; verified: number; vulnerable: number; errors: number; };
-  securityScore?: number;
-  overallStatus?: string;
-  results?: { status: string; description: string; function: string; }[];
+  details?: string;
+  chainId?: number;
+  address?: string;
+  verified?: boolean;
+  status?: 'verified' | 'not_verified';
+  matchType?: string;
+  contractName?: string;
+  source?: 'sourcify' | 'cache';
+  stale?: boolean;
+  staleReason?: string;
 }
 
 // Compact SafeContract Component
 function SafeContractPreview() {
-  const [code, setCode] = useState('');
+  const [chainId, setChainId] = useState('1');
+  const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<VerificationResponse | null>(null);
-
-  const loadExample = async () => {
-    try {
-      const res = await fetch('/api/smart-contract/example');
-      const data = await res.json();
-      setCode(data.code);
-    } catch (e) {
-      console.error('Failed to load example:', e);
-    }
-  };
+  const [result, setResult] = useState<SourcifyVerificationResponse | null>(null);
 
   const verify = async () => {
-    if (!code.trim()) return;
+    if (!address.trim()) return;
     setLoading(true);
-    setResults(null);
+    setResult(null);
     try {
       const res = await fetch('/api/smart-contract/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({
+          chainId: Number(chainId),
+          address: address.trim(),
+        })
       });
       const data = await res.json();
-      setResults(data);
-    } catch (e) {
-      setResults({ success: false, error: 'Verification failed' });
+      setResult(data);
+    } catch {
+      setResult({ success: false, error: 'Verification failed' });
     } finally {
       setLoading(false);
     }
-  };
-
-  const getScoreClass = (score: number) => {
-    if (score >= 80) return 'border-green-500 bg-green-500/20 text-green-400';
-    if (score >= 50) return 'border-yellow-500 bg-yellow-500/20 text-yellow-400';
-    return 'border-red-500 bg-red-500/20 text-red-400';
   };
 
   return (
@@ -89,41 +84,49 @@ function SafeContractPreview() {
             <p className="text-gray-400 text-xs">Smart Contract Verifier</p>
           </div>
         </div>
-        <Link href="/tools/verify" className="text-green-400 text-xs hover:text-green-300 transition">
+        <Link href="/smart-contract-verifier" className="text-green-400 text-xs hover:text-green-300 transition">
           Full Page →
         </Link>
       </div>
 
-      {/* Code Input */}
+      {/* Inputs */}
       <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-gray-500 text-xs">Solidity Code</span>
-          <button type="button" onClick={loadExample} className="text-green-400 text-xs hover:underline">
-            Load Example
-          </button>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="col-span-1">
+            <span className="text-gray-500 text-xs">Chain ID</span>
+            <input
+              value={chainId}
+              onChange={(e) => setChainId(e.target.value)}
+              placeholder="1"
+              className="w-full mt-1 px-2 py-1.5 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-200 text-xs outline-none focus:border-green-500/50"
+            />
+          </div>
+          <div className="col-span-2">
+            <span className="text-gray-500 text-xs">Contract Address</span>
+            <input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="0x..."
+              className="w-full mt-1 px-2 py-1.5 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-200 font-mono text-xs outline-none focus:border-green-500/50"
+            />
+          </div>
         </div>
-        <textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="// Paste Solidity code..."
-          className="w-full h-20 p-2 bg-gray-900/50 border border-gray-700 rounded-lg text-gray-200 font-mono text-xs resize-none outline-none focus:border-green-500/50"
-        />
       </div>
 
       {/* Verify Button */}
       <button
         type="button"
         onClick={verify}
-        disabled={loading || !code.trim()}
+        disabled={loading || !address.trim()}
         className="w-full py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold rounded-lg transition text-sm flex items-center justify-center gap-2 mb-3"
       >
         {loading ? (
           <>
             <span className="w-3 h-3 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
-            Verifying...
+            Checking...
           </>
         ) : (
-          <>🔍 Verify Contract</>
+          <>🔍 Check Sourcify</>
         )}
       </button>
 
@@ -131,26 +134,28 @@ function SafeContractPreview() {
       <div className="bg-gray-900/50 rounded-lg p-3 min-h-[60px]">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-xs">Running verification...</p>
+            <p className="text-gray-400 text-xs">Checking Sourcify...</p>
           </div>
-        ) : results ? (
-          results.success ? (
-            <div className="flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-bold font-mono ${getScoreClass(results.securityScore || 0)}`}>
-                {results.securityScore}%
-              </div>
-              <div className="flex-1">
-                <p className="text-white text-sm font-semibold">{results.overallStatus}</p>
-                <p className="text-gray-400 text-xs">{results.summary?.verified}/{results.summary?.totalChecks} checks passed</p>
-              </div>
+        ) : result ? (
+          result.success ? (
+            <div className="space-y-1">
+              <p className={`text-sm font-semibold ${result.verified ? 'text-green-400' : 'text-gray-200'}`}>
+                {result.verified ? 'Verified on Sourcify' : 'Not verified on Sourcify'}
+              </p>
+              <p className="text-gray-400 text-xs">
+                Source: {result.source}{result.stale ? ' (stale)' : ''}
+              </p>
+              {result.contractName && (
+                <p className="text-gray-300 text-xs font-mono truncate">{result.contractName}</p>
+              )}
             </div>
           ) : (
-            <p className="text-red-400 text-xs text-center">{results.error}</p>
+            <p className="text-red-400 text-xs text-center">{result.error}</p>
           )
         ) : (
           <div className="text-center text-gray-500 text-xs">
             <span className="text-lg">🔐</span>
-            <p>Paste code & verify</p>
+            <p>Enter address & check</p>
           </div>
         )}
       </div>
@@ -160,15 +165,9 @@ function SafeContractPreview() {
 
 // Community Preview Component
 function CommunityPreview() {
-  const [stats, setStats] = useState<CommunityStats>({
-    total_predictions: 0,
-    active_predictors: 0,
-    bullish_percent: 33,
-    bearish_percent: 33,
-    neutral_percent: 34,
-    avg_accuracy: 0
-  });
+  const [stats, setStats] = useState<CommunityStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -177,15 +176,24 @@ function CommunityPreview() {
         const result = await response.json();
         if (result.success && result.data) {
           setStats(result.data);
+        } else {
+          setStats(null);
+          setLoadError(result?.error || 'Community stats unavailable');
         }
       } catch (error) {
         console.error('Error fetching community stats:', error);
+        setStats(null);
+        setLoadError('Community stats unavailable');
       } finally {
         setLoading(false);
       }
     };
     fetchStats();
   }, []);
+
+  const bullish = typeof stats?.bullish_percent === 'number' ? stats.bullish_percent : null;
+  const neutral = typeof stats?.neutral_percent === 'number' ? stats.neutral_percent : null;
+  const bearish = typeof stats?.bearish_percent === 'number' ? stats.bearish_percent : null;
 
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 h-full">
@@ -209,26 +217,29 @@ function CommunityPreview() {
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700">
           <p className="text-gray-400 text-xs">Predictions</p>
-          <p className="text-lg font-bold text-white">{loading ? '...' : stats.total_predictions}</p>
+          <p className="text-lg font-bold text-white">{loading ? '...' : (typeof stats?.total_predictions === 'number' ? stats.total_predictions : 'Unavailable')}</p>
         </div>
         <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700">
           <p className="text-gray-400 text-xs">Accuracy</p>
-          <p className="text-lg font-bold text-emerald-400">{loading ? '...' : `${stats.avg_accuracy}%`}</p>
+          <p className="text-lg font-bold text-emerald-400">{loading ? '...' : (typeof stats?.avg_accuracy === 'number' ? `${stats.avg_accuracy}%` : 'Unavailable')}</p>
         </div>
       </div>
 
       {/* Sentiment Bar */}
       <div className="mb-3">
         <div className="flex h-2 rounded-full overflow-hidden bg-gray-700">
-          <ProgressSegment percentage={stats.bullish_percent} colorClass="bg-emerald-500" />
-          <ProgressSegment percentage={stats.neutral_percent} colorClass="bg-yellow-500" />
-          <ProgressSegment percentage={stats.bearish_percent} colorClass="bg-red-500" />
+          <ProgressSegment percentage={bullish ?? 0} colorClass="bg-emerald-500" />
+          <ProgressSegment percentage={neutral ?? 0} colorClass="bg-yellow-500" />
+          <ProgressSegment percentage={bearish ?? 0} colorClass="bg-red-500" />
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-emerald-400">{stats.bullish_percent}% Bull</span>
-          <span className="text-yellow-400">{stats.neutral_percent}% Neutral</span>
-          <span className="text-red-400">{stats.bearish_percent}% Bear</span>
+          <span className="text-emerald-400">{bullish === null ? 'Unavailable' : `${bullish}% Bull`}</span>
+          <span className="text-yellow-400">{neutral === null ? 'Unavailable' : `${neutral}% Neutral`}</span>
+          <span className="text-red-400">{bearish === null ? 'Unavailable' : `${bearish}% Bear`}</span>
         </div>
+        {!loading && loadError && (
+          <p className="text-gray-500 text-[10px] mt-1">{loadError}</p>
+        )}
       </div>
 
       {/* CTA */}
@@ -301,8 +312,8 @@ export default function LandingPage() {
 
           {/* Two Cards Side by Side */}
           <div className="grid md:grid-cols-2 gap-4">
-            <SafeContractPreview />
-            <CommunityPreview />
+            {isFeatureEnabled('smartContractVerifier') && <SafeContractPreview />}
+            {isFeatureEnabled('community') && <CommunityPreview />}
           </div>
         </div>
       </section>
@@ -312,20 +323,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">$50M+</div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">Unavailable</div>
               <div className="text-gray-400 text-sm">Data Analyzed Daily</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">10,000+</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">Unavailable</div>
               <div className="text-gray-400 text-sm">Tokens Tracked</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-green-400 mb-1">95%</div>
-              <div className="text-gray-400 text-sm">Cost Savings</div>
+              <div className="text-3xl md:text-4xl font-bold text-green-400 mb-1">—</div>
+              <div className="text-gray-400 text-sm">Affordable Pricing</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">24/7</div>
-              <div className="text-gray-400 text-sm">Real-Time Updates</div>
+              <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">—</div>
+              <div className="text-gray-400 text-sm">Live Updates</div>
             </div>
           </div>
         </div>
@@ -336,7 +347,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-bold mb-3">
-              The <span className="text-red-400">$32,000/year</span> Problem
+              The <span className="text-red-400">expensive data</span> problem
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto">
               Professional crypto data is locked behind enterprise paywalls. Until now.
@@ -368,19 +379,17 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 relative">
-              <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">
-                SAVE 95%
-              </div>
+              <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">SAVE</div>
               <div className="text-green-400 text-sm font-medium mb-3">✓ THE DATASIMPLIFY WAY</div>
               <h3 className="text-xl font-bold mb-4">All-In-One Platform</h3>
               <ul className="space-y-3 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
-                  <span>Professional on-chain analytics</span>
+                  <span>On-chain dashboards (availability varies)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
-                  <span>Real-time whale tracking</span>
+                  <span>Whale tracking (availability varies)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
@@ -409,14 +418,14 @@ export default function LandingPage() {
             {[
               { icon: '🤖', title: 'AI Assistant', desc: 'Ask anything about crypto.' },
               { icon: '🗺️', title: 'Market Map', desc: 'Visualize the market.' },
-              { icon: '😱', title: 'Fear & Greed', desc: 'Know when to buy/sell.' },
+              { icon: '😱', title: 'Fear & Greed', desc: 'Track market sentiment.' },
               { icon: '🐋', title: 'Whale Tracker', desc: 'See big players.' },
               { icon: '📊', title: 'Technical Analysis', desc: '12+ indicators.' },
-              { icon: '⛓️', title: 'On-Chain Metrics', desc: 'MVRV, SOPR, HODL.' },
-              { icon: '💰', title: 'DeFi Dashboard', desc: 'Track TVL & yields.' },
-              { icon: '🔍', title: 'Token Screener', desc: 'Filter 10,000+ tokens.' },
-              { icon: '📈', title: 'ETF Tracker', desc: 'Bitcoin ETF flows.' },
-              { icon: '⚡', title: 'Price Alerts', desc: 'Instant notifications.' },
+              { icon: '⛓️', title: 'On-Chain Metrics', desc: 'On-chain indicators (availability varies).' },
+              { icon: '💰', title: 'DeFi Dashboard', desc: 'DeFi analytics (availability varies).' },
+              { icon: '🔍', title: 'Token Screener', desc: 'Filter tokens by metrics.' },
+              { icon: '📈', title: 'ETF Tracker', desc: 'ETF context (flows may be unavailable).' },
+              { icon: '⚡', title: 'Price Alerts', desc: 'Alert setup (delivery may be unavailable).' },
               { icon: '📚', title: 'Crypto Academy', desc: '20 lessons.' },
               { icon: '🔐', title: 'Contract Verifier', desc: 'Smart contract security.' },
             ].map((f, i) => (
@@ -431,6 +440,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
+      {isFeatureEnabled('pricing') ? (
       <section id="pricing" className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
@@ -497,6 +507,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      ) : null}
 
       {/* CTA */}
       <section className="py-16 px-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
@@ -505,7 +516,7 @@ export default function LandingPage() {
             Ready to Invest Smarter?
           </h2>
           <p className="text-lg text-gray-400 mb-6">
-            Join 500+ investors who stopped overpaying for data.
+            Stop overpaying for data.
           </p>
           <Link
             href="/signup"

@@ -75,15 +75,6 @@ const DATA_ENDPOINTS = [
   },
 ];
 
-// Sample market data for preview
-const SAMPLE_MARKET_DATA = [
-  { Symbol: 'BTC', Name: 'Bitcoin', Price: 97500.25, Change_24h: '+2.45%', Market_Cap: '$1.92T', Volume_24h: '$45.2B' },
-  { Symbol: 'ETH', Name: 'Ethereum', Price: 3450.80, Change_24h: '+3.12%', Market_Cap: '$415.5B', Volume_24h: '$18.7B' },
-  { Symbol: 'SOL', Name: 'Solana', Price: 185.45, Change_24h: '+5.67%', Market_Cap: '$87.2B', Volume_24h: '$4.5B' },
-  { Symbol: 'BNB', Name: 'BNB', Price: 698.30, Change_24h: '+1.23%', Market_Cap: '$106.8B', Volume_24h: '$1.8B' },
-  { Symbol: 'XRP', Name: 'XRP', Price: 2.18, Change_24h: '-0.89%', Market_Cap: '$124.5B', Volume_24h: '$8.9B' },
-];
-
 /**
  * Generate an Excel template with live data connection instructions
  */
@@ -154,21 +145,7 @@ export function generateLiveDataTemplate(): Uint8Array {
   XLSX.utils.book_append_sheet(wb, wsUrls, 'Data URLs');
 
   // =====================
-  // Sheet 3: Sample Data (Market Overview)
-  // =====================
-  const wsSample = XLSX.utils.json_to_sheet(SAMPLE_MARKET_DATA);
-  wsSample['!cols'] = [
-    { wch: 10 },
-    { wch: 15 },
-    { wch: 15 },
-    { wch: 12 },
-    { wch: 15 },
-    { wch: 15 },
-  ];
-  XLSX.utils.book_append_sheet(wb, wsSample, 'Sample Data');
-
-  // =====================
-  // Sheet 4: Power Query Guide
+  // Sheet 3: Power Query Guide
   // =====================
   const powerQueryGuide = [
     ['Power Query Step-by-Step Guide'],
@@ -207,7 +184,7 @@ export function generateLiveDataTemplate(): Uint8Array {
   XLSX.utils.book_append_sheet(wb, wsPowerQuery, 'Power Query Guide');
 
   // =====================
-  // Sheet 5: Google Sheets Guide
+  // Sheet 4: Google Sheets Guide
   // =====================
   const googleSheetsGuide = [
     ['Google Sheets Live Data Guide'],

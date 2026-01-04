@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -12,20 +12,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // If Supabase is not configured, return success with mock data
-    if (!isSupabaseConfigured || !supabase) {
-      console.log('Supabase not configured, using mock registration');
-      return NextResponse.json({
-        success: true,
-        userId: `local_${Date.now()}`,
-        email,
-        downloadsRemaining: 3,
-        message: 'Registered successfully (local mode)',
-      });
+    // Supabase is required for truthful user tracking
+    if (!isSupabaseConfigured || !supabaseAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'User registration requires Supabase to be configured.',
+          requiresSupabase: true,
+        },
+        { status: 503 }
+      );
     }
 
     // Check if user already exists
-    const { data: existingUser, error: fetchError } = await supabase
+    const { data: existingUser } = await supabaseAdmin
       .from('free_users')
       .select('*')
       .eq('email', email.toLowerCase())
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     }
 
     // Create new user
-    const { data: newUser, error: insertError } = await supabase
+    const { data: newUser, error: insertError } = await supabaseAdmin
       .from('free_users')
       .insert({
         email: email.toLowerCase(),
@@ -61,14 +61,10 @@ export async function POST(request: Request) {
 
     if (insertError) {
       console.error('Error creating user:', insertError);
-      // Return success anyway for better UX
-      return NextResponse.json({
-        success: true,
-        userId: `temp_${Date.now()}`,
-        email,
-        downloadsRemaining: 3,
-        message: 'Registered (temporary)',
-      });
+      return NextResponse.json(
+        { success: false, error: 'Failed to create user.' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

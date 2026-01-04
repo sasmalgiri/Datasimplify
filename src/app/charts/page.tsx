@@ -247,6 +247,11 @@ function ChartsContent() {
   const [racingData, setRacingData] = useState<Record<string, unknown>[]>([]);
   const [racingFrame, setRacingFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [derivativesData, setDerivativesData] = useState<Record<string, unknown> | null>(null);
+  const [whaleFlows, setWhaleFlows] = useState<Record<string, unknown>[] | null>(null);
+  const [globalStats, setGlobalStats] = useState<Record<string, unknown> | null>(null);
+  const [fearGreedHistory, setFearGreedHistory] = useState<Record<string, unknown>[] | null>(null);
+  const [correlationMatrix, setCorrelationMatrix] = useState<Record<string, unknown>[] | null>(null);
   const [showMA, setShowMA] = useState(true);
   const [showVolume, setShowVolume] = useState(true);
   const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
@@ -305,6 +310,36 @@ function ChartsContent() {
   }, [selectedChart, selectedCoin, timeRange, showMA, showVolume, chartStyle, router]);
 
   // Fetch chart data based on selected options
+  const generateRacingData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/crypto?limit=15');
+      const json = await res.json();
+      const coins = Array.isArray(json?.data) ? json.data : [];
+
+      const frame = {
+        date: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+        coins: coins
+          .filter((c: any) => c?.symbol && c?.name)
+          .map((c: any) => ({
+            id: String(c.id ?? c.symbol ?? c.name).toLowerCase(),
+            symbol: String(c.symbol).toUpperCase(),
+            name: String(c.name),
+            marketCap: typeof c.market_cap === 'number' ? c.market_cap : 0,
+          }))
+          .sort((a: any, b: any) => (b.marketCap || 0) - (a.marketCap || 0)),
+      };
+
+      setRacingData([frame]);
+      setRacingFrame(0);
+      setIsPlaying(false);
+    } catch (e) {
+      console.error('Error fetching racing data:', e);
+      setRacingData([]);
+      setRacingFrame(0);
+      setIsPlaying(false);
+    }
+  }, []);
+
   const fetchChartData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -328,7 +363,7 @@ function ChartsContent() {
             ma7,
             ma30,
             volatility,
-            volume: Math.random() * 10000000000 + 1000000000, // Simulated volume
+            volume: typeof (historyData.prices[i] as any)?.volume === 'number' ? (historyData.prices[i] as any).volume : null,
           };
         });
         setChartData(processed);
@@ -350,112 +385,207 @@ function ChartsContent() {
       setPredictionData(predData);
 
       // Generate racing bar data
-      generateRacingData();
+      await generateRacingData();
     } catch (error) {
       console.error('Error fetching chart data:', error);
-      // Generate mock data on error
-      generateMockData();
+      setChartData([]);
+      setCandlestickData([]);
+      setPredictionData(null);
+      setRacingData([]);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedCoin, timeRange]);
-
-  const generateMockData = () => {
-    // Generate mock price history
-    const days = parseInt(timeRange);
-    const basePrice = selectedCoin === 'bitcoin' ? 45000 : selectedCoin === 'ethereum' ? 2500 : 100;
-    interface MockPrice {
-      date: string;
-      timestamp: number;
-      price: number;
-      ma7: number | null;
-      ma30: number | null;
-      volatility: number;
-      volume: number;
-      open: number;
-      high: number;
-      low: number;
-      close: number;
-      [key: string]: unknown;
-    }
-    const mockPrices: MockPrice[] = [];
-
-    for (let i = 0; i < days; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - (days - i));
-      const randomChange = (Math.random() - 0.5) * basePrice * 0.05;
-      const price = basePrice + randomChange + (Math.random() * basePrice * 0.1);
-
-      const ma7 = i >= 6 ? mockPrices.slice(Math.max(0, i - 6), i + 1).reduce((sum: number, d) => sum + d.price, 0) / Math.min(7, i + 1) : null;
-      const ma30 = i >= 29 ? mockPrices.slice(Math.max(0, i - 29), i + 1).reduce((sum: number, d) => sum + d.price, 0) / Math.min(30, i + 1) : null;
-
-      mockPrices.push({
-        date: date.toLocaleDateString(),
-        timestamp: date.getTime(),
-        price,
-        ma7,
-        ma30,
-        volatility: Math.random() * 5,
-        volume: Math.random() * 10000000000,
-        open: price * (1 - Math.random() * 0.02),
-        high: price * (1 + Math.random() * 0.03),
-        low: price * (1 - Math.random() * 0.03),
-        close: price,
-      });
-    }
-
-    setChartData(mockPrices);
-    setCandlestickData(mockPrices);
-
-    // Mock prediction data
-    setPredictionData({
-      prediction: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH',
-      confidence: Math.floor(Math.random() * 30 + 60),
-      accuracy: {
-        overall: Math.floor(Math.random() * 20 + 65),
-        bullish: Math.floor(Math.random() * 20 + 60),
-        bearish: Math.floor(Math.random() * 20 + 60),
-      },
-      history: Array.from({ length: 30 }, (_, i) => ({
-        date: new Date(Date.now() - i * 86400000).toLocaleDateString(),
-        predicted: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH',
-        actual: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH',
-        correct: Math.random() > 0.35,
-      })),
-      priceTarget: {
-        current: basePrice,
-        low: basePrice * 0.9,
-        mid: basePrice * 1.05,
-        high: basePrice * 1.15,
-      },
-    });
-  };
-
-  const generateRacingData = () => {
-    // Generate racing bar chart data (market cap over time)
-    const frames = 12; // 12 months
-    const data = [];
-
-    for (let f = 0; f < frames; f++) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (frames - f - 1));
-
-      const frame = {
-        date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        coins: COINS.map(coin => ({
-          ...coin,
-          marketCap: (Math.random() * 500 + 100) * 1000000000 * (coin.id === 'bitcoin' ? 2 : 1),
-        })).sort((a, b) => b.marketCap - a.marketCap),
-      };
-      data.push(frame);
-    }
-
-    setRacingData(data);
-  };
+  }, [selectedCoin, timeRange, generateRacingData]);
 
   useEffect(() => {
     fetchChartData();
   }, [fetchChartData]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const run = async () => {
+      try {
+        if (selectedChart === 'funding_rate' || selectedChart === 'open_interest' || selectedChart === 'liquidation_heatmap') {
+          const res = await fetch('/api/derivatives', { signal: controller.signal });
+          const json = await res.json();
+          setDerivativesData(json?.success ? (json.data as Record<string, unknown>) : null);
+        } else {
+          setDerivativesData(null);
+        }
+
+        if (selectedChart === 'whale_flow') {
+          const res = await fetch('/api/whales?type=exchange-flows', { signal: controller.signal });
+          const json = await res.json();
+          setWhaleFlows(Array.isArray(json?.data) ? (json.data as Record<string, unknown>[]) : []);
+        } else {
+          setWhaleFlows(null);
+        }
+
+        if (selectedChart === 'btc_dominance') {
+          const res = await fetch('/api/crypto/global', { signal: controller.signal });
+          const json = await res.json();
+          setGlobalStats(json?.data ? (json.data as Record<string, unknown>) : null);
+        } else {
+          setGlobalStats(null);
+        }
+
+        if (selectedChart === 'fear_greed_history') {
+          const res = await fetch(`/api/onchain/fear-greed-history?limit=${encodeURIComponent(timeRange)}`, { signal: controller.signal });
+          const json = await res.json();
+          setFearGreedHistory(Array.isArray(json?.data) ? (json.data as Record<string, unknown>[]) : []);
+        } else {
+          setFearGreedHistory(null);
+        }
+      } catch (e) {
+        if ((e as any)?.name === 'AbortError') return;
+        console.error('Error fetching aux chart data:', e);
+        setDerivativesData(null);
+        setWhaleFlows(null);
+        setGlobalStats(null);
+        setFearGreedHistory(null);
+      }
+    };
+
+    run();
+    return () => controller.abort();
+  }, [selectedChart, timeRange]);
+
+  const calculateRSISeries = (prices: number[], period: number = 14): Array<number | null> => {
+    if (prices.length < period + 1) return prices.map(() => null);
+
+    const rsis: Array<number | null> = prices.map(() => null);
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 1; i <= period; i++) {
+      const diff = prices[i] - prices[i - 1];
+      if (diff >= 0) gains += diff;
+      else losses -= diff;
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    const firstRS = avgLoss === 0 ? Infinity : avgGain / avgLoss;
+    rsis[period] = 100 - 100 / (1 + firstRS);
+
+    for (let i = period + 1; i < prices.length; i++) {
+      const diff = prices[i] - prices[i - 1];
+      const gain = diff > 0 ? diff : 0;
+      const loss = diff < 0 ? -diff : 0;
+      avgGain = (avgGain * (period - 1) + gain) / period;
+      avgLoss = (avgLoss * (period - 1) + loss) / period;
+      const rs = avgLoss === 0 ? Infinity : avgGain / avgLoss;
+      rsis[i] = 100 - 100 / (1 + rs);
+    }
+
+    return rsis;
+  };
+
+  const calculateEMA = (prices: number[], period: number): Array<number | null> => {
+    const ema: Array<number | null> = prices.map(() => null);
+    if (prices.length < period) return ema;
+
+    const k = 2 / (period + 1);
+    let prev = prices.slice(0, period).reduce((s, p) => s + p, 0) / period;
+    ema[period - 1] = prev;
+
+    for (let i = period; i < prices.length; i++) {
+      prev = prices[i] * k + prev * (1 - k);
+      ema[i] = prev;
+    }
+
+    return ema;
+  };
+
+  const calculateMACD = (prices: number[]) => {
+    const ema12 = calculateEMA(prices, 12);
+    const ema26 = calculateEMA(prices, 26);
+    const macd: Array<number | null> = prices.map(() => null);
+    for (let i = 0; i < prices.length; i++) {
+      if (ema12[i] === null || ema26[i] === null) continue;
+      macd[i] = (ema12[i] as number) - (ema26[i] as number);
+    }
+
+    const macdVals = macd.map(v => (v === null ? 0 : v));
+    const signalRaw = calculateEMA(macdVals, 9);
+    const signal: Array<number | null> = prices.map(() => null);
+    for (let i = 0; i < prices.length; i++) {
+      if (macd[i] === null || signalRaw[i] === null) continue;
+      signal[i] = signalRaw[i];
+    }
+
+    return { macd, signal };
+  };
+
+  const pearsonCorrelation = (a: number[], b: number[]) => {
+    const n = Math.min(a.length, b.length);
+    if (n < 3) return null;
+    const meanA = a.slice(0, n).reduce((s, v) => s + v, 0) / n;
+    const meanB = b.slice(0, n).reduce((s, v) => s + v, 0) / n;
+    let num = 0;
+    let denA = 0;
+    let denB = 0;
+    for (let i = 0; i < n; i++) {
+      const da = a[i] - meanA;
+      const db = b[i] - meanB;
+      num += da * db;
+      denA += da * da;
+      denB += db * db;
+    }
+    const den = Math.sqrt(denA * denB);
+    if (!den) return null;
+    return num / den;
+  };
+
+  const buildCorrelationMatrix = useCallback(async () => {
+    try {
+      const selectedCoinData = COINS.find(c => c.id === selectedCoin);
+      const otherCoins = COINS.filter(c => c.id !== selectedCoin).slice(0, 5);
+      const correlationCoins = selectedCoinData ? [selectedCoinData, ...otherCoins] : COINS.slice(0, 6);
+
+      const histories = await Promise.all(
+        correlationCoins.map(async (coin) => {
+          const res = await fetch(`/api/charts/history?coin=${coin.id}&days=${timeRange}`);
+          const json = await res.json();
+          const prices = Array.isArray(json?.prices) ? json.prices.map((p: any) => p.price).filter((v: any) => typeof v === 'number') : [];
+          const returns = prices.slice(1).map((p: number, i: number) => {
+            const prev = prices[i];
+            return prev ? (p - prev) / prev : 0;
+          });
+          return { symbol: coin.symbol, id: coin.id, returns };
+        })
+      );
+
+      const matrix = correlationCoins.map((coin1) => {
+        const row: Record<string, unknown> = { name: coin1.symbol };
+        for (const coin2 of correlationCoins) {
+          if (coin1.id === coin2.id) {
+            row[coin2.symbol] = 1;
+            continue;
+          }
+          const a = histories.find(h => h.id === coin1.id)?.returns ?? [];
+          const b = histories.find(h => h.id === coin2.id)?.returns ?? [];
+          const corr = pearsonCorrelation(a, b);
+          row[coin2.symbol] = corr === null ? null : Number(corr.toFixed(2));
+        }
+        return row;
+      });
+
+      setCorrelationMatrix(matrix);
+    } catch (e) {
+      console.error('Error building correlation matrix:', e);
+      setCorrelationMatrix([]);
+    }
+  }, [selectedCoin, timeRange]);
+
+  useEffect(() => {
+    if (selectedChart === 'correlation') {
+      buildCorrelationMatrix();
+    } else {
+      setCorrelationMatrix(null);
+    }
+  }, [selectedChart, buildCorrelationMatrix]);
 
   // Racing bar animation
   useEffect(() => {
@@ -1013,75 +1143,74 @@ function ChartsContent() {
         );
 
       case 'momentum':
-        // Generate RSI-like data
-        const momentumData = chartData.map((d) => {
-          const rsi = 30 + Math.random() * 40 + (d.price && chartData[0].price ? ((d.price as number) / (chartData[0].price as number) - 1) * 50 : 0);
-          return {
+        {
+          const prices = chartData.map(d => d.price as number).filter(p => typeof p === 'number');
+          const rsiSeries = calculateRSISeries(prices, 14);
+          const { macd, signal } = calculateMACD(prices);
+          const momentumData = chartData.map((d, i) => ({
             ...d,
-            rsi: Math.min(100, Math.max(0, rsi)),
-            macd: (Math.random() - 0.5) * 1000,
-            signal: (Math.random() - 0.5) * 800,
-          };
-        });
+            rsi: rsiSeries[i],
+            macd: macd[i],
+            signal: signal[i],
+          }));
 
-        return (
-          <ResponsiveContainer width="100%" height={500}>
-            <ComposedChart data={momentumData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-              <YAxis
-                yAxisId="rsi"
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
-                domain={[0, 100]}
-              />
-              <YAxis
-                yAxisId="macd"
-                orientation="right"
-                stroke="#9CA3AF"
-                tick={{ fill: '#9CA3AF' }}
-              />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-                labelStyle={{ color: '#F3F4F6' }}
-              />
-              <Legend />
-              <Line
-                yAxisId="rsi"
-                type="monotone"
-                dataKey="rsi"
-                stroke="#8B5CF6"
-                dot={false}
-                name="RSI"
-                strokeWidth={2}
-              />
-              <ReferenceLine yAxisId="rsi" y={70} stroke="#EF4444" strokeDasharray="5 5" label="Overbought" />
-              <ReferenceLine yAxisId="rsi" y={30} stroke="#10B981" strokeDasharray="5 5" label="Oversold" />
-              <Bar
-                yAxisId="macd"
-                dataKey="macd"
-                fill="#3B82F6"
-                opacity={0.6}
-                name="MACD"
-              />
-              <Line
-                yAxisId="macd"
-                type="monotone"
-                dataKey="signal"
-                stroke="#F59E0B"
-                dot={false}
-                name="Signal"
-                strokeWidth={2}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        );
+          return (
+            <ResponsiveContainer width="100%" height={500}>
+              <ComposedChart data={momentumData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis
+                  yAxisId="rsi"
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF' }}
+                  domain={[0, 100]}
+                />
+                <YAxis
+                  yAxisId="macd"
+                  orientation="right"
+                  stroke="#9CA3AF"
+                  tick={{ fill: '#9CA3AF' }}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  labelStyle={{ color: '#F3F4F6' }}
+                />
+                <Legend />
+                <Line
+                  yAxisId="rsi"
+                  type="monotone"
+                  dataKey="rsi"
+                  stroke="#8B5CF6"
+                  dot={false}
+                  name="RSI"
+                  strokeWidth={2}
+                />
+                <ReferenceLine yAxisId="rsi" y={70} stroke="#EF4444" strokeDasharray="5 5" label="Overbought" />
+                <ReferenceLine yAxisId="rsi" y={30} stroke="#10B981" strokeDasharray="5 5" label="Oversold" />
+                <Bar
+                  yAxisId="macd"
+                  dataKey="macd"
+                  fill="#3B82F6"
+                  opacity={0.6}
+                  name="MACD"
+                />
+                <Line
+                  yAxisId="macd"
+                  type="monotone"
+                  dataKey="signal"
+                  stroke="#F59E0B"
+                  dot={false}
+                  name="Signal"
+                  strokeWidth={2}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          );
+        }
 
       case 'correlation':
-        interface CorrelationRow {
-          name: string;
-          [key: string]: string | number;
-        }
+        type CorrelationCell = number | null;
+        type CorrelationRow = { name: string } & Record<string, CorrelationCell>;
         // Build dynamic coin list: selected coin + top coins (up to 6 total)
         const selectedCoinData = COINS.find(c => c.id === selectedCoin);
         const otherCoins = COINS.filter(c => c.id !== selectedCoin).slice(0, 5);
@@ -1089,15 +1218,15 @@ function ChartsContent() {
           ? [selectedCoinData, ...otherCoins]
           : COINS.slice(0, 6);
 
-        const correlationMatrix: CorrelationRow[] = correlationCoins.map(coin1 => ({
-          name: coin1.symbol,
-          ...Object.fromEntries(
-            correlationCoins.map(coin2 => [
-              coin2.symbol,
-              coin1.id === coin2.id ? 1 : (Math.random() * 0.6 + 0.2).toFixed(2)
-            ])
-          )
-        }));
+        const matrix = correlationMatrix as CorrelationRow[] | null;
+
+        if (matrix === null) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">Loading correlation data...</div>;
+        }
+
+        if (matrix.length === 0) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">No correlation data available</div>;
+        }
 
         // Download correlation as PNG
         const downloadCorrelationPNG = async () => {
@@ -1144,7 +1273,7 @@ function ChartsContent() {
           });
 
           // Add data rows
-          correlationMatrix.forEach((row, i) => {
+          matrix.forEach((row, i) => {
             const dataRow = sheet.getRow(i + 4);
             const isSelectedRow = correlationCoins[i]?.id === selectedCoin;
 
@@ -1156,17 +1285,20 @@ function ChartsContent() {
 
             // Correlation values
             correlationCoins.forEach((coin, j) => {
-              const value = parseFloat(row[coin.symbol] as string);
+              const value = row[coin.symbol];
               const cell = dataRow.getCell(j + 2);
-              cell.value = value;
+              cell.value = value === null ? null : value;
               cell.numFmt = '0.00';
               cell.alignment = { horizontal: 'center' };
 
               // Color based on value
-              let bgColor = 'FFDC2626'; // Red (low)
-              if (value === 1) bgColor = 'FF2563EB'; // Blue (self)
-              else if (value > 0.7) bgColor = 'FF16A34A'; // Green (high)
-              else if (value > 0.4) bgColor = 'FFCA8A04'; // Yellow (medium)
+              let bgColor = 'FF374151'; // Gray (unknown)
+              if (value !== null) {
+                bgColor = 'FFDC2626'; // Red (low)
+                if (value === 1) bgColor = 'FF2563EB'; // Blue (self)
+                else if (value > 0.7) bgColor = 'FF16A34A'; // Green (high)
+                else if (value > 0.4) bgColor = 'FFCA8A04'; // Yellow (medium)
+              }
 
               cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
               cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
@@ -1180,7 +1312,7 @@ function ChartsContent() {
           });
 
           // Add legend
-          const legendRow = sheet.getRow(correlationMatrix.length + 6);
+          const legendRow = sheet.getRow(matrix.length + 6);
           legendRow.getCell(1).value = 'Legend:';
           legendRow.getCell(1).font = { bold: true };
 
@@ -1191,7 +1323,7 @@ function ChartsContent() {
           ];
 
           legendItems.forEach((item, idx) => {
-            const cell = sheet.getCell(correlationMatrix.length + 7 + idx, 1);
+            const cell = sheet.getCell(matrix.length + 7 + idx, 1);
             cell.value = item.label;
             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.color } };
             cell.font = { color: { argb: 'FFFFFFFF' } };
@@ -1252,20 +1384,21 @@ function ChartsContent() {
                     </tr>
                   </thead>
                   <tbody>
-                    {correlationMatrix.map((row, i) => (
+                    {matrix.map((row, i) => (
                       <tr key={i} className={correlationCoins[i]?.id === selectedCoin ? 'bg-blue-900/20' : ''}>
                         <td className={`p-2 font-medium ${correlationCoins[i]?.id === selectedCoin ? 'text-blue-400' : 'text-gray-400'}`}>
                           {row.name}
                         </td>
                         {correlationCoins.map((coin, j) => {
-                          const value = parseFloat(row[coin.symbol] as string);
+                          const value = row[coin.symbol];
                           const isSelected = coin.id === selectedCoin || correlationCoins[i]?.id === selectedCoin;
-                          const color = value === 1 ? 'bg-blue-600' :
+                          const color = value === null ? 'bg-gray-700' :
+                                       value === 1 ? 'bg-blue-600' :
                                        value > 0.7 ? 'bg-green-600' :
                                        value > 0.4 ? 'bg-yellow-600' : 'bg-red-600';
                           return (
                             <td key={j} className={`p-2 text-center ${color} text-white rounded m-1 ${isSelected ? 'ring-2 ring-blue-400' : ''}`}>
-                              {value.toFixed(2)}
+                              {value === null ? '—' : value.toFixed(2)}
                             </td>
                           );
                         })}
@@ -1332,45 +1465,84 @@ function ChartsContent() {
         );
 
       case 'market_dominance':
-        const dominanceData = COINS.slice(0, 8).map((coin, i) => ({
-          name: coin.symbol,
-          value: coin.id === 'bitcoin' ? 52 : coin.id === 'ethereum' ? 18 : Math.random() * 8 + 1,
-          color: CHART_COLORS[i],
-        }));
+        {
+          const marketCapPct = (globalStats as any)?.market_cap_percentage as Record<string, number> | undefined;
+          if (!marketCapPct) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No market dominance data available</div>;
+          }
 
-        return (
-          <ResponsiveContainer width="100%" height={500}>
-            <PieChart>
-              <Pie
-                data={dominanceData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
-                outerRadius={180}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {dominanceData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-                formatter={(value) => value !== undefined ? [`${(value as number).toFixed(2)}%`, 'Market Share'] : ['', '']}
-              />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        );
+          const idToGlobalKey: Record<string, string> = {
+            bitcoin: 'btc',
+            ethereum: 'eth',
+            tether: 'usdt',
+            binancecoin: 'bnb',
+            solana: 'sol',
+            'usd-coin': 'usdc',
+            ripple: 'xrp',
+            dogecoin: 'doge',
+            cardano: 'ada',
+            tron: 'trx',
+          };
+
+          const dominanceData = COINS.slice(0, 8)
+            .map((coin, i) => {
+              const key = idToGlobalKey[coin.id];
+              const value = key ? marketCapPct[key] : undefined;
+              return {
+                name: coin.symbol,
+                value: typeof value === 'number' ? value : null,
+                color: CHART_COLORS[i],
+              };
+            })
+            .filter((d) => typeof d.value === 'number');
+
+          if (dominanceData.length === 0) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No market dominance data available</div>;
+          }
+
+          return (
+            <ResponsiveContainer width="100%" height={500}>
+              <PieChart>
+                <Pie
+                  data={dominanceData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, value }) => `${name}: ${(value as number).toFixed(1)}%`}
+                  outerRadius={180}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {dominanceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  formatter={(value) => value !== undefined ? [`${(value as number).toFixed(2)}%`, 'Market Share'] : ['', '']}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          );
+        }
 
       case 'prediction_accuracy':
         if (!predictionData) {
           return <div className="flex items-center justify-center h-96 text-gray-400">Loading prediction data...</div>;
         }
 
-        const accuracyData = (predictionData as { accuracy?: { overall: number; bullish: number; bearish: number } }).accuracy || { overall: 75, bullish: 72, bearish: 78 };
-        const historyData = (predictionData as { history?: { date: string; correct: boolean }[] }).history || [];
+        const accuracyData = (predictionData as any)?.accuracy as { overall: number; bullish: number; bearish: number } | null | undefined;
+        const historyData = ((predictionData as any)?.history as { date: string; correct: boolean | null }[] | undefined) || [];
+        const accuracyConfidence = (predictionData as any)?.confidence as number | undefined;
+
+        if (!accuracyData && historyData.length === 0) {
+          return (
+            <div className="flex items-center justify-center h-96 text-gray-400">
+              No prediction accuracy data available
+            </div>
+          );
+        }
 
         return (
           <div className="space-y-6">
@@ -1380,11 +1552,13 @@ function ChartsContent() {
                 <h4 className="text-lg font-medium mb-4">Prediction Accuracy by Direction</h4>
                 <ResponsiveContainer width="100%" height={300}>
                   <RadarChart data={[
-                    { metric: 'Overall', value: accuracyData.overall },
-                    { metric: 'Bullish', value: accuracyData.bullish },
-                    { metric: 'Bearish', value: accuracyData.bearish },
-                    { metric: 'Confidence', value: (predictionData as { confidence?: number }).confidence || 70 },
-                  ]}>
+                    ...(accuracyData ? [
+                      { metric: 'Overall', value: accuracyData.overall },
+                      { metric: 'Bullish', value: accuracyData.bullish },
+                      { metric: 'Bearish', value: accuracyData.bearish },
+                    ] : []),
+                    ...(typeof accuracyConfidence === 'number' ? [{ metric: 'Confidence', value: accuracyConfidence }] : []),
+                  ] as any}>
                     <PolarGrid stroke="#374151" />
                     <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF' }} />
                     <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#9CA3AF' }} />
@@ -1424,19 +1598,19 @@ function ChartsContent() {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-blue-400">{accuracyData.overall}%</div>
+                <div className="text-3xl font-bold text-blue-400">{accuracyData ? `${accuracyData.overall}%` : '—'}</div>
                 <div className="text-gray-400 text-sm">Overall Accuracy</div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-green-400">{accuracyData.bullish}%</div>
+                <div className="text-3xl font-bold text-green-400">{accuracyData ? `${accuracyData.bullish}%` : '—'}</div>
                 <div className="text-gray-400 text-sm">Bullish Accuracy</div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-red-400">{accuracyData.bearish}%</div>
+                <div className="text-3xl font-bold text-red-400">{accuracyData ? `${accuracyData.bearish}%` : '—'}</div>
                 <div className="text-gray-400 text-sm">Bearish Accuracy</div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-purple-400">{(predictionData as { confidence?: number }).confidence || 70}%</div>
+                <div className="text-3xl font-bold text-purple-400">{typeof accuracyConfidence === 'number' ? `${accuracyConfidence}%` : '—'}</div>
                 <div className="text-gray-400 text-sm">Avg Confidence</div>
               </div>
             </div>
@@ -1448,33 +1622,15 @@ function ChartsContent() {
           return <div className="flex items-center justify-center h-96 text-gray-400">Loading prediction data...</div>;
         }
 
-        const targets = (predictionData as { priceTarget?: { current: number; low: number; mid: number; high: number } }).priceTarget || { current: 45000, low: 40000, mid: 48000, high: 55000 };
-        const prediction = (predictionData as { prediction?: string }).prediction || 'BULLISH';
+        const targets = (predictionData as any)?.priceTarget as { current: number; low: number; mid: number; high: number } | null | undefined;
+        const prediction = ((predictionData as any)?.prediction as string | undefined) || 'NEUTRAL';
+        const predictionConfidence = (predictionData as any)?.confidence as number | undefined;
 
-        // Generate prediction visualization data
-        interface PredictionChartPoint {
-          date: string;
-          price?: number;
-          predicted: number;
-          [key: string]: unknown;
-        }
-        const predictionChartData: PredictionChartPoint[] = chartData.slice(-30).map((d) => ({
+        // Only show real historical prices. Do not fabricate predicted series.
+        const predictionChartData = chartData.slice(-30).map((d) => ({
           date: d.date as string,
           price: d.price as number,
-          predicted: (d.price as number) * (1 + (Math.random() - 0.5) * 0.1),
         }));
-
-        // Add future predictions
-        const lastPrice = chartData.length > 0 ? (chartData[chartData.length - 1].price as number) : targets.current;
-        for (let i = 1; i <= 7; i++) {
-          const date = new Date();
-          date.setDate(date.getDate() + i);
-          predictionChartData.push({
-            date: date.toLocaleDateString(),
-            price: undefined,
-            predicted: lastPrice * (1 + (prediction === 'BULLISH' ? 0.01 : -0.01) * i),
-          });
-        }
 
         return (
           <div className="space-y-6">
@@ -1489,30 +1645,36 @@ function ChartsContent() {
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-400">Confidence</div>
-                  <div className="text-2xl font-bold text-white">{(predictionData as { confidence?: number }).confidence || 70}%</div>
+                  <div className="text-2xl font-bold text-white">{typeof predictionConfidence === 'number' ? `${predictionConfidence}%` : '—'}</div>
                 </div>
               </div>
             </div>
 
             {/* Price Targets */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Current Price</div>
-                <div className="text-xl font-bold text-white">{formatValue(targets.current)}</div>
+            {targets ? (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Current Price</div>
+                  <div className="text-xl font-bold text-white">{formatValue(targets.current)}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-red-500">
+                  <div className="text-gray-400 text-sm">Bear Target</div>
+                  <div className="text-xl font-bold text-red-400">{formatValue(targets.low)}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-yellow-500">
+                  <div className="text-gray-400 text-sm">Base Target</div>
+                  <div className="text-xl font-bold text-yellow-400">{formatValue(targets.mid)}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-green-500">
+                  <div className="text-gray-400 text-sm">Bull Target</div>
+                  <div className="text-xl font-bold text-green-400">{formatValue(targets.high)}</div>
+                </div>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-red-500">
-                <div className="text-gray-400 text-sm">Bear Target</div>
-                <div className="text-xl font-bold text-red-400">{formatValue(targets.low)}</div>
+            ) : (
+              <div className="flex items-center justify-center rounded-xl bg-gray-800/50 p-6 text-gray-400">
+                No price targets available
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-yellow-500">
-                <div className="text-gray-400 text-sm">Base Target</div>
-                <div className="text-xl font-bold text-yellow-400">{formatValue(targets.mid)}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-green-500">
-                <div className="text-gray-400 text-sm">Bull Target</div>
-                <div className="text-xl font-bold text-green-400">{formatValue(targets.high)}</div>
-              </div>
-            </div>
+            )}
 
             {/* Prediction Chart */}
             <ResponsiveContainer width="100%" height={400}>
@@ -1539,17 +1701,12 @@ function ChartsContent() {
                   name="Historical Price"
                   strokeWidth={2}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="predicted"
-                  stroke="#10B981"
-                  strokeDasharray="5 5"
-                  dot={false}
-                  name="Predicted Price"
-                  strokeWidth={2}
-                />
-                <ReferenceLine y={targets.high} stroke="#10B981" strokeDasharray="3 3" label="Bull Target" />
-                <ReferenceLine y={targets.low} stroke="#EF4444" strokeDasharray="3 3" label="Bear Target" />
+                {targets ? (
+                  <>
+                    <ReferenceLine y={targets.high} stroke="#10B981" strokeDasharray="3 3" label="Bull Target" />
+                    <ReferenceLine y={targets.low} stroke="#EF4444" strokeDasharray="3 3" label="Bear Target" />
+                  </>
+                ) : null}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -1598,281 +1755,251 @@ function ChartsContent() {
         );
 
       case 'volume_profile':
-        // Calculate price range for volume profile
-        const vpPriceData = chartData.map(d => d.price as number).filter(p => p > 0);
-        const vpHigh = Math.max(...vpPriceData);
-        const vpLow = Math.min(...vpPriceData);
-        const vpDiff = vpHigh - vpLow;
+        {
+          const candles = candlestickData as Array<{ close: number; volume: number }>;
+          if (!Array.isArray(candles) || candles.length < 2) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+          }
 
-        // Generate volume profile data (volume at price levels)
-        const volumeProfileData = Array.from({ length: 20 }, (_, i) => {
-          const priceLevel = vpLow + (vpDiff / 20) * i;
-          return {
-            priceLevel: formatValue(priceLevel),
-            price: priceLevel,
-            volume: Math.random() * 50000000000 + 10000000000,
-            buyVolume: Math.random() * 25000000000,
-            sellVolume: Math.random() * 25000000000,
-          };
-        });
+          const prices = candles.map(c => c.close).filter((p) => typeof p === 'number' && p > 0);
+          const volumes = candles.map(c => c.volume).filter((v) => typeof v === 'number' && v >= 0);
+          if (prices.length < 2 || volumes.length < 2) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+          }
 
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ResponsiveContainer width="100%" height={500}>
-              <BarChart data={volumeProfileData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis type="number" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v, 'volume')} />
-                <YAxis type="category" dataKey="priceLevel" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} width={80} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} formatter={(v) => formatValue(v as number, 'volume')} />
-                <Legend />
-                <Bar dataKey="buyVolume" fill="#10B981" name="Buy Volume" stackId="a" />
-                <Bar dataKey="sellVolume" fill="#EF4444" name="Sell Volume" stackId="a" />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <h4 className="text-lg font-medium mb-4">Volume Profile Analysis</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-400">Point of Control (POC)</span>
-                  <span className="font-bold text-yellow-400">{formatValue(volumeProfileData[Math.floor(volumeProfileData.length / 2)].price)}</span>
+          const vpHigh = Math.max(...prices);
+          const vpLow = Math.min(...prices);
+          const bins = 20;
+          const diff = vpHigh - vpLow;
+          if (!diff) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+          }
+
+          const bucketVolumes = Array.from({ length: bins }, () => 0);
+          for (let i = 0; i < candles.length; i++) {
+            const price = candles[i]?.close;
+            const volume = candles[i]?.volume;
+            if (typeof price !== 'number' || typeof volume !== 'number') continue;
+            const idx = Math.max(0, Math.min(bins - 1, Math.floor(((price - vpLow) / diff) * bins)));
+            bucketVolumes[idx] += volume;
+          }
+
+          const volumeProfileData = Array.from({ length: bins }, (_, i) => {
+            const priceLevel = vpLow + (diff / bins) * i;
+            return {
+              priceLevel: formatValue(priceLevel),
+              price: priceLevel,
+              volume: bucketVolumes[i] || 0,
+            };
+          });
+
+          const poc = volumeProfileData.reduce((best, cur) => (cur.volume > best.volume ? cur : best), volumeProfileData[0]);
+
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <ResponsiveContainer width="100%" height={500}>
+                <BarChart data={volumeProfileData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v, 'volume')} />
+                  <YAxis type="category" dataKey="priceLevel" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} width={80} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} formatter={(v) => formatValue(v as number, 'volume')} />
+                  <Bar dataKey="volume" fill="#3B82F6" name="Volume" />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="bg-gray-800/50 rounded-xl p-4">
+                <h4 className="text-lg font-medium mb-4">Volume Profile Analysis</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                    <span className="text-gray-400">Point of Control (POC)</span>
+                    <span className="font-bold text-yellow-400">{formatValue(poc.price)}</span>
+                  </div>
+                  <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                    <span className="text-gray-400">Range High</span>
+                    <span className="font-bold text-green-400">{formatValue(vpHigh)}</span>
+                  </div>
+                  <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
+                    <span className="text-gray-400">Range Low</span>
+                    <span className="font-bold text-red-400">{formatValue(vpLow)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-400">Value Area High</span>
-                  <span className="font-bold text-green-400">{formatValue(vpHigh * 0.95)}</span>
-                </div>
-                <div className="flex justify-between p-3 bg-gray-700/50 rounded-lg">
-                  <span className="text-gray-400">Value Area Low</span>
-                  <span className="font-bold text-red-400">{formatValue(vpLow * 1.05)}</span>
-                </div>
-                <p className="text-gray-400 text-sm mt-4">Volume Profile shows trading activity at each price level. Higher volume areas indicate strong support/resistance zones.</p>
               </div>
             </div>
-          </div>
-        );
+          );
+        }
 
       case 'funding_rate':
-        // Generate funding rate history data
-        const fundingData = chartData.map((d) => ({
-          date: d.date,
-          fundingRate: (Math.random() - 0.5) * 0.1,
-          price: d.price,
-          cumulative: 0,
-        }));
-        let cumulative = 0;
-        fundingData.forEach((d) => {
-          cumulative += d.fundingRate;
-          d.cumulative = cumulative;
-        });
+        {
+          const btc = (derivativesData as any)?.btc as { fundingRate: number | null; longShortRatio: number | null; volume24h: number | null } | undefined;
+          const rate = btc?.fundingRate;
+          const ls = btc?.longShortRatio;
+          const volume24h = btc?.volume24h;
+          const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
+          const interpretation = (derivativesData as any)?.interpretation as string | undefined;
 
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Current Rate</div>
-                <div className={`text-xl font-bold ${fundingData[fundingData.length - 1]?.fundingRate > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(fundingData[fundingData.length - 1]?.fundingRate * 100).toFixed(4)}%
+          if (typeof rate !== 'number') {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No funding rate data available</div>;
+          }
+
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Current Rate</div>
+                  <div className={`text-xl font-bold ${rate > 0 ? 'text-green-400' : 'text-red-400'}`}>{rate.toFixed(4)}%</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Long/Short Ratio</div>
+                  <div className="text-xl font-bold text-blue-400">{typeof ls === 'number' ? ls.toFixed(3) : '—'}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Futures Volume (24h)</div>
+                  <div className="text-xl font-bold text-purple-400">{typeof volume24h === 'number' ? formatValue(volume24h, 'volume') : '—'}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Interpretation</div>
+                  <div className="text-lg font-bold text-yellow-400">{interpretation || '—'}</div>
+                  <div className="text-xs text-gray-500 mt-1">{lastUpdated ? new Date(lastUpdated).toLocaleString() : ''}</div>
                 </div>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Avg Rate ({timeRange}D)</div>
-                <div className="text-xl font-bold text-blue-400">
-                  {(fundingData.reduce((sum, d) => sum + d.fundingRate, 0) / fundingData.length * 100).toFixed(4)}%
-                </div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Sentiment</div>
-                <div className={`text-xl font-bold ${cumulative > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {cumulative > 0 ? '📈 Long Bias' : '📉 Short Bias'}
-                </div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Cumulative</div>
-                <div className={`text-xl font-bold ${cumulative > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(cumulative * 100).toFixed(2)}%
-                </div>
-              </div>
+              <ResponsiveContainer width="100%" height={400}>
+                <ComposedChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                  <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={fundingData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="funding" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v * 100).toFixed(3)}%`} />
-                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Legend />
-                <Bar yAxisId="funding" dataKey="fundingRate" name="Funding Rate">
-                  {fundingData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fundingRate >= 0 ? '#10B981' : '#EF4444'} />
-                  ))}
-                </Bar>
-                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-                <ReferenceLine yAxisId="funding" y={0} stroke="#6B7280" strokeDasharray="3 3" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        );
+          );
+        }
 
       case 'open_interest':
-        // Generate open interest data
-        const oiData = chartData.map((d, i) => ({
-          date: d.date,
-          price: d.price,
-          openInterest: 15000000000 + Math.sin(i * 0.1) * 5000000000 + Math.random() * 2000000000,
-          oiChange: (Math.random() - 0.5) * 10,
-        }));
+        {
+          const btc = (derivativesData as any)?.btc as { openInterest: number | null; openInterestChange24h: number | null; volume24h: number | null } | undefined;
+          const oi = btc?.openInterest;
+          const oiChange = btc?.openInterestChange24h;
+          const volume24h = btc?.volume24h;
+          const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
 
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Current OI</div>
-                <div className="text-xl font-bold text-blue-400">{formatValue(oiData[oiData.length - 1]?.openInterest || 0, 'volume')}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">24h Change</div>
-                <div className={`text-xl font-bold ${oiData[oiData.length - 1]?.oiChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {oiData[oiData.length - 1]?.oiChange.toFixed(2)}%
+          if (typeof oi !== 'number') {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No open interest data available</div>;
+          }
+
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Current OI</div>
+                  <div className="text-xl font-bold text-blue-400">{formatValue(oi, 'volume')}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">24h Change</div>
+                  <div className={`text-xl font-bold ${typeof oiChange === 'number' && oiChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {typeof oiChange === 'number' ? `${oiChange.toFixed(2)}%` : '—'}
+                  </div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Futures Volume (24h)</div>
+                  <div className="text-xl font-bold text-purple-400">{typeof volume24h === 'number' ? formatValue(volume24h, 'volume') : '—'}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="text-gray-400 text-sm">Last Updated</div>
+                  <div className="text-lg font-bold text-yellow-400">{lastUpdated ? new Date(lastUpdated).toLocaleString() : '—'}</div>
                 </div>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">OI/MCap Ratio</div>
-                <div className="text-xl font-bold text-purple-400">2.3%</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Interpretation</div>
-                <div className="text-lg font-bold text-yellow-400">🔥 High Activity</div>
-              </div>
+              <ResponsiveContainer width="100%" height={400}>
+                <ComposedChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                  <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={oiData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="oi" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v, 'volume')} />
-                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Legend />
-                <Area yAxisId="oi" type="monotone" dataKey="openInterest" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} name="Open Interest" />
-                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        );
+          );
+        }
 
       case 'liquidation_heatmap':
-        // Calculate price range for liquidation heatmap
-        const liqPriceData = chartData.map(d => d.price as number).filter(p => p > 0);
-        const liqHigh = Math.max(...liqPriceData);
-        const liqLow = Math.min(...liqPriceData);
-        const liqDiff = liqHigh - liqLow;
-
-        // Generate liquidation heatmap data
-        const liqLevels = Array.from({ length: 10 }, (_, i) => {
-          const priceLevel = liqLow + (liqDiff / 10) * i;
-          return {
-            price: priceLevel,
-            priceLabel: formatValue(priceLevel),
-            longLiq: Math.random() * 100000000,
-            shortLiq: Math.random() * 100000000,
-            intensity: Math.random(),
-          };
-        });
-
         return (
-          <div className="space-y-4">
-            <div className="bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-4">
-              <p className="text-yellow-300 text-sm">⚠️ Liquidation levels are estimates based on exchange data. Actual liquidations may vary.</p>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h4 className="text-lg font-medium mb-4 text-red-400">Long Liquidations (Price Drops)</h4>
-                <div className="space-y-2">
-                  {liqLevels.slice().reverse().map((level, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
-                      <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
-                        <WidthBar
-                          percentage={(level.longLiq / 100000000) * 100}
-                          className="h-full bg-gradient-to-r from-red-600 to-red-400 rounded-full flex items-center justify-end pr-2"
-                        >
-                          <span className="text-xs text-white">{formatValue(level.longLiq, 'volume')}</span>
-                        </WidthBar>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h4 className="text-lg font-medium mb-4 text-green-400">Short Liquidations (Price Rises)</h4>
-                <div className="space-y-2">
-                  {liqLevels.map((level, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-400 w-24">{level.priceLabel}</span>
-                      <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
-                        <WidthBar
-                          percentage={(level.shortLiq / 100000000) * 100}
-                          className="h-full bg-gradient-to-r from-green-600 to-green-400 rounded-full flex items-center justify-end pr-2"
-                        >
-                          <span className="text-xs text-white">{formatValue(level.shortLiq, 'volume')}</span>
-                        </WidthBar>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center justify-center h-96 text-gray-400">
+            Liquidation heatmap is not available from free public APIs
           </div>
         );
 
       case 'whale_flow':
-        // Generate whale flow data
-        const whaleData = chartData.map((d) => ({
-          date: d.date,
-          inflow: Math.random() * 50000,
-          outflow: -Math.random() * 50000,
-          netFlow: (Math.random() - 0.5) * 30000,
-          price: d.price,
-        }));
+        if (whaleFlows === null) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">Loading whale flow data...</div>;
+        }
+
+        if (!Array.isArray(whaleFlows) || whaleFlows.length === 0) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">No whale flow data available</div>;
+        }
+
+        const flowRows = (whaleFlows as any[])
+          .map((r) => ({
+            exchange: typeof r?.exchange === 'string' ? r.exchange : 'Unknown',
+            inflowUsd: typeof r?.inflowUsd24h === 'number' ? r.inflowUsd24h : null,
+            outflowUsd: typeof r?.outflowUsd24h === 'number' ? r.outflowUsd24h : null,
+            netFlowUsd: typeof r?.netFlowUsd24h === 'number' ? r.netFlowUsd24h : null,
+          }))
+          .filter((r) => typeof r.netFlowUsd === 'number');
+
+        const totals = flowRows.reduce(
+          (acc, r) => {
+            acc.inflow += typeof r.inflowUsd === 'number' ? r.inflowUsd : 0;
+            acc.outflow += typeof r.outflowUsd === 'number' ? r.outflowUsd : 0;
+            acc.net += typeof r.netFlowUsd === 'number' ? r.netFlowUsd : 0;
+            return acc;
+          },
+          { inflow: 0, outflow: 0, net: 0 }
+        );
 
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-gray-800/50 rounded-xl p-4">
                 <div className="text-gray-400 text-sm">24h Inflow</div>
-                <div className="text-xl font-bold text-red-400">+{(whaleData[whaleData.length - 1]?.inflow || 0).toFixed(0)} BTC</div>
+                <div className="text-xl font-bold text-red-400">+{formatValue(totals.inflow, 'volume')}</div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4">
                 <div className="text-gray-400 text-sm">24h Outflow</div>
-                <div className="text-xl font-bold text-green-400">{(whaleData[whaleData.length - 1]?.outflow || 0).toFixed(0)} BTC</div>
+                <div className="text-xl font-bold text-green-400">{formatValue(totals.outflow, 'volume')}</div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4">
                 <div className="text-gray-400 text-sm">Net Flow</div>
-                <div className={`text-xl font-bold ${(whaleData[whaleData.length - 1]?.netFlow || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                  {(whaleData[whaleData.length - 1]?.netFlow || 0).toFixed(0)} BTC
+                <div className={`text-xl font-bold ${totals.net > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {formatValue(Math.abs(totals.net), 'volume')}
                 </div>
               </div>
               <div className="bg-gray-800/50 rounded-xl p-4">
                 <div className="text-gray-400 text-sm">Signal</div>
-                <div className={`text-lg font-bold ${(whaleData[whaleData.length - 1]?.netFlow || 0) < 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(whaleData[whaleData.length - 1]?.netFlow || 0) < 0 ? '🐋 Accumulating' : '⚠️ Distribution'}
+                <div className={`text-lg font-bold ${totals.net < 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {totals.net < 0 ? '🐋 Net Outflow' : '⚠️ Net Inflow'}
                 </div>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={whaleData}>
+              <BarChart data={flowRows}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="flow" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
+                <XAxis dataKey="exchange" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
+                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v as number, 'volume')} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  formatter={(v) => formatValue(v as number, 'volume')}
+                />
                 <Legend />
-                <Bar yAxisId="flow" dataKey="inflow" fill="#EF4444" name="Exchange Inflow" stackId="flow" />
-                <Bar yAxisId="flow" dataKey="outflow" fill="#10B981" name="Exchange Outflow" stackId="flow" />
-                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-                <ReferenceLine yAxisId="flow" y={0} stroke="#6B7280" strokeDasharray="3 3" />
-              </ComposedChart>
+                <Bar dataKey="inflowUsd" fill="#EF4444" name="Inflow (USD)" stackId="flow" />
+                <Bar dataKey="outflowUsd" fill="#10B981" name="Outflow (USD)" stackId="flow" />
+                <Bar dataKey="netFlowUsd" fill="#3B82F6" name="Net (USD)" />
+                <ReferenceLine y={0} stroke="#6B7280" strokeDasharray="3 3" />
+              </BarChart>
             </ResponsiveContainer>
             <div className="bg-gray-800/50 rounded-xl p-4">
-              <p className="text-gray-400 text-sm">🐋 <strong>Whale Flow</strong> tracks large transactions to/from exchanges. Outflows typically indicate accumulation (bullish), while inflows suggest potential selling pressure (bearish).</p>
+              <p className="text-gray-400 text-sm">🐋 <strong>Whale Flow</strong> is derived from detected large transfers involving exchanges (not total exchange flow).</p>
             </div>
           </div>
         );
@@ -1889,67 +2016,54 @@ function ChartsContent() {
         );
 
       case 'active_addresses':
-        // Generate active addresses data
-        const addressData = chartData.map((d, i) => ({
-          date: d.date,
-          activeAddresses: 500000 + Math.sin(i * 0.1) * 100000 + Math.random() * 50000,
-          newAddresses: 50000 + Math.random() * 20000,
-          price: d.price,
-        }));
-
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Active Today</div>
-                <div className="text-xl font-bold text-blue-400">{Math.floor(addressData[addressData.length - 1]?.activeAddresses || 0).toLocaleString()}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">New Addresses</div>
-                <div className="text-xl font-bold text-green-400">{Math.floor(addressData[addressData.length - 1]?.newAddresses || 0).toLocaleString()}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">7D Avg</div>
-                <div className="text-xl font-bold text-purple-400">{Math.floor(addressData.slice(-7).reduce((sum, d) => sum + d.activeAddresses, 0) / 7).toLocaleString()}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Network Health</div>
-                <div className="text-lg font-bold text-green-400">🟢 Strong</div>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={addressData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="addresses" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Legend />
-                <Area yAxisId="addresses" type="monotone" dataKey="activeAddresses" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.3} name="Active Addresses" />
-                <Bar yAxisId="addresses" dataKey="newAddresses" fill="#10B981" opacity={0.7} name="New Addresses" />
-                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <div className="flex items-center justify-center h-96 text-gray-400">
+            Active address history is not available from free public APIs
           </div>
         );
 
       case 'fear_greed_history':
-        // Generate fear & greed history
-        const fgData = chartData.map((d, i) => ({
-          date: d.date,
-          index: Math.floor(30 + Math.sin(i * 0.15) * 30 + Math.random() * 20),
-          price: d.price,
-        }));
+        if (fearGreedHistory === null) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">Loading fear & greed data...</div>;
+        }
 
-        const currentFG = fgData[fgData.length - 1]?.index || 50;
-        const fgLabel = currentFG <= 25 ? 'Extreme Fear' : currentFG <= 45 ? 'Fear' : currentFG <= 55 ? 'Neutral' : currentFG <= 75 ? 'Greed' : 'Extreme Greed';
+        if (!Array.isArray(fearGreedHistory) || fearGreedHistory.length === 0) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">No fear & greed data available</div>;
+        }
+
+        const priceByDate = new Map<string, number>();
+        chartData.forEach((d: any) => {
+          if (typeof d?.date === 'string' && typeof d?.price === 'number') priceByDate.set(d.date, d.price);
+        });
+
+        const fgData = (fearGreedHistory as any[]).map((r) => {
+          const d = typeof r?.timestamp === 'string' ? new Date(r.timestamp) : null;
+          const date = d ? d.toLocaleDateString() : '';
+          const index = typeof r?.value === 'number' ? r.value : null;
+          return {
+            date,
+            index,
+            price: priceByDate.get(date),
+            classification: typeof r?.classification === 'string' ? r.classification : null,
+          };
+        }).filter((r) => r.date && typeof r.index === 'number');
+
+        const current = fgData[fgData.length - 1];
+        const currentFG = typeof current?.index === 'number' ? current.index : null;
+        const fgLabel = current?.classification || (currentFG === null ? 'Unknown' : (
+          currentFG <= 25 ? 'Extreme Fear' : currentFG <= 45 ? 'Fear' : currentFG <= 55 ? 'Neutral' : currentFG <= 75 ? 'Greed' : 'Extreme Greed'
+        ));
 
         return (
           <div className="space-y-4">
             <div className="bg-gray-800/50 rounded-xl p-6 text-center">
               <div className="text-gray-400 text-sm mb-2">Current Fear & Greed Index</div>
-              <FGColoredText value={currentFG} className="text-6xl font-bold">{currentFG}</FGColoredText>
-              <FGColoredText value={currentFG} className="text-2xl font-medium mt-2">{fgLabel}</FGColoredText>
+              {currentFG === null ? (
+                <div className="text-6xl font-bold text-gray-400">—</div>
+              ) : (
+                <FGColoredText value={currentFG} className="text-6xl font-bold">{currentFG}</FGColoredText>
+              )}
+              <div className="text-2xl font-medium mt-2 text-gray-200">{fgLabel}</div>
               <div className="flex justify-between mt-4 text-xs text-gray-500">
                 <span>😱 Extreme Fear</span>
                 <span>😰 Fear</span>
@@ -1959,7 +2073,7 @@ function ChartsContent() {
               </div>
               <div className="h-3 rounded-full mt-2 bg-gradient-to-r from-red-500 via-yellow-500 via-gray-500 via-green-500 to-emerald-500">
                 <div className="relative h-full">
-                  <FGMarker position={currentFG} />
+                  {typeof currentFG === 'number' ? <FGMarker position={currentFG} /> : null}
                 </div>
               </div>
             </div>
@@ -1981,97 +2095,74 @@ function ChartsContent() {
         );
 
       case 'social_volume':
-        // Generate social volume data
-        const socialData = chartData.map((d, i) => ({
-          date: d.date,
-          twitterMentions: Math.floor(50000 + Math.sin(i * 0.2) * 20000 + Math.random() * 10000),
-          redditPosts: Math.floor(5000 + Math.random() * 3000),
-          sentiment: 40 + Math.sin(i * 0.15) * 30 + Math.random() * 20,
-          price: d.price,
-        }));
-
         return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Twitter Mentions</div>
-                <div className="text-xl font-bold text-blue-400">{(socialData[socialData.length - 1]?.twitterMentions || 0).toLocaleString()}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Reddit Activity</div>
-                <div className="text-xl font-bold text-orange-400">{(socialData[socialData.length - 1]?.redditPosts || 0).toLocaleString()}</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Social Sentiment</div>
-                <div className={`text-xl font-bold ${(socialData[socialData.length - 1]?.sentiment || 50) > 50 ? 'text-green-400' : 'text-red-400'}`}>
-                  {(socialData[socialData.length - 1]?.sentiment || 50).toFixed(0)}%
-                </div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <div className="text-gray-400 text-sm">Trend</div>
-                <div className="text-lg font-bold text-purple-400">📈 Rising</div>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={socialData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis yAxisId="social" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
-                <YAxis yAxisId="price" orientation="right" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                <Legend />
-                <Bar yAxisId="social" dataKey="twitterMentions" fill="#1DA1F2" opacity={0.7} name="Twitter" />
-                <Bar yAxisId="social" dataKey="redditPosts" fill="#FF4500" opacity={0.7} name="Reddit" />
-                <Line yAxisId="price" type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-              </ComposedChart>
-            </ResponsiveContainer>
+          <div className="flex items-center justify-center h-96 text-gray-400">
+            Social volume is not available from free public APIs
           </div>
         );
 
       case 'btc_dominance':
-        // Generate BTC dominance history
-        const domData = chartData.map((d, i) => ({
-          date: d.date,
-          btcDominance: 48 + Math.sin(i * 0.1) * 8 + Math.random() * 4,
-          ethDominance: 18 + Math.sin(i * 0.15) * 4 + Math.random() * 2,
-          altDominance: 0,
-          price: d.price,
-        }));
-        domData.forEach(d => { d.altDominance = 100 - d.btcDominance - d.ethDominance; });
+        {
+          const marketCapPct = (globalStats as any)?.market_cap_percentage as Record<string, number> | undefined;
+          const btc = marketCapPct?.btc;
+          const eth = marketCapPct?.eth;
+          if (typeof btc !== 'number') {
+            return <div className="flex items-center justify-center h-96 text-gray-400">No dominance data available</div>;
+          }
 
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-orange-500">
-                <div className="text-gray-400 text-sm">BTC Dominance</div>
-                <div className="text-2xl font-bold text-orange-400">{(domData[domData.length - 1]?.btcDominance || 50).toFixed(1)}%</div>
+          const ethValue = typeof eth === 'number' ? eth : 0;
+          const alt = Math.max(0, 100 - btc - ethValue);
+
+          const dominanceData = [
+            { name: 'BTC', value: btc, color: '#F7931A' },
+            ...(typeof eth === 'number' ? [{ name: 'ETH', value: eth, color: '#627EEA' }] : []),
+            { name: 'ALT', value: alt, color: '#8B5CF6' },
+          ];
+
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-orange-500">
+                  <div className="text-gray-400 text-sm">BTC Dominance</div>
+                  <div className="text-2xl font-bold text-orange-400">{btc.toFixed(1)}%</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-blue-500">
+                  <div className="text-gray-400 text-sm">ETH Dominance</div>
+                  <div className="text-2xl font-bold text-blue-400">{typeof eth === 'number' ? eth.toFixed(1) : '—'}</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-purple-500">
+                  <div className="text-gray-400 text-sm">Altcoins</div>
+                  <div className="text-2xl font-bold text-purple-400">{alt.toFixed(1)}%</div>
+                </div>
               </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-blue-500">
-                <div className="text-gray-400 text-sm">ETH Dominance</div>
-                <div className="text-2xl font-bold text-blue-400">{(domData[domData.length - 1]?.ethDominance || 18).toFixed(1)}%</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-purple-500">
-                <div className="text-gray-400 text-sm">Altcoins</div>
-                <div className="text-2xl font-bold text-purple-400">{(domData[domData.length - 1]?.altDominance || 32).toFixed(1)}%</div>
-              </div>
-            </div>
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={domData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} formatter={(v) => `${(v as number).toFixed(1)}%`} />
-                <Legend />
-                <Area type="monotone" dataKey="btcDominance" stackId="1" stroke="#F7931A" fill="#F7931A" name="Bitcoin" />
-                <Area type="monotone" dataKey="ethDominance" stackId="1" stroke="#627EEA" fill="#627EEA" name="Ethereum" />
-                <Area type="monotone" dataKey="altDominance" stackId="1" stroke="#8B5CF6" fill="#8B5CF6" name="Altcoins" />
-              </AreaChart>
-            </ResponsiveContainer>
+              <ResponsiveContainer width="100%" height={400}>
+                <PieChart>
+                  <Pie
+                    data={dominanceData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${(value as number).toFixed(1)}%`}
+                    outerRadius={160}
+                    dataKey="value"
+                  >
+                    {dominanceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(v) => `${(v as number).toFixed(1)}%`}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             <div className="bg-gray-800/50 rounded-xl p-4">
               <p className="text-gray-400 text-sm">👑 <strong>BTC Dominance</strong> measures Bitcoin&apos;s market cap relative to the total crypto market. Rising dominance often indicates risk-off sentiment, while falling dominance suggests altcoin season.</p>
             </div>
           </div>
-        );
+          );
+        }
 
       default:
         return <div className="flex items-center justify-center h-96 text-gray-400">Select a chart type</div>;

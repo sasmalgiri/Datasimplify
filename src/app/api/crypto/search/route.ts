@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchCoins } from '@/lib/coingecko';
+import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,7 +10,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    const coins = await searchCoins(query);
+    const q = query.trim().toLowerCase();
+    const coins = SUPPORTED_COINS
+      .filter(c => c.symbol.toLowerCase().includes(q) || c.name.toLowerCase().includes(q))
+      .slice(0, 25)
+      .map(c => ({
+        id: getCoinGeckoId(c.symbol),
+        name: c.name,
+        symbol: c.symbol.toLowerCase(),
+        market_cap_rank: null,
+        thumb: c.image,
+        large: c.image,
+      }));
     
     return NextResponse.json({
       coins,

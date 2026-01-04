@@ -300,7 +300,7 @@ export async function processRAGQuery(
 ): Promise<ChatResponse> {
   const systemPrompt = `You are DataSimplify's AI assistant, an expert in cryptocurrency markets, DeFi, and blockchain technology.
 
-You have access to real-time data and analysis. Use the provided context to answer questions accurately.
+You may have access to recent market data and analysis via the provided context. Use the provided context to answer questions accurately.
 
 CONTEXT FROM DATABASE:
 ${context.map((c, i) => `[${i + 1}] ${c}`).join('\n\n')}
@@ -311,7 +311,7 @@ Guidelines:
 - Provide specific data points when available
 - Be concise but informative
 - Cite which context piece you're referencing when relevant
-- If asked about current prices or real-time data, use the context provided`;
+- If asked about current prices, only use what appears in the context (and say when it may be stale)`;
 
   const messages: ChatMessage[] = [
     ...(conversationHistory || []),

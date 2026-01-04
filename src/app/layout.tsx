@@ -6,6 +6,7 @@ import DisclaimerBanner from '@/components/ui/DisclaimerBanner';
 import CookieConsent from '@/components/CookieConsent';
 import { AllJsonLd } from '@/components/JsonLd';
 import AnalyticsGate from '@/components/AnalyticsGate';
+import { FEATURES } from '@/lib/featureFlags';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://datasimplify.com';
 
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
     default: 'DataSimplify - Crypto Data & AI Analytics Platform',
     template: '%s | DataSimplify'
   },
-  description: 'Download crypto market data in Excel/CSV. AI-powered predictions, Fear & Greed Index, whale tracking, and DeFi analytics. No coding required. Start free today!',
+  description: 'Download crypto market data in Excel/CSV. Optional analytics tools and indicators (availability depends on configuration). No coding required.',
   keywords: ['crypto data', 'cryptocurrency analytics', 'bitcoin price', 'ethereum data', 'crypto excel download', 'AI crypto predictions', 'fear and greed index', 'whale tracking', 'DeFi analytics', 'crypto market data', 'cryptocurrency API'],
 
   // Favicon & Icons
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: 'DataSimplify',
     title: 'DataSimplify - Crypto Data & AI Analytics Made Simple',
-    description: 'Download crypto market data in Excel/CSV. AI-powered predictions, real-time analytics, and whale tracking. No coding required.',
+    description: 'Download crypto market data in Excel/CSV. Optional analytics tools and indicators (availability depends on configuration).',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'DataSimplify - Crypto Data & AI Analytics',
-    description: 'Download crypto data in Excel/CSV. AI predictions, Fear & Greed Index, whale tracking. Start free!',
+    description: 'Download crypto data in Excel/CSV. Optional analytics tools and indicators (availability depends on configuration).',
     images: [`${siteUrl}/og-image.png`],
     creator: '@datasimplify',
   },
@@ -116,10 +117,11 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Data Sources</h4>
             <ul className="space-y-2 text-sm">
-              <li><span className="text-gray-500">CoinGecko API</span></li>
               <li><span className="text-gray-500">Alternative.me (Fear & Greed)</span></li>
-              <li><span className="text-gray-500">DeFiLlama API</span></li>
-              <li><span className="text-gray-500">CryptoPanic API</span></li>
+              <li><span className="text-gray-500">Binance (Market Data)</span></li>
+              {FEATURES.coingecko ? <li><span className="text-gray-500">CoinGecko</span></li> : null}
+              {FEATURES.defi ? <li><span className="text-gray-500">DeFiLlama</span></li> : null}
+              {FEATURES.whales ? <li><span className="text-gray-500">Etherscan / Blockchair</span></li> : null}
             </ul>
           </div>
 

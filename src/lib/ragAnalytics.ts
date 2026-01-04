@@ -304,8 +304,32 @@ export async function getUserInsights(userId: string): Promise<{
     const preferredQueryType = Object.entries(typeCounts)
       .sort((a, b) => b[1] - a[1])[0]?.[0] || 'general';
 
-    // Session analysis (simplified)
-    const avgSessionLength = Math.min(data.length, 5); // Placeholder
+    // Session analysis: average queries per session.
+    // A new session starts after 30 minutes of inactivity.
+    const sorted = [...data]
+      .filter(d => d.created_at)
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    const SESSION_GAP_MS = 30 * 60 * 1000;
+    let sessions = 0;
+    let currentSessionCount = 0;
+    let prevTs: number | null = null;
+
+    for (const row of sorted) {
+      const ts = new Date(row.created_at).getTime();
+      if (!Number.isFinite(ts)) continue;
+
+      if (prevTs === null || ts - prevTs > SESSION_GAP_MS) {
+        if (currentSessionCount > 0) sessions += 1;
+        currentSessionCount = 0;
+      }
+
+      currentSessionCount += 1;
+      prevTs = ts;
+    }
+
+    if (currentSessionCount > 0) sessions += 1;
+    const avgSessionLength = sessions > 0 ? Number((sorted.length / sessions).toFixed(1)) : 0;
 
     return {
       favoriteCoins,

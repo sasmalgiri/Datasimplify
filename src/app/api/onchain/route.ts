@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   getDefiProtocolsFromCache,
   getDefiYieldsFromCache,
@@ -25,6 +26,17 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'dashboard';
   const limit = parseInt(searchParams.get('limit') || '50');
+
+  const requiresDefi = ['defi-tvl', 'defi-protocols', 'stablecoins', 'yields'].includes(type);
+  if (requiresDefi && !isFeatureEnabled('defi')) {
+    return NextResponse.json(
+      {
+        error: 'DeFi data is disabled.',
+        type,
+      },
+      { status: 403 }
+    );
+  }
 
   try {
     let data;
@@ -143,7 +155,12 @@ export async function GET(request: Request) {
       data,
       type,
       timestamp: new Date().toISOString(),
-      source: source === 'cache' ? 'supabase_cache' : 'FREE Public APIs (DefiLlama, blockchain.info, RPC nodes)',
+      source:
+        source === 'cache'
+          ? 'supabase_cache'
+          : requiresDefi
+            ? 'Third-party APIs (DeFi domain)'
+            : 'Public APIs (blockchain.info, RPC nodes)',
     });
 
   } catch (error) {

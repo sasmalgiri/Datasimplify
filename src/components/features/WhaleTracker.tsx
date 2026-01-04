@@ -50,19 +50,8 @@ interface WhaleTrackerProps {
   showBeginnerTips?: boolean;
 }
 
-// Static distribution data (for demonstration purposes)
-const DISTRIBUTION_DATA: WalletDistribution[] = [
-  { category: 'Shrimps', emoji: '🦐', description: 'Small retail investors like you and me', percentage: 8, btc_range: '< 1 BTC', trend: 'up' },
-  { category: 'Crabs', emoji: '🦀', description: 'Serious individual investors', percentage: 11, btc_range: '1-10 BTC', trend: 'stable' },
-  { category: 'Fish', emoji: '🐟', description: 'High net worth individuals', percentage: 15, btc_range: '10-100 BTC', trend: 'stable' },
-  { category: 'Sharks', emoji: '🦈', description: 'Small funds and early adopters', percentage: 18, btc_range: '100-1K BTC', trend: 'down' },
-  { category: 'Whales', emoji: '🐳', description: 'Large funds, exchanges', percentage: 25, btc_range: '1K-10K BTC', trend: 'stable' },
-  { category: 'Humpbacks', emoji: '🐋', description: 'Mega institutions, Satoshi', percentage: 23, btc_range: '> 10K BTC', trend: 'down' }
-];
-
 export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
   const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
-  const [distribution] = useState<WalletDistribution[]>(DISTRIBUTION_DATA);
   const [exchangeFlows, setExchangeFlows] = useState<ExchangeFlow[]>([]);
   const [activeTab, setActiveTab] = useState<'alerts' | 'distribution' | 'flows'>('alerts');
   const [loading, setLoading] = useState(true);
@@ -277,7 +266,13 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
       {activeTab === 'alerts' && (
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-700">Last 24 Hours</h3>
-          
+
+          {!loading && transactions.length === 0 ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+              Whale alerts are currently unavailable.
+            </div>
+          ) : null}
+
           {transactions.map((tx) => (
             <div 
               key={tx.id}
@@ -327,11 +322,13 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
             </div>
           ))}
 
-          <div className="text-center pt-4">
-            <button type="button" className="text-blue-600 hover:text-blue-800 font-medium">
-              View More Alerts →
-            </button>
-          </div>
+          {transactions.length > 0 ? (
+            <div className="text-center pt-4">
+              <button type="button" className="text-blue-600 hover:text-blue-800 font-medium">
+                View More Alerts →
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -345,50 +342,8 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {distribution.map((cat) => (
-              <div key={cat.category} className="flex items-center gap-4">
-                <span className="text-3xl">{cat.emoji}</span>
-                <div className="flex-1">
-                  <div className="flex justify-between items-center mb-1">
-                    <div>
-                      <span className="font-medium">{cat.category}</span>
-                      <span className="text-gray-500 text-sm ml-2">({cat.btc_range})</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">{cat.percentage}%</span>
-                      <span className={`text-sm ${
-                        cat.trend === 'up' ? 'text-green-600' : 
-                        cat.trend === 'down' ? 'text-red-600' : 'text-gray-500'
-                      }`}>
-                        {cat.trend === 'up' ? '↑' : cat.trend === 'down' ? '↓' : '→'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <DistributionBar
-                      percentage={cat.percentage}
-                      colorClass={
-                        cat.category === 'Humpbacks' || cat.category === 'Whales' ? 'bg-blue-600' :
-                        cat.category === 'Sharks' ? 'bg-blue-500' :
-                        cat.category === 'Fish' ? 'bg-blue-400' :
-                        'bg-blue-300'
-                      }
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">{cat.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Insight Box */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">📈 Current Trend</h4>
-            <p className="text-sm text-blue-900">
-              <strong>Small holders (Shrimps) are increasing!</strong> This is typically bullish - 
-              it means more regular people are buying Bitcoin, spreading ownership more widely.
-            </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+            Bitcoin wallet distribution is currently unavailable.
           </div>
         </div>
       )}
@@ -414,12 +369,13 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
             </div>
           )}
 
-          {/* Flow Stats - Using real data when available */}
+          {/* Flow Stats - show Unavailable when missing */}
           {(() => {
-            const totalInflow = exchangeFlows.reduce((sum, f) => sum + f.inflow24h, 0);
-            const totalOutflow = exchangeFlows.reduce((sum, f) => sum + f.outflow24h, 0);
-            const netFlow = totalOutflow - totalInflow;
-            const isBullish = netFlow > 0;
+            const hasFlows = exchangeFlows.length > 0;
+            const totalInflow = hasFlows ? exchangeFlows.reduce((sum, f) => sum + f.inflow24h, 0) : null;
+            const totalOutflow = hasFlows ? exchangeFlows.reduce((sum, f) => sum + f.outflow24h, 0) : null;
+            const netFlow = hasFlows && totalInflow !== null && totalOutflow !== null ? totalOutflow - totalInflow : null;
+            const isBullish = netFlow !== null ? netFlow > 0 : null;
 
             return (
               <>
@@ -427,7 +383,7 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
                   <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                     <p className="text-red-600 text-sm font-medium">Exchange Inflows (Recent)</p>
                     <p className="text-2xl font-bold text-red-700">
-                      {totalInflow > 0 ? `${totalInflow.toFixed(1)} ETH` : 'Loading...'}
+                      {totalInflow === null ? 'Unavailable' : `${totalInflow.toFixed(1)} ETH`}
                     </p>
                     <p className="text-sm text-red-600">Moved to exchanges</p>
                     <TrafficLight status="bad" label="Bearish Signal" />
@@ -435,7 +391,7 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
                   <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                     <p className="text-green-600 text-sm font-medium">Exchange Outflows (Recent)</p>
                     <p className="text-2xl font-bold text-green-700">
-                      {totalOutflow > 0 ? `${totalOutflow.toFixed(1)} ETH` : 'Loading...'}
+                      {totalOutflow === null ? 'Unavailable' : `${totalOutflow.toFixed(1)} ETH`}
                     </p>
                     <p className="text-sm text-green-600">Withdrawn from exchanges</p>
                     <TrafficLight status="good" label="Bullish Signal" />
@@ -443,27 +399,29 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
                 </div>
 
                 {/* Net Flow */}
-                <div className={`p-4 rounded-lg border ${isBullish ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'}`}>
+                <div className={`p-4 rounded-lg border ${isBullish === null ? 'bg-gray-100 border-gray-300' : isBullish ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'}`}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className={`font-medium ${isBullish ? 'text-green-800' : 'text-red-800'}`}>Net Flow (Recent)</p>
-                      <p className={`text-3xl font-bold ${isBullish ? 'text-green-700' : 'text-red-700'}`}>
-                        {netFlow !== 0 ? `${netFlow > 0 ? '+' : ''}${netFlow.toFixed(1)} ETH ${isBullish ? 'Out' : 'In'}` : 'Loading...'}
+                      <p className={`font-medium ${isBullish === null ? 'text-gray-800' : isBullish ? 'text-green-800' : 'text-red-800'}`}>Net Flow (Recent)</p>
+                      <p className={`text-3xl font-bold ${isBullish === null ? 'text-gray-700' : isBullish ? 'text-green-700' : 'text-red-700'}`}>
+                        {netFlow === null ? 'Unavailable' : `${netFlow > 0 ? '+' : ''}${netFlow.toFixed(1)} ETH ${isBullish ? 'Out' : 'In'}`}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold text-xl ${isBullish ? 'text-green-700' : 'text-red-700'}`}>
-                        {isBullish ? '🟢 Bullish' : '🔴 Bearish'}
+                      <p className={`font-bold text-xl ${isBullish === null ? 'text-gray-700' : isBullish ? 'text-green-700' : 'text-red-700'}`}>
+                        {isBullish === null ? '⚪ Unavailable' : isBullish ? '🟢 Bullish' : '🔴 Bearish'}
                       </p>
-                      <p className={`text-sm ${isBullish ? 'text-green-600' : 'text-red-600'}`}>
-                        {isBullish ? 'More leaving than entering' : 'More entering than leaving'}
+                      <p className={`text-sm ${isBullish === null ? 'text-gray-600' : isBullish ? 'text-green-600' : 'text-red-600'}`}>
+                        {isBullish === null ? 'No flow data available' : isBullish ? 'More leaving than entering' : 'More entering than leaving'}
                       </p>
                     </div>
                   </div>
 
-                  <div className={`mt-4 pt-4 border-t ${isBullish ? 'border-green-200' : 'border-red-200'}`}>
-                    <p className={`text-sm ${isBullish ? 'text-green-800' : 'text-red-800'}`}>
-                      <strong>What this means:</strong> {isBullish
+                  <div className={`mt-4 pt-4 border-t ${isBullish === null ? 'border-gray-200' : isBullish ? 'border-green-200' : 'border-red-200'}`}>
+                    <p className={`text-sm ${isBullish === null ? 'text-gray-800' : isBullish ? 'text-green-800' : 'text-red-800'}`}>
+                      <strong>What this means:</strong> {isBullish === null
+                        ? 'Exchange flow metrics are currently unavailable.'
+                        : isBullish
                         ? 'More crypto is being withdrawn from exchanges than deposited. This suggests investors are moving to long-term storage (bullish).'
                         : 'More crypto is being deposited to exchanges than withdrawn. This could indicate selling pressure (bearish).'}
                     </p>
@@ -476,26 +434,30 @@ export function WhaleTracker({ showBeginnerTips = true }: WhaleTrackerProps) {
           {/* Top Exchanges */}
           <div className="mt-6">
             <h4 className="font-semibold text-gray-700 mb-3">Exchange Flows (ETH)</h4>
-            <div className="space-y-2">
-              {(exchangeFlows.length > 0 ? exchangeFlows : [
-                { exchange: 'Loading...', inflow24h: 0, outflow24h: 0, netFlow24h: 0 }
-              ]).map((flow, idx) => {
-                const flowNetFlow = flow.outflow24h - flow.inflow24h;
-                const isPositive = flowNetFlow > 0;
-                return (
-                  <div key={flow.exchange || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="font-medium">{flow.exchange}</span>
-                    <div className="flex items-center gap-4">
-                      <span className="text-red-600 text-sm">↓{flow.inflow24h.toFixed(1)}</span>
-                      <span className="text-green-600 text-sm">↑{flow.outflow24h.toFixed(1)}</span>
-                      <span className={`font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                        {isPositive ? '+' : ''}{flowNetFlow.toFixed(1)}
-                      </span>
+            {exchangeFlows.length === 0 ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                Exchange flow data is currently unavailable.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {exchangeFlows.map((flow, idx) => {
+                  const flowNetFlow = flow.outflow24h - flow.inflow24h;
+                  const isPositive = flowNetFlow > 0;
+                  return (
+                    <div key={flow.exchange || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">{flow.exchange}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-red-600 text-sm">↓{flow.inflow24h.toFixed(1)}</span>
+                        <span className="text-green-600 text-sm">↑{flow.outflow24h.toFixed(1)}</span>
+                        <span className={`font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                          {isPositive ? '+' : ''}{flowNetFlow.toFixed(1)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

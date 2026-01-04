@@ -42,14 +42,14 @@ export default function ChatPage() {
             <span>💡</span>
             <span>
               <strong>How to use:</strong> Type your crypto question below and press Enter or click Send.
-              Try asking about prices, market trends, or beginner concepts. The AI uses real-time data!
+              Try asking about prices, market trends, or beginner concepts. The AI can incorporate recent market data when available.
             </span>
           </p>
         </div>
 
         <div className="flex items-center gap-2 mb-2">
           <h1 className="text-3xl font-bold">🤖 Crypto AI Assistant</h1>
-          <HelpIcon text="Our AI is enhanced with exclusive market data that standard AI models don't have. Ask about prices, trends, concepts, or investment strategies." />
+          <HelpIcon text="Ask about prices, trends, and crypto concepts. Responses may use available site datasets when enabled, but can be incorrect—double-check important details." />
         </div>
         <p className="text-gray-600 mb-6">
           Ask anything about cryptocurrency and investing. No login required!
@@ -69,8 +69,8 @@ export default function ChatPage() {
                 <HelpIcon text="These are topics the AI can help you with. Try asking questions about any of these!" />
               </h3>
               <ul className="text-sm text-gray-700 space-y-2">
-                <li>📊 Real-time crypto prices</li>
-                <li>📰 Latest crypto news</li>
+                <li>📊 Crypto market data (when available)</li>
+                <li>📰 Crypto news summaries (when enabled)</li>
                 <li>😱 Fear & Greed Index</li>
                 <li>🔥 Trending coins</li>
                 <li>💼 Portfolio advice</li>
@@ -96,7 +96,7 @@ export default function ChatPage() {
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-4">
               <h3 className="font-bold text-blue-700 mb-3 flex items-center">
                 📚 Live Data Access:
-                <HelpIcon text="Our AI is enhanced with DataSimplify's exclusive market database - data that standard AI models cannot access." />
+                <HelpIcon text="Depending on configuration, the AI may reference site datasets (e.g., market indicators). Availability varies by deployment." />
               </h3>
               <ul className="text-sm text-blue-600 space-y-1">
                 <li>• 📊 Market Data (prices, caps)</li>

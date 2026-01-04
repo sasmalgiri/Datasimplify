@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   aggregateAllSentiment,
   getCoinDeepSentiment,
@@ -11,6 +12,13 @@ import {
 } from '@/lib/comprehensiveSentiment';
 
 export async function GET(request: Request) {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return NextResponse.json(
+      { error: 'This feature is currently disabled.', disabled: true },
+      { status: 503 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'aggregated';
   const symbol = searchParams.get('symbol') || 'BTC';
@@ -51,6 +59,12 @@ export async function GET(request: Request) {
         break;
       
       case 'trending':
+        if (!isFeatureEnabled('coingecko')) {
+          return NextResponse.json(
+            { error: 'Trending sentiment is unavailable (CoinGecko disabled).' },
+            { status: 403 }
+          );
+        }
         data = await fetchCoinGeckoTrending();
         break;
       
@@ -62,21 +76,23 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
     }
 
+    const sources = [
+      'Reddit (r/cryptocurrency, r/bitcoin, r/ethtrader, r/CryptoMarkets, r/altcoin)',
+      'CryptoPanic News Aggregator',
+      'RSS Feeds (CoinTelegraph, CoinDesk, Decrypt, CryptoSlate)',
+      '4chan /biz/',
+      ...(isFeatureEnabled('coingecko') ? ['CoinGecko Trending'] : []),
+      'GitHub Activity',
+    ];
+
     return NextResponse.json({
       success: true,
       data,
       type,
       timestamp: new Date().toISOString(),
-      sources: [
-        'Reddit (r/cryptocurrency, r/bitcoin, r/ethtrader, r/CryptoMarkets, r/altcoin)',
-        'CryptoPanic News Aggregator',
-        'RSS Feeds (CoinTelegraph, CoinDesk, Decrypt, CryptoSlate)',
-        '4chan /biz/',
-        'CoinGecko Trending',
-        'GitHub Activity',
-      ],
+      sources,
       methodology: 'Keyword-based NLP sentiment analysis with engagement weighting',
-      legal: 'All data from public APIs and permitted sources',
+      legal: 'Third-party data sources may have their own terms and restrictions.',
     });
 
   } catch (error) {

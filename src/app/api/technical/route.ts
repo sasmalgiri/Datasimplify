@@ -5,6 +5,67 @@
 
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+type MarketChart = {
+  prices: [number, number][];
+  total_volumes?: [number, number][];
+};
+
+function bucketToCandles(
+  prices: [number, number][],
+  volumes: [number, number][] | undefined,
+  bucketMs: number
+): Candle[] {
+  if (!prices || prices.length === 0) return [];
+
+  const volumeByBucket = new Map<number, number>();
+  if (Array.isArray(volumes)) {
+    for (const [ts, vol] of volumes) {
+      const key = Math.floor(ts / bucketMs) * bucketMs;
+      volumeByBucket.set(key, vol);
+    }
+  }
+
+  const buckets = new Map<number, Candle>();
+
+  for (const [ts, price] of prices) {
+    const key = Math.floor(ts / bucketMs) * bucketMs;
+    const existing = buckets.get(key);
+    const vol = volumeByBucket.get(key);
+
+    if (!existing) {
+      buckets.set(key, {
+        timestamp: key,
+        open: price,
+        high: price,
+        low: price,
+        close: price,
+        volume: typeof vol === 'number' ? vol : 0,
+      });
+    } else {
+      existing.high = Math.max(existing.high, price);
+      existing.low = Math.min(existing.low, price);
+      existing.close = price;
+      if (typeof vol === 'number') existing.volume = vol;
+    }
+  }
+
+  return Array.from(buckets.values()).sort((a, b) => a.timestamp - b.timestamp);
+}
+
+async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<MarketChart | null> {
+  const url = `${COINGECKO_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 60 },
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as MarketChart;
+  if (!data?.prices || !Array.isArray(data.prices)) return null;
+  return data;
+}
 
 interface Candle {
   timestamp: number;
@@ -22,6 +83,24 @@ interface TechnicalIndicator {
   signal: 'buy' | 'sell' | 'neutral';
   description: string;
   beginnerExplanation: string;
+}
+
+function computePctReturns(prices: number[]): number[] {
+  const returns: number[] = [];
+  for (let i = 1; i < prices.length; i++) {
+    const prev = prices[i - 1];
+    const cur = prices[i];
+    if (!Number.isFinite(prev) || !Number.isFinite(cur) || prev === 0) continue;
+    returns.push((cur - prev) / prev);
+  }
+  return returns;
+}
+
+function computeStdDev(values: number[]): number | null {
+  if (!values || values.length < 2) return null;
+  const mean = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (values.length - 1);
+  return Math.sqrt(variance);
 }
 
 // Calculate RSI (Relative Strength Index)
@@ -222,7 +301,7 @@ export async function GET(request: Request) {
     const symbol = getCoinSymbol(coin);
 
     let candles: Candle[] = [];
-    let source = 'mock';
+    let source: 'binance' | 'coingecko' = 'binance';
 
     if (symbol) {
       try {
@@ -236,13 +315,48 @@ export async function GET(request: Request) {
       }
     }
 
-    // Generate mock data if needed
+    // Fallback to CoinGecko market chart if Binance is unavailable
     if (candles.length === 0) {
-      candles = generateMockCandles(coin, days);
+      if (!isFeatureEnabled('coingecko')) {
+        return NextResponse.json({
+          success: false,
+          error: 'No candle data available from Binance (CoinGecko disabled).',
+          coin,
+          timeframe,
+        }, { status: 502 });
+      }
+
+      const bucketMs = interval === '1h'
+        ? 60 * 60 * 1000
+        : interval === '4h'
+          ? 4 * 60 * 60 * 1000
+          : 24 * 60 * 60 * 1000;
+
+      const chart = await fetchCoinGeckoMarketChart(coin, days);
+      candles = chart ? bucketToCandles(chart.prices, chart.total_volumes, bucketMs) : [];
+      source = 'coingecko';
+    }
+
+    if (candles.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No candle data available from Binance or CoinGecko.',
+        coin,
+        timeframe,
+      }, { status: 502 });
     }
 
     const prices = candles.map(c => c.close);
     const currentPrice = prices[prices.length - 1];
+
+    // Extra derived metrics (real, computed from the same candle series)
+    const window = 30;
+    const windowPrices = prices.length >= window + 1 ? prices.slice(-(window + 1)) : null;
+    const windowReturns = windowPrices ? computePctReturns(windowPrices) : null;
+    const volatility30dPct = windowReturns ? computeStdDev(windowReturns) : null;
+    const momentum30dPct = windowPrices
+      ? ((windowPrices[windowPrices.length - 1] / windowPrices[0]) - 1)
+      : null;
 
     // Calculate all indicators
     const rsi = calculateRSI(prices, 14);
@@ -399,6 +513,11 @@ export async function GET(request: Request) {
       success: true,
       data: {
         indicators,
+        metrics: {
+          volatility30dPct: typeof volatility30dPct === 'number' ? volatility30dPct * 100 : null,
+          momentum30dPct: typeof momentum30dPct === 'number' ? momentum30dPct * 100 : null,
+          windowDays: window,
+        },
         summary: {
           buySignals,
           sellSignals,
@@ -428,41 +547,4 @@ export async function GET(request: Request) {
       error: 'Failed to calculate technical indicators',
     }, { status: 500 });
   }
-}
-
-function generateMockCandles(coin: string, days: number): Candle[] {
-  const basePrice = coin === 'bitcoin' ? 97000 :
-                   coin === 'ethereum' ? 3400 :
-                   coin === 'solana' ? 190 :
-                   coin === 'binancecoin' ? 700 : 50;
-
-  const candles: Candle[] = [];
-  let currentPrice = basePrice * 0.85; // Start lower to show uptrend
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - i - 1));
-
-    const trendBias = 0.001; // Slight upward bias
-    const open = currentPrice;
-    const volatility = 0.02 + Math.random() * 0.02;
-    const change = (Math.random() - 0.5 + trendBias) * volatility * 2;
-    const close = open * (1 + change);
-    const high = Math.max(open, close) * (1 + Math.random() * volatility * 0.5);
-    const low = Math.min(open, close) * (1 - Math.random() * volatility * 0.5);
-    const volume = (Math.random() * 50000 + 10000) * basePrice;
-
-    candles.push({
-      timestamp: date.getTime(),
-      open,
-      high,
-      low,
-      close,
-      volume,
-    });
-
-    currentPrice = close;
-  }
-
-  return candles;
 }

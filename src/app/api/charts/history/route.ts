@@ -2,12 +2,83 @@
  * Chart History API
  * Returns price history data for charts
  * Uses Binance API (FREE, Commercial OK) as primary source
- * Falls back to CoinGecko or mock data if needed
+ * Falls back to CoinGecko (FREE) if needed
  */
 
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
-import { getPriceHistory } from '@/lib/coingecko';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+type MarketChart = {
+  prices: [number, number][];
+  total_volumes?: [number, number][];
+};
+
+function bucketOHLCV(
+  prices: [number, number][],
+  volumes: [number, number][] | undefined,
+  bucketMs: number
+): Array<{ timestamp: number; price: number; open: number; high: number; low: number; close: number; volume?: number }> {
+  if (!prices || prices.length === 0) return [];
+
+  const buckets = new Map<number, { ts: number; open: number; high: number; low: number; close: number; lastVol?: number }>();
+
+  const volumeByBucket = new Map<number, number>();
+  if (Array.isArray(volumes)) {
+    for (const [ts, vol] of volumes) {
+      const key = Math.floor(ts / bucketMs) * bucketMs;
+      volumeByBucket.set(key, vol);
+    }
+  }
+
+  for (const [ts, price] of prices) {
+    const key = Math.floor(ts / bucketMs) * bucketMs;
+    const existing = buckets.get(key);
+    const lastVol = volumeByBucket.get(key);
+
+    if (!existing) {
+      buckets.set(key, {
+        ts: key,
+        open: price,
+        high: price,
+        low: price,
+        close: price,
+        lastVol,
+      });
+    } else {
+      existing.high = Math.max(existing.high, price);
+      existing.low = Math.min(existing.low, price);
+      existing.close = price;
+      if (typeof lastVol === 'number') existing.lastVol = lastVol;
+    }
+  }
+
+  return Array.from(buckets.values())
+    .sort((a, b) => a.ts - b.ts)
+    .map(b => ({
+      timestamp: b.ts,
+      price: b.close,
+      open: b.open,
+      high: b.high,
+      low: b.low,
+      close: b.close,
+      volume: b.lastVol,
+    }));
+}
+
+async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<MarketChart | null> {
+  const url = `${COINGECKO_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 60 },
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as MarketChart;
+  if (!data?.prices || !Array.isArray(data.prices)) return null;
+  return data;
+}
 
 export async function GET(request: Request) {
   try {
@@ -30,6 +101,7 @@ export async function GET(request: Request) {
           open: k.open,
           high: k.high,
           low: k.low,
+          close: k.close,
           volume: k.volume,
         }));
 
@@ -42,65 +114,43 @@ export async function GET(request: Request) {
       }
     }
 
-    // Fallback to CoinGecko if Binance fails
-    const priceHistory = await getPriceHistory(coin, days);
-
-    if (priceHistory && priceHistory.length > 0) {
-      return NextResponse.json({
-        prices: priceHistory,
-        source: 'coingecko',
-        coin,
-        days,
-      });
+    // Fallback to CoinGecko if Binance fails (only when enabled)
+    if (isFeatureEnabled('coingecko')) {
+      const chart = await fetchCoinGeckoMarketChart(coin, days);
+      const bucketMs = 24 * 60 * 60 * 1000;
+      const priceHistory = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
+      if (priceHistory.length > 0) {
+        return NextResponse.json({
+          prices: priceHistory,
+          source: 'coingecko',
+          coin,
+          days: priceHistory.length,
+        });
+      }
     }
 
-    // Final fallback: mock data
-    const mockData = generateMockPriceHistory(coin, days);
-    return NextResponse.json({ prices: mockData, source: 'mock' });
+    return NextResponse.json({
+      prices: [],
+      source: 'none',
+      coin,
+      days,
+      error: isFeatureEnabled('coingecko')
+        ? 'No chart data available from Binance or CoinGecko.'
+        : 'No chart data available from Binance (CoinGecko disabled).',
+    }, { status: 502 });
 
   } catch (error) {
     console.error('Chart history API error:', error);
 
-    // Return mock data on error
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin') || 'bitcoin';
     const days = parseInt(searchParams.get('days') || '30');
-
     return NextResponse.json({
-      prices: generateMockPriceHistory(coin, days),
-      source: 'mock',
-      error: String(error),
-    });
+      prices: [],
+      source: 'error',
+      coin,
+      days,
+      error: error instanceof Error ? error.message : String(error),
+    }, { status: 502 });
   }
-}
-
-function generateMockPriceHistory(coin: string, days: number) {
-  const basePrice = coin === 'bitcoin' ? 45000 :
-                   coin === 'ethereum' ? 2500 :
-                   coin === 'solana' ? 100 :
-                   coin === 'binancecoin' ? 300 : 50;
-
-  const prices = [];
-  let currentPrice = basePrice;
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - i - 1));
-
-    // Add some realistic price movement
-    const volatility = 0.02 + Math.random() * 0.03;
-    const trend = Math.random() > 0.5 ? 1 : -1;
-    currentPrice = currentPrice * (1 + trend * volatility * (Math.random() - 0.3));
-
-    prices.push({
-      timestamp: date.getTime(),
-      price: currentPrice,
-      open: currentPrice * (1 - volatility/2),
-      high: currentPrice * (1 + volatility),
-      low: currentPrice * (1 - volatility),
-      volume: Math.random() * 1000000000,
-    });
-  }
-
-  return prices;
 }

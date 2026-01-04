@@ -33,10 +33,6 @@ interface CoinPrice {
   change_24h: number;
 }
 
-const PRICE_IDS = ['bitcoin', 'ethereum', 'solana', 'usd-coin'] as const;
-const BASKET_SYMBOLS = new Set(['ALTS', 'MEME']);
-const STABLECOIN_DEFAULTS: Record<string, number> = { USDC: 1, USDT: 1, DAI: 1 };
-
 export default function PortfolioBuilderPage() {
   const [investmentAmount, setInvestmentAmount] = useState(1000);
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
@@ -44,13 +40,14 @@ export default function PortfolioBuilderPage() {
   const [step, setStep] = useState(1);
   const [coinPrices, setCoinPrices] = useState<Record<string, CoinPrice>>({});
   const [pricesLoading, setPricesLoading] = useState(true);
+  const [presetLoading, setPresetLoading] = useState(false);
 
   // Fetch real coin prices
   useEffect(() => {
     const fetchPrices = async () => {
       setPricesLoading(true);
       try {
-        const response = await fetch(`/api/crypto?ids=${PRICE_IDS.join(',')}`);
+        const response = await fetch('/api/crypto?limit=250');
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
@@ -85,44 +82,18 @@ export default function PortfolioBuilderPage() {
 
   // Helper to get coin price
   const getCoinPrice = (symbol: string): number => {
-    if (BASKET_SYMBOLS.has(symbol)) return 0;
     const mapped = coinPrices[symbol]?.price;
     if (typeof mapped === 'number' && mapped > 0) return mapped;
-    const stableFallback = STABLECOIN_DEFAULTS[symbol];
-    if (typeof stableFallback === 'number') return stableFallback;
     return 0;
   };
 
   // Helper to calculate how many coins you'd get
   const getCoinsAmount = (symbol: string, dollarAmount: number): string => {
-    if (BASKET_SYMBOLS.has(symbol)) return 'Varies';
     const price = getCoinPrice(symbol);
-    if (price === 0) return pricesLoading ? 'Loading…' : '-';
+    if (price === 0) return '';
     const amount = dollarAmount / price;
     if (amount >= 1) return amount.toFixed(4);
     return amount.toFixed(8);
-  };
-
-  // Preset portfolios based on risk tolerance
-  const presetPortfolios = {
-    conservative: [
-      { id: 'btc', name: 'Bitcoin', symbol: 'BTC', percentage: 60, riskLevel: 2 as const, color: '#F7931A' },
-      { id: 'eth', name: 'Ethereum', symbol: 'ETH', percentage: 30, riskLevel: 2 as const, color: '#627EEA' },
-      { id: 'usdc', name: 'USD Coin', symbol: 'USDC', percentage: 10, riskLevel: 1 as const, color: '#2775CA' },
-    ],
-    balanced: [
-      { id: 'btc', name: 'Bitcoin', symbol: 'BTC', percentage: 45, riskLevel: 2 as const, color: '#F7931A' },
-      { id: 'eth', name: 'Ethereum', symbol: 'ETH', percentage: 30, riskLevel: 2 as const, color: '#627EEA' },
-      { id: 'sol', name: 'Solana', symbol: 'SOL', percentage: 15, riskLevel: 3 as const, color: '#00FFA3' },
-      { id: 'other', name: 'Other Altcoins', symbol: 'ALTS', percentage: 10, riskLevel: 4 as const, color: '#9945FF' },
-    ],
-    aggressive: [
-      { id: 'btc', name: 'Bitcoin', symbol: 'BTC', percentage: 30, riskLevel: 2 as const, color: '#F7931A' },
-      { id: 'eth', name: 'Ethereum', symbol: 'ETH', percentage: 25, riskLevel: 2 as const, color: '#627EEA' },
-      { id: 'sol', name: 'Solana', symbol: 'SOL', percentage: 20, riskLevel: 3 as const, color: '#00FFA3' },
-      { id: 'other', name: 'Other Altcoins', symbol: 'ALTS', percentage: 15, riskLevel: 4 as const, color: '#9945FF' },
-      { id: 'meme', name: 'Meme Coins', symbol: 'MEME', percentage: 10, riskLevel: 5 as const, color: '#FF6B6B' },
-    ],
   };
 
   // Calculate weighted risk
@@ -132,10 +103,23 @@ export default function PortfolioBuilderPage() {
     return Math.round(weightedRisk * 10) / 10;
   };
 
-  const handleRiskSelect = (risk: 'conservative' | 'balanced' | 'aggressive') => {
-    setRiskTolerance(risk);
-    setAllocations(presetPortfolios[risk]);
-    setStep(2);
+  const handleRiskSelect = async (risk: 'conservative' | 'balanced' | 'aggressive') => {
+    setPresetLoading(true);
+    try {
+      const response = await fetch(`/api/portfolio/presets?risk=${risk}`);
+      const result = await response.json();
+      if (!response.ok || !result?.success || !Array.isArray(result?.data)) {
+        throw new Error(result?.error || 'Failed to load preset');
+      }
+      setRiskTolerance(risk);
+      setAllocations(result.data);
+      setStep(2);
+    } catch (err) {
+      console.error('Failed to fetch portfolio preset:', err);
+      alert('Unable to load portfolio preset from live data. Please try again.');
+    } finally {
+      setPresetLoading(false);
+    }
   };
 
   const updateAllocation = (id: string, newPercentage: number) => {
@@ -264,6 +248,7 @@ https://datasimplify.vercel.app
               <button
                 type="button"
                 onClick={() => handleRiskSelect('conservative')}
+                disabled={presetLoading}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
                   riskTolerance === 'conservative' ? 'border-green-500 bg-green-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
@@ -286,6 +271,7 @@ https://datasimplify.vercel.app
               <button
                 type="button"
                 onClick={() => handleRiskSelect('balanced')}
+                disabled={presetLoading}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
                   riskTolerance === 'balanced' ? 'border-blue-500 bg-blue-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
@@ -309,6 +295,7 @@ https://datasimplify.vercel.app
               <button
                 type="button"
                 onClick={() => handleRiskSelect('aggressive')}
+                disabled={presetLoading}
                 className={`p-6 rounded-xl border-2 text-left transition-all hover:shadow-lg ${
                   riskTolerance === 'aggressive' ? 'border-orange-500 bg-orange-900/30' : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
                 }`}
@@ -554,22 +541,16 @@ https://datasimplify.vercel.app
                           </div>
                         </td>
                         <td className="text-right py-3 px-2 text-gray-400">
-                          {BASKET_SYMBOLS.has(alloc.symbol)
-                            ? 'Varies'
-                            : (currentPrice > 0
-                              ? `$${currentPrice.toLocaleString(undefined, { maximumFractionDigits: currentPrice < 1 ? 4 : 0 })}`
-                              : (pricesLoading ? 'Loading…' : '-'))}
+                          {currentPrice > 0
+                            ? `$${currentPrice.toLocaleString(undefined, { maximumFractionDigits: currentPrice < 1 ? 4 : 0 })}`
+                            : ''}
                         </td>
                         <td className="text-right py-3 px-2 font-medium">{alloc.percentage}%</td>
                         <td className="text-right py-3 px-2">
                           ${dollarAmount.toLocaleString()}
                         </td>
                         <td className="text-right py-3 px-2 text-blue-400 font-medium">
-                          {coinsYouGet === 'Varies'
-                            ? 'Varies'
-                            : (coinsYouGet !== '-' && coinsYouGet !== 'Loading…'
-                              ? `${coinsYouGet} ${alloc.symbol}`
-                              : coinsYouGet)}
+                          {coinsYouGet ? `${coinsYouGet} ${alloc.symbol}` : ''}
                         </td>
                         <td className="text-right py-3 px-2">
                           <span className={`px-2 py-1 rounded text-xs ${

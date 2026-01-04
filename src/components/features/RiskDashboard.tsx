@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BeginnerTip, InfoButton, RiskMeter, TrafficLight } from '../ui/BeginnerHelpers';
 
 interface CoinRisk {
@@ -303,77 +303,58 @@ export function RiskDashboard({
   );
 }
 
-// Demo with sample data
+// Quick-start widget (fetches real API data)
 export function RiskDashboardDemo({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
-  const sampleCoins: CoinRisk[] = [
-    {
-      id: 'bitcoin',
-      symbol: 'BTC',
-      name: 'Bitcoin',
-      current_price: 97245,
-      var_95: 8.2,
-      var_99: 15.1,
-      sharpe_ratio: 1.85,
-      sortino_ratio: 2.1,
-      max_drawdown: 83,
-      volatility: 3.2,
-      risk_level: 2
-    },
-    {
-      id: 'ethereum',
-      symbol: 'ETH',
-      name: 'Ethereum',
-      current_price: 3890,
-      var_95: 10.5,
-      var_99: 18.3,
-      sharpe_ratio: 1.52,
-      sortino_ratio: 1.8,
-      max_drawdown: 94,
-      volatility: 4.1,
-      risk_level: 2
-    },
-    {
-      id: 'solana',
-      symbol: 'SOL',
-      name: 'Solana',
-      current_price: 220,
-      var_95: 15.2,
-      var_99: 25.8,
-      sharpe_ratio: 1.21,
-      sortino_ratio: 1.4,
-      max_drawdown: 96,
-      volatility: 6.5,
-      risk_level: 3
-    },
-    {
-      id: 'dogecoin',
-      symbol: 'DOGE',
-      name: 'Dogecoin',
-      current_price: 0.41,
-      var_95: 25.3,
-      var_99: 42.1,
-      sharpe_ratio: 0.65,
-      sortino_ratio: 0.8,
-      max_drawdown: 92,
-      volatility: 12.3,
-      risk_level: 5
-    },
-    {
-      id: 'shiba',
-      symbol: 'SHIB',
-      name: 'Shiba Inu',
-      current_price: 0.000025,
-      var_95: 28.5,
-      var_99: 48.2,
-      sharpe_ratio: 0.42,
-      sortino_ratio: 0.5,
-      max_drawdown: 95,
-      volatility: 15.2,
-      risk_level: 5
-    }
-  ];
+  const [coins, setCoins] = useState<CoinRisk[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  return <RiskDashboard coins={sampleCoins} showBeginnerTips={showBeginnerTips} />;
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        setLoadError(null);
+        const res = await fetch('/api/risk?coins=bitcoin,ethereum,solana,dogecoin,shiba-inu&days=365');
+        const json = await res.json();
+        if (!res.ok || !json?.success || !json?.data?.coins) {
+          throw new Error(json?.error || 'Risk analytics unavailable');
+        }
+        if (!cancelled) setCoins(json.data.coins);
+      } catch (e) {
+        if (!cancelled) {
+          setCoins(null);
+          setLoadError(e instanceof Error ? e.message : 'Risk analytics unavailable');
+        }
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loadError) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-xl font-bold mb-2">⚠️ Risk Analytics Dashboard</h2>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+          ⚠️ Risk analytics unavailable: {loadError}
+        </div>
+      </div>
+    );
+  }
+
+  if (!coins) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-xl font-bold mb-2">⚠️ Risk Analytics Dashboard</h2>
+        <p className="text-sm text-gray-500">Loading real risk metrics…</p>
+      </div>
+    );
+  }
+
+  return <RiskDashboard coins={coins} showBeginnerTips={showBeginnerTips} />;
 }
 
 export default RiskDashboard;

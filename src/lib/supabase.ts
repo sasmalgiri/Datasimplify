@@ -7,11 +7,19 @@ const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 const supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
 // Check if Supabase is configured
+function isLikelyUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === 'https:' || u.protocol === 'http:';
+  } catch {
+    return false;
+  }
+}
+
 export const isSupabaseConfigured = !!(
-  supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseUrl.includes('supabase.co') &&
-  supabaseAnonKey.startsWith('eyJ')
+  supabaseUrl &&
+  supabaseAnonKey &&
+  isLikelyUrl(supabaseUrl)
 );
 
 // Create a dummy client or real client based on config

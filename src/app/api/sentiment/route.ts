@@ -52,13 +52,14 @@ export async function GET() {
     const data = result.data?.[0];
 
     if (!data) {
-      return NextResponse.json({
-        success: true,
-        value: 50,
-        classification: 'Neutral',
-        source: 'default',
-        note: 'No data available, showing neutral value'
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Fear & Greed API returned no data.',
+          source: 'alternative.me',
+        },
+        { status: 502 }
+      );
     }
 
     const fearGreedData = {
@@ -101,13 +102,12 @@ export async function GET() {
       }
     }
 
-    // Return neutral as fallback
-    return NextResponse.json({
-      success: true,
-      value: 50,
-      classification: 'Neutral',
-      source: 'fallback',
-      note: 'Unable to fetch live data, showing neutral value'
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Unable to fetch Fear & Greed Index.',
+      },
+      { status: 502 }
+    );
   }
 }

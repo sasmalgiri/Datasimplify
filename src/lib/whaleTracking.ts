@@ -83,6 +83,21 @@ export interface ExchangeFlow {
   netFlowUsd24h: number;
 }
 
+async function fetchUsdPrice(coinId: 'bitcoin' | 'ethereum'): Promise<number | null> {
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
+      { headers: { Accept: 'application/json' }, next: { revalidate: 60 } }
+    );
+    if (!response.ok) return null;
+    const data = await response.json();
+    const price = data?.[coinId]?.usd;
+    return typeof price === 'number' && Number.isFinite(price) ? price : null;
+  } catch {
+    return null;
+  }
+}
+
 // ============================================
 // METHOD 1: Using Etherscan FREE API
 // ============================================
@@ -93,6 +108,12 @@ export async function getRecentLargeEthTransactions(
   apiKey?: string
 ): Promise<WhaleTransaction[]> {
   try {
+    const ethUsd = await fetchUsdPrice('ethereum');
+    if (ethUsd === null) {
+      // Without a real price we can't truthfully compute USD values.
+      return [];
+    }
+
     // Get latest block number
     const blockResponse = await fetch(
       `${WHALE_APIS.etherscan}?module=proxy&action=eth_blockNumber${apiKey ? `&apikey=${apiKey}` : ''}`
@@ -137,7 +158,7 @@ export async function getRecentLargeEthTransactions(
               to: tx.to || 'Contract Creation',
               toLabel,
               amount: valueEth,
-              amountUsd: valueEth * 3500, // Approximate ETH price
+              amountUsd: valueEth * ethUsd,
               symbol: 'ETH',
               timestamp: new Date(parseInt(data.result.timestamp, 16) * 1000).toISOString(),
               type,
@@ -166,6 +187,12 @@ export async function getBitcoinWhaleTransactions(
   minValueBtc: number = 100
 ): Promise<WhaleTransaction[]> {
   try {
+    const btcUsd = await fetchUsdPrice('bitcoin');
+    if (btcUsd === null) {
+      // Without a real price we can't truthfully compute USD values.
+      return [];
+    }
+
     const response = await fetch(
       `${WHALE_APIS.blockchair}/bitcoin/transactions?q=output_total(${minValueBtc * 1e8}...)&s=time(desc)&limit=20`
     );
@@ -181,7 +208,7 @@ export async function getBitcoinWhaleTransactions(
       to: 'Multiple Outputs',
       toLabel: 'Unknown',
       amount: (tx.output_total as number) / 1e8,
-      amountUsd: ((tx.output_total as number) / 1e8) * 100000, // Approximate BTC price
+      amountUsd: ((tx.output_total as number) / 1e8) * btcUsd,
       symbol: 'BTC',
       timestamp: tx.time as string,
       type: 'whale_transfer' as const,
@@ -202,6 +229,9 @@ export async function getExchangeWalletBalance(
   apiKey?: string
 ): Promise<WalletBalance | null> {
   try {
+    const ethUsd = await fetchUsdPrice('ethereum');
+    if (ethUsd === null) return null;
+
     const response = await fetch(
       `${WHALE_APIS.etherscan}?module=account&action=balance&address=${walletAddress}&tag=latest${apiKey ? `&apikey=${apiKey}` : ''}`
     );
@@ -216,7 +246,7 @@ export async function getExchangeWalletBalance(
       address: walletAddress,
       label,
       balance: balanceEth,
-      balanceUsd: balanceEth * 3500,
+      balanceUsd: balanceEth * ethUsd,
       lastActivity: new Date().toISOString(),
       transactionCount: 0, // Would need separate API call
     };

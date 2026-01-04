@@ -13,6 +13,7 @@ import { fetchMacroData } from './macroData';
 import { fetchDerivativesData } from './derivativesData';
 import { fetchFearGreedIndex } from './onChainData';
 import { rateLimiter } from './rateLimiter';
+import { isSupabaseConfigured, supabaseAdmin } from './supabase';
 
 // ============================================
 // TYPES
@@ -397,7 +398,7 @@ export async function createPredictionSnapshot(
       bollingerPosition: technicalData?.bollingerPosition as 'upper' | 'middle' | 'lower' | undefined,
 
       // Sentiment Scores
-      fearGreedIndex: fearGreedData?.value,
+      fearGreedIndex: fearGreedData?.value ?? undefined,
       socialSentimentScore: sentimentSignals.overallScore,
       newsSentimentScore: newsSignals.overallNewsSentiment,
 
@@ -795,17 +796,50 @@ export async function generateTrainingDataset(
 export async function getIngestionStatus(): Promise<{
   lastIngestion: Date | null;
   coinsTracked: number;
-  snapshotsToday: number;
-  trainingRecords: number;
-  errors24h: number;
+  snapshotsToday: number | null;
+  trainingRecords: number | null;
+  errors24h: number | null;
+  error?: string;
 }> {
-  // This would query the database for status info
-  // For now, return placeholder data
-  return {
-    lastIngestion: new Date(),
-    coinsTracked: DEFAULT_COINS.length,
-    snapshotsToday: 0,
-    trainingRecords: 0,
-    errors24h: 0,
-  };
+  // No placeholders: report real counts when available, otherwise return nulls.
+  const coinsTracked = DEFAULT_COINS.length;
+
+  try {
+    const latest = await getLatestSnapshot(DEFAULT_COINS[0] ?? 'bitcoin');
+    const lastIngestion = latest?.timestamp ? new Date(latest.timestamp) : null;
+
+    if (!isSupabaseConfigured || !supabaseAdmin) {
+      return { lastIngestion, coinsTracked, snapshotsToday: null, trainingRecords: null, errors24h: null };
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const [{ count: snapshotsToday }, { count: trainingRecords }] = await Promise.all([
+      supabaseAdmin
+        .from('prediction_snapshots')
+        .select('id', { count: 'exact', head: true })
+        .gte('timestamp', startOfToday.toISOString()),
+      supabaseAdmin
+        .from('prediction_training_data')
+        .select('id', { count: 'exact', head: true }),
+    ]);
+
+    return {
+      lastIngestion,
+      coinsTracked,
+      snapshotsToday: typeof snapshotsToday === 'number' ? snapshotsToday : null,
+      trainingRecords: typeof trainingRecords === 'number' ? trainingRecords : null,
+      errors24h: null,
+    };
+  } catch (err) {
+    return {
+      lastIngestion: null,
+      coinsTracked,
+      snapshotsToday: null,
+      trainingRecords: null,
+      errors24h: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 }

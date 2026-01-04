@@ -55,6 +55,8 @@ import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
 import { getMarketDataFromCache } from '@/lib/supabaseData';
 import { validationError, internalError, validateEnum } from '@/lib/apiErrors';
 import { enforceMinInterval } from '@/lib/serverRateLimit';
+import { logDownloadEvent } from '@/lib/downloadTracking';
+import { isDownloadCategoryEnabled } from '@/lib/featureFlags';
 
 // Valid export formats
 const VALID_FORMATS = ['xlsx', 'csv', 'json', 'iqy'] as const;
@@ -138,6 +140,13 @@ export async function GET(request: Request) {
     const iqy = `WEB\n1\n${csvUrl.toString()}\n`;
 
     const filename = `datasimplify_${category}.iqy`;
+    logDownloadEvent({
+      request,
+      category,
+      format: 'iqy',
+      fileName: filename,
+      filters: Object.fromEntries(searchParams.entries()),
+    }).catch(() => {});
     return new NextResponse(iqy, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -171,6 +180,18 @@ export async function GET(request: Request) {
   const categoryError = validateEnum(category, VALID_CATEGORIES, 'Category');
   if (categoryError) {
     return validationError(categoryError);
+  }
+
+  // Feature-flag enforcement (fail closed): if a category is disabled, refuse it.
+  if (!isDownloadCategoryEnabled(category)) {
+    return NextResponse.json(
+      {
+        error: 'This data category is currently disabled.',
+        category,
+        disabled: true,
+      },
+      { status: 503 }
+    );
   }
 
   // Category-specific parameters
@@ -229,8 +250,8 @@ export async function GET(request: Request) {
                 bid_price: d.bid_price,
                 ask_price: d.ask_price,
                 spread: d.spread,
-                vwap: 0,
-                trades_count_24h: 0,
+                vwap: null,
+                trades_count_24h: null,
               }));
               filename = `market_overview_${new Date().toISOString().split('T')[0]}`;
               break;
@@ -332,9 +353,9 @@ export async function GET(request: Request) {
             total_volume_24h: globalStats.totalVolume24h,
             btc_dominance: globalStats.btcDominance,
             eth_dominance: globalStats.ethDominance,
-            market_cap_change_24h: 0,
+            market_cap_change_24h: null,
             active_cryptocurrencies: globalStats.activeCryptocurrencies,
-            active_markets: 0,
+            active_markets: null,
           }];
         }
         filename = `global_stats_${new Date().toISOString().split('T')[0]}`;
@@ -424,7 +445,7 @@ export async function GET(request: Request) {
           symbol: s.symbol,
           market_cap: s.marketCap,
           chain: s.chain,
-          peg_deviation: 0,
+          peg_deviation: null,
         }));
         filename = 'stablecoin_market';
         break;
@@ -435,8 +456,9 @@ export async function GET(request: Request) {
           value: fearGreed.value,
           label: fearGreed.label,
           timestamp: fearGreed.timestamp,
-          previous_value: fearGreed.value,
-          previous_label: fearGreed.label,
+          previous_value: null,
+          previous_label: null,
+          error: fearGreed.error,
         }];
         filename = 'fear_greed_index';
         break;
@@ -446,8 +468,8 @@ export async function GET(request: Request) {
         data = chainTvl.chains.map((c) => ({
           chain: c.name,
           tvl: c.tvl,
-          tvl_change_24h: 0,
-          protocols_count: 0,
+          tvl_change_24h: null,
+          protocols_count: null,
           dominance: ((c.tvl / chainTvl.totalTVL) * 100),
         }));
         filename = 'chain_tvl_rankings';
@@ -456,12 +478,13 @@ export async function GET(request: Request) {
       case 'bitcoin_onchain':
         const btcStats = await fetchBitcoinStats();
         data = [{
-          hash_rate: (btcStats.hashRate / 1e18),
+          hash_rate: typeof btcStats.hashRate === 'number' ? (btcStats.hashRate / 1e18) : null,
           difficulty: btcStats.difficulty,
           block_height: btcStats.blockHeight,
           avg_block_time: btcStats.avgBlockTime,
           unconfirmed_txs: btcStats.unconfirmedTxs,
           mempool_size: btcStats.memPoolSize,
+          error: btcStats.error || null,
         }];
         filename = 'bitcoin_onchain_stats';
         break;
@@ -473,7 +496,8 @@ export async function GET(request: Request) {
           standard_gwei: gasData.standard,
           fast_gwei: gasData.fast,
           base_fee: gasData.baseFee,
-          block_number: 0,
+          block_number: null,
+          error: gasData.error || null,
         }];
         filename = 'ethereum_gas_prices';
         break;
@@ -489,9 +513,9 @@ export async function GET(request: Request) {
           overall_label: aggregatedSentiment.overallLabel,
           total_posts: aggregatedSentiment.totalPosts,
           by_source: JSON.stringify(aggregatedSentiment.bySource),
-          by_coin: '',
-          top_bullish: '',
-          top_bearish: '',
+          by_coin: null,
+          top_bullish: null,
+          top_bearish: null,
           trending_topics: aggregatedSentiment.trendingTopics.join(', '),
         }];
         filename = 'social_sentiment_aggregated';
@@ -812,6 +836,14 @@ export async function GET(request: Request) {
 
     // Return JSON
     if (format === 'json') {
+      logDownloadEvent({
+        request,
+        category,
+        format: 'json',
+        fileName: `${filename}.json`,
+        rowCount: data.length,
+        filters: Object.fromEntries(searchParams.entries()),
+      }).catch(() => {});
       return NextResponse.json({
         data,
         metadata: {
@@ -857,6 +889,14 @@ export async function GET(request: Request) {
     // Generate file
     if (format === 'csv') {
       const csv = XLSX.utils.sheet_to_csv(ws);
+      logDownloadEvent({
+        request,
+        category,
+        format: 'csv',
+        fileName: `${filename}.csv`,
+        rowCount: data.length,
+        filters: Object.fromEntries(searchParams.entries()),
+      }).catch(() => {});
       return new NextResponse(csv, {
         headers: {
           'Content-Type': 'text/csv',
@@ -871,6 +911,14 @@ export async function GET(request: Request) {
 
     // Default: XLSX
     const xlsxBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    logDownloadEvent({
+      request,
+      category,
+      format: 'xlsx',
+      fileName: `${filename}.xlsx`,
+      rowCount: data.length,
+      filters: Object.fromEntries(searchParams.entries()),
+    }).catch(() => {});
     return new NextResponse(xlsxBuffer, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',

@@ -374,6 +374,12 @@ export async function syncMarketData(): Promise<{ success: boolean; count: numbe
         console.log('🤖 Generating AI market summary...');
         const fearGreed = await fetchFearGreedIndex();
 
+        if (fearGreed.value == null) {
+          console.log('ℹ️ Fear & Greed unavailable; skipping AI market summary');
+          await logSyncComplete(logId, records.length);
+          return { success: true, count: records.length };
+        }
+
         const analysis = await generateMarketAnalysis({
           topCoins: marketData.slice(0, 10).map(c => ({
             symbol: c.symbol,
@@ -601,6 +607,14 @@ export async function syncSentimentData(): Promise<{ success: boolean; count: nu
     
     // Fetch and save Fear & Greed
     const fearGreed = await fetchFearGreedIndex();
+
+    if (fearGreed.value == null) {
+      console.log('ℹ️ Fear & Greed unavailable; skipping history upsert');
+      const totalCount = 1 + coinRecords.length + postRecords.length;
+      console.log(`✅ Synced ${totalCount} sentiment records`);
+      await logSyncComplete(logId, totalCount);
+      return { success: true, count: totalCount };
+    }
     
     const { error: fgError } = await checkSupabaseAdmin()
       .from('fear_greed_history')

@@ -3,6 +3,214 @@
 import { useState } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
 
+type Candle = { timestamp: number; open: number; high: number; low: number; close: number; volume?: number };
+
+function roundPercent(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function mean(values: number[]): number {
+  if (values.length === 0) return 0;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function stddev(values: number[]): number {
+  if (values.length < 2) return 0;
+  const m = mean(values);
+  const variance = values.reduce((acc, v) => acc + (v - m) ** 2, 0) / (values.length - 1);
+  return Math.sqrt(variance);
+}
+
+function computeSMA(closes: number[], window: number): Array<number | null> {
+  const out: Array<number | null> = new Array(closes.length).fill(null);
+  if (window <= 0) return out;
+  let sum = 0;
+  for (let i = 0; i < closes.length; i++) {
+    sum += closes[i];
+    if (i >= window) sum -= closes[i - window];
+    if (i >= window - 1) out[i] = sum / window;
+  }
+  return out;
+}
+
+function computeRSI(closes: number[], period: number = 14): Array<number | null> {
+  const out: Array<number | null> = new Array(closes.length).fill(null);
+  if (closes.length < period + 1) return out;
+
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = 1; i <= period; i++) {
+    const change = closes[i] - closes[i - 1];
+    if (change >= 0) gains += change;
+    else losses += -change;
+  }
+
+  let avgGain = gains / period;
+  let avgLoss = losses / period;
+  const rs0 = avgLoss === 0 ? Infinity : avgGain / avgLoss;
+  out[period] = 100 - 100 / (1 + rs0);
+
+  for (let i = period + 1; i < closes.length; i++) {
+    const change = closes[i] - closes[i - 1];
+    const gain = change > 0 ? change : 0;
+    const loss = change < 0 ? -change : 0;
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+    const rs = avgLoss === 0 ? Infinity : avgGain / avgLoss;
+    out[i] = 100 - 100 / (1 + rs);
+  }
+
+  return out;
+}
+
+function maxDrawdownPercent(equity: number[]): number {
+  if (equity.length === 0) return 0;
+  let peak = equity[0];
+  let maxDd = 0;
+  for (const v of equity) {
+    if (v > peak) peak = v;
+    const dd = peak > 0 ? (peak - v) / peak : 0;
+    if (dd > maxDd) maxDd = dd;
+  }
+  return maxDd * 100;
+}
+
+function sharpeFromEquity(equity: number[], annualPeriods: number): number {
+  if (equity.length < 3) return 0;
+  const returns: number[] = [];
+  for (let i = 1; i < equity.length; i++) {
+    if (equity[i - 1] <= 0) continue;
+    returns.push(equity[i] / equity[i - 1] - 1);
+  }
+  const mu = mean(returns);
+  const sd = stddev(returns);
+  if (sd === 0) return 0;
+  return (mu / sd) * Math.sqrt(annualPeriods);
+}
+
+type Trade = { pct: number };
+
+function backtestSignalStrategy(params: {
+  candles: Candle[];
+  initialAmount: number;
+  shouldBuy: (i: number) => boolean;
+  shouldSell: (i: number, entryPrice: number) => boolean;
+  annualPeriods: number;
+}): BacktestResult {
+  const { candles, initialAmount, shouldBuy, shouldSell, annualPeriods } = params;
+  const closes = candles.map(c => c.close);
+  const equity: number[] = [];
+
+  let cash = initialAmount;
+  let units = 0;
+  let entryPrice = 0;
+  const trades: Trade[] = [];
+
+  for (let i = 0; i < candles.length; i++) {
+    const price = closes[i];
+
+    if (units === 0 && cash > 0 && shouldBuy(i)) {
+      units = cash / price;
+      cash = 0;
+      entryPrice = price;
+    } else if (units > 0 && shouldSell(i, entryPrice)) {
+      const exitPrice = price;
+      const pct = (exitPrice / entryPrice - 1) * 100;
+      trades.push({ pct });
+      cash = units * exitPrice;
+      units = 0;
+      entryPrice = 0;
+    }
+
+    equity.push(cash + units * price);
+  }
+
+  const finalValue = equity.length > 0 ? equity[equity.length - 1] : initialAmount;
+  const totalReturn = initialAmount > 0 ? (finalValue / initialAmount - 1) * 100 : 0;
+  const mdd = maxDrawdownPercent(equity);
+  const sharpe = sharpeFromEquity(equity, annualPeriods);
+
+  const numTrades = trades.length;
+  const wins = trades.filter(t => t.pct > 0).length;
+  const winRate = numTrades > 0 ? (wins / numTrades) * 100 : 0;
+  const bestTrade = numTrades > 0 ? Math.max(...trades.map(t => t.pct)) : 0;
+  const worstTrade = numTrades > 0 ? Math.min(...trades.map(t => t.pct)) : 0;
+
+  const holdFinal = closes.length >= 2 ? initialAmount * (closes[closes.length - 1] / closes[0]) : initialAmount;
+  const vsHold = holdFinal > 0 ? ((finalValue - holdFinal) / holdFinal) * 100 : 0;
+
+  return {
+    totalReturn: roundPercent(totalReturn),
+    numTrades,
+    winRate: roundPercent(winRate),
+    maxDrawdown: roundPercent(mdd),
+    sharpeRatio: sharpe,
+    bestTrade: roundPercent(bestTrade),
+    worstTrade: roundPercent(worstTrade),
+    vsHold: roundPercent(vsHold),
+    finalValue,
+  };
+}
+
+function backtestDCA(params: { candles: Candle[]; initialAmount: number; buyEvery: number; annualPeriods: number }): BacktestResult {
+  const { candles, initialAmount, buyEvery, annualPeriods } = params;
+  const closes = candles.map(c => c.close);
+  const equity: number[] = [];
+
+  const buyIndices: number[] = [];
+  for (let i = 0; i < candles.length; i += Math.max(1, buyEvery)) buyIndices.push(i);
+  if (buyIndices.length === 0) buyIndices.push(0);
+
+  const perBuy = initialAmount / buyIndices.length;
+
+  let cash = initialAmount;
+  let units = 0;
+  const purchaseReturns: number[] = [];
+
+  for (let i = 0; i < candles.length; i++) {
+    const price = closes[i];
+    if (buyIndices.includes(i)) {
+      const spend = Math.min(perBuy, cash);
+      if (spend > 0) {
+        units += spend / price;
+        cash -= spend;
+        if (closes.length >= 2) {
+          const endRet = (closes[closes.length - 1] / price - 1) * 100;
+          purchaseReturns.push(endRet);
+        }
+      }
+    }
+    equity.push(cash + units * price);
+  }
+
+  const finalValue = equity.length > 0 ? equity[equity.length - 1] : initialAmount;
+  const totalReturn = initialAmount > 0 ? (finalValue / initialAmount - 1) * 100 : 0;
+  const mdd = maxDrawdownPercent(equity);
+  const sharpe = sharpeFromEquity(equity, annualPeriods);
+
+  const numTrades = buyIndices.length;
+  const wins = purchaseReturns.filter(r => r > 0).length;
+  const winRate = purchaseReturns.length > 0 ? (wins / purchaseReturns.length) * 100 : 0;
+  const bestTrade = purchaseReturns.length > 0 ? Math.max(...purchaseReturns) : 0;
+  const worstTrade = purchaseReturns.length > 0 ? Math.min(...purchaseReturns) : 0;
+
+  const holdFinal = closes.length >= 2 ? initialAmount * (closes[closes.length - 1] / closes[0]) : initialAmount;
+  const vsHold = holdFinal > 0 ? ((finalValue - holdFinal) / holdFinal) * 100 : 0;
+
+  return {
+    totalReturn: roundPercent(totalReturn),
+    numTrades,
+    winRate: roundPercent(winRate),
+    maxDrawdown: roundPercent(mdd),
+    sharpeRatio: sharpe,
+    bestTrade: roundPercent(bestTrade),
+    worstTrade: roundPercent(worstTrade),
+    vsHold: roundPercent(vsHold),
+    finalValue,
+  };
+}
+
 interface BacktestResult {
   totalReturn: number;
   numTrades: number;
@@ -26,11 +234,12 @@ interface PresetStrategy {
 export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
   const [selectedStrategy, setSelectedStrategy] = useState<string | null>(null);
   const [customStrategy, setCustomStrategy] = useState('');
-  const [coin, setCoin] = useState('BTC');
+  const [coin, setCoin] = useState('bitcoin');
   const [initialAmount, setInitialAmount] = useState(1000);
   const [period, setPeriod] = useState('1y');
   const [isBacktesting, setIsBacktesting] = useState(false);
   const [result, setResult] = useState<BacktestResult | null>(null);
+  const [backtestError, setBacktestError] = useState<string | null>(null);
 
   const presetStrategies: PresetStrategy[] = [
     {
@@ -70,72 +279,113 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
     },
   ];
 
-  // Simulate backtest (in production this would call an API)
   const runBacktest = async () => {
     setIsBacktesting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Generate mock results based on selected strategy
-    let mockResult: BacktestResult;
-    
-    switch (selectedStrategy) {
-      case 'dip-buy':
-        mockResult = {
-          totalReturn: 285,
-          numTrades: 15,
-          winRate: 73,
-          maxDrawdown: 22,
-          sharpeRatio: 1.65,
-          bestTrade: 42,
-          worstTrade: -15,
-          vsHold: 12,
-          finalValue: initialAmount * 3.85
-        };
-        break;
-      case 'rsi':
-        mockResult = {
-          totalReturn: 195,
-          numTrades: 28,
-          winRate: 64,
-          maxDrawdown: 18,
-          sharpeRatio: 1.42,
-          bestTrade: 28,
-          worstTrade: -12,
-          vsHold: -8,
-          finalValue: initialAmount * 2.95
-        };
-        break;
-      case 'dca':
-        mockResult = {
-          totalReturn: 245,
-          numTrades: 52,
-          winRate: 100,
-          maxDrawdown: 35,
-          sharpeRatio: 1.25,
-          bestTrade: 0,
-          worstTrade: 0,
-          vsHold: -2,
-          finalValue: initialAmount * 3.45
-        };
-        break;
-      default:
-        mockResult = {
-          totalReturn: 220,
-          numTrades: 18,
-          winRate: 67,
-          maxDrawdown: 25,
-          sharpeRatio: 1.35,
-          bestTrade: 35,
-          worstTrade: -18,
-          vsHold: 5,
-          finalValue: initialAmount * 3.2
-        };
+    setResult(null);
+    setBacktestError(null);
+
+    try {
+      const periodDays = period === '6m' ? 180 : period === '1y' ? 365 : period === '2y' ? 730 : 1825;
+      const interval = periodDays > 1000 ? '1w' : undefined;
+
+      if (selectedStrategy === 'fear-greed' && periodDays > 365) {
+        setBacktestError('Fear & Greed history is only available up to 365 days from the free API.');
+        setIsBacktesting(false);
+        return;
+      }
+
+      const candlesUrl = `/api/charts/candles?coin=${encodeURIComponent(coin)}&days=${periodDays}${interval ? `&interval=${interval}` : ''}`;
+      const candlesRes = await fetch(candlesUrl);
+      const candlesJson = await candlesRes.json();
+      const candles: Candle[] = Array.isArray(candlesJson?.candles) ? candlesJson.candles : [];
+
+      if (!candlesRes.ok || candles.length < 30) {
+        const reason = typeof candlesJson?.error === 'string' ? candlesJson.error : 'No candle data available.';
+        setBacktestError(reason);
+        setIsBacktesting(false);
+        return;
+      }
+
+      const closes = candles.map(c => c.close);
+      const annualPeriods = candlesJson?.interval === '1w' ? 52 : 252;
+
+      let computed: BacktestResult;
+
+      if (selectedStrategy === 'dca') {
+        const buyEvery = candlesJson?.interval === '1w' ? 1 : 7;
+        computed = backtestDCA({ candles, initialAmount, buyEvery, annualPeriods });
+      } else if (selectedStrategy === 'rsi') {
+        const rsi = computeRSI(closes, 14);
+        computed = backtestSignalStrategy({
+          candles,
+          initialAmount,
+          annualPeriods,
+          shouldBuy: (i) => rsi[i] !== null && (rsi[i] as number) < 30,
+          shouldSell: (i) => rsi[i] !== null && (rsi[i] as number) > 70,
+        });
+      } else if (selectedStrategy === 'ma-cross') {
+        const sma20 = computeSMA(closes, 20);
+        const sma50 = computeSMA(closes, 50);
+        computed = backtestSignalStrategy({
+          candles,
+          initialAmount,
+          annualPeriods,
+          shouldBuy: (i) => i > 0 && sma20[i - 1] !== null && sma50[i - 1] !== null && sma20[i] !== null && sma50[i] !== null
+            && (sma20[i - 1] as number) <= (sma50[i - 1] as number) && (sma20[i] as number) > (sma50[i] as number),
+          shouldSell: (i) => i > 0 && sma20[i - 1] !== null && sma50[i - 1] !== null && sma20[i] !== null && sma50[i] !== null
+            && (sma20[i - 1] as number) >= (sma50[i - 1] as number) && (sma20[i] as number) < (sma50[i] as number),
+        });
+      } else if (selectedStrategy === 'dip-buy') {
+        computed = backtestSignalStrategy({
+          candles,
+          initialAmount,
+          annualPeriods,
+          shouldBuy: (i) => i >= 7 && (closes[i] / closes[i - 7] - 1) <= -0.10,
+          shouldSell: (_i, entryPrice) => entryPrice > 0 && (closes[_i] / entryPrice - 1) >= 0.20,
+        });
+      } else if (selectedStrategy === 'fear-greed') {
+        const fgRes = await fetch(`/api/onchain/fear-greed-history?limit=${Math.min(365, periodDays)}`);
+        const fgJson = await fgRes.json();
+        if (!fgRes.ok || !fgJson?.success || !Array.isArray(fgJson?.data) || fgJson.data.length === 0) {
+          setBacktestError('Fear & Greed data unavailable from the free API.');
+          setIsBacktesting(false);
+          return;
+        }
+
+        const byDay = new Map<string, number>();
+        for (const row of fgJson.data as Array<{ timestamp: string; value: number }>) {
+          if (typeof row?.timestamp === 'string' && typeof row?.value === 'number' && Number.isFinite(row.value)) {
+            byDay.set(row.timestamp.slice(0, 10), row.value);
+          }
+        }
+
+        computed = backtestSignalStrategy({
+          candles,
+          initialAmount,
+          annualPeriods,
+          shouldBuy: (i) => {
+            const dayKey = new Date(candles[i].timestamp).toISOString().slice(0, 10);
+            const v = byDay.get(dayKey);
+            return typeof v === 'number' && v < 25;
+          },
+          shouldSell: (i) => {
+            const dayKey = new Date(candles[i].timestamp).toISOString().slice(0, 10);
+            const v = byDay.get(dayKey);
+            return typeof v === 'number' && v > 75;
+          },
+        });
+      } else {
+        setBacktestError('Please select a strategy.');
+        setIsBacktesting(false);
+        return;
+      }
+
+      setResult(computed);
+    } catch (e) {
+      setBacktestError(e instanceof Error ? e.message : 'Backtest failed.');
+    } finally {
+      setIsBacktesting(false);
     }
-    
-    setResult(mockResult);
-    setIsBacktesting(false);
   };
 
   return (
@@ -214,9 +464,9 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
                 title="Select cryptocurrency to backtest"
                 aria-label="Select cryptocurrency to backtest"
               >
-                <option value="BTC">Bitcoin (BTC)</option>
-                <option value="ETH">Ethereum (ETH)</option>
-                <option value="SOL">Solana (SOL)</option>
+                <option value="bitcoin">Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="solana">Solana (SOL)</option>
               </select>
             </div>
             <div>
@@ -276,13 +526,23 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
 
         {/* Right: Results */}
         <div>
-          {!result && !isBacktesting && (
+          {!result && !isBacktesting && !backtestError && (
             <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 text-center">
               <div>
                 <span className="text-6xl">📊</span>
                 <p className="text-gray-500 mt-4">
                   Select a strategy and click &quot;Run Backtest&quot; to see results
                 </p>
+              </div>
+            </div>
+          )}
+
+          {backtestError && !isBacktesting && (
+            <div className="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 text-center">
+              <div>
+                <span className="text-6xl">⚠️</span>
+                <p className="text-gray-700 mt-4 font-medium">Backtest unavailable</p>
+                <p className="text-gray-500 mt-2 text-sm">{backtestError}</p>
               </div>
             </div>
           )}
@@ -344,7 +604,7 @@ export function StrategyBacktester({ showBeginnerTips = true }: { showBeginnerTi
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-xs text-gray-500">Worst Trade</p>
-                  <p className="font-bold text-red-600">{result.worstTrade}%</p>
+                    <p className="font-bold text-red-600">{result.worstTrade}%</p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-xs text-gray-500">Max Drawdown</p>

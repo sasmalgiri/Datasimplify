@@ -29,6 +29,7 @@ import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap
 import { RiskDashboardDemo } from '@/components/features/RiskDashboard';
 import { WhaleTracker } from '@/components/features/WhaleTracker';
 import { UserLevelSelector, StatCard, BeginnerTip } from '@/components/ui/BeginnerHelpers';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 interface MarketData {
   total_market_cap: number;
@@ -58,31 +59,26 @@ export default function HomePage() {
     async function fetchData() {
       try {
         // Fetch global market data
-        const globalRes = await fetch('https://api.coingecko.com/api/v3/global');
-        const globalData = await globalRes.json();
+        const globalRes = await fetch('/api/crypto/global');
+        const globalJson = await globalRes.json();
+        const globalData = globalJson?.data;
         
         setMarketData({
-          total_market_cap: globalData.data.total_market_cap.usd,
-          total_volume_24h: globalData.data.total_volume.usd,
-          btc_dominance: globalData.data.market_cap_percentage.btc,
-          market_cap_change_24h: globalData.data.market_cap_change_percentage_24h_usd
+          total_market_cap: globalData?.total_market_cap?.usd || 0,
+          total_volume_24h: globalData?.total_volume?.usd || 0,
+          btc_dominance: globalData?.market_cap_percentage?.btc || 0,
+          market_cap_change_24h: globalData?.market_cap_change_percentage_24h_usd || 0
         });
 
         // Fetch top coins
-        const coinsRes = await fetch(
-          'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1'
-        );
-        const coinsData = await coinsRes.json();
-        setCoins(coinsData);
+        const coinsRes = await fetch('/api/crypto?limit=100');
+        const coinsJson = await coinsRes.json();
+        setCoins(Array.isArray(coinsJson?.data) ? coinsJson.data : []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Use mock data
-        setMarketData({
-          total_market_cap: 3.2e12,
-          total_volume_24h: 150e9,
-          btc_dominance: 52.3,
-          market_cap_change_24h: 2.4
-        });
+        // No placeholders: if we can't fetch real data, show Unavailable
+        setMarketData(null);
+        setCoins([]);
       }
       setLoading(false);
     }
@@ -172,7 +168,7 @@ export default function HomePage() {
           />
           <StatCard
             title="Market Status"
-            value={marketData && marketData.market_cap_change_24h > 0 ? '🟢 Bullish' : '🔴 Bearish'}
+            value={marketData ? (marketData.market_cap_change_24h > 0 ? '🟢 Bullish' : '🔴 Bearish') : '-'}
             icon="📈"
             explanation="Overall market direction today. Green = prices mostly going up."
           />
@@ -183,7 +179,9 @@ export default function HomePage() {
           {[
             { id: 'overview', label: '🗺️ Market Map', desc: 'Visual overview' },
             { id: 'sentiment', label: '😱 Fear & Greed', desc: 'Market mood' },
-            { id: 'whales', label: '🐋 Whales', desc: 'Big player activity' },
+            ...(isFeatureEnabled('whales')
+              ? [{ id: 'whales', label: '🐋 Whales', desc: 'Big player activity' }]
+              : []),
             { id: 'risk', label: '⚠️ Risk', desc: 'Safety analysis' },
             { id: 'correlation', label: '🔗 Correlation', desc: 'How coins relate' },
           ].map((tab) => (
@@ -267,7 +265,7 @@ export default function HomePage() {
           )}
 
           {/* Whale Tracker */}
-          {activeSection === 'whales' && (
+          {isFeatureEnabled('whales') && activeSection === 'whales' && (
             <WhaleTracker showBeginnerTips={showTips} />
           )}
 

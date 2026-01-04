@@ -2,6 +2,10 @@
 // ALL DATA TYPES AVAILABLE FROM FREE APIs
 // ============================================
 
+import { FEATURES } from '@/lib/featureFlags';
+
+const DEFAULT_COIN_IMAGE = '/globe.svg';
+
 // Professional-grade crypto data at affordable prices
 // Enterprise platforms charge $800-$2000/month for similar features
 
@@ -885,7 +889,7 @@ export function findCoinByGeckoId(geckoId: string): CoinInfo | undefined {
   return SUPPORTED_COINS.find(c => c.symbol.toLowerCase() === geckoId.toLowerCase());
 }
 
-export const SUPPORTED_COINS: CoinInfo[] = [
+const SUPPORTED_COINS_RAW: CoinInfo[] = [
   // Layer 1
   { symbol: 'BTC', binanceSymbol: 'BTCUSDT', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', category: 'layer1', circulatingSupply: 19800000, maxSupply: 21000000 },
   { symbol: 'ETH', binanceSymbol: 'ETHUSDT', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', category: 'layer1', circulatingSupply: 120400000, maxSupply: null },
@@ -1115,6 +1119,11 @@ export const SUPPORTED_COINS: CoinInfo[] = [
   { symbol: 'LSK', binanceSymbol: 'LSKUSDT', name: 'Lisk', image: 'https://assets.coingecko.com/coins/images/385/large/lisk.png', category: 'infrastructure', circulatingSupply: 145000000, maxSupply: null },
   { symbol: 'SYS', binanceSymbol: 'SYSUSDT', name: 'Syscoin', image: 'https://assets.coingecko.com/coins/images/119/large/syscoin.png', category: 'infrastructure', circulatingSupply: 744000000, maxSupply: 888000000 },
 ];
+
+export const SUPPORTED_COINS: CoinInfo[] = SUPPORTED_COINS_RAW.map((coin) => ({
+  ...coin,
+  image: FEATURES.coingecko ? coin.image : DEFAULT_COIN_IMAGE,
+}));
 
 // Helper to get coins by category
 export function getCoinsByCategory(category: string): CoinInfo[] {

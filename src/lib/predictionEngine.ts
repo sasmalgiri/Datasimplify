@@ -36,10 +36,10 @@ export interface PredictionResult {
   riskLevel: RiskLevel;
   reasons: string[];
   signals: Signal[];
-  technicalScore: number;
-  sentimentScore: number;
-  onChainScore: number;
-  macroScore: number;
+  technicalScore: number | null;
+  sentimentScore: number | null;
+  onChainScore: number | null;
+  macroScore: number | null;
   overallScore: number;
   timestamp: string;
   priceTarget?: {
@@ -133,9 +133,11 @@ export interface DerivativesData {
 // Calculate Technical Signals
 export function calculateTechnicalSignals(
   marketData: MarketData,
-  technicalData: TechnicalData
+  technicalData?: TechnicalData | null
 ): Signal[] {
   const signals: Signal[] = [];
+
+  if (!technicalData) return signals;
 
   // RSI Signal
   if (technicalData.rsi14 !== undefined) {
@@ -325,8 +327,10 @@ export function calculateSentimentSignals(sentimentData: SentimentData): Signal[
 }
 
 // Calculate On-Chain Signals
-export function calculateOnChainSignals(onChainData: OnChainData): Signal[] {
+export function calculateOnChainSignals(onChainData?: OnChainData | null): Signal[] {
   const signals: Signal[] = [];
+
+  if (!onChainData) return signals;
 
   // Exchange Net Flow
   if (onChainData.exchangeNetflow === 'outflow') {
@@ -503,10 +507,10 @@ export function aggregateSignals(signals: Signal[]): {
   prediction: SignalDirection;
   confidence: Confidence;
   riskLevel: RiskLevel;
-  technicalScore: number;
-  sentimentScore: number;
-  onChainScore: number;
-  macroScore: number;
+  technicalScore: number | null;
+  sentimentScore: number | null;
+  onChainScore: number | null;
+  macroScore: number | null;
   overallScore: number;
 } {
   // Separate signals by source
@@ -517,8 +521,8 @@ export function aggregateSignals(signals: Signal[]): {
   const derivativesSignals = signals.filter(s => s.source === 'Derivatives');
 
   // Calculate weighted scores for each category
-  const calculateScore = (categorySignals: Signal[]): number => {
-    if (categorySignals.length === 0) return 50; // Neutral if no signals
+  const calculateScore = (categorySignals: Signal[]): number | null => {
+    if (categorySignals.length === 0) return null; // Unavailable if no real signals
 
     let bullishWeight = 0;
     let bearishWeight = 0;
@@ -533,7 +537,7 @@ export function aggregateSignals(signals: Signal[]): {
       }
     });
 
-    if (totalWeight === 0) return 50;
+    if (totalWeight === 0) return null;
 
     // Score from 0 (very bearish) to 100 (very bullish)
     const score = ((bullishWeight - bearishWeight) / totalWeight) * 50 + 50;
@@ -545,13 +549,18 @@ export function aggregateSignals(signals: Signal[]): {
   const onChainScore = calculateScore(onChainSignals);
   const macroScore = calculateScore([...macroSignals, ...derivativesSignals]);
 
-  // Weighted overall score (Technical and On-Chain weighted higher)
-  const overallScore = (
-    technicalScore * 0.35 +
-    sentimentScore * 0.15 +
-    onChainScore * 0.30 +
-    macroScore * 0.20
-  );
+  // Weighted overall score using only available categories
+  const weights: Array<{ score: number | null; weight: number }> = [
+    { score: technicalScore, weight: 0.35 },
+    { score: sentimentScore, weight: 0.15 },
+    { score: onChainScore, weight: 0.30 },
+    { score: macroScore, weight: 0.20 },
+  ];
+  const available = weights.filter(w => typeof w.score === 'number' && Number.isFinite(w.score));
+  const weightSum = available.reduce((sum, w) => sum + w.weight, 0);
+  const overallScore = weightSum > 0
+    ? available.reduce((sum, w) => sum + (w.score as number) * w.weight, 0) / weightSum
+    : 50;
 
   // Determine prediction
   let prediction: SignalDirection;
@@ -605,10 +614,10 @@ export function aggregateSignals(signals: Signal[]): {
     prediction,
     confidence,
     riskLevel,
-    technicalScore: Math.round(technicalScore),
-    sentimentScore: Math.round(sentimentScore),
-    onChainScore: Math.round(onChainScore),
-    macroScore: Math.round(macroScore),
+    technicalScore: typeof technicalScore === 'number' ? Math.round(technicalScore) : null,
+    sentimentScore: typeof sentimentScore === 'number' ? Math.round(sentimentScore) : null,
+    onChainScore: typeof onChainScore === 'number' ? Math.round(onChainScore) : null,
+    macroScore: typeof macroScore === 'number' ? Math.round(macroScore) : null,
     overallScore: Math.round(overallScore)
   };
 }
@@ -701,95 +710,6 @@ Provide exactly 3 brief, actionable reasons (max 15 words each). Format as a JSO
   };
 }
 
-// Simulate technical data based on price action
-export function simulateTechnicalData(marketData: MarketData): TechnicalData {
-  // Simulate RSI based on recent price changes
-  const priceChange = marketData.priceChange24h + marketData.priceChange7d * 0.5;
-  let rsi14 = 50 + priceChange * 2;
-  rsi14 = Math.max(10, Math.min(90, rsi14));
-
-  // Simulate MACD based on momentum
-  let macdSignal: 'bullish_cross' | 'bearish_cross' | 'neutral' = 'neutral';
-  if (marketData.priceChange24h > 3 && marketData.priceChange7d > 5) {
-    macdSignal = 'bullish_cross';
-  } else if (marketData.priceChange24h < -3 && marketData.priceChange7d < -5) {
-    macdSignal = 'bearish_cross';
-  }
-
-  // Simulate MA position based on trend
-  let priceVs200MA: 'above' | 'below' | 'near' = 'near';
-  let priceVs50MA: 'above' | 'below' | 'near' = 'near';
-
-  if (marketData.priceChange30d > 10) {
-    priceVs200MA = 'above';
-    priceVs50MA = 'above';
-  } else if (marketData.priceChange30d < -10) {
-    priceVs200MA = 'below';
-    priceVs50MA = 'below';
-  }
-
-  // Bollinger position based on volatility
-  const volatility = Math.abs(marketData.high24h - marketData.low24h) / marketData.price * 100;
-  let bollingerPosition: 'upper' | 'middle' | 'lower' = 'middle';
-  if (marketData.priceChange24h > 5 && volatility > 5) {
-    bollingerPosition = 'upper';
-  } else if (marketData.priceChange24h < -5 && volatility > 5) {
-    bollingerPosition = 'lower';
-  }
-
-  // Volume trend
-  let volumeTrend: 'increasing' | 'decreasing' | 'stable' = 'stable';
-  const volumeToMarketCap = marketData.volume24h / marketData.marketCap;
-  if (volumeToMarketCap > 0.15) {
-    volumeTrend = 'increasing';
-  } else if (volumeToMarketCap < 0.05) {
-    volumeTrend = 'decreasing';
-  }
-
-  return {
-    rsi14,
-    macdSignal,
-    priceVs200MA,
-    priceVs50MA,
-    bollingerPosition,
-    volumeTrend
-  };
-}
-
-// Simulate on-chain data based on market conditions
-export function simulateOnChainData(marketData: MarketData): OnChainData {
-  // Simulate exchange flow based on price trend
-  let exchangeNetflow: 'inflow' | 'outflow' | 'neutral' = 'neutral';
-  if (marketData.priceChange7d > 5) {
-    exchangeNetflow = 'outflow'; // Bull market = accumulation
-  } else if (marketData.priceChange7d < -5) {
-    exchangeNetflow = 'inflow'; // Bear market = distribution
-  }
-
-  // Simulate whale activity
-  let whaleActivity: 'buying' | 'selling' | 'neutral' = 'neutral';
-  if (marketData.priceChange24h > 3 && marketData.volume24h > marketData.marketCap * 0.1) {
-    whaleActivity = 'buying';
-  } else if (marketData.priceChange24h < -3 && marketData.volume24h > marketData.marketCap * 0.1) {
-    whaleActivity = 'selling';
-  }
-
-  // Active addresses based on volume
-  let activeAddresses: 'increasing' | 'decreasing' | 'stable' = 'stable';
-  const volumeRatio = marketData.volume24h / marketData.marketCap;
-  if (volumeRatio > 0.12) {
-    activeAddresses = 'increasing';
-  } else if (volumeRatio < 0.03) {
-    activeAddresses = 'decreasing';
-  }
-
-  return {
-    exchangeNetflow,
-    whaleActivity,
-    activeAddresses
-  };
-}
-
 // Main prediction function for a coin
 export async function generateCoinPrediction(
   coinId: string,
@@ -797,18 +717,17 @@ export async function generateCoinPrediction(
   marketData: MarketData,
   sentimentData: SentimentData,
   macroData: MacroData,
-  derivativesData: DerivativesData
+  derivativesData: DerivativesData,
+  technicalData?: TechnicalData | null,
+  onChainData?: OnChainData | null
 ): Promise<PredictionResult> {
-  // Get technical data (simulated from market data)
-  const technicalData = simulateTechnicalData(marketData);
-
-  // Get on-chain data (simulated)
-  const onChainData = simulateOnChainData(marketData);
+  const safeTechnicalData = technicalData ?? null;
+  const safeOnChainData = onChainData ?? null;
 
   // Calculate all signals
-  const technicalSignals = calculateTechnicalSignals(marketData, technicalData);
+  const technicalSignals = calculateTechnicalSignals(marketData, safeTechnicalData);
   const sentimentSignals = calculateSentimentSignals(sentimentData);
-  const onChainSignals = calculateOnChainSignals(onChainData);
+  const onChainSignals = calculateOnChainSignals(safeOnChainData);
   const macroSignals = calculateMacroSignals(macroData);
   const derivativesSignals = calculateDerivativesSignals(derivativesData);
 
@@ -835,14 +754,16 @@ export function generateQuickPrediction(
   marketData: MarketData,
   sentimentData: SentimentData,
   macroData: MacroData,
-  derivativesData: DerivativesData
+  derivativesData: DerivativesData,
+  technicalData?: TechnicalData | null,
+  onChainData?: OnChainData | null
 ): Omit<PredictionResult, 'timestamp'> & { timestamp: string } {
-  const technicalData = simulateTechnicalData(marketData);
-  const onChainData = simulateOnChainData(marketData);
+  const safeTechnicalData = technicalData ?? null;
+  const safeOnChainData = onChainData ?? null;
 
-  const technicalSignals = calculateTechnicalSignals(marketData, technicalData);
+  const technicalSignals = calculateTechnicalSignals(marketData, safeTechnicalData);
   const sentimentSignals = calculateSentimentSignals(sentimentData);
-  const onChainSignals = calculateOnChainSignals(onChainData);
+  const onChainSignals = calculateOnChainSignals(safeOnChainData);
   const macroSignals = calculateMacroSignals(macroData);
   const derivativesSignals = calculateDerivativesSignals(derivativesData);
 
@@ -934,10 +855,10 @@ function predictionToSnapshotInput(
     prediction: prediction.prediction,
     confidence: prediction.confidence,
     riskLevel: prediction.riskLevel,
-    technicalScore: prediction.technicalScore,
-    sentimentScore: prediction.sentimentScore,
-    onchainScore: prediction.onChainScore,
-    macroScore: prediction.macroScore,
+    technicalScore: prediction.technicalScore ?? undefined,
+    sentimentScore: prediction.sentimentScore ?? undefined,
+    onchainScore: prediction.onChainScore ?? undefined,
+    macroScore: prediction.macroScore ?? undefined,
     overallScore: prediction.overallScore,
     reasons: prediction.reasons,
     signals: prediction.signals,
@@ -1045,7 +966,9 @@ export async function generatePredictionWithPersistence(
   sentimentData: SentimentData,
   macroData: MacroData,
   derivativesData: DerivativesData,
-  options: PersistenceOptions = {}
+  options: PersistenceOptions = {},
+  technicalData?: TechnicalData | null,
+  onChainData?: OnChainData | null
 ): Promise<PredictionResult> {
   const {
     persist = true,
@@ -1055,14 +978,13 @@ export async function generatePredictionWithPersistence(
     storeTrainingData = true,
   } = options;
 
-  // Generate technical and on-chain data
-  const technicalData = simulateTechnicalData(marketData);
-  const onChainData = simulateOnChainData(marketData);
+  const safeTechnicalData = technicalData ?? null;
+  const safeOnChainData = onChainData ?? null;
 
   // Calculate all signals
-  const technicalSignals = calculateTechnicalSignals(marketData, technicalData);
+  const technicalSignals = calculateTechnicalSignals(marketData, safeTechnicalData);
   const sentimentSignals = calculateSentimentSignals(sentimentData);
-  const onChainSignals = calculateOnChainSignals(onChainData);
+  const onChainSignals = calculateOnChainSignals(safeOnChainData);
   const macroSignals = calculateMacroSignals(macroData);
   const derivativesSignals = calculateDerivativesSignals(derivativesData);
 
@@ -1078,7 +1000,7 @@ export async function generatePredictionWithPersistence(
   const aggregatedResult = aggregateSignals(allSignals);
 
   // Generate base prediction
-  let prediction = await generateAIPrediction(coinId, coinName, allSignals, aggregatedResult);
+  const prediction = await generateAIPrediction(coinId, coinName, allSignals, aggregatedResult);
 
   // Calculate price targets
   const volatility = marketData.high24h && marketData.low24h
@@ -1096,7 +1018,7 @@ export async function generatePredictionWithPersistence(
     try {
       const accuracy = await getHistoricalAccuracy({
         coinId,
-        rsiRange: technicalData.rsi14 ? [technicalData.rsi14 - 10, technicalData.rsi14 + 10] : undefined,
+        rsiRange: safeTechnicalData?.rsi14 ? [safeTechnicalData.rsi14 - 10, safeTechnicalData.rsi14 + 10] : undefined,
         fearGreedRange: [sentimentData.fearGreedIndex - 10, sentimentData.fearGreedIndex + 10],
         days: 90,
       });
@@ -1135,7 +1057,7 @@ export async function generatePredictionWithPersistence(
       const snapshotInput = predictionToSnapshotInput(
         prediction,
         marketData,
-        technicalData,
+        safeTechnicalData || {},
         sentimentData,
         macroData,
         derivativesData
@@ -1148,7 +1070,7 @@ export async function generatePredictionWithPersistence(
         if (storeTrainingData) {
           const features = extractTrainingFeatures(
             marketData,
-            technicalData,
+            safeTechnicalData || {},
             sentimentData,
             macroData,
             derivativesData
@@ -1159,10 +1081,10 @@ export async function generatePredictionWithPersistence(
             snapshotTimestamp: new Date(prediction.timestamp),
             features,
             technicalFeatures: {
-              rsi14: technicalData.rsi14,
-              macdSignal: technicalData.macdSignal,
-              priceVs50MA: technicalData.priceVs50MA,
-              priceVs200MA: technicalData.priceVs200MA,
+              rsi14: safeTechnicalData?.rsi14,
+              macdSignal: safeTechnicalData?.macdSignal,
+              priceVs50MA: safeTechnicalData?.priceVs50MA,
+              priceVs200MA: safeTechnicalData?.priceVs200MA,
             },
             sentimentFeatures: {
               fearGreedIndex: sentimentData.fearGreedIndex,
@@ -1203,15 +1125,15 @@ export async function getLatestPrediction(coinId: string): Promise<PredictionRes
       coinId: snapshot.coinId,
       coinName: coinId, // Name not stored in snapshot
       prediction: (snapshot.prediction as SignalDirection) || 'NEUTRAL',
-      confidence: snapshot.confidence || 50,
+      confidence: typeof snapshot.confidence === 'number' ? snapshot.confidence : 50,
       riskLevel: (snapshot.riskLevel as RiskLevel) || 'MEDIUM',
       reasons: snapshot.reasons || [],
       signals: (snapshot.signals as Signal[]) || [],
-      technicalScore: snapshot.technicalScore || 50,
-      sentimentScore: snapshot.sentimentScore || 50,
-      onChainScore: snapshot.onchainScore || 50,
-      macroScore: snapshot.macroScore || 50,
-      overallScore: snapshot.overallScore || 50,
+      technicalScore: typeof snapshot.technicalScore === 'number' ? snapshot.technicalScore : null,
+      sentimentScore: typeof snapshot.sentimentScore === 'number' ? snapshot.sentimentScore : null,
+      onChainScore: typeof snapshot.onchainScore === 'number' ? snapshot.onchainScore : null,
+      macroScore: typeof snapshot.macroScore === 'number' ? snapshot.macroScore : null,
+      overallScore: typeof snapshot.overallScore === 'number' ? snapshot.overallScore : 50,
       timestamp: snapshot.timestamp.toISOString(),
       snapshotId: snapshot.id,
     };

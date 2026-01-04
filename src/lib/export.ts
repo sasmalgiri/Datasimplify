@@ -51,7 +51,7 @@ function coinsToRows(coins: CoinMarketData[], columns: typeof COLUMN_CONFIG): Re
       const value = coin[col.key as keyof CoinMarketData];
       
       if (value === null || value === undefined) {
-        row[col.header] = '-';
+        row[col.header] = 'Unavailable';
         continue;
       }
       
@@ -66,13 +66,13 @@ function coinsToRows(coins: CoinMarketData[], columns: typeof COLUMN_CONFIG): Re
           row[col.header] = typeof value === 'number' ? formatNumber(value) : value;
           break;
         case 'date':
-          row[col.header] = value ? new Date(value as string).toLocaleDateString() : '-';
+          row[col.header] = value ? new Date(value as string).toLocaleDateString() : 'Unavailable';
           break;
         case 'datetime':
-          row[col.header] = value ? new Date(value as string).toLocaleString() : '-';
+          row[col.header] = value ? new Date(value as string).toLocaleString() : 'Unavailable';
           break;
         default:
-          row[col.header] = value?.toString().toUpperCase() || '-';
+          row[col.header] = value?.toString().toUpperCase() || 'Unavailable';
       }
     }
     

@@ -139,6 +139,9 @@ export interface AggregatedSentiment {
     sentiment: number;
     volume: number;
     trending: boolean;
+    bullishCount: number;
+    bearishCount: number;
+    neutralCount: number;
   }>;
   topBullish: SentimentPost[];
   topBearish: SentimentPost[];
@@ -532,10 +535,12 @@ export async function fetchCoinGeckoTrending(): Promise<{
   losers: string[];
 }> {
   try {
-    const [trendingRes, globalRes] = await Promise.all([
-      fetch('https://api.coingecko.com/api/v3/search/trending'),
-      fetch('https://api.coingecko.com/api/v3/global'),
-    ]);
+    const { isFeatureEnabled } = await import('@/lib/featureFlags');
+    if (!isFeatureEnabled('coingecko')) {
+      return { trending: [], gainers: [], losers: [] };
+    }
+
+    const trendingRes = await fetch('https://api.coingecko.com/api/v3/search/trending');
     
     const trending = await trendingRes.json();
     
@@ -675,14 +680,23 @@ export async function aggregateAllSentiment(): Promise<AggregatedSentiment> {
       Object.entries(byCoin)
         .sort((a, b) => b[1].volume - a[1].volume)
         .slice(0, 50)
-        .map(([coin, data]) => [
-          coin,
-          {
-            sentiment: Math.round(data.sentiment * 100),
-            volume: data.volume,
-            trending: trending.trending.includes(coin),
-          }
-        ])
+        .map(([coin, data]) => {
+          const bullishCount = data.posts.filter(p => p.sentiment.label.includes('bullish')).length;
+          const bearishCount = data.posts.filter(p => p.sentiment.label.includes('bearish')).length;
+          const neutralCount = data.posts.filter(p => p.sentiment.label === 'neutral').length;
+
+          return [
+            coin,
+            {
+              sentiment: Math.round(data.sentiment * 100),
+              volume: data.volume,
+              trending: trending.trending.includes(coin),
+              bullishCount,
+              bearishCount,
+              neutralCount,
+            },
+          ];
+        })
     ),
     topBullish: sortedPosts.filter(p => p.sentiment.score > 0.2).slice(0, 10),
     topBearish: sortedPosts.filter(p => p.sentiment.score < -0.2).slice(0, 10),

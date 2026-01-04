@@ -371,7 +371,12 @@ export function OnChainMetrics({
   activeAddresses?: 'increasing' | 'decreasing' | 'stable';
   compact?: boolean;
 }) {
+  const hasAny = exchangeFlow !== undefined || whaleActivity !== undefined || activeAddresses !== undefined;
+
   const getFlowStyle = () => {
+    if (exchangeFlow === undefined) {
+      return { text: 'text-gray-400', label: 'Unavailable', signal: '' };
+    }
     switch (exchangeFlow) {
       case 'outflow':
         return { text: 'text-emerald-400', label: 'Outflow', signal: 'Accumulation' };
@@ -383,6 +388,9 @@ export function OnChainMetrics({
   };
 
   const getWhaleStyle = () => {
+    if (whaleActivity === undefined) {
+      return { text: 'text-gray-400', label: 'Unavailable', icon: Activity };
+    }
     switch (whaleActivity) {
       case 'buying':
         return { text: 'text-emerald-400', label: 'Buying', icon: TrendingUp };
@@ -394,6 +402,9 @@ export function OnChainMetrics({
   };
 
   const getAddressStyle = () => {
+    if (activeAddresses === undefined) {
+      return { text: 'text-gray-400', label: 'Unavailable' };
+    }
     switch (activeAddresses) {
       case 'increasing':
         return { text: 'text-emerald-400', label: 'Increasing' };
@@ -408,6 +419,18 @@ export function OnChainMetrics({
   const whaleStyle = getWhaleStyle();
   const addressStyle = getAddressStyle();
   const WhaleIcon = whaleStyle.icon;
+
+  if (!hasAny) {
+    return (
+      <div className="bg-gray-800/50 rounded-xl p-5 border border-gray-700">
+        <h3 className="text-white font-semibold flex items-center gap-2 mb-2">
+          <Lock className="w-5 h-5 text-blue-400" />
+          On-Chain Metrics
+        </h3>
+        <p className="text-sm text-gray-400">Unavailable for this asset from free sources.</p>
+      </div>
+    );
+  }
 
   if (compact) {
     return (

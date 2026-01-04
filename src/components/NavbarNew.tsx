@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
+  const socialEnabled = isFeatureEnabled('socialSentiment');
 
   const navigation = [
     {
@@ -31,7 +33,9 @@ export function Navbar() {
         { name: 'ETF Flows', href: '/etf', icon: '📊', desc: 'Bitcoin ETF tracking' },
         { name: 'Risk Analysis', href: '/risk', icon: '⚠️', desc: 'Safety metrics' },
         { name: 'Correlation', href: '/correlation', icon: '🔗', desc: 'How coins move together' },
-        { name: 'Social Buzz', href: '/social', icon: '📱', desc: 'Social media sentiment' },
+        ...(socialEnabled
+          ? [{ name: 'Social Buzz', href: '/social', icon: '📱', desc: 'Social media sentiment' }]
+          : []),
       ]
     },
     {

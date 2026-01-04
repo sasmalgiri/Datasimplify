@@ -78,7 +78,10 @@ export default function EmailCaptureModal({
         {/* Header */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-8 text-white text-center">
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Close modal"
+            title="Close"
             className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -120,7 +123,7 @@ export default function EmailCaptureModal({
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500" />
-                <span>3 free downloads per month</span>
+                <span>5 free downloads per month</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500" />

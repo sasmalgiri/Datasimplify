@@ -6,7 +6,7 @@ export function OrganizationJsonLd() {
     name: 'DataSimplify',
     url: 'https://datasimplify.com',
     logo: 'https://datasimplify.com/logo.png',
-    description: 'Crypto data analytics platform with AI-powered predictions, market data downloads, and real-time insights.',
+    description: 'Crypto data platform with market data downloads and optional analytics tools (availability depends on configuration).',
     sameAs: [
       'https://twitter.com/datasimplify',
       'https://linkedin.com/company/datasimplify',
@@ -65,11 +65,11 @@ export function SoftwareApplicationJsonLd() {
       description: 'Free tier available',
     },
     featureList: [
-      'Real-time crypto market data',
-      'AI-powered price predictions',
+      'Crypto market data',
+      'AI-assisted analysis (when enabled)',
       'Fear & Greed Index tracking',
-      'Whale transaction monitoring',
-      'DeFi analytics',
+      'Whale transaction monitoring (when enabled)',
+      'DeFi analytics (when enabled)',
       'Excel/CSV data export',
       'No coding required',
     ],
@@ -87,7 +87,7 @@ export function FAQJsonLd() {
   const faqs = [
     {
       question: 'What is DataSimplify?',
-      answer: 'DataSimplify is a crypto data analytics platform that provides market data, AI predictions, sentiment analysis, and data export features - all without requiring any coding knowledge.',
+      answer: 'DataSimplify is a crypto data platform that provides market data downloads and optional analytics tools, without requiring coding knowledge.',
     },
     {
       question: 'Is DataSimplify free to use?',

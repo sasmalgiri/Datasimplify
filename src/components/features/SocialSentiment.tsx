@@ -26,14 +26,15 @@ interface SocialData {
   bearish_percent: number;
   neutral_percent: number;
   social_volume: number;
-  twitter_mentions: number;
-  reddit_posts: number;
-  youtube_videos: number;
-  news_articles: number;
-  influencer_mentions: number;
+  twitter_mentions: number | null;
+  reddit_posts: number | null;
+  youtube_videos: number | null;
+  news_articles: number | null;
+  influencer_mentions: number | null;
   trending_rank: number | null;
-  galaxy_score: number;  // Combined sentiment score
-  change_24h: number;
+  is_trending: boolean;
+  galaxy_score: number | null;
+  change_24h: number | null;
 }
 
 export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
@@ -49,91 +50,64 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
       setError(null);
 
       try {
-        // Fetch sentiment data from comprehensive sentiment API
-        const response = await fetch('/api/sentiment-full');
+        // Fetch aggregated sentiment data (real sources only)
+        const [sentimentRes, marketRes] = await Promise.allSettled([
+          fetch('/api/sentiment-full?type=aggregated'),
+          fetch('/api/crypto?limit=250'),
+        ]);
 
-        if (response.ok) {
-          const data = await response.json();
+        if (sentimentRes.status !== 'fulfilled' || !sentimentRes.value.ok) {
+          throw new Error('Unable to fetch aggregated sentiment data');
+        }
 
-          if (data.success && data.data) {
-            // Transform API data to component format
-            const sentimentData = data.data;
-            const transformedCoins: SocialData[] = [];
+        const sentimentJson = await sentimentRes.value.json();
+        const aggregated = sentimentJson?.data;
 
-            // Get Fear & Greed for base sentiment
-            const fearGreedScore = sentimentData.fearGreed?.value || 50;
+        if (!sentimentJson?.success || !aggregated?.byCoin) {
+          throw new Error('Sentiment API returned unexpected response');
+        }
 
-            // Process coin mentions from different sources
-            const coinList = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'SHIB', 'PEPE'];
-            const coinNames: Record<string, string> = {
-              'BTC': 'Bitcoin', 'ETH': 'Ethereum', 'SOL': 'Solana',
-              'DOGE': 'Dogecoin', 'XRP': 'Ripple', 'ADA': 'Cardano',
-              'SHIB': 'Shiba Inu', 'PEPE': 'Pepe'
-            };
-
-            coinList.forEach((symbol, index) => {
-              // Calculate sentiment from aggregated data
-              const baseSentiment = fearGreedScore + Math.random() * 20 - 10;
-              const sentimentScore = Math.max(0, Math.min(100, Math.round(baseSentiment)));
-              const bullishPercent = Math.round(sentimentScore * 0.8 + Math.random() * 10);
-              const bearishPercent = Math.round((100 - sentimentScore) * 0.7 + Math.random() * 10);
-              const neutralPercent = 100 - bullishPercent - bearishPercent;
-
-              // Estimate social volume from Reddit mentions
-              const redditMentions = sentimentData.reddit?.find((p: { coins: string[] }) =>
-                p.coins?.includes(symbol)
-              )?.engagement?.comments || Math.floor(Math.random() * 10000);
-
-              const newsMentions = sentimentData.news?.filter((n: { coins: string[] }) =>
-                n.coins?.includes(symbol)
-              ).length || Math.floor(Math.random() * 50);
-
-              transformedCoins.push({
-                id: symbol.toLowerCase(),
-                symbol,
-                name: coinNames[symbol] || symbol,
-                sentiment_score: sentimentScore,
-                bullish_percent: Math.max(0, bullishPercent),
-                bearish_percent: Math.max(0, bearishPercent),
-                neutral_percent: Math.max(0, neutralPercent),
-                social_volume: Math.floor((redditMentions + newsMentions * 100) * (1 + Math.random())),
-                twitter_mentions: Math.floor(redditMentions * 2.5),
-                reddit_posts: redditMentions,
-                youtube_videos: Math.floor(newsMentions * 10),
-                news_articles: newsMentions,
-                influencer_mentions: Math.floor(Math.random() * 500 + 100),
-                trending_rank: index + 1,
-                galaxy_score: Math.round(sentimentScore * 0.9 + Math.random() * 10),
-                change_24h: Math.round((Math.random() * 40 - 20) * 10) / 10
-              });
-            });
-
-            setCoins(transformedCoins);
-            setSelectedCoin(transformedCoins[0]);
-            setLoading(false);
-            return;
+        // Optional: enrich with 24h price change from CoinGecko markets
+        const marketBySymbol = new Map<string, number>();
+        if (marketRes.status === 'fulfilled' && marketRes.value.ok) {
+          const marketJson = await marketRes.value.json();
+          const items: Array<{ symbol?: string; price_change_percentage_24h?: number }> = marketJson?.data || [];
+          for (const item of items) {
+            const sym = item.symbol?.toUpperCase();
+            if (sym && typeof item.price_change_percentage_24h === 'number') {
+              marketBySymbol.set(sym, item.price_change_percentage_24h);
+            }
           }
         }
 
-        // Fallback: fetch from Fear & Greed Index
-        const fgResponse = await fetch('/api/sentiment');
-        if (fgResponse.ok) {
-          const fgData = await fgResponse.json();
-          const baseScore = fgData.value || 50;
+        const coinNames: Record<string, string> = {
+          BTC: 'Bitcoin',
+          ETH: 'Ethereum',
+          SOL: 'Solana',
+          DOGE: 'Dogecoin',
+          XRP: 'Ripple',
+          ADA: 'Cardano',
+          SHIB: 'Shiba Inu',
+          PEPE: 'Pepe',
+          BNB: 'BNB',
+          DOT: 'Polkadot',
+          AVAX: 'Avalanche',
+          LINK: 'Chainlink',
+          MATIC: 'Polygon',
+        };
 
-          // Generate coins with Fear & Greed as base
-          const coinList = ['BTC', 'ETH', 'SOL', 'DOGE', 'XRP', 'ADA', 'SHIB', 'PEPE'];
-          const coinNames: Record<string, string> = {
-            'BTC': 'Bitcoin', 'ETH': 'Ethereum', 'SOL': 'Solana',
-            'DOGE': 'Dogecoin', 'XRP': 'Ripple', 'ADA': 'Cardano',
-            'SHIB': 'Shiba Inu', 'PEPE': 'Pepe'
-          };
+        const transformedCoins: SocialData[] = Object.entries(aggregated.byCoin)
+          .map(([symbol, stats]: any) => {
+            const rawSentiment = typeof stats?.sentiment === 'number' ? stats.sentiment : 0; // -100..100
+            const sentimentScore = Math.max(0, Math.min(100, Math.round((rawSentiment + 100) / 2)));
 
-          const generatedCoins: SocialData[] = coinList.map((symbol, index) => {
-            const variance = Math.random() * 30 - 15;
-            const sentimentScore = Math.max(0, Math.min(100, Math.round(baseScore + variance)));
-            const bullishPercent = Math.round(sentimentScore * 0.75 + Math.random() * 15);
-            const bearishPercent = Math.round((100 - sentimentScore) * 0.65 + Math.random() * 15);
+            const bullishCount = typeof stats?.bullishCount === 'number' ? stats.bullishCount : 0;
+            const bearishCount = typeof stats?.bearishCount === 'number' ? stats.bearishCount : 0;
+            const neutralCount = typeof stats?.neutralCount === 'number' ? stats.neutralCount : 0;
+            const total = Math.max(1, bullishCount + bearishCount + neutralCount);
+
+            const bullishPercent = Math.round((bullishCount / total) * 100);
+            const bearishPercent = Math.round((bearishCount / total) * 100);
             const neutralPercent = Math.max(0, 100 - bullishPercent - bearishPercent);
 
             return {
@@ -141,26 +115,36 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
               symbol,
               name: coinNames[symbol] || symbol,
               sentiment_score: sentimentScore,
-              bullish_percent: Math.max(0, Math.min(100, bullishPercent)),
-              bearish_percent: Math.max(0, Math.min(100, bearishPercent)),
-              neutral_percent: Math.max(0, Math.min(100, neutralPercent)),
-              social_volume: Math.floor(50000 + Math.random() * 250000),
-              twitter_mentions: Math.floor(30000 + Math.random() * 150000),
-              reddit_posts: Math.floor(2000 + Math.random() * 15000),
-              youtube_videos: Math.floor(500 + Math.random() * 5000),
-              news_articles: Math.floor(100 + Math.random() * 3000),
-              influencer_mentions: Math.floor(50 + Math.random() * 800),
-              trending_rank: index + 1,
-              galaxy_score: Math.round(sentimentScore * 0.85 + Math.random() * 15),
-              change_24h: Math.round((Math.random() * 40 - 20) * 10) / 10
+              bullish_percent: bullishPercent,
+              bearish_percent: bearishPercent,
+              neutral_percent: neutralPercent,
+              social_volume: typeof stats?.volume === 'number' ? stats.volume : 0,
+              twitter_mentions: null,
+              reddit_posts: null,
+              youtube_videos: null,
+              news_articles: null,
+              influencer_mentions: null,
+              trending_rank: null,
+              is_trending: Boolean(stats?.trending),
+              galaxy_score: null,
+              change_24h: marketBySymbol.get(symbol) ?? null,
             };
-          });
+          })
+          // Drop coins with zero volume (no observed mentions)
+          .filter(c => c.social_volume > 0);
 
-          setCoins(generatedCoins);
-          setSelectedCoin(generatedCoins[0]);
-        } else {
-          setError('Unable to fetch sentiment data');
-        }
+        // Default ranking: trending first, then by volume
+        const ranked = [...transformedCoins].sort((a, b) => {
+          if (a.is_trending !== b.is_trending) return a.is_trending ? -1 : 1;
+          return b.social_volume - a.social_volume;
+        });
+
+        ranked.forEach((c, idx) => {
+          c.trending_rank = idx + 1;
+        });
+
+        setCoins(ranked);
+        setSelectedCoin(ranked[0] || null);
       } catch (err) {
         console.error('Sentiment fetch error:', err);
         setError('Failed to load sentiment data');
@@ -180,10 +164,12 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
   const sortedCoins = [...coins].sort((a, b) => {
     if (sortBy === 'sentiment') return b.sentiment_score - a.sentiment_score;
     if (sortBy === 'volume') return b.social_volume - a.social_volume;
-    return (a.trending_rank || 999) - (b.trending_rank || 999);
+    if (a.is_trending !== b.is_trending) return a.is_trending ? -1 : 1;
+    return b.social_volume - a.social_volume;
   });
 
-  const formatNumber = (num: number) => {
+  const formatNumber = (num: number | null | undefined) => {
+    if (num === null || num === undefined || Number.isNaN(num)) return '—';
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
@@ -308,9 +294,13 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                     }`}>
                       {coin.sentiment_score}%
                     </div>
-                    <div className={`text-xs ${coin.change_24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {coin.change_24h >= 0 ? '↑' : '↓'}{Math.abs(coin.change_24h)}%
-                    </div>
+                    {coin.change_24h === null || coin.change_24h === undefined ? (
+                      <div className="text-xs text-gray-400">N/A</div>
+                    ) : (
+                      <div className={`text-xs ${coin.change_24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {coin.change_24h >= 0 ? '↑' : '↓'}{Math.abs(coin.change_24h).toFixed(2)}%
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -431,10 +421,15 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                   <p className="text-xs text-gray-500">Combined social + price performance</p>
                 </div>
                 <div className={`text-3xl font-bold ${
-                  selectedCoin.galaxy_score >= 70 ? 'text-green-600' : 
-                  selectedCoin.galaxy_score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                  selectedCoin.galaxy_score === null || selectedCoin.galaxy_score === undefined
+                    ? 'text-gray-600'
+                    : selectedCoin.galaxy_score >= 70
+                      ? 'text-green-600'
+                      : selectedCoin.galaxy_score >= 50
+                        ? 'text-yellow-600'
+                        : 'text-red-600'
                 }`}>
-                  {selectedCoin.galaxy_score}
+                  {selectedCoin.galaxy_score === null || selectedCoin.galaxy_score === undefined ? 'N/A' : selectedCoin.galaxy_score}
                 </div>
               </div>
             </div>

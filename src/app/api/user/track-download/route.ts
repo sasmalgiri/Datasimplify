@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 
-const FREE_DOWNLOAD_LIMIT = 3;
+const FREE_DOWNLOAD_LIMIT = 5;
 
 export async function POST(request: Request) {
   try {
@@ -14,17 +14,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // If Supabase not configured, use localStorage-based tracking
-    if (!isSupabaseConfigured || !supabase) {
-      return NextResponse.json({
-        success: true,
-        downloadsRemaining: 2, // Mock remaining
-        message: 'Download tracked (local mode)',
-      });
+    // Supabase is required for truthful server-side tracking
+    if (!isSupabaseConfigured || !supabaseAdmin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Download tracking requires Supabase to be configured.',
+          requiresSupabase: true,
+        },
+        { status: 503 }
+      );
     }
 
     // Get user
-    const { data: user } = await supabase
+    const { data: user } = await supabaseAdmin
       .from('free_users')
       .select('*')
       .eq('email', email.toLowerCase())
@@ -46,7 +49,7 @@ export async function POST(request: Request) {
     const isNewMonth = lastDownload &&
       (lastDownload.getMonth() !== now.getMonth() || lastDownload.getFullYear() !== now.getFullYear());
 
-    let currentMonthDownloads = isNewMonth ? 0 : downloadsThisMonth;
+    const currentMonthDownloads = isNewMonth ? 0 : downloadsThisMonth;
 
     if (currentMonthDownloads >= FREE_DOWNLOAD_LIMIT) {
       return NextResponse.json({
@@ -58,7 +61,7 @@ export async function POST(request: Request) {
     }
 
     // Increment download count
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('free_users')
       .update({
         downloads_this_month: currentMonthDownloads + 1,
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
 
     // Log the download
     try {
-      await supabase.from('download_logs').insert({
+      await supabaseAdmin.from('download_logs').insert({
         user_email: email.toLowerCase(),
         download_type: downloadType || 'unknown',
         file_name: fileName || 'unknown',
@@ -111,24 +114,27 @@ export async function GET(request: Request) {
       );
     }
 
-    if (!isSupabaseConfigured || !supabase) {
-      return NextResponse.json({
-        downloadsRemaining: 3,
-        downloadsThisMonth: 0,
-      });
+    if (!isSupabaseConfigured || !supabaseAdmin) {
+      return NextResponse.json(
+        {
+          error: 'Download status requires Supabase to be configured.',
+          requiresSupabase: true,
+        },
+        { status: 503 }
+      );
     }
 
-    const { data: user } = await supabase
+    const { data: user } = await supabaseAdmin
       .from('free_users')
       .select('downloads_this_month, last_download_at')
       .eq('email', email.toLowerCase())
       .single();
 
     if (!user) {
-      return NextResponse.json({
-        downloadsRemaining: 3,
-        downloadsThisMonth: 0,
-      });
+      return NextResponse.json(
+        { error: 'User not found. Please register first.' },
+        { status: 404 }
+      );
     }
 
     // Check if month reset needed

@@ -141,7 +141,7 @@ export function TechnicalAnalysisPanel({
   const totalIndicators = indicators.length;
 
   let overallSignal: 'bullish' | 'bearish' | 'neutral' = 'neutral';
-  let overallLabel = 'Neutral';
+  let overallLabel = totalIndicators === 0 ? 'Unavailable' : 'Neutral';
   if (bullishCount > bearishCount + 1) {
     overallSignal = 'bullish';
     overallLabel = 'Bullish';
@@ -187,7 +187,7 @@ export function TechnicalAnalysisPanel({
           <div className="bg-gray-900/50 rounded-lg p-2">
             <div className="text-gray-400 text-xs mb-1">Trend</div>
             <div className={`font-medium ${priceVs200MA === 'above' ? 'text-emerald-400' : priceVs200MA === 'below' ? 'text-red-400' : 'text-gray-300'}`}>
-              {priceVs200MA === 'above' ? 'Up' : priceVs200MA === 'below' ? 'Down' : 'Flat'}
+              {priceVs200MA === 'above' ? 'Up' : priceVs200MA === 'below' ? 'Down' : priceVs200MA === 'near' ? 'Flat' : '-'}
             </div>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-2">

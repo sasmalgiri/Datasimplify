@@ -830,8 +830,9 @@ export default function CommunityPage() {
   const [filterPrediction, setFilterPrediction] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock user ID for demo - in production this would come from auth
-  const currentUserId = 'demo-user-123';
+  // Auth is required for write actions (vote/follow/submit). If no authenticated user is available,
+  // keep the page in read-only mode.
+  const currentUserId: string | undefined = undefined;
 
   // Ref to track if component is mounted
   const mountedRef = useRef(true);
@@ -864,10 +865,12 @@ export default function CommunityPage() {
   }, []);
 
   const handleVote = async (predictionId: string, voteType: 'like' | 'dislike') => {
+    if (!currentUserId) return;
     await votePrediction(predictionId, currentUserId, voteType);
   };
 
   const handleFollow = async (userId: string) => {
+    if (!currentUserId) return;
     await followUser(currentUserId, userId);
   };
 
@@ -880,6 +883,7 @@ export default function CommunityPage() {
     confidence: number;
     reasoning: string;
   }) => {
+    if (!currentUserId) return;
     const result = await submitPrediction({
       userId: currentUserId,
       ...data

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   getWhaleDashboard,
   getRecentLargeEthTransactions,
@@ -19,6 +20,16 @@ import { validationError, internalError, validateEnum, validatePositiveNumber } 
 const VALID_TYPES = ['dashboard', 'eth-whales', 'btc-whales', 'exchange-balances', 'exchange-flows'] as const;
 
 export async function GET(request: Request) {
+  if (!isFeatureEnabled('whales')) {
+    return NextResponse.json(
+      {
+        error: 'Whale tracking is disabled.',
+        reason: 'This data domain is not enabled for this deployment.',
+      },
+      { status: 403 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'dashboard';
   const minValueParam = searchParams.get('minValue');
@@ -116,19 +127,39 @@ export async function GET(request: Request) {
         valueUsd?: number;
         symbol?: string;
         timestamp?: string;
-      }) => ({
-        txHash: tx.hash || tx.txHash || '',
-        blockchain: type === 'btc-whales' ? 'bitcoin' : 'ethereum',
-        fromAddress: tx.from || '',
-        fromLabel: '',
-        toAddress: tx.to || '',
-        toLabel: '',
-        amount: tx.value || 0,
-        amountUsd: tx.valueUsd || 0,
-        symbol: tx.symbol || (type === 'btc-whales' ? 'BTC' : 'ETH'),
-        txType: 'transfer',
-        txTime: tx.timestamp || new Date().toISOString()
-      }));
+      }) => {
+        const txHash = tx.hash || tx.txHash || '';
+        const amount = typeof tx.value === 'number' && Number.isFinite(tx.value) ? tx.value : null;
+        const amountUsd = typeof tx.valueUsd === 'number' && Number.isFinite(tx.valueUsd) ? tx.valueUsd : null;
+
+        if (!txHash || amount === null || amountUsd === null) return null;
+
+        return {
+          txHash,
+          blockchain: type === 'btc-whales' ? 'bitcoin' : 'ethereum',
+          fromAddress: tx.from || '',
+          fromLabel: '',
+          toAddress: tx.to || '',
+          toLabel: '',
+          amount,
+          amountUsd,
+          symbol: tx.symbol || (type === 'btc-whales' ? 'BTC' : 'ETH'),
+          txType: 'transfer',
+          txTime: tx.timestamp || new Date().toISOString()
+        };
+      }).filter(Boolean) as Array<{
+        txHash: string;
+        blockchain: 'bitcoin' | 'ethereum';
+        fromAddress: string;
+        fromLabel: string;
+        toAddress: string;
+        toLabel: string;
+        amount: number;
+        amountUsd: number;
+        symbol: string;
+        txType: string;
+        txTime: string;
+      }>;
       await saveWhaleTransactionsToCache(transactions);
     }
 

@@ -1,428 +1,173 @@
 /**
  * Smart Contract Verification API
- * Provides formal verification analysis for Solidity smart contracts
+ * Uses Sourcify to check whether a deployed contract is verified.
  */
 
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getContractVerificationFromCache, saveContractVerificationToCache } from '@/lib/supabaseData';
 
-interface VerificationCondition {
-  name: string;
-  type: string;
-  function: string;
-  description: string;
-  note?: string;
+const SOURCIFY_BASE_URL = 'https://sourcify.dev/server';
+
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+function isValidEvmAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
-interface VerificationResult {
-  name: string;
-  type: string;
-  function: string;
-  description: string;
-  status: 'verified' | 'vulnerable' | 'error';
-  result: string;
-  details: string;
-  proofGenerated: boolean;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-interface ParsedContract {
-  functions: Array<{
-    name: string;
-    params: Array<{ type: string; name: string }>;
-    returns: string | null;
-    body: string;
-  }>;
-  stateVars: string[];
-  hasBuiltinOverflowProtection: boolean;
-  hasUnchecked: boolean;
-  solidityVersion: string;
-}
+async function fetchSourcifyContract(chainId: number, address: string): Promise<{
+  verified: boolean;
+  matchType?: string;
+  contractName?: string;
+  raw?: unknown;
+}> {
+  const url = `${SOURCIFY_BASE_URL}/v2/contract/${encodeURIComponent(String(chainId))}/${encodeURIComponent(address)}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json'
+    },
+    cache: 'no-store'
+  });
 
-/**
- * Parse Solidity code to extract functions and properties
- */
-function parseSolidity(code: string): ParsedContract {
-  const functions: ParsedContract['functions'] = [];
-  const stateVars: string[] = [];
-
-  // Detect Solidity version (0.8+ has built-in overflow protection)
-  const versionMatch = code.match(/pragma\s+solidity\s+[\^>=]*(\d+)\.(\d+)/);
-  const solidityMajor = versionMatch ? parseInt(versionMatch[1]) : 0;
-  const solidityMinor = versionMatch ? parseInt(versionMatch[2]) : 0;
-  const hasBuiltinOverflowProtection = solidityMajor > 0 || solidityMinor >= 8;
-
-  // Check for unchecked blocks
-  const hasUnchecked = code.includes('unchecked');
-
-  // Extract state variables
-  const stateVarRegex = /(?:mapping\s*\([^)]+\)|uint\d*|int\d*|address|bool|string|bytes\d*)\s+(?:public\s+|private\s+|internal\s+)?(\w+)\s*(?:=|;)/g;
-  let match;
-  while ((match = stateVarRegex.exec(code)) !== null) {
-    stateVars.push(match[1]);
+  if (res.status === 404) {
+    return { verified: false };
   }
 
-  // Extract functions with their bodies
-  const funcRegex = /function\s+(\w+)\s*\(([^)]*)\)[^{]*(?:returns\s*\(([^)]*)\))?\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/g;
-  while ((match = funcRegex.exec(code)) !== null) {
-    const params = match[2].split(',').filter(p => p.trim()).map(p => {
-      const parts = p.trim().split(/\s+/);
-      return {
-        type: parts[0],
-        name: parts[parts.length - 1]
-      };
-    });
-
-    functions.push({
-      name: match[1],
-      params: params,
-      returns: match[3] ? match[3].trim() : null,
-      body: match[4]
-    });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Sourcify error (${res.status}): ${text || res.statusText}`);
   }
+
+  const json = await res.json().catch(() => null);
+
+  const contractName = (() => {
+    if (!isRecord(json)) return undefined;
+    const name = json['name'];
+    return typeof name === 'string' ? name : undefined;
+  })();
+
+  const matchType = (() => {
+    if (!isRecord(json)) return undefined;
+    const mt = json['matchType'];
+    return typeof mt === 'string' ? mt : undefined;
+  })();
 
   return {
-    functions,
-    stateVars,
-    hasBuiltinOverflowProtection,
-    hasUnchecked,
-    solidityVersion: versionMatch ? `${solidityMajor}.${solidityMinor}` : 'unknown'
-  };
-}
-
-/**
- * Generate verification conditions for common vulnerabilities
- */
-function generateVerificationConditions(parsed: ParsedContract): VerificationCondition[] {
-  const conditions: VerificationCondition[] = [];
-  const { hasBuiltinOverflowProtection, hasUnchecked } = parsed;
-
-  for (const func of parsed.functions) {
-    // 1. Integer overflow check
-    if ((func.body.includes('+') || func.body.includes('*')) &&
-        (!hasBuiltinOverflowProtection || hasUnchecked || func.body.includes('unchecked'))) {
-      conditions.push({
-        name: `${func.name}_overflow`,
-        type: 'overflow',
-        description: `Integer overflow check in ${func.name}()`,
-        function: func.name
-      });
-    } else if (func.body.includes('+') || func.body.includes('*')) {
-      conditions.push({
-        name: `${func.name}_overflow`,
-        type: 'overflow',
-        description: `Integer overflow check in ${func.name}()`,
-        function: func.name,
-        note: 'Solidity 0.8+ has built-in overflow protection'
-      });
-    }
-
-    // 2. Integer underflow check
-    if ((func.body.includes('-=') || func.body.match(/\w+\s*-\s*\w+/)) &&
-        (!hasBuiltinOverflowProtection || hasUnchecked || func.body.includes('unchecked'))) {
-      conditions.push({
-        name: `${func.name}_underflow`,
-        type: 'underflow',
-        description: `Integer underflow check in ${func.name}()`,
-        function: func.name
-      });
-    } else if (func.body.includes('-=') || func.body.match(/\w+\s*-\s*\w+/)) {
-      conditions.push({
-        name: `${func.name}_underflow`,
-        type: 'underflow',
-        description: `Integer underflow check in ${func.name}()`,
-        function: func.name,
-        note: 'Solidity 0.8+ has built-in underflow protection'
-      });
-    }
-
-    // 3. Balance preservation check
-    if (func.name.toLowerCase().includes('transfer') ||
-        func.body.includes('balance') ||
-        func.body.match(/\[\w+\]\s*[-+]=/)) {
-      conditions.push({
-        name: `${func.name}_balance_preservation`,
-        type: 'invariant',
-        description: `Balance preservation check in ${func.name}()`,
-        function: func.name
-      });
-    }
-
-    // 4. Division by zero check
-    if (func.body.includes('/')) {
-      conditions.push({
-        name: `${func.name}_div_zero`,
-        type: 'division',
-        description: `Division by zero check in ${func.name}()`,
-        function: func.name
-      });
-    }
-
-    // 5. Precondition satisfiability
-    const requireMatches = func.body.match(/require\s*\([^)]+\)/g);
-    if (requireMatches) {
-      conditions.push({
-        name: `${func.name}_preconditions`,
-        type: 'precondition',
-        description: `Precondition satisfiability in ${func.name}()`,
-        function: func.name
-      });
-    }
-
-    // 6. Reentrancy check
-    const hasExternalCall = func.body.includes('.call(') ||
-                           func.body.includes('.call{') ||
-                           (func.body.includes('transfer(') && func.body.includes('payable'));
-    if (hasExternalCall) {
-      conditions.push({
-        name: `${func.name}_reentrancy`,
-        type: 'reentrancy',
-        description: `Reentrancy vulnerability check in ${func.name}()`,
-        function: func.name
-      });
-    }
-  }
-
-  return conditions;
-}
-
-/**
- * Run verification on a condition (simulated Z3 analysis)
- */
-function runVerification(condition: VerificationCondition, parsed: ParsedContract): VerificationResult {
-  const func = parsed.functions.find(f => f.name === condition.function);
-
-  // Simulate Z3 verification based on condition type
-  switch (condition.type) {
-    case 'overflow':
-    case 'underflow':
-      if (condition.note) {
-        // Solidity 0.8+ has built-in protection
-        return {
-          ...condition,
-          status: 'verified',
-          result: 'SAFE',
-          details: `PROOF: ${condition.note} (auto-revert on ${condition.type})`,
-          proofGenerated: true
-        };
-      }
-      // Check for SafeMath or require statements
-      const hasSafeMath = func?.body.includes('SafeMath') || false;
-      const hasRequire = func?.body.includes('require') || false;
-      if (hasSafeMath || hasRequire) {
-        return {
-          ...condition,
-          status: 'verified',
-          result: 'SAFE',
-          details: `PROOF: ${condition.type.charAt(0).toUpperCase() + condition.type.slice(1)} prevented by ${hasSafeMath ? 'SafeMath' : 'require statement'}`,
-          proofGenerated: true
-        };
-      }
-      return {
-        ...condition,
-        status: 'vulnerable',
-        result: 'VULNERABLE',
-        details: `COUNTEREXAMPLE: Possible ${condition.type} without protection`,
-        proofGenerated: false
-      };
-
-    case 'invariant':
-      // Balance preservation check
-      if (func?.body.includes('-=') && func?.body.includes('+=')) {
-        return {
-          ...condition,
-          status: 'verified',
-          result: 'SAFE',
-          details: 'PROOF: Total balance is preserved (subtract + add pattern detected)',
-          proofGenerated: true
-        };
-      }
-      return {
-        ...condition,
-        status: 'verified',
-        result: 'SAFE',
-        details: 'PROOF: Balance operations appear consistent',
-        proofGenerated: true
-      };
-
-    case 'division':
-      // Check if there's a denominator check
-      const hasDenominatorCheck = func?.body.includes('require') &&
-                                  (func?.body.includes('> 0') || func?.body.includes('!= 0'));
-      if (hasDenominatorCheck) {
-        return {
-          ...condition,
-          status: 'verified',
-          result: 'SAFE',
-          details: 'PROOF: Division by zero prevented by require statement',
-          proofGenerated: true
-        };
-      }
-      return {
-        ...condition,
-        status: 'vulnerable',
-        result: 'VULNERABLE',
-        details: 'COUNTEREXAMPLE: Division by zero possible if denominator not checked',
-        proofGenerated: false
-      };
-
-    case 'precondition':
-      return {
-        ...condition,
-        status: 'verified',
-        result: 'SAFE',
-        details: 'PROOF: Preconditions are satisfiable - function can be called with valid inputs',
-        proofGenerated: true
-      };
-
-    case 'reentrancy':
-      // Check for checks-effects-interactions pattern
-      const body = func?.body || '';
-      const callIndex = Math.max(
-        body.indexOf('.call'),
-        body.indexOf('.transfer'),
-        body.indexOf('.send')
-      );
-      const stateUpdateIndex = Math.max(
-        body.indexOf('-='),
-        body.indexOf('+='),
-        body.lastIndexOf('= ')
-      );
-
-      const isVulnerable = callIndex !== -1 && stateUpdateIndex !== -1 && callIndex < stateUpdateIndex;
-
-      if (isVulnerable) {
-        return {
-          ...condition,
-          status: 'vulnerable',
-          result: 'VULNERABLE',
-          details: 'COUNTEREXAMPLE: External call before state update - reentrancy possible',
-          proofGenerated: false
-        };
-      }
-      return {
-        ...condition,
-        status: 'verified',
-        result: 'SAFE',
-        details: 'PROOF: Checks-Effects-Interactions pattern followed or no state after call',
-        proofGenerated: true
-      };
-
-    default:
-      return {
-        ...condition,
-        status: 'error',
-        result: 'ERROR',
-        details: 'Unknown verification type',
-        proofGenerated: false
-      };
-  }
-}
-
-/**
- * Generate proof certificate for verified contracts
- */
-function generateProofCertificate(contractHash: string, results: VerificationResult[]) {
-  const certId = crypto.randomBytes(8).toString('hex').toUpperCase();
-  return {
-    certificateId: `SC-${certId}`,
-    contractHash,
-    issuedAt: new Date().toISOString(),
-    verificationMethod: 'Z3 SMT Solver (Simulated)',
-    provenProperties: results.filter(r => r.status === 'verified').map(r => r.description),
-    statement: 'This smart contract has been analyzed for common vulnerabilities. The verification covers overflow, underflow, reentrancy, and balance preservation properties.',
-    disclaimer: 'This is a demonstration verification. For production contracts, please use comprehensive formal verification tools.'
+    verified: true,
+    matchType,
+    contractName,
+    raw: json
   };
 }
 
 export async function POST(request: Request) {
-  const startTime = Date.now();
+  if (!isFeatureEnabled('smartContractVerifier')) {
+    return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
+  }
 
   try {
-    const { code } = await request.json();
+    const body = await request.json().catch(() => null);
+    const bodyRecord: Record<string, unknown> = isRecord(body) ? body : {};
 
-    if (!code || typeof code !== 'string') {
+    const chainId = Number(bodyRecord['chainId'] ?? 1);
+    const address = String(bodyRecord['address'] ?? '').trim();
+
+    if (!Number.isFinite(chainId) || chainId <= 0) {
       return NextResponse.json({
         success: false,
-        error: 'No Solidity code provided'
+        error: 'Invalid chainId. Provide a positive integer.',
+        code: 'E_INVALID_INPUT'
       }, { status: 400 });
     }
 
-    const contractHash = crypto.createHash('sha256').update(code).digest('hex').slice(0, 16);
-
-    // Parse the Solidity code
-    const parsed = parseSolidity(code);
-
-    if (parsed.functions.length === 0) {
+    if (!isValidEvmAddress(address)) {
       return NextResponse.json({
         success: false,
-        error: 'No functions found in contract',
-        contractHash
-      });
+        error: 'Invalid address. Provide a 0x-prefixed 40-hex EVM address.',
+        code: 'E_INVALID_INPUT'
+      }, { status: 400 });
     }
 
-    // Generate verification conditions
-    const conditions = generateVerificationConditions(parsed);
+    // 1) Cache-first (fresh). If stale exists and live fails, return stale with explicit flag.
+    let cached = null as Awaited<ReturnType<typeof getContractVerificationFromCache>>;
+    if (isSupabaseConfigured) {
+      cached = await getContractVerificationFromCache(chainId, address);
+      if (cached) {
+        const ageMs = Date.now() - new Date(cached.updated_at).getTime();
+        if (Number.isFinite(ageMs) && ageMs <= CACHE_TTL_MS) {
+          return NextResponse.json({
+            success: true,
+            chainId,
+            address,
+            verified: cached.status === 'verified',
+            status: cached.status,
+            matchType: cached.match_type ?? undefined,
+            contractName: cached.contract_name ?? undefined,
+            source: 'cache',
+            stale: false
+          });
+        }
+      }
+    }
 
-    if (conditions.length === 0) {
+    // 2) Live Sourcify lookup
+    try {
+      const live = await fetchSourcifyContract(chainId, address);
+
+      if (isSupabaseConfigured) {
+        await saveContractVerificationToCache({
+          chainId,
+          address,
+          status: live.verified ? 'verified' : 'not_verified',
+          matchType: live.matchType ?? null,
+          contractName: live.contractName ?? null,
+          raw: live.raw ?? null
+        });
+      }
+
       return NextResponse.json({
         success: true,
-        contractHash,
-        timestamp: new Date().toISOString(),
-        verificationTime: Date.now() - startTime,
-        summary: {
-          totalChecks: 0,
-          verified: 0,
-          vulnerable: 0,
-          errors: 0
-        },
-        securityScore: 100,
-        overallStatus: 'VERIFIED SAFE',
-        results: [],
-        message: 'No verification conditions generated - contract appears simple',
-        proofCertificate: null
+        chainId,
+        address,
+        verified: live.verified,
+        status: live.verified ? 'verified' : 'not_verified',
+        matchType: live.matchType,
+        contractName: live.contractName,
+        source: 'sourcify',
+        stale: false
       });
+    } catch (liveError) {
+      if (cached) {
+        return NextResponse.json({
+          success: true,
+          chainId,
+          address,
+          verified: cached.status === 'verified',
+          status: cached.status,
+          matchType: cached.match_type ?? undefined,
+          contractName: cached.contract_name ?? undefined,
+          source: 'cache',
+          stale: true,
+          staleReason: liveError instanceof Error ? liveError.message : 'Live lookup failed'
+        });
+      }
+
+      throw liveError;
     }
-
-    // Run verification on each condition
-    const results = conditions.map(c => runVerification(c, parsed));
-
-    const summary = {
-      totalChecks: results.length,
-      verified: results.filter(r => r.status === 'verified').length,
-      vulnerable: results.filter(r => r.status === 'vulnerable').length,
-      errors: results.filter(r => r.status === 'error').length
-    };
-
-    const securityScore = Math.round(
-      (summary.verified / Math.max(summary.totalChecks, 1)) * 100
-    );
-
-    return NextResponse.json({
-      success: true,
-      contractHash,
-      timestamp: new Date().toISOString(),
-      verificationTime: Date.now() - startTime,
-      summary,
-      securityScore,
-      overallStatus: summary.vulnerable > 0 ? 'ISSUES FOUND' : 'VERIFIED SAFE',
-      results: results.map(r => ({
-        name: r.name,
-        type: r.type,
-        function: r.function,
-        description: r.description,
-        status: r.status,
-        result: r.result,
-        details: r.details,
-        proofGenerated: r.proofGenerated
-      })),
-      proofCertificate: summary.vulnerable === 0 ? generateProofCertificate(contractHash, results) : null
-    });
 
   } catch (error) {
     console.error('Verification error:', error);
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Verification failed'
-    }, { status: 500 });
+      error: 'Failed to verify contract via Sourcify.',
+      code: 'E_VERIFICATION_FAILED',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 502 });
   }
 }

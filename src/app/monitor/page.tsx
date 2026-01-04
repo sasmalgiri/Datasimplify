@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus, Brain, Target, Shield } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Progress bar component using refs to avoid inline style warnings and ARIA expression warnings
 function ProgressBarRef({ percentage, className, label }: { percentage: number; className: string; label: string }) {
@@ -104,7 +105,7 @@ interface OnChainData {
 }
 
 interface SentimentData {
-  fearGreedIndex: number;
+  fearGreedIndex: number | null;
   fearGreedLabel: string;
   trending: Array<{ name: string; symbol: string }>;
 }
@@ -138,12 +139,12 @@ interface CoinPrediction {
 
 // Format helpers
 const formatNumber = (num: number | null | undefined, decimals = 2): string => {
-  if (num === null || num === undefined) return 'N/A';
+  if (num === null || num === undefined) return '-';
   return num.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 };
 
 const formatLargeNumber = (num: number | null | undefined): string => {
-  if (num === null || num === undefined) return 'N/A';
+  if (num === null || num === undefined) return '-';
   if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
   if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
   if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
@@ -151,7 +152,7 @@ const formatLargeNumber = (num: number | null | undefined): string => {
 };
 
 const formatPercent = (num: number | null | undefined): string => {
-  if (num === null || num === undefined) return 'N/A';
+  if (num === null || num === undefined) return '-';
   const sign = num >= 0 ? '+' : '';
   return `${sign}${num.toFixed(2)}%`;
 };
@@ -250,6 +251,12 @@ export default function MonitorPage() {
 
   // Fetch predictions for top coins
   const fetchPredictions = async () => {
+    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
+      setTopPredictions([]);
+      setMarketPrediction(null);
+      return;
+    }
+
     try {
       // Fetch predictions for top 10 coins
       const topCoins = [
@@ -323,13 +330,13 @@ export default function MonitorPage() {
     try {
       // Fetch all data in parallel (including predictions)
       const [macroRes, derivativesRes, onchainRes, sentimentRes, unlocksRes, stablecoinRes, defiRes] = await Promise.allSettled([
-        fetch('/api/macro').then(r => r.json()),
+        isFeatureEnabled('macro') ? fetch('/api/macro').then(r => r.json()) : Promise.resolve({ success: false }),
         fetch('/api/derivatives').then(r => r.json()),
         fetch('/api/onchain').then(r => r.json()),
         fetch('/api/sentiment').then(r => r.json()),
         fetch('/api/unlocks?upcoming=true&days=30').then(r => r.json()),
-        fetch('https://api.llama.fi/stablecoins').then(r => r.json()),
-        fetch('https://api.llama.fi/protocols').then(r => r.json())
+        isFeatureEnabled('defi') ? fetch('/api/defi/llama?type=stablecoins').then(r => r.json()) : Promise.resolve({}),
+        isFeatureEnabled('defi') ? fetch('/api/defi/llama?type=protocols').then(r => r.json()) : Promise.resolve([])
       ]);
 
       // Also fetch predictions
@@ -360,8 +367,8 @@ export default function MonitorPage() {
       if (sentimentRes.status === 'fulfilled') {
         const data = sentimentRes.value;
         setSentiment({
-          fearGreedIndex: data.value || 50,
-          fearGreedLabel: data.value_classification || 'Neutral',
+          fearGreedIndex: (typeof data.value === 'number' && Number.isFinite(data.value)) ? data.value : null,
+          fearGreedLabel: data.classification || (data.value ? 'Unknown' : 'Unavailable'),
           trending: []
         });
       }
@@ -470,10 +477,12 @@ export default function MonitorPage() {
 
     // Fear & Greed alerts
     if (sentiment) {
-      if (sentiment.fearGreedIndex < 20) {
-        alerts.push({ type: 'Extreme Fear', message: `Fear & Greed at ${sentiment.fearGreedIndex} - potential bottom`, severity: 'info' });
-      } else if (sentiment.fearGreedIndex > 80) {
-        alerts.push({ type: 'Extreme Greed', message: `Fear & Greed at ${sentiment.fearGreedIndex} - potential top`, severity: 'warning' });
+      if (sentiment.fearGreedIndex !== null) {
+        if (sentiment.fearGreedIndex < 20) {
+          alerts.push({ type: 'Extreme Fear', message: `Fear & Greed at ${sentiment.fearGreedIndex} - potential bottom`, severity: 'info' });
+        } else if (sentiment.fearGreedIndex > 80) {
+          alerts.push({ type: 'Extreme Greed', message: `Fear & Greed at ${sentiment.fearGreedIndex} - potential top`, severity: 'warning' });
+        }
       }
     }
 
@@ -493,7 +502,7 @@ export default function MonitorPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Market Monitor</h1>
-            <p className="text-gray-400">Complete crypto market monitoring dashboard • Real-time data</p>
+            <p className="text-gray-400">Complete crypto market monitoring dashboard • Updates periodically</p>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">
@@ -853,7 +862,7 @@ export default function MonitorPage() {
                   'border-green-500'
                 }`}>
                   <div>
-                    <p className="text-3xl font-bold">{sentiment?.fearGreedIndex || '—'}</p>
+                    <p className="text-3xl font-bold">{sentiment?.fearGreedIndex || '-'}</p>
                     <p className="text-xs text-gray-400">{sentiment?.fearGreedLabel || 'Loading'}</p>
                   </div>
                 </div>
@@ -926,8 +935,8 @@ export default function MonitorPage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data sources: FRED, Binance, DeFiLlama, Alternative.me, Blockchain.info, Etherscan</p>
-          <p className="mt-1">Updates every 60 seconds • Professional-grade monitoring • Free forever</p>
+          <p>Data sources vary by enabled features and provider availability.</p>
+          <p className="mt-1">Refresh cadence depends on the dataset.</p>
         </div>
       </div>
     </div>

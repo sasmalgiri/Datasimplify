@@ -483,10 +483,10 @@ const MACRO_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export interface CachedMacroData {
   indicator: string;
-  value: number;
-  previous_value: number;
-  change: number;
-  source: string;
+  value: number | null;
+  previous_value: number | null;
+  change: number | null;
+  source: string | null;
   updated_at: string;
 }
 
@@ -514,9 +514,9 @@ export async function getMacroDataFromCache(): Promise<CachedMacroData[] | null>
 
 export async function saveMacroDataToCache(indicators: Array<{
   indicator: string;
-  value: number;
-  previousValue: number;
-  change: number;
+  value: number | null;
+  previousValue: number | null;
+  change: number | null;
   source: string;
 }>): Promise<boolean> {
   try {
@@ -536,6 +536,77 @@ export async function saveMacroDataToCache(indicators: Array<{
       .from('macro_data_cache')
       .upsert(records, {
         onConflict: 'indicator'
+      });
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// ============================================
+// SMART CONTRACT VERIFICATION CACHE (Sourcify)
+// ============================================
+
+export type ContractVerificationStatus = 'verified' | 'not_verified';
+
+export interface CachedContractVerification {
+  chain_id: number;
+  address: string;
+  status: ContractVerificationStatus;
+  match_type: string | null;
+  contract_name: string | null;
+  raw: unknown | null;
+  updated_at: string;
+}
+
+export async function getContractVerificationFromCache(
+  chainId: number,
+  address: string
+): Promise<CachedContractVerification | null> {
+  try {
+    const db = checkSupabase();
+    const { data, error } = await db
+      .from('contract_verification_cache')
+      .select('*')
+      .eq('chain_id', chainId)
+      .eq('address', address)
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      return null;
+    }
+
+    return (data as CachedContractVerification) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveContractVerificationToCache(input: {
+  chainId: number;
+  address: string;
+  status: ContractVerificationStatus;
+  matchType: string | null;
+  contractName: string | null;
+  raw: unknown | null;
+}): Promise<boolean> {
+  try {
+    const db = checkSupabase();
+    const { error } = await db
+      .from('contract_verification_cache')
+      .upsert({
+        chain_id: input.chainId,
+        address: input.address,
+        status: input.status,
+        match_type: input.matchType,
+        contract_name: input.contractName,
+        raw: input.raw,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'chain_id,address'
       });
 
     return !error;
@@ -634,17 +705,26 @@ export interface BulkMarketCoin {
   symbol: string;
   name: string;
   image: string;
-  current_price: number;
-  market_cap: number;
-  market_cap_rank: number;
-  price_change_24h: number;
-  price_change_percentage_24h: number;
-  price_change_percentage_7d_in_currency?: number;
-  total_volume: number;
-  high_24h: number;
-  low_24h: number;
-  circulating_supply: number;
+  current_price: number | null;
+  market_cap: number | null;
+  market_cap_rank: number | null;
+  price_change_24h: number | null;
+  price_change_percentage_24h: number | null;
+  price_change_percentage_7d_in_currency?: number | null;
+  total_volume: number | null;
+  high_24h: number | null;
+  low_24h: number | null;
+  circulating_supply: number | null;
   max_supply: number | null;
+}
+
+function toNumberOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 export async function getBulkMarketDataFromCache(limit: number = 100): Promise<BulkMarketCoin[] | null> {
@@ -673,17 +753,17 @@ export async function getBulkMarketDataFromCache(limit: number = 100): Promise<B
       symbol: coin.symbol?.toLowerCase() || '',
       name: coin.name || '',
       image: '', // Not in actual schema
-      current_price: Number(coin.price) || 0,
-      market_cap: Number(coin.market_cap) || 0,
-      market_cap_rank: Number(coin.rank) || 0,
-      price_change_24h: Number(coin.price_change_24h) || 0,
-      price_change_percentage_24h: Number(coin.price_change_24h) || 0, // Schema uses same column
-      price_change_percentage_7d_in_currency: Number(coin.price_change_7d) || 0,
-      total_volume: Number(coin.volume_24h) || 0, // Actual column name in schema
-      high_24h: Number(coin.ath) || 0, // Use ATH as fallback
-      low_24h: Number(coin.atl) || 0, // Use ATL as fallback
-      circulating_supply: Number(coin.circulating_supply) || 0,
-      max_supply: Number(coin.max_supply) || null
+      current_price: toNumberOrNull(coin.price),
+      market_cap: toNumberOrNull(coin.market_cap),
+      market_cap_rank: toNumberOrNull(coin.rank),
+      price_change_24h: toNumberOrNull(coin.price_change_24h),
+      price_change_percentage_24h: toNumberOrNull(coin.price_change_24h), // Schema uses same column
+      price_change_percentage_7d_in_currency: toNumberOrNull(coin.price_change_7d),
+      total_volume: toNumberOrNull(coin.volume_24h), // Actual column name in schema
+      high_24h: toNumberOrNull(coin.ath), // Use ATH as fallback
+      low_24h: toNumberOrNull(coin.atl), // Use ATL as fallback
+      circulating_supply: toNumberOrNull(coin.circulating_supply),
+      max_supply: toNumberOrNull(coin.max_supply)
     }));
   } catch {
     return null;
@@ -695,8 +775,8 @@ export async function saveBulkMarketDataToCache(coins: Array<{
   symbol: string;
   name: string;
   image?: string;
-  current_price: number;
-  market_cap: number;
+  current_price: number | null;
+  market_cap: number | null;
   market_cap_rank?: number;
   price_change_24h?: number;
   price_change_percentage_24h?: number;
@@ -721,15 +801,15 @@ export async function saveBulkMarketDataToCache(coins: Array<{
       name: coin.name,
       price: coin.current_price,
       market_cap: coin.market_cap,
-      rank: coin.market_cap_rank || null,
-      price_change_24h: coin.price_change_24h || 0,
-      price_change_7d: coin.price_change_percentage_7d_in_currency || 0,
-      volume_24h: coin.total_volume || 0, // Actual column name in schema
-      circulating_supply: coin.circulating_supply || 0,
+      rank: typeof coin.market_cap_rank === 'number' && Number.isFinite(coin.market_cap_rank) ? coin.market_cap_rank : null,
+      price_change_24h: typeof coin.price_change_24h === 'number' && Number.isFinite(coin.price_change_24h) ? coin.price_change_24h : null,
+      price_change_7d: typeof coin.price_change_percentage_7d_in_currency === 'number' && Number.isFinite(coin.price_change_percentage_7d_in_currency) ? coin.price_change_percentage_7d_in_currency : null,
+      volume_24h: typeof coin.total_volume === 'number' && Number.isFinite(coin.total_volume) ? coin.total_volume : null, // Actual column name in schema
+      circulating_supply: typeof coin.circulating_supply === 'number' && Number.isFinite(coin.circulating_supply) ? coin.circulating_supply : null,
       total_supply: coin.total_supply || null,
       max_supply: coin.max_supply || null,
-      ath: coin.high_24h || coin.ath || null, // Store as ATH
-      atl: coin.low_24h || coin.atl || null, // Store as ATL
+      ath: (typeof coin.high_24h === 'number' && Number.isFinite(coin.high_24h) ? coin.high_24h : null) ?? (typeof coin.ath === 'number' && Number.isFinite(coin.ath) ? coin.ath : null),
+      atl: (typeof coin.low_24h === 'number' && Number.isFinite(coin.low_24h) ? coin.low_24h : null) ?? (typeof coin.atl === 'number' && Number.isFinite(coin.atl) ? coin.atl : null),
       updated_at: timestamp,
       fetched_at: timestamp
     }));
@@ -820,10 +900,10 @@ export interface CachedPrediction {
   confidence: number;
   risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
   reasons: string[];
-  technical_score: number;
-  sentiment_score: number;
-  onchain_score: number;
-  macro_score: number;
+  technical_score: number | null;
+  sentiment_score: number | null;
+  onchain_score: number | null;
+  macro_score: number | null;
   overall_score: number;
   market_data?: Record<string, unknown>;
   updated_at: string;
@@ -854,6 +934,28 @@ export async function getPredictionFromCache(coinId: string): Promise<CachedPred
       if (cacheAge > PREDICTION_CACHE_TTL_MS) {
         return null; // Cache expired
       }
+    }
+
+    return data as CachedPrediction;
+  } catch {
+    return null;
+  }
+}
+
+// Returns cached prediction even if stale (caller must label it as such)
+export async function getPredictionFromCacheAnyAge(coinId: string): Promise<CachedPrediction | null> {
+  try {
+    const db = checkSupabase();
+
+    const { data, error } = await db
+      .from('prediction_cache')
+      .select('*')
+      .eq('coin_id', coinId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      return null;
     }
 
     return data as CachedPrediction;

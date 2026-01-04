@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
 
 interface CoinData {
@@ -248,37 +248,89 @@ export function CorrelationHeatmap({ coins, showBeginnerTips = true }: Correlati
   );
 }
 
-// Demo component with sample data
+// Quick-start widget (fetches real price history)
 export function CorrelationHeatmapDemo({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
-  // Generate sample price data
-  const generatePrices = (basePrice: number, volatility: number, correlation: number, basePrices?: number[]) => {
-    const prices: number[] = [];
-    for (let i = 0; i < 30; i++) {
-      if (basePrices) {
-        // Correlated with base
-        const noise = (Math.random() - 0.5) * volatility;
-        const correlated = basePrices[i] + (Math.random() - 0.5) * (1 - correlation) * volatility * 10;
-        prices.push(correlated + noise);
-      } else {
-        // Independent
-        const change = (Math.random() - 0.5) * volatility;
-        prices.push(i === 0 ? basePrice : prices[i-1] + change);
+  const [coins, setCoins] = useState<CoinData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const requested = [
+          { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+          { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+          { id: 'solana', symbol: 'SOL', name: 'Solana' },
+          { id: 'ripple', symbol: 'XRP', name: 'Ripple' },
+          { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' },
+        ];
+
+        const results = await Promise.all(
+          requested.map(async (c) => {
+            const res = await fetch(`/api/charts/history?coin=${encodeURIComponent(c.id)}&days=30`);
+            if (!res.ok) return null;
+            const json = await res.json();
+            const prices: number[] = Array.isArray(json?.prices)
+              ? json.prices
+                  .map((p: any) => p?.close ?? p?.price)
+                  .filter((v: any) => typeof v === 'number')
+              : [];
+
+            if (prices.length < 2) return null;
+
+            return {
+              id: c.id,
+              symbol: c.symbol,
+              name: c.name,
+              prices,
+            } satisfies CoinData;
+          })
+        );
+
+        const usable = results.filter(Boolean) as CoinData[];
+        if (usable.length < 2) {
+          setError('Not enough historical data to compute correlations.');
+          setCoins([]);
+        } else {
+          setCoins(usable);
+        }
+      } catch (e) {
+        console.error('Correlation heatmap demo load error:', e);
+        setError('Failed to load correlation data');
+        setCoins([]);
+      } finally {
+        setLoading(false);
       }
-    }
-    return prices;
-  };
+    };
 
-  const btcPrices = generatePrices(97000, 2000, 0);
-  
-  const sampleCoins: CoinData[] = [
-    { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin', prices: btcPrices },
-    { id: 'ethereum', symbol: 'ETH', name: 'Ethereum', prices: generatePrices(3800, 200, 0.9, btcPrices) },
-    { id: 'solana', symbol: 'SOL', name: 'Solana', prices: generatePrices(220, 20, 0.8, btcPrices) },
-    { id: 'ripple', symbol: 'XRP', name: 'Ripple', prices: generatePrices(2.3, 0.2, 0.6, btcPrices) },
-    { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin', prices: generatePrices(0.4, 0.05, 0.5, btcPrices) },
-  ];
+    load();
+  }, []);
 
-  return <CorrelationHeatmap coins={sampleCoins} showBeginnerTips={showBeginnerTips} />;
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Loading correlation data...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <CorrelationHeatmap coins={coins} showBeginnerTips={showBeginnerTips} />;
 }
 
 export default CorrelationHeatmap;

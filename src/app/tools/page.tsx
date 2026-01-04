@@ -45,7 +45,7 @@ export default function ToolsPage() {
       href: '/chat',
       color: 'from-orange-500 to-red-500',
       forBeginner: true,
-      features: ['Natural language', 'Real-time data', 'Personalized answers']
+      features: ['Natural language', 'Uses available site data', 'Educational answers']
     },
     {
       id: 'compare',
@@ -85,17 +85,17 @@ export default function ToolsPage() {
       href: '/whales',
       color: 'from-blue-600 to-cyan-500',
       forBeginner: false,
-      features: ['Real-time alerts', 'Wallet distribution', 'Exchange flows']
+      features: ['Large transactions', 'Explorer-backed data', 'Some metrics may be unavailable']
     },
     {
       id: 'smart-contract-verifier',
       name: 'SafeContract',
       emoji: '🔐',
-      description: 'Formal verification for smart contracts using Z3 SMT solver',
+      description: 'Check whether a smart contract is verified (not a security audit)',
       href: '/smart-contract-verifier',
       color: 'from-emerald-600 to-green-500',
       forBeginner: false,
-      features: ['Overflow detection', 'Reentrancy check', 'Balance verification']
+      features: ['Verification status', 'Cache-backed checks', 'No safety guarantees']
     },
     {
       id: 'etf',
@@ -115,7 +115,7 @@ export default function ToolsPage() {
       href: '/social',
       color: 'from-pink-500 to-rose-500',
       forBeginner: true,
-      features: ['Twitter, Reddit, YouTube', 'Sentiment scores', 'Trending topics']
+      features: ['News/community signals', 'Sentiment summaries', 'Availability varies by config']
     },
     {
       id: 'fear-greed',

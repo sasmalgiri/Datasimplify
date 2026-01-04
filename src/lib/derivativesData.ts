@@ -22,7 +22,7 @@ export interface LiquidationData {
   shortLiquidations24h: number;
   totalLiquidations24h: number;
   largestLiquidation: number | null;
-  isEstimated: boolean; // Flag to indicate this is estimated data
+  isEstimated: boolean; // Always false when sourced from free public endpoints
 }
 
 export interface DerivativesData {
@@ -42,34 +42,40 @@ export interface DerivativesData {
  */
 async function fetchBinanceOpenInterest(symbol: string): Promise<{ oi: number; oiChange: number } | null> {
   try {
-    // Get current OI
-    const res = await fetch(
-      `https://fapi.binance.com/fapi/v1/openInterest?symbol=${symbol}USDT`,
+    // Use Binance Futures historical open interest (free) to compute a real 24h change
+    // Endpoint returns an array of snapshots; we use 1h period and ~25 points (~24h)
+    const histRes = await fetch(
+      `https://fapi.binance.com/futures/data/openInterestHist?symbol=${symbol}USDT&period=1h&limit=25`,
       { next: { revalidate: 60 } }
     );
 
-    if (!res.ok) return null;
+    if (!histRes.ok) return null;
 
-    const data = await res.json();
-    const currentOI = parseFloat(data.openInterest);
+    const hist = await histRes.json();
+    if (!Array.isArray(hist) || hist.length < 2) return null;
 
-    // Get 24h ticker for price to calculate USD value
-    const tickerRes = await fetch(
-      `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}USDT`,
-      { next: { revalidate: 60 } }
-    );
+    const pickUsd = (row: Record<string, unknown>): number | null => {
+      const candidates = [
+        row.sumOpenInterestValue,
+        row.openInterestValue,
+        row.sumOpenInterest,
+        row.openInterest,
+      ];
+      for (const c of candidates) {
+        if (typeof c === 'string' || typeof c === 'number') {
+          const v = parseFloat(String(c));
+          if (Number.isFinite(v) && v > 0) return v;
+        }
+      }
+      return null;
+    };
 
-    if (!tickerRes.ok) return { oi: currentOI, oiChange: 0 };
+    const firstUsd = pickUsd(hist[0] as Record<string, unknown>);
+    const lastUsd = pickUsd(hist[hist.length - 1] as Record<string, unknown>);
+    if (firstUsd === null || lastUsd === null) return null;
 
-    const tickerData = await tickerRes.json();
-    const price = parseFloat(tickerData.lastPrice);
-    const oiUSD = currentOI * price;
-
-    // Estimate OI change (we'd need historical data for exact, using price change as proxy)
-    const priceChange = parseFloat(tickerData.priceChangePercent);
-    const oiChange = priceChange * 0.5; // Rough estimate
-
-    return { oi: oiUSD, oiChange };
+    const oiChange = firstUsd > 0 ? ((lastUsd - firstUsd) / firstUsd) * 100 : 0;
+    return { oi: lastUsd, oiChange };
   } catch (error) {
     console.error(`Error fetching OI for ${symbol}:`, error);
     return null;
@@ -183,45 +189,73 @@ function determineFundingHeatLevel(rate: number | null): 'extreme_long' | 'bulli
  * Note: Real liquidation data requires paid APIs like CoinGlass Pro ($200+/mo)
  * This is an APPROXIMATION based on volume and price volatility
  */
-async function fetchLiquidationEstimates(): Promise<LiquidationData[]> {
-  // We'll estimate liquidations based on price volatility and OI
-  // This is an approximation - real data would come from CoinGlass paid API
+type BinanceForceOrder = {
+  symbol?: string;
+  side?: 'BUY' | 'SELL';
+  price?: string;
+  origQty?: string;
+  time?: number;
+};
 
+async function fetchBinanceLiquidations24h(): Promise<LiquidationData[]> {
+  // Binance Futures liquidation orders (forceOrders) are a free public endpoint.
+  // We aggregate the last 24h for a few major symbols.
   const symbols = ['BTC', 'ETH', 'SOL', 'XRP', 'DOGE'];
-  const liquidations: LiquidationData[] = [];
+  const now = Date.now();
+  const since = now - 24 * 60 * 60 * 1000;
+
+  const results: LiquidationData[] = [];
 
   for (const symbol of symbols) {
     try {
-      const tickerRes = await fetch(
-        `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${symbol}USDT`,
+      const res = await fetch(
+        `https://fapi.binance.com/fapi/v1/forceOrders?symbol=${symbol}USDT&limit=1000`,
         { next: { revalidate: 60 } }
       );
+      if (!res.ok) continue;
 
-      if (tickerRes.ok) {
-        const data = await tickerRes.json();
-        const priceChange = Math.abs(parseFloat(data.priceChangePercent));
-        const volume = parseFloat(data.quoteVolume);
+      const orders = (await res.json()) as BinanceForceOrder[];
+      if (!Array.isArray(orders) || orders.length === 0) continue;
 
-        // Rough estimate: higher volatility + higher volume = more liquidations
-        // Typical liquidation is ~2-5% of volume on volatile days
-        const estimatedLiqs = volume * (priceChange / 100) * 0.03;
-        const longBias = parseFloat(data.priceChangePercent) < 0 ? 0.6 : 0.4;
+      let longLiqs = 0;
+      let shortLiqs = 0;
+      let largest: number | null = null;
 
-        liquidations.push({
-          symbol,
-          longLiquidations24h: estimatedLiqs * longBias,
-          shortLiquidations24h: estimatedLiqs * (1 - longBias),
-          totalLiquidations24h: estimatedLiqs,
-          largestLiquidation: estimatedLiqs * 0.1, // Top 10% estimate
-          isEstimated: true // Mark as estimated data
-        });
+      for (const o of orders) {
+        const t = typeof o.time === 'number' ? o.time : 0;
+        if (t < since) continue;
+        const price = parseFloat(String(o.price ?? ''));
+        const qty = parseFloat(String(o.origQty ?? ''));
+        if (!Number.isFinite(price) || !Number.isFinite(qty)) continue;
+        const usd = price * qty;
+        if (!Number.isFinite(usd) || usd <= 0) continue;
+
+        // Interpreting liquidation side:
+        // SELL liquidation order generally corresponds to long liquidations.
+        // BUY liquidation order generally corresponds to short liquidations.
+        if (o.side === 'SELL') longLiqs += usd;
+        else if (o.side === 'BUY') shortLiqs += usd;
+
+        if (largest === null || usd > largest) largest = usd;
       }
+
+      const total = longLiqs + shortLiqs;
+      if (total <= 0) continue;
+
+      results.push({
+        symbol,
+        longLiquidations24h: longLiqs,
+        shortLiquidations24h: shortLiqs,
+        totalLiquidations24h: total,
+        largestLiquidation: largest,
+        isEstimated: false,
+      });
     } catch (error) {
-      console.error(`Error estimating liquidations for ${symbol}:`, error);
+      console.error(`Error fetching Binance liquidation orders for ${symbol}:`, error);
     }
   }
 
-  return liquidations;
+  return results;
 }
 
 /**
@@ -238,7 +272,7 @@ export async function fetchDerivativesData(): Promise<DerivativesData> {
   const [btc, eth, liquidations] = await Promise.all([
     fetchCoinDerivatives('BTC'),
     fetchCoinDerivatives('ETH'),
-    fetchLiquidationEstimates()
+    fetchBinanceLiquidations24h()
   ]);
 
   // Calculate aggregated metrics
@@ -257,7 +291,9 @@ export async function fetchDerivativesData(): Promise<DerivativesData> {
     fundingHeatLevel: determineFundingHeatLevel(avgFunding),
     liquidations,
     lastUpdated: new Date().toISOString(),
-    dataNote: 'Liquidation data is estimated from volume and volatility. Real liquidation data requires CoinGlass Pro API.'
+    dataNote: liquidations.length > 0
+      ? 'Liquidation data is sourced from Binance Futures liquidation orders (forceOrders).'
+      : 'Liquidation data unavailable from free public endpoints.'
   };
 
   // Update cache
@@ -472,5 +508,8 @@ export async function fetchLongShortRatioForDownload(symbols?: string[]): Promis
  * Fetch liquidation data for download
  */
 export async function fetchLiquidationsForDownload(symbols?: string[]): Promise<LiquidationData[]> {
-  return fetchLiquidationEstimates();
+  const all = await fetchBinanceLiquidations24h();
+  if (!symbols || symbols.length === 0) return all;
+  const wanted = new Set(symbols.map(s => s.toUpperCase()));
+  return all.filter(r => wanted.has(r.symbol.toUpperCase()));
 }

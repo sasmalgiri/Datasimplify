@@ -177,6 +177,7 @@ async function getMacroData(): Promise<string> {
 
     const indicators: Record<string, string> = {};
     data.forEach(d => {
+      if (d.value === null || d.value === undefined) return;
       indicators[d.indicator] = `${Number(d.value).toFixed(2)}`;
     });
 
@@ -318,7 +319,7 @@ ${topExchanges || 'No exchange data'}`);
 // ============================================
 
 function getSystemPromptForLevel(userLevel: UserLevel, context: string): string {
-  const basePrompt = `You are DataSimplify's AI crypto analyst with access to REAL-TIME DATA.
+  const basePrompt = `You are DataSimplify's AI crypto analyst with access to recent market data and indicators (when provided).
 
 YOUR DATA ACCESS (as of ${new Date().toISOString()}):
 ${context || 'No specific data available for this query.'}`;
@@ -332,7 +333,7 @@ ${context || 'No specific data available for this query.'}`;
 IMPORTANT GUIDELINES:
 1. Use the ACTUAL DATA above to answer questions - don't make up numbers
 2. If data is missing, say "I don't have current data for that"
-3. Always cite which data you're using (e.g., "Based on current market data...")
+3. Always cite which data you're using (e.g., "Based on the data provided above...")
 4. Never give direct financial advice - use phrases like "the data suggests..." or "historically..."
 5. Explain complex concepts simply
 6. Be concise but thorough

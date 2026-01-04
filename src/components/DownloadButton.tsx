@@ -59,7 +59,13 @@ export default function DownloadButton({
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({} as any));
+
+      if (!response.ok) {
+        // Truthfulness: if we can't track, we shouldn't claim the download was persisted.
+        console.error('Download tracking failed:', data);
+        return false;
+      }
 
       if (data.upgradeRequired) {
         setLimitReached(true);
@@ -71,7 +77,7 @@ export default function DownloadButton({
       return true;
     } catch (error) {
       console.error('Track download error:', error);
-      return true; // Allow download even if tracking fails
+      return false;
     }
   };
 
@@ -97,7 +103,7 @@ export default function DownloadButton({
       const canDownload = await trackDownload(format);
 
       if (!canDownload) {
-        alert('Monthly download limit reached. Upgrade to Pro for unlimited downloads!');
+        alert('Download tracking is unavailable right now, so the download was blocked. Please try again in a moment.');
         return;
       }
 

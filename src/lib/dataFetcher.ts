@@ -1,6 +1,10 @@
 // Data Fetcher Service - Fetches ALL available data from Binance
 // No API key needed - 100% FREE
 
+import { FEATURES } from '@/lib/featureFlags';
+
+const DEFAULT_COIN_IMAGE = '/globe.svg';
+
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
 // Top trading pairs to fetch data for
@@ -18,7 +22,7 @@ export const TOP_SYMBOLS = [
 ];
 
 // Coin metadata (for names, images, supply)
-export const COIN_INFO: Record<string, {
+const COIN_INFO_RAW: Record<string, {
   id: string;
   name: string;
   image: string;
@@ -57,6 +61,26 @@ export const COIN_INFO: Record<string, {
   'SANDUSDT': { id: 'sandbox', name: 'The Sandbox', image: 'https://assets.coingecko.com/coins/images/12129/large/sandbox_logo.jpg', circulatingSupply: 2300000000, maxSupply: 3000000000, category: 'Gaming' },
   'MANAUSDT': { id: 'decentraland', name: 'Decentraland', image: 'https://assets.coingecko.com/coins/images/878/large/decentraland-mana.png', circulatingSupply: 1900000000, maxSupply: null, category: 'Gaming' },
 };
+
+export const COIN_INFO: Record<
+  string,
+  {
+    id: string;
+    name: string;
+    image: string;
+    circulatingSupply: number;
+    maxSupply: number | null;
+    category: string;
+  }
+> = Object.fromEntries(
+  Object.entries(COIN_INFO_RAW).map(([symbol, meta]) => [
+    symbol,
+    {
+      ...meta,
+      image: FEATURES.coingecko ? meta.image : DEFAULT_COIN_IMAGE,
+    },
+  ])
+);
 
 // Types
 export interface TickerData {

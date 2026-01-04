@@ -104,6 +104,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
   const sellSignals = summary?.sellSignals || indicators.filter(i => i.signal === 'sell').length;
   const neutralSignals = summary?.neutralSignals || indicators.filter(i => i.signal === 'neutral').length;
   const overallSignal = summary?.overallSignal || 'Loading...';
+  const totalSignals = Math.max(1, indicators.length);
 
   const getSignalColor = (signal: string) => {
     if (signal.includes('Buy')) return 'text-green-600 bg-green-50';
@@ -160,14 +161,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
         </div>
       )}
 
-      {/* Data Source Notice */}
-      {dataSource === 'mock' && !loading && !error && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
-          <span className="text-amber-800">
-            ⚠️ <strong>Note:</strong> Using estimated data. Live price data requires supported trading pairs.
-          </span>
-        </div>
-      )}
+      {/* Data source is provided by the API meta; no mock/estimated UI allowed */}
 
       {/* Timeframe Selector */}
       <div className="flex gap-2 mb-6">
@@ -215,14 +209,14 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {/* Signal Summary Bar */}
       <div className="mb-6">
         <div className="flex h-4 rounded-full overflow-hidden">
-          <SignalBarSegment width={(buySignals / indicators.length) * 100} className="bg-green-500" />
-          <SignalBarSegment width={(neutralSignals / indicators.length) * 100} className="bg-gray-300" />
-          <SignalBarSegment width={(sellSignals / indicators.length) * 100} className="bg-red-500" />
+          <SignalBarSegment width={(buySignals / totalSignals) * 100} className="bg-green-500" />
+          <SignalBarSegment width={(neutralSignals / totalSignals) * 100} className="bg-gray-300" />
+          <SignalBarSegment width={(sellSignals / totalSignals) * 100} className="bg-red-500" />
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>Buy ({Math.round((buySignals / indicators.length) * 100)}%)</span>
-          <span>Neutral ({Math.round((neutralSignals / indicators.length) * 100)}%)</span>
-          <span>Sell ({Math.round((sellSignals / indicators.length) * 100)}%)</span>
+          <span>Buy ({Math.round((buySignals / totalSignals) * 100)}%)</span>
+          <span>Neutral ({Math.round((neutralSignals / totalSignals) * 100)}%)</span>
+          <span>Sell ({Math.round((sellSignals / totalSignals) * 100)}%)</span>
         </div>
       </div>
 

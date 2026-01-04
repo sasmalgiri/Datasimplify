@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { logDownloadEvent } from '@/lib/downloadTracking';
 
 // GDPR/CCPA Data Export - Right to Data Portability
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const cookieStore = await cookies();
 
@@ -159,6 +160,16 @@ export async function GET() {
     };
 
     // Return as downloadable JSON
+    logDownloadEvent({
+      request,
+      category: 'user_export',
+      format: 'json',
+      fileName: `datasimplify-export-${new Date().toISOString().split('T')[0]}.json`,
+      filters: Object.fromEntries(new URL(request.url).searchParams.entries()),
+      userId: user.id,
+      userEmail: user.email || null,
+    }).catch(() => {});
+
     return new NextResponse(JSON.stringify(exportData, null, 2), {
       status: 200,
       headers: {

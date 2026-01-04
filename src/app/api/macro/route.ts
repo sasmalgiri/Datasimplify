@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchMacroData, getRiskInterpretation, type MacroData } from '@/lib/macroData';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getMacroDataFromCache, saveMacroDataToCache } from '@/lib/supabaseData';
 
@@ -8,6 +9,13 @@ export const revalidate = 300; // 5 minutes
 
 export async function GET() {
   try {
+    if (!isFeatureEnabled('macro')) {
+      return NextResponse.json(
+        { success: false, error: 'Macro data is currently disabled.', disabled: true },
+        { status: 503 }
+      );
+    }
+
     // 1. Try cache first
     if (isSupabaseConfigured) {
       const cached = await getMacroDataFromCache();
@@ -50,14 +58,17 @@ export async function GET() {
     // 3. Save to cache
     if (isSupabaseConfigured) {
       const indicators = [
-        { indicator: 'fedFundsRate', value: data.fedFundsRate ?? 0, previousValue: 0, change: 0, source: 'FRED' },
-        { indicator: 'treasury10Y', value: data.treasury10Y ?? 0, previousValue: 0, change: 0, source: 'FRED' },
-        { indicator: 'dxy', value: data.dxy ?? 0, previousValue: 0, change: 0, source: 'FRED' },
-        { indicator: 'vix', value: data.vix ?? 0, previousValue: 0, change: 0, source: 'Yahoo Finance' },
-        { indicator: 'sp500Change', value: data.sp500Change ?? 0, previousValue: 0, change: 0, source: 'Yahoo Finance' },
-        { indicator: 'nasdaqChange', value: data.nasdaqChange ?? 0, previousValue: 0, change: 0, source: 'Yahoo Finance' }
-      ];
-      await saveMacroDataToCache(indicators);
+        { indicator: 'fedFundsRate', value: data.fedFundsRate ?? null, previousValue: null, change: null, source: 'FRED' },
+        { indicator: 'treasury10Y', value: data.treasury10Y ?? null, previousValue: null, change: null, source: 'FRED' },
+        { indicator: 'dxy', value: data.dxy ?? null, previousValue: null, change: null, source: 'FRED' },
+        { indicator: 'vix', value: data.vix ?? null, previousValue: null, change: null, source: 'Yahoo Finance' },
+        { indicator: 'sp500Change', value: data.sp500Change ?? null, previousValue: null, change: null, source: 'Yahoo Finance' },
+        { indicator: 'nasdaqChange', value: data.nasdaqChange ?? null, previousValue: null, change: null, source: 'Yahoo Finance' }
+      ].filter(i => i.value !== null);
+
+      if (indicators.length > 0) {
+        await saveMacroDataToCache(indicators);
+      }
     }
 
     return NextResponse.json({

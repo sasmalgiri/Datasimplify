@@ -145,8 +145,8 @@ export default function CoinTable({ coins, onCompare, compareList = [], loading 
                 <td className={`px-4 py-4 whitespace-nowrap text-sm font-medium ${getPriceChangeColor(coin.price_change_percentage_24h)}`}>
                   {formatPercent(coin.price_change_percentage_24h)}
                 </td>
-                <td className={`px-4 py-4 whitespace-nowrap text-sm font-medium ${getPriceChangeColor(coin.price_change_percentage_7d || 0)}`}>
-                  {coin.price_change_percentage_7d ? formatPercent(coin.price_change_percentage_7d) : '-'}
+                <td className={`px-4 py-4 whitespace-nowrap text-sm font-medium ${typeof coin.price_change_percentage_7d === 'number' ? getPriceChangeColor(coin.price_change_percentage_7d) : 'text-gray-500'}`}>
+                  {typeof coin.price_change_percentage_7d === 'number' ? formatPercent(coin.price_change_percentage_7d) : '-'}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatCurrency(coin.market_cap)}

@@ -26,12 +26,12 @@ export default function CryptoAIChatRAG() {
       role: 'assistant',
       content: `👋 **Welcome to DataSimplify AI!**
 
-I'm enhanced with **exclusive market data** that standard AI can't access:
-• 📊 Live market prices & trends
+    Depending on configuration, I can reference available site datasets:
+    • 📊 Market prices & trends (when available)
 • 😰 Fear & Greed index
-• 🐋 Whale transactions
+    • 🐋 Whale transactions (when enabled)
 • 📈 Derivatives & funding rates
-• 🏛️ Macro economic indicators
+    • 🏛️ Macro economic indicators (when enabled)
 
 Ask me anything about crypto! Try the quick actions below or ask your own question.`,
       timestamp: new Date(),
@@ -195,7 +195,7 @@ Ask me anything about crypto! Try the quick actions below or ask your own questi
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${aiAvailable ? 'bg-green-400' : 'bg-yellow-400'}`}></span>
               <p className="text-sm text-blue-100">
-                {aiAvailable === null ? 'Checking...' : aiAvailable ? 'Connected to real-time data' : 'Limited mode'}
+                {aiAvailable === null ? 'Checking...' : aiAvailable ? 'Data-connected mode' : 'Limited mode'}
               </p>
             </div>
           </div>
@@ -205,8 +205,8 @@ Ask me anything about crypto! Try the quick actions below or ask your own questi
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 1 && (
-          <BeginnerTip title="💡 Powered by Real Data">
-            Unlike generic AI, I can see your actual Supabase data including live prices, whale transactions, derivatives, and more!
+          <BeginnerTip title="💡 Powered by Available Data">
+            Depending on configuration, I can reference available site datasets (e.g., market indicators). If data isn’t available, I’ll say so.
           </BeginnerTip>
         )}
 
@@ -305,7 +305,7 @@ Ask me anything about crypto! Try the quick actions below or ask your own questi
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2 text-center">
-          🚀 Enhanced with exclusive real-time market data unavailable to standard AI • Not financial advice
+          Uses available site data when enabled • Not financial advice
         </p>
       </form>
     </div>

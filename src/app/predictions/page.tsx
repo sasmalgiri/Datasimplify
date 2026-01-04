@@ -24,6 +24,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { AIPredictionDisclaimer } from '@/components/ui/DisclaimerBanner';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { FEATURES, isFeatureEnabled } from '@/lib/featureFlags';
 
 // Coin categories
 const CATEGORIES = [
@@ -166,6 +167,8 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
 }
 
 export default function PredictionsPage() {
+  const predictionsEnabled = isFeatureEnabled('predictions') && isFeatureEnabled('macro');
+
   const [selectedCoins, setSelectedCoins] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
   const [predictions, setPredictions] = useState<Map<string, Prediction>>(new Map());
   const [loading, setLoading] = useState(false);
@@ -221,10 +224,24 @@ export default function PredictionsPage() {
   };
 
   useEffect(() => {
+    if (!predictionsEnabled) return;
     if (selectedCoins.length > 0) {
       fetchPredictions();
     }
-  }, []);
+  }, [predictionsEnabled, selectedCoins]);
+
+  if (!predictionsEnabled) {
+    return (
+      <div className="min-h-screen bg-gray-50 text-gray-900">
+        <FreeNavbar />
+        <Breadcrumb />
+        <div className="max-w-3xl mx-auto px-4 py-16">
+          <h1 className="text-3xl font-bold mb-2">Predictions</h1>
+          <p className="text-gray-700">This feature is currently disabled.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter coins by category and search
   const filteredCoins = ALL_COINS.filter(coin => {
@@ -687,7 +704,9 @@ export default function PredictionsPage() {
         {/* Info Footer */}
         <div className="mt-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
           <Clock className="w-4 h-4" />
-          Predictions are updated every 6 hours. Data sources: CoinGecko, Alternative.me, DeFiLlama.
+          <span>
+            Predictions refresh periodically. Data sources vary by enabled providers.
+          </span>
         </div>
       </div>
     </div>

@@ -5,6 +5,39 @@
 
 import { NextResponse } from 'next/server';
 import { getHistoricalAccuracy, getPredictionHistory, getPredictionStats, type PredictionSnapshot } from '@/lib/predictionDb';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+type MarketChart = {
+  prices: [number, number][];
+};
+
+async function fetchCoinGeckoPrices(coinId: string, days: number): Promise<[number, number][]> {
+  const url = `${COINGECKO_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 60 },
+  });
+  if (!response.ok) return [];
+  const data = (await response.json()) as MarketChart;
+  return Array.isArray(data?.prices) ? data.prices : [];
+}
+
+function computeTrendSignal(prices: [number, number][]) {
+  if (prices.length < 2) {
+    return { prediction: 'NEUTRAL' as const, confidence: null as number | null, changePct: null as number | null };
+  }
+  const first = prices[0][1];
+  const last = prices[prices.length - 1][1];
+  if (!first || !last) {
+    return { prediction: 'NEUTRAL' as const, confidence: null as number | null, changePct: null as number | null };
+  }
+  const changePct = ((last - first) / first) * 100;
+  const prediction = changePct > 0.5 ? 'BULLISH' : changePct < -0.5 ? 'BEARISH' : 'NEUTRAL';
+  const confidence = Math.min(95, Math.max(5, Math.round(Math.abs(changePct) * 4)));
+  return { prediction, confidence, changePct };
+}
 
 export async function GET(request: Request) {
   try {
@@ -21,12 +54,38 @@ export async function GET(request: Request) {
       predictionHistory = await getPredictionHistory(coin, { limit: 30 });
       stats = await getPredictionStats(coin, 30);
     } catch {
-      // Database might not be set up, use mock data
+      // DB may not be configured; fall back to free market data signal
     }
 
     if (!historicalAccuracy || !predictionHistory || predictionHistory.length === 0) {
-      // Return mock prediction data
-      return NextResponse.json(generateMockPredictionData(coin));
+      if (!isFeatureEnabled('coingecko')) {
+        return NextResponse.json({
+          prediction: 'NEUTRAL',
+          confidence: null,
+          accuracy: null,
+          history: [],
+          priceTarget: null,
+          stats: null,
+          source: 'disabled',
+          coin,
+          changePct7d: null,
+        });
+      }
+
+      const prices7d = await fetchCoinGeckoPrices(coin, 7);
+      const trend = computeTrendSignal(prices7d);
+
+      return NextResponse.json({
+        prediction: trend.prediction,
+        confidence: trend.confidence,
+        accuracy: null,
+        history: [],
+        priceTarget: null,
+        stats: null,
+        source: 'coingecko-trend',
+        coin,
+        changePct7d: trend.changePct,
+      });
     }
 
     // Get latest prediction for current direction
@@ -40,7 +99,7 @@ export async function GET(request: Request) {
 
     const avgPrice = recentPrices.length > 0
       ? recentPrices.reduce((a, b) => a + b, 0) / recentPrices.length
-      : getBasePrice(coin);
+      : null;
 
     // Use historical accuracy from the database
     const bullishPredictions = predictionHistory.filter(p => p.prediction === 'BULLISH');
@@ -48,37 +107,37 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       prediction: latestPrediction?.prediction || 'NEUTRAL',
-      confidence: latestPrediction?.confidence || 70,
+      confidence: latestPrediction?.confidence ?? null,
       accuracy: {
-        overall: historicalAccuracy.accuracy || 70,
+        overall: historicalAccuracy.accuracy ?? null,
         bullish: historicalAccuracy.byDirection?.bullish?.total > 0
           ? Math.round((historicalAccuracy.byDirection.bullish.correct / historicalAccuracy.byDirection.bullish.total) * 100)
-          : 68,
+          : null,
         bearish: historicalAccuracy.byDirection?.bearish?.total > 0
           ? Math.round((historicalAccuracy.byDirection.bearish.correct / historicalAccuracy.byDirection.bearish.total) * 100)
-          : 72,
+          : null,
       },
       history: predictionHistory.slice(0, 30).map(p => ({
         date: new Date(p.timestamp).toLocaleDateString(),
         predicted: p.prediction,
-        actual: p.prediction, // We don't have actual data stored, use prediction as placeholder
-        correct: Math.random() > 0.35, // Simulated correctness
-        confidence: p.confidence,
+        actual: null,
+        correct: null,
+        confidence: p.confidence ?? null,
       })),
       priceTarget: {
         current: avgPrice,
-        low: avgPrice * 0.85,
-        mid: avgPrice * 1.05,
-        high: avgPrice * 1.20,
+        low: avgPrice !== null ? avgPrice * 0.85 : null,
+        mid: avgPrice !== null ? avgPrice * 1.05 : null,
+        high: avgPrice !== null ? avgPrice * 1.20 : null,
       },
       stats: stats || {
-        totalPredictions: historicalAccuracy?.totalPredictions || predictionHistory.length,
+        totalPredictions: historicalAccuracy?.totalPredictions ?? predictionHistory.length,
         bullishCount: bullishPredictions.length,
         bearishCount: bearishPredictions.length,
         neutralCount: predictionHistory.filter(p => p.prediction === 'NEUTRAL').length,
         avgConfidence: predictionHistory.length > 0
-          ? Math.round(predictionHistory.reduce((sum, p) => sum + (p.confidence || 70), 0) / predictionHistory.length)
-          : 70,
+          ? Math.round(predictionHistory.reduce((sum, p) => sum + (p.confidence ?? 0), 0) / predictionHistory.length)
+          : null,
       },
       source: 'database',
       coin,
@@ -90,76 +149,15 @@ export async function GET(request: Request) {
     const coin = searchParams.get('coin') || 'bitcoin';
 
     return NextResponse.json({
-      ...generateMockPredictionData(coin),
-      source: 'mock',
-      error: String(error),
-    });
+      prediction: 'NEUTRAL',
+      confidence: null,
+      accuracy: null,
+      history: [],
+      priceTarget: null,
+      stats: null,
+      source: 'error',
+      coin,
+      error: error instanceof Error ? error.message : String(error),
+    }, { status: 502 });
   }
-}
-
-function getBasePrice(coin: string): number {
-  const prices: Record<string, number> = {
-    bitcoin: 45000,
-    ethereum: 2500,
-    solana: 100,
-    binancecoin: 300,
-    ripple: 0.5,
-    cardano: 0.4,
-    dogecoin: 0.08,
-    polkadot: 7,
-  };
-  return prices[coin] || 50;
-}
-
-function generateMockPredictionData(coin: string) {
-  const basePrice = getBasePrice(coin);
-  const isBullish = Math.random() > 0.45;
-
-  // Generate prediction history
-  const history = [];
-  for (let i = 0; i < 30; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-
-    const predicted = Math.random() > 0.5 ? 'BULLISH' : 'BEARISH';
-    const actual = Math.random() > 0.5 ? 'BULLISH' : 'BEARISH';
-    const correct = Math.random() > 0.35; // ~65% accuracy
-
-    history.push({
-      date: date.toLocaleDateString(),
-      predicted,
-      actual,
-      correct,
-      confidence: Math.floor(Math.random() * 25 + 60),
-    });
-  }
-
-  const correctCount = history.filter(h => h.correct).length;
-  const bullishHistory = history.filter(h => h.predicted === 'BULLISH');
-  const bearishHistory = history.filter(h => h.predicted === 'BEARISH');
-
-  return {
-    prediction: isBullish ? 'BULLISH' : 'BEARISH',
-    confidence: Math.floor(Math.random() * 25 + 65),
-    accuracy: {
-      overall: Math.round((correctCount / history.length) * 100),
-      bullish: Math.round((bullishHistory.filter(h => h.correct).length / Math.max(bullishHistory.length, 1)) * 100),
-      bearish: Math.round((bearishHistory.filter(h => h.correct).length / Math.max(bearishHistory.length, 1)) * 100),
-    },
-    history,
-    priceTarget: {
-      current: basePrice,
-      low: basePrice * (isBullish ? 0.92 : 0.80),
-      mid: basePrice * (isBullish ? 1.08 : 0.95),
-      high: basePrice * (isBullish ? 1.20 : 1.05),
-    },
-    stats: {
-      totalPredictions: 30,
-      bullishCount: bullishHistory.length,
-      bearishCount: bearishHistory.length,
-      neutralCount: 0,
-      avgConfidence: Math.round(history.reduce((sum, h) => sum + h.confidence, 0) / history.length),
-    },
-    coin,
-  };
 }

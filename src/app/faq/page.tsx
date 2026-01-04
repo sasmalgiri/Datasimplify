@@ -16,7 +16,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is DataSimplify?',
-    answer: 'DataSimplify is a professional crypto data platform that lets you download real-time cryptocurrency data to Excel, CSV, and JSON formats. Our data is refreshable via Power Query, making it easy to keep your spreadsheets up to date without manual work.',
+    answer: 'DataSimplify helps you download crypto market data to Excel, CSV, and JSON formats. Many downloads can be refreshed in Excel via Power Query, so spreadsheets can stay up to date without manual copy/paste.',
   },
   {
     category: 'Getting Started',
@@ -26,7 +26,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What data sources does DataSimplify use?',
-    answer: 'We aggregate data from multiple professional sources including Binance API for market data, DeFiLlama for DeFi/TVL data, Alternative.me for Fear & Greed Index, and various on-chain data providers. All data is verified and updated in real-time.',
+    answer: 'Data sources vary by dataset and by which providers are enabled in your deployment. Common sources include exchange market data APIs and public market indicators (e.g. Fear & Greed). Some optional datasets may be disabled by default for commercial/ToS safety.',
   },
   // Downloads
   {
@@ -53,12 +53,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Data & Accuracy',
     question: 'How often is the data updated?',
-    answer: 'Market data updates every 1-5 seconds. Historical data and on-chain metrics update every 5-15 minutes. Some specialized data like token unlocks updates daily. The exact frequency depends on the data type.',
+    answer: 'Update frequency depends on the dataset and provider. Some endpoints update frequently, while others refresh on a schedule. If a dataset is unavailable from enabled sources, the app shows “Unavailable” rather than placeholder data.',
   },
   {
     category: 'Data & Accuracy',
     question: 'Is the data accurate?',
-    answer: 'Yes, we use professional-grade data sources and cross-verify data points where possible. Our market data comes directly from Binance, one of the largest exchanges. For derived metrics, we use industry-standard calculation methods.',
+    answer: 'We aim to provide accurate data, but accuracy depends on upstream providers and network conditions. Derived metrics use standard calculation methods where applicable. We do not guarantee accuracy or completeness, and unavailable datasets are shown as “Unavailable”.',
   },
   {
     category: 'Data & Accuracy',
@@ -69,7 +69,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Tools & Features',
     question: 'What is the Smart Contract Verifier?',
-    answer: 'SafeContract is our formal verification tool for Solidity smart contracts. It uses Z3 SMT solver to mathematically prove security properties like integer overflow protection, reentrancy safety, and access control. Unlike pattern-matching tools, it provides mathematical guarantees.',
+    answer: 'SafeContract is a smart contract verification status checker. It helps you see whether a contract is verified on public verification registries (when supported). It is not a security audit and does not provide guarantees of safety.',
   },
   {
     category: 'Tools & Features',
@@ -79,18 +79,18 @@ const faqs: FAQItem[] = [
   {
     category: 'Tools & Features',
     question: 'What AI features does DataSimplify offer?',
-    answer: 'We offer AI-powered price predictions for 75+ coins, an AI chat assistant for crypto questions, sentiment analysis from social media, and AI-generated market insights. Our AI models are trained on extensive market data.',
+    answer: 'AI features (like chat and predictions) may be available depending on configuration. AI outputs can be wrong, so treat them as educational signals rather than financial advice.',
   },
   // Pricing & Limits
   {
     category: 'Pricing & Limits',
     question: 'Is DataSimplify free?',
-    answer: 'Yes, DataSimplify offers a generous free tier with 5 downloads per month and access to all data types. The free tier is powered by public APIs and is suitable for personal use and learning.',
+    answer: 'DataSimplify can be used with a free tier that includes 5 downloads per month. Available datasets depend on deployment configuration and provider availability.',
   },
   {
     category: 'Pricing & Limits',
     question: 'What are the rate limits?',
-    answer: 'Free users: 5 downloads/month, 1 request per second. For live Excel refresh, the minimum interval is 60 seconds for free users. Paid plans have higher limits and faster refresh rates (down to 10 seconds).',
+    answer: 'Free users have a monthly download limit (5/month). Additional rate limits can apply depending on the deployment and upstream providers.',
   },
   {
     category: 'Pricing & Limits',
@@ -106,7 +106,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Technical',
     question: 'Can I filter the data before downloading?',
-    answer: 'Yes! You can filter by coin category (Layer 1, DeFi, Meme, etc.), minimum market cap, price range, volume, and more. You can also select specific fields/columns to include in your download.',
+    answer: 'Some downloads support filtering and field selection. Exact options depend on the dataset and the current UI.',
   },
   {
     category: 'Technical',
@@ -244,7 +244,7 @@ export default function FAQPage() {
             <div className="text-sm text-gray-500">Get crypto data</div>
           </Link>
           <Link
-            href="/tools/verify"
+            href="/smart-contract-verifier"
             className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition text-center"
           >
             <div className="text-2xl mb-2">🔐</div>

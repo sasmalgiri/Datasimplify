@@ -600,25 +600,10 @@ CREATE POLICY "Service role full access on adoption_metrics" ON adoption_metrics
 CREATE POLICY "Service role full access on prediction_training_data" ON prediction_training_data FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================
--- SEED DATA: Known Exchange Wallets
+-- SEED DATA
 -- ============================================
-INSERT INTO wallet_profiles (address, blockchain, wallet_type, label, known_entity, entity_category, impact_score) VALUES
--- Binance Hot Wallets (ETH)
-('0x28c6c06298d514db089934071355e5743bf21d60', 'ethereum', 'exchange', 'Binance Hot Wallet 1', 'Binance', 'exchange', 95),
-('0x21a31ee1afc51d94c2efccaa2092ad1028285549', 'ethereum', 'exchange', 'Binance Hot Wallet 2', 'Binance', 'exchange', 90),
-('0xdfd5293d8e347dfe59e90efd55b2956a1343963d', 'ethereum', 'exchange', 'Binance Hot Wallet 3', 'Binance', 'exchange', 85),
--- Coinbase
-('0x71660c4005ba85c37ccec55d0c4493e66fe775d3', 'ethereum', 'exchange', 'Coinbase Hot Wallet', 'Coinbase', 'exchange', 90),
-('0xa090e606e30bd747d4e6245a1517ebe430f0057e', 'ethereum', 'exchange', 'Coinbase Cold Wallet', 'Coinbase', 'exchange', 85),
--- Kraken
-('0x2910543af39aba0cd09dbb2d50200b3e800a63d2', 'ethereum', 'exchange', 'Kraken Hot Wallet', 'Kraken', 'exchange', 80),
--- OKX
-('0x98ec059dc3adfbdd63429454aeb0c990fba4a128', 'ethereum', 'exchange', 'OKX Hot Wallet', 'OKX', 'exchange', 80),
--- Bitfinex
-('0x1151314c646ce4e0efd76d1af4760ae66a9fe30f', 'ethereum', 'exchange', 'Bitfinex Hot Wallet', 'Bitfinex', 'exchange', 75),
--- ETH 2.0 Deposit Contract
-('0x00000000219ab540356cbb839cbe05303d7705fa', 'ethereum', 'protocol', 'ETH 2.0 Deposit Contract', 'Ethereum Foundation', 'protocol', 70)
-ON CONFLICT (address, blockchain) DO NOTHING;
+-- Intentionally omitted. The app should not ship static or example “known wallets” lists.
+-- If you want enrichment labels, ingest them from a real upstream data source.
 
 -- ============================================
 -- COMMENTS

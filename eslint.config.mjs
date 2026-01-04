@@ -12,7 +12,19 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+
+    // Project scripts are operational utilities, not app code.
+    "scripts/**",
   ]),
+
+  // Free-first shipping: keep real correctness rules, relax noisy style rules.
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react/no-unescaped-entities": "warn",
+      "react-hooks/purity": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

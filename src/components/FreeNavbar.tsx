@@ -29,6 +29,8 @@ import {
   Shield,
 } from 'lucide-react';
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 interface NavDropdownProps {
   label: string;
   icon: React.ReactNode;
@@ -102,36 +104,53 @@ export function FreeNavbar() {
         { href: '/download', label: 'Download Center', description: 'Export data to Excel/CSV', icon: <FileSpreadsheet className="w-4 h-4" /> },
       ],
     },
-    analysis: {
-      label: 'Analysis',
-      icon: <Brain className="w-4 h-4" />,
-      paths: ['/monitor', '/predictions', '/dashboard', '/portfolio'],
-      items: [
-        { href: '/monitor', label: 'AI Monitor', description: 'Real-time market predictions', icon: <Brain className="w-4 h-4" /> },
-        { href: '/predictions', label: 'AI Prediction Center', description: 'Bulk predictions for 75+ coins', icon: <Sparkles className="w-4 h-4" /> },
-        { href: '/dashboard', label: 'Dashboard', description: 'Your personalized overview', icon: <Activity className="w-4 h-4" /> },
-        { href: '/portfolio', label: 'Portfolio Builder', description: 'Build & track portfolios', icon: <Wallet className="w-4 h-4" /> },
-      ],
-    },
+    ...(isFeatureEnabled('predictions')
+      ? {
+          analysis: {
+            label: 'Analysis',
+            icon: <Brain className="w-4 h-4" />,
+            paths: ['/monitor', '/predictions', '/dashboard', '/portfolio'],
+            items: [
+              { href: '/monitor', label: 'AI Monitor', description: 'Market monitoring & signals', icon: <Brain className="w-4 h-4" /> },
+              { href: '/predictions', label: 'AI Prediction Center', description: 'Bulk predictions (availability varies)', icon: <Sparkles className="w-4 h-4" /> },
+              { href: '/dashboard', label: 'Dashboard', description: 'Your personalized overview', icon: <Activity className="w-4 h-4" /> },
+              { href: '/portfolio', label: 'Portfolio Builder', description: 'Build & track portfolios', icon: <Wallet className="w-4 h-4" /> },
+            ],
+          },
+        }
+      : {}),
     tools: {
       label: 'Tools',
       icon: <Zap className="w-4 h-4" />,
-      paths: ['/chat', '/alerts', '/tools/verify'],
+      paths: ['/chat', '/alerts', '/smart-contract-verifier', '/tools/verify'],
       items: [
         { href: '/chat', label: 'AI Chat', description: 'Ask questions about crypto', icon: <MessageSquare className="w-4 h-4" /> },
-        { href: '/alerts', label: 'Price Alerts', description: 'Get notified on price moves', icon: <Bell className="w-4 h-4" /> },
-        { href: '/tools/verify', label: 'Contract Verifier', description: 'Formal verification for smart contracts', icon: <Shield className="w-4 h-4" /> },
+        { href: '/alerts', label: 'Price Alerts', description: 'Set up price alerts (delivery may be unavailable)', icon: <Bell className="w-4 h-4" /> },
+        ...(isFeatureEnabled('smartContractVerifier')
+          ? [
+              {
+                href: '/smart-contract-verifier',
+                label: 'Contract Verification',
+                description: 'Checks if a contract is verified on Sourcify',
+                icon: <Shield className="w-4 h-4" />,
+              },
+            ]
+          : []),
       ],
     },
-    community: {
-      label: 'AI Community',
-      icon: <Users className="w-4 h-4" />,
-      paths: ['/community'],
-      items: [
-        { href: '/community', label: 'Prediction Forum', description: 'Share & discuss AI predictions', icon: <Users className="w-4 h-4" /> },
-        { href: '/community?tab=leaderboard', label: 'Leaderboard', description: 'Top predictors ranking', icon: <Trophy className="w-4 h-4" /> },
-      ],
-    },
+    ...(isFeatureEnabled('community')
+      ? {
+          community: {
+            label: 'AI Community',
+            icon: <Users className="w-4 h-4" />,
+            paths: ['/community'],
+            items: [
+              { href: '/community', label: 'Prediction Forum', description: 'Share & discuss AI predictions', icon: <Users className="w-4 h-4" /> },
+              { href: '/community?tab=leaderboard', label: 'Leaderboard', description: 'Top predictors ranking', icon: <Trophy className="w-4 h-4" /> },
+            ],
+          },
+        }
+      : {}),
     more: {
       label: 'More',
       icon: <BookOpen className="w-4 h-4" />,
@@ -140,7 +159,9 @@ export function FreeNavbar() {
         { href: '/learn', label: 'Academy', description: 'Crypto education & guides', icon: <GraduationCap className="w-4 h-4" /> },
         { href: '/glossary', label: 'Glossary', description: 'Crypto terms explained', icon: <BookOpen className="w-4 h-4" /> },
         { href: '/faq', label: 'FAQ', description: 'Common questions answered', icon: <HelpCircle className="w-4 h-4" /> },
-        { href: '/pricing', label: 'Pricing', description: 'Plans & subscription options', icon: <DollarSign className="w-4 h-4" /> },
+        ...(isFeatureEnabled('pricing')
+          ? [{ href: '/pricing', label: 'Pricing', description: 'Plans & subscription options', icon: <DollarSign className="w-4 h-4" /> }]
+          : []),
       ],
     },
   };
@@ -150,14 +171,20 @@ export function FreeNavbar() {
     { href: '/charts', label: 'Charts', icon: <LineChart className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare', icon: <Scale className="w-4 h-4" /> },
     { href: '/download', label: 'Download', icon: <Download className="w-4 h-4" /> },
-    { href: '/monitor', label: 'AI Monitor', icon: <Brain className="w-4 h-4" /> },
-    { href: '/predictions', label: 'Predictions', icon: <Sparkles className="w-4 h-4" /> },
-    { href: '/community', label: 'AI Community', icon: <Users className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
+    ...(isFeatureEnabled('predictions')
+      ? [
+          { href: '/monitor', label: 'AI Monitor', icon: <Brain className="w-4 h-4" /> },
+          { href: '/predictions', label: 'Predictions', icon: <Sparkles className="w-4 h-4" /> },
+          { href: '/dashboard', label: 'Dashboard', icon: <Activity className="w-4 h-4" /> },
+        ]
+      : []),
+    ...(isFeatureEnabled('community') ? [{ href: '/community', label: 'AI Community', icon: <Users className="w-4 h-4" /> }] : []),
     { href: '/chat', label: 'AI Chat', icon: <MessageSquare className="w-4 h-4" /> },
-    { href: '/tools/verify', label: 'Contract Verifier', icon: <Shield className="w-4 h-4" /> },
+    ...(isFeatureEnabled('smartContractVerifier')
+      ? [{ href: '/smart-contract-verifier', label: 'Contract Verification', icon: <Shield className="w-4 h-4" /> }]
+      : []),
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
-    { href: '/pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> },
+    ...(isFeatureEnabled('pricing') ? [{ href: '/pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> }] : []),
   ];
 
   return (
@@ -182,17 +209,19 @@ export function FreeNavbar() {
               />
             ))}
             {/* Prominent AI Predictions link */}
-            <Link
-              href="/predictions"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition ${
-                isActive('/predictions')
-                  ? 'text-purple-400 bg-purple-500/10'
-                  : 'text-purple-300 hover:text-purple-200 hover:bg-purple-700/30 border border-purple-500/30'
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              AI Predictions
-            </Link>
+            {isFeatureEnabled('predictions') && (
+              <Link
+                href="/predictions"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition ${
+                  isActive('/predictions')
+                    ? 'text-purple-400 bg-purple-500/10'
+                    : 'text-purple-300 hover:text-purple-200 hover:bg-purple-700/30 border border-purple-500/30'
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                AI Predictions
+              </Link>
+            )}
           </div>
 
           {/* Desktop Actions */}

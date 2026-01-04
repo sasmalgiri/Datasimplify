@@ -1,23 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-
-// Bar component that uses ref to avoid inline style warnings
-function FlowBar({ height, isPositive, title }: { height: number; isPositive: boolean; title: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.style.height = `${height}%`;
-    }
-  }, [height]);
-  return (
-    <div
-      ref={ref}
-      className={`flex-1 rounded-t ${isPositive ? 'bg-green-400' : 'bg-red-400'}`}
-      title={title}
-    />
-  );
-}
+import { useState, useEffect } from 'react';
 import { BeginnerTip, InfoButton, TrafficLight } from '../ui/BeginnerHelpers';
 
 interface ETFData {
@@ -32,9 +15,9 @@ interface ETFData {
 }
 
 interface ETFSummary {
-  total_aum: number;
-  total_today_flow: number;
-  total_week_flow: number;
+  total_aum: number | null;
+  total_today_flow: number | null;
+  total_week_flow: number | null;
   btc_price: number;
   btc_change_24h: number;
   market_sentiment: string;
@@ -46,7 +29,6 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
   const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month'>('today');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEstimated, setIsEstimated] = useState(false);
 
   useEffect(() => {
     const fetchETFData = async () => {
@@ -62,7 +44,6 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           if (result.success && result.data) {
             setEtfs(result.data.etfs);
             setSummary(result.data.summary);
-            setIsEstimated(result.data.meta?.data_type === 'estimated');
           } else {
             setError('Failed to load ETF data');
           }
@@ -84,10 +65,12 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate totals
-  const totalTodayFlow = etfs.reduce((sum, etf) => sum + etf.today_flow, 0);
-  const totalWeekFlow = etfs.reduce((sum, etf) => sum + etf.week_flow, 0);
-  const totalAUM = etfs.reduce((sum, etf) => sum + etf.total_aum, 0);
+  const hasEtfData = etfs.length > 0;
+
+  // Calculate totals (only if real ETF rows are present)
+  const totalTodayFlow = hasEtfData ? etfs.reduce((sum, etf) => sum + etf.today_flow, 0) : 0;
+  const totalWeekFlow = hasEtfData ? etfs.reduce((sum, etf) => sum + etf.week_flow, 0) : 0;
+  const totalAUM = hasEtfData ? etfs.reduce((sum, etf) => sum + etf.total_aum, 0) : 0;
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -147,12 +130,11 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
         </div>
       )}
 
-      {/* Estimated Data Notice */}
-      {isEstimated && !loading && !error && (
+      {/* Availability Notice */}
+      {!loading && !error && !hasEtfData && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm">
           <span className="text-amber-800">
-            ⚠️ <strong>Note:</strong> Flow data is estimated based on AUM and market conditions.
-            Real-time flow data requires premium data sources.
+            ⚠️ <strong>Note:</strong> ETF flow/AUM data is not shown because it isn&apos;t reliably available from free public APIs.
           </span>
         </div>
       )}
@@ -178,6 +160,7 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
       )}
 
       {/* Summary Cards */}
+      {hasEtfData && (
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className={`p-4 rounded-lg ${totalTodayFlow >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
           <p className="text-sm text-gray-600">Today&apos;s Net Flow</p>
@@ -206,8 +189,10 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           <p className="text-xs text-gray-500 mt-1">Combined AUM</p>
         </div>
       </div>
+      )}
 
       {/* Period Selector */}
+      {hasEtfData && (
       <div className="flex gap-2 mb-4">
         {[
           { id: 'today' as const, label: 'Today' },
@@ -227,8 +212,10 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           </button>
         ))}
       </div>
+      )}
 
       {/* ETF Table */}
+      {hasEtfData && (
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-white">
@@ -279,8 +266,10 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           </tfoot>
         </table>
       </div>
+      )}
 
       {/* Interpretation Box */}
+      {hasEtfData && (
       <div className={`mt-6 p-4 rounded-lg ${totalTodayFlow >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
         <h3 className={`font-semibold mb-2 ${totalTodayFlow >= 0 ? 'text-green-800' : 'text-red-800'}`}>
           💡 What This Means For You
@@ -299,30 +288,7 @@ export function ETFTracker({ showBeginnerTips = true }: { showBeginnerTips?: boo
           </div>
         )}
       </div>
-
-      {/* Historical Chart Placeholder */}
-      <div className="mt-6">
-        <h3 className="font-semibold text-gray-700 mb-3">📈 Flow History (Last 30 Days)</h3>
-        <div className="h-40 bg-gray-50 rounded-lg flex items-end gap-1 p-4">
-          {/* Simple bar chart visualization */}
-          {Array.from({ length: 30 }).map((_, i) => {
-            const value = Math.sin(i * 0.3) * 100 + Math.random() * 50;
-            const isPositive = value > 50;
-            return (
-              <FlowBar
-                key={i}
-                height={Math.abs(value - 50) + 20}
-                isPositive={isPositive}
-                title={`Day ${30 - i}`}
-              />
-            );
-          })}
-        </div>
-        <div className="flex justify-between text-xs text-gray-400 mt-2">
-          <span>30 days ago</span>
-          <span>Today</span>
-        </div>
-      </div>
+      )}
 
       {/* Quick Facts */}
       {showBeginnerTips && (

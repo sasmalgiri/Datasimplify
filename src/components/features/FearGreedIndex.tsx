@@ -27,35 +27,53 @@ function HistoryBar({ height, bgClass, title }: { height: number; bgClass: strin
 
 interface FearGreedData {
   value: number;
-  value_classification: string;
   timestamp: string;
-  time_until_update: string;
+  classification?: string | null;
 }
 
 export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?: boolean }) {
   const [data, setData] = useState<FearGreedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<FearGreedData[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch Fear & Greed data
     async function fetchData() {
       try {
-        const res = await fetch('https://api.alternative.me/fng/?limit=30');
+        const res = await fetch('/api/onchain/fear-greed-history?limit=30');
         const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          setData(json.data[0]);
-          setHistory(json.data);
+        const rows = Array.isArray(json?.data) ? json.data : [];
+        if (json?.success && rows.length > 0) {
+          const mapped: FearGreedData[] = rows
+            .map((r: { value?: number | null; classification?: string | null; timestamp?: string | null }) => ({
+              value: typeof r.value === 'number' && Number.isFinite(r.value) ? r.value : 0,
+              classification: r.classification ?? null,
+              timestamp: typeof r.timestamp === 'string' ? r.timestamp : new Date().toISOString(),
+            }))
+            .filter((r: FearGreedData) => typeof r.value === 'number' && Number.isFinite(r.value));
+
+          if (mapped.length === 0) {
+            setData(null);
+            setHistory([]);
+            setLoadError('Fear & Greed API returned no data.');
+            setLoading(false);
+            return;
+          }
+
+          setData(mapped[0]);
+          setHistory(mapped);
+          setLoadError(null);
+        } else {
+          setData(null);
+          setHistory([]);
+          setLoadError('Fear & Greed API returned no data.');
         }
       } catch (error) {
         console.error('Error fetching Fear & Greed:', error);
-        // Use mock data
-        setData({
-          value: 72,
-          value_classification: 'Greed',
-          timestamp: Date.now().toString(),
-          time_until_update: '12 hours'
-        });
+        setData(null);
+        setHistory([]);
+        setLoadError('Fear & Greed data is unavailable right now.');
       }
       setLoading(false);
     }
@@ -71,7 +89,33 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
     );
   }
 
-  const value = data?.value || 50;
+  if (!data) {
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              😱 Fear &amp; Greed Index
+              <InfoButton explanation="This index measures the overall sentiment in the crypto market. It combines volatility, market momentum, social media, surveys, and more to determine if investors are fearful or greedy." />
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">How the market is feeling right now</p>
+          </div>
+        </div>
+
+        {showBeginnerTips && (
+          <BeginnerTip title="💡 What is This?">
+            This measures how people <strong>feel</strong> about crypto right now. If the official source is down, we show it as unavailable instead of guessing.
+          </BeginnerTip>
+        )}
+
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+          ⚠️ <strong>Unavailable:</strong> {loadError || 'Fear & Greed data could not be loaded.'}
+        </div>
+      </div>
+    );
+  }
+
+  const value = data.value;
   
   // Get emoji and color based on value
   const getEmoji = (val: number) => {

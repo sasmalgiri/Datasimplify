@@ -13,6 +13,17 @@ import { moderateContent } from '@/lib/moderation';
 
 export const dynamic = 'force-dynamic';
 
+function supabaseRequiredResponse() {
+  return NextResponse.json(
+    {
+      success: false,
+      error: 'Community features require Supabase configuration.',
+      code: 'SUPABASE_NOT_CONFIGURED',
+    },
+    { status: 503 }
+  );
+}
+
 // GET - Get comments or check follow status
 export async function GET(request: Request) {
   try {
@@ -20,11 +31,7 @@ export async function GET(request: Request) {
     const action = searchParams.get('action');
 
     if (!isSupabaseConfigured) {
-      return NextResponse.json({
-        success: true,
-        data: getMockInteractionData(action, searchParams),
-        source: 'mock'
-      });
+      return supabaseRequiredResponse();
     }
 
     switch (action) {
@@ -103,11 +110,7 @@ export async function POST(request: Request) {
     const { action } = body;
 
     if (!isSupabaseConfigured) {
-      return NextResponse.json({
-        success: true,
-        data: { message: `${action} processed (mock mode)` },
-        source: 'mock'
-      });
+      return supabaseRequiredResponse();
     }
 
     switch (action) {
@@ -224,71 +227,5 @@ export async function POST(request: Request) {
       success: false,
       error: 'Failed to process request'
     }, { status: 500 });
-  }
-}
-
-function getMockInteractionData(action: string | null, searchParams: URLSearchParams) {
-  switch (action) {
-    case 'comments':
-      return [
-        {
-          id: 'comment-1',
-          prediction_id: searchParams.get('predictionId'),
-          user_id: 'user-1',
-          content: 'Great analysis! I agree with this prediction.',
-          likes: 12,
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          user: {
-            id: 'user-1',
-            user_id: 'user-1',
-            display_name: 'CryptoFan',
-            avatar_emoji: '🚀',
-            accuracy: 65,
-            rank: 15
-          }
-        },
-        {
-          id: 'comment-2',
-          prediction_id: searchParams.get('predictionId'),
-          user_id: 'user-2',
-          content: 'Interesting take. The on-chain data supports this.',
-          likes: 8,
-          created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-          user: {
-            id: 'user-2',
-            user_id: 'user-2',
-            display_name: 'OnChainPro',
-            avatar_emoji: '🔗',
-            accuracy: 72,
-            rank: 8
-          }
-        }
-      ];
-
-    case 'is_following':
-      return { isFollowing: Math.random() > 0.5 };
-
-    case 'user_stats':
-      return {
-        id: 'user-mock',
-        user_id: searchParams.get('userId'),
-        display_name: 'MockUser',
-        avatar_emoji: '🎯',
-        total_predictions: 45,
-        correct_predictions: 28,
-        accuracy: 62.2,
-        current_streak: 3,
-        best_streak: 8,
-        points: 1250,
-        rank: 42,
-        badges: ['early_adopter'],
-        followers: 156,
-        following: 89,
-        is_verified: false,
-        created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
-      };
-
-    default:
-      return null;
   }
 }

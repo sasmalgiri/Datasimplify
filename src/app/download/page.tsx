@@ -6,6 +6,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory, getFieldDisplayName } from '@/lib/dataTypes';
 import { downloadLiveDataTemplate } from '@/lib/excelTemplate';
+import { isDownloadCategoryEnabled } from '@/lib/featureFlags';
 
 // Progress bar component using ref to avoid inline style warnings
 function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
@@ -100,7 +101,17 @@ export default function DownloadPage() {
   // const [columnRenames, setColumnRenames] = useState<Record<string, string>>({});
 
   // Get category info
-  const categoryInfo = DATA_CATEGORIES.find(c => c.id === selectedCategory);
+  const availableCategories = DATA_CATEGORIES.filter(c => !c.isPremium && isDownloadCategoryEnabled(c.id));
+  const categoryInfo = availableCategories.find(c => c.id === selectedCategory) || availableCategories[0];
+
+  // If a category is disabled via feature flags, keep selection on a valid category.
+  useEffect(() => {
+    if (!availableCategories.length) return;
+    if (!availableCategories.some(c => c.id === selectedCategory)) {
+      setSelectedCategory(availableCategories[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableCategories.length]);
 
   // Initialize selected fields when category changes
   useEffect(() => {
@@ -367,7 +378,7 @@ export default function DownloadPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">📊 Download Center</h1>
           <p className="text-gray-400">
-            Download real-time crypto data as Standard files or Live (refreshable) downloads in Excel/CSV. No coding required!
+            Download crypto data as Standard files or Live (refreshable) downloads in Excel/CSV. No coding required!
           </p>
         </div>
 
@@ -381,7 +392,7 @@ export default function DownloadPage() {
                 <HelpTooltip text="Choose what kind of data you want to download. Each type contains different information about cryptocurrencies." />
               </h2>
               <div className="space-y-2">
-                {DATA_CATEGORIES.filter(c => !c.isPremium).map(category => (
+                {availableCategories.map(category => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}

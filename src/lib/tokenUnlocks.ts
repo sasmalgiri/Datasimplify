@@ -12,7 +12,7 @@ export interface TokenUnlock {
   timestamp: number;
   amount: number;
   amountUSD: number | null;
-  percentOfCirculating: number;
+  percentOfCirculating: number | null;
   percentOfTotal: number;
   unlockType: 'cliff' | 'linear' | 'unknown';
   description?: string;
@@ -24,7 +24,7 @@ export interface TokenUnlockData {
   symbol: string;
   totalLocked: number;
   totalLockedUSD: number | null;
-  percentLocked: number;
+  percentLocked: number | null;
   upcomingUnlocks: TokenUnlock[];
   next7dUnlockPercent: number;
   next30dUnlockPercent: number;
@@ -52,23 +52,6 @@ const COIN_TO_PROTOCOL: Record<string, string> = {
   'axie-infinity': 'axie',
   'the-sandbox': 'sandbox',
   'ape-coin': 'apecoin',
-};
-
-// Major tokens with known vesting schedules (static data as fallback)
-const KNOWN_UNLOCKS: Record<string, TokenUnlockData> = {
-  'solana': {
-    id: 'solana',
-    name: 'Solana',
-    symbol: 'SOL',
-    totalLocked: 0,
-    totalLockedUSD: null,
-    percentLocked: 0,
-    upcomingUnlocks: [],
-    next7dUnlockPercent: 0,
-    next30dUnlockPercent: 0,
-    next90dUnlockPercent: 0,
-    riskLevel: 'low'
-  }
 };
 
 /**
@@ -122,16 +105,19 @@ async function fetchDeFiLlamaUnlocks(): Promise<TokenUnlockData[]> {
               ? parseFloat(event.noOfTokens)
               : (event.noOfTokens || 0);
 
-            const percentOfTotal = token.maxSupply
-              ? (amount / token.maxSupply) * 100
-              : 0;
+            if (!token.maxSupply || !Number.isFinite(token.maxSupply) || token.maxSupply <= 0) {
+              // Without max supply we can't compute meaningful percent-based unlock pressure.
+              continue;
+            }
+
+            const percentOfTotal = (amount / token.maxSupply) * 100;
 
             upcomingUnlocks.push({
               date: new Date(timestamp).toISOString().split('T')[0],
               timestamp,
               amount,
               amountUSD: null,
-              percentOfCirculating: 0, // Would need circulating supply
+              percentOfCirculating: null,
               percentOfTotal,
               unlockType: 'unknown',
               description: event.description
@@ -159,7 +145,7 @@ async function fetchDeFiLlamaUnlocks(): Promise<TokenUnlockData[]> {
         totalLockedUSD: null,
         percentLocked: token.maxSupply && token.totalLocked
           ? (token.totalLocked / token.maxSupply) * 100
-          : 0,
+          : null,
         upcomingUnlocks: upcomingUnlocks.sort((a, b) => a.timestamp - b.timestamp),
         next7dUnlockPercent: next7d,
         next30dUnlockPercent: next30d,
@@ -245,7 +231,7 @@ export function getUnlockRiskInterpretation(data: TokenUnlockData): string {
     parts.push(`Major supply increase: ${data.next30dUnlockPercent.toFixed(1)}% in 30 days`);
   }
 
-  if (data.percentLocked > 50) {
+  if (typeof data.percentLocked === 'number' && data.percentLocked > 50) {
     parts.push(`${data.percentLocked.toFixed(0)}% of supply still locked - future dilution risk`);
   }
 
@@ -304,7 +290,7 @@ export interface TokenUnlockDownload {
   unlockAmount: number;
   unlockValueUsd: number | null;
   percentOfTotal: number;
-  percentOfCirculating: number;
+  percentOfCirculating: number | null;
   unlockType: string;
   riskLevel: string;
 }
@@ -313,9 +299,9 @@ export interface StakingRewardDownload {
   name: string;
   symbol: string;
   stakingApy: number;
-  inflationRate: number;
+  inflationRate: number | null;
   totalStaked: number;
-  stakedPercent: number;
+  stakedPercent: number | null;
   lockupPeriod: string;
   minStake: number;
 }
@@ -369,13 +355,6 @@ interface DeFiLlamaPool {
 }
 
 // Fallback static data
-const FALLBACK_STAKING: StakingRewardDownload[] = [
-  { name: 'Ethereum', symbol: 'ETH', stakingApy: 3.8, inflationRate: 0.5, totalStaked: 34000000, stakedPercent: 28, lockupPeriod: 'Variable', minStake: 32 },
-  { name: 'Solana', symbol: 'SOL', stakingApy: 7.2, inflationRate: 5.5, totalStaked: 390000000, stakedPercent: 72, lockupPeriod: '~2-3 days', minStake: 0 },
-  { name: 'Cardano', symbol: 'ADA', stakingApy: 3.5, inflationRate: 2.0, totalStaked: 23000000000, stakedPercent: 63, lockupPeriod: 'No lockup', minStake: 0 },
-  { name: 'Polkadot', symbol: 'DOT', stakingApy: 14.5, inflationRate: 10.0, totalStaked: 750000000, stakedPercent: 52, lockupPeriod: '28 days', minStake: 10 },
-  { name: 'Cosmos', symbol: 'ATOM', stakingApy: 18.0, inflationRate: 14.0, totalStaked: 250000000, stakedPercent: 64, lockupPeriod: '21 days', minStake: 0 },
-];
 
 // Mapping for chain names to symbol names
 const STAKING_SYMBOL_MAP: Record<string, { name: string; lockup: string; minStake: number }> = {
@@ -415,7 +394,7 @@ export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDow
 
     if (!response.ok) {
       console.error('DeFiLlama yields API error:', response.status);
-      return FALLBACK_STAKING;
+      return [];
     }
 
     const data = await response.json();
@@ -475,9 +454,9 @@ export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDow
           name: info.name,
           symbol: baseSymbol,
           stakingApy: Math.round(pool.apy * 100) / 100,
-          inflationRate: 0, // Not available from this API
+          inflationRate: null,
           totalStaked: pool.tvlUsd,
-          stakedPercent: 0, // Not available from this API
+          stakedPercent: null,
           lockupPeriod: info.lockup,
           minStake: info.minStake,
         });
@@ -498,6 +477,5 @@ export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDow
     console.error('Error fetching staking rewards from DeFiLlama:', error);
   }
 
-  // Fallback to static data
-  return FALLBACK_STAKING;
+  return [];
 }

@@ -15,7 +15,6 @@ interface TokenData {
   change_7d: number;
   rsi: number;
   volatility: number;
-  exchanges: number;
   category: string;
 }
 
@@ -56,39 +55,64 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           const result = await response.json();
 
           if (result.success && result.data) {
-            const transformedTokens: TokenData[] = result.data.map((coin: {
-              symbol: string;
-              name: string;
-              price: number;
-              market_cap: number;
-              volume_24h: number;
-              price_change_1h?: number;
-              price_change_24h: number;
-              price_change_7d?: number;
-            }) => {
-              // Calculate RSI estimate based on price changes (simplified)
-              const priceChange = coin.price_change_24h || 0;
-              const estimatedRsi = Math.max(20, Math.min(80, 50 + priceChange * 2));
+            const transformedTokens: TokenData[] = result.data
+              .map((coin: any) => {
+                const symbol = String(coin.symbol || '').toUpperCase();
+                const name = String(coin.name || symbol);
 
-              // Calculate volatility estimate
-              const volatility = Math.abs(priceChange) * 0.5 + Math.random() * 3;
+                const price = typeof coin.current_price === 'number'
+                  ? coin.current_price
+                  : typeof coin.price === 'number'
+                    ? coin.price
+                    : 0;
 
-              return {
-                id: coin.symbol.toLowerCase(),
-                symbol: coin.symbol,
-                name: coin.name,
-                price: coin.price,
-                market_cap: coin.market_cap || 0,
-                volume_24h: coin.volume_24h || 0,
-                change_1h: coin.price_change_1h || (Math.random() * 4 - 2),
-                change_24h: coin.price_change_24h || 0,
-                change_7d: coin.price_change_7d || (priceChange * 2.5 + Math.random() * 5),
-                rsi: Math.round(estimatedRsi),
-                volatility: Math.round(volatility * 10) / 10,
-                exchanges: Math.floor(100 + Math.random() * 350),
-                category: categoryMap[coin.symbol] || 'Other'
-              };
-            });
+                const marketCap = typeof coin.market_cap === 'number' ? coin.market_cap : 0;
+                const volume24h = typeof coin.total_volume === 'number'
+                  ? coin.total_volume
+                  : typeof coin.volume_24h === 'number'
+                    ? coin.volume_24h
+                    : 0;
+
+                const change1h = typeof coin.price_change_percentage_1h_in_currency === 'number'
+                  ? coin.price_change_percentage_1h_in_currency
+                  : typeof coin.price_change_1h === 'number'
+                    ? coin.price_change_1h
+                    : 0;
+
+                const change24h = typeof coin.price_change_percentage_24h === 'number'
+                  ? coin.price_change_percentage_24h
+                  : typeof coin.price_change_24h === 'number'
+                    ? coin.price_change_24h
+                    : 0;
+
+                const change7d = typeof coin.price_change_percentage_7d_in_currency === 'number'
+                  ? coin.price_change_percentage_7d_in_currency
+                  : typeof coin.price_change_7d === 'number'
+                    ? coin.price_change_7d
+                    : 0;
+
+                // RSI estimate based on real price change (simplified)
+                const estimatedRsi = Math.max(20, Math.min(80, 50 + change24h * 2));
+
+                // Deterministic volatility estimate from observed % changes
+                const volatility = Math.round((Math.abs(change24h) + Math.abs(change7d) / 3) * 10) / 10;
+
+                return {
+                  id: symbol.toLowerCase(),
+                  symbol,
+                  name,
+                  price,
+                  market_cap: marketCap,
+                  volume_24h: volume24h,
+                  change_1h: change1h,
+                  change_24h: change24h,
+                  change_7d: change7d,
+                  rsi: Math.round(estimatedRsi),
+                  volatility,
+                  category: categoryMap[symbol] || 'Other',
+                };
+              })
+              .filter((t: TokenData) => t.symbol && t.price > 0);
 
             setTokens(transformedTokens);
           } else {

@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getBulkMarketDataFromCache, saveBulkMarketDataToCache, getMarketDataFromCache } from '@/lib/supabaseData';
+import { fetchMarketOverview } from '@/lib/dataApi';
+import { findCoinByGeckoId, getCoinGeckoId } from '@/lib/dataTypes';
 import {
   validationError,
-  externalApiError,
   internalError,
   validatePositiveNumber,
   parseNumericParam
 } from '@/lib/apiErrors';
 
-// CoinGecko FREE API - 10-30 calls/minute
-const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 const MAX_LIMIT = 250;
 const DEFAULT_LIMIT = 100;
 
@@ -65,53 +64,34 @@ export async function GET(request: Request) {
         }
       }
 
-      // 2. Fetch specific coins from CoinGecko with extended price change data
-      const response = await fetch(
-        `${COINGECKO_BASE}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h,7d,30d,1y`,
-        {
-          headers: { 'Accept': 'application/json' },
-          next: { revalidate: 60 },
-        }
-      );
+      // 2. Derive specific coins from Binance via our supported universe
+      const symbols = idList
+        .map(id => findCoinByGeckoId(id))
+        .filter((c): c is NonNullable<ReturnType<typeof findCoinByGeckoId>> => c != null)
+        .map(c => c.symbol);
 
-      if (!response.ok) {
-        console.error('CoinGecko API error:', response.status);
-        // On API error, try to return stale cache if available
-        if (isSupabaseConfigured) {
-          const staleCache = await getMarketDataFromCache({ limit: MAX_LIMIT });
-          if (staleCache && staleCache.length > 0) {
-            const matchedCoins = staleCache.filter((coin: { id: string; symbol: string }) =>
-              idList.includes(coin.id.toLowerCase()) ||
-              idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
-            );
-            if (matchedCoins.length > 0) {
-              return NextResponse.json({
-                success: true,
-                data: matchedCoins,
-                total: matchedCoins.length,
-                source: 'stale-cache',
-                updated: new Date().toISOString(),
-              });
-            }
-          }
-        }
-
-        if (response.status === 429) {
-          return NextResponse.json({
-            success: false,
-            error: 'Rate limit exceeded. Please wait a moment and try again.',
-            code: 'E003',
-            data: []
-          }, { status: 429 });
-        }
-
-        return externalApiError('CoinGecko');
-      }
-
-      const coins = await response.json();
+      const market = await fetchMarketOverview({ symbols });
+      const coins = market.map((coin, idx) => ({
+        id: getCoinGeckoId(coin.symbol),
+        symbol: coin.symbol.toLowerCase(),
+        name: coin.name,
+        image: coin.image,
+        current_price: coin.price,
+        market_cap: coin.marketCap,
+        market_cap_rank: idx + 1,
+        price_change_24h: coin.priceChange24h,
+        price_change_percentage_24h: coin.priceChangePercent24h,
+        total_volume: coin.quoteVolume24h,
+        high_24h: coin.high24h,
+        low_24h: coin.low24h,
+        circulating_supply: coin.circulatingSupply,
+        max_supply: coin.maxSupply,
+        ath: coin.price,
+        ath_change_percentage: 0,
+      }));
 
       // 3. Save to cache
-      if (isSupabaseConfigured && Array.isArray(coins) && coins.length > 0) {
+      if (isSupabaseConfigured && coins.length > 0) {
         await saveBulkMarketDataToCache(coins);
       }
 
@@ -119,7 +99,7 @@ export async function GET(request: Request) {
         success: true,
         data: coins,
         total: coins.length,
-        source: 'coingecko',
+        source: 'binance-derived',
         updated: new Date().toISOString(),
       });
     }
@@ -139,47 +119,30 @@ export async function GET(request: Request) {
       }
     }
 
-    // 2. Fetch from CoinGecko
-    const response = await fetch(
-      `${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=false&price_change_percentage=24h,7d`,
-      {
-        headers: { 'Accept': 'application/json' },
-        next: { revalidate: 60 },
-      }
-    );
-
-    if (!response.ok) {
-      console.error('CoinGecko API error:', response.status);
-      // On API error, try to return stale cache if available
-      if (isSupabaseConfigured) {
-        const staleCache = await getBulkMarketDataFromCache(limit);
-        if (staleCache && staleCache.length > 0) {
-          return NextResponse.json({
-            success: true,
-            data: staleCache,
-            total: staleCache.length,
-            source: 'stale-cache',
-            updated: new Date().toISOString(),
-          });
-        }
-      }
-
-      if (response.status === 429) {
-        return NextResponse.json({
-          success: false,
-          error: 'Rate limit exceeded. Please wait a moment and try again.',
-          code: 'E003',
-          data: []
-        }, { status: 429 });
-      }
-
-      return externalApiError('CoinGecko');
-    }
-
-    const coins = await response.json();
+    // 2. Derive from Binance (supported universe only)
+    const market = await fetchMarketOverview();
+    const limited = market.slice(0, limit);
+    const coins = limited.map((coin, idx) => ({
+      id: getCoinGeckoId(coin.symbol),
+      symbol: coin.symbol.toLowerCase(),
+      name: coin.name,
+      image: coin.image,
+      current_price: coin.price,
+      market_cap: coin.marketCap,
+      market_cap_rank: idx + 1,
+      price_change_24h: coin.priceChange24h,
+      price_change_percentage_24h: coin.priceChangePercent24h,
+      total_volume: coin.quoteVolume24h,
+      high_24h: coin.high24h,
+      low_24h: coin.low24h,
+      circulating_supply: coin.circulatingSupply,
+      max_supply: coin.maxSupply,
+      ath: coin.price,
+      ath_change_percentage: 0,
+    }));
 
     // 3. Save to cache
-    if (isSupabaseConfigured && Array.isArray(coins) && coins.length > 0) {
+    if (isSupabaseConfigured && coins.length > 0) {
       await saveBulkMarketDataToCache(coins);
     }
 
@@ -187,7 +150,7 @@ export async function GET(request: Request) {
       success: true,
       data: coins,
       total: coins.length,
-      source: 'coingecko',
+      source: 'binance-derived',
       updated: new Date().toISOString(),
     });
 

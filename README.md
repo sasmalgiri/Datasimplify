@@ -133,7 +133,7 @@ npm run dev
 ## ⚙️ Configuration
 
 ### Minimal Setup (Works Immediately)
-Just run `npm run dev` - the app works with sample data!
+Just run `npm run dev` - the app fetches real data from free public APIs where available. If a source is rate-limited/unavailable, affected UI fields will show “Unavailable” (no mock values).
 
 ### Full Setup (All Features)
 
@@ -155,17 +155,19 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # ============================================
 # PADDLE PAYMENTS (Required for Subscriptions)
-# Get these from: https://vendors.paddle.com
 # ============================================
-NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=test_xxxxxxxx
-NEXT_PUBLIC_PADDLE_ENVIRONMENT=sandbox
-PADDLE_API_KEY=your-api-key
+# Frontend
+NEXT_PUBLIC_PADDLE_VENDOR_ID=12345
+NEXT_PUBLIC_PADDLE_SANDBOX=true
+
+# Server
+PADDLE_SANDBOX=true
 PADDLE_WEBHOOK_SECRET=pdl_ntfset_xxxxxxxx
 
-# Paddle Price IDs (create in Paddle dashboard)
-NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID=pri_xxxxx
-NEXT_PUBLIC_PADDLE_PRO_PRICE_ID=pri_xxxxx
-NEXT_PUBLIC_PADDLE_BUSINESS_PRICE_ID=pri_xxxxx
+# Paddle Price IDs (from Paddle dashboard)
+PADDLE_STARTER_PRICE_ID=pri_xxxxx
+PADDLE_PRO_PRICE_ID=pri_xxxxx
+PADDLE_BUSINESS_PRICE_ID=pri_xxxxx
 
 # ============================================
 # OLLAMA AI (Required for AI Chat)
@@ -180,6 +182,84 @@ OLLAMA_CHAT_MODEL=llama3.2
 # ============================================
 COINGECKO_API_KEY=your-api-key
 COINMARKETCAP_API_KEY=your-api-key
+
+# ============================================
+# FEATURE FLAGS (Commercial-safe defaults)
+# ============================================
+# App mode defaults to "full" if unset.
+NEXT_PUBLIC_APP_MODE=full
+
+# Data providers / domains (OFF unless you explicitly enable)
+NEXT_PUBLIC_FEATURE_COINGECKO=false
+NEXT_PUBLIC_FEATURE_DEFI=false
+NEXT_PUBLIC_FEATURE_WHALES=false
+NEXT_PUBLIC_FEATURE_NFT=false
+NEXT_PUBLIC_FEATURE_SOCIAL_SENTIMENT=false
+
+# Macro & on-chain risk surfaces (OFF by default)
+NEXT_PUBLIC_FEATURE_MACRO=false
+NEXT_PUBLIC_FEATURE_MACRO_YAHOO=false
+NEXT_PUBLIC_FEATURE_PUBLIC_RPC=false
+
+# Optional: if you want to explicitly disable predictions UI in "full" mode
+NEXT_PUBLIC_FEATURE_PREDICTIONS=false
+```
+
+---
+
+## ▲ Vercel-safe production env (recommended defaults)
+
+These defaults are designed to be “fail-closed” on Vercel: anything with higher ToS/licensing/redistribution risk stays OFF unless you explicitly enable it.
+
+Paste these into **Vercel → Project → Settings → Environment Variables** (Production):
+
+```env
+# Site
+NEXT_PUBLIC_APP_URL=https://YOUR_DOMAIN
+
+# Supabase (recommended for auth + caching)
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+
+# Background jobs / protected endpoints
+CLEANUP_SECRET=CHANGE_ME_TO_A_RANDOM_32+_CHAR_STRING
+CLEANUP_ALLOW_VERCEL_CRON=true
+
+# Optional: protect /api/sync and AI-data ingestion endpoints
+SYNC_SECRET_KEY=CHANGE_ME_TO_A_RANDOM_32+_CHAR_STRING
+
+# Feature flags (commercial-safe defaults)
+NEXT_PUBLIC_APP_MODE=full
+
+# Risky providers/domains OFF by default
+NEXT_PUBLIC_FEATURE_COINGECKO=false
+NEXT_PUBLIC_FEATURE_SOCIAL_SENTIMENT=false
+NEXT_PUBLIC_FEATURE_DEFI=false
+NEXT_PUBLIC_FEATURE_WHALES=false
+NEXT_PUBLIC_FEATURE_NFT=false
+
+# Macro & public RPC OFF by default
+NEXT_PUBLIC_FEATURE_MACRO=false
+NEXT_PUBLIC_FEATURE_MACRO_YAHOO=false
+NEXT_PUBLIC_FEATURE_PUBLIC_RPC=false
+
+# Keep predictions OFF unless macro is enabled
+NEXT_PUBLIC_FEATURE_PREDICTIONS=false
+
+# Monetization (set true only if you configure Paddle)
+NEXT_PUBLIC_FEATURE_PRICING=false
+NEXT_PUBLIC_FEATURE_PAYMENTS=false
+
+# AI (recommended on Vercel: Groq or OpenAI; leave Ollama unset)
+# GROQ_API_KEY=YOUR_GROQ_KEY
+# GROQ_MODEL=llama-3.3-70b-versatile
+# OPENAI_API_KEY=YOUR_OPENAI_KEY
+# OPENAI_MODEL=gpt-4o-mini
+ENABLE_AI_SUMMARIES=false
+ENABLE_SENTIMENT_SIGNALS=false
+ENABLE_SMART_MONEY=false
+ENABLE_USER_ADAPTATION=false
 ```
 
 ---

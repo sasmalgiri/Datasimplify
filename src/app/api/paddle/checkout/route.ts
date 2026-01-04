@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { PADDLE_CONFIG, isCountryBlocked } from '@/lib/payments';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // ============================================
 // PADDLE CHECKOUT API
@@ -9,6 +10,10 @@ import { PADDLE_CONFIG, isCountryBlocked } from '@/lib/payments';
 // ============================================
 
 export async function POST(request: Request) {
+  if (!isFeatureEnabled('payments')) {
+    return NextResponse.json({ error: 'Payments are disabled' }, { status: 404 });
+  }
+
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -94,6 +99,10 @@ export async function POST(request: Request) {
 // ============================================
 
 export async function GET(request: Request) {
+  if (!isFeatureEnabled('payments')) {
+    return NextResponse.json({ available: false, blocked: true, blockedMessage: 'Payments are disabled' }, { status: 404 });
+  }
+
   const { searchParams } = new URL(request.url);
   const country = searchParams.get('country');
 

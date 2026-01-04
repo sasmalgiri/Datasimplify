@@ -5,36 +5,181 @@
 
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+type MarketChart = {
+  prices: [number, number][];
+  total_volumes?: [number, number][];
+};
+
+function bucketOHLCV(
+  prices: [number, number][],
+  volumes: [number, number][] | undefined,
+  bucketMs: number
+): Array<{ timestamp: number; open: number; high: number; low: number; close: number; volume?: number }> {
+  if (!prices || prices.length === 0) return [];
+
+  const volumeByBucket = new Map<number, number>();
+  if (Array.isArray(volumes)) {
+    for (const [ts, vol] of volumes) {
+      const key = Math.floor(ts / bucketMs) * bucketMs;
+      volumeByBucket.set(key, vol);
+    }
+  }
+
+  const buckets = new Map<number, { ts: number; open: number; high: number; low: number; close: number; lastVol?: number }>();
+
+  for (const [ts, price] of prices) {
+    const key = Math.floor(ts / bucketMs) * bucketMs;
+    const lastVol = volumeByBucket.get(key);
+    const existing = buckets.get(key);
+
+    if (!existing) {
+      buckets.set(key, {
+        ts: key,
+        open: price,
+        high: price,
+        low: price,
+        close: price,
+        lastVol,
+      });
+    } else {
+      existing.high = Math.max(existing.high, price);
+      existing.low = Math.min(existing.low, price);
+      existing.close = price;
+      if (typeof lastVol === 'number') existing.lastVol = lastVol;
+    }
+  }
+
+  return Array.from(buckets.values())
+    .sort((a, b) => a.ts - b.ts)
+    .map(b => ({
+      timestamp: b.ts,
+      open: b.open,
+      high: b.high,
+      low: b.low,
+      close: b.close,
+      volume: b.lastVol,
+    }));
+}
+
+async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<MarketChart | null> {
+  const url = `${COINGECKO_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 60 },
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as MarketChart;
+  if (!data?.prices || !Array.isArray(data.prices)) return null;
+  return data;
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin') || 'bitcoin';
     const days = parseInt(searchParams.get('days') || '30');
-    const interval = days <= 1 ? '1h' : days <= 7 ? '4h' : '1d';
+    const requestedInterval = searchParams.get('interval');
+    const interval = (requestedInterval === '1h' || requestedInterval === '4h' || requestedInterval === '1d' || requestedInterval === '1w')
+      ? requestedInterval
+      : (days <= 1 ? '1h' : days <= 7 ? '4h' : '1d');
 
     const symbol = getCoinSymbol(coin);
 
+    // If Binance doesn't support the coin, use CoinGecko fallback
     if (!symbol) {
-      // Return mock data for unsupported coins
+      if (!isFeatureEnabled('coingecko')) {
+        return NextResponse.json({
+          candles: [],
+          source: 'none',
+          coin,
+          days,
+          interval,
+          error: 'No candle data available from Binance (CoinGecko disabled).',
+        }, { status: 502 });
+      }
+
+      const bucketMs = interval === '1h'
+        ? 60 * 60 * 1000
+        : interval === '4h'
+          ? 4 * 60 * 60 * 1000
+          : interval === '1w'
+            ? 7 * 24 * 60 * 60 * 1000
+            : 24 * 60 * 60 * 1000;
+      const chart = await fetchCoinGeckoMarketChart(coin, days);
+      const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
+      if (candles.length === 0) {
+        return NextResponse.json({
+          candles: [],
+          source: 'none',
+          coin,
+          days,
+          interval,
+          error: 'No candle data available from Binance or CoinGecko.',
+        }, { status: 502 });
+      }
       return NextResponse.json({
-        candles: generateMockCandles(coin, days),
-        source: 'mock',
+        candles,
+        source: 'coingecko',
         coin,
         days,
+        interval,
       });
     }
 
     // Binance supports up to 1000 candles per request
-    const limit = Math.min(days <= 1 ? 24 : days <= 7 ? days * 6 : days, 1000);
-    const klines = await getBinanceKlines(symbol, interval as '1h' | '4h' | '1d', limit);
+    const limit = Math.min(
+      interval === '1h'
+        ? 24
+        : interval === '4h'
+          ? days * 6
+          : interval === '1w'
+            ? Math.ceil(days / 7)
+            : days,
+      1000
+    );
+    const klines = await getBinanceKlines(symbol, interval as '1h' | '4h' | '1d' | '1w', limit);
 
     if (!klines || klines.length === 0) {
+      if (!isFeatureEnabled('coingecko')) {
+        return NextResponse.json({
+          candles: [],
+          source: 'none',
+          coin,
+          days,
+          interval,
+          error: 'No candle data available from Binance (CoinGecko disabled).',
+        }, { status: 502 });
+      }
+
+      const bucketMs = interval === '1h'
+        ? 60 * 60 * 1000
+        : interval === '4h'
+          ? 4 * 60 * 60 * 1000
+          : interval === '1w'
+            ? 7 * 24 * 60 * 60 * 1000
+            : 24 * 60 * 60 * 1000;
+      const chart = await fetchCoinGeckoMarketChart(coin, days);
+      const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
+      if (candles.length === 0) {
+        return NextResponse.json({
+          candles: [],
+          source: 'none',
+          coin,
+          days,
+          interval,
+          error: 'No candle data available from Binance or CoinGecko.',
+        }, { status: 502 });
+      }
       return NextResponse.json({
-        candles: generateMockCandles(coin, days),
-        source: 'mock',
+        candles,
+        source: 'coingecko',
         coin,
         days,
+        interval,
       });
     }
 
@@ -53,44 +198,11 @@ export async function GET(request: Request) {
     const days = parseInt(searchParams.get('days') || '30');
 
     return NextResponse.json({
-      candles: generateMockCandles(coin, days),
-      source: 'mock',
-      error: String(error),
-    });
+      candles: [],
+      source: 'error',
+      coin,
+      days,
+      error: error instanceof Error ? error.message : String(error),
+    }, { status: 502 });
   }
-}
-
-function generateMockCandles(coin: string, days: number) {
-  const basePrice = coin === 'bitcoin' ? 45000 :
-                   coin === 'ethereum' ? 2500 :
-                   coin === 'solana' ? 100 :
-                   coin === 'binancecoin' ? 300 : 50;
-
-  const candles = [];
-  let currentPrice = basePrice;
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - (days - i - 1));
-
-    const open = currentPrice;
-    const volatility = 0.02 + Math.random() * 0.03;
-    const close = open * (1 + (Math.random() - 0.5) * volatility * 2);
-    const high = Math.max(open, close) * (1 + Math.random() * volatility);
-    const low = Math.min(open, close) * (1 - Math.random() * volatility);
-    const volume = (Math.random() * 50000 + 10000) * basePrice;
-
-    candles.push({
-      timestamp: date.getTime(),
-      open,
-      high,
-      low,
-      close,
-      volume,
-    });
-
-    currentPrice = close;
-  }
-
-  return candles;
 }

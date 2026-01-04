@@ -28,6 +28,33 @@ import { RiskScoreCard, OnChainMetrics } from '@/components/RiskScoreCard';
 import { CoinMarketData } from '@/types/crypto';
 import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChangeColor } from '@/lib/utils';
 import { fetchWithCache, CACHE_TTL, getCacheStats } from '@/lib/clientCache';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
+// Calculate support/resistance levels using pivot points from OHLC data
+function calculateSupportResistance(high: number, low: number, close: number): {
+  pivot: number;
+  support1: number;
+  support2: number;
+  resistance1: number;
+  resistance2: number;
+} {
+  const pivot = (high + low + close) / 3;
+  const support1 = 2 * pivot - high;
+  const support2 = pivot - (high - low);
+  const resistance1 = 2 * pivot - low;
+  const resistance2 = pivot + (high - low);
+  return { pivot, support1, support2, resistance1, resistance2 };
+}
+
+// Format support/resistance for display
+function formatSupportResistance(high: number | undefined, low: number | undefined, close: number | undefined): string {
+  if (typeof high !== 'number' || typeof low !== 'number' || typeof close !== 'number') {
+    return 'Unavailable';
+  }
+  const levels = calculateSupportResistance(high, low, close);
+  const formatPrice = (p: number) => p >= 1 ? `$${p.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : `$${p.toFixed(6)}`;
+  return `S1: ${formatPrice(levels.support1)} | R1: ${formatPrice(levels.resistance1)}`;
+}
 
 // Sentiment Gauge component using ref to avoid inline styles
 function SentimentGauge({ value }: { value: number }) {
@@ -72,34 +99,55 @@ interface PredictionData {
   timestamp: string;
 }
 
-interface TechnicalData {
-  rsi14: number;
-  macdSignal: 'bullish_cross' | 'bearish_cross' | 'neutral';
-  priceVs200MA: 'above' | 'below' | 'near';
-  priceVs50MA: 'above' | 'below' | 'near';
-  bollingerPosition: 'upper' | 'middle' | 'lower';
-  volumeTrend: 'increasing' | 'decreasing' | 'stable';
-}
+type TechnicalSnapshot = {
+  rsi14?: number;
+  macdSignal?: 'bullish_cross' | 'bearish_cross' | 'neutral';
+  priceVs200MA?: 'above' | 'below' | 'near';
+  priceVs50MA?: 'above' | 'below' | 'near';
+  bollingerPosition?: 'upper' | 'middle' | 'lower';
+  volumeTrend?: 'increasing' | 'decreasing' | 'stable';
+} | null;
 
-interface OnChainData {
-  exchangeFlow: 'inflow' | 'outflow' | 'neutral';
-  whaleActivity: 'buying' | 'selling' | 'neutral';
-  activeAddresses: 'increasing' | 'decreasing' | 'stable';
-}
+type OnChainSnapshot = {
+  exchangeFlow?: 'inflow' | 'outflow' | 'neutral';
+  whaleActivity?: 'buying' | 'selling' | 'neutral';
+  activeAddresses?: 'increasing' | 'decreasing' | 'stable';
+} | null;
 
 interface SentimentInfo {
   fearGreedIndex: number;
   fearGreedLabel: string;
 }
 
+type MacroSnapshot = {
+  vix?: number;
+  dxy?: number;
+  riskEnvironment?: string;
+} | null;
+
+type DerivativesSnapshot = {
+  fundingRate?: number;
+  openInterestChange24h?: number;
+  liquidations24h?: number;
+  longShortRatio?: number;
+} | null;
+
 export default function CoinDetailPage() {
   const params = useParams();
   const coinId = params.id as string;
+
+  const macroEnabled = isFeatureEnabled('macro');
+  const predictionsEnabled = isFeatureEnabled('predictions') && macroEnabled;
+  const whalesEnabled = isFeatureEnabled('whales');
 
   const [coin, setCoin] = useState<CoinMarketData | null>(null);
   const [priceHistory, setPriceHistory] = useState<Array<{ timestamp: number; price: number }>>([]);
   const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [sentiment, setSentiment] = useState<SentimentInfo | null>(null);
+  const [technical, setTechnical] = useState<TechnicalSnapshot>(null);
+  const [onchain, setOnchain] = useState<OnChainSnapshot>(null);
+  const [macro, setMacro] = useState<MacroSnapshot>(null);
+  const [derivatives, setDerivatives] = useState<DerivativesSnapshot>(null);
   const [loading, setLoading] = useState(true);
   const [predictionLoading, setPredictionLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -143,12 +191,22 @@ export default function CoinDetailPage() {
   useEffect(() => {
     if (coinId) {
       fetchCoinData();
-      fetchPrediction();
+      if (predictionsEnabled) fetchPrediction();
       fetchSentiment();
+      fetchTechnical();
+      if (macroEnabled) fetchMacro();
+      fetchDerivatives();
+      fetchOnchain();
     }
   }, [coinId, fetchCoinData]);
 
   const fetchPrediction = async () => {
+    if (!predictionsEnabled) {
+      setPrediction(null);
+      setPredictionLoading(false);
+      return;
+    }
+
     try {
       setPredictionLoading(true);
       const res = await fetch(`/api/predict?coin=${coinId}&quick=true`);
@@ -165,16 +223,162 @@ export default function CoinDetailPage() {
 
   const fetchSentiment = async () => {
     try {
-      const res = await fetch('https://api.alternative.me/fng/?limit=1');
+      const res = await fetch('/api/sentiment');
       const data = await res.json();
-      if (data.data?.[0]) {
+      if (data?.success && typeof data.value === 'number' && Number.isFinite(data.value)) {
         setSentiment({
-          fearGreedIndex: parseInt(data.data[0].value),
-          fearGreedLabel: data.data[0].value_classification
+          fearGreedIndex: data.value,
+          fearGreedLabel: data.classification || 'Unknown'
         });
       }
     } catch (error) {
       console.error('Error fetching sentiment:', error);
+    }
+  };
+
+  const fetchTechnical = async () => {
+    try {
+      const res = await fetch(`/api/technical?coin=${encodeURIComponent(coinId)}&timeframe=1d`);
+      const json = await res.json();
+      if (!json?.success || !json?.data?.summary) {
+        setTechnical(null);
+        return;
+      }
+
+      const currentPrice: number | undefined = typeof json.data.summary.currentPrice === 'number' ? json.data.summary.currentPrice : undefined;
+      const sma50: number | undefined = typeof json.data.summary.sma50 === 'number' ? json.data.summary.sma50 : undefined;
+      const sma200: number | undefined = typeof json.data.summary.sma200 === 'number' ? json.data.summary.sma200 : undefined;
+
+      const rsiRow = Array.isArray(json.data.indicators)
+        ? json.data.indicators.find((i: { shortName?: string }) => i?.shortName === 'RSI (14)')
+        : null;
+      const rsiValue = typeof rsiRow?.value === 'number'
+        ? rsiRow.value
+        : typeof rsiRow?.value === 'string'
+          ? Number.parseFloat(rsiRow.value)
+          : undefined;
+
+      const bbRow = Array.isArray(json.data.indicators)
+        ? json.data.indicators.find((i: { shortName?: string }) => i?.shortName === 'BB')
+        : null;
+
+      const bbText = typeof bbRow?.value === 'string' ? bbRow.value : undefined;
+      const bollingerPosition = bbText?.toLowerCase().includes('lower')
+        ? 'lower'
+        : bbText?.toLowerCase().includes('upper') || bbText?.toLowerCase().includes('above upper')
+          ? 'upper'
+          : bbText
+            ? 'middle'
+            : undefined;
+
+      const compareToMA = (price?: number, ma?: number): 'above' | 'below' | 'near' | undefined => {
+        if (typeof price !== 'number' || typeof ma !== 'number' || !Number.isFinite(price) || !Number.isFinite(ma) || ma === 0) return undefined;
+        const diffPct = ((price - ma) / ma) * 100;
+        if (Math.abs(diffPct) <= 1) return 'near';
+        return diffPct > 0 ? 'above' : 'below';
+      };
+
+      const snapshot: NonNullable<TechnicalSnapshot> = {
+        rsi14: typeof rsiValue === 'number' && Number.isFinite(rsiValue) ? rsiValue : undefined,
+        priceVs50MA: compareToMA(currentPrice, sma50),
+        priceVs200MA: compareToMA(currentPrice, sma200),
+        bollingerPosition,
+      };
+
+      const hasAny = Object.values(snapshot).some(v => v !== undefined);
+      setTechnical(hasAny ? snapshot : null);
+    } catch {
+      setTechnical(null);
+    }
+  };
+
+  const fetchMacro = async () => {
+    if (!macroEnabled) {
+      setMacro(null);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/macro');
+      const json = await res.json();
+      const data = json?.data;
+      if (!json?.success || !data) {
+        setMacro(null);
+        return;
+      }
+      const vix = typeof data.vix === 'number' && Number.isFinite(data.vix) ? data.vix : undefined;
+      const dxy = typeof data.dxy === 'number' && Number.isFinite(data.dxy) ? data.dxy : undefined;
+      const riskEnvironment = typeof data.riskEnvironment === 'string' ? data.riskEnvironment : undefined;
+      const snap: NonNullable<MacroSnapshot> = { vix, dxy, riskEnvironment };
+      const hasAny = Object.values(snap).some(v => v !== undefined);
+      setMacro(hasAny ? snap : null);
+    } catch {
+      setMacro(null);
+    }
+  };
+
+  const fetchDerivatives = async () => {
+    try {
+      const res = await fetch('/api/derivatives');
+      const json = await res.json();
+      const data = json?.data;
+      if (!json?.success || !data) {
+        setDerivatives(null);
+        return;
+      }
+      const btc = data?.btc;
+      const fundingRate = typeof btc?.fundingRate === 'number' && Number.isFinite(btc.fundingRate) ? btc.fundingRate : undefined;
+      const openInterestChange24h = typeof btc?.openInterestChange24h === 'number' && Number.isFinite(btc.openInterestChange24h) ? btc.openInterestChange24h : undefined;
+      const liquidations24h = typeof data?.totalLiquidations24h === 'number' && Number.isFinite(data.totalLiquidations24h) ? data.totalLiquidations24h : undefined;
+      const longShortRatio = typeof btc?.longShortRatio === 'number' && Number.isFinite(btc.longShortRatio) ? btc.longShortRatio : undefined;
+      const snap: NonNullable<DerivativesSnapshot> = { fundingRate, openInterestChange24h, liquidations24h, longShortRatio };
+      const hasAny = Object.values(snap).some(v => v !== undefined);
+      setDerivatives(hasAny ? snap : null);
+    } catch {
+      setDerivatives(null);
+    }
+  };
+
+  const fetchOnchain = async () => {
+    // Coin-specific on-chain is only available for BTC/ETH via free sources.
+    try {
+      if (coinId.toLowerCase() === 'ethereum') {
+        if (!whalesEnabled) {
+          setOnchain(null);
+          return;
+        }
+        const res = await fetch('/api/whales?type=eth-whales&minValue=100');
+        const json = await res.json();
+        const txs = Array.isArray(json?.data) ? json.data : Array.isArray(json?.data?.transactions) ? json.data.transactions : [];
+        const inflows = txs.filter((t: { type?: string }) => t?.type === 'exchange_inflow').length;
+        const outflows = txs.filter((t: { type?: string }) => t?.type === 'exchange_outflow').length;
+        if (inflows === 0 && outflows === 0) {
+          setOnchain(null);
+          return;
+        }
+        setOnchain({
+          exchangeFlow: outflows > inflows ? 'outflow' : inflows > outflows ? 'inflow' : 'neutral',
+          whaleActivity: outflows > inflows ? 'buying' : inflows > outflows ? 'selling' : 'neutral',
+        });
+        return;
+      }
+
+      if (coinId.toLowerCase() === 'bitcoin') {
+        const res = await fetch('/api/onchain?type=bitcoin');
+        const json = await res.json();
+        const stats = json?.data;
+        // No direct active address trend here; keep onchain null and let the UI show unavailable.
+        if (!stats) {
+          setOnchain(null);
+          return;
+        }
+        setOnchain(null);
+        return;
+      }
+
+      setOnchain(null);
+    } catch {
+      setOnchain(null);
     }
   };
 
@@ -185,90 +389,21 @@ export default function CoinDetailPage() {
     await Promise.all([
       fetchCoinData(true),
       fetchPrediction(),
-      fetchSentiment()
+      fetchSentiment(),
+      fetchTechnical(),
+      fetchMacro(),
+      fetchDerivatives(),
+      fetchOnchain()
     ]);
     setRefreshing(false);
-  };
-
-  // Simulate technical data from market data
-  const getTechnicalData = (): TechnicalData | null => {
-    if (!coin) return null;
-
-    const priceChange = (coin.price_change_percentage_24h || 0) + (coin.price_change_percentage_7d || 0) * 0.5;
-    let rsi14 = 50 + priceChange * 2;
-    rsi14 = Math.max(10, Math.min(90, rsi14));
-
-    let macdSignal: 'bullish_cross' | 'bearish_cross' | 'neutral' = 'neutral';
-    if ((coin.price_change_percentage_24h || 0) > 3 && (coin.price_change_percentage_7d || 0) > 5) {
-      macdSignal = 'bullish_cross';
-    } else if ((coin.price_change_percentage_24h || 0) < -3 && (coin.price_change_percentage_7d || 0) < -5) {
-      macdSignal = 'bearish_cross';
-    }
-
-    let priceVs200MA: 'above' | 'below' | 'near' = 'near';
-    let priceVs50MA: 'above' | 'below' | 'near' = 'near';
-    if ((coin.price_change_percentage_30d || 0) > 10) {
-      priceVs200MA = 'above';
-      priceVs50MA = 'above';
-    } else if ((coin.price_change_percentage_30d || 0) < -10) {
-      priceVs200MA = 'below';
-      priceVs50MA = 'below';
-    }
-
-    const volatility = Math.abs(coin.high_24h - coin.low_24h) / coin.current_price * 100;
-    let bollingerPosition: 'upper' | 'middle' | 'lower' = 'middle';
-    if ((coin.price_change_percentage_24h || 0) > 5 && volatility > 5) {
-      bollingerPosition = 'upper';
-    } else if ((coin.price_change_percentage_24h || 0) < -5 && volatility > 5) {
-      bollingerPosition = 'lower';
-    }
-
-    const volumeToMarketCap = coin.total_volume / coin.market_cap;
-    let volumeTrend: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    if (volumeToMarketCap > 0.15) {
-      volumeTrend = 'increasing';
-    } else if (volumeToMarketCap < 0.05) {
-      volumeTrend = 'decreasing';
-    }
-
-    return { rsi14, macdSignal, priceVs200MA, priceVs50MA, bollingerPosition, volumeTrend };
-  };
-
-  // Simulate on-chain data
-  const getOnChainData = (): OnChainData | null => {
-    if (!coin) return null;
-
-    let exchangeFlow: 'inflow' | 'outflow' | 'neutral' = 'neutral';
-    if ((coin.price_change_percentage_7d || 0) > 5) {
-      exchangeFlow = 'outflow';
-    } else if ((coin.price_change_percentage_7d || 0) < -5) {
-      exchangeFlow = 'inflow';
-    }
-
-    let whaleActivity: 'buying' | 'selling' | 'neutral' = 'neutral';
-    if ((coin.price_change_percentage_24h || 0) > 3 && coin.total_volume > coin.market_cap * 0.1) {
-      whaleActivity = 'buying';
-    } else if ((coin.price_change_percentage_24h || 0) < -3 && coin.total_volume > coin.market_cap * 0.1) {
-      whaleActivity = 'selling';
-    }
-
-    const volumeRatio = coin.total_volume / coin.market_cap;
-    let activeAddresses: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    if (volumeRatio > 0.12) {
-      activeAddresses = 'increasing';
-    } else if (volumeRatio < 0.03) {
-      activeAddresses = 'decreasing';
-    }
-
-    return { exchangeFlow, whaleActivity, activeAddresses };
   };
 
   // Build PredictionFactorsData for detailed view
   const buildPredictionFactorsData = (): PredictionFactorsData | null => {
     if (!prediction || !coin || !sentiment) return null;
 
-    const tech = getTechnicalData();
-    const onchain = getOnChainData();
+    const tech = technical;
+    const onchainSnap = onchain;
 
     return {
       technicalScore: prediction.technicalScore,
@@ -279,43 +414,43 @@ export default function CoinDetailPage() {
       prediction: prediction.prediction,
       confidence: prediction.confidence,
       technical: tech ? {
-        rsi: { value: tech.rsi14, signal: tech.rsi14 < 30 ? 'Oversold' : tech.rsi14 > 70 ? 'Overbought' : 'Neutral' },
-        macd: { signal: tech.macdSignal === 'bullish_cross' ? 'Bullish crossover' : tech.macdSignal === 'bearish_cross' ? 'Bearish crossover' : 'Neutral', histogram: 0 },
-        priceVsMA200: { percentage: coin.price_change_percentage_30d || 0, signal: tech.priceVs200MA === 'above' ? 'Bullish' : tech.priceVs200MA === 'below' ? 'Bearish' : 'Neutral' },
-        bollingerPosition: tech.bollingerPosition === 'upper' ? 'Upper band' : tech.bollingerPosition === 'lower' ? 'Lower band' : 'Middle band',
-        volumeTrend: tech.volumeTrend === 'increasing' ? 'Increasing' : tech.volumeTrend === 'decreasing' ? 'Decreasing' : 'Stable',
-        supportResistance: coin.price_change_percentage_24h && coin.price_change_percentage_24h > 0 ? 'Testing resistance' : 'Testing support',
+        rsi: { value: typeof tech.rsi14 === 'number' ? tech.rsi14 : null, signal: typeof tech.rsi14 === 'number' ? (tech.rsi14 < 30 ? 'Oversold' : tech.rsi14 > 70 ? 'Overbought' : 'Neutral') : 'Unavailable' },
+        macd: { signal: tech.macdSignal ? (tech.macdSignal === 'bullish_cross' ? 'Bullish crossover' : tech.macdSignal === 'bearish_cross' ? 'Bearish crossover' : 'Neutral') : 'Unavailable', histogram: null },
+        priceVsMA200: { percentage: null, signal: tech.priceVs200MA ? (tech.priceVs200MA === 'above' ? 'Bullish' : tech.priceVs200MA === 'below' ? 'Bearish' : 'Neutral') : 'Unavailable' },
+        bollingerPosition: tech.bollingerPosition ? (tech.bollingerPosition === 'upper' ? 'Upper band' : tech.bollingerPosition === 'lower' ? 'Lower band' : 'Middle band') : 'Unavailable',
+        volumeTrend: tech.volumeTrend ? (tech.volumeTrend === 'increasing' ? 'Increasing' : tech.volumeTrend === 'decreasing' ? 'Decreasing' : 'Stable') : 'Unavailable',
+        supportResistance: formatSupportResistance(coin.high_24h, coin.low_24h, coin.current_price),
       } : undefined,
       sentiment: {
         fearGreedIndex: { value: sentiment.fearGreedIndex, label: sentiment.fearGreedLabel },
-        socialSentiment: sentiment.fearGreedIndex > 50 ? 'Mostly positive' : sentiment.fearGreedIndex < 30 ? 'Mostly negative' : 'Mixed',
-        newsAnalysis: 'Neutral',
-        twitterMentions: { trend: 'Stable', change: 0 },
+        socialSentiment: 'Unavailable',
+        newsAnalysis: 'Unavailable',
+        twitterMentions: { trend: 'Unavailable', change: null },
       },
-      onChain: onchain ? {
-        exchangeFlow: { net: onchain.exchangeFlow === 'outflow' ? 'Outflow' : onchain.exchangeFlow === 'inflow' ? 'Inflow' : 'Neutral', signal: onchain.exchangeFlow === 'outflow' ? 'Bullish' : onchain.exchangeFlow === 'inflow' ? 'Bearish' : 'Neutral' },
-        whaleActivity: onchain.whaleActivity === 'buying' ? 'Accumulating' : onchain.whaleActivity === 'selling' ? 'Distributing' : 'Neutral',
-        activeAddresses: { trend: onchain.activeAddresses === 'increasing' ? 'Increasing' : onchain.activeAddresses === 'decreasing' ? 'Decreasing' : 'Stable', change: 0 },
-        holdingDistribution: 'Normal distribution',
+      onChain: onchainSnap ? {
+        exchangeFlow: onchainSnap.exchangeFlow ? { net: onchainSnap.exchangeFlow === 'outflow' ? 'Outflow' : onchainSnap.exchangeFlow === 'inflow' ? 'Inflow' : 'Neutral', signal: onchainSnap.exchangeFlow === 'outflow' ? 'Bullish' : onchainSnap.exchangeFlow === 'inflow' ? 'Bearish' : 'Neutral' } : { net: 'Unavailable', signal: 'Unavailable' },
+        whaleActivity: onchainSnap.whaleActivity ? (onchainSnap.whaleActivity === 'buying' ? 'Accumulating' : onchainSnap.whaleActivity === 'selling' ? 'Distributing' : 'Neutral') : 'Unavailable',
+        activeAddresses: onchainSnap.activeAddresses ? { trend: onchainSnap.activeAddresses === 'increasing' ? 'Increasing' : onchainSnap.activeAddresses === 'decreasing' ? 'Decreasing' : 'Stable', change: null } : { trend: 'Unavailable', change: null },
+        holdingDistribution: 'Unavailable',
       } : undefined,
-      macro: {
-        vix: { value: 20, signal: 'Neutral' },
-        dxy: { value: 104, signal: 'Neutral' },
-        riskEnvironment: 'Risk-on',
-        btcCorrelation: coinId === 'bitcoin' ? 100 : 75,
-        marketCycle: 'Mid-cycle',
-      },
-      derivatives: {
-        fundingRate: { value: 0.01, signal: 'Neutral' },
-        openInterest: { change: 5, signal: 'Bullish' },
-        liquidations24h: { value: 120000000, predominant: 'Shorts' },
-        longShortRatio: 1.2,
-      },
+      macro: macro ? {
+        vix: { value: typeof macro.vix === 'number' ? macro.vix : null, signal: typeof macro.vix === 'number' ? (macro.vix > 25 ? 'Risk-off' : macro.vix < 15 ? 'Risk-on' : 'Neutral' ) : 'Unavailable' },
+        dxy: { value: typeof macro.dxy === 'number' ? macro.dxy : null, signal: typeof macro.dxy === 'number' ? (macro.dxy > 105 ? 'Bearish' : macro.dxy < 100 ? 'Bullish' : 'Neutral') : 'Unavailable' },
+        riskEnvironment: macro.riskEnvironment ?? 'Unavailable',
+        btcCorrelation: null,
+        marketCycle: 'Unavailable',
+      } : undefined,
+      derivatives: derivatives ? {
+        fundingRate: { value: typeof derivatives.fundingRate === 'number' ? derivatives.fundingRate : null, signal: typeof derivatives.fundingRate === 'number' ? 'Neutral' : 'Unavailable' },
+        openInterest: { change: typeof derivatives.openInterestChange24h === 'number' ? derivatives.openInterestChange24h : null, signal: typeof derivatives.openInterestChange24h === 'number' ? (derivatives.openInterestChange24h > 0 ? 'Bullish' : 'Bearish') : 'Unavailable' },
+        liquidations24h: { value: typeof derivatives.liquidations24h === 'number' ? derivatives.liquidations24h : null, predominant: 'Unavailable' },
+        longShortRatio: typeof derivatives.longShortRatio === 'number' ? derivatives.longShortRatio : null,
+      } : undefined,
     };
   };
 
-  const technicalData = getTechnicalData();
-  const onChainData = getOnChainData();
+  const technicalData = technical;
+  const onChainData = onchain;
   const predictionFactorsData = buildPredictionFactorsData();
 
   if (loading) {
@@ -661,14 +796,14 @@ export default function CoinDetailPage() {
             </div>
             <div className="bg-gray-900/50 rounded-lg p-3">
               <div className="text-gray-400 text-sm mb-1">7 Days</div>
-              <div className={`text-xl font-semibold ${getPriceChangeColor(coin.price_change_percentage_7d || 0)}`}>
-                {coin.price_change_percentage_7d ? formatPercent(coin.price_change_percentage_7d) : '-'}
+              <div className={`text-xl font-semibold ${typeof coin.price_change_percentage_7d === 'number' ? getPriceChangeColor(coin.price_change_percentage_7d) : 'text-gray-500'}`}>
+                {typeof coin.price_change_percentage_7d === 'number' ? formatPercent(coin.price_change_percentage_7d) : '-'}
               </div>
             </div>
             <div className="bg-gray-900/50 rounded-lg p-3">
               <div className="text-gray-400 text-sm mb-1">30 Days</div>
-              <div className={`text-xl font-semibold ${getPriceChangeColor(coin.price_change_percentage_30d || 0)}`}>
-                {coin.price_change_percentage_30d ? formatPercent(coin.price_change_percentage_30d) : '-'}
+              <div className={`text-xl font-semibold ${typeof coin.price_change_percentage_30d === 'number' ? getPriceChangeColor(coin.price_change_percentage_30d) : 'text-gray-500'}`}>
+                {typeof coin.price_change_percentage_30d === 'number' ? formatPercent(coin.price_change_percentage_30d) : '-'}
               </div>
             </div>
             <div className="bg-gray-900/50 rounded-lg p-3">

@@ -3,6 +3,8 @@
 // ============================================
 // Uses FREE public RPC nodes to get blockchain data
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 // FREE RPC Endpoints (no API key needed)
 const RPC_ENDPOINTS = {
   ethereum: [
@@ -103,7 +105,7 @@ export interface WhaleTransaction {
 
 // 1. Fear & Greed Index (FREE - updates daily)
 export async function fetchFearGreedIndex(): Promise<{
-  value: number;
+  value: number | null;
   label: string;
   timestamp: string;
   error?: string;
@@ -115,24 +117,30 @@ export async function fetchFearGreedIndex(): Promise<{
 
     if (!response.ok) {
       console.error(`Fear & Greed API returned ${response.status}`);
-      return { value: 50, label: 'Neutral (API unavailable)', timestamp: new Date().toISOString(), error: `API returned ${response.status}` };
+      return { value: null, label: 'Unavailable', timestamp: new Date().toISOString(), error: `API returned ${response.status}` };
     }
 
     const data = await response.json();
 
     if (!data.data || !data.data[0]) {
       console.error('Fear & Greed API returned invalid data:', data);
-      return { value: 50, label: 'Neutral (Invalid response)', timestamp: new Date().toISOString(), error: 'Invalid API response' };
+      return { value: null, label: 'Unavailable', timestamp: new Date().toISOString(), error: 'Invalid API response' };
+    }
+
+    const parsedValue = Number.parseInt(data.data[0].value);
+    if (!Number.isFinite(parsedValue)) {
+      console.error('Fear & Greed API returned non-numeric value:', data.data?.[0]?.value);
+      return { value: null, label: 'Unavailable', timestamp: new Date().toISOString(), error: 'Non-numeric API value' };
     }
 
     return {
-      value: parseInt(data.data[0].value),
+      value: parsedValue,
       label: data.data[0].value_classification,
       timestamp: new Date(parseInt(data.data[0].timestamp) * 1000).toISOString(),
     };
   } catch (error) {
     console.error('Error fetching fear & greed:', error);
-    return { value: 50, label: 'Neutral (Error)', timestamp: new Date().toISOString(), error: String(error) };
+    return { value: null, label: 'Unavailable', timestamp: new Date().toISOString(), error: String(error) };
   }
 }
 
@@ -239,8 +247,8 @@ export async function fetchYieldData(limit: number = 50): Promise<{
     symbol: string;
     tvl: number;
     apy: number;
-    apyBase: number;
-    apyReward: number;
+    apyBase: number | null;
+    apyReward: number | null;
   }[];
 }> {
   try {
@@ -257,8 +265,8 @@ export async function fetchYieldData(limit: number = 50): Promise<{
         symbol: p.symbol as string,
         tvl: p.tvlUsd as number,
         apy: p.apy as number,
-        apyBase: p.apyBase as number || 0,
-        apyReward: p.apyReward as number || 0,
+        apyBase: typeof p.apyBase === 'number' && Number.isFinite(p.apyBase) ? (p.apyBase as number) : null,
+        apyReward: typeof p.apyReward === 'number' && Number.isFinite(p.apyReward) ? (p.apyReward as number) : null,
       }));
     
     return { pools };
@@ -270,12 +278,12 @@ export async function fetchYieldData(limit: number = 50): Promise<{
 
 // 6. Bitcoin Blockchain Stats (FREE from blockchain.info)
 export async function fetchBitcoinStats(): Promise<{
-  hashRate: number;
-  difficulty: number;
-  blockHeight: number;
-  avgBlockTime: number;
-  unconfirmedTxs: number;
-  memPoolSize: number;
+  hashRate: number | null;
+  difficulty: number | null;
+  blockHeight: number | null;
+  avgBlockTime: number | null;
+  unconfirmedTxs: number | null;
+  memPoolSize: number | null;
   error?: string;
 }> {
   try {
@@ -286,12 +294,12 @@ export async function fetchBitcoinStats(): Promise<{
     if (!response.ok) {
       console.error(`Blockchain.info API returned ${response.status}`);
       return {
-        hashRate: 0,
-        difficulty: 0,
-        blockHeight: 0,
-        avgBlockTime: 10,
-        unconfirmedTxs: 0,
-        memPoolSize: 0,
+        hashRate: null,
+        difficulty: null,
+        blockHeight: null,
+        avgBlockTime: null,
+        unconfirmedTxs: null,
+        memPoolSize: null,
         error: `API returned ${response.status}`
       };
     }
@@ -301,33 +309,40 @@ export async function fetchBitcoinStats(): Promise<{
     if (!data || typeof data !== 'object') {
       console.error('Blockchain.info returned invalid data');
       return {
-        hashRate: 0,
-        difficulty: 0,
-        blockHeight: 0,
-        avgBlockTime: 10,
-        unconfirmedTxs: 0,
-        memPoolSize: 0,
+        hashRate: null,
+        difficulty: null,
+        blockHeight: null,
+        avgBlockTime: null,
+        unconfirmedTxs: null,
+        memPoolSize: null,
         error: 'Invalid API response'
       };
     }
 
+    const hashRate = (data as any).hash_rate;
+    const difficulty = (data as any).difficulty;
+    const blockHeight = (data as any).n_blocks_total;
+    const avgBlockTime = (data as any).minutes_between_blocks;
+    const unconfirmedTxs = (data as any).n_tx_unconfirmed;
+    const memPoolSize = (data as any).mempool_size;
+
     return {
-      hashRate: data.hash_rate || 0,
-      difficulty: data.difficulty || 0,
-      blockHeight: data.n_blocks_total || 0,
-      avgBlockTime: data.minutes_between_blocks || 10,
-      unconfirmedTxs: data.n_tx_unconfirmed || 0,
-      memPoolSize: data.mempool_size || 0,
+      hashRate: typeof hashRate === 'number' && Number.isFinite(hashRate) ? hashRate : null,
+      difficulty: typeof difficulty === 'number' && Number.isFinite(difficulty) ? difficulty : null,
+      blockHeight: typeof blockHeight === 'number' && Number.isFinite(blockHeight) ? blockHeight : null,
+      avgBlockTime: typeof avgBlockTime === 'number' && Number.isFinite(avgBlockTime) ? avgBlockTime : null,
+      unconfirmedTxs: typeof unconfirmedTxs === 'number' && Number.isFinite(unconfirmedTxs) ? unconfirmedTxs : null,
+      memPoolSize: typeof memPoolSize === 'number' && Number.isFinite(memPoolSize) ? memPoolSize : null,
     };
   } catch (error) {
     console.error('Error fetching Bitcoin stats:', error);
     return {
-      hashRate: 0,
-      difficulty: 0,
-      blockHeight: 0,
-      avgBlockTime: 10,
-      unconfirmedTxs: 0,
-      memPoolSize: 0,
+      hashRate: null,
+      difficulty: null,
+      blockHeight: null,
+      avgBlockTime: null,
+      unconfirmedTxs: null,
+      memPoolSize: null,
       error: String(error)
     };
   }
@@ -335,12 +350,17 @@ export async function fetchBitcoinStats(): Promise<{
 
 // 7. Ethereum Gas Prices (FREE)
 export async function fetchEthGasPrices(): Promise<{
-  slow: number;
-  standard: number;
-  fast: number;
-  baseFee: number;
+  slow: number | null;
+  standard: number | null;
+  fast: number | null;
+  baseFee: number | null;
+  error?: string;
 }> {
   try {
+    if (!isFeatureEnabled('publicRpc')) {
+      return { slow: null, standard: null, fast: null, baseFee: null, error: 'Public RPC is disabled.' };
+    }
+
     // Use public RPC to get gas price
     const response = await fetch(RPC_ENDPOINTS.ethereum[0], {
       method: 'POST',
@@ -353,8 +373,17 @@ export async function fetchEthGasPrices(): Promise<{
       }),
     });
     
+    if (!response.ok) {
+      return { slow: null, standard: null, fast: null, baseFee: null, error: `RPC returned ${response.status}` };
+    }
+
     const data = await response.json();
-    const gasPrice = parseInt(data.result, 16) / 1e9; // Convert to Gwei
+    const parsed = typeof data?.result === 'string' ? Number.parseInt(data.result, 16) : NaN;
+    const gasPrice = Number.isFinite(parsed) ? parsed / 1e9 : NaN; // Convert to Gwei
+
+    if (!Number.isFinite(gasPrice)) {
+      return { slow: null, standard: null, fast: null, baseFee: null, error: 'Invalid RPC response' };
+    }
     
     return {
       slow: gasPrice * 0.8,
@@ -364,19 +393,31 @@ export async function fetchEthGasPrices(): Promise<{
     };
   } catch (error) {
     console.error('Error fetching gas prices:', error);
-    return { slow: 20, standard: 25, fast: 30, baseFee: 20 };
+    return { slow: null, standard: null, fast: null, baseFee: null, error: String(error) };
   }
 }
 
 // 8. Get Latest Ethereum Block (FREE via RPC)
 export async function fetchLatestEthBlock(): Promise<{
-  blockNumber: number;
-  timestamp: string;
-  transactionCount: number;
-  gasUsed: number;
-  gasLimit: number;
+  blockNumber: number | null;
+  timestamp: string | null;
+  transactionCount: number | null;
+  gasUsed: number | null;
+  gasLimit: number | null;
+  error?: string;
 }> {
   try {
+    if (!isFeatureEnabled('publicRpc')) {
+      return {
+        blockNumber: null,
+        timestamp: null,
+        transactionCount: null,
+        gasUsed: null,
+        gasLimit: null,
+        error: 'Public RPC is disabled.',
+      };
+    }
+
     const response = await fetch(RPC_ENDPOINTS.ethereum[0], {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -388,6 +429,17 @@ export async function fetchLatestEthBlock(): Promise<{
       }),
     });
     
+    if (!response.ok) {
+      return {
+        blockNumber: null,
+        timestamp: null,
+        transactionCount: null,
+        gasUsed: null,
+        gasLimit: null,
+        error: `RPC returned ${response.status}`,
+      };
+    }
+
     const data = await response.json();
     const block = data.result;
     
@@ -401,11 +453,12 @@ export async function fetchLatestEthBlock(): Promise<{
   } catch (error) {
     console.error('Error fetching ETH block:', error);
     return {
-      blockNumber: 0,
-      timestamp: new Date().toISOString(),
-      transactionCount: 0,
-      gasUsed: 0,
-      gasLimit: 0,
+      blockNumber: null,
+      timestamp: null,
+      transactionCount: null,
+      gasUsed: null,
+      gasLimit: null,
+      error: String(error),
     };
   }
 }
@@ -415,11 +468,11 @@ export async function fetchLatestEthBlock(): Promise<{
 // ============================================
 
 export async function fetchOnChainDashboard(): Promise<{
-  fearGreed: { value: number; label: string };
-  defi: { totalTVL: number; topChains: { name: string; tvl: number }[] };
-  stablecoins: { totalMarketCap: number; top5: { name: string; marketCap: number }[] };
-  bitcoin: { hashRate: number; difficulty: number; blockHeight: number };
-  ethereum: { gasPrice: number; blockNumber: number };
+  fearGreed: { value: number | null; label: string };
+  defi: { totalTVL: number | null; topChains: { name: string; tvl: number }[] };
+  stablecoins: { totalMarketCap: number | null; top5: { name: string; marketCap: number }[] };
+  bitcoin: { hashRate: number | null; difficulty: number | null; blockHeight: number | null };
+  ethereum: { gasPrice: number | null; blockNumber: number | null };
   timestamp: string;
 }> {
   const [fearGreed, defi, stablecoins, bitcoin, ethGas, ethBlock] = await Promise.all([
@@ -434,11 +487,11 @@ export async function fetchOnChainDashboard(): Promise<{
   return {
     fearGreed: { value: fearGreed.value, label: fearGreed.label },
     defi: { 
-      totalTVL: defi.totalTVL, 
+      totalTVL: typeof defi?.totalTVL === 'number' && Number.isFinite(defi.totalTVL) ? defi.totalTVL : null,
       topChains: defi.chains.slice(0, 10) 
     },
     stablecoins: { 
-      totalMarketCap: stablecoins.totalMarketCap, 
+      totalMarketCap: typeof stablecoins?.totalMarketCap === 'number' && Number.isFinite(stablecoins.totalMarketCap) ? stablecoins.totalMarketCap : null,
       top5: stablecoins.stablecoins.slice(0, 5) 
     },
     bitcoin: {

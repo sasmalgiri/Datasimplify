@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { paddlePriceToTier } from '@/lib/payments';
 import { verifyPaddleWebhookSignature } from '@/lib/paddleWebhook';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // ============================================
 // PADDLE WEBHOOK HANDLER
@@ -21,6 +22,10 @@ function getSupabase() {
 }
 
 export async function POST(request: Request) {
+  if (!isFeatureEnabled('payments')) {
+    return NextResponse.json({ error: 'Payments are disabled' }, { status: 404 });
+  }
+
   try {
     const body = await request.text();
 

@@ -8,7 +8,7 @@ import type { ECharts } from 'echarts';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
-import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 
 // Import echarts-gl after echarts core (must be in this order)
@@ -53,7 +53,9 @@ function downloadDataURL(dataURL: string, filename: string) {
   document.body.removeChild(a);
 }
 
-// Chart type definitions
+
+const CHART_COLORS = ['#F7931A', '#627EEA', '#00D18C', '#8B5CF6', '#EC4899', '#14B8A6', '#F59E0B', '#EF4444'];
+
 type AdvancedChartType =
   | 'globe_3d'
   | 'sankey'
@@ -68,63 +70,52 @@ type AdvancedChartType =
   | 'whale_tracker'
   | 'wallet_distribution';
 
-interface ChartConfig {
-  type: AdvancedChartType;
-  title: string;
-  description: string;
-  icon: string;
-  category: '3d' | 'flow' | 'hierarchy' | 'metrics' | 'special';
+type ChartCategory = '3d' | 'hierarchy' | 'flow' | 'metrics' | 'special';
+
+interface CoinMetric {
+  id: string;
+  name: string;
+  symbol: string;
+  color: string;
+  marketCap: number | null; // $B
+  price: number | null; // USD
+  volume: number | null; // $B
+  change: number | null; // %
 }
 
-const CHART_CONFIGS: ChartConfig[] = [
-  { type: 'globe_3d', title: '3D Metrics', description: '3D bar chart comparing coin metrics', icon: '📊', category: '3d' },
-  { type: 'whale_tracker', title: 'Whale Tracker', description: 'Large transaction monitoring', icon: '🐋', category: 'flow' },
-  { type: 'wallet_distribution', title: 'BTC Distribution', description: 'Finviz-style wallet distribution treemap', icon: '🐳', category: 'hierarchy' },
-  { type: 'sankey', title: 'Sankey Flow', description: 'Money flow between exchanges and wallets', icon: '🌊', category: 'flow' },
-  { type: 'sunburst', title: 'Sunburst', description: 'Hierarchical market structure', icon: '☀️', category: 'hierarchy' },
-  { type: 'treemap', title: 'Treemap', description: 'Market cap weighted visualization', icon: '🗺️', category: 'hierarchy' },
-  { type: 'gauge', title: 'Gauges', description: 'Key metrics dashboard', icon: '⏱️', category: 'metrics' },
-  { type: 'radar_advanced', title: 'Radar Analysis', description: 'Multi-dimensional coin comparison', icon: '📡', category: 'metrics' },
-  { type: 'graph_network', title: 'Network Graph', description: 'Token relationships and connections', icon: '🕸️', category: 'flow' },
-  { type: 'parallel', title: 'Parallel Coords', description: 'Multi-factor analysis', icon: '📊', category: 'special' },
-  { type: 'funnel', title: 'Funnel', description: 'Conversion and adoption rates', icon: '🔻', category: 'special' },
-  { type: 'calendar', title: 'Calendar Heatmap', description: 'Daily activity patterns', icon: '📅', category: 'special' },
-];
-
-// Chart color palette for all 67 coins
-const CHART_COLORS = [
-  '#F7931A', '#627EEA', '#F3BA2F', '#00D18C', '#23292F', '#0033AD', '#C3A634', '#E6007A',
-  '#E84142', '#2A5ADA', '#8247E5', '#FF007A', '#00CED1', '#FF6B6B', '#4ECDC4', '#45B7D1',
-  '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F8B500',
-  '#7FDBFF', '#39CCCC', '#3D9970', '#2ECC40', '#01FF70', '#FFDC00', '#FF851B', '#FF4136',
-];
-
-// Generate chart data from all 67 SUPPORTED_COINS with mock visualization data
-const ALL_COINS = SUPPORTED_COINS.map((coin, index) => ({
+const ALL_COINS: CoinMetric[] = SUPPORTED_COINS.map((coin, index) => ({
   id: coin.symbol,
   name: coin.name,
   symbol: coin.symbol,
-  marketCap: Math.max(5, 900 - index * 12),
-  price: coin.symbol === 'BTC' ? 97000 : coin.symbol === 'ETH' ? 3400 : Math.max(0.01, 100 - index * 1.5),
-  volume: Math.max(0.5, 25 - index * 0.3),
-  change: Number((Math.sin(index) * 10 - 2).toFixed(1)),
-  holders: Math.max(5, 45 - Math.floor(index * 0.5)),
-  sentiment: Math.min(95, Math.max(40, Math.floor(78 - index * 0.5 + Math.cos(index) * 10))),
+  marketCap: null,
+  price: null,
+  volume: null,
+  change: null,
   color: CHART_COLORS[index % CHART_COLORS.length],
 }));
 
-// Sample data for charts (first 8 coins)
-const COINS_DATA = ALL_COINS.slice(0, 8).map(coin => ({
-  name: coin.name,
-  symbol: coin.symbol,
-  marketCap: coin.marketCap,
-  price: coin.price,
-  volume: coin.volume,
-  change: coin.change,
-  holders: coin.holders,
-  sentiment: coin.sentiment,
-}));
+const CHART_CONFIGS: Array<{
+  type: AdvancedChartType;
+  title: string;
+  category: ChartCategory;
+  icon: string;
+  description: string;
+}> = [
+  { type: 'treemap', title: 'Treemap', category: 'hierarchy', icon: '▦', description: 'Market cap treemap (real market data)' },
+  { type: 'sunburst', title: 'Sunburst', category: 'hierarchy', icon: '◔', description: 'Market structure by cap tiers (real market data)' },
+  { type: 'graph_network', title: 'Network Graph', category: 'flow', icon: '◎', description: 'Coin network by market cap similarity (real market data)' },
+  { type: 'funnel', title: 'Dominance Funnel', category: 'metrics', icon: '⏷', description: 'Dominance view by market cap (real market data)' },
+  { type: 'wallet_distribution', title: 'Wallet Distribution', category: 'special', icon: '₿', description: 'Unavailable (no free, reliable wallet distribution source wired)' },
 
+  // Disabled (no-fake-data policy): kept for navigation but will show Unavailable.
+  { type: 'sankey', title: 'Sankey Flow', category: 'flow', icon: '⇄', description: 'Unavailable (requires real flow data source)' },
+  { type: 'gauge', title: 'Market Gauges', category: 'metrics', icon: '⟲', description: 'Fear & Greed + Volatility gauges (real data via internal APIs)' },
+  { type: 'radar_advanced', title: 'Radar', category: 'metrics', icon: '✶', description: 'Unavailable (requires real multi-factor fundamentals)' },
+  { type: 'parallel', title: 'Parallel', category: 'metrics', icon: '≋', description: 'Unavailable (requires real multi-factor fundamentals)' },
+  { type: 'calendar', title: 'Calendar Heatmap', category: 'special', icon: '▣', description: 'Bitcoin daily returns heatmap (real data via internal APIs)' },
+  { type: 'whale_tracker', title: 'Whale Tracker', category: 'special', icon: '◉', description: 'Large BTC/ETH transactions (real data from Blockchair + Etherscan)' },
+  { type: 'globe_3d', title: '3D Globe', category: '3d', icon: '◍', description: 'Unavailable (requires real 3D metric set)' },
+];
 // Valid chart types for URL validation
 const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker', 'wallet_distribution'];
 
@@ -143,6 +134,15 @@ function AdvancedChartsContent() {
   const [maxItems, setMaxItems] = useState(8);
   const [sortBy, setSortBy] = useState<'marketCap' | 'change' | 'volume'>('marketCap');
   const [colorMode, setColorMode] = useState<'change' | 'category'>('change');
+
+  const [marketMetricsBySymbol, setMarketMetricsBySymbol] = useState<Record<string, Pick<CoinMetric, 'marketCap' | 'price' | 'volume' | 'change'>>>({});
+  const [calendarData, setCalendarData] = useState<Array<[string, number]>>([]);
+  const [gaugeData, setGaugeData] = useState<{ fearGreed: number | null; volatility: number | null; fundingRate: number | null }>({
+    fearGreed: null,
+    volatility: null,
+    fundingRate: null
+  });
+  const [whaleData, setWhaleData] = useState<Array<{ hash: string; amount: number; amountUsd: number; symbol: string; type: string; timestamp: string }>>([]);
 
   // Initialize state from URL params on mount (client-side only)
   useEffect(() => {
@@ -196,20 +196,231 @@ function AdvancedChartsContent() {
     router.replace(newUrl, { scroll: false });
   }, [selectedChart, selectedCoins, maxItems, sortBy, colorMode, router]);
 
+  // Fetch real market metrics for selected coins (chunked, max 50 CoinGecko IDs per request)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchSelectedMarketData() {
+      try {
+        if (selectedChart === 'wallet_distribution') return;
+
+        const uniqueSymbols = Array.from(new Set(selectedCoins.map(s => s.toUpperCase())));
+        if (uniqueSymbols.length === 0) {
+          if (!cancelled) setMarketMetricsBySymbol({});
+          return;
+        }
+
+        const ids = uniqueSymbols.map(getCoinGeckoId);
+        const chunks: string[][] = [];
+        for (let i = 0; i < ids.length; i += 50) chunks.push(ids.slice(i, i + 50));
+
+        const results = await Promise.all(
+          chunks.map(async (chunk) => {
+            const res = await fetch(`/api/crypto?ids=${encodeURIComponent(chunk.join(','))}`);
+            if (!res.ok) return null;
+            const json = await res.json();
+            if (!json?.success || !Array.isArray(json.data)) return null;
+            return json.data;
+          })
+        );
+
+        const merged: Record<string, Pick<CoinMetric, 'marketCap' | 'price' | 'volume' | 'change'>> = {};
+
+        for (const arr of results) {
+          if (!Array.isArray(arr)) continue;
+          for (const coin of arr) {
+            const symbol = typeof coin?.symbol === 'string' ? coin.symbol.toUpperCase() : null;
+            if (!symbol) continue;
+
+            const marketCapUsd = typeof coin?.market_cap === 'number' ? coin.market_cap : null;
+            const volumeUsd = typeof coin?.total_volume === 'number' ? coin.total_volume : null;
+            const priceUsd = typeof coin?.current_price === 'number' ? coin.current_price : null;
+            const changePct =
+              typeof coin?.price_change_percentage_24h_in_currency === 'number'
+                ? coin.price_change_percentage_24h_in_currency
+                : typeof coin?.price_change_percentage_24h === 'number'
+                  ? coin.price_change_percentage_24h
+                  : null;
+
+            merged[symbol] = {
+              marketCap: marketCapUsd !== null ? marketCapUsd / 1e9 : null,
+              volume: volumeUsd !== null ? volumeUsd / 1e9 : null,
+              price: priceUsd,
+              change: changePct,
+            };
+          }
+        }
+
+        if (!cancelled) setMarketMetricsBySymbol(merged);
+      } catch (e) {
+        // No placeholders: on error, keep metrics null so charts render as unavailable.
+        if (!cancelled) setMarketMetricsBySymbol({});
+      }
+    }
+
+    fetchSelectedMarketData();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCoins, selectedChart]);
+
+  // Fetch calendar data (daily returns for past year) when calendar chart is selected
+  useEffect(() => {
+    if (selectedChart !== 'calendar') return;
+    let cancelled = false;
+
+    async function fetchCalendarData() {
+      try {
+        // Fetch BTC historical data for the calendar heatmap
+        const res = await fetch('/api/crypto/bitcoin/history?days=365');
+        if (!res.ok) {
+          if (!cancelled) setCalendarData([]);
+          return;
+        }
+        const json = await res.json();
+        const prices = json?.prices;
+        if (!Array.isArray(prices) || prices.length < 2) {
+          if (!cancelled) setCalendarData([]);
+          return;
+        }
+
+        // Calculate daily returns and format for calendar
+        const dailyData: Array<[string, number]> = [];
+        for (let i = 1; i < prices.length; i++) {
+          const prev = prices[i - 1];
+          const curr = prices[i];
+          if (typeof prev?.price === 'number' && typeof curr?.price === 'number' && prev.price > 0) {
+            const dailyReturn = ((curr.price - prev.price) / prev.price) * 100;
+            const date = new Date(curr.timestamp);
+            const dateStr = date.toISOString().split('T')[0];
+            dailyData.push([dateStr, parseFloat(dailyReturn.toFixed(2))]);
+          }
+        }
+        if (!cancelled) setCalendarData(dailyData);
+      } catch {
+        if (!cancelled) setCalendarData([]);
+      }
+    }
+
+    fetchCalendarData();
+    return () => { cancelled = true; };
+  }, [selectedChart]);
+
+  // Fetch gauge data (Fear & Greed, volatility, funding rate) when gauge chart is selected
+  useEffect(() => {
+    if (selectedChart !== 'gauge') return;
+    let cancelled = false;
+
+    async function fetchGaugeData() {
+      try {
+        // Fetch Fear & Greed index from internal API
+        const fgPromise = fetch('/api/sentiment')
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null);
+
+        // Fetch derivatives for funding rate
+        const derivPromise = fetch('/api/derivatives')
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null);
+
+        // Fetch BTC data for volatility calculation
+        const btcPromise = fetch('/api/crypto/bitcoin')
+          .then(r => r.ok ? r.json() : null)
+          .catch(() => null);
+
+        const [fgData, derivData, btcData] = await Promise.all([fgPromise, derivPromise, btcPromise]);
+
+        const fearGreed = (fgData?.success && typeof fgData.value === 'number' && Number.isFinite(fgData.value))
+          ? fgData.value
+          : null;
+        const fundingRate = derivData?.data?.btc?.fundingRate ?? null;
+
+        // Calculate volatility from high/low spread
+        let volatility: number | null = null;
+        if (btcData?.high_24h && btcData?.low_24h && btcData?.current_price) {
+          volatility = ((btcData.high_24h - btcData.low_24h) / btcData.current_price) * 100;
+        }
+
+        if (!cancelled) {
+          setGaugeData({ fearGreed, volatility, fundingRate });
+        }
+      } catch {
+        if (!cancelled) setGaugeData({ fearGreed: null, volatility: null, fundingRate: null });
+      }
+    }
+
+    fetchGaugeData();
+    return () => { cancelled = true; };
+  }, [selectedChart]);
+
+  // Fetch whale data when whale_tracker chart is selected
+  useEffect(() => {
+    if (selectedChart !== 'whale_tracker') return;
+    let cancelled = false;
+
+    async function fetchWhaleData() {
+      try {
+        const res = await fetch('/api/whales?type=dashboard');
+        if (!res.ok) {
+          if (!cancelled) setWhaleData([]);
+          return;
+        }
+        const json = await res.json();
+        const transactions = json?.data?.recentWhaleTransactions;
+        if (!Array.isArray(transactions)) {
+          if (!cancelled) setWhaleData([]);
+          return;
+        }
+
+        const mapped = transactions.slice(0, 20).map((tx: {
+          hash: string;
+          amount: number;
+          amountUsd: number;
+          symbol: string;
+          type: string;
+          timestamp: string;
+        }) => ({
+          hash: tx.hash,
+          amount: tx.amount,
+          amountUsd: tx.amountUsd,
+          symbol: tx.symbol,
+          type: tx.type,
+          timestamp: tx.timestamp
+        }));
+
+        if (!cancelled) setWhaleData(mapped);
+      } catch {
+        if (!cancelled) setWhaleData([]);
+      }
+    }
+
+    fetchWhaleData();
+    return () => { cancelled = true; };
+  }, [selectedChart]);
+
   // Get filtered and sorted coins based on parameters
   const filteredCoins = useMemo(() => {
-    let coins = ALL_COINS.filter(c => selectedCoins.includes(c.id));
+    let coins = ALL_COINS
+      .filter(c => selectedCoins.includes(c.id))
+      .map((coin) => ({
+        ...coin,
+        ...(marketMetricsBySymbol[coin.symbol] || { marketCap: null, price: null, volume: null, change: null }),
+      }));
 
     // Sort coins
     coins = [...coins].sort((a, b) => {
-      if (sortBy === 'marketCap') return b.marketCap - a.marketCap;
-      if (sortBy === 'change') return b.change - a.change;
-      return b.volume - a.volume;
+      const aVal = sortBy === 'marketCap' ? a.marketCap : sortBy === 'change' ? a.change : a.volume;
+      const bVal = sortBy === 'marketCap' ? b.marketCap : sortBy === 'change' ? b.change : b.volume;
+
+      if (typeof aVal !== 'number' && typeof bVal !== 'number') return 0;
+      if (typeof aVal !== 'number') return 1;
+      if (typeof bVal !== 'number') return -1;
+      return bVal - aVal;
     });
 
     // Limit to max items
     return coins.slice(0, maxItems);
-  }, [selectedCoins, maxItems, sortBy]);
+  }, [selectedCoins, maxItems, sortBy, marketMetricsBySymbol]);
 
   // Ref to store ECharts instance (set via onChartReady callback)
   const chartInstanceRef = useRef<ECharts | null>(null);
@@ -272,12 +483,12 @@ function AdvancedChartsContent() {
         const chartDataForExcel = filteredCoins.map(coin => ({
           'Symbol': coin.symbol,
           'Name': coin.name,
-          'Price (USD)': `$${coin.price.toLocaleString()}`,
-          'Market Cap ($B)': coin.marketCap,
-          'Volume ($B)': coin.volume,
-          '24h Change (%)': coin.change,
-          'Holders (M)': coin.holders,
-          'Sentiment Score': coin.sentiment,
+          'Price (USD)': typeof coin.price === 'number' ? `$${coin.price.toLocaleString()}` : 'Unavailable',
+          'Market Cap ($B)': typeof coin.marketCap === 'number' ? coin.marketCap : null,
+          'Volume ($B)': typeof coin.volume === 'number' ? coin.volume : null,
+          '24h Change (%)': typeof coin.change === 'number' ? coin.change : null,
+          'Holders (M)': 'Unavailable',
+          'Sentiment Score': 'Unavailable',
         }));
         const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
         wsData['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
@@ -420,6 +631,10 @@ function AdvancedChartsContent() {
   const getChartOption = useMemo(() => {
     switch (selectedChart) {
       case 'treemap':
+        {
+        const treemapCoins = filteredCoins.filter(c => typeof c.marketCap === 'number' && Number.isFinite(c.marketCap));
+        if (treemapCoins.length === 0) return {};
+
         return {
           title: {
             text: 'Crypto Market Cap Treemap',
@@ -433,14 +648,16 @@ function AdvancedChartsContent() {
           series: [{
             type: 'treemap',
             roam: 'move',
-            data: filteredCoins.map(coin => ({
+            data: treemapCoins.map(coin => ({
               name: `${coin.name} (${coin.symbol})`,
               value: coin.marketCap,
               itemStyle: {
                 color: colorMode === 'change'
-                  ? (coin.change >= 0 ?
-                      `rgba(16, 185, 129, ${0.4 + coin.change / 20})` :
-                      `rgba(239, 68, 68, ${0.4 + Math.abs(coin.change) / 20})`)
+                  ? (typeof coin.change === 'number'
+                      ? (coin.change >= 0 ?
+                          `rgba(16, 185, 129, ${Math.min(0.95, Math.max(0.35, 0.4 + coin.change / 20))})` :
+                          `rgba(239, 68, 68, ${Math.min(0.95, Math.max(0.35, 0.4 + Math.abs(coin.change) / 20))})`)
+                      : coin.color)
                   : coin.color
               }
             })),
@@ -459,20 +676,25 @@ function AdvancedChartsContent() {
             }]
           }]
         };
+        }
 
       case 'sunburst':
-        // Group selected coins by market cap tiers
-        const megaCap = filteredCoins.filter(c => c.marketCap >= 100000000000); // $100B+
-        const largeCap = filteredCoins.filter(c => c.marketCap >= 10000000000 && c.marketCap < 100000000000); // $10B-$100B
-        const midCap = filteredCoins.filter(c => c.marketCap >= 1000000000 && c.marketCap < 10000000000); // $1B-$10B
-        const smallCap = filteredCoins.filter(c => c.marketCap < 1000000000); // <$1B
+        {
+        const sunburstCoins = filteredCoins.filter(c => typeof c.marketCap === 'number' && Number.isFinite(c.marketCap));
+        if (sunburstCoins.length === 0) return {};
+
+        // marketCap is stored in $B
+        const megaCap = sunburstCoins.filter(c => (c.marketCap as number) >= 100); // $100B+
+        const largeCap = sunburstCoins.filter(c => (c.marketCap as number) >= 10 && (c.marketCap as number) < 100); // $10B-$100B
+        const midCap = sunburstCoins.filter(c => (c.marketCap as number) >= 1 && (c.marketCap as number) < 10); // $1B-$10B
+        const smallCap = sunburstCoins.filter(c => (c.marketCap as number) < 1); // <$1B
 
         const sunburstColors = ['#F7931A', '#627EEA', '#00D18C', '#8B5CF6', '#EC4899', '#14B8A6', '#F59E0B', '#EF4444'];
 
-        const buildChildren = (coins: typeof filteredCoins) =>
+        const buildChildren = (coins: typeof sunburstCoins) =>
           coins.map((coin, idx) => ({
             name: coin.symbol,
-            value: Math.max(1, Math.round(coin.marketCap / 1000000000)), // Value in billions
+            value: Math.max(1, Math.round(coin.marketCap as number)),
             itemStyle: { color: coin.color || sunburstColors[idx % sunburstColors.length] }
           }));
 
@@ -492,7 +714,7 @@ function AdvancedChartsContent() {
 
         return {
           title: {
-            text: `Crypto Market Structure (${filteredCoins.length} coins)`,
+            text: `Crypto Market Structure (${sunburstCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
@@ -522,221 +744,126 @@ function AdvancedChartsContent() {
             }
           }]
         };
+        }
 
       case 'sankey':
-        // Dynamic Sankey using selected coins
-        const sankeyNodes: { name: string }[] = [
-          { name: 'Retail' },
-          { name: 'Institutions' },
-          { name: 'Whales' },
-          { name: 'Binance' },
-          { name: 'Coinbase' },
-          { name: 'Kraken' },
-        ];
-        // Add selected coins as nodes
-        filteredCoins.forEach(coin => {
-          sankeyNodes.push({ name: coin.symbol });
-        });
-        sankeyNodes.push({ name: 'HODLers' }, { name: 'DeFi' }, { name: 'Trading' });
+        // Previously used fabricated flow values.
+        return {};
 
-        const sankeyLinks: { source: string; target: string; value: number }[] = [];
-        // Investors -> Exchanges
-        sankeyLinks.push(
-          { source: 'Retail', target: 'Binance', value: 30 },
-          { source: 'Retail', target: 'Coinbase', value: 20 },
-          { source: 'Institutions', target: 'Coinbase', value: 40 },
-          { source: 'Institutions', target: 'Kraken', value: 25 },
-          { source: 'Whales', target: 'Binance', value: 50 },
-          { source: 'Whales', target: 'Kraken', value: 15 },
-        );
-        // Exchanges -> Selected Coins (based on volume)
-        filteredCoins.forEach((coin) => {
-          const vol = Math.max(5, coin.volume);
-          sankeyLinks.push(
-            { source: 'Binance', target: coin.symbol, value: vol * 0.5 },
-            { source: 'Coinbase', target: coin.symbol, value: vol * 0.3 },
-            { source: 'Kraken', target: coin.symbol, value: vol * 0.2 },
-          );
-          // Coins -> Destinations
-          sankeyLinks.push(
-            { source: coin.symbol, target: 'HODLers', value: vol * 0.4 },
-            { source: coin.symbol, target: 'DeFi', value: vol * 0.3 },
-            { source: coin.symbol, target: 'Trading', value: vol * 0.3 },
-          );
-        });
+      case 'gauge':
+        {
+        // Market gauges showing Fear & Greed, Volatility, and Funding Rate
+        const hasAnyData = gaugeData.fearGreed !== null || gaugeData.volatility !== null || gaugeData.fundingRate !== null;
+        if (!hasAnyData) return {};
+
+        const gauges: Array<{
+          type: string;
+          center: string[];
+          radius: string;
+          startAngle: number;
+          endAngle: number;
+          min: number;
+          max: number;
+          splitNumber: number;
+          axisLine: { lineStyle: { width: number; color: Array<[number, string]> } };
+          pointer: { width: number };
+          axisTick: { show: boolean };
+          splitLine: { show: boolean };
+          axisLabel: { show: boolean };
+          title: { offsetCenter: [string, string]; color: string };
+          detail: { valueAnimation: boolean; formatter: string | ((v: number) => string); color: string; offsetCenter: [string, string] };
+          data: Array<{ value: number; name: string }>;
+        }> = [];
+
+        // Fear & Greed Gauge
+        if (typeof gaugeData.fearGreed === 'number') {
+          gauges.push({
+            type: 'gauge',
+            center: ['25%', '55%'],
+            radius: '60%',
+            startAngle: 180,
+            endAngle: 0,
+            min: 0,
+            max: 100,
+            splitNumber: 4,
+            axisLine: {
+              lineStyle: {
+                width: 15,
+                color: [
+                  [0.25, '#EF4444'], // Extreme Fear
+                  [0.45, '#F59E0B'], // Fear
+                  [0.55, '#9CA3AF'], // Neutral
+                  [0.75, '#10B981'], // Greed
+                  [1, '#059669']     // Extreme Greed
+                ]
+              }
+            },
+            pointer: { width: 5 },
+            axisTick: { show: false },
+            splitLine: { show: false },
+            axisLabel: { show: false },
+            title: { offsetCenter: ['0', '30%'], color: '#9CA3AF' },
+            detail: { valueAnimation: true, formatter: '{value}', color: '#fff', offsetCenter: ['0', '50%'] },
+            data: [{ value: gaugeData.fearGreed, name: 'Fear & Greed' }]
+          });
+        }
+
+        // Volatility Gauge
+        if (typeof gaugeData.volatility === 'number') {
+          gauges.push({
+            type: 'gauge',
+            center: ['75%', '55%'],
+            radius: '60%',
+            startAngle: 180,
+            endAngle: 0,
+            min: 0,
+            max: 10,
+            splitNumber: 5,
+            axisLine: {
+              lineStyle: {
+                width: 15,
+                color: [
+                  [0.2, '#10B981'], // Low volatility
+                  [0.4, '#3B82F6'], // Moderate
+                  [0.6, '#F59E0B'], // Elevated
+                  [0.8, '#EF4444'], // High
+                  [1, '#991B1B']    // Extreme
+                ]
+              }
+            },
+            pointer: { width: 5 },
+            axisTick: { show: false },
+            splitLine: { show: false },
+            axisLabel: { show: false },
+            title: { offsetCenter: ['0', '30%'], color: '#9CA3AF' },
+            detail: { valueAnimation: true, formatter: (v: number) => `${v.toFixed(2)}%`, color: '#fff', offsetCenter: ['0', '50%'] },
+            data: [{ value: Math.min(10, gaugeData.volatility), name: '24h Volatility' }]
+          });
+        }
 
         return {
           title: {
-            text: `Crypto Money Flow (${filteredCoins.length} coins)`,
+            text: 'Market Gauges',
             left: 'center',
             textStyle: { color: '#fff' }
           },
           tooltip: {
-            trigger: 'item',
-            formatter: (params: { data: { source: string; target: string; value: number } }) => {
-              const d = params.data;
-              return `${d.source} → ${d.target}<br/>Volume: $${d.value.toFixed(1)}B`;
-            }
+            formatter: (params: { value: number; name: string }) => `${params.name}: ${params.value}`
           },
-          series: [{
-            type: 'sankey',
-            layout: 'none',
-            emphasis: { focus: 'adjacency' },
-            nodeAlign: 'left',
-            data: sankeyNodes,
-            links: sankeyLinks,
-            lineStyle: {
-              color: 'gradient',
-              curveness: 0.5
-            },
-            itemStyle: {
-              borderWidth: 1,
-              borderColor: '#aaa'
-            },
-            label: {
-              color: '#fff'
-            }
-          }]
+          series: gauges
         };
-
-      case 'gauge':
-        // Calculate dynamic metrics from selected coins
-        const avgSentiment = Math.round(filteredCoins.reduce((sum, c) => sum + (c.sentiment || 50), 0) / filteredCoins.length);
-        const avgChange = filteredCoins.reduce((sum, c) => sum + c.change, 0) / filteredCoins.length;
-        // Derive "market mood" from average change: -10% = 0, 0% = 50, +10% = 100
-        const marketMood = Math.min(100, Math.max(0, Math.round(50 + avgChange * 5)));
-        // Calculate volatility score from change spread
-        const changeSpread = Math.max(...filteredCoins.map(c => c.change)) - Math.min(...filteredCoins.map(c => c.change));
-        const volatilityScore = Math.min(100, Math.round(changeSpread * 5));
-
-        return {
-          title: {
-            text: `Market Gauges (${filteredCoins.length} coins)`,
-            left: 'center',
-            textStyle: { color: '#fff' }
-          },
-          series: [
-            {
-              type: 'gauge',
-              center: ['25%', '55%'],
-              radius: '40%',
-              startAngle: 200,
-              endAngle: -20,
-              min: 0,
-              max: 100,
-              splitNumber: 10,
-              axisLine: {
-                lineStyle: {
-                  width: 6,
-                  color: [
-                    [0.25, '#EF4444'],
-                    [0.5, '#F59E0B'],
-                    [0.75, '#10B981'],
-                    [1, '#3B82F6']
-                  ]
-                }
-              },
-              pointer: { show: true, length: '60%', width: 6 },
-              axisTick: { distance: -30, splitNumber: 5, lineStyle: { width: 2, color: '#999' } },
-              splitLine: { distance: -32, length: 14, lineStyle: { width: 3, color: '#999' } },
-              axisLabel: { distance: -20, color: '#999', fontSize: 10 },
-              anchor: { show: true, size: 20, itemStyle: { borderWidth: 2 } },
-              title: { show: true, offsetCenter: [0, '70%'], color: '#fff' },
-              detail: { valueAnimation: true, fontSize: 20, offsetCenter: [0, '90%'], color: '#fff', formatter: '{value}' },
-              data: [{ value: marketMood, name: 'Market Mood' }]
-            },
-            {
-              type: 'gauge',
-              center: ['75%', '55%'],
-              radius: '40%',
-              startAngle: 200,
-              endAngle: -20,
-              min: 0,
-              max: 100,
-              axisLine: {
-                lineStyle: {
-                  width: 6,
-                  color: [
-                    [0.3, '#10B981'],
-                    [0.7, '#F59E0B'],
-                    [1, '#EF4444']
-                  ]
-                }
-              },
-              pointer: { show: true, length: '60%', width: 6 },
-              axisTick: { distance: -30, splitNumber: 5, lineStyle: { width: 2, color: '#999' } },
-              splitLine: { distance: -32, length: 14, lineStyle: { width: 3, color: '#999' } },
-              axisLabel: { distance: -20, color: '#999', fontSize: 10 },
-              anchor: { show: true, size: 20, itemStyle: { borderWidth: 2 } },
-              title: { show: true, offsetCenter: [0, '70%'], color: '#fff' },
-              detail: { valueAnimation: true, fontSize: 20, offsetCenter: [0, '90%'], color: '#fff', formatter: '{value}%' },
-              data: [{ value: volatilityScore, name: 'Volatility' }]
-            }
-          ]
-        };
+        }
 
       case 'radar_advanced':
-        // Use filteredCoins for dynamic radar comparison
-        const radarCoins = filteredCoins.slice(0, 6); // Max 6 coins for readability
-        const radarColors = ['#F7931A', '#627EEA', '#00D18C', '#8B5CF6', '#EC4899', '#14B8A6'];
-
-        // Calculate normalized metrics (0-100 scale)
-        const maxMarketCap = Math.max(...radarCoins.map(c => c.marketCap || 0));
-        const maxVolume = Math.max(...radarCoins.map(c => c.volume || 0));
-        const maxHolders = Math.max(...radarCoins.map(c => c.holders || 100000));
-
-        const radarData = radarCoins.map((coin, idx) => {
-          // Normalize metrics to 0-100 scale
-          const marketCapScore = maxMarketCap > 0 ? Math.round((coin.marketCap || 0) / maxMarketCap * 100) : 50;
-          const volumeScore = maxVolume > 0 ? Math.round((coin.volume || 0) / maxVolume * 100) : 50;
-          const holdersScore = maxHolders > 0 ? Math.round((coin.holders || 50000) / maxHolders * 100) : 50;
-          // Derive other metrics from available data
-          const sentimentScore = Math.min(100, Math.max(20, 50 + (coin.change || 0) * 2));
-          const devActivityScore = Math.min(100, Math.max(40, 50 + marketCapScore * 0.3));
-          const adoptionScore = Math.min(100, Math.max(20, marketCapScore * 0.4 + volumeScore * 0.3 + holdersScore * 0.3));
-
-          return {
-            value: [marketCapScore, volumeScore, holdersScore, Math.round(sentimentScore), devActivityScore, Math.round(adoptionScore)],
-            name: coin.symbol,
-            areaStyle: { opacity: 0.2 },
-            lineStyle: { color: radarColors[idx % radarColors.length], width: 2 },
-            itemStyle: { color: radarColors[idx % radarColors.length] }
-          };
-        });
-
-        return {
-          title: {
-            text: `Multi-Coin Comparison (${radarCoins.length} coins)`,
-            left: 'center',
-            textStyle: { color: '#fff' }
-          },
-          legend: {
-            data: radarCoins.map(c => c.symbol),
-            bottom: 0,
-            textStyle: { color: '#9CA3AF' }
-          },
-          radar: {
-            indicator: [
-              { name: 'Market Cap', max: 100 },
-              { name: 'Volume', max: 100 },
-              { name: 'Holders', max: 100 },
-              { name: 'Sentiment', max: 100 },
-              { name: 'Dev Activity', max: 100 },
-              { name: 'Adoption', max: 100 }
-            ],
-            axisName: { color: '#9CA3AF' },
-            splitArea: { areaStyle: { color: ['rgba(59, 130, 246, 0.1)', 'rgba(59, 130, 246, 0.05)'] } },
-            axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.2)' } },
-            splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.1)' } }
-          },
-          series: [{
-            type: 'radar',
-            data: radarData
-          }]
-        };
+        // Previously relied on fabricated holders/sentiment/adoption signals.
+        return {};
 
       case 'graph_network':
-        // Build network from selected coins based on market cap tiers
+        {
+        const networkCoins = filteredCoins.filter(c => typeof c.marketCap === 'number' && Number.isFinite(c.marketCap));
+        if (networkCoins.length < 2) return {};
+
+        // Build network from selected coins based on market cap tiers ($B)
         const networkCategories = [
           { name: 'Mega Cap ($100B+)' },
           { name: 'Large Cap ($10B-$100B)' },
@@ -745,26 +872,26 @@ function AdvancedChartsContent() {
         ];
 
         const getCategoryIndex = (marketCap: number) => {
-          if (marketCap >= 100000000000) return 0;
-          if (marketCap >= 10000000000) return 1;
-          if (marketCap >= 1000000000) return 2;
+          if (marketCap >= 100) return 0;
+          if (marketCap >= 10) return 1;
+          if (marketCap >= 1) return 2;
           return 3;
         };
 
-        const maxMC = Math.max(...filteredCoins.map(c => c.marketCap));
-        const networkNodes = filteredCoins.map(coin => ({
+        const maxMC = Math.max(...networkCoins.map(c => c.marketCap as number));
+        const networkNodes = networkCoins.map(coin => ({
           name: coin.symbol,
-          symbolSize: Math.max(15, Math.min(60, (coin.marketCap / maxMC) * 60)),
-          category: getCategoryIndex(coin.marketCap),
+          symbolSize: Math.max(15, Math.min(60, ((coin.marketCap as number) / maxMC) * 60)),
+          category: getCategoryIndex(coin.marketCap as number),
           itemStyle: { color: coin.color }
         }));
 
         // Create links between coins in similar/related tiers
         const networkLinks: { source: string; target: string }[] = [];
-        filteredCoins.forEach((coin) => {
+        networkCoins.forEach((coin) => {
           // Link to 2-3 nearest coins by market cap
-          const sorted = [...filteredCoins].sort((a, b) =>
-            Math.abs(a.marketCap - coin.marketCap) - Math.abs(b.marketCap - coin.marketCap)
+          const sorted = [...networkCoins].sort((a, b) =>
+            Math.abs((a.marketCap as number) - (coin.marketCap as number)) - Math.abs((b.marketCap as number) - (coin.marketCap as number))
           );
           sorted.slice(1, 3).forEach(target => {
             if (!networkLinks.some(l =>
@@ -778,7 +905,7 @@ function AdvancedChartsContent() {
 
         return {
           title: {
-            text: `Crypto Network (${filteredCoins.length} coins)`,
+            text: `Crypto Network (${networkCoins.length} coins)`,
             left: 'center',
             textStyle: { color: '#fff' }
           },
@@ -810,53 +937,26 @@ function AdvancedChartsContent() {
             lineStyle: { color: 'source', curveness: 0.3 }
           }]
         };
+        }
 
       case 'parallel':
-        return {
-          title: {
-            text: 'Multi-Factor Coin Analysis',
-            left: 'center',
-            textStyle: { color: '#fff' }
-          },
-          parallelAxis: [
-            { dim: 0, name: 'Coin', type: 'category', data: filteredCoins.map(c => c.symbol) },
-            { dim: 1, name: 'Market Cap ($B)', min: 0, max: 1000 },
-            { dim: 2, name: 'Volume ($B)', min: 0, max: 30 },
-            { dim: 3, name: 'Change %', min: -10, max: 10 },
-            { dim: 4, name: 'Holders (M)', min: 0, max: 50 },
-            { dim: 5, name: 'Sentiment', min: 0, max: 100 }
-          ],
-          parallel: {
-            left: '5%',
-            right: '15%',
-            parallelAxisDefault: {
-              type: 'value',
-              nameLocation: 'end',
-              nameGap: 20,
-              nameTextStyle: { color: '#9CA3AF' },
-              axisLine: { lineStyle: { color: '#374151' } },
-              axisTick: { lineStyle: { color: '#374151' } },
-              axisLabel: { color: '#9CA3AF' }
-            }
-          },
-          series: [{
-            type: 'parallel',
-            lineStyle: { width: 2 },
-            data: filteredCoins.map((coin, i) => ({
-              value: [i, coin.marketCap, coin.volume, coin.change, coin.holders, coin.sentiment],
-              lineStyle: { color: colorMode === 'change' ? (coin.change >= 0 ? '#10B981' : '#EF4444') : coin.color }
-            }))
-          }]
-        };
+        // Previously relied on fabricated holders/sentiment metrics.
+        return {};
 
       case 'funnel':
+        {
+        const funnelCoins = filteredCoins.filter(c => typeof c.marketCap === 'number' && Number.isFinite(c.marketCap));
+        if (funnelCoins.length === 0) return {};
+
         // Funnel showing market dominance of selected coins
-        const totalMarketCap = filteredCoins.reduce((sum, c) => sum + c.marketCap, 0);
-        const funnelData = filteredCoins
-          .sort((a, b) => b.marketCap - a.marketCap)
+        const totalMarketCap = funnelCoins.reduce((sum, c) => sum + (c.marketCap as number), 0);
+        if (totalMarketCap <= 0) return {};
+
+        const funnelData = funnelCoins
+          .sort((a, b) => (b.marketCap as number) - (a.marketCap as number))
           .slice(0, 8)
           .map((coin, idx) => ({
-            value: Math.round((coin.marketCap / totalMarketCap) * 100),
+            value: Math.round(((coin.marketCap as number) / totalMarketCap) * 100),
             name: `${coin.symbol} ($${coin.marketCap}B)`,
             itemStyle: { color: coin.color || CHART_COLORS[idx % CHART_COLORS.length] }
           }));
@@ -884,61 +984,58 @@ function AdvancedChartsContent() {
             data: funnelData
           }]
         };
-
-      case 'calendar':
-        // Generate calendar data based on selected coins' combined volume
-        const calendarData: [string, number][] = [];
-        const today = new Date();
-        // Use total volume of selected coins as base activity level
-        const baseVolume = filteredCoins.reduce((sum, c) => sum + c.volume, 0);
-        const coinCount = filteredCoins.length;
-
-        for (let i = 180; i >= 0; i--) {
-          const date = new Date(today);
-          date.setDate(date.getDate() - i);
-          const dateStr = date.toISOString().split('T')[0];
-          // Deterministic pseudo-random based on date + coin selection
-          const dateParts = dateStr.split('-');
-          const seed = parseInt(dateParts[0]) + parseInt(dateParts[1]) * 31 + parseInt(dateParts[2]) * 12 + coinCount;
-          // Scale activity by selected coins' total volume
-          const value = Math.floor(Math.abs(Math.sin(seed) * baseVolume * 100));
-          calendarData.push([dateStr, value]);
         }
 
-        const startMonth = new Date(today);
-        startMonth.setMonth(startMonth.getMonth() - 6);
-        const maxCalendarValue = Math.max(...calendarData.map(d => d[1]));
+      case 'calendar':
+        {
+        // Calendar heatmap showing daily BTC price returns
+        if (calendarData.length === 0) return {};
+
+        // Get date range from data
+        const dates = calendarData.map(d => d[0]).sort();
+        const startDate = dates[0];
+        const endDate = dates[dates.length - 1];
+
+        // Calculate max absolute value for color scaling
+        const maxAbsReturn = Math.max(...calendarData.map(d => Math.abs(d[1])), 1);
 
         return {
           title: {
-            text: `Trading Activity (${filteredCoins.length} coins)`,
+            text: 'Bitcoin Daily Returns Heatmap',
             left: 'center',
             textStyle: { color: '#fff' }
           },
           tooltip: {
-            formatter: (params: { value: [string, number] }) =>
-              `${params.value[0]}<br/>Activity: ${params.value[1].toLocaleString()}<br/>Coins: ${filteredCoins.map(c => c.symbol).join(', ')}`
+            position: 'top',
+            formatter: (params: { value: [string, number] }) => {
+              const [date, value] = params.value;
+              const color = value >= 0 ? '#10B981' : '#EF4444';
+              return `<div style="padding:4px 8px"><strong>${date}</strong><br/><span style="color:${color}">${value >= 0 ? '+' : ''}${value.toFixed(2)}%</span></div>`;
+            }
           },
           visualMap: {
-            min: 0,
-            max: maxCalendarValue,
+            min: -maxAbsReturn,
+            max: maxAbsReturn,
             calculable: true,
             orient: 'horizontal',
             left: 'center',
-            top: 'bottom',
-            textStyle: { color: '#9CA3AF' },
+            bottom: '5%',
             inRange: {
-              color: ['#1e3a5f', '#3B82F6', '#60A5FA', '#93C5FD']
-            }
+              color: ['#EF4444', '#374151', '#10B981']
+            },
+            textStyle: { color: '#9CA3AF' }
           },
           calendar: {
-            top: 80,
-            left: 30,
+            top: 60,
+            left: 50,
             right: 30,
             cellSize: ['auto', 15],
-            range: [startMonth.toISOString().split('T')[0], today.toISOString().split('T')[0]],
-            itemStyle: { borderWidth: 0.5, borderColor: '#1f2937' },
-            yearLabel: { show: false },
+            range: [startDate, endDate],
+            itemStyle: {
+              borderWidth: 1,
+              borderColor: '#374151'
+            },
+            yearLabel: { color: '#9CA3AF' },
             monthLabel: { color: '#9CA3AF' },
             dayLabel: { color: '#9CA3AF' }
           },
@@ -948,229 +1045,104 @@ function AdvancedChartsContent() {
             data: calendarData
           }]
         };
+        }
 
       case 'whale_tracker':
-        // Generate whale transactions dynamically based on selected coins
-        const timeSlots = ['00:15', '01:30', '02:45', '04:00', '05:20', '06:45', '08:00', '09:30', '10:15', '11:45', '13:00', '14:30', '16:00', '17:20', '19:00'];
-        const txTypes = ['buy', 'sell', 'transfer'] as const;
-        const txLocations = ['Exchange', 'Wallet', 'Cold Storage', 'DeFi', 'OTC'];
+        {
+        // Whale tracker scatter/bubble chart showing recent large transactions
+        if (whaleData.length === 0) return {};
 
-        // Build coin color map from selected coins
-        const whaleCoinColors: Record<string, string> = {};
-        filteredCoins.forEach(coin => {
-          whaleCoinColors[coin.symbol] = coin.color;
-        });
+        // Group by symbol and create scatter data
+        const btcTxs = whaleData.filter(tx => tx.symbol === 'BTC');
+        const ethTxs = whaleData.filter(tx => tx.symbol === 'ETH');
 
-        // Generate transactions for each selected coin
-        const whaleTransactions: { time: string; coin: string; amount: number; type: 'buy' | 'sell' | 'transfer'; from: string; to: string; price: number }[] = [];
-        filteredCoins.slice(0, 6).forEach((coin, coinIdx) => {
-          // Generate 2-3 transactions per coin
-          const txCount = 2 + (coinIdx % 2);
-          for (let i = 0; i < txCount; i++) {
-            const timeIdx = (coinIdx * 3 + i) % timeSlots.length;
-            const typeIdx = (coinIdx + i) % 3;
-            const fromIdx = (coinIdx + i) % txLocations.length;
-            const toIdx = (coinIdx + i + 1) % txLocations.length;
-            // Amount based on coin price - higher price means lower amount
-            const baseAmount = coin.price > 10000 ? 500 : coin.price > 100 ? 5000 : coin.price > 1 ? 50000 : 5000000;
-            const amount = baseAmount * (1 + (i * 0.5));
-
-            whaleTransactions.push({
-              time: timeSlots[timeIdx],
-              coin: coin.symbol,
-              amount,
-              type: txTypes[typeIdx],
-              from: txLocations[fromIdx],
-              to: txLocations[toIdx],
-              price: coin.price
-            });
-          }
-        });
-
-        // Sort by time
-        whaleTransactions.sort((a, b) => a.time.localeCompare(b.time));
-
-        const typeSymbols: Record<string, string> = {
-          'buy': 'circle',
-          'sell': 'triangle',
-          'transfer': 'diamond'
-        };
+        const formatScatterData = (txs: typeof whaleData) =>
+          txs.map((tx) => {
+            const date = new Date(tx.timestamp);
+            const hours = date.getHours() + date.getMinutes() / 60;
+            return [
+              hours, // X: time of day
+              Math.log10(tx.amountUsd + 1), // Y: log scale of USD value
+              Math.sqrt(tx.amountUsd) / 100, // Size
+              tx.type,
+              tx.amount,
+              tx.amountUsd,
+              tx.hash.slice(0, 10)
+            ];
+          });
 
         return {
           title: {
-            text: `Whale Tracker (${filteredCoins.length} coins)`,
+            text: 'Recent Whale Transactions',
             left: 'center',
             textStyle: { color: '#fff' }
           },
           tooltip: {
-            trigger: 'item',
-            formatter: (params: { data: { value: number[]; coin: string; type: string; amount: number; from: string; to: string; price: number } }) => {
-              const d = params.data;
-              const usdValue = d.amount * d.price;
-              return `<strong>${d.coin}</strong><br/>
-                      Type: ${d.type.toUpperCase()}<br/>
-                      Amount: ${d.amount.toLocaleString()} ${d.coin}<br/>
-                      Value: $${(usdValue / 1000000).toFixed(2)}M<br/>
-                      ${d.from} → ${d.to}`;
+            formatter: (params: { value: [number, number, number, string, number, number, string]; seriesName: string }) => {
+              const [, , , type, amount, usd, hash] = params.value;
+              const typeLabel = type === 'exchange_inflow' ? 'Exchange Inflow' :
+                               type === 'exchange_outflow' ? 'Exchange Outflow' : 'Whale Transfer';
+              return `<strong>${params.seriesName}</strong><br/>
+                      Amount: ${amount.toLocaleString()} ${params.seriesName}<br/>
+                      Value: $${(usd / 1e6).toFixed(2)}M<br/>
+                      Type: ${typeLabel}<br/>
+                      TX: ${hash}...`;
             }
           },
           legend: {
-            data: filteredCoins.slice(0, 6).map(c => c.symbol),
+            data: ['BTC', 'ETH'],
             bottom: 10,
             textStyle: { color: '#9CA3AF' }
           },
-          grid: {
-            left: '8%',
-            right: '8%',
-            top: '15%',
-            bottom: '18%'
-          },
           xAxis: {
-            type: 'category',
-            data: [...new Set(whaleTransactions.map(t => t.time))].sort(),
+            name: 'Time (Hour)',
+            nameTextStyle: { color: '#9CA3AF' },
+            min: 0,
+            max: 24,
             axisLabel: { color: '#9CA3AF' },
-            axisLine: { lineStyle: { color: '#374151' } },
-            name: 'Time (UTC)',
-            nameTextStyle: { color: '#9CA3AF' }
+            splitLine: { lineStyle: { color: '#374151' } }
           },
           yAxis: {
-            type: 'value',
-            name: 'USD Value (Millions)',
+            name: 'Value (log scale)',
             nameTextStyle: { color: '#9CA3AF' },
-            axisLabel: {
-              color: '#9CA3AF',
-              formatter: (val: number) => `$${(val / 1000000).toFixed(0)}M`
-            },
-            axisLine: { lineStyle: { color: '#374151' } },
-            splitLine: { lineStyle: { color: '#374151', type: 'dashed' } }
+            axisLabel: { color: '#9CA3AF', formatter: (v: number) => `$${Math.pow(10, v).toExponential(0)}` },
+            splitLine: { lineStyle: { color: '#374151' } }
           },
-          series: filteredCoins.slice(0, 6).map(coin => ({
-            name: coin.symbol,
-            type: 'scatter',
-            data: whaleTransactions
-              .filter(t => t.coin === coin.symbol)
-              .map(t => {
-                const usdValue = t.amount * t.price;
-                return {
-                  value: [t.time, usdValue],
-                  coin: t.coin,
-                  type: t.type,
-                  amount: t.amount,
-                  from: t.from,
-                  to: t.to,
-                  price: t.price,
-                  symbolSize: Math.min(Math.max(usdValue / 500000, 15), 60),
-                  itemStyle: {
-                    color: whaleCoinColors[coin.symbol] || coin.color,
-                    opacity: t.type === 'buy' ? 0.9 : t.type === 'sell' ? 0.7 : 0.5,
-                    borderColor: t.type === 'sell' ? '#EF4444' : t.type === 'buy' ? '#10B981' : '#9CA3AF',
-                    borderWidth: 2
-                  }
-                };
-              }),
-            symbol: (_value: unknown, params: { data?: { type?: string } }) => typeSymbols[params.data?.type || 'buy'] || 'circle',
-            emphasis: {
-              scale: 1.5
+          series: [
+            {
+              name: 'BTC',
+              type: 'scatter',
+              symbolSize: (data: number[]) => Math.min(50, Math.max(10, data[2])),
+              data: formatScatterData(btcTxs),
+              itemStyle: {
+                color: '#F7931A',
+                borderColor: '#fff',
+                borderWidth: 1
+              }
+            },
+            {
+              name: 'ETH',
+              type: 'scatter',
+              symbolSize: (data: number[]) => Math.min(50, Math.max(10, data[2])),
+              data: formatScatterData(ethTxs),
+              itemStyle: {
+                color: '#627EEA',
+                borderColor: '#fff',
+                borderWidth: 1
+              }
             }
-          }))
+          ]
         };
+        }
 
       case 'globe_3d':
-        // 3D Bar chart showing crypto metrics by coin
-        const bar3DData: [number, number, number, string, string][] = [];
-        const metrics = ['Market Cap', 'Volume', 'Holders', 'Sentiment'];
-
-        filteredCoins.slice(0, 8).forEach((coin, coinIdx) => {
-          metrics.forEach((metric, metricIdx) => {
-            let value = 0;
-            if (metric === 'Market Cap') value = coin.marketCap / 10;
-            else if (metric === 'Volume') value = coin.volume * 3;
-            else if (metric === 'Holders') value = coin.holders * 2;
-            else if (metric === 'Sentiment') value = coin.sentiment;
-            bar3DData.push([coinIdx, metricIdx, value, coin.symbol, metric]);
-          });
-        });
-
-        return {
-          title: {
-            text: '3D Crypto Metrics Comparison',
-            left: 'center',
-            textStyle: { color: '#fff' }
-          },
-          tooltip: {
-            formatter: (params: { value: [number, number, number, string, string] }) => {
-              const [, , val, symbol, metric] = params.value;
-              return `${symbol}<br/>${metric}: ${val.toFixed(1)}`;
-            }
-          },
-          visualMap: {
-            max: 100,
-            inRange: {
-              color: ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981']
-            },
-            textStyle: { color: '#9CA3AF' }
-          },
-          xAxis3D: {
-            type: 'category',
-            data: filteredCoins.slice(0, 8).map(c => c.symbol),
-            axisLabel: { color: '#9CA3AF' },
-            axisLine: { lineStyle: { color: '#374151' } }
-          },
-          yAxis3D: {
-            type: 'category',
-            data: metrics,
-            axisLabel: { color: '#9CA3AF' },
-            axisLine: { lineStyle: { color: '#374151' } }
-          },
-          zAxis3D: {
-            type: 'value',
-            axisLabel: { color: '#9CA3AF' },
-            axisLine: { lineStyle: { color: '#374151' } }
-          },
-          grid3D: {
-            boxWidth: 200,
-            boxDepth: 80,
-            viewControl: {
-              projection: 'orthographic',
-              autoRotate: true,
-              autoRotateSpeed: 5
-            },
-            light: {
-              main: { intensity: 1.2 },
-              ambient: { intensity: 0.3 }
-            },
-            environment: '#1f2937'
-          },
-          series: [{
-            type: 'bar3D',
-            data: bar3DData.map(item => ({
-              value: item,
-              itemStyle: {
-                color: CHART_COLORS[item[0] % CHART_COLORS.length],
-                opacity: 0.8
-              }
-            })),
-            shading: 'lambert',
-            label: {
-              show: false
-            },
-            emphasis: {
-              label: {
-                show: true,
-                fontSize: 12,
-                color: '#fff'
-              },
-              itemStyle: {
-                color: '#10B981'
-              }
-            }
-          }]
-        };
+        // Disabled: previously relied on fabricated holders/sentiment metrics.
+        return {};
 
       default:
         return {};
     }
-  }, [selectedChart, filteredCoins, colorMode]);
+  }, [selectedChart, filteredCoins, colorMode, calendarData, gaugeData, whaleData]);
 
   const selectedConfig = CHART_CONFIGS.find(c => c.type === selectedChart);
 
@@ -1513,7 +1485,7 @@ function AdvancedChartsContent() {
                 {selectedChart === 'calendar' && 'Calendar heatmap shows daily trading activity over the past 6 months. Darker colors indicate higher trading volume.'}
                 {selectedChart === 'globe_3d' && '3D Metrics visualization shows a rotating 3D bar chart comparing multiple metrics (Market Cap, Volume, Holders, Sentiment) across selected coins. Drag to rotate, scroll to zoom.'}
                 {selectedChart === 'whale_tracker' && 'Whale Tracker monitors large cryptocurrency transactions (>$1M USD). Bubble size represents transaction value. Green border = buy, Red border = sell, Gray border = transfer. Track whale movements between exchanges, wallets, and DeFi protocols.'}
-                {selectedChart === 'wallet_distribution' && 'BTC Wallet Distribution shows the Finviz-style treemap of Bitcoin holdings by wallet size. Categories range from Humpback (>10K BTC) to Shrimp (<1 BTC). Green indicates accumulating, red indicates distributing. Hover for detailed stats.'}
+                {selectedChart === 'wallet_distribution' && 'Wallet Distribution is unavailable until a real public data source is integrated. (Hardcoded example buckets are not shown.)'}
               </p>
             </div>
 
@@ -1532,7 +1504,7 @@ function AdvancedChartsContent() {
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
                 <div className="text-2xl mb-2">📊</div>
                 <div className="text-sm font-medium">Data-Driven</div>
-                <div className="text-xs text-gray-400">Real-time updates</div>
+                <div className="text-xs text-gray-400">Updates periodically</div>
               </div>
               <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
                 <div className="text-2xl mb-2">💾</div>

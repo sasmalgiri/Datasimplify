@@ -528,8 +528,8 @@ export async function backfillActualResults(): Promise<{
     '7d': 24 * 7,
   };
 
-  let updated = 0;
-  let errors = 0;
+  const updated = 0;
+  const errors = 0;
 
   // Get records that need updating (older than 7 days and missing 7d price)
   const sevenDaysAgo = new Date();
@@ -547,35 +547,14 @@ export async function backfillActualResults(): Promise<{
     return { updated: 0, errors: 1 };
   }
 
-  // For each record, fetch the current price and calculate outcomes
-  for (const record of pendingRecords) {
-    try {
-      // Fetch historical price at +1h, +4h, +24h, +7d from snapshot
-      // This would need to be implemented with actual price data fetching
-      // For now, we'll mark this as a placeholder
-
-      const snapshotTime = new Date(record.snapshot_timestamp);
-      const priceAtSnapshot = record.price_at_snapshot;
-
-      // TODO: Fetch actual prices at these timestamps from historical data
-      // This is a placeholder - in production, you'd fetch from your price history
-
-      // Calculate direction and accuracy
-      // const price7dLater = ... // Fetch from historical data
-      // const actualDirection = price7dLater > priceAtSnapshot ? 'up' : price7dLater < priceAtSnapshot ? 'down' : 'flat';
-      // const wasCorrect = actualDirection === record.predicted_direction?.toLowerCase();
-
-      // Update record with actual outcomes
-      // await db.from('prediction_training_data').update({...}).eq('id', record.id);
-
-      updated++;
-    } catch (error) {
-      console.error(`Error backfilling record ${record.id}:`, error);
-      errors++;
-    }
+  if (pendingRecords.length > 0) {
+    console.warn(
+      `backfillActualResults: ${pendingRecords.length} records pending, but historical price backfill is not implemented.`
+    );
   }
 
-  return { updated, errors };
+  // No placeholders: until historical price fetching is implemented, we do not update any rows.
+  return { updated: 0, errors: pendingRecords.length };
 }
 
 // ============================================

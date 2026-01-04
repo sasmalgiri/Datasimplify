@@ -6,6 +6,7 @@ import { TrendingUp, TrendingDown, Minus, Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
@@ -191,16 +192,19 @@ export default function MarketPage() {
 
         // Also get Fear & Greed from dashboard
         if (globalJson.data.fearGreed) {
-          const fg = {
-            value: globalJson.data.fearGreed.value || 50,
-            value_classification: globalJson.data.fearGreed.label || 'Neutral',
-          };
-          setFearGreed(fg);
-          setClientCache('market_fear_greed', fg, CACHE_TTL.MARKET_DATA);
+          const value = globalJson.data.fearGreed.value;
+          if (typeof value === 'number' && Number.isFinite(value)) {
+            const fg = {
+              value,
+              value_classification: globalJson.data.fearGreed.label || 'Unknown',
+            };
+            setFearGreed(fg);
+            setClientCache('market_fear_greed', fg, CACHE_TTL.MARKET_DATA);
+          }
         }
       } else {
         // Fallback to direct API if cache is empty
-        const directGlobalRes = await fetch('https://api.coingecko.com/api/v3/global');
+        const directGlobalRes = await fetch('/api/crypto/global');
         const directGlobalJson = await directGlobalRes.json();
         if (directGlobalJson?.data) {
           const globalData = {
@@ -214,13 +218,13 @@ export default function MarketPage() {
           setClientCache('market_global', globalData, CACHE_TTL.MARKET_DATA);
         }
 
-        // Fallback Fear & Greed
-        const fgRes = await fetch('https://api.alternative.me/fng/');
+        // Fallback Fear & Greed (internal API)
+        const fgRes = await fetch('/api/sentiment');
         const fgData = await fgRes.json();
-        if (fgData?.data?.[0]) {
+        if (fgData?.success && typeof fgData.value === 'number' && Number.isFinite(fgData.value)) {
           const fg = {
-            value: parseInt(fgData.data[0].value),
-            value_classification: fgData.data[0].value_classification,
+            value: fgData.value,
+            value_classification: fgData.classification || 'Unknown',
           };
           setFearGreed(fg);
           setClientCache('market_fear_greed', fg, CACHE_TTL.MARKET_DATA);
@@ -242,6 +246,12 @@ export default function MarketPage() {
 
   // Fetch predictions when coins are loaded
   const fetchPredictions = useCallback(async (forceRefresh = false) => {
+    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
+      setPredictions(new Map());
+      setPredictionsLoading(false);
+      return;
+    }
+
     // Try cache first (unless forcing refresh)
     if (!forceRefresh) {
       const cachedPredictions = getClientCache<Array<{ coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }>>('market_predictions');
@@ -263,6 +273,11 @@ export default function MarketPage() {
 
   const fetchFreshPredictions = async () => {
     if (coins.length === 0) return;
+    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
+      setPredictions(new Map());
+      setPredictionsLoading(false);
+      return;
+    }
 
     try {
       // Fetch predictions for top 50 coins
@@ -305,6 +320,7 @@ export default function MarketPage() {
   };
 
   useEffect(() => {
+    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) return;
     if (coins.length > 0) {
       fetchPredictions();
     }
@@ -445,7 +461,7 @@ export default function MarketPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Cryptocurrency Market</h1>
             <p className="text-gray-400 flex items-center gap-2">
-              Real-time prices for top 100 cryptocurrencies • No login required
+              Live prices for top cryptocurrencies • No login required
               {dataFromCache && (
                 <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
                   <Database className="w-3 h-3" />
@@ -714,7 +730,7 @@ export default function MarketPage() {
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data updates every 60 seconds • Powered by CoinGecko API</p>
+          <p>Data updates every 60 seconds • Powered by Binance market data</p>
           <p className="mt-2">
             Want more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for unlimited downloads, AI analysis, and more!
           </p>

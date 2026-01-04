@@ -2,9 +2,11 @@
 // COMPREHENSIVE DATA API - Fetches ALL data from Binance
 // ============================================
 
-import { SUPPORTED_COINS, CoinInfo } from './dataTypes';
+import { SUPPORTED_COINS } from './dataTypes';
+import { FEATURES } from './featureFlags';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
+const DEFAULT_COIN_IMAGE = '/globe.svg';
 
 // ============================================
 // TYPE DEFINITIONS
@@ -133,7 +135,7 @@ export async function fetchMarketOverview(options?: {
     const tickers = await response.json();
     
     // Map Binance data to our format with metadata
-    let coins: MarketData[] = [];
+    const coins: MarketData[] = [];
     
     for (const coinInfo of SUPPORTED_COINS) {
       const ticker = tickers.find((t: { symbol: string }) => t.symbol === coinInfo.binanceSymbol);
@@ -161,7 +163,7 @@ export async function fetchMarketOverview(options?: {
       coins.push({
         symbol: coinInfo.symbol,
         name: coinInfo.name,
-        image: coinInfo.image,
+        image: FEATURES.coingecko ? coinInfo.image : DEFAULT_COIN_IMAGE,
         category: coinInfo.category,
         price,
         priceChange24h: parseFloat(ticker.priceChange),
@@ -337,40 +339,62 @@ export async function fetchRecentTrades(options: {
 // 5. GLOBAL MARKET STATS
 export async function fetchGlobalStats(): Promise<GlobalStats | null> {
   try {
-    const response = await fetch(`${BINANCE_BASE}/ticker/24hr`);
+    // Redistributable-only mode: derive stats from Binance tickers for our SUPPORTED_COINS universe.
+    // Note: This is NOT "global crypto market"; it's "tracked universe".
+    const response = await fetch(`${BINANCE_BASE}/ticker/24hr`, {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
+    });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const tickers = await response.json();
-    
-    let totalVolume = 0;
+
+    const tickers: Array<{
+      symbol: string;
+      lastPrice: string;
+      openPrice: string;
+      quoteVolume: string;
+    }> = await response.json();
+
+    let totalMarketCap = 0;
+    let totalMarketCapPrev = 0;
+    let totalVolume24h = 0;
+
     let btcMarketCap = 0;
     let ethMarketCap = 0;
-    let totalMarketCap = 0;
-    
-    for (const coinInfo of SUPPORTED_COINS) {
-      const ticker = tickers.find((t: { symbol: string }) => t.symbol === coinInfo.binanceSymbol);
+
+    for (const coin of SUPPORTED_COINS) {
+      const ticker = tickers.find(t => t.symbol === coin.binanceSymbol);
       if (!ticker) continue;
-      
-      const price = parseFloat(ticker.lastPrice);
-      const volume = parseFloat(ticker.quoteVolume);
-      const marketCap = price * coinInfo.circulatingSupply;
-      
-      totalVolume += volume;
+
+      const price = Number.parseFloat(ticker.lastPrice);
+      const open = Number.parseFloat(ticker.openPrice);
+      const quoteVolume = Number.parseFloat(ticker.quoteVolume);
+
+      if (!Number.isFinite(price) || !Number.isFinite(open)) continue;
+
+      const marketCap = price * coin.circulatingSupply;
+      const prevMarketCap = open * coin.circulatingSupply;
+
       totalMarketCap += marketCap;
-      
-      if (coinInfo.symbol === 'BTC') btcMarketCap = marketCap;
-      if (coinInfo.symbol === 'ETH') ethMarketCap = marketCap;
+      totalMarketCapPrev += prevMarketCap;
+      if (Number.isFinite(quoteVolume)) totalVolume24h += quoteVolume;
+
+      if (coin.symbol === 'BTC') btcMarketCap += marketCap;
+      if (coin.symbol === 'ETH') ethMarketCap += marketCap;
     }
-    
-    // Estimate full market cap (our coins ~75% of total)
-    const estimatedTotalMarketCap = totalMarketCap / 0.75;
-    
+
+    if (!Number.isFinite(totalMarketCap) || totalMarketCap <= 0) return null;
+
+    const btcDominance = (btcMarketCap / totalMarketCap) * 100;
+    const ethDominance = (ethMarketCap / totalMarketCap) * 100;
+    const marketCapChange24h =
+      totalMarketCapPrev > 0 ? ((totalMarketCap - totalMarketCapPrev) / totalMarketCapPrev) * 100 : 0;
+
     return {
-      totalMarketCap: estimatedTotalMarketCap,
-      totalVolume24h: totalVolume,
-      btcDominance: (btcMarketCap / estimatedTotalMarketCap) * 100,
-      ethDominance: (ethMarketCap / estimatedTotalMarketCap) * 100,
-      marketCapChange24h: 0, // Would need historical data
+      totalMarketCap,
+      totalVolume24h,
+      btcDominance: Number.isFinite(btcDominance) ? btcDominance : 0,
+      ethDominance: Number.isFinite(ethDominance) ? ethDominance : 0,
+      marketCapChange24h: Number.isFinite(marketCapChange24h) ? marketCapChange24h : 0,
       activeCryptocurrencies: SUPPORTED_COINS.length,
       updatedAt: new Date().toISOString(),
     };

@@ -148,13 +148,13 @@ export interface FearGreedData {
 
 export interface OnChainMetrics {
   coin: string;
-  activeAddresses24h: number;
-  transactionCount24h: number;
-  avgTransactionValue: number;
-  hashRate?: number;
-  difficulty?: number;
-  blockHeight: number;
-  mempoolSize?: number;
+  activeAddresses24h: number | null;
+  transactionCount24h: number | null;
+  avgTransactionValue: number | null;
+  hashRate?: number | null;
+  difficulty?: number | null;
+  blockHeight: number | null;
+  mempoolSize?: number | null;
 }
 
 // ============================================
@@ -334,9 +334,8 @@ export async function fetchYields(): Promise<any[]> {
 // ============================================
 
 export async function fetchCryptoNews(): Promise<NewsItem[]> {
-  // Using CryptoPanic free tier or RSS feeds
-  // For now, we'll simulate with a placeholder
-  // In production, integrate with actual news APIs
+  // Using RSS feeds (free sources). If parsing/indexing isn't implemented,
+  // return an empty array (truthful) rather than synthetic news.
   
   const sources = [
     'https://cointelegraph.com/rss',
@@ -344,11 +343,10 @@ export async function fetchCryptoNews(): Promise<NewsItem[]> {
     'https://www.coindesk.com/arc/outboundfeeds/rss/',
   ];
   
-  // Placeholder - replace with actual RSS parsing
+  // Not implemented yet: RSS feed parsing + dedupe + storage
   const news: NewsItem[] = [];
   
   // TODO: Implement RSS feed parsing
-  // For now, return empty array - will be populated by manual news indexing
   
   return news;
 }
@@ -363,15 +361,20 @@ export async function fetchBitcoinOnChain(): Promise<OnChainMetrics> {
     fetchWithRetry('https://blockchain.info/latestblock'),
   ]);
   
+  const nTx = typeof stats?.n_tx === 'number' ? stats.n_tx : null;
+  const totalBtcSent = typeof stats?.total_btc_sent === 'number' ? stats.total_btc_sent : null;
+  const avgTransactionValue =
+    nTx && totalBtcSent ? totalBtcSent / nTx / 100000000 : null;
+
   return {
     coin: 'BTC',
-    activeAddresses24h: 0, // Not available in free API
-    transactionCount24h: stats.n_tx,
-    avgTransactionValue: stats.total_btc_sent / stats.n_tx / 100000000,
-    hashRate: stats.hash_rate,
-    difficulty: stats.difficulty,
-    blockHeight: blockHeight.height,
-    mempoolSize: stats.mempool_size,
+    activeAddresses24h: null, // Not available in free API
+    transactionCount24h: nTx,
+    avgTransactionValue,
+    hashRate: typeof stats?.hash_rate === 'number' ? stats.hash_rate : null,
+    difficulty: typeof stats?.difficulty === 'number' ? stats.difficulty : null,
+    blockHeight: typeof blockHeight?.height === 'number' ? blockHeight.height : null,
+    mempoolSize: typeof stats?.mempool_size === 'number' ? stats.mempool_size : null,
   };
 }
 
@@ -693,9 +696,19 @@ export async function syncAllData(): Promise<SyncResult[]> {
     const start = Date.now();
     try {
       const btcOnChain = await fetchBitcoinOnChain();
-      
+
+      const blockHeightText = btcOnChain.blockHeight ?? 'Unavailable';
+      const hashRateEh =
+        typeof btcOnChain.hashRate === 'number'
+          ? `${(btcOnChain.hashRate / 1e18).toFixed(2)} EH/s`
+          : 'Unavailable';
+      const txCountText =
+        typeof btcOnChain.transactionCount24h === 'number'
+          ? btcOnChain.transactionCount24h.toLocaleString()
+          : 'Unavailable';
+
       const chunk: DataChunk = {
-        content: `Bitcoin on-chain metrics: Block height ${btcOnChain.blockHeight}, hash rate ${(btcOnChain.hashRate! / 1e18).toFixed(2)} EH/s, ${btcOnChain.transactionCount24h.toLocaleString()} transactions in mempool.`,
+        content: `Bitcoin on-chain metrics: Block height ${blockHeightText}, hash rate ${hashRateEh}, ${txCountText} transactions (24h).`,
         contentType: 'onchain_metrics',
         categoryPath: 'onchain/bitcoin',
         coinSymbol: 'BTC',

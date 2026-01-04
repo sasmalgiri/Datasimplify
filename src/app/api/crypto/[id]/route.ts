@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getCoinDetails } from '@/lib/coingecko';
-import { getCoinGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
+import { findCoinByGeckoId, getCoinGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
+import { FEATURES } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getCoinFromCache, saveBulkMarketDataToCache } from '@/lib/supabaseData';
+
+const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
 // In-memory cache for quick access (fallback when Supabase not available)
 const coinCache = new Map<string, { data: unknown; timestamp: number }>();
@@ -38,16 +40,16 @@ async function getCached<T>(key: string): Promise<T | null> {
           symbol: symbol.toLowerCase(),
           name: dbCached.name || symbol,
           image: dbCached.image_url || '',
-          current_price: dbCached.price || 0,
-          market_cap: dbCached.market_cap || 0,
+          current_price: dbCached.price ?? null,
+          market_cap: dbCached.market_cap ?? null,
           market_cap_rank: 0,
-          price_change_24h: dbCached.price_change_24h || 0,
-          price_change_percentage_24h: dbCached.price_change_percent_24h || 0,
-          total_volume: dbCached.volume_24h || 0,
-          high_24h: dbCached.high_24h || 0,
-          low_24h: dbCached.low_24h || 0,
-          circulating_supply: dbCached.circulating_supply || 0,
-          max_supply: dbCached.max_supply || null,
+          price_change_24h: dbCached.price_change_24h ?? null,
+          price_change_percentage_24h: dbCached.price_change_percent_24h ?? null,
+          total_volume: dbCached.volume_24h ?? null,
+          high_24h: dbCached.high_24h ?? null,
+          low_24h: dbCached.low_24h ?? null,
+          circulating_supply: dbCached.circulating_supply ?? null,
+          max_supply: dbCached.max_supply ?? null,
         };
         // Update memory cache
         setMemoryCache(key, transformed);
@@ -73,16 +75,16 @@ async function setCache(key: string, data: unknown): Promise<void> {
         id: (coinData.id as string) || key.toLowerCase(),
         symbol: (coinData.symbol as string) || key,
         name: (coinData.name as string) || '',
-        current_price: (coinData.current_price as number) || 0,
-        market_cap: (coinData.market_cap as number) || 0,
-        market_cap_rank: (coinData.market_cap_rank as number) || 0,
-        price_change_24h: (coinData.price_change_24h as number) || 0,
-        price_change_percentage_24h: (coinData.price_change_percentage_24h as number) || 0,
-        total_volume: (coinData.total_volume as number) || 0,
-        high_24h: (coinData.high_24h as number) || 0,
-        low_24h: (coinData.low_24h as number) || 0,
-        circulating_supply: (coinData.circulating_supply as number) || 0,
-        max_supply: (coinData.max_supply as number | null) || null,
+        current_price: typeof coinData.current_price === 'number' && Number.isFinite(coinData.current_price) ? (coinData.current_price as number) : 0,
+        market_cap: typeof coinData.market_cap === 'number' && Number.isFinite(coinData.market_cap) ? (coinData.market_cap as number) : 0,
+        market_cap_rank: typeof coinData.market_cap_rank === 'number' && Number.isFinite(coinData.market_cap_rank) ? (coinData.market_cap_rank as number) : 0,
+        price_change_24h: typeof coinData.price_change_24h === 'number' && Number.isFinite(coinData.price_change_24h) ? (coinData.price_change_24h as number) : undefined,
+        price_change_percentage_24h: typeof coinData.price_change_percentage_24h === 'number' && Number.isFinite(coinData.price_change_percentage_24h) ? (coinData.price_change_percentage_24h as number) : undefined,
+        total_volume: typeof coinData.total_volume === 'number' && Number.isFinite(coinData.total_volume) ? (coinData.total_volume as number) : undefined,
+        high_24h: typeof coinData.high_24h === 'number' && Number.isFinite(coinData.high_24h) ? (coinData.high_24h as number) : undefined,
+        low_24h: typeof coinData.low_24h === 'number' && Number.isFinite(coinData.low_24h) ? (coinData.low_24h as number) : undefined,
+        circulating_supply: typeof coinData.circulating_supply === 'number' && Number.isFinite(coinData.circulating_supply) ? (coinData.circulating_supply as number) : undefined,
+        max_supply: typeof coinData.max_supply === 'number' && Number.isFinite(coinData.max_supply) ? (coinData.max_supply as number) : null,
       }]);
     } catch (error) {
       console.error('Supabase save error:', error);
@@ -105,35 +107,83 @@ export async function GET(
   }
 
   try {
-    // First try using the ID directly (it could be a CoinGecko slug like "the-open-network")
-    let coin = await getCoinDetails(id);
+    const bySymbol = SUPPORTED_COINS.find(c => c.symbol.toLowerCase() === id.toLowerCase());
+    const byGeckoId = findCoinByGeckoId(id);
+    const coinInfo = bySymbol || byGeckoId;
 
-    // If not found, try converting from symbol to CoinGecko ID
-    if (!coin) {
-      const geckoId = getCoinGeckoId(id);
-      if (geckoId !== id.toLowerCase()) {
-        coin = await getCoinDetails(geckoId);
-      }
-    }
-
-    // If still not found, check if it's in our supported coins and get the correct ID
-    if (!coin) {
-      const supportedCoin = SUPPORTED_COINS.find(
-        c => c.symbol.toLowerCase() === id.toLowerCase() ||
-             c.name.toLowerCase() === id.toLowerCase()
-      );
-      if (supportedCoin) {
-        const geckoId = getCoinGeckoId(supportedCoin.symbol);
-        coin = await getCoinDetails(geckoId);
-      }
-    }
-
-    if (!coin) {
+    if (!coinInfo) {
       return NextResponse.json(
         { error: 'Coin not found', searchedId: id },
         { status: 404 }
       );
     }
+
+    const response = await fetch(
+      `${BINANCE_BASE}/ticker/24hr?symbol=${encodeURIComponent(coinInfo.binanceSymbol)}`,
+      { headers: { Accept: 'application/json' }, next: { revalidate: 60 } }
+    );
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: 'Failed to fetch coin ticker', status: response.status },
+        { status: 502 }
+      );
+    }
+
+    const ticker: {
+      lastPrice: string;
+      openPrice: string;
+      highPrice: string;
+      lowPrice: string;
+      quoteVolume: string;
+      priceChange: string;
+      priceChangePercent: string;
+    } = await response.json();
+
+    const currentPrice = Number.parseFloat(ticker.lastPrice);
+    const openPrice = Number.parseFloat(ticker.openPrice);
+    const high24h = Number.parseFloat(ticker.highPrice);
+    const low24h = Number.parseFloat(ticker.lowPrice);
+    const totalVolume = Number.parseFloat(ticker.quoteVolume);
+    const priceChange24h = Number.parseFloat(ticker.priceChange);
+    const priceChangePct24h = Number.parseFloat(ticker.priceChangePercent);
+
+    const marketCap = (Number.isFinite(currentPrice) ? currentPrice : 0) * coinInfo.circulatingSupply;
+    const prevMarketCap = (Number.isFinite(openPrice) ? openPrice : 0) * coinInfo.circulatingSupply;
+    const marketCapChange24h = marketCap - prevMarketCap;
+    const marketCapChangePct24h = prevMarketCap > 0 ? (marketCapChange24h / prevMarketCap) * 100 : 0;
+
+    const maxSupply = coinInfo.maxSupply;
+    const fullyDiluted = typeof maxSupply === 'number' ? maxSupply * (Number.isFinite(currentPrice) ? currentPrice : 0) : null;
+    const now = new Date().toISOString();
+
+    const coin = {
+      id: getCoinGeckoId(coinInfo.symbol),
+      symbol: coinInfo.symbol.toLowerCase(),
+      name: coinInfo.name,
+      image: FEATURES.coingecko ? coinInfo.image : '/globe.svg',
+      current_price: Number.isFinite(currentPrice) ? currentPrice : 0,
+      market_cap: Number.isFinite(marketCap) ? marketCap : 0,
+      market_cap_rank: 0,
+      fully_diluted_valuation: fullyDiluted,
+      total_volume: Number.isFinite(totalVolume) ? totalVolume : 0,
+      high_24h: Number.isFinite(high24h) ? high24h : 0,
+      low_24h: Number.isFinite(low24h) ? low24h : 0,
+      price_change_24h: Number.isFinite(priceChange24h) ? priceChange24h : 0,
+      price_change_percentage_24h: Number.isFinite(priceChangePct24h) ? priceChangePct24h : 0,
+      market_cap_change_24h: Number.isFinite(marketCapChange24h) ? marketCapChange24h : 0,
+      market_cap_change_percentage_24h: Number.isFinite(marketCapChangePct24h) ? marketCapChangePct24h : 0,
+      circulating_supply: coinInfo.circulatingSupply,
+      total_supply: null,
+      max_supply: maxSupply,
+      ath: Number.isFinite(high24h) ? high24h : (Number.isFinite(currentPrice) ? currentPrice : 0),
+      ath_change_percentage: 0,
+      ath_date: now,
+      atl: Number.isFinite(low24h) ? low24h : (Number.isFinite(currentPrice) ? currentPrice : 0),
+      atl_change_percentage: 0,
+      atl_date: now,
+      last_updated: now,
+    };
 
     // Cache the result (Supabase + memory)
     await setCache(id, coin);

@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 interface OnChainMetric {
   name: string;
   value: string | number;
-  change: number;
+  change: number | null;
   signal: 'bullish' | 'bearish' | 'neutral';
   description: string;
   beginnerExplanation: string;
@@ -43,9 +44,10 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     setError(null);
 
     try {
+      const whalesEnabled = isFeatureEnabled('whales');
       const [btcRes, whaleRes] = await Promise.all([
         fetch('/api/onchain?type=bitcoin'),
-        fetch('/api/whales?type=exchange-flows')
+        whalesEnabled ? fetch('/api/whales?type=exchange-flows') : Promise.resolve(null)
       ]);
 
       if (btcRes.ok) {
@@ -57,11 +59,13 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
         console.error('Failed to fetch Bitcoin stats:', btcRes.status);
       }
 
-      if (whaleRes.ok) {
+      if (whaleRes && whaleRes.ok) {
         const whaleDataRes = await whaleRes.json();
         if (whaleDataRes.data) {
           setWhaleData(whaleDataRes.data);
         }
+      } else {
+        setWhaleData(null);
       }
 
       setLastUpdated(new Date().toLocaleTimeString());
@@ -78,6 +82,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     const interval = setInterval(fetchOnChainData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, [fetchOnChainData]);
+
+  const missingValueLabel = loading ? 'Loading...' : 'Unavailable';
 
   // Format hash rate
   const formatHashRate = (hashRate: number): string => {
@@ -101,8 +107,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     // Activity Metrics
     {
       name: 'Unconfirmed Txs',
-      value: bitcoinStats?.unconfirmedTxs?.toLocaleString() || 'Loading...',
-      change: 0,
+      value: typeof bitcoinStats?.unconfirmedTxs === 'number' ? bitcoinStats.unconfirmedTxs.toLocaleString() : missingValueLabel,
+      change: null,
       signal: (bitcoinStats?.unconfirmedTxs || 0) > 50000 ? 'bearish' : 'neutral',
       description: 'Transactions waiting to be confirmed',
       beginnerExplanation: 'High unconfirmed txs means network congestion. May increase fees.',
@@ -110,8 +116,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Mempool Size',
-      value: bitcoinStats?.memPoolSize ? `${(bitcoinStats.memPoolSize / 1e6).toFixed(1)} MB` : 'Loading...',
-      change: 0,
+      value: typeof bitcoinStats?.memPoolSize === 'number' ? `${(bitcoinStats.memPoolSize / 1e6).toFixed(1)} MB` : missingValueLabel,
+      change: null,
       signal: (bitcoinStats?.memPoolSize || 0) > 100e6 ? 'bearish' : 'neutral',
       description: 'Size of pending transactions',
       beginnerExplanation: 'Large mempool = high demand for block space. Usually bullish for price!',
@@ -119,10 +125,10 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Exchange Net Flow',
-      value: whaleData?.exchangeFlows?.netFlow24h
+      value: typeof whaleData?.exchangeFlows?.netFlow24h === 'number'
         ? `${whaleData.exchangeFlows.netFlow24h > 0 ? '+' : ''}${whaleData.exchangeFlows.netFlow24h.toFixed(0)} BTC`
-        : 'Loading...',
-      change: 0,
+        : missingValueLabel,
+      change: null,
       signal: (whaleData?.exchangeFlows?.netFlow24h || 0) < 0 ? 'bullish' : 'bearish',
       description: 'Net BTC flow to/from exchanges (24h)',
       beginnerExplanation: 'Negative = outflows (bullish, people holding). Positive = inflows (bearish, selling pressure)',
@@ -130,10 +136,10 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Exchange Inflows',
-      value: whaleData?.exchangeFlows?.inflows24h
+      value: typeof whaleData?.exchangeFlows?.inflows24h === 'number'
         ? `${whaleData.exchangeFlows.inflows24h.toLocaleString()} BTC`
-        : 'Loading...',
-      change: 0,
+        : missingValueLabel,
+      change: null,
       signal: 'neutral',
       description: 'BTC moved to exchanges (24h)',
       beginnerExplanation: 'BTC moving TO exchanges might be sold. Watch for spikes!',
@@ -144,7 +150,7 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     {
       name: 'Hash Rate',
       value: formatHashRate(bitcoinStats?.hashRate || 0),
-      change: 0,
+      change: null,
       signal: 'bullish',
       description: 'Network computing power',
       beginnerExplanation: 'Higher hash rate = more secure network. Miners are confident!',
@@ -153,7 +159,7 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     {
       name: 'Difficulty',
       value: formatDifficulty(bitcoinStats?.difficulty || 0),
-      change: 0,
+      change: null,
       signal: 'bullish',
       description: 'Mining difficulty adjustment',
       beginnerExplanation: 'Rising difficulty = more miners competing. Network is healthy!',
@@ -161,8 +167,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Block Height',
-      value: bitcoinStats?.blockHeight?.toLocaleString() || 'Loading...',
-      change: 0,
+      value: typeof bitcoinStats?.blockHeight === 'number' ? bitcoinStats.blockHeight.toLocaleString() : missingValueLabel,
+      change: null,
       signal: 'neutral',
       description: 'Current block number',
       beginnerExplanation: 'Each block is ~10 minutes of Bitcoin history. We\'re making history!',
@@ -170,8 +176,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Avg Block Time',
-      value: bitcoinStats?.avgBlockTime ? `${bitcoinStats.avgBlockTime.toFixed(1)} min` : 'Loading...',
-      change: 0,
+      value: typeof bitcoinStats?.avgBlockTime === 'number' ? `${bitcoinStats.avgBlockTime.toFixed(1)} min` : missingValueLabel,
+      change: null,
       signal: (bitcoinStats?.avgBlockTime || 10) < 10 ? 'bullish' : 'neutral',
       description: 'Average time between blocks',
       beginnerExplanation: 'Target is 10 min. Faster = more hash rate joining. Bullish!',
@@ -181,28 +187,28 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     // Holder Metrics (Professional-grade data)
     {
       name: 'HODL Waves (1y+)',
-      value: '~70%',
-      change: 0,
-      signal: 'bullish',
-      description: 'Estimated % of BTC not moved in 1+ year',
-      beginnerExplanation: 'Most Bitcoin hasn\'t moved in over a year. Diamond hands! (Estimate)',
+      value: missingValueLabel,
+      change: null,
+      signal: 'neutral',
+      description: 'Long-term holding share (requires a real on-chain source)',
+      beginnerExplanation: 'Unavailable from the current free on-chain endpoints wired into this app.',
       category: 'holders'
     },
     {
       name: 'Supply Held by LTH',
-      value: '~14M BTC',
-      change: 0,
-      signal: 'bullish',
-      description: 'BTC held by long-term holders',
-      beginnerExplanation: 'Long-term holders are accumulating, not selling. Very bullish! (Estimate)',
+      value: missingValueLabel,
+      change: null,
+      signal: 'neutral',
+      description: 'Long-term holder supply (requires a real on-chain source)',
+      beginnerExplanation: 'Unavailable from the current free on-chain endpoints wired into this app.',
       category: 'holders'
     },
 
     // Valuation Metrics (These need paid data - showing indicators)
     {
       name: 'Network Security',
-      value: bitcoinStats?.hashRate ? 'Strong' : 'Loading...',
-      change: 0,
+      value: typeof bitcoinStats?.hashRate === 'number' && bitcoinStats.hashRate > 0 ? 'Strong' : missingValueLabel,
+      change: null,
       signal: 'bullish',
       description: 'Overall network health',
       beginnerExplanation: 'Based on hash rate, difficulty, and block times. All looking good!',
@@ -210,8 +216,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
     },
     {
       name: 'Block Production',
-      value: bitcoinStats?.avgBlockTime && bitcoinStats.avgBlockTime < 11 ? 'Healthy' : 'Slow',
-      change: 0,
+      value: typeof bitcoinStats?.avgBlockTime === 'number' ? (bitcoinStats.avgBlockTime < 11 ? 'Healthy' : 'Slow') : missingValueLabel,
+      change: null,
       signal: bitcoinStats?.avgBlockTime && bitcoinStats.avgBlockTime < 11 ? 'bullish' : 'neutral',
       description: 'Block production rate',
       beginnerExplanation: 'Blocks coming at expected rate means network is running smoothly.',
@@ -376,7 +382,7 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
               </div>
               <div className="text-right">
                 <p className="text-xl font-bold">{metric.value}</p>
-                {metric.change !== 0 && (
+                {typeof metric.change === 'number' && metric.change !== 0 && (
                   <p className={`text-sm ${metric.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {metric.change > 0 ? '↑' : '↓'} {Math.abs(metric.change)}%
                   </p>
@@ -395,27 +401,8 @@ export function OnChainMetrics({ showBeginnerTips = true }: { showBeginnerTips?:
       {/* Key Levels */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <h3 className="font-bold text-blue-800 mb-3">📊 Key On-Chain Levels to Watch</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div className="bg-white p-3 rounded-lg">
-            <p className="text-blue-600">MVRV Top</p>
-            <p className="font-bold">&gt; 3.5</p>
-            <p className="text-xs text-gray-500">Overheated</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg">
-            <p className="text-blue-600">MVRV Bottom</p>
-            <p className="font-bold">&lt; 1.0</p>
-            <p className="text-xs text-gray-500">Undervalued</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg">
-            <p className="text-blue-600">Exchange Reserve</p>
-            <p className="font-bold">2.3M BTC</p>
-            <p className="text-xs text-gray-500">5yr low!</p>
-          </div>
-          <div className="bg-white p-3 rounded-lg">
-            <p className="text-blue-600">HODL Waves 1y+</p>
-            <p className="font-bold">68%</p>
-            <p className="text-xs text-gray-500">ATH!</p>
-          </div>
+        <div className="bg-white p-4 rounded-lg text-sm text-gray-600">
+          Key levels are unavailable (requires real MVRV / reserves / HODL-waves data sources).
         </div>
       </div>
     </div>

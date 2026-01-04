@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Help icon with tooltip
@@ -36,6 +37,8 @@ interface Coin {
   name: string;
   image: string;
   current_price: number;
+  high_24h?: number;
+  low_24h?: number;
   price_change_percentage_24h: number;
   price_change_percentage_7d_in_currency?: number;
   price_change_percentage_30d_in_currency?: number;
@@ -124,10 +127,10 @@ const COLUMN_OPTIONS = [
   { id: 'ai_confidence', label: 'AI Confidence', default: false, category: 'AI' },
   { id: 'risk_level', label: 'Risk Level', default: false, category: 'AI' },
 
-  // Technical Indicators (simulated)
+  // Technical Indicators (real, derived from candles)
   { id: 'rsi', label: 'RSI (14)', default: false, category: 'Technical' },
-  { id: 'volatility', label: 'Volatility', default: false, category: 'Technical' },
-  { id: 'momentum', label: 'Momentum', default: false, category: 'Technical' },
+  { id: 'volatility', label: 'Volatility (30d)', default: false, category: 'Technical' },
+  { id: 'momentum', label: 'Momentum (30d)', default: false, category: 'Technical' },
 
   // Market Dominance
   { id: 'dominance', label: 'Market Dominance', default: false, category: 'Dominance' },
@@ -141,11 +144,21 @@ interface CoinPrediction {
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
 }
 
+type TechnicalMetrics = {
+  rsi14: number | null;
+  volatility30dPct: number | null;
+  momentum30dPct: number | null;
+  source: string | null;
+  lastUpdate: string | null;
+};
+
 export default function ComparePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [predictions, setPredictions] = useState<Map<string, CoinPrediction>>(new Map());
   const [predictionsLoading, setPredictionsLoading] = useState(false);
+  const [technicals, setTechnicals] = useState<Map<string, TechnicalMetrics>>(new Map());
+  const [technicalsLoading, setTechnicalsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -215,11 +228,20 @@ export default function ComparePage() {
   // Fetch predictions when coins are loaded
   useEffect(() => {
     if (coins.length > 0) {
-      fetchPredictions();
+      if (isFeatureEnabled('predictions') && isFeatureEnabled('macro')) {
+        fetchPredictions();
+      }
+      fetchTechnicals();
     }
   }, [coins]);
 
   const fetchPredictions = async () => {
+    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
+      setPredictions(new Map());
+      setPredictionsLoading(false);
+      return;
+    }
+
     setPredictionsLoading(true);
     try {
       const coinsToPredict = coins.map(c => ({ id: c.id, name: c.name }));
@@ -251,6 +273,58 @@ export default function ComparePage() {
       console.error('Error fetching predictions:', error);
     } finally {
       setPredictionsLoading(false);
+    }
+  };
+
+  const fetchTechnicals = async () => {
+    setTechnicalsLoading(true);
+    try {
+      const requests = coins.map(async (coin) => {
+        try {
+          const res = await fetch(`/api/technical?coin=${encodeURIComponent(coin.id)}&timeframe=1d`);
+          const json = await res.json();
+
+          if (!res.ok || !json?.success || !json?.data) {
+            return [coin.id, {
+              rsi14: null,
+              volatility30dPct: null,
+              momentum30dPct: null,
+              source: null,
+              lastUpdate: null,
+            }] as const;
+          }
+
+          const indicators = Array.isArray(json.data.indicators) ? json.data.indicators : [];
+          const rsi = indicators.find((i: { shortName?: string; name?: string }) =>
+            i?.shortName === 'RSI (14)' || i?.name === 'Relative Strength Index'
+          )?.value;
+
+          const metrics = json.data.metrics || {};
+
+          return [coin.id, {
+            rsi14: typeof rsi === 'number' ? rsi : null,
+            volatility30dPct: typeof metrics.volatility30dPct === 'number' ? metrics.volatility30dPct : null,
+            momentum30dPct: typeof metrics.momentum30dPct === 'number' ? metrics.momentum30dPct : null,
+            source: typeof json.data?.meta?.source === 'string' ? json.data.meta.source : null,
+            lastUpdate: typeof json.data?.meta?.lastUpdate === 'string' ? json.data.meta.lastUpdate : null,
+          }] as const;
+        } catch {
+          return [coin.id, {
+            rsi14: null,
+            volatility30dPct: null,
+            momentum30dPct: null,
+            source: null,
+            lastUpdate: null,
+          }] as const;
+        }
+      });
+
+      const results = await Promise.all(requests);
+      const next = new Map<string, TechnicalMetrics>();
+      for (const [coinId, data] of results) next.set(coinId, data);
+      setTechnicals(next);
+    } finally {
+      setTechnicalsLoading(false);
     }
   };
 
@@ -328,7 +402,7 @@ export default function ComparePage() {
   };
 
   const formatLargeNumber = (num: number | undefined) => {
-    if (!num) return '-';
+    if (num === undefined || num === null) return 'Unavailable';
     if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
@@ -336,7 +410,7 @@ export default function ComparePage() {
   };
 
   const formatSupply = (num: number | undefined) => {
-    if (!num) return '-';
+    if (num === undefined || num === null) return 'Unavailable';
     if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
     if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
     if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
@@ -344,7 +418,13 @@ export default function ComparePage() {
   };
 
   const formatPercent = (pct: number | undefined) => {
-    if (pct === undefined || pct === null) return '-';
+    if (pct === undefined || pct === null) return 'Unavailable';
+    const sign = pct >= 0 ? '+' : '';
+    return `${sign}${pct.toFixed(2)}%`;
+  };
+
+  const formatNullablePercent = (pct: number | null | undefined) => {
+    if (pct === undefined || pct === null) return 'Unavailable';
     const sign = pct >= 0 ? '+' : '';
     return `${sign}${pct.toFixed(2)}%`;
   };
@@ -358,18 +438,18 @@ export default function ComparePage() {
       Symbol: coin.symbol.toUpperCase(),
       Rank: coin.market_cap_rank,
       Price: coin.current_price,
-      '24h Change %': coin.price_change_percentage_24h?.toFixed(2) || 'N/A',
-      '7d Change %': coin.price_change_percentage_7d_in_currency?.toFixed(2) || 'N/A',
-      '30d Change %': coin.price_change_percentage_30d_in_currency?.toFixed(2) || 'N/A',
+      '24h Change %': typeof coin.price_change_percentage_24h === 'number' ? coin.price_change_percentage_24h.toFixed(2) : 'Unavailable',
+      '7d Change %': typeof coin.price_change_percentage_7d_in_currency === 'number' ? coin.price_change_percentage_7d_in_currency.toFixed(2) : 'Unavailable',
+      '30d Change %': typeof coin.price_change_percentage_30d_in_currency === 'number' ? coin.price_change_percentage_30d_in_currency.toFixed(2) : 'Unavailable',
       'Market Cap': coin.market_cap,
-      'FDV': coin.fully_diluted_valuation || 'N/A',
+      'FDV': typeof coin.fully_diluted_valuation === 'number' ? coin.fully_diluted_valuation : 'Unavailable',
       'Volume 24h': coin.total_volume,
       'Circulating Supply': coin.circulating_supply,
-      'Max Supply': coin.max_supply || 'Unlimited',
+      'Max Supply': typeof coin.max_supply === 'number' ? coin.max_supply : 'Unavailable',
       'ATH': coin.ath,
-      'ATH Change %': coin.ath_change_percentage?.toFixed(2) || 'N/A',
+      'ATH Change %': typeof coin.ath_change_percentage === 'number' ? coin.ath_change_percentage.toFixed(2) : 'Unavailable',
       'ATL': coin.atl,
-      'ATL Change %': coin.atl_change_percentage?.toFixed(2) || 'N/A',
+      'ATL Change %': typeof coin.atl_change_percentage === 'number' ? coin.atl_change_percentage.toFixed(2) : 'Unavailable',
     }));
 
     if (format === 'json') {
@@ -640,16 +720,28 @@ export default function ComparePage() {
                     {visibleColumns.includes('change_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h</th>}
                     {visibleColumns.includes('change_7d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">7d</th>}
                     {visibleColumns.includes('change_30d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">30d</th>}
+                    {visibleColumns.includes('change_1y') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">1Y</th>}
                     {visibleColumns.includes('ai_signal') && <th className="px-4 py-3 text-center text-emerald-400 font-medium">AI Signal</th>}
+                    {visibleColumns.includes('ai_confidence') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">AI Conf.</th>}
+                    {visibleColumns.includes('risk_level') && <th className="px-4 py-3 text-center text-emerald-400 font-medium">Risk</th>}
                     {visibleColumns.includes('market_cap') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Market Cap</th>}
                     {visibleColumns.includes('fdv') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">FDV</th>}
                     {visibleColumns.includes('volume') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Volume 24h</th>}
+                    {visibleColumns.includes('vol_mcap_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol/MCap</th>}
                     {visibleColumns.includes('circulating') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circulating</th>}
                     {visibleColumns.includes('max_supply') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Max Supply</th>}
+                    {visibleColumns.includes('supply_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circ/Max</th>}
                     {visibleColumns.includes('ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATH</th>}
                     {visibleColumns.includes('from_ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATH</th>}
                     {visibleColumns.includes('atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATL</th>}
                     {visibleColumns.includes('from_atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATL</th>}
+                    {visibleColumns.includes('high_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h High</th>}
+                    {visibleColumns.includes('low_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Low</th>}
+                    {visibleColumns.includes('price_range_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Range</th>}
+                    {visibleColumns.includes('rsi') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">RSI</th>}
+                    {visibleColumns.includes('volatility') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol (30d)</th>}
+                    {visibleColumns.includes('momentum') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Mom (30d)</th>}
+                    {visibleColumns.includes('dominance') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Dominance</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -695,9 +787,30 @@ export default function ComparePage() {
                           {formatPercent(coin.price_change_percentage_30d_in_currency)}
                         </td>
                       )}
+                      {visibleColumns.includes('change_1y') && (
+                        <td className={`px-4 py-3 text-right font-medium ${
+                          (coin.price_change_percentage_1y_in_currency || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {formatPercent(coin.price_change_percentage_1y_in_currency)}
+                        </td>
+                      )}
                       {visibleColumns.includes('ai_signal') && (
                         <td className="px-4 py-3 text-center">
                           {getPredictionBadge(coin.id)}
+                        </td>
+                      )}
+                      {visibleColumns.includes('ai_confidence') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {predictionsLoading ? 'Loading…' : (
+                            predictions.get(coin.id)
+                              ? `${predictions.get(coin.id)!.confidence.toFixed(0)}%`
+                              : 'Unavailable'
+                          )}
+                        </td>
+                      )}
+                      {visibleColumns.includes('risk_level') && (
+                        <td className="px-4 py-3 text-center text-gray-300">
+                          {predictionsLoading ? 'Loading…' : (predictions.get(coin.id)?.riskLevel ?? 'Unavailable')}
                         </td>
                       )}
                       {visibleColumns.includes('market_cap') && (
@@ -719,12 +832,28 @@ export default function ComparePage() {
                           {coin.id === volumeBW.best && <span className="ml-1">🔥</span>}
                         </td>
                       )}
+                      {visibleColumns.includes('vol_mcap_ratio') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {coin.market_cap > 0 && coin.total_volume >= 0
+                            ? `${(coin.total_volume / coin.market_cap).toFixed(3)}`
+                            : 'Unavailable'
+                          }
+                        </td>
+                      )}
                       {visibleColumns.includes('circulating') && (
                         <td className="px-4 py-3 text-right text-gray-300">{formatSupply(coin.circulating_supply)}</td>
                       )}
                       {visibleColumns.includes('max_supply') && (
                         <td className="px-4 py-3 text-right text-gray-300">
-                          {coin.max_supply ? formatSupply(coin.max_supply) : '∞'}
+                          {typeof coin.max_supply === 'number' ? formatSupply(coin.max_supply) : 'Unavailable'}
+                        </td>
+                      )}
+                      {visibleColumns.includes('supply_ratio') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {typeof coin.max_supply === 'number' && coin.max_supply > 0
+                            ? `${((coin.circulating_supply / coin.max_supply) * 100).toFixed(1)}%`
+                            : 'Unavailable'
+                          }
                         </td>
                       )}
                       {visibleColumns.includes('ath') && (
@@ -745,6 +874,42 @@ export default function ComparePage() {
                         <td className="px-4 py-3 text-right text-green-400">
                           {formatPercent(coin.atl_change_percentage)}
                         </td>
+                      )}
+                      {visibleColumns.includes('high_24h') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {typeof coin.high_24h === 'number' ? formatPrice(coin.high_24h) : 'Unavailable'}
+                        </td>
+                      )}
+                      {visibleColumns.includes('low_24h') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {typeof coin.low_24h === 'number' ? formatPrice(coin.low_24h) : 'Unavailable'}
+                        </td>
+                      )}
+                      {visibleColumns.includes('price_range_24h') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {typeof coin.high_24h === 'number' && typeof coin.low_24h === 'number' && coin.low_24h > 0
+                            ? formatNullablePercent(((coin.high_24h - coin.low_24h) / coin.low_24h) * 100)
+                            : 'Unavailable'
+                          }
+                        </td>
+                      )}
+                      {visibleColumns.includes('rsi') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {technicalsLoading ? 'Loading…' : (technicals.get(coin.id)?.rsi14 ?? null) ?? 'Unavailable'}
+                        </td>
+                      )}
+                      {visibleColumns.includes('volatility') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {technicalsLoading ? 'Loading…' : formatNullablePercent(technicals.get(coin.id)?.volatility30dPct)}
+                        </td>
+                      )}
+                      {visibleColumns.includes('momentum') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {technicalsLoading ? 'Loading…' : formatNullablePercent(technicals.get(coin.id)?.momentum30dPct)}
+                        </td>
+                      )}
+                      {visibleColumns.includes('dominance') && (
+                        <td className="px-4 py-3 text-right text-gray-300">Unavailable</td>
                       )}
                     </tr>
                   ))}
@@ -781,7 +946,7 @@ export default function ComparePage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-400 text-sm">
-          <p>Data from CoinGecko API • Updates in real-time • 50+ coins available</p>
+          <p>Data from exchange market data • Updates frequently • 50+ coins available</p>
           <p className="mt-2">
             Need more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for historical charts, alerts, and AI analysis!
           </p>

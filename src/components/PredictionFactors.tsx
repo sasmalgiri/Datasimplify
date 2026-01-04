@@ -21,6 +21,7 @@ import {
   LineChart,
 } from 'lucide-react';
 import { AIPredictionDisclaimer } from './ui/DisclaimerBanner';
+import { FEATURES } from '@/lib/featureFlags';
 
 // Progress bar using refs to avoid inline style warnings
 function FactorBar({ percentage, colorClass }: { percentage: number; colorClass: string }) {
@@ -52,9 +53,9 @@ const FACTOR_WEIGHTS = {
 };
 
 export interface TechnicalFactors {
-  rsi: { value: number; signal: string };
-  macd: { signal: string; histogram: number };
-  priceVsMA200: { percentage: number; signal: string };
+  rsi: { value: number | null; signal: string };
+  macd: { signal: string; histogram: number | null };
+  priceVsMA200: { percentage: number | null; signal: string };
   bollingerPosition: string;
   volumeTrend: string;
   supportResistance: string;
@@ -64,30 +65,30 @@ export interface SentimentFactors {
   fearGreedIndex: { value: number; label: string };
   socialSentiment: string;
   newsAnalysis: string;
-  twitterMentions: { trend: string; change: number };
+  twitterMentions: { trend: string; change: number | null };
 }
 
 export interface OnChainFactors {
   exchangeFlow: { net: string; signal: string };
   whaleActivity: string;
-  activeAddresses: { trend: string; change: number };
+  activeAddresses: { trend: string; change: number | null };
   holdingDistribution: string;
   networkHashrate?: string;
 }
 
 export interface MacroFactors {
-  vix: { value: number; signal: string };
-  dxy: { value: number; signal: string };
+  vix: { value: number | null; signal: string };
+  dxy: { value: number | null; signal: string };
   riskEnvironment: string;
-  btcCorrelation: number;
+  btcCorrelation: number | null;
   marketCycle: string;
 }
 
 export interface DerivativesFactors {
-  fundingRate: { value: number; signal: string };
-  openInterest: { change: number; signal: string };
-  liquidations24h: { value: number; predominant: string };
-  longShortRatio: number;
+  fundingRate: { value: number | null; signal: string };
+  openInterest: { change: number | null; signal: string };
+  liquidations24h: { value: number | null; predominant: string };
+  longShortRatio: number | null;
 }
 
 export interface PredictionFactorsData {
@@ -132,6 +133,13 @@ function getSignalIcon(signal: string) {
     return <TrendingDown className="w-3 h-3 text-red-400" />;
   }
   return <Minus className="w-3 h-3 text-yellow-400" />;
+}
+
+function formatNumberOrUnavailable(value: number | null | undefined, options?: { suffix?: string; decimals?: number }) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return 'Unavailable';
+  const decimals = options?.decimals;
+  const text = typeof decimals === 'number' ? value.toFixed(decimals) : `${value}`;
+  return `${text}${options?.suffix ?? ''}`;
 }
 
 // Factor category component
@@ -234,6 +242,13 @@ export default function PredictionFactors({
     ? 'bg-red-500/10 border-red-500/30'
     : 'bg-yellow-500/10 border-yellow-500/30';
 
+  const sources = [
+    'Binance',
+    'Alternative.me',
+    ...(FEATURES.coingecko ? ['CoinGecko'] : []),
+    ...(FEATURES.defi ? ['DeFiLlama'] : []),
+  ];
+
   return (
     <div className="space-y-4">
       {/* Disclaimer */}
@@ -298,7 +313,11 @@ export default function PredictionFactors({
               <FactorRow
                 icon={LineChart}
                 label="RSI (14)"
-                value={`${data.technical.rsi.value} (${data.technical.rsi.signal})`}
+                value={
+                  typeof data.technical.rsi.value === 'number'
+                    ? `${data.technical.rsi.value} (${data.technical.rsi.signal})`
+                    : 'Unavailable'
+                }
                 signal={data.technical.rsi.signal}
               />
               <FactorRow
@@ -308,7 +327,11 @@ export default function PredictionFactors({
               />
               <FactorRow
                 label="Price vs MA200"
-                value={`${data.technical.priceVsMA200.percentage > 0 ? '+' : ''}${data.technical.priceVsMA200.percentage}%`}
+                value={
+                  typeof data.technical.priceVsMA200.percentage === 'number'
+                    ? `${data.technical.priceVsMA200.percentage > 0 ? '+' : ''}${data.technical.priceVsMA200.percentage}%`
+                    : 'Unavailable'
+                }
                 signal={data.technical.priceVsMA200.signal}
               />
               <FactorRow
@@ -357,7 +380,11 @@ export default function PredictionFactors({
               />
               <FactorRow
                 label="Twitter Mentions"
-                value={`${data.sentiment.twitterMentions.trend} (${data.sentiment.twitterMentions.change > 0 ? '+' : ''}${data.sentiment.twitterMentions.change}%)`}
+                value={
+                  typeof data.sentiment.twitterMentions.change === 'number'
+                    ? `${data.sentiment.twitterMentions.trend} (${data.sentiment.twitterMentions.change > 0 ? '+' : ''}${data.sentiment.twitterMentions.change}%)`
+                    : `${data.sentiment.twitterMentions.trend} (Unavailable)`
+                }
                 signal={data.sentiment.twitterMentions.trend}
               />
             </>
@@ -389,7 +416,11 @@ export default function PredictionFactors({
               />
               <FactorRow
                 label="Active Addresses"
-                value={`${data.onChain.activeAddresses.trend} (${data.onChain.activeAddresses.change > 0 ? '+' : ''}${data.onChain.activeAddresses.change}%)`}
+                value={
+                  typeof data.onChain.activeAddresses.change === 'number'
+                    ? `${data.onChain.activeAddresses.trend} (${data.onChain.activeAddresses.change > 0 ? '+' : ''}${data.onChain.activeAddresses.change}%)`
+                    : `${data.onChain.activeAddresses.trend} (Unavailable)`
+                }
                 signal={data.onChain.activeAddresses.trend}
               />
               <FactorRow
@@ -420,13 +451,13 @@ export default function PredictionFactors({
             <>
               <FactorRow
                 label="VIX (Fear Index)"
-                value={`${data.macro.vix.value}`}
+                value={formatNumberOrUnavailable(data.macro.vix.value)}
                 signal={data.macro.vix.signal}
               />
               <FactorRow
                 icon={DollarSign}
                 label="DXY (Dollar Index)"
-                value={`${data.macro.dxy.value}`}
+                value={formatNumberOrUnavailable(data.macro.dxy.value)}
                 signal={data.macro.dxy.signal}
               />
               <FactorRow
@@ -436,7 +467,7 @@ export default function PredictionFactors({
               />
               <FactorRow
                 label="BTC Correlation"
-                value={`${data.macro.btcCorrelation}%`}
+                value={formatNumberOrUnavailable(data.macro.btcCorrelation, { suffix: '%' })}
               />
               <FactorRow
                 label="Market Cycle"
@@ -455,9 +486,11 @@ export default function PredictionFactors({
             label="Derivatives Data"
             weight={0}
             score={
-              data.derivatives.fundingRate.value >= 0
-                ? Math.min(100, 50 + data.derivatives.fundingRate.value * 1000)
-                : Math.max(0, 50 + data.derivatives.fundingRate.value * 1000)
+              typeof data.derivatives.fundingRate.value === 'number'
+                ? (data.derivatives.fundingRate.value >= 0
+                  ? Math.min(100, 50 + data.derivatives.fundingRate.value * 1000)
+                  : Math.max(0, 50 + data.derivatives.fundingRate.value * 1000))
+                : 0
             }
           >
             <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
@@ -466,22 +499,42 @@ export default function PredictionFactors({
             </div>
             <FactorRow
               label="Funding Rate"
-              value={`${(data.derivatives.fundingRate.value * 100).toFixed(3)}%`}
+              value={
+                typeof data.derivatives.fundingRate.value === 'number'
+                  ? `${(data.derivatives.fundingRate.value * 100).toFixed(3)}%`
+                  : 'Unavailable'
+              }
               signal={data.derivatives.fundingRate.signal}
             />
             <FactorRow
               label="Open Interest (24h)"
-              value={`${data.derivatives.openInterest.change > 0 ? '+' : ''}${data.derivatives.openInterest.change}%`}
+              value={
+                typeof data.derivatives.openInterest.change === 'number'
+                  ? `${data.derivatives.openInterest.change > 0 ? '+' : ''}${data.derivatives.openInterest.change}%`
+                  : 'Unavailable'
+              }
               signal={data.derivatives.openInterest.signal}
             />
             <FactorRow
               label="Liquidations (24h)"
-              value={`$${(data.derivatives.liquidations24h.value / 1000000).toFixed(1)}M (${data.derivatives.liquidations24h.predominant})`}
+              value={
+                typeof data.derivatives.liquidations24h.value === 'number'
+                  ? `$${(data.derivatives.liquidations24h.value / 1000000).toFixed(1)}M (${data.derivatives.liquidations24h.predominant})`
+                  : 'Unavailable'
+              }
             />
             <FactorRow
               label="Long/Short Ratio"
-              value={data.derivatives.longShortRatio.toFixed(2)}
-              signal={data.derivatives.longShortRatio > 1 ? 'Bullish' : data.derivatives.longShortRatio < 1 ? 'Bearish' : 'Neutral'}
+              value={
+                typeof data.derivatives.longShortRatio === 'number'
+                  ? data.derivatives.longShortRatio.toFixed(2)
+                  : 'Unavailable'
+              }
+              signal={
+                typeof data.derivatives.longShortRatio === 'number'
+                  ? (data.derivatives.longShortRatio > 1 ? 'Bullish' : data.derivatives.longShortRatio < 1 ? 'Bearish' : 'Neutral')
+                  : 'Unavailable'
+              }
             />
           </FactorCategory>
         )}
@@ -517,7 +570,7 @@ export default function PredictionFactors({
       {/* Data Sources */}
       <div className="text-xs text-gray-500 flex items-center gap-2">
         <AlertTriangle className="w-3 h-3" />
-        <span>Data sources: CoinGecko, Alternative.me, DeFiLlama, Binance. Updated every 6 hours.</span>
+        <span>Data sources: {sources.join(', ')}. Updated every 6 hours.</span>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   generateCoinPrediction,
   generateQuickPrediction,
@@ -7,10 +8,13 @@ import {
   type MacroData,
   type DerivativesData
 } from '@/lib/predictionEngine';
+import { fetchTechnicalDataForPrediction } from '@/lib/predictionTechnical';
+import { fetchOnChainDataForPrediction } from '@/lib/predictionOnChain';
 import { fetchMacroData } from '@/lib/macroData';
 import { fetchDerivativesData } from '@/lib/derivativesData';
 import {
   getPredictionFromCache,
+  getPredictionFromCacheAnyAge,
   savePredictionToCache,
   getCoinMarketDataFromCache,
   saveCoinMarketDataToCache,
@@ -67,7 +71,11 @@ async function fetchCoinMarketData(coinId: string): Promise<MarketData | null> {
     }
   }
 
-  // Fetch from CoinGecko
+  // Fetch from CoinGecko (only when enabled)
+  if (!isFeatureEnabled('coingecko')) {
+    return null;
+  }
+
   try {
     const response = await fetch(
       `https://api.coingecko.com/api/v3/coins/${coinId}?localization=false&tickers=false&community_data=false&developer_data=false`,
@@ -81,15 +89,30 @@ async function fetchCoinMarketData(coinId: string): Promise<MarketData | null> {
 
     const data = await response.json();
 
+    const price = data.market_data?.current_price?.usd;
+    const priceChange24h = data.market_data?.price_change_percentage_24h;
+    const priceChange7d = data.market_data?.price_change_percentage_7d;
+    const priceChange30d = data.market_data?.price_change_percentage_30d;
+    const volume24h = data.market_data?.total_volume?.usd;
+    const marketCap = data.market_data?.market_cap?.usd;
+    const high24h = data.market_data?.high_24h?.usd;
+    const low24h = data.market_data?.low_24h?.usd;
+
+    const required = [price, priceChange24h, priceChange7d, priceChange30d, volume24h, marketCap, high24h, low24h];
+    if (!required.every((v: unknown) => typeof v === 'number' && Number.isFinite(v))) {
+      console.error(`CoinGecko returned incomplete market_data for ${coinId}`);
+      return null;
+    }
+
     const marketData: MarketData = {
-      price: data.market_data?.current_price?.usd || 0,
-      priceChange24h: data.market_data?.price_change_percentage_24h || 0,
-      priceChange7d: data.market_data?.price_change_percentage_7d || 0,
-      priceChange30d: data.market_data?.price_change_percentage_30d || 0,
-      volume24h: data.market_data?.total_volume?.usd || 0,
-      marketCap: data.market_data?.market_cap?.usd || 0,
-      high24h: data.market_data?.high_24h?.usd || 0,
-      low24h: data.market_data?.low_24h?.usd || 0
+      price,
+      priceChange24h,
+      priceChange7d,
+      priceChange30d,
+      volume24h,
+      marketCap,
+      high24h,
+      low24h
     };
 
     // Save to cache for next time
@@ -107,7 +130,7 @@ async function fetchCoinMarketData(coinId: string): Promise<MarketData | null> {
 }
 
 // Fetch sentiment data
-async function fetchSentimentData(): Promise<SentimentData> {
+async function fetchSentimentData(): Promise<SentimentData | null> {
   try {
     const response = await fetch(
       'https://api.alternative.me/fng/?limit=1',
@@ -115,19 +138,24 @@ async function fetchSentimentData(): Promise<SentimentData> {
     );
 
     if (!response.ok) {
-      return { fearGreedIndex: 50, fearGreedLabel: 'Neutral' };
+      return null;
     }
 
     const data = await response.json();
     const fgData = data.data?.[0];
 
+    const parsed = Number.parseInt(fgData?.value);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+
     return {
-      fearGreedIndex: parseInt(fgData?.value || '50'),
-      fearGreedLabel: fgData?.value_classification || 'Neutral'
+      fearGreedIndex: parsed,
+      fearGreedLabel: fgData?.value_classification || 'Unknown'
     };
   } catch (error) {
     console.error('Error fetching sentiment:', error);
-    return { fearGreedIndex: 50, fearGreedLabel: 'Neutral' };
+    return null;
   }
 }
 
@@ -140,10 +168,10 @@ function toCachedPrediction(prediction: ReturnType<typeof generateQuickPredictio
     confidence: prediction.confidence,
     risk_level: prediction.riskLevel,
     reasons: prediction.reasons,
-    technical_score: prediction.technicalScore,
-    sentiment_score: prediction.sentimentScore,
-    onchain_score: prediction.onChainScore,
-    macro_score: prediction.macroScore,
+    technical_score: prediction.technicalScore ?? null,
+    sentiment_score: prediction.sentimentScore ?? null,
+    onchain_score: prediction.onChainScore ?? null,
+    macro_score: prediction.macroScore ?? null,
     overall_score: prediction.overallScore,
     updated_at: new Date().toISOString()
   };
@@ -158,14 +186,24 @@ function fromCachedPrediction(cached: CachedPrediction) {
     confidence: cached.confidence,
     riskLevel: cached.risk_level,
     reasons: cached.reasons,
-    technicalScore: cached.technical_score,
-    sentimentScore: cached.sentiment_score,
-    onChainScore: cached.onchain_score,
-    macroScore: cached.macro_score,
+    technicalScore: cached.technical_score ?? null,
+    sentimentScore: cached.sentiment_score ?? null,
+    onChainScore: cached.onchain_score ?? null,
+    macroScore: cached.macro_score ?? null,
     overallScore: cached.overall_score,
     timestamp: cached.updated_at,
     signals: [],
     fromCache: true
+  };
+}
+
+function withStaleMeta(cached: CachedPrediction) {
+  const base = fromCachedPrediction(cached);
+  const ageMs = cached.updated_at ? Date.now() - new Date(cached.updated_at).getTime() : null;
+  return {
+    ...base,
+    stale: true,
+    cacheAgeSeconds: typeof ageMs === 'number' && Number.isFinite(ageMs) ? Math.max(0, Math.round(ageMs / 1000)) : null,
   };
 }
 
@@ -207,39 +245,91 @@ export async function GET(request: Request) {
       }
     }
 
+    const fallbackStale = async (reason: string, status: number) => {
+      if (!isSupabaseConfigured || skipCache) {
+        return NextResponse.json({ success: false, error: reason }, { status });
+      }
+
+      const cachedAny = await getPredictionFromCacheAnyAge(coinId);
+      if (!cachedAny) {
+        return NextResponse.json({ success: false, error: reason }, { status });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: withStaleMeta(cachedAny),
+        source: 'stale_cache',
+        warning: reason,
+      });
+    };
+
     // Fetch all required data in parallel
-    const [marketData, sentimentData, macroDataResult, derivativesDataResult] = await Promise.all([
+    const [marketData, sentimentData, macroDataResult, derivativesDataResult, technicalData, onChainData] = await Promise.all([
       fetchCoinMarketData(coinId),
       fetchSentimentData(),
       fetchMacroData(),
-      fetchDerivativesData()
+      fetchDerivativesData(),
+      fetchTechnicalDataForPrediction(coinId),
+      fetchOnChainDataForPrediction(coinId)
     ]);
 
-    if (!marketData) {
-      return NextResponse.json({
-        success: false,
-        error: `Could not fetch market data for "${coinId}". Please check the coin ID is correct (e.g., bitcoin, ethereum, solana).`,
-        code: 'E002',
-        data: null
-      }, { status: 404 });
+    if (!sentimentData) {
+      return fallbackStale('Fear & Greed data unavailable (free API error). Serving last cached prediction (may be stale).', 503);
     }
 
-    // Convert macro data to expected format (with defaults for null values)
+    if (!marketData) {
+      return fallbackStale(
+        `Could not fetch market data for "${coinId}". Serving last cached prediction if available (may be stale).`,
+        404
+      );
+    }
+
+    if (
+      macroDataResult.fedFundsRate === null ||
+      macroDataResult.treasury10Y === null ||
+      macroDataResult.vix === null ||
+      macroDataResult.dxy === null
+    ) {
+      return fallbackStale('Macro data unavailable (free API error). Serving last cached prediction (may be stale).', 503);
+    }
+
+    const macroRiskEnvironment: MacroData['riskEnvironment'] =
+      macroDataResult.riskEnvironment === 'risk-on'
+        ? 'risk_on'
+        : macroDataResult.riskEnvironment === 'risk-off'
+          ? 'risk_off'
+          : 'neutral';
+
     const macroData: MacroData = {
-      fedFundsRate: macroDataResult.fedFundsRate ?? 5.25,
-      treasury10Y: macroDataResult.treasury10Y ?? 4.5,
-      vix: macroDataResult.vix ?? 20,
-      dxy: macroDataResult.dxy ?? 104,
-      riskEnvironment: macroDataResult.riskEnvironment as 'risk_on' | 'risk_off' | 'neutral'
+      fedFundsRate: macroDataResult.fedFundsRate,
+      treasury10Y: macroDataResult.treasury10Y,
+      vix: macroDataResult.vix,
+      dxy: macroDataResult.dxy,
+      riskEnvironment: macroRiskEnvironment
     };
 
-    // Convert derivatives data to expected format
+    const btcOpenInterest = derivativesDataResult.btc?.openInterest ?? null;
+    const ethOpenInterest = derivativesDataResult.eth?.openInterest ?? null;
+    const btcFundingRate = derivativesDataResult.btc?.fundingRate ?? null;
+    const ethFundingRate = derivativesDataResult.eth?.fundingRate ?? null;
+    const liquidations24h = derivativesDataResult.totalLiquidations24h ?? null;
+
+    if (
+      btcOpenInterest === null ||
+      ethOpenInterest === null ||
+      btcFundingRate === null ||
+      ethFundingRate === null ||
+      liquidations24h === null
+    ) {
+      return fallbackStale('Derivatives data unavailable (free API error). Serving last cached prediction (may be stale).', 503);
+    }
+
     const derivativesData: DerivativesData = {
-      btcOpenInterest: derivativesDataResult.btc?.openInterest ?? 0,
-      ethOpenInterest: derivativesDataResult.eth?.openInterest ?? 0,
-      btcFundingRate: derivativesDataResult.btc?.fundingRate ?? 0,
-      ethFundingRate: derivativesDataResult.eth?.fundingRate ?? 0,
-      liquidations24h: derivativesDataResult.totalLiquidations24h ?? 0,
+      btcOpenInterest,
+      ethOpenInterest,
+      btcFundingRate,
+      ethFundingRate,
+      liquidations24h,
       fundingHeatLevel: mapFundingHeatLevel(derivativesDataResult.fundingHeatLevel)
     };
 
@@ -252,7 +342,9 @@ export async function GET(request: Request) {
         marketData,
         sentimentData,
         macroData,
-        derivativesData
+        derivativesData,
+        technicalData,
+        onChainData
       );
     } else {
       prediction = await generateCoinPrediction(
@@ -261,7 +353,9 @@ export async function GET(request: Request) {
         marketData,
         sentimentData,
         macroData,
-        derivativesData
+        derivativesData,
+        technicalData,
+        onChainData
       );
     }
 
@@ -285,9 +379,13 @@ export async function GET(request: Request) {
 
 // Batch prediction endpoint
 export async function POST(request: Request) {
+  if (!isFeatureEnabled('predictions')) {
+    return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
+  }
+
   try {
     const body = await request.json();
-    const { coins } = body; // Array of { id, name }
+    const { coins, skipCache } = body as { coins: Array<{ id: string; name: string }>; skipCache?: boolean };
 
     if (!coins || !Array.isArray(coins) || coins.length === 0) {
       return validationError('Please provide an array of coins. Example: { "coins": [{ "id": "bitcoin", "name": "Bitcoin" }] }');
@@ -296,11 +394,20 @@ export async function POST(request: Request) {
     // Limit to 50 coins per request (reasonable for batch predictions)
     const coinsToProcess = coins.slice(0, 50);
 
+    if (!isFeatureEnabled('macro')) {
+      return NextResponse.json(
+        { error: 'Predictions are unavailable (macro data disabled).', disabled: true },
+        { status: 503 }
+      );
+    }
+
     // Check cache for existing predictions
     const predictions: (ReturnType<typeof generateQuickPrediction> | { coinId: string; coinName: string; error: string })[] = [];
     const coinsNeedingFresh: { id: string; name: string; index: number }[] = [];
 
-    if (isSupabaseConfigured) {
+    const shouldUseCache = isSupabaseConfigured && skipCache !== true;
+
+    if (shouldUseCache) {
       for (let i = 0; i < coinsToProcess.length; i++) {
         const coin = coinsToProcess[i];
         try {
@@ -320,46 +427,112 @@ export async function POST(request: Request) {
 
     // Fetch fresh data only for coins not in cache
     if (coinsNeedingFresh.length > 0) {
+      const fallbackBatchStale = async (reason: string) => {
+        if (!shouldUseCache) {
+          return NextResponse.json({ success: false, error: reason }, { status: 503 });
+        }
+
+        const cachedAny = await Promise.all(coinsToProcess.map(c => getPredictionFromCacheAnyAge(c.id)));
+        const anyHit = cachedAny.some(Boolean);
+        if (!anyHit) {
+          return NextResponse.json({ success: false, error: reason }, { status: 503 });
+        }
+
+        const data = coinsToProcess.map((coin, idx) => {
+          const cached = cachedAny[idx];
+          if (!cached) return { coinId: coin.id, coinName: coin.name, error: 'No cached prediction available' };
+          return withStaleMeta(cached);
+        });
+
+        return NextResponse.json({ success: true, data, source: 'stale_cache', warning: reason });
+      };
+
       const [sentimentData, macroDataResult, derivativesDataResult] = await Promise.all([
         fetchSentimentData(),
         fetchMacroData(),
         fetchDerivativesData()
       ]);
 
+      if (!sentimentData) {
+        return fallbackBatchStale('Fear & Greed data unavailable (free API error). Serving cached predictions where available (may be stale).');
+      }
+
+      if (
+        macroDataResult.fedFundsRate === null ||
+        macroDataResult.treasury10Y === null ||
+        macroDataResult.vix === null ||
+        macroDataResult.dxy === null
+      ) {
+        return fallbackBatchStale('Macro data unavailable (free API error). Serving cached predictions where available (may be stale).');
+      }
+
+      const macroRiskEnvironment: MacroData['riskEnvironment'] =
+        macroDataResult.riskEnvironment === 'risk-on'
+          ? 'risk_on'
+          : macroDataResult.riskEnvironment === 'risk-off'
+            ? 'risk_off'
+            : 'neutral';
+
       const macroData: MacroData = {
-        fedFundsRate: macroDataResult.fedFundsRate ?? 5.25,
-        treasury10Y: macroDataResult.treasury10Y ?? 4.5,
-        vix: macroDataResult.vix ?? 20,
-        dxy: macroDataResult.dxy ?? 104,
-        riskEnvironment: macroDataResult.riskEnvironment as 'risk_on' | 'risk_off' | 'neutral'
+        fedFundsRate: macroDataResult.fedFundsRate,
+        treasury10Y: macroDataResult.treasury10Y,
+        vix: macroDataResult.vix,
+        dxy: macroDataResult.dxy,
+        riskEnvironment: macroRiskEnvironment
       };
 
+      const btcOpenInterest = derivativesDataResult.btc?.openInterest ?? null;
+      const ethOpenInterest = derivativesDataResult.eth?.openInterest ?? null;
+      const btcFundingRate = derivativesDataResult.btc?.fundingRate ?? null;
+      const ethFundingRate = derivativesDataResult.eth?.fundingRate ?? null;
+      const liquidations24h = derivativesDataResult.totalLiquidations24h ?? null;
+
+      if (
+        btcOpenInterest === null ||
+        ethOpenInterest === null ||
+        btcFundingRate === null ||
+        ethFundingRate === null ||
+        liquidations24h === null
+      ) {
+        return fallbackBatchStale('Derivatives data unavailable (free API error). Serving cached predictions where available (may be stale).');
+      }
+
       const derivativesData: DerivativesData = {
-        btcOpenInterest: derivativesDataResult.btc?.openInterest ?? 0,
-        ethOpenInterest: derivativesDataResult.eth?.openInterest ?? 0,
-        btcFundingRate: derivativesDataResult.btc?.fundingRate ?? 0,
-        ethFundingRate: derivativesDataResult.eth?.fundingRate ?? 0,
-        liquidations24h: derivativesDataResult.totalLiquidations24h ?? 0,
+        btcOpenInterest,
+        ethOpenInterest,
+        btcFundingRate,
+        ethFundingRate,
+        liquidations24h,
         fundingHeatLevel: mapFundingHeatLevel(derivativesDataResult.fundingHeatLevel)
       };
 
       // Fetch market data for coins not in cache
-      const marketDataPromises = coinsNeedingFresh.map(coin =>
-        fetchCoinMarketData(coin.id)
-      );
-      const marketDataResults = await Promise.all(marketDataPromises);
+      const marketDataPromises = coinsNeedingFresh.map(coin => fetchCoinMarketData(coin.id));
+      const technicalPromises = coinsNeedingFresh.map(coin => fetchTechnicalDataForPrediction(coin.id));
+      const onChainPromises = coinsNeedingFresh.map(coin => fetchOnChainDataForPrediction(coin.id));
+      const [marketDataResults, technicalResults] = await Promise.all([
+        Promise.all(marketDataPromises),
+        Promise.all(technicalPromises)
+      ]);
+      const onChainResults = await Promise.all(onChainPromises);
 
       // Generate predictions for each coin
       for (let i = 0; i < coinsNeedingFresh.length; i++) {
         const coin = coinsNeedingFresh[i];
         const marketData = marketDataResults[i];
+        const technicalData = technicalResults[i];
+        const onChainData = onChainResults[i];
 
         if (!marketData) {
-          predictions[coin.index] = {
-            coinId: coin.id,
-            coinName: coin.name,
-            error: 'Could not fetch market data'
-          };
+          if (shouldUseCache) {
+            const cachedAny = await getPredictionFromCacheAnyAge(coin.id);
+            if (cachedAny) {
+              predictions[coin.index] = withStaleMeta(cachedAny);
+              continue;
+            }
+          }
+
+          predictions[coin.index] = { coinId: coin.id, coinName: coin.name, error: 'Could not fetch market data' };
           continue;
         }
 
@@ -369,7 +542,9 @@ export async function POST(request: Request) {
           marketData,
           sentimentData,
           macroData,
-          derivativesData
+          derivativesData,
+          technicalData,
+          onChainData
         );
 
         predictions[coin.index] = prediction;

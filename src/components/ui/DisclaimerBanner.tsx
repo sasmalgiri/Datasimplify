@@ -2,10 +2,19 @@
 
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { FEATURES } from '@/lib/featureFlags';
 
 const DISCLAIMER_KEY = 'datasimplify_disclaimer_accepted';
 
 export default function DisclaimerBanner() {
+  const sources = [
+    'Binance',
+    'Alternative.me',
+    ...(FEATURES.coingecko ? ['CoinGecko'] : []),
+    ...(FEATURES.defi ? ['DeFiLlama'] : []),
+    ...(FEATURES.whales ? ['Etherscan', 'Blockchair'] : []),
+  ];
+
   const [isVisible, setIsVisible] = useState(() => {
     if (typeof window === 'undefined') return false;
     const accepted = window.localStorage.getItem(DISCLAIMER_KEY);
@@ -69,7 +78,7 @@ export default function DisclaimerBanner() {
 
                 {/* Data Sources */}
                 <div className="mt-3 text-xs text-gray-500">
-                  Data Sources: CoinGecko API, Binance, DeFiLlama, Alternative.me, CryptoPanic
+                  Data Sources: {sources.join(', ')}
                 </div>
               </div>
 
@@ -140,13 +149,21 @@ export function AIPredictionDisclaimer({ className = '' }: { className?: string 
 
 // Compact footer disclaimer
 export function FooterDisclaimer() {
+  const sources = [
+    'Binance',
+    'Alternative.me',
+    ...(FEATURES.coingecko ? ['CoinGecko'] : []),
+    ...(FEATURES.defi ? ['DeFiLlama'] : []),
+    ...(FEATURES.whales ? ['Etherscan', 'Blockchair'] : []),
+  ];
+
   return (
     <div className="text-center text-xs text-gray-500 space-y-1 py-4 border-t border-gray-800">
       <p>
         <span className="text-yellow-500">⚠️</span> Not financial advice. Past performance ≠ future results.
       </p>
       <p>
-        Data Sources: CoinGecko, Binance, DeFiLlama, Alternative.me |{' '}
+        Data Sources: {sources.join(', ')} |{' '}
         <a href="/terms" className="text-gray-400 hover:text-white">Terms</a> |{' '}
         <a href="/privacy" className="text-gray-400 hover:text-white">Privacy</a>
       </p>

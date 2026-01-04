@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   syncAllData,
   syncMarketData,
@@ -75,16 +76,25 @@ export async function GET(request: Request) {
         result = await syncCoinLoreData();
         break;
       case 'coingecko':
-        // Note: CoinGecko free tier is for personal use only
+        if (!isFeatureEnabled('coingecko')) {
+          return NextResponse.json({ error: 'CoinGecko sync is disabled.' }, { status: 403 });
+        }
+        // Note: CoinGecko usage requires appropriate rights/license for your product.
         result = await syncCoinGeckoData();
         break;
       case 'defi':
+        if (!isFeatureEnabled('defi')) {
+          return NextResponse.json({ error: 'DeFi sync is disabled.' }, { status: 403 });
+        }
         result = await syncDefiData();
         break;
       case 'sentiment':
         result = await syncSentimentData();
         break;
       case 'whales':
+        if (!isFeatureEnabled('whales')) {
+          return NextResponse.json({ error: 'Whales sync is disabled.' }, { status: 403 });
+        }
         result = await syncWhaleData();
         break;
       case 'onchain':

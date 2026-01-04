@@ -65,7 +65,7 @@ export interface CoinSentiment {
 export interface MarketSentiment {
   overallScore: number;
   overallLabel: string;
-  fearGreedIndex: number;
+  fearGreedIndex: number | null;
   fearGreedLabel: string;
   socialVolume24h: number;
   topBullish: CoinSentiment[];
@@ -332,8 +332,10 @@ export async function getSentimentDashboard(): Promise<MarketSentiment> {
     getRedditCryptoSentiment('cryptocurrency', 100),
   ]);
   
-  const fearGreedIndex = parseInt(fearGreedResponse.data?.[0]?.value || '50');
-  const fearGreedLabel = fearGreedResponse.data?.[0]?.value_classification || 'Neutral';
+  const fearGreedValueStr = fearGreedResponse.data?.[0]?.value;
+  const parsedFearGreed = fearGreedValueStr != null ? Number.parseInt(fearGreedValueStr) : NaN;
+  const fearGreedIndex = Number.isFinite(parsedFearGreed) ? parsedFearGreed : null;
+  const fearGreedLabel = fearGreedResponse.data?.[0]?.value_classification || 'Unavailable';
   
   // Calculate overall sentiment from posts
   const allPosts = [...news, ...reddit];
@@ -342,7 +344,10 @@ export async function getSentimentDashboard(): Promise<MarketSentiment> {
     : 0;
   
   // Combine fear/greed with social sentiment
-  const overallScore = Math.round((fearGreedIndex + (avgSentiment + 1) * 50) / 2);
+  const socialScore = (avgSentiment + 1) * 50;
+  const overallScore = fearGreedIndex == null
+    ? Math.round(socialScore)
+    : Math.round((fearGreedIndex + socialScore) / 2);
   
   let overallLabel = 'Neutral';
   if (overallScore >= 75) overallLabel = 'Extreme Greed';

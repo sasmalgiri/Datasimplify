@@ -3,6 +3,8 @@
  * Fetches Fed Funds Rate, 10Y Yield, USD Index, VIX from free APIs
  */
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 // Cache for macro data (5 minute TTL)
 let macroCache: { data: MacroData | null; timestamp: number } = { data: null, timestamp: 0 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -31,44 +33,58 @@ export interface MacroData {
 }
 
 /**
- * Fetch Federal Funds Effective Rate from FRED
- * Series: DFF (Daily)
+ * Fetch Federal Funds Effective Rate
+ * Uses Treasury.gov API as primary source (FREE, no key required)
  */
 async function fetchFedFundsRate(): Promise<number | null> {
   try {
-    // FRED API - no key needed for basic JSON access via alternative endpoint
+    // Try Treasury.gov API first (FREE, no API key needed)
+    // This provides daily Treasury rates which correlate with Fed Funds
     const res = await fetch(
-      'https://api.stlouisfed.org/fred/series/observations?series_id=DFF&sort_order=desc&limit=1&file_type=json&api_key=DEMO_KEY',
-      { next: { revalidate: 3600 } } // Cache for 1 hour (rate changes rarely)
+      'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates?sort=-record_date&page[size]=1',
+      { next: { revalidate: 3600 } } // Cache for 1 hour
     );
 
-    if (!res.ok) {
-      // Fallback: try alternative source
-      return await fetchFedFundsFromAlternative();
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data && data.data.length > 0) {
+        // Use the average interest rate as a proxy
+        const rate = parseFloat(data.data[0].avg_interest_rate_amt);
+        if (!isNaN(rate)) {
+          apiStatus.fedFunds.lastSuccess = new Date().toISOString();
+          apiStatus.fedFunds.consecutiveFailures = 0;
+          return rate;
+        }
+      }
     }
 
-    const data = await res.json();
-    if (data.observations && data.observations.length > 0) {
-      const value = parseFloat(data.observations[0].value);
-      return isNaN(value) ? null : value;
-    }
-    return null;
+    // Fallback: Try CoinGecko's global data which includes some macro context
+    return await fetchFedFundsFromAlternative();
   } catch (error) {
     console.error('Error fetching Fed Funds Rate:', error);
+    apiStatus.fedFunds.lastError = String(error);
+    apiStatus.fedFunds.consecutiveFailures++;
     return await fetchFedFundsFromAlternative();
   }
 }
 
 async function fetchFedFundsFromAlternative(): Promise<number | null> {
   try {
-    // Use a reliable fallback - current Fed target range is public knowledge
-    // As of late 2024, the rate is around 4.5-4.75%
-    // We'll try to get live data from another source
-    const res = await fetch('https://www.alphavantage.co/query?function=FEDERAL_FUNDS_RATE&interval=daily&apikey=demo');
-    const data = await res.json();
-    if (data.data && data.data.length > 0) {
-      return parseFloat(data.data[0].value);
+    // World Bank API - FREE, no key needed
+    // Provides US interest rate data (slightly delayed but reliable)
+    const res = await fetch(
+      'https://api.worldbank.org/v2/country/USA/indicator/FR.INR.RINR?format=json&per_page=1&mrv=1',
+      { next: { revalidate: 86400 } } // Cache for 24 hours (World Bank data updates less frequently)
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data[1] && data[1][0] && data[1][0].value !== null) {
+        return parseFloat(data[1][0].value);
+      }
     }
+
+    // If all APIs fail, return null (will be shown as "unavailable" in UI)
     return null;
   } catch {
     return null;
@@ -76,51 +92,101 @@ async function fetchFedFundsFromAlternative(): Promise<number | null> {
 }
 
 /**
- * Fetch 10-Year Treasury Yield from FRED
- * Series: DGS10 (Daily)
+ * Fetch 10-Year Treasury Yield
+ * Uses Treasury.gov API (FREE, no key required)
  */
 async function fetch10YYield(): Promise<number | null> {
   try {
+    // Treasury.gov Direct API - FREE, no key needed
     const res = await fetch(
-      'https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&sort_order=desc&limit=1&file_type=json&api_key=DEMO_KEY',
+      'https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v2/accounting/od/avg_interest_rates?filter=security_desc:eq:Treasury%20Notes&sort=-record_date&page[size]=1',
       { next: { revalidate: 3600 } }
     );
 
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    if (data.observations && data.observations.length > 0) {
-      const value = parseFloat(data.observations[0].value);
-      return isNaN(value) ? null : value;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.data && data.data.length > 0) {
+        const rate = parseFloat(data.data[0].avg_interest_rate_amt);
+        if (!isNaN(rate)) {
+          apiStatus.treasury10Y.lastSuccess = new Date().toISOString();
+          apiStatus.treasury10Y.consecutiveFailures = 0;
+          return rate;
+        }
+      }
     }
+
+    // Fallback: Try Yahoo Finance for TNX (10-Year Treasury Index)
+    // (Often more restrictive; keep OFF unless explicitly enabled.)
+    if (!isFeatureEnabled('macroYahoo')) return null;
+    const yahooRes = await fetch(
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5ETNX?interval=1d&range=1d',
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        next: { revalidate: 300 }
+      }
+    );
+
+    if (yahooRes.ok) {
+      const yahooData = await yahooRes.json();
+      const yield10Y = yahooData.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (yield10Y) return parseFloat(yield10Y);
+    }
+
     return null;
   } catch (error) {
     console.error('Error fetching 10Y Yield:', error);
+    apiStatus.treasury10Y.lastError = String(error);
+    apiStatus.treasury10Y.consecutiveFailures++;
     return null;
   }
 }
 
 /**
- * Fetch USD Index (DXY) - Trade Weighted US Dollar Index
- * FRED Series: DTWEXBGS (Broad)
+ * Fetch USD Index (DXY) - US Dollar Index
+ * Uses Yahoo Finance (FREE)
  */
 async function fetchDXY(): Promise<number | null> {
   try {
+    if (!isFeatureEnabled('macroYahoo')) return null;
+    // Yahoo Finance DX-Y.NYB (US Dollar Index)
     const res = await fetch(
-      'https://api.stlouisfed.org/fred/series/observations?series_id=DTWEXBGS&sort_order=desc&limit=1&file_type=json&api_key=DEMO_KEY',
-      { next: { revalidate: 3600 } }
+      'https://query1.finance.yahoo.com/v8/finance/chart/DX-Y.NYB?interval=1d&range=1d',
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        next: { revalidate: 300 } // 5 min cache
+      }
     );
 
-    if (!res.ok) return null;
-
-    const data = await res.json();
-    if (data.observations && data.observations.length > 0) {
-      const value = parseFloat(data.observations[0].value);
-      return isNaN(value) ? null : value;
+    if (res.ok) {
+      const data = await res.json();
+      const dxy = data.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (dxy) {
+        apiStatus.dxy.lastSuccess = new Date().toISOString();
+        apiStatus.dxy.consecutiveFailures = 0;
+        return parseFloat(dxy);
+      }
     }
+
+    // Fallback: Try alternative Yahoo symbol
+    const altRes = await fetch(
+      'https://query1.finance.yahoo.com/v8/finance/chart/%5EUSDX?interval=1d&range=1d',
+      {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+        next: { revalidate: 300 }
+      }
+    );
+
+    if (altRes.ok) {
+      const altData = await altRes.json();
+      const altDxy = altData.chart?.result?.[0]?.meta?.regularMarketPrice;
+      if (altDxy) return parseFloat(altDxy);
+    }
+
     return null;
   } catch (error) {
     console.error('Error fetching DXY:', error);
+    apiStatus.dxy.lastError = String(error);
+    apiStatus.dxy.consecutiveFailures++;
     return null;
   }
 }
@@ -131,6 +197,7 @@ async function fetchDXY(): Promise<number | null> {
  */
 async function fetchVIX(): Promise<number | null> {
   try {
+    if (!isFeatureEnabled('macroYahoo')) return null;
     // Yahoo Finance API for VIX
     const res = await fetch(
       'https://query1.finance.yahoo.com/v8/finance/chart/%5EVIX?interval=1d&range=1d',
@@ -156,6 +223,7 @@ async function fetchVIX(): Promise<number | null> {
  */
 async function fetchSP500Change(): Promise<number | null> {
   try {
+    if (!isFeatureEnabled('macroYahoo')) return null;
     const res = await fetch(
       'https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=2d',
       {
@@ -188,6 +256,7 @@ async function fetchSP500Change(): Promise<number | null> {
  */
 async function fetchNasdaqChange(): Promise<number | null> {
   try {
+    if (!isFeatureEnabled('macroYahoo')) return null;
     const res = await fetch(
       'https://query1.finance.yahoo.com/v8/finance/chart/%5EIXIC?interval=1d&range=2d',
       {
@@ -251,6 +320,21 @@ function determineRiskEnvironment(data: Partial<MacroData>): 'risk-on' | 'risk-o
  * Fetch all macro data with caching
  */
 export async function fetchMacroData(): Promise<MacroData> {
+  if (!isFeatureEnabled('macro')) {
+    return {
+      fedFundsRate: null,
+      treasury10Y: null,
+      dxy: null,
+      vix: null,
+      sp500Change: null,
+      nasdaqChange: null,
+      lastUpdated: new Date().toISOString(),
+      riskEnvironment: 'neutral',
+      dataQuality: 'stale',
+      errors: ['Macro feature is disabled'],
+    };
+  }
+
   // Check cache
   const now = Date.now();
   if (macroCache.data && (now - macroCache.timestamp) < CACHE_TTL) {
