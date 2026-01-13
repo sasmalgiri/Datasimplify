@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { TrendingUp, TrendingDown, Minus, Database } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
-import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Tooltip Component for hover explanations - improved visibility
 function Tooltip({ children, text }: { children: React.ReactNode; text: string }) {
@@ -114,24 +114,14 @@ interface FearGreed {
   value_classification: string;
 }
 
-interface CoinPrediction {
-  coinId: string;
-  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  confidence: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
-}
-
 export default function MarketPage() {
   const [coins, setCoins] = useState<Coin[]>([]);
   const [globalData, setGlobalData] = useState<GlobalData | null>(null);
   const [fearGreed, setFearGreed] = useState<FearGreed | null>(null);
-  const [predictions, setPredictions] = useState<Map<string, CoinPrediction>>(new Map());
-  const [predictionsLoading, setPredictionsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'market_cap' | 'price_change' | 'volume'>('market_cap');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [predictionFilter, setPredictionFilter] = useState<'all' | 'BULLISH' | 'BEARISH' | 'NEUTRAL'>('all');
   const [dataFromCache, setDataFromCache] = useState(false);
 
   const fetchData = useCallback(async (forceRefresh = false) => {
@@ -244,88 +234,6 @@ export default function MarketPage() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // Fetch predictions when coins are loaded
-  const fetchPredictions = useCallback(async (forceRefresh = false) => {
-    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
-      setPredictions(new Map());
-      setPredictionsLoading(false);
-      return;
-    }
-
-    // Try cache first (unless forcing refresh)
-    if (!forceRefresh) {
-      const cachedPredictions = getClientCache<Array<{ coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }>>('market_predictions');
-      if (cachedPredictions && cachedPredictions.length > 0) {
-        const predMap = new Map<string, CoinPrediction>();
-        cachedPredictions.forEach(pred => {
-          predMap.set(pred.coinId, pred);
-        });
-        setPredictions(predMap);
-        // Still fetch fresh in background
-        fetchFreshPredictions();
-        return;
-      }
-    }
-
-    setPredictionsLoading(true);
-    await fetchFreshPredictions();
-  }, [coins]);
-
-  const fetchFreshPredictions = async () => {
-    if (coins.length === 0) return;
-    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
-      setPredictions(new Map());
-      setPredictionsLoading(false);
-      return;
-    }
-
-    try {
-      // Fetch predictions for top 50 coins
-      const topCoins = coins.slice(0, 50).map(c => ({ id: c.id, name: c.name }));
-
-      const response = await fetch('/api/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coins: topCoins })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const predMap = new Map<string, CoinPrediction>();
-          const predArray: Array<{ coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }> = [];
-
-          result.data.forEach((pred: { coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }) => {
-            if (pred.coinId && pred.prediction) {
-              const predData = {
-                coinId: pred.coinId,
-                prediction: pred.prediction,
-                confidence: pred.confidence || 50,
-                riskLevel: pred.riskLevel || 'MEDIUM'
-              };
-              predMap.set(pred.coinId, predData);
-              predArray.push(predData);
-            }
-          });
-          setPredictions(predMap);
-          // Cache predictions for 10 minutes
-          setClientCache('market_predictions', predArray, CACHE_TTL.MARKET_DATA);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching predictions:', error);
-    } finally {
-      setPredictionsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) return;
-    if (coins.length > 0) {
-      fetchPredictions();
-    }
-  }, [coins, fetchPredictions]);
-
   // Format helpers
   const formatPrice = (price: number) => {
     if (price >= 1000) return `$${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -351,12 +259,6 @@ export default function MarketPage() {
       coin.name.toLowerCase().includes(search.toLowerCase()) ||
       coin.symbol.toLowerCase().includes(search.toLowerCase())
     )
-    .filter(coin => {
-      // Apply prediction filter
-      if (predictionFilter === 'all') return true;
-      const pred = predictions.get(coin.id);
-      return pred?.prediction === predictionFilter;
-    })
     .sort((a, b) => {
       let aVal, bVal;
       switch (sortBy) {
@@ -375,61 +277,7 @@ export default function MarketPage() {
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
 
-  // Get prediction badge component
-  const getPredictionBadge = (coinId: string) => {
-    const pred = predictions.get(coinId);
-    if (!pred) {
-      return predictionsLoading ? (
-        <span className="text-gray-500 text-xs">Loading...</span>
-      ) : (
-        <span className="text-gray-500 text-xs">-</span>
-      );
-    }
-
-    const { prediction, confidence } = pred;
-    const styles = {
-      BULLISH: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', Icon: TrendingUp },
-      BEARISH: { bg: 'bg-red-500/20', text: 'text-red-400', Icon: TrendingDown },
-      NEUTRAL: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', Icon: Minus }
-    };
-
-    const style = styles[prediction];
-    const Icon = style.Icon;
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-        <Icon className="w-3 h-3" />
-        <span>{prediction === 'BULLISH' ? 'Bull' : prediction === 'BEARISH' ? 'Bear' : 'Neutral'}</span>
-        <span className="opacity-60">{confidence}%</span>
-      </span>
-    );
-  };
-
-  // Download as CSV
-  const downloadCSV = () => {
-    const headers = ['Rank', 'Name', 'Symbol', 'Price (USD)', '24h Change %', 'Market Cap', 'Volume (24h)', 'Circulating Supply', 'Max Supply', 'ATH', 'ATH Change %'];
-    const rows = filteredCoins.map(coin => [
-      coin.market_cap_rank,
-      coin.name,
-      coin.symbol.toUpperCase(),
-      coin.current_price,
-      coin.price_change_percentage_24h?.toFixed(2) || '0',
-      coin.market_cap,
-      coin.total_volume,
-      coin.circulating_supply,
-      coin.max_supply || 'N/A',
-      coin.ath,
-      coin.ath_change_percentage?.toFixed(2) || '0'
-    ]);
-    
-    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `crypto-market-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-  };
+  // CSV downloads removed - use templates for data export
 
   // Fear & Greed color
   const getFearGreedColor = (value: number) => {
@@ -473,18 +321,24 @@ export default function MarketPage() {
           <div className="flex items-center gap-3 mt-4 md:mt-0">
             <button
               type="button"
-              onClick={() => { fetchData(true); fetchPredictions(true); }}
+              onClick={() => fetchData(true)}
               className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
             >
               🔄 Refresh
             </button>
-            <button
-              type="button"
-              onClick={downloadCSV}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium flex items-center gap-2 transition-colors"
-            >
-              <span>📥</span> Download CSV
-            </button>
+            <TemplateDownloadButton
+              pageContext={{
+                pageId: 'market',
+                selectedCoins: filteredCoins.slice(0, 20).map(c => c.id),
+                timeframe: '24h',
+                currency: 'USD',
+                customizations: {
+                  sortBy,
+                  includeCharts: true,
+                },
+              }}
+              variant="outline"
+            />
           </div>
         </div>
 
@@ -599,45 +453,6 @@ export default function MarketPage() {
           </div>
         </div>
 
-        {/* AI Prediction Filters */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <span className="text-gray-400 text-sm mr-2">🤖 AI Prediction:</span>
-          <button
-            type="button"
-            onClick={() => setPredictionFilter('all')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all ${predictionFilter === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-          >
-            All
-          </button>
-          <button
-            type="button"
-            onClick={() => setPredictionFilter('BULLISH')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'BULLISH' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-emerald-400 hover:bg-emerald-900/50'}`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" /> Bullish
-          </button>
-          <button
-            type="button"
-            onClick={() => setPredictionFilter('BEARISH')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'BEARISH' ? 'bg-red-600 text-white' : 'bg-gray-800 text-red-400 hover:bg-red-900/50'}`}
-          >
-            <TrendingDown className="w-3.5 h-3.5" /> Bearish
-          </button>
-          <button
-            type="button"
-            onClick={() => setPredictionFilter('NEUTRAL')}
-            className={`px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1 ${predictionFilter === 'NEUTRAL' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-yellow-400 hover:bg-yellow-900/50'}`}
-          >
-            <Minus className="w-3.5 h-3.5" /> Neutral
-          </button>
-          {predictionsLoading && (
-            <span className="text-gray-500 text-sm ml-2 flex items-center gap-1">
-              <span className="animate-spin h-3 w-3 border-2 border-emerald-500 border-t-transparent rounded-full"></span>
-              Loading predictions...
-            </span>
-          )}
-        </div>
-
         {/* Beginner Tip */}
         <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 mb-6">
           <p className="text-blue-300 text-sm flex items-start gap-2">
@@ -656,7 +471,6 @@ export default function MarketPage() {
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Coin:</span> Name & symbol</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Price:</span> Current USD price</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">24h %:</span> Price change in 24 hours</span>
-            <span className="text-gray-300"><span className="text-emerald-400 font-medium">AI Signal:</span> AI prediction (Bull/Bear/Neutral)</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Market Cap:</span> Price × Supply</span>
             <span className="text-gray-300"><span className="text-emerald-400 font-medium">Volume:</span> 24h trading activity</span>
           </div>
@@ -676,7 +490,6 @@ export default function MarketPage() {
                   <th className="px-4 py-4 text-left text-emerald-400 font-medium">Coin</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Price</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">24h %</th>
-                  <th className="px-4 py-4 text-center text-emerald-400 font-medium">AI Signal</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Market Cap</th>
                   <th className="px-4 py-4 text-right text-emerald-400 font-medium">Volume (24h)</th>
                   <th className="px-4 py-4 text-center text-gray-400 font-medium">Action</th>
@@ -706,9 +519,6 @@ export default function MarketPage() {
                     <td className="px-4 py-4 text-right font-medium">{formatPrice(coin.current_price)}</td>
                     <td className={`px-4 py-4 text-right font-medium ${coin.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {formatPercent(coin.price_change_percentage_24h || 0)}
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      {getPredictionBadge(coin.id)}
                     </td>
                     <td className="px-4 py-4 text-right text-gray-300">{formatLargeNumber(coin.market_cap)}</td>
                     <td className="px-4 py-4 text-right text-gray-300">{formatLargeNumber(coin.total_volume)}</td>

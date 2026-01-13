@@ -3,6 +3,7 @@ import { fetchMacroData, getRiskInterpretation, type MacroData } from '@/lib/mac
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getMacroDataFromCache, saveMacroDataToCache } from '@/lib/supabaseData';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300; // 5 minutes
@@ -15,6 +16,9 @@ export async function GET() {
         { status: 503 }
       );
     }
+
+    // Macro data is sourced from third-party APIs (FRED + Yahoo Finance).
+    assertRedistributionAllowed(['fred', 'yahoofinance'], { purpose: 'chart', route: '/api/macro' });
 
     // 1. Try cache first
     if (isSupabaseConfigured) {

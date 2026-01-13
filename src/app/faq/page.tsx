@@ -16,38 +16,38 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is DataSimplify?',
-    answer: 'DataSimplify helps you download crypto market data to Excel, CSV, and JSON formats. Many downloads can be refreshed in Excel via Power Query, so spreadsheets can stay up to date without manual copy/paste.',
+    answer: 'DataSimplify provides educational crypto analytics tools and Excel templates with CryptoSheets formulas for live data visualization. We offer charts, comparisons, and technical indicator analysis for educational purposes.',
   },
   {
     category: 'Getting Started',
     question: 'Do I need to create an account to use DataSimplify?',
-    answer: 'No account is required for basic downloads. You can download up to 5 files per month for free. Creating a free account lets you track your usage and unlock additional features.',
+    answer: 'No account is required to browse our analytics tools and charts. Creating a free account lets you save preferences and access additional features.',
   },
   {
     category: 'Getting Started',
     question: 'What data sources does DataSimplify use?',
-    answer: 'Data sources vary by dataset and by which providers are enabled in your deployment. Common sources include exchange market data APIs and public market indicators (e.g. Fear & Greed). Some optional datasets may be disabled by default for commercial/ToS safety.',
+    answer: 'Our web dashboards display educational visualizations based on publicly available data sources. Excel templates use CryptoSheets formulas that fetch data via your own CryptoSheets account when opened in Excel.',
   },
-  // Downloads
+  // Templates
   {
-    category: 'Downloads',
-    question: 'What file formats are supported?',
-    answer: 'We support XLSX (Excel), CSV, JSON, and IQY (Excel Web Query) formats. The IQY format is special - it creates a live connection that refreshes automatically in Excel using Power Query.',
-  },
-  {
-    category: 'Downloads',
-    question: 'How do I make my Excel file auto-refresh?',
-    answer: 'Download the Live Excel (IQY) format, then open it in Excel. Go to Data > Queries & Connections, right-click the connection, and set your preferred refresh interval. You can also use our Excel Template which includes pre-configured Power Query connections.',
+    category: 'Templates',
+    question: 'What are DataSimplify Excel Templates?',
+    answer: 'Our Excel templates contain CryptoSheets formulas (no embedded data). When you open a template in Microsoft Excel with the CryptoSheets add-in installed, the formulas fetch live data directly to your spreadsheet.',
   },
   {
-    category: 'Downloads',
-    question: 'Can I use the data in Google Sheets?',
-    answer: 'Yes! Use the IMPORTDATA formula with our CSV API endpoint. For example: =IMPORTDATA("https://datasimplify.com/api/download?category=market_overview&format=csv"). The data refreshes automatically every hour in Google Sheets.',
+    category: 'Templates',
+    question: 'What do I need to use the Excel templates?',
+    answer: 'You need: 1) Microsoft Excel Desktop (Windows/Mac), 2) The CryptoSheets add-in installed, and 3) A CryptoSheets account (free or paid). See our Template Requirements page for full setup instructions.',
   },
   {
-    category: 'Downloads',
-    question: 'What data types can I download?',
-    answer: 'We offer 30+ data categories including: Market Overview, Historical Prices (OHLCV), Order Book, Recent Trades, Global Stats, DeFi Protocols, Stablecoins, Fear & Greed Index, Funding Rates, Open Interest, Technical Indicators, NFT Collections, and more.',
+    category: 'Templates',
+    question: 'Do templates include market data?',
+    answer: 'No. Templates contain formulas only - no market data is embedded. Data is fetched via the CryptoSheets add-in when you open the file in Excel. DataSimplify is software tooling, not a data vendor.',
+  },
+  {
+    category: 'Templates',
+    question: 'Why do templates require CryptoSheets?',
+    answer: 'CryptoSheets is a third-party Excel add-in that provides the data feed. Templates contain formulas that call CryptoSheets functions. This approach means you use your own CryptoSheets subscription to fetch data.',
   },
   // Data & Accuracy
   {
@@ -63,55 +63,45 @@ const faqs: FAQItem[] = [
   {
     category: 'Data & Accuracy',
     question: 'What coins/tokens are supported?',
-    answer: 'We support 75+ major cryptocurrencies including BTC, ETH, BNB, SOL, XRP, ADA, DOGE, and many more. The full list is available in our Download Center when selecting coins.',
+    answer: 'We support 75+ major cryptocurrencies including BTC, ETH, BNB, SOL, XRP, ADA, DOGE, and many more. The full list is available on our Templates page when configuring your template.',
   },
   // Tools & Features
+  {
+    category: 'Tools & Features',
+    question: 'What are DataSimplify Excel Templates?',
+    answer: 'Our Excel templates contain CryptoSheets formulas that fetch live crypto data when you open them in Excel. Templates include pre-built charts and visualizations. Requires the CryptoSheets add-in (free or paid) to function.',
+  },
   {
     category: 'Tools & Features',
     question: 'What is the Smart Contract Verifier?',
     answer: 'SafeContract is a smart contract verification status checker. It helps you see whether a contract is verified on public verification registries (when supported). It is not a security audit and does not provide guarantees of safety.',
   },
-  {
-    category: 'Tools & Features',
-    question: 'How does the AI Prediction Community work?',
-    answer: 'Our community lets users share crypto price predictions with specific targets and timeframes. Predictions are tracked automatically, and users earn accuracy scores based on their track record. Top predictors appear on the leaderboard.',
-  },
-  {
-    category: 'Tools & Features',
-    question: 'What AI features does DataSimplify offer?',
-    answer: 'AI features (like chat and predictions) may be available depending on configuration. AI outputs can be wrong, so treat them as educational signals rather than financial advice.',
-  },
   // Pricing & Limits
   {
     category: 'Pricing & Limits',
     question: 'Is DataSimplify free?',
-    answer: 'DataSimplify can be used with a free tier that includes 5 downloads per month. Available datasets depend on deployment configuration and provider availability.',
+    answer: 'DataSimplify offers free access to our analytics dashboards and charts. Excel templates may require a paid subscription depending on features needed. CryptoSheets (required for templates) has its own pricing.',
   },
   {
     category: 'Pricing & Limits',
-    question: 'What are the rate limits?',
-    answer: 'Free users have a monthly download limit (5/month). Additional rate limits can apply depending on the deployment and upstream providers.',
-  },
-  {
-    category: 'Pricing & Limits',
-    question: 'Do you offer API access?',
-    answer: 'Yes, all our data is available via REST API. You can access it using the same endpoints as our download feature. API documentation is available for developers who want to integrate our data into their applications.',
+    question: 'What do I need to pay for?',
+    answer: 'DataSimplify dashboards are free. Premium Excel templates may require a subscription. Note: Templates also require a CryptoSheets account (separate product) which has free and paid tiers.',
   },
   // Technical
   {
     category: 'Technical',
-    question: 'How do I use Power Query with DataSimplify?',
-    answer: 'Download our Excel Template which includes pre-configured Power Query connections. Alternatively, in Excel go to Data > Get Data > From Web, paste our API URL, and configure your refresh settings. Our IQY files do this automatically.',
+    question: 'How do I set up Excel templates?',
+    answer: 'See our Template Requirements page for full setup instructions. You need Microsoft Excel Desktop, the CryptoSheets add-in, and a CryptoSheets account. Open the template in Excel and sign into CryptoSheets to load data.',
   },
   {
     category: 'Technical',
-    question: 'Can I filter the data before downloading?',
-    answer: 'Some downloads support filtering and field selection. Exact options depend on the dataset and the current UI.',
+    question: 'Why do I see #NAME? errors in templates?',
+    answer: 'This means the CryptoSheets add-in is not installed or not signed in. Install CryptoSheets from Excel\'s add-in store, sign in, then click Data > Refresh All.',
   },
   {
     category: 'Technical',
-    question: 'What programming languages can I use with the API?',
-    answer: 'Our REST API works with any language that can make HTTP requests. We provide examples for Python, JavaScript, and Excel/VBA. The JSON format is ideal for programmatic access.',
+    question: 'Can I customize the templates?',
+    answer: 'Yes! Templates are regular Excel files. You can modify formulas, add your own calculations, and adjust charts. Just keep the CryptoSheets formulas intact for live data.',
   },
   // Support
   {
@@ -122,7 +112,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Support',
     question: 'Is my data private?',
-    answer: 'We do not store your downloaded data. API calls are logged for rate limiting purposes only. If you create an account, your email is stored securely and never shared with third parties.',
+    answer: 'We do not store personal data beyond what you provide for your account. If you create an account, your email is stored securely and never shared with third parties. See our Privacy Policy for details.',
   },
 ];
 
@@ -236,20 +226,20 @@ export default function FAQPage() {
         {/* Quick Links */}
         <div className="mt-12 grid md:grid-cols-3 gap-4">
           <Link
-            href="/download"
+            href="/templates"
             className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition text-center"
           >
-            <div className="text-2xl mb-2">📊</div>
-            <div className="font-semibold">Download Center</div>
-            <div className="text-sm text-gray-500">Get crypto data</div>
+            <div className="text-2xl mb-2">📋</div>
+            <div className="font-semibold">Excel Templates</div>
+            <div className="text-sm text-gray-500">CryptoSheets formulas</div>
           </Link>
           <Link
-            href="/smart-contract-verifier"
+            href="/template-requirements"
             className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition text-center"
           >
-            <div className="text-2xl mb-2">🔐</div>
-            <div className="font-semibold">SafeContract</div>
-            <div className="text-sm text-gray-500">Verify smart contracts</div>
+            <div className="text-2xl mb-2">📖</div>
+            <div className="font-semibold">Setup Guide</div>
+            <div className="text-sm text-gray-500">Template requirements</div>
           </Link>
           <Link
             href="/community/guidelines"

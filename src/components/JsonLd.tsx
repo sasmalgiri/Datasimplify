@@ -32,7 +32,7 @@ export function WebsiteJsonLd() {
     '@type': 'WebSite',
     name: 'DataSimplify',
     url: 'https://datasimplify.com',
-    description: 'Download crypto market data in Excel/CSV. AI-powered predictions and analytics.',
+    description: 'Crypto research tools with charts, comparisons, and Excel downloads powered by CryptoSheets.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -66,11 +66,10 @@ export function SoftwareApplicationJsonLd() {
     },
     featureList: [
       'Crypto market data',
-      'AI-assisted analysis (when enabled)',
+      'Interactive charts and comparisons',
       'Fear & Greed Index tracking',
-      'Whale transaction monitoring (when enabled)',
-      'DeFi analytics (when enabled)',
-      'Excel/CSV data export',
+      'Excel downloads powered by CryptoSheets',
+      'Educational analytics tools',
       'No coding required',
     ],
   };
@@ -87,19 +86,19 @@ export function FAQJsonLd() {
   const faqs = [
     {
       question: 'What is DataSimplify?',
-      answer: 'DataSimplify is a crypto data platform that provides market data downloads and optional analytics tools, without requiring coding knowledge.',
+      answer: 'DataSimplify is a crypto research platform that provides charts, comparisons, and Excel downloads powered by CryptoSheets for educational analysis.',
     },
     {
       question: 'Is DataSimplify free to use?',
-      answer: 'Yes! DataSimplify offers a free tier with basic features. Premium plans are available for advanced analytics, unlimited downloads, and priority support.',
+      answer: 'Yes! DataSimplify offers a free tier with charts, comparisons, and basic downloads. Premium plans are available for advanced features.',
     },
     {
-      question: 'How accurate are the AI predictions?',
-      answer: 'Our AI predictions use multiple data sources including market data, sentiment analysis, on-chain metrics, and macro indicators. Predictions are for educational purposes only and should not be considered financial advice.',
+      question: 'What analytics does DataSimplify provide?',
+      answer: 'DataSimplify provides market analytics using multiple data sources including market data, sentiment analysis, and on-chain metrics. All analytics are for educational purposes only and should not be considered financial advice.',
     },
     {
-      question: 'Can I download crypto data to Excel?',
-      answer: 'Yes! DataSimplify allows you to download cryptocurrency market data in Excel (XLSX) and CSV formats. This includes price history, market cap, volume, and more.',
+      question: 'How do Excel downloads work?',
+      answer: 'Excel downloads are powered by CryptoSheets - they contain formulas that connect to live data when opened in Excel with the CryptoSheets add-in installed. Configure your view on DataSimplify, then download.',
     },
   ];
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import {
   getDefiProtocolsFromCache,
   getDefiYieldsFromCache,
@@ -27,6 +28,9 @@ export async function GET(request: Request) {
   const type = searchParams.get('type') || 'dashboard';
   const limit = parseInt(searchParams.get('limit') || '50');
 
+  const assertSources = (sources: string | string[]) =>
+    assertRedistributionAllowed(sources, { purpose: 'chart', route: '/api/onchain', category: type });
+
   const requiresDefi = ['defi-tvl', 'defi-protocols', 'stablecoins', 'yields'].includes(type);
   if (requiresDefi && !isFeatureEnabled('defi')) {
     return NextResponse.json(
@@ -44,6 +48,7 @@ export async function GET(request: Request) {
 
     switch (type) {
       case 'dashboard':
+        assertSources(['alternativeme', 'defillama', 'blockchaininfo', 'publicrpc']);
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getDashboardDataFromCache();
@@ -57,6 +62,7 @@ export async function GET(request: Request) {
         break;
 
       case 'fear-greed':
+        assertSources('alternativeme');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getFearGreedHistoryFromCache(1);
@@ -70,6 +76,7 @@ export async function GET(request: Request) {
         break;
 
       case 'defi-tvl':
+        assertSources('defillama');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getChainTvlFromCache();
@@ -83,6 +90,7 @@ export async function GET(request: Request) {
         break;
 
       case 'defi-protocols':
+        assertSources('defillama');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getDefiProtocolsFromCache(limit);
@@ -96,6 +104,7 @@ export async function GET(request: Request) {
         break;
 
       case 'stablecoins':
+        assertSources('defillama');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getStablecoinsFromCache();
@@ -109,6 +118,7 @@ export async function GET(request: Request) {
         break;
 
       case 'yields':
+        assertSources('defillama');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getDefiYieldsFromCache(limit);
@@ -122,6 +132,7 @@ export async function GET(request: Request) {
         break;
 
       case 'bitcoin':
+        assertSources('blockchaininfo');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getBitcoinStatsFromCache();
@@ -135,6 +146,7 @@ export async function GET(request: Request) {
         break;
 
       case 'gas':
+        assertSources('publicrpc');
         // Try cache first
         if (isSupabaseConfigured) {
           const cached = await getGasPricesFromCache();

@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import { fetchDerivativesData, getFundingInterpretation } from '@/lib/derivativesData';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getDerivativesFromCache, saveDerivativesToCache } from '@/lib/supabaseData';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60; // 1 minute
 
 export async function GET() {
   try {
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/derivatives' });
     // 1. Try cache first for BTC (main coin)
     if (isSupabaseConfigured) {
       const cached = await getDerivativesFromCache('BTCUSDT');

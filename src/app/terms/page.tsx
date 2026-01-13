@@ -31,9 +31,10 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Definitions</h2>
             <ul className="list-disc list-inside space-y-2">
-              <li><strong>&quot;Services&quot;</strong> means the DataSimplify platform, website, APIs, analytics tools, downloadable reports, and all related features.</li>
+              <li><strong>&quot;Services&quot;</strong> means the DataSimplify platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
-              <li><strong>&quot;Content&quot;</strong> means all data, analytics, reports, charts, and information provided through our Services.</li>
+              <li><strong>&quot;Content&quot;</strong> means all analytics visualizations, templates, charts, and educational information provided through our Services.</li>
+              <li><strong>&quot;Templates&quot;</strong> means Excel files containing CryptoSheets formulas (no embedded data) that fetch live data via the CryptoSheets add-in on your machine.</li>
               <li><strong>&quot;Subscription&quot;</strong> means a paid plan providing access to premium features of our Services.</li>
             </ul>
           </section>
@@ -59,8 +60,8 @@ export default function TermsPage() {
               <strong>DATASIMPLIFY DOES NOT PROVIDE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE.</strong>
             </p>
             <p className="mb-4">
-              All Content provided through our Services, including but not limited to cryptocurrency data,
-              analytics, AI-generated insights, charts, reports, and any other information, is for
+              All Content provided through our Services, including but not limited to cryptocurrency visualizations,
+              analytics, technical indicators, charts, templates, and any other information, is for
               <strong> educational and informational purposes only</strong>.
             </p>
             <p className="mb-4">
@@ -82,29 +83,27 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* AI-Generated Content Disclaimer */}
+          {/* Product Scope */}
           <section className="bg-blue-50 border border-blue-300 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. AI-Generated Content Disclaimer</h2>
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. Product Scope & Limitations</h2>
             <p className="mb-4">
-              Our Services use artificial intelligence (&quot;AI&quot;) and machine learning technologies to generate
-              predictions, analysis, insights, and other content. By using our Services, you acknowledge and agree that:
+              DataSimplify is software analytics tooling. By using our Services, you acknowledge and agree that:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4">
-              <li><strong>No Guarantee of Accuracy:</strong> AI-generated content may contain errors, inaccuracies,
-                or incomplete information. AI predictions are probabilistic estimates based on historical data and
-                algorithms, not guarantees of future outcomes.</li>
-              <li><strong>Not Investment Advice:</strong> AI predictions and analysis should never be relied upon
-                as the sole basis for investment decisions. Past AI prediction accuracy does not guarantee future results.</li>
-              <li><strong>Limitations:</strong> AI systems have inherent limitations and may not account for
-                sudden market changes, black swan events, regulatory changes, or other unpredictable factors.</li>
-              <li><strong>Human Review:</strong> While we strive to maintain quality, AI-generated content may
-                not always be reviewed by humans before publication.</li>
-              <li><strong>Training Data:</strong> Our AI models are trained on historical data which may contain
-                biases or not reflect current market conditions.</li>
+              <li><strong>Software Tools Only:</strong> We provide educational visualization tools and Excel templates
+                containing formulas. We do not provide market data, data feeds, or raw data downloads.</li>
+              <li><strong>No Data Redistribution:</strong> We do not sell, license, or redistribute market data.
+                Templates contain CryptoSheets formulas that fetch data via the user&apos;s own CryptoSheets account.</li>
+              <li><strong>No Trading Execution:</strong> We do not offer order routing, brokerage, or trading services
+                of any kind. We are not a broker-dealer or exchange.</li>
+              <li><strong>CryptoSheets Requirement:</strong> Excel templates require the CryptoSheets add-in (a separate
+                third-party product) to function. Data availability depends on your CryptoSheets subscription.</li>
+              <li><strong>Display-Only Dashboards:</strong> Web dashboards show educational visualizations based on
+                publicly available data sources. They are not real-time trading terminals.</li>
             </ul>
             <p className="text-blue-800 font-semibold">
-              You assume all risks associated with reliance on AI-generated content. We strongly recommend
-              verifying AI-generated insights with multiple independent sources before taking any action.
+              See our <a href="/template-requirements" className="underline">Template Requirements</a> page for
+              detailed setup instructions and <a href="/disclaimer" className="underline">Disclaimer</a> for full details.
             </p>
           </section>
 
@@ -166,8 +165,8 @@ export default function TermsPage() {
                 <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
                   After 30 days, cancellation stops future billing but no refund is provided for the remaining period.
                   UK/EU customers have an additional 14-day cooling-off period on annual renewals.</li>
-                <li><strong>Digital Downloads:</strong> One-time data file purchases are non-refundable once downloaded,
-                  as the digital content has been delivered. Exceptions apply for corrupted or incorrect files.</li>
+                <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template
+                  purchases follow the same 30-day policy as subscriptions.</li>
                 <li><strong>Chargebacks:</strong> We encourage you to use Paddle&apos;s self-service refund rather than filing chargebacks.
                   Fraudulent chargebacks may result in account termination.</li>
               </ul>

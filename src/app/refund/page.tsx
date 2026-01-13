@@ -92,30 +92,33 @@ export default function RefundPage() {
             </div>
           </section>
 
-          {/* Digital Downloads */}
-          <section className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Digital Downloads (Data Files)</h2>
+          {/* Excel Templates */}
+          <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Excel Templates</h2>
             <p className="mb-4">
-              For one-time data downloads (Excel/CSV files), the following applies:
+              Our Excel templates contain <strong>formulas only</strong> - they do not include embedded market data.
+              Data is fetched via the CryptoSheets add-in when you open the file in Microsoft Excel.
             </p>
             <ul className="space-y-3 mb-4">
               <li className="flex items-start gap-3">
-                <span className="text-yellow-600 mt-1">⚠️</span>
+                <span className="text-blue-600 mt-1">ℹ️</span>
                 <span>
-                  <strong>Before download:</strong> You have 14 days to request a refund
+                  <strong>Template purchases:</strong> Follow the same 30-day refund policy as subscriptions
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-yellow-600 mt-1">⚠️</span>
+                <span className="text-blue-600 mt-1">ℹ️</span>
                 <span>
-                  <strong>After download:</strong> By downloading, you acknowledge that you waive your right
-                  to withdraw, as the digital content has been delivered
+                  <strong>CryptoSheets required:</strong> Templates require the CryptoSheets add-in (a third-party
+                  product) to fetch live data. Ensure you meet the{' '}
+                  <Link href="/template-requirements" className="text-emerald-600 underline">requirements</Link>
+                  {' '}before purchasing.
                 </span>
               </li>
             </ul>
             <p className="text-sm text-gray-600">
-              <strong>Exceptions:</strong> We will still provide refunds for corrupted files, data significantly
-              different from what was described, or technical errors on our end.
+              <strong>Note:</strong> DataSimplify provides software tools (templates with formulas), not market data.
+              See our <Link href="/disclaimer" className="text-emerald-600 underline">Disclaimer</Link> for details.
             </p>
           </section>
 

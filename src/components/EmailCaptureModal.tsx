@@ -123,11 +123,11 @@ export default function EmailCaptureModal({
             <ul className="space-y-2">
               <li className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500" />
-                <span>5 free downloads per month</span>
+                <span>Excel downloads (powered by CryptoSheets)</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500" />
-                <span>Excel & CSV formats</span>
+                <span>Charts & comparisons</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-gray-600">
                 <Check className="w-4 h-4 text-green-500" />

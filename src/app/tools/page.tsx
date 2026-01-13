@@ -4,48 +4,59 @@ import Link from 'next/link';
 import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export default function ToolsPage() {
   const tools = [
     {
-      id: 'portfolio',
-      name: 'Portfolio Builder',
-      emoji: '💼',
-      description: 'Build your first crypto portfolio with guided recommendations',
-      href: '/portfolio',
-      color: 'from-blue-500 to-indigo-500',
-      forBeginner: true,
-      features: ['Risk-based allocation', 'Visual pie chart', 'PDF export']
-    },
-    {
-      id: 'backtest',
-      name: 'Strategy Backtester',
-      emoji: '🧪',
-      description: 'Test trading strategies using historical data',
-      href: '/backtest',
-      color: 'from-purple-500 to-pink-500',
-      forBeginner: true,
-      features: ['Plain English strategies', 'No coding needed', 'Performance metrics']
-    },
-    {
-      id: 'download',
-      name: 'Data Download',
-      emoji: '📥',
-      description: 'Export crypto data to Excel, CSV, or PDF',
-      href: '/download',
+      id: 'templates',
+      name: 'Excel Templates',
+      emoji: '📋',
+      description: 'CryptoSheets formula templates for live data visualization',
+      href: '/templates',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,
-      features: ['One-click exports', 'Historical data', 'Multiple formats']
+      features: ['CryptoSheets formulas', 'Live data', 'No embedded data']
     },
     {
-      id: 'chat',
-      name: 'AI Assistant',
-      emoji: '🤖',
-      description: 'Ask questions about crypto in plain English',
-      href: '/chat',
-      color: 'from-orange-500 to-red-500',
+      id: 'research',
+      name: 'Research Workspace',
+      emoji: '🔎',
+      description: 'A focused place for charts, comparisons, and templates',
+      href: '/research',
+      color: 'from-blue-500 to-indigo-500',
       forBeginner: true,
-      features: ['Natural language', 'Uses available site data', 'Educational answers']
+      features: ['Quick links', 'Repeatable research flow', 'Education-first']
+    },
+    {
+      id: 'market',
+      name: 'Market Analytics',
+      emoji: '📈',
+      description: 'Market overview and rankings',
+      href: '/market',
+      color: 'from-cyan-500 to-blue-500',
+      forBeginner: true,
+      features: ['Market map', 'Top movers', 'Market stats']
+    },
+    {
+      id: 'onchain',
+      name: 'On-Chain Analytics',
+      emoji: '⛓️',
+      description: 'Explore network activity and on-chain metrics',
+      href: '/onchain',
+      color: 'from-violet-500 to-purple-500',
+      forBeginner: false,
+      features: ['On-chain indicators', 'Availability varies by config', 'Template-ready']
+    },
+    {
+      id: 'charts',
+      name: 'Charts',
+      emoji: '📊',
+      description: 'Explore interactive charts and visualizations',
+      href: '/charts',
+      color: 'from-purple-500 to-pink-500',
+      forBeginner: true,
+      features: ['Chart library', 'Indicators', 'Visual analysis']
     },
     {
       id: 'compare',
@@ -53,7 +64,7 @@ export default function ToolsPage() {
       emoji: '⚖️',
       description: 'Compare multiple cryptocurrencies side-by-side',
       href: '/compare',
-      color: 'from-cyan-500 to-blue-500',
+      color: 'from-emerald-500 to-green-500',
       forBeginner: true,
       features: ['Up to 10 coins', 'Key metrics', 'Visual charts']
     },
@@ -61,9 +72,9 @@ export default function ToolsPage() {
       id: 'correlation',
       name: 'Correlation Heatmap',
       emoji: '🔗',
-      description: 'See how different coins move together',
+      description: 'See how different assets move together',
       href: '/correlation',
-      color: 'from-violet-500 to-purple-500',
+      color: 'from-gray-600 to-gray-800',
       forBeginner: false,
       features: ['Diversification insights', 'Historical analysis', 'Portfolio optimization']
     },
@@ -71,21 +82,11 @@ export default function ToolsPage() {
       id: 'risk',
       name: 'Risk Analyzer',
       emoji: '⚠️',
-      description: 'Understand the risk level of each coin',
+      description: 'Explore risk metrics and explanations',
       href: '/risk',
       color: 'from-red-500 to-orange-500',
       forBeginner: true,
       features: ['VaR calculation', 'Sharpe ratio', 'Max drawdown']
-    },
-    {
-      id: 'whales',
-      name: 'Whale Tracker',
-      emoji: '🐋',
-      description: 'Monitor large transactions and smart money',
-      href: '/whales',
-      color: 'from-blue-600 to-cyan-500',
-      forBeginner: false,
-      features: ['Large transactions', 'Explorer-backed data', 'Some metrics may be unavailable']
     },
     {
       id: 'smart-contract-verifier',
@@ -98,46 +99,16 @@ export default function ToolsPage() {
       features: ['Verification status', 'Cache-backed checks', 'No safety guarantees']
     },
     {
-      id: 'etf',
-      name: 'ETF Flow Tracker',
-      emoji: '📊',
-      description: 'Track Bitcoin ETF inflows and outflows',
-      href: '/etf',
-      color: 'from-emerald-500 to-green-500',
-      forBeginner: true,
-      features: ['Daily updates', 'All major ETFs', 'Historical trends']
-    },
-    {
-      id: 'social',
-      name: 'Social Sentiment',
-      emoji: '📱',
-      description: 'See what people are saying on social media',
-      href: '/social',
-      color: 'from-pink-500 to-rose-500',
-      forBeginner: true,
-      features: ['News/community signals', 'Sentiment summaries', 'Availability varies by config']
-    },
-    {
       id: 'fear-greed',
       name: 'Fear & Greed Index',
       emoji: '😱',
-      description: 'Measure overall market sentiment',
+      description: 'A simple sentiment gauge with historical context',
       href: '/sentiment',
       color: 'from-yellow-500 to-orange-500',
       forBeginner: true,
-      features: ['Live index', 'Historical chart', 'Market signals']
+      features: ['Live index', 'Historical chart', 'Educational explanations']
     },
-    {
-      id: 'templates',
-      name: 'Report Templates',
-      emoji: '📋',
-      description: 'Pre-built analysis reports ready to download',
-      href: '/templates',
-      color: 'from-gray-600 to-gray-800',
-      forBeginner: true,
-      features: ['One-click reports', 'Multiple formats', 'Customizable']
-    },
-  ];
+  ].filter((t) => (t.id === 'smart-contract-verifier' ? isFeatureEnabled('smartContractVerifier') : true));
 
   const beginnerTools = tools.filter(t => t.forBeginner);
   const advancedTools = tools.filter(t => !t.forBeginner);
@@ -149,9 +120,9 @@ export default function ToolsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12 border-b border-gray-700">
         <div className="max-w-6xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">🛠️ Analysis Tools</h1>
+          <h1 className="text-4xl font-bold mb-4">🧰 Research Tools</h1>
           <p className="text-xl text-gray-300">
-            Powerful tools to help you make smarter crypto decisions
+            Datasets, analytics, and explanations — education-first
           </p>
         </div>
       </div>
@@ -159,13 +130,13 @@ export default function ToolsPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Beginner Tip */}
         <BeginnerTip title="💡 Where to Start?">
-          If you&apos;re new to crypto, we recommend starting with:
+          If you&apos;re new, start with:
           <br/>
-          1. <strong>Portfolio Builder</strong> - Create your first portfolio
+          1. <strong>Excel Templates</strong> - CryptoSheets formula templates for live data
           <br/>
-          2. <strong>AI Assistant</strong> - Ask any questions you have
+          2. <strong>Charts</strong> - Explore interactive visualizations
           <br/>
-          3. <strong>Fear & Greed Index</strong> - Understand market sentiment
+          3. <strong>Comparisons</strong> - Side-by-side metrics with explanations
         </BeginnerTip>
 
         {/* Beginner-Friendly Tools */}
@@ -247,15 +218,15 @@ export default function ToolsPage() {
 
         {/* CTA */}
         <div className="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-3">Need Help Using These Tools?</h2>
+          <h2 className="text-2xl font-bold mb-3">Want Metric Explanations?</h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Our AI assistant can guide you through any tool. Just ask!
+            Start with the Academy and Glossary for clear, non-trading explanations.
           </p>
           <Link
-            href="/chat"
+            href="/learn"
             className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors"
           >
-            🤖 Ask AI Assistant
+            📚 Go to Academy
           </Link>
         </div>
 

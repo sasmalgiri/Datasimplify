@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 
 // Color dot component using ref to avoid inline style warnings
 function ColorDot({ color, className = '' }: { color: string; className?: string }) {
@@ -595,6 +596,25 @@ https://datasimplify.vercel.app
               >
                 📥 Download Portfolio Plan (PDF)
               </button>
+              <TemplateDownloadButton
+                pageContext={{
+                  pageId: 'portfolio',
+                  selectedCoins: allocations.map(a => a.symbol.toLowerCase()),
+                  timeframe: '24h',
+                  currency: 'USD',
+                  holdings: allocations.map(a => ({
+                    coin: a.symbol,
+                    quantity: (investmentAmount * a.percentage / 100) / (coinPrices[a.symbol]?.price || 1),
+                  })),
+                  customizations: {
+                    riskTolerance,
+                    investmentAmount,
+                    includeCharts: true,
+                  },
+                }}
+                variant="outline"
+                size="lg"
+              />
               <button
                 type="button"
                 onClick={trackPortfolio}

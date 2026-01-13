@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
 export async function GET() {
   try {
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/global' });
     // Redistributable-only mode: derive stats from Binance tickers for our SUPPORTED_COINS universe.
     // Response keeps the legacy CoinGecko /global shape used by UI.
     const response = await fetch(`${BINANCE_BASE}/ticker/24hr`, {

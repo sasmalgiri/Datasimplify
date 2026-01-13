@@ -3,6 +3,7 @@ import { findCoinByGeckoId, getCoinGeckoId, SUPPORTED_COINS } from '@/lib/dataTy
 import { FEATURES } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getCoinFromCache, saveBulkMarketDataToCache } from '@/lib/supabaseData';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
@@ -97,6 +98,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/[id]' });
 
   // Check cache first (Supabase + memory)
   const cached = await getCached(id);

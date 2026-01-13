@@ -5,8 +5,14 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
+import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import {
+  areAllSourcesRedistributableClient,
+  isAnySourceRedistributableClient,
+  isDownloadCategoryRedistributableClient,
+} from '@/lib/redistributionPolicyClient';
 import {
   LineChart,
   Line,
@@ -135,7 +141,7 @@ function FGMarker({ position }: { position: number }) {
   return <div ref={markerRef} className="absolute top-0 w-3 h-3 bg-white rounded-full shadow-lg transform -translate-y-0" />;
 }
 
-// Chart type definitions - expanded to 21 chart types
+// Chart type definitions - expanded to 19 chart types
 type ChartType =
   | 'price_history'
   | 'candlestick'
@@ -143,8 +149,6 @@ type ChartType =
   | 'correlation'
   | 'racing_bar'
   | 'market_dominance'
-  | 'prediction_accuracy'
-  | 'price_prediction'
   | 'volume_analysis'
   | 'momentum'
   // New chart types
@@ -165,7 +169,7 @@ interface ChartConfig {
   title: string;
   description: string;
   icon: string;
-  category: 'historical' | 'volatility' | 'prediction' | 'comparison' | 'onchain' | 'derivatives' | 'sentiment';
+  category: 'historical' | 'volatility' | 'comparison' | 'onchain' | 'derivatives' | 'sentiment';
 }
 
 const CHART_CONFIGS: ChartConfig[] = [
@@ -199,11 +203,48 @@ const CHART_CONFIGS: ChartConfig[] = [
   // Sentiment Charts
   { type: 'fear_greed_history', title: 'Fear & Greed History', description: 'Historical fear/greed index', icon: '😱', category: 'sentiment' },
   { type: 'social_volume', title: 'Social Volume', description: 'Social mentions & engagement', icon: '📣', category: 'sentiment' },
-
-  // Prediction Charts
-  { type: 'prediction_accuracy', title: 'AI Prediction Accuracy', description: 'Historical prediction performance', icon: '🎯', category: 'prediction' },
-  { type: 'price_prediction', title: 'Price Prediction', description: 'AI-powered price forecasts', icon: '🔮', category: 'prediction' },
 ];
+
+function isChartTypeAllowed(chartType: ChartType): boolean {
+  // Chart types that render “unavailable” placeholders are safe to keep.
+  if (chartType === 'wallet_distribution' || chartType === 'active_addresses' || chartType === 'social_volume' || chartType === 'liquidation_heatmap') {
+    return true;
+  }
+
+  // History/candle-based charts: allow if at least one permitted source can serve (binance or coingecko).
+  if (
+    chartType === 'price_history' ||
+    chartType === 'candlestick' ||
+    chartType === 'volume_analysis' ||
+    chartType === 'volatility' ||
+    chartType === 'momentum' ||
+    chartType === 'fibonacci' ||
+    chartType === 'volume_profile' ||
+    chartType === 'correlation' ||
+    chartType === 'racing_bar' ||
+    chartType === 'market_dominance' ||
+    chartType === 'btc_dominance'
+  ) {
+    return isAnySourceRedistributableClient(['binance', 'coingecko']);
+  }
+
+  if (chartType === 'funding_rate' || chartType === 'open_interest') {
+    return areAllSourcesRedistributableClient(['binance']);
+  }
+
+  if (chartType === 'whale_flow') {
+    return areAllSourcesRedistributableClient(['etherscan', 'coingecko']);
+  }
+
+  if (chartType === 'fear_greed_history') {
+    return areAllSourcesRedistributableClient(['alternativeme']);
+  }
+
+  // Default: strict.
+  return false;
+}
+
+const AVAILABLE_CHART_CONFIGS: ChartConfig[] = CHART_CONFIGS.filter(c => isChartTypeAllowed(c.type));
 
 // Use all 67 supported coins from shared config
 const COINS = SUPPORTED_COINS.map(coin => ({
@@ -225,7 +266,7 @@ const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#E
 // Valid chart types for URL validation
 const VALID_CHART_TYPES: ChartType[] = [
   'price_history', 'candlestick', 'volatility', 'correlation', 'racing_bar',
-  'market_dominance', 'prediction_accuracy', 'price_prediction', 'volume_analysis',
+  'market_dominance', 'volume_analysis',
   'momentum', 'fibonacci', 'volume_profile', 'funding_rate', 'open_interest',
   'liquidation_heatmap', 'whale_flow', 'wallet_distribution', 'active_addresses',
   'fear_greed_history', 'social_volume', 'btc_dominance'
@@ -243,8 +284,7 @@ function ChartsContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [chartData, setChartData] = useState<Record<string, unknown>[]>([]);
   const [candlestickData, setCandlestickData] = useState<Record<string, unknown>[]>([]);
-  const [predictionData, setPredictionData] = useState<Record<string, unknown> | null>(null);
-  const [racingData, setRacingData] = useState<Record<string, unknown>[]>([]);
+    const [racingData, setRacingData] = useState<Record<string, unknown>[]>([]);
   const [racingFrame, setRacingFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [derivativesData, setDerivativesData] = useState<Record<string, unknown> | null>(null);
@@ -257,13 +297,20 @@ function ChartsContent() {
   const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
   const chartRef = useRef<HTMLDivElement>(null);
 
+  // Enforce allowed chart types in strict redistribution mode
+  useEffect(() => {
+    if (isChartTypeAllowed(selectedChart)) return;
+    const fallback = AVAILABLE_CHART_CONFIGS[0]?.type;
+    if (fallback) setSelectedChart(fallback);
+  }, [selectedChart]);
+
   // Initialize state from URL params on mount (client-side only)
   useEffect(() => {
     if (isInitialized.current) return;
     isInitialized.current = true;
 
     const chart = searchParams.get('chart');
-    if (chart && VALID_CHART_TYPES.includes(chart as ChartType)) {
+    if (chart && VALID_CHART_TYPES.includes(chart as ChartType) && isChartTypeAllowed(chart as ChartType)) {
       setSelectedChart(chart as ChartType);
     }
 
@@ -379,18 +426,12 @@ function ChartsContent() {
         })));
       }
 
-      // Fetch prediction data for AI charts
-      const predRes = await fetch(`/api/charts/prediction?coin=${selectedCoin}`);
-      const predData = await predRes.json();
-      setPredictionData(predData);
-
       // Generate racing bar data
       await generateRacingData();
     } catch (error) {
       console.error('Error fetching chart data:', error);
       setChartData([]);
       setCandlestickData([]);
-      setPredictionData(null);
       setRacingData([]);
     } finally {
       setIsLoading(false);
@@ -613,52 +654,9 @@ function ChartsContent() {
     if (!chartRef.current && (format === 'png' || format === 'svg')) return;
 
     if (format === 'iqy') {
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
-      const coinSymbol = COINS.find(c => c.id === selectedCoin)?.symbol || 'BTC';
-      const days = Math.min(2000, Math.max(30, Number.parseInt(timeRange, 10) || 30));
-
-      const buildUrl = (category: string, extraParams: Record<string, string>) => {
-        const url = new URL(`${baseUrl}/api/download`);
-        url.searchParams.set('category', category);
-        url.searchParams.set('format', 'csv');
-        url.searchParams.set('excel', 'true');
-        for (const [k, v] of Object.entries(extraParams)) url.searchParams.set(k, v);
-        return url.toString();
-      };
-
-      let csvUrl = buildUrl('market_overview', { fields: 'symbol,name,price,market_cap,volume_24h,price_change_percent_24h' });
-
-      // Map chart types to the closest matching download dataset
-      if (['price_history', 'candlestick', 'volume_analysis', 'volatility', 'momentum', 'fibonacci', 'volume_profile'].includes(selectedChart)) {
-        csvUrl = buildUrl('historical_prices', {
-          symbol: coinSymbol,
-          interval: '1d',
-          limit: String(days),
-          fields: 'timestamp,open,high,low,close,volume',
-        });
-      } else if (selectedChart === 'funding_rate') {
-        csvUrl = buildUrl('funding_rates', { symbols: coinSymbol });
-      } else if (selectedChart === 'open_interest') {
-        csvUrl = buildUrl('open_interest', { symbols: coinSymbol });
-      } else if (selectedChart === 'liquidation_heatmap') {
-        csvUrl = buildUrl('liquidations', { symbols: coinSymbol });
-      } else if (selectedChart === 'correlation') {
-        csvUrl = buildUrl('correlation_matrix', { symbols: 'BTC,ETH,BNB,SOL,XRP' });
-      } else if (selectedChart === 'racing_bar') {
-        csvUrl = buildUrl('market_overview', { sortBy: 'market_cap', minMarketCap: '0', fields: 'symbol,name,price,market_cap' });
-      } else if (selectedChart === 'market_dominance' || selectedChart === 'btc_dominance') {
-        csvUrl = buildUrl('global_stats', {});
-      } else if (selectedChart === 'fear_greed_history') {
-        csvUrl = buildUrl('fear_greed', {});
-      } else if (selectedChart === 'social_volume') {
-        csvUrl = buildUrl('sentiment_aggregated', {});
-      } else if (selectedChart === 'whale_flow') {
-        csvUrl = buildUrl('exchange_flows', {});
-      } else if (selectedChart === 'wallet_distribution' || selectedChart === 'active_addresses') {
-        csvUrl = buildUrl('bitcoin_onchain', {});
-      }
-
-      downloadIqy(csvUrl, `${selectedCoin}_${selectedChart}_${timeRange}d.iqy`);
+      // IQY/Live Excel format is no longer available - redirect to templates
+      alert('Live Excel connections are no longer available.\n\nFor live data in Excel, use our CryptoSheets templates instead.\n\nVisit: /templates');
+      window.location.href = '/templates';
       return;
     }
 
@@ -801,29 +799,31 @@ function ChartsContent() {
       chartSheet.getColumn('A').width = 25;
       chartSheet.getColumn('B').width = 30;
 
-      // Sheet 3: Live Data Instructions
-      const instructionSheet = workbook.addWorksheet('Live Data Guide');
+      // Sheet 3: About DataSimplify
+      const instructionSheet = workbook.addWorksheet('About');
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
 
       const instructions = [
-        ['DataSimplify - Live Data Connection', ''],
+        ['DataSimplify - Educational Chart Export', ''],
         ['', ''],
         ['Coin:', coinName],
         ['Chart Type:', selectedChart],
         ['Time Range:', `${timeRange} days`],
         ['Generated:', new Date().toISOString()],
         ['', ''],
-        ['GET LIVE DATA IN EXCEL (Power Query):', ''],
-        ['1. Go to Data tab → Get Data → From Web', ''],
-        ['2. Paste this URL:', `${baseUrl}/api/charts/history?coin=${selectedCoin}&days=${timeRange}`],
-        ['3. Click OK and transform JSON to table', ''],
-        ['4. Right-click query → Properties → Enable auto-refresh', ''],
+        ['ABOUT THIS FILE:', ''],
+        ['This file contains a snapshot of chart data for educational purposes.', ''],
+        ['It is NOT a live data feed. Data is static from the time of export.', ''],
         ['', ''],
-        ['GET LIVE DATA IN GOOGLE SHEETS:', ''],
-        ['Paste this formula in any cell:', ''],
-        ['', `=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
+        ['FOR LIVE DATA IN EXCEL:', ''],
+        ['Use our CryptoSheets formula templates for live data.', ''],
+        ['Templates require the CryptoSheets add-in.', ''],
+        ['Learn more:', `${baseUrl}/templates`],
+        ['Setup guide:', `${baseUrl}/template-requirements`],
         ['', ''],
-        ['More data available at:', `${baseUrl}/download`],
+        ['DISCLAIMER:', ''],
+        ['This data is for educational purposes only. Not financial advice.', ''],
+        ['See full disclaimer at:', `${baseUrl}/disclaimer`],
       ];
 
       instructions.forEach((row, idx) => {
@@ -1527,191 +1527,6 @@ function ChartsContent() {
           );
         }
 
-      case 'prediction_accuracy':
-        if (!predictionData) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">Loading prediction data...</div>;
-        }
-
-        const accuracyData = (predictionData as any)?.accuracy as { overall: number; bullish: number; bearish: number } | null | undefined;
-        const historyData = ((predictionData as any)?.history as { date: string; correct: boolean | null }[] | undefined) || [];
-        const accuracyConfidence = (predictionData as any)?.confidence as number | undefined;
-
-        if (!accuracyData && historyData.length === 0) {
-          return (
-            <div className="flex items-center justify-center h-96 text-gray-400">
-              No prediction accuracy data available
-            </div>
-          );
-        }
-
-        return (
-          <div className="space-y-6">
-            {/* Accuracy Radar */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h4 className="text-lg font-medium mb-4">Prediction Accuracy by Direction</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart data={[
-                    ...(accuracyData ? [
-                      { metric: 'Overall', value: accuracyData.overall },
-                      { metric: 'Bullish', value: accuracyData.bullish },
-                      { metric: 'Bearish', value: accuracyData.bearish },
-                    ] : []),
-                    ...(typeof accuracyConfidence === 'number' ? [{ metric: 'Confidence', value: accuracyConfidence }] : []),
-                  ] as any}>
-                    <PolarGrid stroke="#374151" />
-                    <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF' }} />
-                    <PolarRadiusAxis domain={[0, 100]} tick={{ fill: '#9CA3AF' }} />
-                    <Radar name="Accuracy" dataKey="value" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.5} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Recent Predictions */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h4 className="text-lg font-medium mb-4">Recent Prediction Results</h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={historyData.slice(0, 14)}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                    <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={[0, 1]} />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-                    />
-                    <Bar
-                      dataKey="correct"
-                      fill="#10B981"
-                      name="Correct"
-                    >
-                      {historyData.slice(0, 14).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.correct ? '#10B981' : '#EF4444'} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-blue-400">{accuracyData ? `${accuracyData.overall}%` : '—'}</div>
-                <div className="text-gray-400 text-sm">Overall Accuracy</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-green-400">{accuracyData ? `${accuracyData.bullish}%` : '—'}</div>
-                <div className="text-gray-400 text-sm">Bullish Accuracy</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-red-400">{accuracyData ? `${accuracyData.bearish}%` : '—'}</div>
-                <div className="text-gray-400 text-sm">Bearish Accuracy</div>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-purple-400">{typeof accuracyConfidence === 'number' ? `${accuracyConfidence}%` : '—'}</div>
-                <div className="text-gray-400 text-sm">Avg Confidence</div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'price_prediction':
-        if (!predictionData) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">Loading prediction data...</div>;
-        }
-
-        const targets = (predictionData as any)?.priceTarget as { current: number; low: number; mid: number; high: number } | null | undefined;
-        const prediction = ((predictionData as any)?.prediction as string | undefined) || 'NEUTRAL';
-        const predictionConfidence = (predictionData as any)?.confidence as number | undefined;
-
-        // Only show real historical prices. Do not fabricate predicted series.
-        const predictionChartData = chartData.slice(-30).map((d) => ({
-          date: d.date as string,
-          price: d.price as number,
-        }));
-
-        return (
-          <div className="space-y-6">
-            {/* Prediction Banner */}
-            <div className={`rounded-xl p-6 ${prediction === 'BULLISH' ? 'bg-green-900/30 border border-green-500/50' : 'bg-red-900/30 border border-red-500/50'}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-gray-400">AI Prediction for {COINS.find(c => c.id === selectedCoin)?.name}</div>
-                  <div className={`text-3xl font-bold ${prediction === 'BULLISH' ? 'text-green-400' : 'text-red-400'}`}>
-                    {prediction === 'BULLISH' ? '🚀 BULLISH' : '📉 BEARISH'}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-400">Confidence</div>
-                  <div className="text-2xl font-bold text-white">{typeof predictionConfidence === 'number' ? `${predictionConfidence}%` : '—'}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Price Targets */}
-            {targets ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-gray-800/50 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm">Current Price</div>
-                  <div className="text-xl font-bold text-white">{formatValue(targets.current)}</div>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-red-500">
-                  <div className="text-gray-400 text-sm">Bear Target</div>
-                  <div className="text-xl font-bold text-red-400">{formatValue(targets.low)}</div>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-yellow-500">
-                  <div className="text-gray-400 text-sm">Base Target</div>
-                  <div className="text-xl font-bold text-yellow-400">{formatValue(targets.mid)}</div>
-                </div>
-                <div className="bg-gray-800/50 rounded-xl p-4 border-l-4 border-green-500">
-                  <div className="text-gray-400 text-sm">Bull Target</div>
-                  <div className="text-xl font-bold text-green-400">{formatValue(targets.high)}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center rounded-xl bg-gray-800/50 p-6 text-gray-400">
-                No price targets available
-              </div>
-            )}
-
-            {/* Prediction Chart */}
-            <ResponsiveContainer width="100%" height={400}>
-              <ComposedChart data={predictionChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                <YAxis
-                  stroke="#9CA3AF"
-                  tick={{ fill: '#9CA3AF' }}
-                  domain={['auto', 'auto']}
-                  tickFormatter={(v) => formatValue(v)}
-                />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-                  labelStyle={{ color: '#F3F4F6' }}
-                  formatter={(value, name) => value !== undefined ? [formatValue(value as number), name as string] : ['', '']}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="price"
-                  stroke="#3B82F6"
-                  dot={false}
-                  name="Historical Price"
-                  strokeWidth={2}
-                />
-                {targets ? (
-                  <>
-                    <ReferenceLine y={targets.high} stroke="#10B981" strokeDasharray="3 3" label="Bull Target" />
-                    <ReferenceLine y={targets.low} stroke="#EF4444" strokeDasharray="3 3" label="Bear Target" />
-                  </>
-                ) : null}
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        );
-
       case 'fibonacci':
         // Fibonacci retracement levels
         const priceData = chartData.map(d => d.price as number).filter(p => p > 0);
@@ -2169,7 +1984,7 @@ function ChartsContent() {
     }
   };
 
-  const selectedConfig = CHART_CONFIGS.find(c => c.type === selectedChart);
+  const selectedConfig = AVAILABLE_CHART_CONFIGS.find(c => c.type === selectedChart);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -2186,7 +2001,6 @@ function ChartsContent() {
               </Link>
               <Link href="/download" className="text-gray-400 hover:text-white">Downloads</Link>
               <Link href="/compare" className="text-gray-400 hover:text-white">Compare</Link>
-              <Link href="/chat" className="text-gray-400 hover:text-white">AI Chat</Link>
               <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
             </div>
           </div>
@@ -2227,18 +2041,32 @@ function ChartsContent() {
               type="button"
               onClick={() => downloadChart('xlsx')}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
-              title="Download Excel with chart-ready data"
+              title="Download Excel with chart snapshot (calculated indicators only)"
             >
               Excel
             </button>
             <button
               type="button"
-              onClick={() => downloadChart('iqy')}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
-              title="Live Excel (IQY): one-click import, refreshable in Excel"
+              onClick={() => window.location.href = '/templates'}
+              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg text-sm font-medium transition"
+              title="Get CryptoSheets templates for live data in Excel"
             >
-              Live Excel
+              Templates
             </button>
+            <TemplateDownloadButton
+              pageContext={{
+                pageId: 'charts',
+                selectedCoin: selectedCoin,
+                chartType: selectedChart,
+                interval: timeRange,
+                timeframe: timeRange,
+                customizations: {
+                  includeCharts: true,
+                },
+              }}
+              variant="outline"
+              size="md"
+            />
           </div>
         </div>
 
@@ -2248,12 +2076,12 @@ function ChartsContent() {
             <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 sticky top-4">
               <h3 className="font-medium mb-4">Chart Types</h3>
 
-              {['historical', 'volatility', 'comparison', 'prediction'].map(category => (
+              {['historical', 'volatility', 'comparison'].map(category => (
                 <div key={category} className="mb-4">
                   <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
                     {category}
                   </div>
-                  {CHART_CONFIGS.filter(c => c.category === category).map(config => (
+                  {AVAILABLE_CHART_CONFIGS.filter(c => c.category === category).map(config => (
                     <button
                       key={config.type}
                       onClick={() => setSelectedChart(config.type)}
@@ -2396,9 +2224,7 @@ function ChartsContent() {
                 {selectedChart === 'correlation' && 'Correlation matrix showing how different cryptocurrencies move in relation to each other.'}
                 {selectedChart === 'racing_bar' && 'Animated visualization of market cap rankings over time. Click Play to start the animation.'}
                 {selectedChart === 'market_dominance' && 'Pie chart showing the relative market share of top cryptocurrencies.'}
-                {selectedChart === 'prediction_accuracy' && 'Track the historical accuracy of our AI prediction engine across different market conditions.'}
-                {selectedChart === 'price_prediction' && 'AI-powered price predictions with confidence levels and target prices.'}
-              </p>
+                              </p>
             </div>
           </div>
         </div>

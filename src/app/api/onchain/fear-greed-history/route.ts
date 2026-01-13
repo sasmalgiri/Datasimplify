@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 // Alternative.me Fear & Greed Index API (FREE)
 const FEAR_GREED_API = 'https://api.alternative.me/fng/';
@@ -7,6 +8,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(365, Math.max(1, Number.parseInt(searchParams.get('limit') || '30', 10) || 30));
+
+    assertRedistributionAllowed('alternativeme', { purpose: 'chart', route: '/api/onchain/fear-greed-history' });
 
     const response = await fetch(`${FEAR_GREED_API}?limit=${limit}&format=json`, {
       headers: { Accept: 'application/json' },

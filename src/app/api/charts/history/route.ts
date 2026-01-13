@@ -1,13 +1,14 @@
 /**
  * Chart History API
  * Returns price history data for charts
- * Uses Binance API (FREE, Commercial OK) as primary source
- * Falls back to CoinGecko (FREE) if needed
+ * Uses Binance API as primary source
+ * Falls back to CoinGecko if enabled
  */
 
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
@@ -86,7 +87,7 @@ export async function GET(request: Request) {
     const coin = searchParams.get('coin') || 'bitcoin';
     const days = parseInt(searchParams.get('days') || '30');
 
-    // Try Binance first (commercial-friendly, supports up to 1000 daily candles = ~2.7 years)
+    // Try Binance first (supports up to 1000 daily candles = ~2.7 years)
     const binanceSymbol = getCoinSymbol(coin);
 
     if (binanceSymbol) {
@@ -95,6 +96,7 @@ export async function GET(request: Request) {
       const klines = await getBinanceKlines(binanceSymbol, '1d', limit);
 
       if (klines && klines.length > 0) {
+        assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/charts/history' });
         const priceHistory = klines.map(k => ({
           timestamp: k.timestamp,
           price: k.close,
@@ -116,6 +118,7 @@ export async function GET(request: Request) {
 
     // Fallback to CoinGecko if Binance fails (only when enabled)
     if (isFeatureEnabled('coingecko')) {
+      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/history' });
       const chart = await fetchCoinGeckoMarketChart(coin, days);
       const bucketMs = 24 * 60 * 60 * 1000;
       const priceHistory = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];

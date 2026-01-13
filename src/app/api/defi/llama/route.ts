@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 const LLAMA_BASE = 'https://api.llama.fi';
 
@@ -17,6 +18,8 @@ export async function GET(request: Request) {
       { status: 503 }
     );
   }
+
+  assertRedistributionAllowed('defillama', { purpose: 'chart', route: '/api/defi/llama' });
 
   const { searchParams } = new URL(request.url);
   const type = parseType(searchParams.get('type'));

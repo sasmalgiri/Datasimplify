@@ -5,12 +5,9 @@
 // Run this on a schedule (cron job) to keep data fresh
 // Users then query Supabase instead of external APIs
 //
-// COMMERCIAL USE: All APIs used are free and allow commercial use
-// - CoinLore: FREE, no API key, commercial allowed
-// - Finnhub: FREE tier (60 calls/min), commercial allowed
-// - DefiLlama: FREE, commercial allowed (with attribution)
-// - Binance: FREE, commercial allowed
-// - Etherscan/Blockchair: FREE tiers, commercial allowed
+// NOTE ON LICENSING:
+// Some upstream data sources may restrict commercial use, caching, or redistribution.
+// This module respects feature flags to avoid accidentally syncing higher-risk domains.
 // ============================================
 
 import { supabaseAdmin, isSupabaseConfigured } from './supabase';
@@ -27,10 +24,10 @@ import {
 import { aggregateAllSentiment } from './comprehensiveSentiment';
 import { getWhaleDashboard } from './whaleTracking';
 import { SUPPORTED_COINS } from './dataTypes';
-import { generateMarketAnalysis, isGroqConfigured } from './groqAI';
-// Commercial-friendly API imports
+// Provider API imports (terms vary by provider)
 import { fetchAllCoinLoreCoins, transformCoinLoreToInternal, COINLORE_ATTRIBUTION } from './coinlore';
 import { fetchFinnhubSentimentPosts, isFinnhubConfigured, FINNHUB_ATTRIBUTION } from './finnhub';
+import { isFeatureEnabled } from './featureFlags';
 
 // Check if Supabase is configured
 function checkSupabaseAdmin() {
@@ -260,7 +257,7 @@ export async function syncCoinGeckoData(): Promise<{ success: boolean; count: nu
 
 // ============================================
 // 0b. SYNC COINLORE MARKET DATA (Commercial Alternative)
-// FREE API - No API key - Commercial use allowed
+// FREE API - No API key (terms apply; verify commercial usage rights)
 // ============================================
 
 export async function syncCoinLoreData(): Promise<{ success: boolean; count: number; error?: string }> {
@@ -367,44 +364,6 @@ export async function syncMarketData(): Promise<{ success: boolean; count: numbe
     if (error) throw error;
     
     console.log(`✅ Synced ${records.length} coins`);
-
-    // Generate daily AI summary (once per day)
-    if (isGroqConfigured() && await shouldGenerateDailySummary('market')) {
-      try {
-        console.log('🤖 Generating AI market summary...');
-        const fearGreed = await fetchFearGreedIndex();
-
-        if (fearGreed.value == null) {
-          console.log('ℹ️ Fear & Greed unavailable; skipping AI market summary');
-          await logSyncComplete(logId, records.length);
-          return { success: true, count: records.length };
-        }
-
-        const analysis = await generateMarketAnalysis({
-          topCoins: marketData.slice(0, 10).map(c => ({
-            symbol: c.symbol,
-            price: c.price,
-            change24h: c.priceChangePercent24h,
-          })),
-          fearGreedIndex: fearGreed.value,
-          fearGreedLabel: fearGreed.label,
-        });
-
-        const sentimentScore = analysis.outlook === 'bullish' ? 0.5 :
-                               analysis.outlook === 'bearish' ? -0.5 : 0;
-
-        await saveDailySummary(
-          'market',
-          analysis.summary,
-          analysis.keyInsights,
-          sentimentScore,
-          analysis.outlook,
-          { riskLevel: analysis.riskLevel === 'high' ? 3 : analysis.riskLevel === 'medium' ? 2 : 1 }
-        );
-      } catch (aiError) {
-        console.error('AI summary generation failed:', aiError);
-      }
-    }
 
     await logSyncComplete(logId, records.length);
 
@@ -517,7 +476,7 @@ export async function syncDefiData(): Promise<{ success: boolean; count: number;
 
 // ============================================
 // 3. SYNC SENTIMENT DATA (Every 15 minutes)
-// Uses Finnhub (commercial) + CryptoPanic + RSS (all commercial-friendly)
+// Uses Finnhub + other sources; ensure terms/rights are acceptable before enabling.
 // ============================================
 
 export async function syncSentimentData(): Promise<{ success: boolean; count: number; error?: string }> {
@@ -525,11 +484,11 @@ export async function syncSentimentData(): Promise<{ success: boolean; count: nu
 
   try {
     console.log('💬 Syncing sentiment data...');
-    console.log(`📊 Data sources: ${FINNHUB_ATTRIBUTION.name}, CryptoPanic, RSS Feeds (all commercial-friendly)`);
+    console.log(`📊 Data sources: ${FINNHUB_ATTRIBUTION.name}, CryptoPanic, RSS Feeds (terms vary by source)`);
 
-    // Fetch aggregated sentiment from commercial sources
-    // aggregateAllSentiment uses: CryptoPanic, RSS, 4chan (all commercial OK)
-    // We add Finnhub for additional commercial-friendly sentiment
+    // Fetch aggregated sentiment from multiple sources.
+    // aggregateAllSentiment uses: CryptoPanic, RSS, 4chan (terms vary; enable only if acceptable)
+    // We add Finnhub for additional coverage when configured.
     const sentiment = await aggregateAllSentiment();
 
     // If Finnhub is configured, also fetch from there
@@ -574,11 +533,11 @@ export async function syncSentimentData(): Promise<{ success: boolean; count: nu
     if (coinError) throw coinError;
     
     // Save individual posts (for historical analysis)
-    // Combine posts from all commercial-friendly sources
+    // Combine posts from configured sources
     const allPosts = [
       ...sentiment.topBullish,
       ...sentiment.topBearish,
-      ...finnhubPosts, // Add Finnhub posts (commercial-friendly)
+      ...finnhubPosts,
     ].slice(0, 100); // Limit to top 100
     
     const postRecords = allPosts.map(post => ({
@@ -787,17 +746,27 @@ export async function syncAllData(): Promise<{
 }> {
   console.log('🔄 Starting full data sync...');
   console.log('⏰', new Date().toISOString());
-  console.log('📋 Using COMMERCIAL-FRIENDLY APIs only');
 
-  const results = {
-    // Use CoinLore (commercial) as primary, CoinGecko as fallback
-    coinLore: await syncCoinLoreData(), // Commercial-friendly market data
-    marketData: await syncMarketData(), // Binance (commercial OK)
-    defiData: await syncDefiData(), // DefiLlama (commercial OK with attribution)
-    sentiment: await syncSentimentData(), // Finnhub + CryptoPanic + RSS (all commercial OK)
-    whales: await syncWhaleData(), // Etherscan + Blockchair (commercial OK)
-    onchain: await syncOnChainMetrics(), // Blockchain.info (commercial OK)
+  const results: Record<string, { success: boolean; count: number; error?: string }> = {
+    // Lower-risk core syncs
+    coinLore: await syncCoinLoreData(),
+    marketData: await syncMarketData(),
+    onchain: await syncOnChainMetrics(),
   };
+
+  // Optional domains (explicitly enabled)
+  if (isFeatureEnabled('coingecko')) {
+    results.coingecko = await syncCoinGeckoData();
+  }
+  if (isFeatureEnabled('defi')) {
+    results.defiData = await syncDefiData();
+  }
+  if (isFeatureEnabled('socialSentiment')) {
+    results.sentiment = await syncSentimentData();
+  }
+  if (isFeatureEnabled('whales')) {
+    results.whales = await syncWhaleData();
+  }
   
   const allSuccess = Object.values(results).every(r => r.success);
   
@@ -817,32 +786,42 @@ export async function syncAllData(): Promise<{
 // ============================================
 
 export const SYNC_INTERVALS = {
-  coinlore: 5 * 60 * 1000,       // 5 minutes (CoinLore - commercial friendly)
-  coingecko: 5 * 60 * 1000,      // 5 minutes (CoinGecko - fallback, non-commercial)
-  market_data: 60 * 1000,        // 1 minute (Binance - commercial OK)
-  defi_data: 10 * 60 * 1000,     // 10 minutes (DefiLlama - commercial OK)
-  sentiment: 15 * 60 * 1000,     // 15 minutes (Finnhub + others - commercial OK)
-  whales: 5 * 60 * 1000,         // 5 minutes (Etherscan - commercial OK)
-  onchain: 10 * 60 * 1000,       // 10 minutes (Blockchain.info - commercial OK)
+  coinlore: 5 * 60 * 1000,       // 5 minutes (CoinLore - check terms)
+  coingecko: 5 * 60 * 1000,      // 5 minutes (CoinGecko - check terms)
+  market_data: 60 * 1000,        // 1 minute (Binance - check terms)
+  defi_data: 10 * 60 * 1000,     // 10 minutes (DeFi providers - check terms)
+  sentiment: 15 * 60 * 1000,     // 15 minutes (Sentiment sources - check terms)
+  whales: 5 * 60 * 1000,         // 5 minutes (Explorer providers - check terms)
+  onchain: 10 * 60 * 1000,       // 10 minutes (On-chain public endpoints - check terms)
 };
 
 // Start all sync jobs (for local development)
-// Uses COMMERCIAL-FRIENDLY APIs only
+// Uses a mix of providers; ensure terms/rights are acceptable
 export function startSyncJobs() {
-  console.log('🚀 Starting sync jobs (COMMERCIAL APIs)...');
+  console.log('🚀 Starting sync jobs...');
 
   // Initial sync
   syncAllData();
 
-  // Schedule recurring syncs - using commercial-friendly APIs
-  setInterval(syncCoinLoreData, SYNC_INTERVALS.coinlore); // Commercial market data
+  // Schedule recurring syncs
+  setInterval(syncCoinLoreData, SYNC_INTERVALS.coinlore);
   setInterval(syncMarketData, SYNC_INTERVALS.market_data);
-  setInterval(syncDefiData, SYNC_INTERVALS.defi_data);
-  setInterval(syncSentimentData, SYNC_INTERVALS.sentiment);
-  setInterval(syncWhaleData, SYNC_INTERVALS.whales);
   setInterval(syncOnChainMetrics, SYNC_INTERVALS.onchain);
 
-  console.log('✅ Sync jobs scheduled (all commercial-friendly)');
+  if (isFeatureEnabled('coingecko')) {
+    setInterval(syncCoinGeckoData, SYNC_INTERVALS.coingecko);
+  }
+  if (isFeatureEnabled('defi')) {
+    setInterval(syncDefiData, SYNC_INTERVALS.defi_data);
+  }
+  if (isFeatureEnabled('socialSentiment')) {
+    setInterval(syncSentimentData, SYNC_INTERVALS.sentiment);
+  }
+  if (isFeatureEnabled('whales')) {
+    setInterval(syncWhaleData, SYNC_INTERVALS.whales);
+  }
+
+  console.log('✅ Sync jobs scheduled (feature-flag aware)');
 }
 
 // ============================================
@@ -855,31 +834,31 @@ export const DATA_ATTRIBUTIONS = {
   defillama: {
     name: 'DefiLlama',
     url: 'https://defillama.com',
-    license: 'Free API - Commercial use allowed with attribution',
+    license: 'Public data (terms apply)',
     note: 'DeFi TVL and protocol data',
   },
   binance: {
     name: 'Binance',
     url: 'https://binance.com',
-    license: 'Free public API - Commercial use allowed',
+    license: 'Public API (terms apply)',
     note: 'Real-time trading data',
   },
   etherscan: {
     name: 'Etherscan',
     url: 'https://etherscan.io',
-    license: 'Free tier (5 calls/sec) - Commercial use allowed',
+    license: 'API access (terms apply)',
     note: 'Ethereum blockchain data and whale tracking',
   },
   blockchair: {
     name: 'Blockchair',
     url: 'https://blockchair.com',
-    license: 'Free tier (30 req/min) - Commercial use allowed',
+    license: 'API access (terms apply)',
     note: 'Bitcoin blockchain data',
   },
   alternativeme: {
     name: 'Alternative.me',
     url: 'https://alternative.me',
-    license: 'Free API - Commercial use allowed',
+    license: 'API (terms apply; verify commercial usage rights)',
     note: 'Fear & Greed Index',
   },
 };

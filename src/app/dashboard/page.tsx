@@ -217,9 +217,6 @@ export default function DashboardPage() {
               <Link href="/download" className="text-gray-600 hover:text-gray-900">
                 Downloads
               </Link>
-              <Link href="/chat" className="text-gray-600 hover:text-gray-900">
-                AI Chat
-              </Link>
               <button
                 onClick={signOut}
                 className="text-gray-600 hover:text-gray-900"
@@ -328,14 +325,6 @@ export default function DashboardPage() {
             <div className="text-3xl mb-2">📊</div>
             <h3 className="font-medium">Download Data</h3>
             <p className="text-gray-600 text-sm">Excel, CSV, JSON</p>
-          </Link>
-          <Link
-            href="/chat"
-            className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
-          >
-            <div className="text-3xl mb-2">🤖</div>
-            <h3 className="font-medium">AI Chat</h3>
-            <p className="text-gray-600 text-sm">Ask anything</p>
           </Link>
           <Link
             href="/compare"

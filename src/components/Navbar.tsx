@@ -28,8 +28,8 @@ export function Navbar() {
             >
               Market
             </Link>
-            <Link 
-              href="/download" 
+            <Link
+              href="/templates"
               className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
             >
               📊 Download
@@ -40,13 +40,7 @@ export function Navbar() {
             >
               Compare
             </Link>
-            <Link 
-              href="/chat" 
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              🤖 AI Chat
-            </Link>
-            <Link 
+            <Link
               href="/pricing" 
               className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
             >

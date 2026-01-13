@@ -15,7 +15,7 @@ export default function CommunityGuidelinesPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Community Guidelines</h1>
           <p className="text-gray-400 text-lg">
-            Rules and best practices for our AI Prediction Community
+            Rules and best practices for the DataSimplify Community
           </p>
         </div>
 
@@ -25,46 +25,72 @@ export default function CommunityGuidelinesPage() {
           <section className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-500/30 rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-emerald-400 mb-4">Our Mission</h2>
             <p className="text-gray-300 leading-relaxed">
-              DataSimplify&apos;s AI Community is a platform for crypto enthusiasts to share predictions,
-              discuss market trends, and learn from each other. We aim to foster a respectful,
-              educational, and transparent environment where everyone can contribute meaningfully.
+              DataSimplify provides software analytics tools and Excel templates for crypto enthusiasts
+              to visualize and analyze market data. Our community is a place to discuss data analysis
+              techniques, share spreadsheet tips, and help each other use our tools effectively.
             </p>
           </section>
 
-          {/* Prediction Rules */}
+          {/* Product Scope */}
+          <section className="bg-yellow-900/20 border border-yellow-500/30 rounded-2xl p-6">
+            <h2 className="text-2xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
+              <span>1.</span> Understanding Our Product
+            </h2>
+            <div className="space-y-3 text-gray-300">
+              <p className="mb-4">DataSimplify is software analytics tooling, not a financial service:</p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-3">
+                  <span className="text-yellow-400 mt-1">&#10003;</span>
+                  <span><strong className="text-white">Software Tools:</strong> We provide Excel templates with formulas (no embedded data)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-yellow-400 mt-1">&#10003;</span>
+                  <span><strong className="text-white">Educational Visualization:</strong> Dashboard displays are for educational purposes only</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-yellow-400 mt-1">&#10003;</span>
+                  <span><strong className="text-white">CryptoSheets Integration:</strong> Templates require the CryptoSheets add-in to fetch data</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-1">&#10007;</span>
+                  <span><strong className="text-white">Not a Data Vendor:</strong> We do not sell or redistribute market data</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-1">&#10007;</span>
+                  <span><strong className="text-white">Not Financial Advice:</strong> Nothing on this platform constitutes investment recommendations</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Discussion Rules */}
           <section className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2">
-              <span>1.</span> Prediction Rules
+              <span>2.</span> Discussion Rules
             </h2>
             <ul className="space-y-3 text-gray-300">
               <li className="flex items-start gap-3">
                 <span className="text-emerald-400 mt-1">&#10003;</span>
                 <div>
-                  <strong className="text-white">Be Specific:</strong> Include target price, timeframe (24h, 7d, 30d), and reasoning for your prediction.
+                  <strong className="text-white">Stay On Topic:</strong> Discussions should relate to data analysis, spreadsheet techniques, and tool usage.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-400 mt-1">&#10003;</span>
                 <div>
-                  <strong className="text-white">Provide Analysis:</strong> Back your predictions with technical analysis, on-chain data, or fundamental research.
+                  <strong className="text-white">Share Knowledge:</strong> Help others learn Excel formulas, data visualization, and analysis techniques.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-400 mt-1">&#10003;</span>
                 <div>
-                  <strong className="text-white">One Prediction Per Coin:</strong> You can only have one active prediction per cryptocurrency at a time.
+                  <strong className="text-white">Report Issues:</strong> If you find bugs or have feature requests, share them constructively.
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <span className="text-emerald-400 mt-1">&#10003;</span>
                 <div>
-                  <strong className="text-white">Realistic Targets:</strong> Predictions with unrealistic targets (e.g., 1000% gains in 24h) will be flagged.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-400 mt-1">&#10003;</span>
-                <div>
-                  <strong className="text-white">No Financial Advice:</strong> Predictions are opinions, not financial advice. Always include a disclaimer.
+                  <strong className="text-white">Educational Focus:</strong> Discussions should be educational - learning about data, not making money.
                 </div>
               </li>
             </ul>
@@ -73,7 +99,7 @@ export default function CommunityGuidelinesPage() {
           {/* Conduct Rules */}
           <section className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-4 flex items-center gap-2">
-              <span>2.</span> Community Conduct
+              <span>3.</span> Community Conduct
             </h2>
             <ul className="space-y-3 text-gray-300">
               <li className="flex items-start gap-3">
@@ -85,7 +111,7 @@ export default function CommunityGuidelinesPage() {
               <li className="flex items-start gap-3">
                 <span className="text-emerald-400 mt-1">&#10003;</span>
                 <div>
-                  <strong className="text-white">Constructive Feedback:</strong> When disagreeing, provide constructive criticism with your own analysis.
+                  <strong className="text-white">Constructive Feedback:</strong> When disagreeing, provide constructive criticism with reasoning.
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -106,9 +132,15 @@ export default function CommunityGuidelinesPage() {
           {/* Prohibited Content */}
           <section className="bg-red-900/20 border border-red-500/30 rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-red-400 mb-4 flex items-center gap-2">
-              <span>3.</span> Prohibited Content
+              <span>4.</span> Prohibited Content
             </h2>
             <ul className="space-y-3 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-red-400 mt-1">&#10007;</span>
+                <div>
+                  <strong className="text-white">Financial Advice:</strong> Do not give or solicit investment advice, price targets, or trading recommendations.
+                </div>
+              </li>
               <li className="flex items-start gap-3">
                 <span className="text-red-400 mt-1">&#10007;</span>
                 <div>
@@ -142,79 +174,10 @@ export default function CommunityGuidelinesPage() {
             </ul>
           </section>
 
-          {/* Accuracy & Leaderboard */}
-          <section className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
-              <span>4.</span> Accuracy & Leaderboard
-            </h2>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-400 mt-1">&#10003;</span>
-                <div>
-                  <strong className="text-white">Accuracy Tracking:</strong> Your prediction accuracy is tracked automatically based on actual price movements.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-400 mt-1">&#10003;</span>
-                <div>
-                  <strong className="text-white">Leaderboard Rankings:</strong> Top predictors are ranked based on accuracy, consistency, and community engagement.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-400 mt-1">&#10003;</span>
-                <div>
-                  <strong className="text-white">Badges & Rewards:</strong> Earn badges for milestones (10+ predictions, 70%+ accuracy, top 10 ranking).
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-emerald-400 mt-1">&#10003;</span>
-                <div>
-                  <strong className="text-white">Fair Play:</strong> Gaming the system (e.g., deleting failed predictions) will result in account penalties.
-                </div>
-              </li>
-            </ul>
-          </section>
-
-          {/* AI Moderation */}
-          <section className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-2xl p-6">
-            <h2 className="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2">
-              <span>5.</span> AI-Powered Moderation
-            </h2>
-            <p className="text-gray-300 mb-4">
-              Our community is monitored by advanced AI to ensure a safe environment:
-            </p>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex items-start gap-3">
-                <span className="text-blue-400 mt-1">&#9679;</span>
-                <div>
-                  <strong className="text-white">Content Screening:</strong> Predictions and comments may be screened for prohibited content before publishing.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-blue-400 mt-1">&#9679;</span>
-                <div>
-                  <strong className="text-white">Spam Detection:</strong> AI identifies and flags spam, duplicate content, and low-quality posts.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-blue-400 mt-1">&#9679;</span>
-                <div>
-                  <strong className="text-white">Sentiment Analysis:</strong> Toxic or hostile content is automatically flagged for review.
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="text-blue-400 mt-1">&#9679;</span>
-                <div>
-                  <strong className="text-white">Human Review:</strong> If your content is flagged incorrectly, you can request a human review.
-                </div>
-              </li>
-            </ul>
-          </section>
-
           {/* Enforcement */}
           <section className="bg-gray-800/50 border border-gray-700 rounded-2xl p-6">
             <h2 className="text-2xl font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <span>6.</span> Enforcement
+              <span>5.</span> Enforcement
             </h2>
             <div className="space-y-4 text-gray-300">
               <p>Violations of these guidelines will result in the following actions:</p>
@@ -243,13 +206,14 @@ export default function CommunityGuidelinesPage() {
 
           {/* Disclaimer */}
           <section className="bg-gray-900/50 border border-gray-600 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-gray-400 mb-3">Disclaimer</h2>
+            <h2 className="text-xl font-bold text-gray-400 mb-3">Important Disclaimer</h2>
             <p className="text-gray-400 text-sm leading-relaxed">
-              All predictions shared on DataSimplify&apos;s AI Community are user-generated content and represent
-              personal opinions only. They do not constitute financial advice. Cryptocurrency investments
-              carry significant risk, and you should always conduct your own research (DYOR) before making
-              any investment decisions. DataSimplify is not responsible for any financial losses resulting
-              from following community predictions.
+              DataSimplify provides educational software tools only. All community discussions are for
+              educational and informational purposes. Nothing shared in this community constitutes
+              financial, investment, tax, or legal advice. Cryptocurrency investments carry significant
+              risk, and you should always conduct your own research (DYOR) and consult qualified
+              professionals before making any investment decisions. DataSimplify is not responsible
+              for any financial decisions made based on community discussions.
             </p>
           </section>
         </div>

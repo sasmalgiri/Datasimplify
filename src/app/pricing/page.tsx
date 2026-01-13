@@ -33,22 +33,21 @@ function HelpIcon({ text }: { text: string }) {
 
 // Feature explanations for tooltips
 const FEATURE_EXPLANATIONS: Record<string, string> = {
-  '5 downloads per month': 'Includes standard downloads (XLSX/CSV) and Live (IQY) links for Excel refresh.',
-  '50 downloads per month': 'More monthly downloads for regular Excel/CSV workflows.',
-  'Unlimited downloads': 'No monthly download limits.',
-  'Standard downloads (XLSX/CSV)': 'Get a snapshot file you can open in Excel/Sheets or any tool that supports CSV.',
-  'Live downloads (IQY for Excel refresh)': 'One-click IQY file that imports a refreshable table into Excel (no Power Query setup needed).',
-  'Standard + Live downloads': 'Includes both snapshot files and refreshable Excel IQY downloads.',
-  'Customizable exports (choose columns)': 'Pick the columns you want (server-side filtering) so your exports match your spreadsheet.',
-  'Live chart exports to Excel (IQY)': 'Download a refreshable Excel link for charts so tables update when you refresh.',
-  'Faster refresh via authenticated endpoints': 'When using authenticated requests (e.g., add-in / API), the backend can allow shorter refresh intervals than public refresh.',
+  '5 templates per month': 'Generate up to 5 Excel templates with CryptoSheets formulas each month.',
+  '50 templates per month': 'More monthly template generations for regular workflows.',
+  'Unlimited templates': 'No monthly template generation limits.',
+  'Basic templates (XLSX)': 'Excel templates with CryptoSheets formulas for data visualization.',
+  'All template types': 'Access to all template categories: screener, compare, risk, watchlist.',
+  'Custom template configurations': 'Configure templates with your preferred coins, timeframes, and metrics.',
+  'Priority template generation': 'Faster template generation with dedicated processing.',
+  'Educational dashboards': 'Access to display-only dashboards for educational data visualization.',
   'Community support': 'Help via community resources and docs.',
   'Email support': 'Email support for account and billing questions.',
   'Priority support': 'Faster response times for paid tiers.',
   'Everything in Pro': 'All Pro features included.',
   'API access (authenticated)': 'Use authenticated endpoints for integrations and automation.',
   'Higher limits by request': 'If you need higher limits, we can discuss a tailored setup.',
-  'Priority onboarding (email)': 'Help getting your first dashboard/export workflow set up.',
+  'Priority onboarding (email)': 'Help getting your template workflow set up.',
 };
 
 interface PricingInfo {
@@ -104,12 +103,19 @@ export default function PricingPage() {
         <Breadcrumb />
         <div className="max-w-3xl mx-auto px-4 py-16">
           <h1 className="text-3xl font-bold mb-4">Pricing</h1>
-          <p className="text-gray-700">
-            This product is currently running in free mode. Pricing and payments are disabled.
+          <p className="text-gray-700 mb-4">
+            DataSimplify is currently running in free mode. All features are available without payment.
           </p>
-          <div className="mt-6">
-            <Link href="/download" className="text-blue-600 hover:text-blue-700 font-medium">
-              Go to Download Center →
+          <p className="text-gray-600 text-sm mb-6">
+            We provide software analytics tools and Excel templates for educational data visualization.
+            Templates contain formulas only - data is fetched via the CryptoSheets add-in.
+          </p>
+          <div className="mt-6 flex gap-4">
+            <Link href="/templates" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              Browse Templates →
+            </Link>
+            <Link href="/template-requirements" className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+              Setup Requirements
             </Link>
           </div>
         </div>
@@ -217,9 +223,9 @@ export default function PricingPage() {
       key: 'free',
       price: 0,
       features: [
-        '5 downloads per month',
-        'Standard downloads (XLSX/CSV)',
-        'Live downloads (IQY for Excel refresh)',
+        '5 templates per month',
+        'Basic templates (XLSX)',
+        'Educational dashboards',
         'Community support',
       ],
       cta: 'Get Started',
@@ -230,9 +236,9 @@ export default function PricingPage() {
       key: 'starter',
       price: 19,
       features: [
-        '50 downloads per month',
-        'Standard + Live downloads',
-        'Customizable exports (choose columns)',
+        '50 templates per month',
+        'All template types',
+        'Custom template configurations',
         'Email support',
       ],
       cta: 'Subscribe',
@@ -243,10 +249,10 @@ export default function PricingPage() {
       key: 'pro',
       price: 49,
       features: [
-        'Unlimited downloads',
-        'Standard + Live downloads',
-        'Live chart exports to Excel (IQY)',
-        'Faster refresh via authenticated endpoints',
+        'Unlimited templates',
+        'All template types',
+        'Priority template generation',
+        'Educational dashboards',
         'Priority support',
       ],
       cta: 'Subscribe',
@@ -312,11 +318,11 @@ export default function PricingPage() {
           {/* Title */}
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <h1 className="text-4xl font-bold">Simple, Excel-First Pricing</h1>
-              <HelpIcon text="Choose a plan based on how often you download and how much automation you need. You can cancel or change plans anytime. Refunds follow our refund policy." />
+              <h1 className="text-4xl font-bold">Software Tools & Templates</h1>
+              <HelpIcon text="Choose a plan based on how many templates you need. Templates contain formulas only - data is fetched via CryptoSheets add-in. Cancel anytime." />
             </div>
             <p className="text-gray-600 text-lg mb-2">
-              Start free, upgrade when you need more. Cancel anytime.
+              Excel templates powered by CryptoSheets. Start free, upgrade anytime.
             </p>
             <p className="text-gray-500">
               All prices in USD • Paddle handles all taxes automatically
@@ -426,6 +432,23 @@ export default function PricingPage() {
                 <p className="text-gray-600">Paddle adds applicable taxes at checkout based on your location.</p>
               </div>
             </div>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="mt-12 p-4 bg-gray-100 rounded-lg border border-gray-200">
+            <p className="text-gray-500 text-xs text-center">
+              <strong>Disclaimer:</strong> DataSimplify provides software analytics tools and Excel templates for educational purposes only.
+              Templates contain formulas only - no market data is embedded. Data is fetched via the CryptoSheets add-in on your machine.
+              We do not provide financial advice, trading signals, or investment recommendations. Not a data vendor or broker.
+            </p>
+          </div>
+
+          {/* Footer Links */}
+          <div className="mt-8 pt-8 border-t border-gray-200 flex flex-wrap justify-center gap-4 text-sm text-gray-600">
+            <Link href="/privacy" className="hover:text-gray-900">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-900">Terms of Service</Link>
+            <Link href="/refund" className="hover:text-gray-900">Refund Policy</Link>
+            <Link href="/contact" className="hover:text-gray-900">Contact</Link>
           </div>
         </div>
 

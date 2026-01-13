@@ -43,11 +43,9 @@ export function Navbar() {
       href: '/tools',
       icon: '🛠️',
       children: [
-        { name: 'Portfolio Builder', href: '/portfolio', icon: '💼', desc: 'Build your portfolio' },
-        { name: 'Backtest Strategy', href: '/backtest', icon: '🧪', desc: 'Test trading ideas' },
-        { name: 'Download Data', href: '/download', icon: '📥', desc: 'Export to Excel/CSV' },
-        { name: 'AI Assistant', href: '/chat', icon: '🤖', desc: 'Ask anything' },
-        { name: 'Templates', href: '/templates', icon: '📋', desc: 'Pre-built reports' },
+        { name: 'Excel Downloads', href: '/templates', icon: '📋', desc: 'Powered by CryptoSheets' },
+        { name: 'Technical Indicators', href: '/technical', icon: '📊', desc: 'Educational indicator analysis' },
+        { name: 'Portfolio Tracker', href: '/portfolio', icon: '💼', desc: 'Track your holdings' },
       ]
     },
     {

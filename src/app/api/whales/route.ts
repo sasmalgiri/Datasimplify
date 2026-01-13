@@ -7,6 +7,7 @@ import {
   getAllExchangeBalances,
   estimateExchangeFlows,
 } from '@/lib/whaleTracking';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
   getWhaleTransactionsFromCache,
@@ -52,6 +53,11 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Whale tracking uses Etherscan + CoinGecko (USD price) for ETH-based views,
+    // and Blockchair + CoinGecko (USD price) for BTC whale txs.
+    const sources = type === 'btc-whales' ? ['blockchair', 'coingecko'] : ['etherscan', 'coingecko'];
+    assertRedistributionAllowed(sources, { purpose: 'chart', route: '/api/whales' });
+
     // 1. Try cache first for whale transactions
     if (isSupabaseConfigured && (type === 'dashboard' || type === 'eth-whales' || type === 'btc-whales')) {
       const isFresh = await getWhaleDataFreshness();

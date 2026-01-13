@@ -1,7 +1,8 @@
 // ============================================
 // ON-CHAIN DATA FETCHER - Professional-grade blockchain analytics
 // ============================================
-// Uses FREE public RPC nodes to get blockchain data
+// Uses public endpoints and RPC nodes to get blockchain data.
+// Feature flags fail closed for higher-risk domains (e.g. DeFiLlama/public RPC).
 
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
@@ -150,6 +151,10 @@ export async function fetchDeFiTVL(): Promise<{
   chains: { name: string; tvl: number }[];
   error?: string;
 }> {
+  if (!isFeatureEnabled('defi')) {
+    return { totalTVL: 0, chains: [], error: 'DeFi data is disabled.' };
+  }
+
   try {
     const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/v2/chains`, {
       next: { revalidate: 300 }
@@ -187,6 +192,10 @@ export async function fetchDeFiTVL(): Promise<{
 
 // 3. Top DeFi Protocols (FREE)
 export async function fetchTopDeFiProtocols(limit: number = 50): Promise<DeFiProtocol[]> {
+  if (!isFeatureEnabled('defi')) {
+    return [];
+  }
+
   try {
     const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/protocols`);
     const protocols = await response.json();
@@ -214,6 +223,10 @@ export async function fetchStablecoinData(): Promise<{
   totalMarketCap: number;
   stablecoins: { name: string; symbol: string; marketCap: number; chain: string }[];
 }> {
+  if (!isFeatureEnabled('defi')) {
+    return { totalMarketCap: 0, stablecoins: [] };
+  }
+
   try {
     const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/stablecoins`);
     const data = await response.json();
@@ -251,6 +264,10 @@ export async function fetchYieldData(limit: number = 50): Promise<{
     apyReward: number | null;
   }[];
 }> {
+  if (!isFeatureEnabled('defi')) {
+    return { pools: [] };
+  }
+
   try {
     const response = await fetch(`${FREE_ONCHAIN_APIS.defiLlama}/pools`);
     const data = await response.json();

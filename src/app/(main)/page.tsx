@@ -1,28 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  Users,
-  Trophy,
-  Flame,
-  Zap,
-  Crown,
-  Medal
-} from 'lucide-react';
-
-// Sentiment bar component using ref to avoid inline style warnings
-function SentimentBar({ percentage, colorClass }: { percentage: number; colorClass: string }) {
-  const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (barRef.current) {
-      barRef.current.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
-    }
-  }, [percentage]);
-
-  return <div ref={barRef} className={`h-full ${colorClass}`} />;
-}
 import { Treemap } from '@/components/features/Treemap';
 import { FearGreedIndex } from '@/components/features/FearGreedIndex';
 import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap';
@@ -30,6 +9,8 @@ import { RiskDashboardDemo } from '@/components/features/RiskDashboard';
 import { WhaleTracker } from '@/components/features/WhaleTracker';
 import { UserLevelSelector, StatCard, BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+
+
 
 interface MarketData {
   total_market_cap: number;
@@ -102,8 +83,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">🌟 DataSimplify — Crypto Data to Excel/CSV</h1>
-              <p className="text-blue-100 mt-1">Export customizable datasets (XLSX/CSV/JSON) and refresh in Excel via Power Query.</p>
+              <h1 className="text-3xl font-bold">🌟 DataSimplify — Crypto Research Tools</h1>
+              <p className="text-blue-100 mt-1">Charts, comparisons, and CryptoSheets formula templates for live data analysis.</p>
             </div>
             <UserLevelSelector currentLevel={userLevel} onLevelChange={setUserLevel} />
           </div>
@@ -123,10 +104,10 @@ export default function HomePage() {
                   📚 Start Learning
                 </Link>
                 <Link 
-                  href="/quiz"
+                  href="/research"
                   className="bg-white/20 text-white px-6 py-2 rounded-lg font-medium hover:bg-white/30 transition-colors"
                 >
-                  🎯 Take Quiz
+                  🔎 Open Research Workspace
                 </Link>
               </div>
             </div>
@@ -214,54 +195,7 @@ export default function HomePage() {
 
           {/* Fear & Greed Index */}
           {activeSection === 'sentiment' && (
-            <div className="grid md:grid-cols-2 gap-6">
-              <FearGreedIndex showBeginnerTips={showTips} />
-
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                <h3 className="text-lg font-bold mb-4 text-gray-900">📱 Social Sentiment</h3>
-
-                {showTips && (
-                  <BeginnerTip>
-                    Social sentiment shows what people are saying about crypto on Twitter, Reddit, and other platforms.
-                    High positive sentiment can mean prices might rise!
-                  </BeginnerTip>
-                )}
-
-                <div className="space-y-4">
-                  {[
-                    { coin: 'BTC', sentiment: 72, trend: 'up', mentions: '45K' },
-                    { coin: 'ETH', sentiment: 68, trend: 'stable', mentions: '32K' },
-                    { coin: 'SOL', sentiment: 81, trend: 'up', mentions: '28K' },
-                    { coin: 'DOGE', sentiment: 85, trend: 'up', mentions: '52K' },
-                  ].map((item) => (
-                    <div key={item.coin} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-gray-900">{item.coin}</span>
-                        <span className="text-sm text-gray-500">{item.mentions} mentions</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <SentimentBar
-                            percentage={item.sentiment}
-                            colorClass={item.sentiment >= 70 ? 'bg-green-500' : item.sentiment >= 50 ? 'bg-yellow-500' : 'bg-red-500'}
-                          />
-                        </div>
-                        <span className={`text-sm font-medium ${item.sentiment >= 70 ? 'text-green-600' : 'text-gray-500'}`}>
-                          {item.sentiment}% 😊
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  href="/social"
-                  className="block text-center text-blue-600 hover:text-blue-700 font-medium mt-4"
-                >
-                  View Full Social Dashboard →
-                </Link>
-              </div>
-            </div>
+            <FearGreedIndex showBeginnerTips={showTips} />
           )}
 
           {/* Whale Tracker */}
@@ -280,110 +214,27 @@ export default function HomePage() {
           )}
           </div>
 
-          {/* Right Side - AI Community Sidebar */}
+          {/* Right Side - Research Shortcuts */}
           <div className="space-y-6">
-            {/* Leaderboard Preview */}
             <div className="bg-white rounded-xl border border-gray-200 p-5 sticky top-20 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                Top Predictors
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { rank: 1, user: 'CryptoKing', emoji: '👑', points: 15420, accuracy: 82 },
-                  { rank: 2, user: 'MoonShot', emoji: '🚀', points: 12850, accuracy: 79 },
-                  { rank: 3, user: 'DiamondHands', emoji: '💎', points: 11200, accuracy: 76 },
-                  { rank: 4, user: 'CryptoWizard', emoji: '🧙', points: 9840, accuracy: 78 },
-                  { rank: 5, user: 'WhaleHunter', emoji: '🐋', points: 8720, accuracy: 71 },
-                ].map((user) => (
-                  <div key={user.rank} className={`flex items-center gap-3 p-2 rounded-lg ${
-                    user.rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-gray-50'
-                  }`}>
-                    <div className="w-6 flex justify-center text-sm">
-                      {user.rank === 1 ? <Crown className="w-4 h-4 text-yellow-500" /> :
-                       user.rank === 2 ? <Medal className="w-4 h-4 text-gray-400" /> :
-                       user.rank === 3 ? <Medal className="w-4 h-4 text-orange-400" /> :
-                       <span className="text-gray-500 font-mono text-xs">#{user.rank}</span>}
-                    </div>
-                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
-                      {user.emoji}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">{user.user}</p>
-                      <p className="text-xs text-gray-500">{user.accuracy}% acc</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1 text-purple-600 font-bold text-sm">
-                        <Zap className="w-3 h-3" />
-                        {user.points.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <h3 className="text-lg font-bold text-gray-900 mb-3">🔎 Research Shortcuts</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Use these pages to explore metrics and analyze data. This is educational content, not trading advice.
+              </p>
+              <div className="space-y-2">
+                <Link href="/research" className="block w-full text-center py-2 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-700 transition">
+                  Open Research Workspace
+                </Link>
+                <Link href="/templates" className="block w-full text-center py-2 bg-white border border-gray-300 text-gray-900 rounded-lg font-bold text-sm hover:bg-gray-50 transition">
+                  Excel Templates
+                </Link>
+                <Link href="/charts" className="block w-full text-center py-2 bg-white border border-gray-300 text-gray-900 rounded-lg font-bold text-sm hover:bg-gray-50 transition">
+                  Explore Charts
+                </Link>
+                <Link href="/compare" className="block w-full text-center py-2 bg-white border border-gray-300 text-gray-900 rounded-lg font-bold text-sm hover:bg-gray-50 transition">
+                  Compare Assets
+                </Link>
               </div>
-              <Link
-                href="/community?tab=leaderboard"
-                className="block text-center text-purple-600 hover:text-purple-700 font-medium mt-4 text-sm"
-              >
-                View Full Leaderboard →
-              </Link>
-            </div>
-
-            {/* Recent Predictions Mini */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Flame className="w-5 h-5 text-orange-500" />
-                Hot Predictions
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { user: 'CryptoWizard', emoji: '🧙', coin: 'BTC', prediction: 'BULLISH', target: '$105K' },
-                  { user: 'WhaleHunter', emoji: '🐋', coin: 'ETH', prediction: 'BULLISH', target: '$4.2K' },
-                  { user: 'SolanaFan', emoji: '☀️', coin: 'SOL', prediction: 'BEARISH', target: '$180' },
-                ].map((pred, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                    <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-sm">
-                      {pred.emoji}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">{pred.user}</p>
-                      <div className="flex items-center gap-1">
-                        <span className={`text-xs font-medium ${
-                          pred.prediction === 'BULLISH' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {pred.prediction === 'BULLISH' ? '↑' : '↓'} {pred.coin}
-                        </span>
-                        <span className="text-xs text-gray-500">→ {pred.target}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Link
-                href="/community"
-                className="block text-center text-purple-600 hover:text-purple-700 font-medium mt-4 text-sm"
-              >
-                View All Predictions →
-              </Link>
-            </div>
-
-            {/* Community CTA Mini */}
-            <div className="bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl p-5 text-white">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold">AI Community</h3>
-                  <p className="text-purple-200 text-xs">Join 2,341 traders</p>
-                </div>
-              </div>
-              <Link
-                href="/community"
-                className="block w-full text-center py-2 bg-white text-purple-600 rounded-lg font-bold text-sm hover:bg-purple-50 transition"
-              >
-                Start Predicting
-              </Link>
             </div>
           </div>
         </div>
@@ -391,13 +242,13 @@ export default function HomePage() {
         {/* Quick Actions */}
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           <Link
-            href="/download"
+            href="/templates"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all group"
           >
-            <span className="text-4xl">📥</span>
-            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Download Data</h3>
+            <span className="text-4xl">📊</span>
+            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Excel Templates</h3>
             <p className="text-gray-600 text-sm mt-1">
-              Export crypto data to Excel, CSV, or PDF with one click.
+              CryptoSheets formula templates for live data.
             </p>
           </Link>
 
@@ -413,13 +264,13 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/chat"
+            href="/research"
             className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all group"
           >
-            <span className="text-4xl">🤖</span>
-            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Ask AI</h3>
+            <span className="text-4xl">🔎</span>
+            <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Research Workspace</h3>
             <p className="text-gray-600 text-sm mt-1">
-              Get instant answers about crypto in plain English.
+              Keep your research flow organized across charts, comparisons, and downloads.
             </p>
           </Link>
         </div>
@@ -429,8 +280,7 @@ export default function HomePage() {
           <div className="mt-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-2xl p-8 text-white text-center">
             <h2 className="text-2xl font-bold mb-3">🎓 Ready to Learn More?</h2>
             <p className="text-green-100 mb-6 max-w-2xl mx-auto">
-              We have a complete Crypto Academy to help you understand everything from the basics 
-              to advanced trading strategies. It&apos;s free and takes just 30 minutes!
+              Use the Academy and Glossary to understand metrics, indicators, and market structure.
             </p>
             <Link 
               href="/learn"

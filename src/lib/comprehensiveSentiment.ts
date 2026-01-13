@@ -1,9 +1,12 @@
 // ============================================
 // COMPREHENSIVE SENTIMENT AGGREGATOR
-// Legal scraping from ALL permitted sources
+// Aggregates sentiment from public endpoints and feeds.
 // ============================================
-// This aggregates sentiment from 10+ sources that legally allow access
+// Source terms and redistribution rights vary by provider.
+// Keep this feature OFF unless you have acceptable rights/permissions.
 // Professional-grade social sentiment analysis
+
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // ============================================
 // SOURCE CONFIGURATION
@@ -305,6 +308,10 @@ export async function fetchRedditSentiment(
   subreddits: string[] = ['cryptocurrency', 'bitcoin', 'ethtrader', 'CryptoMarkets', 'altcoin'],
   postsPerSub: number = 25
 ): Promise<SentimentPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return [];
+  }
+
   const allPosts: SentimentPost[] = [];
   
   for (const sub of subreddits) {
@@ -362,6 +369,10 @@ export async function fetchRedditSentiment(
 export async function fetchCryptoPanicSentiment(
   filter: 'rising' | 'hot' | 'bullish' | 'bearish' | 'important' = 'hot'
 ): Promise<SentimentPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return [];
+  }
+
   try {
     const authToken = process.env.CRYPTOPANIC_API_KEY || 'FREE';
     const response = await fetch(
@@ -417,6 +428,10 @@ export async function fetchCryptoPanicSentiment(
 
 // 3. RSS FEEDS - News sites
 export async function fetchRSSFeeds(): Promise<SentimentPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return [];
+  }
+
   const feeds = [
     { name: 'CoinTelegraph', url: 'https://cointelegraph.com/rss' },
     { name: 'CoinDesk', url: 'https://www.coindesk.com/arc/outboundfeeds/rss/' },
@@ -480,6 +495,10 @@ export async function fetchRSSFeeds(): Promise<SentimentPost[]> {
 
 // 4. 4CHAN /biz/ - Meme coin alpha
 export async function fetch4chanBiz(): Promise<SentimentPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return [];
+  }
+
   try {
     const response = await fetch('https://a.4cdn.org/biz/catalog.json');
     if (!response.ok) return [];
@@ -598,6 +617,21 @@ export async function fetchGitHubActivity(
 // ============================================
 
 export async function aggregateAllSentiment(): Promise<AggregatedSentiment> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return {
+      timestamp: new Date().toISOString(),
+      overallScore: 50,
+      overallLabel: 'Unavailable',
+      confidence: 0,
+      totalPosts: 0,
+      bySource: [],
+      byCoin: {},
+      topBullish: [],
+      topBearish: [],
+      trendingTopics: [],
+    };
+  }
+
   console.log('Fetching sentiment from all sources...');
   
   // Fetch from all sources in parallel

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { isRedistributionPolicyEnabled, isSourceRedistributable } from '@/lib/redistributionPolicy';
 
 // Bitcoin ETF Data API
 // Free, reliable ETF flow + AUM data is not consistently available via public APIs.
@@ -7,7 +8,8 @@ import { isFeatureEnabled } from '@/lib/featureFlags';
 
 async function fetchBtcPriceContext(): Promise<{ btcPrice: number; btcChange24h: number; source: string }> {
   // 1) Binance ticker (fast, free)
-  try {
+  const canUseBinance = !isRedistributionPolicyEnabled() || isSourceRedistributable('binance');
+  if (canUseBinance) try {
     const priceResponse = await fetch(
       'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT',
       { next: { revalidate: 60 } }
@@ -28,6 +30,11 @@ async function fetchBtcPriceContext(): Promise<{ btcPrice: number; btcChange24h:
   // 2) CoinGecko markets (free)
   if (!isFeatureEnabled('coingecko')) {
     throw new Error('Unable to fetch BTC context (CoinGecko disabled)');
+  }
+
+  const canUseCoinGecko = !isRedistributionPolicyEnabled() || isSourceRedistributable('coingecko');
+  if (!canUseCoinGecko) {
+    throw new Error('Unable to fetch BTC context (CoinGecko blocked by redistribution policy)');
   }
 
   const cg = await fetch(

@@ -1,5 +1,5 @@
 // ============================================
-// COINLORE API - Commercial Use Allowed
+// COINLORE API - Terms apply (verify commercial usage rights)
 // ============================================
 // FREE API - No API key required
 // Commercial use: YES (no restrictions)
@@ -321,6 +321,6 @@ export async function syncCoinLoreData(limit: number = 500): Promise<{
 export const COINLORE_ATTRIBUTION = {
   name: 'CoinLore',
   url: 'https://www.coinlore.com',
-  license: 'Free API - Commercial use allowed',
+  license: 'Free API (terms apply; verify commercial usage rights)',
   note: 'Real-time cryptocurrency market data',
 };

@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
 
-// Signal bar segment using ref to set width dynamically (avoids inline style attribute)
-function SignalBarSegment({ width, className }: { width: number; className: string }) {
+// State bar segment using ref to set width dynamically (avoids inline style attribute)
+function StateBarSegment({ width, className }: { width: number; className: string }) {
   const barRef = useRef<HTMLDivElement>(null);
   const safeWidth = Math.max(0, Math.min(100, width || 0));
 
@@ -21,16 +21,16 @@ interface TechnicalIndicator {
   name: string;
   shortName: string;
   value: number | string;
-  signal: 'buy' | 'sell' | 'neutral';
+  state: 'bullish' | 'bearish' | 'neutral';
   description: string;
-  beginnerExplanation: string;
+  interpretation: string;
 }
 
 interface TechnicalSummary {
-  buySignals: number;
-  sellSignals: number;
-  neutralSignals: number;
-  overallSignal: string;
+  bullishCount: number;
+  bearishCount: number;
+  neutralCount: number;
+  overallTrend: string;
   currentPrice: number;
   sma20: number;
   sma50: number;
@@ -99,22 +99,22 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
     return () => clearInterval(interval);
   }, [coin, timeframe]);
 
-  // Calculate signals from indicators
-  const buySignals = summary?.buySignals || indicators.filter(i => i.signal === 'buy').length;
-  const sellSignals = summary?.sellSignals || indicators.filter(i => i.signal === 'sell').length;
-  const neutralSignals = summary?.neutralSignals || indicators.filter(i => i.signal === 'neutral').length;
-  const overallSignal = summary?.overallSignal || 'Loading...';
-  const totalSignals = Math.max(1, indicators.length);
+  // Calculate indicator states from data
+  const bullishCount = summary?.bullishCount || indicators.filter(i => i.state === 'bullish').length;
+  const bearishCount = summary?.bearishCount || indicators.filter(i => i.state === 'bearish').length;
+  const neutralCount = summary?.neutralCount || indicators.filter(i => i.state === 'neutral').length;
+  const overallTrend = summary?.overallTrend || 'Loading...';
+  const totalIndicators = Math.max(1, indicators.length);
 
-  const getSignalColor = (signal: string) => {
-    if (signal.includes('Buy')) return 'text-green-600 bg-green-50';
-    if (signal.includes('Sell')) return 'text-red-600 bg-red-50';
+  const getTrendColor = (trend: string) => {
+    if (trend.includes('Bullish')) return 'text-green-600 bg-green-50';
+    if (trend.includes('Bearish')) return 'text-red-600 bg-red-50';
     return 'text-gray-600 bg-gray-50';
   };
 
-  const getSignalEmoji = (signal: 'buy' | 'sell' | 'neutral') => {
-    if (signal === 'buy') return '🟢';
-    if (signal === 'sell') return '🔴';
+  const getStateEmoji = (state: 'bullish' | 'bearish' | 'neutral') => {
+    if (state === 'bullish') return '🟢';
+    if (state === 'bearish') return '🔴';
     return '⚪';
   };
 
@@ -123,26 +123,26 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {/* Header */}
       <div className="mb-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          📊 Technical Analysis - {coin}
-          <InfoButton explanation="Technical analysis uses mathematical indicators to predict future price movements based on historical data. These are commonly used by traders." />
+          📊 Technical Indicators - {coin}
+          <InfoButton explanation="Technical indicators are mathematical calculations based on historical price data. They help analyze market conditions but are for educational purposes only." />
         </h2>
         <p className="text-gray-500 text-sm mt-1">
-          What the charts are telling us
+          Educational analysis of market indicators
         </p>
       </div>
 
       {/* Beginner Tip */}
       {showBeginnerTips && (
-        <BeginnerTip title="💡 What is Technical Analysis?">
-          Technical analysis uses <strong>math and charts</strong> to predict where prices might go.
+        <BeginnerTip title="💡 What are Technical Indicators?">
+          Technical indicators use <strong>math and charts</strong> to analyze market conditions.
           <br/><br/>
-          • 🟢 <strong>Buy Signal</strong> = Indicator suggests price might go UP
+          • 🟢 <strong>Bullish</strong> = Indicator suggests upward momentum
           <br/>
-          • 🔴 <strong>Sell Signal</strong> = Indicator suggests price might go DOWN
+          • 🔴 <strong>Bearish</strong> = Indicator suggests downward momentum
           <br/>
           • ⚪ <strong>Neutral</strong> = No clear direction
           <br/><br/>
-          ⚠️ <strong>Remember:</strong> No indicator is 100% accurate! Use them as one input, not the only input.
+          ⚠️ <strong>Important:</strong> Indicators are for <em>educational analysis only</em>. They are not predictions or recommendations.
         </BeginnerTip>
       )}
 
@@ -161,12 +161,11 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
         </div>
       )}
 
-      {/* Data source is provided by the API meta; no mock/estimated UI allowed */}
-
       {/* Timeframe Selector */}
       <div className="flex gap-2 mb-6">
         {(['1h', '4h', '1d', '1w'] as const).map((tf) => (
           <button
+            type="button"
             key={tf}
             onClick={() => setTimeframe(tf)}
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
@@ -180,43 +179,43 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
         ))}
       </div>
 
-      {/* Overall Signal */}
-      <div className={`p-6 rounded-lg mb-6 ${getSignalColor(overallSignal)}`}>
+      {/* Overall Trend */}
+      <div className={`p-6 rounded-lg mb-6 ${getTrendColor(overallTrend)}`}>
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm opacity-75">Overall Signal ({timeframe})</p>
-            <p className="text-3xl font-bold">{overallSignal}</p>
+            <p className="text-sm opacity-75">Overall Trend ({timeframe})</p>
+            <p className="text-3xl font-bold">{overallTrend}</p>
           </div>
           <div className="text-right">
             <div className="flex gap-4">
               <div>
                 <span className="text-2xl">🟢</span>
-                <p className="text-sm">{buySignals} Buy</p>
+                <p className="text-sm">{bullishCount} Bullish</p>
               </div>
               <div>
                 <span className="text-2xl">⚪</span>
-                <p className="text-sm">{neutralSignals} Neutral</p>
+                <p className="text-sm">{neutralCount} Neutral</p>
               </div>
               <div>
                 <span className="text-2xl">🔴</span>
-                <p className="text-sm">{sellSignals} Sell</p>
+                <p className="text-sm">{bearishCount} Bearish</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Signal Summary Bar */}
+      {/* Indicator Summary Bar */}
       <div className="mb-6">
         <div className="flex h-4 rounded-full overflow-hidden">
-          <SignalBarSegment width={(buySignals / totalSignals) * 100} className="bg-green-500" />
-          <SignalBarSegment width={(neutralSignals / totalSignals) * 100} className="bg-gray-300" />
-          <SignalBarSegment width={(sellSignals / totalSignals) * 100} className="bg-red-500" />
+          <StateBarSegment width={(bullishCount / totalIndicators) * 100} className="bg-green-500" />
+          <StateBarSegment width={(neutralCount / totalIndicators) * 100} className="bg-gray-300" />
+          <StateBarSegment width={(bearishCount / totalIndicators) * 100} className="bg-red-500" />
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>Buy ({Math.round((buySignals / totalSignals) * 100)}%)</span>
-          <span>Neutral ({Math.round((neutralSignals / totalSignals) * 100)}%)</span>
-          <span>Sell ({Math.round((sellSignals / totalSignals) * 100)}%)</span>
+          <span>Bullish ({Math.round((bullishCount / totalIndicators) * 100)}%)</span>
+          <span>Neutral ({Math.round((neutralCount / totalIndicators) * 100)}%)</span>
+          <span>Bearish ({Math.round((bearishCount / totalIndicators) * 100)}%)</span>
         </div>
       </div>
 
@@ -226,8 +225,8 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
           <div
             key={indicator.shortName}
             className={`p-4 rounded-lg border ${
-              indicator.signal === 'buy' ? 'border-green-200 bg-green-50' :
-              indicator.signal === 'sell' ? 'border-red-200 bg-red-50' :
+              indicator.state === 'bullish' ? 'border-green-200 bg-green-50' :
+              indicator.state === 'bearish' ? 'border-red-200 bg-red-50' :
               'border-gray-200 bg-gray-50'
             }`}
           >
@@ -237,13 +236,13 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
                 <p className="text-xs text-gray-500">{indicator.name}</p>
               </div>
               <div className="text-right">
-                <span className="text-xl">{getSignalEmoji(indicator.signal)}</span>
+                <span className="text-xl">{getStateEmoji(indicator.state)}</span>
                 <p className="text-sm font-bold">{indicator.value}</p>
               </div>
             </div>
             {showBeginnerTips && (
               <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
-                💡 {indicator.beginnerExplanation}
+                💡 {indicator.interpretation}
               </p>
             )}
           </div>
@@ -253,13 +252,13 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {/* Moving Average Summary */}
       {summary && !loading && (
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-bold text-blue-800 mb-3">📈 Moving Average Summary</h3>
+          <h3 className="font-bold text-blue-800 mb-3">📈 Moving Average Analysis</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-sm text-blue-600">Short-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma20 ? '🟢' : '🔴'}</p>
               <p className="text-xs text-blue-700">
-                SMA 20: {summary.currentPrice > summary.sma20 ? 'Bullish' : 'Bearish'}
+                SMA 20: {summary.currentPrice > summary.sma20 ? 'Above' : 'Below'}
               </p>
               <p className="text-xs text-gray-500">${summary.sma20.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
@@ -267,7 +266,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
               <p className="text-sm text-blue-600">Medium-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma50 ? '🟢' : '🔴'}</p>
               <p className="text-xs text-blue-700">
-                SMA 50: {summary.currentPrice > summary.sma50 ? 'Bullish' : 'Bearish'}
+                SMA 50: {summary.currentPrice > summary.sma50 ? 'Above' : 'Below'}
               </p>
               <p className="text-xs text-gray-500">${summary.sma50.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
@@ -275,7 +274,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
               <p className="text-sm text-blue-600">Long-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma200 ? '🟢' : '🔴'}</p>
               <p className="text-xs text-blue-700">
-                SMA 200: {summary.currentPrice > summary.sma200 ? 'Bullish' : 'Bearish'}
+                SMA 200: {summary.currentPrice > summary.sma200 ? 'Above' : 'Below'}
               </p>
               <p className="text-xs text-gray-500">${summary.sma200.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
@@ -286,8 +285,9 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {/* Disclaimer */}
       <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
         <p className="text-xs text-yellow-800">
-          ⚠️ <strong>Disclaimer:</strong> Technical indicators are based on historical data and do not guarantee future performance. 
-          Always combine technical analysis with fundamental analysis and never invest more than you can afford to lose.
+          ⚠️ <strong>Disclaimer:</strong> Technical indicators are for <em>educational purposes only</em>.
+          They are based on historical data and do not predict future performance.
+          This is not financial advice. Always do your own research.
         </p>
       </div>
     </div>

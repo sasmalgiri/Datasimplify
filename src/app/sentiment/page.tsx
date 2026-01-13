@@ -4,6 +4,7 @@ import { FearGreedIndex } from '@/components/features/FearGreedIndex';
 import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 
 export default function SentimentPage() {
   return (
@@ -11,10 +12,27 @@ export default function SentimentPage() {
       <FreeNavbar />
       <Breadcrumb />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-2">Market Sentiment</h1>
-        <p className="text-gray-400 mb-8">
-          Measure the overall mood of the crypto market.
-        </p>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Market Sentiment</h1>
+            <p className="text-gray-400">
+              Measure the overall mood of the crypto market.
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0">
+            <TemplateDownloadButton
+              pageContext={{
+                pageId: 'sentiment',
+                timeframe: '30d',
+                customizations: {
+                  includeCharts: true,
+                  period: '30d',
+                },
+              }}
+              variant="outline"
+            />
+          </div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6">
           <FearGreedIndex showBeginnerTips={true} />

@@ -32,6 +32,21 @@ The app will run with:
 
 ---
 
+## Free-only sources mode (recommended if you want ONLY free sources)
+
+Set this in your environment:
+
+```env
+NEXT_PUBLIC_APP_MODE=free
+```
+
+In `free` mode the app:
+- Forces strict source gating on (fail-closed)
+- Allows only built-in free sources (e.g. Binance, Alternative.me, DeFiLlama, blockchain.info, public RPC)
+- Hard-disables non-free / higher-risk provider modules regardless of other env flags
+
+---
+
 ## Production: Automated Data Retention Cleanup
 
 This repo includes a retention cleanup endpoint and a cron schedule.

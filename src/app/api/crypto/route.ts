@@ -3,6 +3,7 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import { getBulkMarketDataFromCache, saveBulkMarketDataToCache, getMarketDataFromCache } from '@/lib/supabaseData';
 import { fetchMarketOverview } from '@/lib/dataApi';
 import { findCoinByGeckoId, getCoinGeckoId } from '@/lib/dataTypes';
+import { assertRedistributionAllowed, isRedistributionPolicyEnabled, isSourceRedistributable } from '@/lib/redistributionPolicy';
 import {
   validationError,
   internalError,
@@ -45,8 +46,12 @@ export async function GET(request: Request) {
       if (isSupabaseConfigured) {
         const cached = await getMarketDataFromCache({ limit: MAX_LIMIT });
         if (cached && cached.length > 0) {
+          const filteredCached = isRedistributionPolicyEnabled()
+            ? cached.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
+            : cached;
+
           // Filter cached data for requested IDs (match by id or symbol)
-          const matchedCoins = cached.filter((coin: { id: string; symbol: string }) =>
+          const matchedCoins = filteredCached.filter((coin: { id: string; symbol: string }) =>
             idList.includes(coin.id.toLowerCase()) ||
             idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
           );
@@ -65,6 +70,7 @@ export async function GET(request: Request) {
       }
 
       // 2. Derive specific coins from Binance via our supported universe
+      assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto' });
       const symbols = idList
         .map(id => findCoinByGeckoId(id))
         .filter((c): c is NonNullable<ReturnType<typeof findCoinByGeckoId>> => c != null)
@@ -109,17 +115,24 @@ export async function GET(request: Request) {
     if (isSupabaseConfigured) {
       const cached = await getBulkMarketDataFromCache(limit);
       if (cached && cached.length > 0) {
+        const filteredCached = isRedistributionPolicyEnabled()
+          ? cached.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
+          : cached;
+
+        if (filteredCached.length > 0) {
         return NextResponse.json({
           success: true,
-          data: cached,
-          total: cached.length,
+          data: filteredCached,
+          total: filteredCached.length,
           source: 'cache',
           updated: new Date().toISOString(),
         });
+        }
       }
     }
 
     // 2. Derive from Binance (supported universe only)
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto' });
     const market = await fetchMarketOverview();
     const limited = market.slice(0, limit);
     const coins = limited.map((coin, idx) => ({
@@ -160,13 +173,19 @@ export async function GET(request: Request) {
     if (isSupabaseConfigured) {
       const staleCache = await getBulkMarketDataFromCache(limit);
       if (staleCache && staleCache.length > 0) {
+        const filteredStale = isRedistributionPolicyEnabled()
+          ? staleCache.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
+          : staleCache;
+
+        if (filteredStale.length > 0) {
         return NextResponse.json({
           success: true,
-          data: staleCache,
-          total: staleCache.length,
+          data: filteredStale,
+          total: filteredStale.length,
           source: 'stale-cache',
           updated: new Date().toISOString(),
         });
+        }
       }
     }
     return internalError('Unable to fetch market data. Please try again later.');

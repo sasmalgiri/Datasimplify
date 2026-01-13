@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getFearGreedFromCache, saveFearGreedToCache } from '@/lib/supabaseData';
 import { externalApiError } from '@/lib/apiErrors';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 // Alternative.me Fear & Greed Index API (FREE)
 const FEAR_GREED_API = 'https://api.alternative.me/fng/';
 
 export async function GET() {
   try {
+    assertRedistributionAllowed('alternativeme', { purpose: 'chart', route: '/api/sentiment' });
+
     // 1. Try cache first
     if (isSupabaseConfigured) {
       const cached = await getFearGreedFromCache();

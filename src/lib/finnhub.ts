@@ -1,5 +1,5 @@
 // ============================================
-// FINNHUB API - Commercial Use Allowed
+// FINNHUB API - Terms apply (verify commercial usage rights)
 // ============================================
 // FREE tier: 60 API calls/minute
 // Commercial use: YES (with attribution)
@@ -464,7 +464,7 @@ export async function fetchFinnhubSentimentPosts(): Promise<Array<{
 export const FINNHUB_ATTRIBUTION = {
   name: 'Finnhub',
   url: 'https://finnhub.io',
-  license: 'Free tier - 60 calls/minute, Commercial use allowed',
+  license: 'Free tier - 60 calls/minute (terms apply; verify commercial usage rights)',
   note: 'Real-time financial data and news sentiment',
 };
 

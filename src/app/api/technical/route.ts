@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 type MarketChart = {
@@ -80,9 +81,9 @@ interface TechnicalIndicator {
   name: string;
   shortName: string;
   value: number | string;
-  signal: 'buy' | 'sell' | 'neutral';
+  state: 'bullish' | 'bearish' | 'neutral';  // Indicator state, not trading signal
   description: string;
-  beginnerExplanation: string;
+  interpretation: string;  // Educational interpretation, not advice
 }
 
 function computePctReturns(prices: number[]): number[] {
@@ -307,6 +308,7 @@ export async function GET(request: Request) {
       try {
         const klines = await getBinanceKlines(symbol, interval, Math.min(days, 500));
         if (klines && klines.length > 0) {
+          assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/technical' });
           candles = klines;
           source = 'binance';
         }
@@ -325,6 +327,8 @@ export async function GET(request: Request) {
           timeframe,
         }, { status: 502 });
       }
+
+      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/technical' });
 
       const bucketMs = interval === '1h'
         ? 60 * 60 * 1000
@@ -370,101 +374,101 @@ export async function GET(request: Request) {
     const cci = calculateCCI(candles, 20);
     const williamsR = calculateWilliamsR(candles, 14);
 
-    // Determine signals based on values
+    // Determine indicator states (educational, not trading signals)
     const indicators: TechnicalIndicator[] = [
       {
         name: 'Relative Strength Index',
         shortName: 'RSI (14)',
         value: Math.round(rsi),
-        signal: rsi > 70 ? 'sell' : rsi < 30 ? 'buy' : 'neutral',
+        state: rsi > 70 ? 'bearish' : rsi < 30 ? 'bullish' : 'neutral',
         description: 'Momentum oscillator measuring speed of price changes',
-        beginnerExplanation: rsi > 70
-          ? `RSI at ${Math.round(rsi)} is OVERBOUGHT - price might drop soon`
+        interpretation: rsi > 70
+          ? `RSI at ${Math.round(rsi)} indicates overbought conditions`
           : rsi < 30
-            ? `RSI at ${Math.round(rsi)} is OVERSOLD - price might bounce up`
-            : `RSI at ${Math.round(rsi)} is neutral - no extreme condition`
+            ? `RSI at ${Math.round(rsi)} indicates oversold conditions`
+            : `RSI at ${Math.round(rsi)} is in neutral range`
       },
       {
         name: 'Moving Average (20)',
         shortName: 'SMA 20',
         value: `$${sma20.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-        signal: currentPrice > sma20 ? 'buy' : currentPrice < sma20 ? 'sell' : 'neutral',
+        state: currentPrice > sma20 ? 'bullish' : currentPrice < sma20 ? 'bearish' : 'neutral',
         description: 'Average price over last 20 periods',
-        beginnerExplanation: currentPrice > sma20
-          ? 'Price is ABOVE the 20-period average = short-term bullish!'
-          : 'Price is BELOW the 20-period average = short-term bearish'
+        interpretation: currentPrice > sma20
+          ? 'Price is above the 20-period average'
+          : 'Price is below the 20-period average'
       },
       {
         name: 'Moving Average (50)',
         shortName: 'SMA 50',
         value: `$${sma50.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-        signal: currentPrice > sma50 ? 'buy' : currentPrice < sma50 ? 'sell' : 'neutral',
+        state: currentPrice > sma50 ? 'bullish' : currentPrice < sma50 ? 'bearish' : 'neutral',
         description: 'Average price over last 50 periods',
-        beginnerExplanation: currentPrice > sma50
-          ? 'Price is ABOVE the 50-period average = medium-term bullish!'
-          : 'Price is BELOW the 50-period average = medium-term bearish'
+        interpretation: currentPrice > sma50
+          ? 'Price is above the 50-period average'
+          : 'Price is below the 50-period average'
       },
       {
         name: 'Moving Average (200)',
         shortName: 'SMA 200',
         value: `$${sma200.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-        signal: currentPrice > sma200 ? 'buy' : currentPrice < sma200 ? 'sell' : 'neutral',
+        state: currentPrice > sma200 ? 'bullish' : currentPrice < sma200 ? 'bearish' : 'neutral',
         description: 'Average price over last 200 periods',
-        beginnerExplanation: currentPrice > sma200
-          ? 'Price above 200-period average = strong long-term uptrend!'
-          : 'Price below 200-period average = long-term downtrend'
+        interpretation: currentPrice > sma200
+          ? 'Price is above the 200-period average (long-term uptrend)'
+          : 'Price is below the 200-period average (long-term downtrend)'
       },
       {
         name: 'MACD',
         shortName: 'MACD',
         value: macdData.macd >= 0 ? `+${macdData.macd.toFixed(0)}` : macdData.macd.toFixed(0),
-        signal: macdData.histogram > 0 ? 'buy' : macdData.histogram < 0 ? 'sell' : 'neutral',
+        state: macdData.histogram > 0 ? 'bullish' : macdData.histogram < 0 ? 'bearish' : 'neutral',
         description: 'Moving Average Convergence Divergence',
-        beginnerExplanation: macdData.histogram > 0
-          ? 'MACD is positive and above signal line = bullish momentum!'
-          : 'MACD is below signal line = bearish momentum'
+        interpretation: macdData.histogram > 0
+          ? 'MACD is positive and above signal line (bullish momentum)'
+          : 'MACD is below signal line (bearish momentum)'
       },
       {
         name: 'Bollinger Bands',
         shortName: 'BB',
         value: bb.position,
-        signal: bb.position.includes('Lower') ? 'buy' : bb.position.includes('Upper') || bb.position === 'Above Upper' ? 'sell' : 'neutral',
+        state: bb.position.includes('Lower') ? 'bullish' : bb.position.includes('Upper') || bb.position === 'Above Upper' ? 'bearish' : 'neutral',
         description: 'Volatility bands around price',
-        beginnerExplanation: bb.position.includes('Lower')
-          ? 'Price near lower band = potentially oversold, might bounce'
+        interpretation: bb.position.includes('Lower')
+          ? 'Price near lower band (potentially oversold)'
           : bb.position.includes('Upper')
-            ? 'Price near upper band = potentially overbought'
-            : 'Price is in the middle range = no extreme condition'
+            ? 'Price near upper band (potentially overbought)'
+            : 'Price is in the middle range'
       },
       {
         name: 'Stochastic RSI',
         shortName: 'StochRSI',
         value: Math.round(stochRSI),
-        signal: stochRSI > 80 ? 'sell' : stochRSI < 20 ? 'buy' : 'neutral',
+        state: stochRSI > 80 ? 'bearish' : stochRSI < 20 ? 'bullish' : 'neutral',
         description: 'RSI applied to RSI for more sensitivity',
-        beginnerExplanation: stochRSI > 80
-          ? `StochRSI at ${Math.round(stochRSI)} is overbought - might pull back`
+        interpretation: stochRSI > 80
+          ? `StochRSI at ${Math.round(stochRSI)} indicates overbought conditions`
           : stochRSI < 20
-            ? `StochRSI at ${Math.round(stochRSI)} is oversold - might bounce`
-            : `StochRSI at ${Math.round(stochRSI)} is neutral`
+            ? `StochRSI at ${Math.round(stochRSI)} indicates oversold conditions`
+            : `StochRSI at ${Math.round(stochRSI)} is in neutral range`
       },
       {
         name: 'Average Directional Index',
         shortName: 'ADX',
         value: Math.round(adx),
-        signal: adx > 25 && currentPrice > sma20 ? 'buy' : adx > 25 && currentPrice < sma20 ? 'sell' : 'neutral',
+        state: adx > 25 && currentPrice > sma20 ? 'bullish' : adx > 25 && currentPrice < sma20 ? 'bearish' : 'neutral',
         description: 'Measures trend strength',
-        beginnerExplanation: adx > 25
-          ? `ADX at ${Math.round(adx)} shows a STRONG trend`
-          : `ADX at ${Math.round(adx)} shows a weak/no trend`
+        interpretation: adx > 25
+          ? `ADX at ${Math.round(adx)} indicates a strong trend`
+          : `ADX at ${Math.round(adx)} indicates weak/no trend`
       },
       {
         name: 'Commodity Channel Index',
         shortName: 'CCI (20)',
         value: Math.round(cci),
-        signal: cci > 100 ? 'sell' : cci < -100 ? 'buy' : 'neutral',
+        state: cci > 100 ? 'bearish' : cci < -100 ? 'bullish' : 'neutral',
         description: 'Identifies cyclical trends',
-        beginnerExplanation: cci > 100
+        interpretation: cci > 100
           ? `CCI at ${Math.round(cci)} indicates overbought conditions`
           : cci < -100
             ? `CCI at ${Math.round(cci)} indicates oversold conditions`
@@ -474,40 +478,40 @@ export async function GET(request: Request) {
         name: 'Williams %R',
         shortName: 'Williams %R',
         value: Math.round(williamsR),
-        signal: williamsR > -20 ? 'sell' : williamsR < -80 ? 'buy' : 'neutral',
+        state: williamsR > -20 ? 'bearish' : williamsR < -80 ? 'bullish' : 'neutral',
         description: 'Momentum indicator similar to Stochastic',
-        beginnerExplanation: williamsR > -20
-          ? `Williams %R at ${Math.round(williamsR)} is overbought`
+        interpretation: williamsR > -20
+          ? `Williams %R at ${Math.round(williamsR)} indicates overbought conditions`
           : williamsR < -80
-            ? `Williams %R at ${Math.round(williamsR)} is oversold`
-            : `Williams %R at ${Math.round(williamsR)} is neutral`
+            ? `Williams %R at ${Math.round(williamsR)} indicates oversold conditions`
+            : `Williams %R at ${Math.round(williamsR)} is in neutral range`
       },
       {
         name: 'Ichimoku Cloud',
         shortName: 'Ichimoku',
         value: currentPrice > sma50 ? 'Above Cloud' : currentPrice < sma50 * 0.95 ? 'Below Cloud' : 'In Cloud',
-        signal: currentPrice > sma50 ? 'buy' : currentPrice < sma50 * 0.95 ? 'sell' : 'neutral',
+        state: currentPrice > sma50 ? 'bullish' : currentPrice < sma50 * 0.95 ? 'bearish' : 'neutral',
         description: 'Japanese indicator showing support/resistance',
-        beginnerExplanation: currentPrice > sma50
-          ? 'Price above the cloud = bullish! Strong support below.'
+        interpretation: currentPrice > sma50
+          ? 'Price is above the cloud (bullish trend)'
           : currentPrice < sma50 * 0.95
-            ? 'Price below the cloud = bearish. Resistance above.'
-            : 'Price inside the cloud = uncertain/consolidation.'
+            ? 'Price is below the cloud (bearish trend)'
+            : 'Price is inside the cloud (consolidation)'
       },
       {
         name: 'Pivot Points',
         shortName: 'Pivot',
         value: `$${((candles[candles.length - 1].high + candles[candles.length - 1].low + candles[candles.length - 1].close) / 3).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-        signal: currentPrice > (candles[candles.length - 1].high + candles[candles.length - 1].low + candles[candles.length - 1].close) / 3 ? 'buy' : 'sell',
+        state: currentPrice > (candles[candles.length - 1].high + candles[candles.length - 1].low + candles[candles.length - 1].close) / 3 ? 'bullish' : 'bearish',
         description: 'Key support and resistance levels',
-        beginnerExplanation: 'Pivot point helps identify potential support and resistance levels for the day.'
+        interpretation: 'Pivot point helps identify potential support and resistance levels.'
       },
     ];
 
-    // Calculate overall stats
-    const buySignals = indicators.filter(i => i.signal === 'buy').length;
-    const sellSignals = indicators.filter(i => i.signal === 'sell').length;
-    const neutralSignals = indicators.filter(i => i.signal === 'neutral').length;
+    // Calculate overall indicator states (educational, not trading recommendations)
+    const bullishCount = indicators.filter(i => i.state === 'bullish').length;
+    const bearishCount = indicators.filter(i => i.state === 'bearish').length;
+    const neutralCount = indicators.filter(i => i.state === 'neutral').length;
 
     return NextResponse.json({
       success: true,
@@ -519,13 +523,14 @@ export async function GET(request: Request) {
           windowDays: window,
         },
         summary: {
-          buySignals,
-          sellSignals,
-          neutralSignals,
-          overallSignal: buySignals > sellSignals + 2 ? 'Strong Buy' :
-                         buySignals > sellSignals ? 'Buy' :
-                         sellSignals > buySignals + 2 ? 'Strong Sell' :
-                         sellSignals > buySignals ? 'Sell' : 'Neutral',
+          bullishCount,
+          bearishCount,
+          neutralCount,
+          // Overall trend indication (educational, not trading advice)
+          overallTrend: bullishCount > bearishCount + 2 ? 'Strong Bullish' :
+                        bullishCount > bearishCount ? 'Bullish' :
+                        bearishCount > bullishCount + 2 ? 'Strong Bearish' :
+                        bearishCount > bullishCount ? 'Bearish' : 'Neutral',
           currentPrice,
           sma20,
           sma50,
@@ -537,7 +542,8 @@ export async function GET(request: Request) {
           source,
           dataPoints: candles.length,
           lastUpdate: new Date().toISOString(),
-        }
+        },
+        disclaimer: 'Technical indicators are for educational purposes only. Not financial advice.',
       }
     });
   } catch (error) {

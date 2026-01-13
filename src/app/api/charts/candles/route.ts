@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
@@ -102,6 +103,9 @@ export async function GET(request: Request) {
         }, { status: 502 });
       }
 
+      // Serving CoinGecko data in charts is a form of redistribution.
+      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
+
       const bucketMs = interval === '1h'
         ? 60 * 60 * 1000
         : interval === '4h'
@@ -155,6 +159,8 @@ export async function GET(request: Request) {
         }, { status: 502 });
       }
 
+      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
+
       const bucketMs = interval === '1h'
         ? 60 * 60 * 1000
         : interval === '4h'
@@ -182,6 +188,8 @@ export async function GET(request: Request) {
         interval,
       });
     }
+
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/charts/candles' });
 
     return NextResponse.json({
       candles: klines,

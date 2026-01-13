@@ -31,7 +31,7 @@ export interface TechnicalIndicatorsResult {
   atr: number | null;
   stochK: number | null;
   stochD: number | null;
-  overallSignal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell';
+  overallTrend: 'strongly_bullish' | 'bullish' | 'neutral' | 'bearish' | 'strongly_bearish';
 }
 
 export interface SupportResistanceLevel {
@@ -332,7 +332,7 @@ export async function calculateTechnicalIndicators(
     else if (macdHistogram < 0) macdTrend = 'bearish';
   }
 
-  // Calculate overall signal
+  // Calculate overall trend (educational indicator, not trading advice)
   let score = 0;
   if (!isNaN(rsi)) {
     if (rsi < 30) score += 2;
@@ -347,11 +347,11 @@ export async function calculateTechnicalIndicators(
   if (!isNaN(sma50) && currentPrice > sma50) score += 1;
   else if (!isNaN(sma50)) score -= 1;
 
-  let overallSignal: 'strong_buy' | 'buy' | 'neutral' | 'sell' | 'strong_sell' = 'neutral';
-  if (score >= 4) overallSignal = 'strong_buy';
-  else if (score >= 2) overallSignal = 'buy';
-  else if (score <= -4) overallSignal = 'strong_sell';
-  else if (score <= -2) overallSignal = 'sell';
+  let overallTrend: 'strongly_bullish' | 'bullish' | 'neutral' | 'bearish' | 'strongly_bearish' = 'neutral';
+  if (score >= 4) overallTrend = 'strongly_bullish';
+  else if (score >= 2) overallTrend = 'bullish';
+  else if (score <= -4) overallTrend = 'strongly_bearish';
+  else if (score <= -2) overallTrend = 'bearish';
 
   return {
     symbol,
@@ -375,7 +375,7 @@ export async function calculateTechnicalIndicators(
     atr: isNaN(atr) ? null : atr,
     stochK: isNaN(stoch.k[lastIndex]) ? null : stoch.k[lastIndex],
     stochD: isNaN(stoch.d[lastIndex]) ? null : stoch.d[lastIndex],
-    overallSignal,
+    overallTrend,
   };
 }
 

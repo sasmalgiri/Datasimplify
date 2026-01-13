@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { getPriceHistory } from '@/lib/coingecko';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 export async function GET(
   request: Request,
@@ -17,6 +18,7 @@ export async function GET(
       const limit = Math.min(days, 1000);
       const klines = await getBinanceKlines(symbol, '1d', limit);
       if (klines && klines.length > 0) {
+        assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/[id]/history' });
         return NextResponse.json({
           coinId: id,
           days,
@@ -32,6 +34,8 @@ export async function GET(
         { status: 502 }
       );
     }
+
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto/[id]/history' });
 
     const prices = await getPriceHistory(id, days);
     

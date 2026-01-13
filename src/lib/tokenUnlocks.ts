@@ -3,6 +3,8 @@
  * Fetches upcoming token unlocks from DeFiLlama
  */
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 // Cache for unlock data (10 minute TTL)
 let unlocksCache: { data: TokenUnlockData[] | null; timestamp: number } = { data: null, timestamp: 0 };
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
@@ -58,6 +60,10 @@ const COIN_TO_PROTOCOL: Record<string, string> = {
  * Fetch token unlocks from DeFiLlama
  */
 async function fetchDeFiLlamaUnlocks(): Promise<TokenUnlockData[]> {
+  if (!isFeatureEnabled('defi')) {
+    return [];
+  }
+
   try {
     // DeFiLlama unlocks endpoint
     const res = await fetch(
@@ -181,6 +187,10 @@ export async function fetchCoinUnlocks(coinId: string): Promise<TokenUnlockData 
  * Fetch all token unlocks with caching
  */
 export async function fetchAllUnlocks(): Promise<TokenUnlockData[]> {
+  if (!isFeatureEnabled('defi')) {
+    return [];
+  }
+
   // Check cache
   const now = Date.now();
   if (unlocksCache.data && (now - unlocksCache.timestamp) < CACHE_TTL) {
@@ -379,6 +389,10 @@ const STAKING_SYMBOL_MAP: Record<string, { name: string; lockup: string; minStak
  * Fetch staking rewards from DeFiLlama Yields API (real data)
  */
 export async function fetchStakingRewardsForDownload(): Promise<StakingRewardDownload[]> {
+  if (!isFeatureEnabled('defi')) {
+    return [];
+  }
+
   // Check cache
   const now = Date.now();
   if (stakingCache.data && (now - stakingCache.timestamp) < STAKING_CACHE_TTL) {

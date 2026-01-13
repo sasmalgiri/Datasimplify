@@ -15,7 +15,6 @@ import {
   Scale,
   Wallet,
   Bell,
-  Sparkles,
   Activity,
   Users,
   DollarSign,
@@ -51,7 +50,6 @@ const routeIcons: Record<string, ReactNode> = {
 
   // Analysis
   monitor: <Brain className="w-3.5 h-3.5" />,
-  predictions: <Sparkles className="w-3.5 h-3.5" />,
   dashboard: <Activity className="w-3.5 h-3.5" />,
   portfolio: <Wallet className="w-3.5 h-3.5" />,
 
@@ -110,7 +108,6 @@ const routeNames: Record<string, string> = {
   compare: 'Compare',
   download: 'Download Center',
   monitor: 'AI Monitor',
-  predictions: 'AI Predictions',
   dashboard: 'Dashboard',
   portfolio: 'Portfolio Builder',
   chat: 'AI Chat',

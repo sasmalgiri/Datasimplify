@@ -3,6 +3,8 @@
 // ============================================
 // How it works: Monitor blockchain for large transactions using FREE APIs
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 // FREE APIs for whale tracking
 const WHALE_APIS = {
   // Whale Alert (has free tier)
@@ -84,6 +86,9 @@ export interface ExchangeFlow {
 }
 
 async function fetchUsdPrice(coinId: 'bitcoin' | 'ethereum'): Promise<number | null> {
+  if (!isFeatureEnabled('whales')) return null;
+  if (!isFeatureEnabled('coingecko')) return null;
+
   try {
     const response = await fetch(
       `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd`,
@@ -107,6 +112,10 @@ export async function getRecentLargeEthTransactions(
   minValueEth: number = 100,
   apiKey?: string
 ): Promise<WhaleTransaction[]> {
+  if (!isFeatureEnabled('whales')) {
+    return [];
+  }
+
   try {
     const ethUsd = await fetchUsdPrice('ethereum');
     if (ethUsd === null) {
@@ -186,6 +195,10 @@ export async function getRecentLargeEthTransactions(
 export async function getBitcoinWhaleTransactions(
   minValueBtc: number = 100
 ): Promise<WhaleTransaction[]> {
+  if (!isFeatureEnabled('whales')) {
+    return [];
+  }
+
   try {
     const btcUsd = await fetchUsdPrice('bitcoin');
     if (btcUsd === null) {
@@ -228,6 +241,10 @@ export async function getExchangeWalletBalance(
   walletAddress: string,
   apiKey?: string
 ): Promise<WalletBalance | null> {
+  if (!isFeatureEnabled('whales')) {
+    return null;
+  }
+
   try {
     const ethUsd = await fetchUsdPrice('ethereum');
     if (ethUsd === null) return null;
@@ -258,6 +275,10 @@ export async function getExchangeWalletBalance(
 
 // Get all exchange balances
 export async function getAllExchangeBalances(apiKey?: string): Promise<WalletBalance[]> {
+  if (!isFeatureEnabled('whales')) {
+    return [];
+  }
+
   const balances: WalletBalance[] = [];
   
   for (const [address, info] of Object.entries(KNOWN_EXCHANGE_WALLETS)) {
@@ -282,6 +303,10 @@ export async function getAllExchangeBalances(apiKey?: string): Promise<WalletBal
 // For now, we can estimate from recent transactions
 
 export async function estimateExchangeFlows(): Promise<ExchangeFlow[]> {
+  if (!isFeatureEnabled('whales')) {
+    return [];
+  }
+
   const transactions = await getRecentLargeEthTransactions(10);
   
   const flows: Record<string, ExchangeFlow> = {};
@@ -342,6 +367,19 @@ export async function getWhaleDashboard(etherscanApiKey?: string): Promise<{
     netExchangeFlow: number;
   };
 }> {
+  if (!isFeatureEnabled('whales')) {
+    return {
+      recentWhaleTransactions: [],
+      exchangeBalances: [],
+      exchangeFlows: [],
+      summary: {
+        totalWhaleVolume24h: 0,
+        largestTransaction: null,
+        netExchangeFlow: 0,
+      },
+    };
+  }
+
   const [ethTransactions, btcTransactions, exchangeBalances] = await Promise.all([
     getRecentLargeEthTransactions(100, etherscanApiKey),
     getBitcoinWhaleTransactions(100),

@@ -11,7 +11,6 @@ import {
   RefreshCw,
   Activity,
   Shield,
-  Brain,
   BarChart3,
   Users,
   Zap,
@@ -21,13 +20,11 @@ import {
 } from 'lucide-react';
 import PriceChart from '@/components/PriceChart';
 import DownloadButton from '@/components/DownloadButton';
-import { PredictionCard, PredictionBadge, RiskBadge } from '@/components/PredictionCard';
-import PredictionFactors, { PredictionFactorsData } from '@/components/PredictionFactors';
 import { TechnicalAnalysisPanel } from '@/components/TechnicalAnalysisPanel';
-import { RiskScoreCard, OnChainMetrics } from '@/components/RiskScoreCard';
+import { OnChainMetrics } from '@/components/RiskScoreCard';
 import { CoinMarketData } from '@/types/crypto';
 import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChangeColor } from '@/lib/utils';
-import { fetchWithCache, CACHE_TTL, getCacheStats } from '@/lib/clientCache';
+import { fetchWithCache, CACHE_TTL } from '@/lib/clientCache';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Calculate support/resistance levels using pivot points from OHLC data
@@ -83,22 +80,6 @@ function SentimentGauge({ value }: { value: number }) {
   );
 }
 
-// Prediction types
-interface PredictionData {
-  coinId: string;
-  coinName: string;
-  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  confidence: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
-  reasons: string[];
-  technicalScore: number;
-  sentimentScore: number;
-  onChainScore: number;
-  macroScore: number;
-  overallScore: number;
-  timestamp: string;
-}
-
 type TechnicalSnapshot = {
   rsi14?: number;
   macdSignal?: 'bullish_cross' | 'bearish_cross' | 'neutral';
@@ -137,21 +118,17 @@ export default function CoinDetailPage() {
   const coinId = params.id as string;
 
   const macroEnabled = isFeatureEnabled('macro');
-  const predictionsEnabled = isFeatureEnabled('predictions') && macroEnabled;
   const whalesEnabled = isFeatureEnabled('whales');
 
   const [coin, setCoin] = useState<CoinMarketData | null>(null);
   const [priceHistory, setPriceHistory] = useState<Array<{ timestamp: number; price: number }>>([]);
-  const [prediction, setPrediction] = useState<PredictionData | null>(null);
   const [sentiment, setSentiment] = useState<SentimentInfo | null>(null);
   const [technical, setTechnical] = useState<TechnicalSnapshot>(null);
   const [onchain, setOnchain] = useState<OnChainSnapshot>(null);
   const [macro, setMacro] = useState<MacroSnapshot>(null);
   const [derivatives, setDerivatives] = useState<DerivativesSnapshot>(null);
   const [loading, setLoading] = useState(true);
-  const [predictionLoading, setPredictionLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showDetailedPrediction, setShowDetailedPrediction] = useState(false);
   const [dataFromCache, setDataFromCache] = useState(false);
 
   const fetchCoinData = useCallback(async (forceRefresh = false) => {
@@ -191,7 +168,6 @@ export default function CoinDetailPage() {
   useEffect(() => {
     if (coinId) {
       fetchCoinData();
-      if (predictionsEnabled) fetchPrediction();
       fetchSentiment();
       fetchTechnical();
       if (macroEnabled) fetchMacro();
@@ -199,27 +175,6 @@ export default function CoinDetailPage() {
       fetchOnchain();
     }
   }, [coinId, fetchCoinData]);
-
-  const fetchPrediction = async () => {
-    if (!predictionsEnabled) {
-      setPrediction(null);
-      setPredictionLoading(false);
-      return;
-    }
-
-    try {
-      setPredictionLoading(true);
-      const res = await fetch(`/api/predict?coin=${coinId}&quick=true`);
-      const data = await res.json();
-      if (data.success && data.data) {
-        setPrediction(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching prediction:', error);
-    } finally {
-      setPredictionLoading(false);
-    }
-  };
 
   const fetchSentiment = async () => {
     try {
@@ -388,7 +343,6 @@ export default function CoinDetailPage() {
     // Force refresh all data (bypass cache)
     await Promise.all([
       fetchCoinData(true),
-      fetchPrediction(),
       fetchSentiment(),
       fetchTechnical(),
       fetchMacro(),
@@ -398,60 +352,8 @@ export default function CoinDetailPage() {
     setRefreshing(false);
   };
 
-  // Build PredictionFactorsData for detailed view
-  const buildPredictionFactorsData = (): PredictionFactorsData | null => {
-    if (!prediction || !coin || !sentiment) return null;
-
-    const tech = technical;
-    const onchainSnap = onchain;
-
-    return {
-      technicalScore: prediction.technicalScore,
-      sentimentScore: prediction.sentimentScore,
-      onChainScore: prediction.onChainScore,
-      macroScore: prediction.macroScore,
-      overallScore: prediction.overallScore,
-      prediction: prediction.prediction,
-      confidence: prediction.confidence,
-      technical: tech ? {
-        rsi: { value: typeof tech.rsi14 === 'number' ? tech.rsi14 : null, signal: typeof tech.rsi14 === 'number' ? (tech.rsi14 < 30 ? 'Oversold' : tech.rsi14 > 70 ? 'Overbought' : 'Neutral') : 'Unavailable' },
-        macd: { signal: tech.macdSignal ? (tech.macdSignal === 'bullish_cross' ? 'Bullish crossover' : tech.macdSignal === 'bearish_cross' ? 'Bearish crossover' : 'Neutral') : 'Unavailable', histogram: null },
-        priceVsMA200: { percentage: null, signal: tech.priceVs200MA ? (tech.priceVs200MA === 'above' ? 'Bullish' : tech.priceVs200MA === 'below' ? 'Bearish' : 'Neutral') : 'Unavailable' },
-        bollingerPosition: tech.bollingerPosition ? (tech.bollingerPosition === 'upper' ? 'Upper band' : tech.bollingerPosition === 'lower' ? 'Lower band' : 'Middle band') : 'Unavailable',
-        volumeTrend: tech.volumeTrend ? (tech.volumeTrend === 'increasing' ? 'Increasing' : tech.volumeTrend === 'decreasing' ? 'Decreasing' : 'Stable') : 'Unavailable',
-        supportResistance: formatSupportResistance(coin.high_24h, coin.low_24h, coin.current_price),
-      } : undefined,
-      sentiment: {
-        fearGreedIndex: { value: sentiment.fearGreedIndex, label: sentiment.fearGreedLabel },
-        socialSentiment: 'Unavailable',
-        newsAnalysis: 'Unavailable',
-        twitterMentions: { trend: 'Unavailable', change: null },
-      },
-      onChain: onchainSnap ? {
-        exchangeFlow: onchainSnap.exchangeFlow ? { net: onchainSnap.exchangeFlow === 'outflow' ? 'Outflow' : onchainSnap.exchangeFlow === 'inflow' ? 'Inflow' : 'Neutral', signal: onchainSnap.exchangeFlow === 'outflow' ? 'Bullish' : onchainSnap.exchangeFlow === 'inflow' ? 'Bearish' : 'Neutral' } : { net: 'Unavailable', signal: 'Unavailable' },
-        whaleActivity: onchainSnap.whaleActivity ? (onchainSnap.whaleActivity === 'buying' ? 'Accumulating' : onchainSnap.whaleActivity === 'selling' ? 'Distributing' : 'Neutral') : 'Unavailable',
-        activeAddresses: onchainSnap.activeAddresses ? { trend: onchainSnap.activeAddresses === 'increasing' ? 'Increasing' : onchainSnap.activeAddresses === 'decreasing' ? 'Decreasing' : 'Stable', change: null } : { trend: 'Unavailable', change: null },
-        holdingDistribution: 'Unavailable',
-      } : undefined,
-      macro: macro ? {
-        vix: { value: typeof macro.vix === 'number' ? macro.vix : null, signal: typeof macro.vix === 'number' ? (macro.vix > 25 ? 'Risk-off' : macro.vix < 15 ? 'Risk-on' : 'Neutral' ) : 'Unavailable' },
-        dxy: { value: typeof macro.dxy === 'number' ? macro.dxy : null, signal: typeof macro.dxy === 'number' ? (macro.dxy > 105 ? 'Bearish' : macro.dxy < 100 ? 'Bullish' : 'Neutral') : 'Unavailable' },
-        riskEnvironment: macro.riskEnvironment ?? 'Unavailable',
-        btcCorrelation: null,
-        marketCycle: 'Unavailable',
-      } : undefined,
-      derivatives: derivatives ? {
-        fundingRate: { value: typeof derivatives.fundingRate === 'number' ? derivatives.fundingRate : null, signal: typeof derivatives.fundingRate === 'number' ? 'Neutral' : 'Unavailable' },
-        openInterest: { change: typeof derivatives.openInterestChange24h === 'number' ? derivatives.openInterestChange24h : null, signal: typeof derivatives.openInterestChange24h === 'number' ? (derivatives.openInterestChange24h > 0 ? 'Bullish' : 'Bearish') : 'Unavailable' },
-        liquidations24h: { value: typeof derivatives.liquidations24h === 'number' ? derivatives.liquidations24h : null, predominant: 'Unavailable' },
-        longShortRatio: typeof derivatives.longShortRatio === 'number' ? derivatives.longShortRatio : null,
-      } : undefined,
-    };
-  };
-
   const technicalData = technical;
   const onChainData = onchain;
-  const predictionFactorsData = buildPredictionFactorsData();
 
   if (loading) {
     return (
@@ -526,13 +428,6 @@ export default function CoinDetailPage() {
                 <span className="bg-gray-800 text-gray-400 text-xs font-medium px-2 py-1 rounded">
                   Rank #{coin.market_cap_rank}
                 </span>
-                {prediction && (
-                  <PredictionBadge
-                    prediction={prediction.prediction}
-                    confidence={prediction.confidence}
-                    size="md"
-                  />
-                )}
               </div>
               <div className="flex items-center gap-4 mt-2">
                 <span className="text-3xl font-bold text-white">
@@ -573,115 +468,52 @@ export default function CoinDetailPage() {
           </div>
         </div>
 
-        {/* AI Prediction Panel */}
+        {/* Market Sentiment Panel */}
         <div className="mb-8">
-          {/* Toggle Header */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Brain className="w-6 h-6 text-purple-400" />
-              AI Prediction Analysis
-            </h2>
-            {prediction && (
-              <button
-                type="button"
-                onClick={() => setShowDetailedPrediction(!showDetailedPrediction)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors text-sm"
-              >
-                {showDetailedPrediction ? 'Show Summary' : 'Show All Factors'}
-              </button>
-            )}
-          </div>
-
-          {predictionLoading ? (
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 animate-pulse">
-              <div className="h-6 bg-gray-700 rounded w-32 mb-4" />
-              <div className="h-4 bg-gray-700 rounded w-full mb-2" />
-              <div className="h-4 bg-gray-700 rounded w-3/4" />
-            </div>
-          ) : prediction && showDetailedPrediction && predictionFactorsData ? (
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6">
-              <PredictionFactors
-                data={predictionFactorsData}
-                coinName={coin.name}
-                coinSymbol={coin.symbol.toUpperCase()}
-                showDisclaimer={true}
-              />
-            </div>
-          ) : prediction ? (
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <PredictionCard
-                  prediction={prediction.prediction}
-                  confidence={prediction.confidence}
-                  riskLevel={prediction.riskLevel}
-                  reasons={prediction.reasons}
-                  technicalScore={prediction.technicalScore}
-                  sentimentScore={prediction.sentimentScore}
-                  onChainScore={prediction.onChainScore}
-                  macroScore={prediction.macroScore}
-                  overallScore={prediction.overallScore}
-                  coinName={coin.name}
-                  showDetails={true}
-                />
-              </div>
-              {/* Sentiment Panel - moved inside the grid for summary view */}
-              <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-5">
-                <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-purple-400" />
-                  Market Sentiment
-                </h3>
-                {sentiment ? (
-                  <>
-                    <div className="text-center mb-4">
-                      <div className={`text-4xl font-bold mb-1 ${
-                        sentiment.fearGreedIndex < 30 ? 'text-red-400' :
-                        sentiment.fearGreedIndex > 70 ? 'text-emerald-400' : 'text-yellow-400'
-                      }`}>
-                        {sentiment.fearGreedIndex}
-                      </div>
-                      <div className="text-gray-400 text-sm">{sentiment.fearGreedLabel}</div>
-                    </div>
-                    <SentimentGauge value={sentiment.fearGreedIndex} />
-                    <div className="flex justify-between mt-1 text-xs text-gray-500">
-                      <span>Fear</span>
-                      <span>Greed</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-4">
-                    <Activity className="w-6 h-6 text-gray-600 mx-auto mb-2" />
-                    <p className="text-gray-500 text-sm">Loading sentiment...</p>
+          <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-5">
+            <h3 className="text-white font-semibold flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-purple-400" />
+              Market Sentiment
+            </h3>
+            {sentiment ? (
+              <>
+                <div className="text-center mb-4">
+                  <div className={`text-4xl font-bold mb-1 ${
+                    sentiment.fearGreedIndex < 30 ? 'text-red-400' :
+                    sentiment.fearGreedIndex > 70 ? 'text-emerald-400' : 'text-yellow-400'
+                  }`}>
+                    {sentiment.fearGreedIndex}
                   </div>
-                )}
-                {/* Quick Stats */}
-                <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">24h Volume/MCap</span>
-                    <span className="text-white font-medium">
-                      {((coin.total_volume / coin.market_cap) * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Volatility (24h)</span>
-                    <span className="text-white font-medium">
-                      {((Math.abs(coin.high_24h - coin.low_24h) / coin.current_price) * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  {prediction && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Risk Level</span>
-                      <RiskBadge level={prediction.riskLevel} size="xs" />
-                    </div>
-                  )}
+                  <div className="text-gray-400 text-sm">{sentiment.fearGreedLabel}</div>
                 </div>
+                <SentimentGauge value={sentiment.fearGreedIndex} />
+                <div className="flex justify-between mt-1 text-xs text-gray-500">
+                  <span>Fear</span>
+                  <span>Greed</span>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4">
+                <Activity className="w-6 h-6 text-gray-600 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">Loading sentiment...</p>
+              </div>
+            )}
+            {/* Quick Stats */}
+            <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">24h Volume/MCap</span>
+                <span className="text-white font-medium">
+                  {((coin.total_volume / coin.market_cap) * 100).toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Volatility (24h)</span>
+                <span className="text-white font-medium">
+                  {((Math.abs(coin.high_24h - coin.low_24h) / coin.current_price) * 100).toFixed(2)}%
+                </span>
               </div>
             </div>
-          ) : (
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 text-center">
-              <Brain className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-gray-400">Prediction unavailable</p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Price Chart */}
@@ -718,17 +550,6 @@ export default function CoinDetailPage() {
               exchangeFlow={onChainData.exchangeFlow}
               whaleActivity={onChainData.whaleActivity}
               activeAddresses={onChainData.activeAddresses}
-            />
-          )}
-
-          {/* Risk Assessment */}
-          {prediction && (
-            <RiskScoreCard
-              overallRisk={prediction.riskLevel}
-              riskScore={100 - prediction.overallScore}
-              technicalRisk={prediction.technicalScore < 40 ? 'HIGH' : prediction.technicalScore > 60 ? 'LOW' : 'MEDIUM'}
-              sentimentRisk={prediction.sentimentScore < 40 ? 'HIGH' : prediction.sentimentScore > 60 ? 'LOW' : 'MEDIUM'}
-              compact={true}
             />
           )}
         </div>

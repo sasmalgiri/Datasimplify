@@ -2,6 +2,7 @@
 // Creates an Excel file with instructions for Power Query live data connections
 
 import * as XLSX from 'xlsx';
+import { isDownloadCategoryRedistributableClient } from '@/lib/redistributionPolicyClient';
 
 // Base URL - will be configured based on deployment
 const getBaseUrl = () => {
@@ -75,12 +76,33 @@ const DATA_ENDPOINTS = [
   },
 ];
 
+function extractCategoryId(endpoint: string): string {
+  try {
+    const url = new URL(endpoint, 'https://datasimplify.com');
+    return (url.searchParams.get('category') || '').trim();
+  } catch {
+    const match = endpoint.match(/[?&]category=([^&]+)/i);
+    return match ? decodeURIComponent(match[1] || '').trim() : '';
+  }
+}
+
+function getAllowedDataEndpoints() {
+  return DATA_ENDPOINTS.filter((e) => {
+    const categoryId = extractCategoryId(e.endpoint);
+    if (!categoryId) return false;
+    return isDownloadCategoryRedistributableClient(categoryId);
+  });
+}
+
 /**
  * Generate an Excel template with live data connection instructions
  */
 export function generateLiveDataTemplate(): Uint8Array {
   const baseUrl = getBaseUrl();
   const wb = XLSX.utils.book_new();
+
+  const allowedEndpoints = getAllowedDataEndpoints();
+  const firstAllowedEndpoint = allowedEndpoints[0]?.endpoint || '/api/download?category=market_overview&format=json';
 
   // =====================
   // Sheet 1: Instructions
@@ -111,11 +133,11 @@ export function generateLiveDataTemplate(): Uint8Array {
     ['3. Use =IMPORTJSON(url) function'],
     [''],
     ['AVAILABLE DATA CATEGORIES'],
-    ['See the "Data URLs" sheet for all available endpoints'],
+    ['See the "Data URLs" sheet for available endpoints'],
     [''],
     ['NOTES'],
     ['• Free tier: 5 downloads/month limit'],
-    ['• Data is refreshed from Binance, DeFiLlama, and other sources'],
+    ['• Data sources depend on your deployment configuration'],
     ['• All times are in UTC'],
     ['• For API documentation, visit ' + baseUrl + '/download'],
   ];
@@ -127,7 +149,7 @@ export function generateLiveDataTemplate(): Uint8Array {
   // Sheet 2: Data URLs
   // =====================
   const urlsHeader = ['Category', 'JSON URL', 'CSV URL', 'Description', 'Refresh Rate'];
-  const urlsData = DATA_ENDPOINTS.map(ep => [
+  const urlsData = allowedEndpoints.map(ep => [
     ep.category,
     baseUrl + ep.endpoint,
     baseUrl + ep.endpoint.replace('format=json', 'format=csv'),
@@ -156,7 +178,7 @@ export function generateLiveDataTemplate(): Uint8Array {
     ['STEP 2: Create New Query from Web'],
     ['• Click "New Source" → Web'],
     ['• Paste this URL:'],
-    [baseUrl + '/api/download?category=market_overview&format=json'],
+    [baseUrl + firstAllowedEndpoint],
     [''],
     ['STEP 3: Transform JSON to Table'],
     ['• Click "To Table" if prompted'],
@@ -192,17 +214,7 @@ export function generateLiveDataTemplate(): Uint8Array {
     ['METHOD 1: IMPORTDATA (Simple - CSV Format)'],
     [''],
     ['Paste this formula in any cell:'],
-    ['=IMPORTDATA("' + baseUrl + '/api/download?category=market_overview&format=csv")'],
-    [''],
-    ['Other examples:'],
-    ['Fear & Greed Index:'],
-    ['=IMPORTDATA("' + baseUrl + '/api/download?category=fear_greed&format=csv")'],
-    [''],
-    ['Top Gainers:'],
-    ['=IMPORTDATA("' + baseUrl + '/api/download?category=gainers_losers&format=csv&type=gainers&limit=10")'],
-    [''],
-    ['DeFi TVL:'],
-    ['=IMPORTDATA("' + baseUrl + '/api/download?category=defi_protocols&format=csv&limit=25")'],
+    ['=IMPORTDATA("' + baseUrl + firstAllowedEndpoint.replace('format=json', 'format=csv') + '")'],
     [''],
     ['NOTE: IMPORTDATA refreshes approximately every hour automatically.'],
     [''],

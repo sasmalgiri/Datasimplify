@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { findCoinByGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
@@ -141,6 +142,8 @@ export async function GET(request: Request) {
     .filter(Boolean);
 
   try {
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/risk' });
+
     const results = await Promise.allSettled(coinIds.map(id => buildCoinRisk(id, days)));
     const coins: CoinRisk[] = results
       .filter(r => r.status === 'fulfilled')

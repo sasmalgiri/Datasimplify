@@ -128,25 +128,6 @@ export function InlineDisclaimer({ className = '' }: { className?: string }) {
   );
 }
 
-// AI Prediction specific disclaimer
-export function AIPredictionDisclaimer({ className = '' }: { className?: string }) {
-  return (
-    <div className={`bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 ${className}`}>
-      <div className="flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-gray-400">
-          <p className="font-medium text-purple-300 mb-1">AI Prediction Disclaimer</p>
-          <p>
-            AI predictions are experimental and based on historical patterns. Accuracy varies significantly.
-            <strong className="text-white"> Never invest based solely on AI signals.</strong>{' '}
-            Always conduct your own research and consult qualified financial advisors.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Compact footer disclaimer
 export function FooterDisclaimer() {
   const sources = [

@@ -3,6 +3,8 @@
 // Collections, floor prices, volume, stats
 // ============================================
 
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 // Cache for NFT data (5 minute TTL)
 let nftCache: { data: NFTMarketStats | null; timestamp: number } = { data: null, timestamp: 0 };
 let collectionsCache: { data: NFTCollection[] | null; timestamp: number } = { data: null, timestamp: 0 };
@@ -116,6 +118,10 @@ const TOP_NFT_IDS = [
  * Fetch NFT collection details from CoinGecko
  */
 async function fetchNFTFromCoinGecko(nftId: string): Promise<NFTCollection | null> {
+  if (!isFeatureEnabled('nft')) {
+    return null;
+  }
+
   try {
     const response = await fetch(
       `https://api.coingecko.com/api/v3/nfts/${nftId}`,
@@ -184,6 +190,10 @@ export async function fetchTopNFTCollections(
   limit: number = 20,
   chain?: string
 ): Promise<NFTCollection[]> {
+  if (!isFeatureEnabled('nft')) {
+    return [];
+  }
+
   // Check cache first
   const now = Date.now();
   if (collectionsCache.data && (now - collectionsCache.timestamp) < CACHE_TTL) {
@@ -233,6 +243,24 @@ export async function fetchTopNFTCollections(
  * Fetch NFT market-wide stats
  */
 export async function fetchNFTMarketStats(): Promise<NFTMarketStats> {
+  if (!isFeatureEnabled('nft')) {
+    const now = Date.now();
+    const stats: NFTMarketStats = {
+      totalMarketCap: null,
+      totalVolume24h: null,
+      volumeChange24h: null,
+      totalSales24h: null,
+      averagePrice: null,
+      topCollections: [],
+      chainBreakdown: [],
+      timestamp: new Date(now).toISOString(),
+      dataSource: 'unavailable',
+      errors: ['NFT data is disabled.'],
+    };
+    nftCache = { data: stats, timestamp: now };
+    return stats;
+  }
+
   // Check cache
   const now = Date.now();
   if (nftCache.data && (now - nftCache.timestamp) < CACHE_TTL) {

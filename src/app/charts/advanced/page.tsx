@@ -10,6 +10,11 @@ import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
+import {
+  areAllSourcesRedistributableClient,
+  isAnySourceRedistributableClient,
+  isDownloadCategoryRedistributableClient,
+} from '@/lib/redistributionPolicyClient';
 
 // Import echarts-gl after echarts core (must be in this order)
 import 'echarts-gl';
@@ -116,6 +121,15 @@ const CHART_CONFIGS: Array<{
   { type: 'whale_tracker', title: 'Whale Tracker', category: 'special', icon: '◉', description: 'Large BTC/ETH transactions (real data from Blockchair + Etherscan)' },
   { type: 'globe_3d', title: '3D Globe', category: '3d', icon: '◍', description: 'Unavailable (requires real 3D metric set)' },
 ];
+
+function isAdvancedChartTypeAllowed(chartType: AdvancedChartType): boolean {
+  if (chartType === 'wallet_distribution') return true;
+  if (chartType === 'whale_tracker') return areAllSourcesRedistributableClient(['etherscan', 'coingecko']);
+  // Everything else is built from market data and/or derived metrics.
+  return isAnySourceRedistributableClient(['binance', 'coingecko']);
+}
+
+const AVAILABLE_CHART_CONFIGS = CHART_CONFIGS.filter(c => isAdvancedChartTypeAllowed(c.type));
 // Valid chart types for URL validation
 const VALID_ADVANCED_CHART_TYPES: AdvancedChartType[] = ['globe_3d', 'sankey', 'sunburst', 'gauge', 'treemap', 'radar_advanced', 'graph_network', 'parallel', 'funnel', 'calendar', 'whale_tracker', 'wallet_distribution'];
 
@@ -150,7 +164,7 @@ function AdvancedChartsContent() {
     isInitialized.current = true;
 
     const chart = searchParams.get('chart');
-    if (chart && VALID_ADVANCED_CHART_TYPES.includes(chart as AdvancedChartType)) {
+    if (chart && VALID_ADVANCED_CHART_TYPES.includes(chart as AdvancedChartType) && isAdvancedChartTypeAllowed(chart as AdvancedChartType)) {
       setSelectedChart(chart as AdvancedChartType);
     }
 
@@ -180,6 +194,13 @@ function AdvancedChartsContent() {
       setColorMode(color);
     }
   }, [searchParams]);
+
+  // Enforce allowed chart types in strict redistribution mode
+  useEffect(() => {
+    if (isAdvancedChartTypeAllowed(selectedChart)) return;
+    const fallback = AVAILABLE_CHART_CONFIGS[0]?.type;
+    if (fallback) setSelectedChart(fallback);
+  }, [selectedChart]);
 
   // Sync state to URL (only after initialization)
   useEffect(() => {
@@ -448,17 +469,9 @@ function AdvancedChartsContent() {
     setIsDownloading(true);
     try {
       if (format === 'iqy') {
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
-        const url = new URL(`${baseUrl}/api/download`);
-        url.searchParams.set('category', 'market_overview');
-        url.searchParams.set('format', 'csv');
-        url.searchParams.set('excel', 'true');
-        if (selectedCoins.length > 0) url.searchParams.set('symbols', selectedCoins.join(','));
-        url.searchParams.set('fields', 'symbol,name,price,market_cap,volume_24h,price_change_percent_24h');
-
-        const iqy = `WEB\n1\n${url.toString()}\n`;
-        const blob = new Blob([iqy], { type: 'text/plain; charset=utf-8' });
-        downloadBlob(blob, `${selectedChart}_live.iqy`);
+        // IQY/Live Excel format is no longer available - redirect to templates
+        alert('Live Excel connections are no longer available.\n\nFor live data in Excel, use our CryptoSheets templates instead.\n\nVisit: /templates');
+        window.location.href = '/templates';
         setIsDownloading(false);
         return;
       }
@@ -496,6 +509,13 @@ function AdvancedChartsContent() {
 
         // Sheet 2: Live Data Instructions
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
+        const allowMarketOverview = isDownloadCategoryRedistributableClient('market_overview');
+        const marketOverviewJsonUrl = allowMarketOverview
+          ? `${baseUrl}/api/download?category=market_overview&format=json`
+          : 'Disabled by redistribution policy';
+        const marketOverviewCsvFormula = allowMarketOverview
+          ? `=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`
+          : 'Disabled by redistribution policy';
         const liveDataInstructions = [
           ['DataSimplify - Live Data Connection'],
           [''],
@@ -503,17 +523,15 @@ function AdvancedChartsContent() {
           ['Generated:', new Date().toISOString()],
           ['Coins:', selectedCoins.join(', ')],
           [''],
-          ['GET LIVE DATA IN EXCEL (Power Query):'],
-          ['1. Go to Data tab → Get Data → From Web'],
-          ['2. Paste this URL:', `${baseUrl}/api/download?category=market_overview&format=json`],
-          ['3. Click OK and transform JSON to table'],
-          ['4. Right-click query → Properties → Enable auto-refresh'],
+          ['GET LIVE DATA IN EXCEL:'],
+          ['For live updating data in Excel, use our CryptoSheets templates.'],
+          ['Visit:', `${baseUrl}/templates`],
           [''],
-          ['GET LIVE DATA IN GOOGLE SHEETS:'],
-          ['Paste this formula in any cell:'],
-          [`=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`],
+          ['WHAT\'S INCLUDED IN THIS DOWNLOAD:'],
+          ['- Chart image (PNG format)'],
+          ['- Static snapshot of current data'],
           [''],
-          ['More data available at:', `${baseUrl}/download`],
+          ['For live, refreshable data, use CryptoSheets templates at:', `${baseUrl}/templates`],
           [''],
           ['NOTE: Chart image is included in this ZIP file as a PNG.'],
         ];
@@ -1144,7 +1162,7 @@ function AdvancedChartsContent() {
     }
   }, [selectedChart, filteredCoins, colorMode, calendarData, gaugeData, whaleData]);
 
-  const selectedConfig = CHART_CONFIGS.find(c => c.type === selectedChart);
+  const selectedConfig = AVAILABLE_CHART_CONFIGS.find(c => c.type === selectedChart);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -1188,7 +1206,7 @@ function AdvancedChartsContent() {
                        category === 'flow' ? 'Flow & Network' :
                        category === 'metrics' ? 'Metrics' : 'Special'}
                     </div>
-                    {CHART_CONFIGS.filter(c => c.category === category).map(config => (
+                    {AVAILABLE_CHART_CONFIGS.filter(c => c.category === category).map(config => (
                       <button
                         type="button"
                         key={config.type}
@@ -1419,15 +1437,14 @@ function AdvancedChartsContent() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => downloadChart('iqy')}
-                      disabled={isDownloading}
-                      className="px-2 py-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Live Excel (IQY): one-click import, refreshable in Excel"
+                      onClick={() => window.location.href = '/templates'}
+                      className="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white text-xs rounded transition flex items-center gap-1"
+                      title="Get CryptoSheets templates for live data in Excel"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      LIVE
+                      Templates
                     </button>
                   </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">

@@ -115,7 +115,7 @@ export function DataAttribution() {
       )}
 
       <p className="text-xs text-gray-500 mt-2">
-        All data sources are free for commercial use. See individual API terms for details.
+        Data sources are used under their respective terms. Review each provider's current API terms for commercial use, caching, and redistribution.
       </p>
     </div>
   );

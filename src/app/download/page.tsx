@@ -1,370 +1,48 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { DATA_CATEGORIES, SUPPORTED_COINS, DataCategory, getFieldDisplayName } from '@/lib/dataTypes';
-import { downloadLiveDataTemplate } from '@/lib/excelTemplate';
-import { isDownloadCategoryEnabled } from '@/lib/featureFlags';
-
-// Progress bar component using ref to avoid inline style warnings
-function ProgressBarRef({ percentage, className }: { percentage: number; className: string }) {
-  const barRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (barRef.current) {
-      barRef.current.style.setProperty('--progress-width', `${percentage}%`);
-    }
-  }, [percentage]);
-
-  return <div ref={barRef} className={`${className} progress-bar`} />;
-}
-
-// Icons (inline SVG for simplicity)
-const DownloadIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
-
-const SpinnerIcon = () => (
-  <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-  </svg>
-);
-
-// Help Icon with Tooltip
-function HelpTooltip({ text }: { text: string }) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  return (
-    <span
-      className="relative inline-flex items-center ml-2"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-    >
-      <span className="cursor-help w-5 h-5 rounded-full bg-gray-700 text-emerald-400 text-xs flex items-center justify-center hover:bg-emerald-600 hover:text-white transition-colors font-bold">
-        ?
-      </span>
-      {isVisible && (
-        <span className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-sm text-white bg-gray-900 rounded-lg shadow-2xl border border-emerald-500/50 min-w-[250px] max-w-[350px] text-left whitespace-normal">
-          {text}
-          <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-gray-900"></span>
-        </span>
-      )}
-    </span>
-  );
-}
-
-// Category explanations for tooltips
-const CATEGORY_EXPLANATIONS: Record<string, string> = {
-  'all': 'Show all available cryptocurrencies without any filter',
-  'layer1': 'Base blockchain networks like Bitcoin, Ethereum, Solana that process transactions directly',
-  'layer2': 'Solutions built on top of Layer 1 to improve speed and reduce costs (e.g., Polygon, Arbitrum)',
-  'defi': 'Decentralized Finance tokens for lending, trading, and earning interest without banks',
-  'gaming': 'Tokens used in blockchain games and virtual worlds (metaverse)',
-  'meme': 'Community-driven tokens often started as jokes (e.g., Dogecoin, Shiba Inu)',
-  'exchange': 'Tokens issued by crypto exchanges (e.g., BNB, FTT)',
-  'payments': 'Cryptocurrencies designed for fast, cheap payments (e.g., XRP, Litecoin)'
-};
+import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
+import { TemplateGrid } from '@/components/TemplateCard';
+import { getTemplateList } from '@/lib/templates/templateConfig';
 
 export default function DownloadPage() {
-  // State
-  const [selectedCategory, setSelectedCategory] = useState<DataCategory>('market_overview');
-  const [selectedCoins, setSelectedCoins] = useState<string[]>([]);
-  const [selectedCoinCategory, setSelectedCoinCategory] = useState('all');
-  const [selectedInterval, setSelectedInterval] = useState('1d');
-  const [selectedLimit, setSelectedLimit] = useState('500');
-  const [selectedDepth, setSelectedDepth] = useState('20');
-  const [selectedGainerType, setSelectedGainerType] = useState('both');
-  const [selectedFormat, setSelectedFormat] = useState<'xlsx' | 'csv' | 'iqy'>('xlsx');
-  const [liveKind, setLiveKind] = useState<'excel' | 'csv'>('excel');
-  const [sortBy, setSortBy] = useState('market_cap');
-  const [minMarketCap, setMinMarketCap] = useState('0');
-  const [isLoading, setIsLoading] = useState(false);
-  const [downloadCount, setDownloadCount] = useState(0);
-  const [previewData, setPreviewData] = useState<Record<string, unknown>[] | null>(null);
-  const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  // Template modal state
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [selectedTemplateName, setSelectedTemplateName] = useState<string>('');
+  const [templates, setTemplates] = useState<Array<{id: string; name: string; description: string; icon: string}>>([]);
 
-  // New customization options
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [minVolume, setMinVolume] = useState('');
-  const [numberFormat, setNumberFormat] = useState<'full' | 'abbreviated' | 'scientific'>('abbreviated');
-  const [decimalPlaces, setDecimalPlaces] = useState('2');
-  const [includeMetadata, setIncludeMetadata] = useState(true);
-  // Column renaming reserved for future feature
-  // const [columnRenames, setColumnRenames] = useState<Record<string, string>>({});
+  // Configuration state for templates
+  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'SOL']);
+  const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
 
-  // Get category info
-  const availableCategories = DATA_CATEGORIES.filter(c => !c.isPremium && isDownloadCategoryEnabled(c.id));
-  const categoryInfo = availableCategories.find(c => c.id === selectedCategory) || availableCategories[0];
-
-  // If a category is disabled via feature flags, keep selection on a valid category.
+  // Load templates on mount
   useEffect(() => {
-    if (!availableCategories.length) return;
-    if (!availableCategories.some(c => c.id === selectedCategory)) {
-      setSelectedCategory(availableCategories[0].id);
+    const templateList = getTemplateList();
+    setTemplates(templateList);
+  }, []);
+
+  // Handler for template selection
+  const handleTemplateSelect = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplateId(templateId);
+      setSelectedTemplateName(template.name);
+      setShowTemplateModal(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availableCategories.length]);
-
-  // Initialize selected fields when category changes
-  useEffect(() => {
-    if (categoryInfo?.fields) {
-      setSelectedFields(categoryInfo.fields);
-    }
-  }, [selectedCategory, categoryInfo]);
-
-  // Toggle field selection
-  const toggleField = (field: string) => {
-    setSelectedFields(prev => 
-      prev.includes(field)
-        ? prev.filter(f => f !== field)
-        : [...prev, field]
-    );
-  };
-
-  // Select/Deselect all fields
-  const selectAllFields = () => {
-    if (categoryInfo?.fields) {
-      setSelectedFields(categoryInfo.fields);
-    }
-  };
-
-  const deselectAllFields = () => {
-    setSelectedFields([]);
-  };
-
-  // Filter coins by category
-  const filteredCoins = selectedCoinCategory === 'all' 
-    ? SUPPORTED_COINS 
-    : SUPPORTED_COINS.filter(c => c.category === selectedCoinCategory);
-
-  // Select/Deselect all coins
-  const selectAllCoins = () => {
-    setSelectedCoins(filteredCoins.map(c => c.symbol));
-  };
-
-  const deselectAllCoins = () => {
-    setSelectedCoins([]);
   };
 
   // Toggle coin selection
   const toggleCoin = (symbol: string) => {
-    setSelectedCoins(prev => 
-      prev.includes(symbol) 
+    setSelectedCoins(prev =>
+      prev.includes(symbol)
         ? prev.filter(s => s !== symbol)
         : [...prev, symbol]
     );
-  };
-
-  // Filter preview data to only show selected fields
-  const filteredPreviewData = previewData?.map(row => {
-    const filtered: Record<string, unknown> = {};
-    selectedFields.forEach(field => {
-      if (Object.prototype.hasOwnProperty.call(row, field)) {
-        filtered[field] = row[field];
-      }
-    });
-    return filtered;
-  });
-
-  // Get first selected coin for dependency tracking
-  const firstSelectedCoin = selectedCoins[0] || 'BTC';
-
-  // Create stable string for coins array to use as dependency
-  const selectedCoinsKey = selectedCoins.join(',');
-
-  // Fetch preview data
-  const fetchPreview = async () => {
-    setIsLoading(true);
-    try {
-      let url = `/api/download?category=${selectedCategory}&format=json&preview=true`;
-
-      if (selectedFields.length > 0) {
-        url += `&fields=${encodeURIComponent(selectedFields.join(','))}`;
-      }
-
-      // Build URL based on category
-      if (selectedCategory === 'market_overview') {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-        if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
-        url += `&sortBy=${sortBy}&minMarketCap=${minMarketCap}`;
-      } else if (selectedCategory === 'historical_prices') {
-        url += `&symbol=${firstSelectedCoin}&interval=${selectedInterval}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'order_book') {
-        url += `&symbol=${firstSelectedCoin}&depth=${selectedDepth}`;
-      } else if (selectedCategory === 'recent_trades') {
-        url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'gainers_losers') {
-        url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'sentiment_coin') {
-        url += `&symbol=${firstSelectedCoin}`;
-      } else if (selectedCategory === 'sentiment_news') {
-        url += `&filter=hot`;
-      }
-      // Derivatives data
-      else if (['funding_rates', 'open_interest', 'long_short_ratio', 'liquidations'].includes(selectedCategory)) {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-      }
-      // Technical analysis
-      else if (['technical_indicators', 'correlation_matrix', 'support_resistance'].includes(selectedCategory)) {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-      }
-      // Token economics
-      else if (selectedCategory === 'token_unlocks') {
-        url += `&limit=${selectedLimit}`;
-      }
-      // Staking rewards - no specific params needed
-      else if (selectedCategory === 'staking_rewards') {
-        // No additional params
-      }
-      // NFT data
-      else if (selectedCategory === 'nft_collections') {
-        url += `&limit=${selectedLimit}`;
-      }
-      // NFT stats - no params needed
-      else if (selectedCategory === 'nft_stats') {
-        // No additional params
-      }
-      // Other categories with limit support
-      else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
-        url += `&limit=${selectedLimit}`;
-      }
-      // On-chain data - no specific params needed
-      else if (['global_stats', 'stablecoins', 'fear_greed', 'chain_tvl', 'bitcoin_onchain', 'eth_gas'].includes(selectedCategory)) {
-        // No additional params
-      }
-      // Exchange info - no params needed
-      else if (selectedCategory === 'exchange_info') {
-        // No additional params
-      }
-      // Sentiment data
-      else if (selectedCategory === 'sentiment_aggregated' || selectedCategory === 'sentiment_reddit') {
-        // No additional params
-      }
-      // Whale tracking
-      else if (selectedCategory === 'whale_transactions' || selectedCategory === 'exchange_flows') {
-        // No additional params
-      }
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      // Handle both array data and single object data
-      if (Array.isArray(data.data)) {
-        setPreviewData(data.data.slice(0, 5));
-      } else if (data.data && typeof data.data === 'object') {
-        // For single object responses (like global_stats), wrap in array
-        setPreviewData([data.data]);
-      } else {
-        setPreviewData([]);
-      }
-    } catch (error) {
-      console.error('Preview error:', error);
-      setPreviewData([]);
-    }
-    setIsLoading(false);
-  };
-
-  // Auto-fetch preview when filters change (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchPreview();
-    }, 500);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, firstSelectedCoin, selectedCoinsKey, selectedCoinCategory, sortBy, minMarketCap, selectedInterval, selectedLimit, selectedDepth, selectedGainerType]);
-
-  // Download data
-  const handleDownload = async () => {
-    setIsLoading(true);
-    try {
-      let url = `/api/download?category=${selectedCategory}&format=${selectedFormat}`;
-
-      if (selectedFields.length > 0) {
-        url += `&fields=${encodeURIComponent(selectedFields.join(','))}`;
-      }
-
-      // Build URL based on category
-      if (selectedCategory === 'market_overview') {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-        if (selectedCoinCategory !== 'all') url += `&coinCategory=${selectedCoinCategory}`;
-        url += `&sortBy=${sortBy}&minMarketCap=${minMarketCap}`;
-      } else if (selectedCategory === 'historical_prices') {
-        url += `&symbol=${firstSelectedCoin}&interval=${selectedInterval}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'order_book') {
-        url += `&symbol=${firstSelectedCoin}&depth=${selectedDepth}`;
-      } else if (selectedCategory === 'recent_trades') {
-        url += `&symbol=${firstSelectedCoin}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'gainers_losers') {
-        url += `&type=${selectedGainerType}&limit=${selectedLimit}`;
-      } else if (selectedCategory === 'sentiment_coin') {
-        url += `&symbol=${firstSelectedCoin}`;
-      } else if (selectedCategory === 'sentiment_news') {
-        url += `&filter=hot`;
-      }
-      // Derivatives data
-      else if (['funding_rates', 'open_interest', 'long_short_ratio', 'liquidations'].includes(selectedCategory)) {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-      }
-      // Technical analysis
-      else if (['technical_indicators', 'correlation_matrix', 'support_resistance'].includes(selectedCategory)) {
-        if (selectedCoins.length > 0) url += `&symbols=${selectedCoins.join(',')}`;
-      }
-      // Token economics
-      else if (selectedCategory === 'token_unlocks') {
-        url += `&limit=${selectedLimit}`;
-      }
-      // Staking rewards - no specific params
-      else if (selectedCategory === 'staking_rewards') {
-        // No additional params
-      }
-      // NFT data
-      else if (selectedCategory === 'nft_collections') {
-        url += `&limit=${selectedLimit}`;
-      }
-      // NFT stats - no params needed
-      else if (selectedCategory === 'nft_stats') {
-        // No additional params
-      }
-      // Other categories with limit support
-      else if (['defi_protocols', 'defi_yields', 'categories'].includes(selectedCategory)) {
-        url += `&limit=${selectedLimit}`;
-      }
-      // On-chain data, sentiment, whale tracking, exchange info - no params needed
-      // (global_stats, stablecoins, fear_greed, chain_tvl, bitcoin_onchain, eth_gas,
-      //  sentiment_aggregated, sentiment_reddit, whale_transactions, exchange_flows, exchange_info)
-
-      const response = await fetch(url);
-
-      const blob = await response.blob();
-      const ext = selectedFormat === 'xlsx' ? 'xlsx' : selectedFormat === 'iqy' ? 'iqy' : 'csv';
-      const suffix = selectedFormat === 'iqy' ? `_live_${liveKind}` : '';
-      downloadBlob(blob, `datasimplify_${selectedCategory}${suffix}.${ext}`);
-
-      setDownloadCount(prev => prev + 1);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Download failed. Please try again.');
-    }
-    setIsLoading(false);
-  };
-
-  const downloadBlob = (blob: Blob, filename: string) => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
   };
 
   return (
@@ -376,816 +54,196 @@ export default function DownloadPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">📊 Download Center</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Excel Templates</h1>
           <p className="text-gray-400">
-            Download crypto data as Standard files or Live (refreshable) downloads in Excel/CSV. No coding required!
+            Download Excel templates with CryptoSheets formulas for live data visualization.
+            Templates contain formulas only - data is fetched via the CryptoSheets add-in.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Data Type Selection */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Data Category */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-                1️⃣ Select Data Type
-                <HelpTooltip text="Choose what kind of data you want to download. Each type contains different information about cryptocurrencies." />
-              </h2>
-              <div className="space-y-2">
-                {availableCategories.map(category => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full text-left p-3 rounded-lg transition ${
-                      selectedCategory === category.id
-                        ? 'bg-emerald-500/20 border border-emerald-500 text-emerald-400'
-                        : 'bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600'
-                    }`}
-                  >
-                    <div className="font-medium">{category.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">{category.description}</div>
-                  </button>
-                ))}
-              </div>
-              
-              {/* Premium notice */}
-              <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
-                <p className="text-xs text-gray-500">
-                  🔓 All data types are <span className="text-green-400">FREE</span> - powered by Binance API
-                </p>
-              </div>
-            </div>
-
-            {/* Download Type + Format */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-                2️⃣ Download Options
-                <HelpTooltip text="Standard downloads give you a snapshot file (XLSX/CSV). Live downloads give you an Excel Web Query (IQY) that pulls the latest CSV from DataSimplify and supports Refresh inside Excel." />
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedFormat('xlsx')}
-                  className={`w-full text-left p-3 rounded-lg transition border ${
-                    selectedFormat === 'xlsx'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                  }`}
+        {/* Important Notice */}
+        <div className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="font-semibold text-yellow-400 mb-1">CryptoSheets Add-in Required</h3>
+              <p className="text-gray-300 text-sm">
+                These templates require the{' '}
+                <a
+                  href="https://www.cryptosheets.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 hover:underline"
                 >
-                  <div className="font-medium">Excel (XLSX)</div>
-                  <div className="text-xs text-gray-500 mt-1">Standard file download</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedFormat('csv')}
-                  className={`w-full text-left p-3 rounded-lg transition border ${
-                    selectedFormat === 'csv'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                  }`}
-                >
-                  <div className="font-medium">CSV</div>
-                  <div className="text-xs text-gray-500 mt-1">Standard file download</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFormat('iqy');
-                    setLiveKind('excel');
-                  }}
-                  className={`w-full text-left p-3 rounded-lg transition border ${
-                    selectedFormat === 'iqy' && liveKind === 'excel'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                  }`}
-                >
-                  <div className="font-medium">Live Excel (IQY)</div>
-                  <div className="text-xs text-gray-500 mt-1">Refreshable in Excel</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedFormat('iqy');
-                    setLiveKind('csv');
-                  }}
-                  className={`w-full text-left p-3 rounded-lg transition border ${
-                    selectedFormat === 'iqy' && liveKind === 'csv'
-                      ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-600'
-                  }`}
-                >
-                  <div className="font-medium">Live CSV (IQY)</div>
-                  <div className="text-xs text-gray-500 mt-1">CSV feed via Excel Refresh</div>
-                </button>
-              </div>
-
-              <p className="text-xs text-gray-500 mt-2">
-                {selectedFormat === 'xlsx' && '📊 Standard XLSX snapshot export.'}
-                {selectedFormat === 'csv' && '📄 Standard CSV snapshot export.'}
-                {selectedFormat === 'iqy' && '🔄 Live IQY imports a CSV table and supports Refresh in Excel.'}
+                  CryptoSheets Excel add-in
+                </a>{' '}
+                to function. Templates contain formulas only - no market data is embedded.
+                Data is fetched by CryptoSheets when you open the file in Excel.
               </p>
-
-              {/* Advanced Options */}
-              <details className="mt-4">
-                <summary className="text-sm text-gray-400 cursor-pointer hover:text-gray-300 flex items-center gap-2">
-                  <span>⚙️ Advanced Options</span>
-                </summary>
-                <div className="mt-3 space-y-4 pt-3 border-t border-gray-800">
-                  {/* Number Format */}
-                  <div>
-                    <label htmlFor="number-format" className="flex items-center text-sm text-gray-400 mb-2">
-                      Number Format
-                      <HelpTooltip text="Choose how numbers are displayed in your export" />
-                    </label>
-                    <select
-                      id="number-format"
-                      value={numberFormat}
-                      onChange={(e) => setNumberFormat(e.target.value as 'full' | 'abbreviated' | 'scientific')}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      <option value="abbreviated">Abbreviated ($1.5M, $2.3B)</option>
-                      <option value="full">Full Numbers (1500000)</option>
-                      <option value="scientific">Scientific (1.5e6)</option>
-                    </select>
-                  </div>
-
-                  {/* Decimal Places */}
-                  <div>
-                    <label htmlFor="decimal-places" className="flex items-center text-sm text-gray-400 mb-2">
-                      Decimal Places
-                      <HelpTooltip text="How many decimal places to show for numbers" />
-                    </label>
-                    <select
-                      id="decimal-places"
-                      value={decimalPlaces}
-                      onChange={(e) => setDecimalPlaces(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    >
-                      <option value="0">0 (No decimals)</option>
-                      <option value="2">2 (Standard)</option>
-                      <option value="4">4 (Precise)</option>
-                      <option value="8">8 (Crypto prices)</option>
-                    </select>
-                  </div>
-
-                  {/* Metadata Toggle (XLSX only) */}
-                  {selectedFormat === 'xlsx' && (
-                    <div className="flex items-center justify-between">
-                      <label htmlFor="include-metadata" className="flex items-center text-sm text-gray-400">
-                        Include Metadata Sheet
-                        <HelpTooltip text="Add a second sheet with export info (date, source, etc.)" />
-                      </label>
-                      <button
-                        id="include-metadata"
-                        type="button"
-                        onClick={() => setIncludeMetadata(!includeMetadata)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          includeMetadata ? 'bg-emerald-500' : 'bg-gray-600'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            includeMetadata ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </details>
-            </div>
-          </div>
-
-          {/* Middle Column - Filters */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-                3️⃣ Customize Filters
-                <HelpTooltip text="Use these filters to narrow down the data you want to download. Each filter helps you get exactly what you need." />
-              </h2>
-
-              {/* Market Overview Filters */}
-              {selectedCategory === 'market_overview' && (
-                <div className="space-y-4">
-                  {/* Category Filter */}
-                  <div>
-                    <label htmlFor="coin-category" className="flex items-center text-sm text-gray-400 mb-2">
-                      Coin Category
-                      <HelpTooltip text={CATEGORY_EXPLANATIONS[selectedCoinCategory] || 'Filter coins by their type or use case'} />
-                    </label>
-                    <select
-                      id="coin-category"
-                      value={selectedCoinCategory}
-                      onChange={(e) => setSelectedCoinCategory(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="all">All Categories</option>
-                      <option value="layer1">Layer 1 (Base blockchains)</option>
-                      <option value="layer2">Layer 2 (Scaling solutions)</option>
-                      <option value="defi">DeFi (Decentralized Finance)</option>
-                      <option value="gaming">Gaming/Metaverse</option>
-                      <option value="meme">Meme Coins</option>
-                      <option value="exchange">Exchange Tokens</option>
-                      <option value="payments">Payments</option>
-                    </select>
-                  </div>
-                  
-                  {/* Sort By */}
-                  <div>
-                    <label htmlFor="sort-by" className="flex items-center text-sm text-gray-400 mb-2">
-                      Sort By
-                      <HelpTooltip text="Choose how to order the coins in your download. Market Cap shows the biggest coins first." />
-                    </label>
-                    <select
-                      id="sort-by"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="market_cap">Market Cap (Total Value)</option>
-                      <option value="volume">24h Volume (Trading Activity)</option>
-                      <option value="price_change">Price Change % (Performance)</option>
-                      <option value="price">Price (Current USD Value)</option>
-                    </select>
-                  </div>
-
-                  {/* Min Market Cap */}
-                  <div>
-                    <label htmlFor="min-market-cap" className="flex items-center text-sm text-gray-400 mb-2">
-                      Min Market Cap
-                      <HelpTooltip text="Filter out small coins. $1B+ shows only large, established cryptocurrencies. Smaller caps are riskier but may have more growth potential." />
-                    </label>
-                    <select
-                      id="min-market-cap"
-                      value={minMarketCap}
-                      onChange={(e) => setMinMarketCap(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="0">Any</option>
-                      <option value="1000000000">$1B+</option>
-                      <option value="100000000">$100M+</option>
-                      <option value="10000000">$10M+</option>
-                    </select>
-                  </div>
-                  
-                  {/* Value Filters */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="min-price" className="flex items-center text-sm text-gray-400 mb-2">
-                        Min Price
-                        <HelpTooltip text="Only include coins with price above this value" />
-                      </label>
-                      <input
-                        id="min-price"
-                        type="number"
-                        placeholder="e.g., 0.01"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="max-price" className="flex items-center text-sm text-gray-400 mb-2">
-                        Max Price
-                        <HelpTooltip text="Only include coins with price below this value" />
-                      </label>
-                      <input
-                        id="max-price"
-                        type="number"
-                        placeholder="e.g., 100000"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Min Volume Filter */}
-                  <div>
-                    <label htmlFor="min-volume" className="flex items-center text-sm text-gray-400 mb-2">
-                      Min 24h Volume
-                      <HelpTooltip text="Only include coins with 24h trading volume above this value" />
-                    </label>
-                    <select
-                      id="min-volume"
-                      value={minVolume}
-                      onChange={(e) => setMinVolume(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="">Any</option>
-                      <option value="1000000">$1M+</option>
-                      <option value="10000000">$10M+</option>
-                      <option value="100000000">$100M+</option>
-                      <option value="1000000000">$1B+</option>
-                    </select>
-                  </div>
-
-                  {/* Coin Selection */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm text-gray-400">Select Coins ({selectedCoins.length} selected)</label>
-                      <div className="space-x-2">
-                        <button onClick={selectAllCoins} className="text-xs text-emerald-400 hover:text-orange-300">
-                          Select All
-                        </button>
-                        <button onClick={deselectAllCoins} className="text-xs text-gray-500 hover:text-gray-400">
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                    <div className="max-h-48 overflow-y-auto bg-gray-800 rounded-lg border border-gray-700 p-2 custom-scrollbar">
-                      {filteredCoins.map(coin => (
-                        <label
-                          key={coin.symbol}
-                          className="flex items-center space-x-2 p-2 hover:bg-gray-700 rounded cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedCoins.includes(coin.symbol)}
-                            onChange={() => toggleCoin(coin.symbol)}
-                            className="w-4 h-4 rounded border-gray-600 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <Image src={coin.image} alt={coin.name} width={20} height={20} className="rounded-full" />
-                          <span className="text-sm text-white">{coin.symbol}</span>
-                          <span className="text-xs text-gray-500">{coin.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Historical Prices Filters */}
-              {selectedCategory === 'historical_prices' && (
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="historical-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
-                    <select
-                      id="historical-coin"
-                      value={selectedCoins[0] || 'BTC'}
-                      onChange={(e) => setSelectedCoins([e.target.value])}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      {SUPPORTED_COINS.map(coin => (
-                        <option key={coin.symbol} value={coin.symbol}>
-                          {coin.symbol} - {coin.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="time-interval" className="block text-sm text-gray-400 mb-2">Time Interval</label>
-                    <select
-                      id="time-interval"
-                      value={selectedInterval}
-                      onChange={(e) => setSelectedInterval(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="1m">1 Minute</option>
-                      <option value="5m">5 Minutes</option>
-                      <option value="15m">15 Minutes</option>
-                      <option value="30m">30 Minutes</option>
-                      <option value="1h">1 Hour</option>
-                      <option value="4h">4 Hours</option>
-                      <option value="1d">1 Day</option>
-                      <option value="1w">1 Week</option>
-                      <option value="1M">1 Month</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="num-candles" className="block text-sm text-gray-400 mb-2">Number of Candles</label>
-                    <select
-                      id="num-candles"
-                      value={selectedLimit}
-                      onChange={(e) => setSelectedLimit(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="100">100 candles</option>
-                      <option value="200">200 candles</option>
-                      <option value="500">500 candles</option>
-                      <option value="1000">1000 candles (max)</option>
-                    </select>
-                  </div>
-
-                  {/* Date Range Picker */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="start-date" className="flex items-center text-sm text-gray-400 mb-2">
-                        Start Date
-                        <HelpTooltip text="Filter data starting from this date. Leave empty to get the most recent data." />
-                      </label>
-                      <input
-                        id="start-date"
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="end-date" className="flex items-center text-sm text-gray-400 mb-2">
-                        End Date
-                        <HelpTooltip text="Filter data up to this date. Leave empty for current date." />
-                      </label>
-                      <input
-                        id="end-date"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Order Book Filters */}
-              {selectedCategory === 'order_book' && (
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="orderbook-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
-                    <select
-                      id="orderbook-coin"
-                      value={selectedCoins[0] || 'BTC'}
-                      onChange={(e) => setSelectedCoins([e.target.value])}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      {SUPPORTED_COINS.map(coin => (
-                        <option key={coin.symbol} value={coin.symbol}>
-                          {coin.symbol} - {coin.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="orderbook-depth" className="block text-sm text-gray-400 mb-2">Order Book Depth</label>
-                    <select
-                      id="orderbook-depth"
-                      value={selectedDepth}
-                      onChange={(e) => setSelectedDepth(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="5">Top 5 orders</option>
-                      <option value="10">Top 10 orders</option>
-                      <option value="20">Top 20 orders</option>
-                      <option value="50">Top 50 orders</option>
-                      <option value="100">Top 100 orders</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Recent Trades Filters */}
-              {selectedCategory === 'recent_trades' && (
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="trades-coin" className="block text-sm text-gray-400 mb-2">Select Coin</label>
-                    <select
-                      id="trades-coin"
-                      value={selectedCoins[0] || 'BTC'}
-                      onChange={(e) => setSelectedCoins([e.target.value])}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      {SUPPORTED_COINS.map(coin => (
-                        <option key={coin.symbol} value={coin.symbol}>
-                          {coin.symbol} - {coin.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="num-trades" className="block text-sm text-gray-400 mb-2">Number of Trades</label>
-                    <select
-                      id="num-trades"
-                      value={selectedLimit}
-                      onChange={(e) => setSelectedLimit(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="50">50 trades</option>
-                      <option value="100">100 trades</option>
-                      <option value="500">500 trades</option>
-                      <option value="1000">1000 trades (max)</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Gainers/Losers Filters */}
-              {selectedCategory === 'gainers_losers' && (
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="gainer-type" className="block text-sm text-gray-400 mb-2">Show</label>
-                    <select
-                      id="gainer-type"
-                      value={selectedGainerType}
-                      onChange={(e) => setSelectedGainerType(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="both">Both Gainers & Losers</option>
-                      <option value="gainers">Top Gainers Only</option>
-                      <option value="losers">Top Losers Only</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="num-coins" className="block text-sm text-gray-400 mb-2">Number of Coins</label>
-                    <select
-                      id="num-coins"
-                      value={selectedLimit}
-                      onChange={(e) => setSelectedLimit(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
-                    >
-                      <option value="10">Top 10</option>
-                      <option value="20">Top 20</option>
-                      <option value="50">Top 50</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Global Stats / Categories - No filters needed */}
-              {(selectedCategory === 'global_stats' || selectedCategory === 'categories' || selectedCategory === 'exchange_info') && (
-                <div className="text-center py-4">
-                  <p className="text-gray-500">No additional filters needed for this data type.</p>
-                  <p className="text-sm text-gray-600 mt-2">Click download to get the data!</p>
-                </div>
-              )}
-            </div>
-
-            {/* Download Button */}
-            <button
-              onClick={handleDownload}
-              disabled={isLoading || selectedFields.length === 0}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-orange-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center space-x-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <SpinnerIcon />
-                  <span>Generating...</span>
-                </>
-              ) : selectedFields.length === 0 ? (
-                <>
-                  <DownloadIcon />
-                  <span>Select fields to download</span>
-                </>
-              ) : (
-                <>
-                  <DownloadIcon />
-                  <span>
-                    {selectedFormat === 'iqy'
-                      ? `Download Live ${liveKind === 'excel' ? 'Excel' : 'CSV'} (IQY)`
-                      : `Download ${selectedFormat.toUpperCase()}`}
-                  </span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Right Column - Preview & Info */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Data Preview */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">📋 Data Preview</h2>
-                <button
-                  onClick={fetchPreview}
-                  disabled={isLoading}
-                  className="text-xs px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition disabled:opacity-50"
-                >
-                  {isLoading ? 'Loading...' : '🔄 Refresh'}
-                </button>
-              </div>
-              
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <SpinnerIcon />
-                  <span className="ml-2 text-gray-400">Loading preview...</span>
-                </div>
-              ) : filteredPreviewData && filteredPreviewData.length > 0 && selectedFields.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="sticky top-0 z-10 bg-gray-900">
-                      <tr className="border-b border-gray-800">
-                        {selectedFields.slice(0, 5).map(key => (
-                          <th key={key} className="text-left text-emerald-400 py-2 px-2 font-medium text-xs" title={key}>
-                            {getFieldDisplayName(key)}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredPreviewData.slice(0, 5).map((row, i) => (
-                        <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                          {selectedFields.slice(0, 5).map((field, j) => (
-                            <td key={j} className="text-gray-300 py-2 px-2 text-xs truncate max-w-[100px]" title={String(row[field] ?? '')}>
-                              {row[field] !== undefined
-                                ? typeof row[field] === 'number'
-                                  ? (row[field] as number) > 1000000
-                                    ? `$${((row[field] as number) / 1000000).toFixed(2)}M`
-                                    : (row[field] as number) > 1
-                                      ? (row[field] as number).toFixed(2)
-                                      : (row[field] as number).toFixed(6)
-                                  : String(row[field]).slice(0, 15)
-                                : '-'}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-                    <span>Showing {Math.min(5, filteredPreviewData.length)} rows × {Math.min(5, selectedFields.length)} fields</span>
-                    {selectedFields.length > 5 && (
-                      <span className="text-emerald-400">+{selectedFields.length - 5} more fields in download</span>
-                    )}
-                  </div>
-                </div>
-              ) : selectedFields.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-yellow-400 text-sm">⚠️ Select at least 1 field</p>
-                  <p className="text-gray-500 text-xs mt-1">Choose fields from &quot;Select Fields&quot; below</p>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No preview available</p>
-                  <button
-                    onClick={fetchPreview}
-                    className="mt-2 text-xs text-emerald-400 hover:underline"
-                  >
-                    Click to load preview
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Data Fields Info - Now Interactive! */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-white">📄 Select Fields</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={selectAllFields}
-                    className="text-xs px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded hover:bg-emerald-600/30 transition"
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={deselectAllFields}
-                    className="text-xs px-2 py-1 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 transition"
-                  >
-                    None
-                  </button>
-                </div>
-              </div>
-              
-              {/* Toggleable Fields */}
-              <div className="flex flex-wrap gap-2">
-                {categoryInfo?.fields.map(field => {
-                  const isSelected = selectedFields.includes(field);
-                  return (
-                    <button
-                      key={field}
-                      onClick={() => toggleField(field)}
-                      title={field}
-                      className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
-                        isSelected
-                          ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
-                          : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-600'
-                      }`}
-                    >
-                      {isSelected && <span className="mr-1">✓</span>}
-                      {getFieldDisplayName(field)}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {/* Selected count */}
-              <p className="text-xs text-gray-500 mt-3">
-                {selectedFields.length} of {categoryInfo?.fields.length || 0} fields selected
-              </p>
-              
-              <div className="mt-4 pt-4 border-t border-gray-800">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Source:</span>
-                  <span className="text-emerald-400">{categoryInfo?.source}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-gray-500">Update Frequency:</span>
-                  <span className="text-gray-300">{categoryInfo?.updateFrequency}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Usage Stats */}
-            <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 rounded-xl border border-emerald-500/20 p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">⚡ Your Usage</h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Downloads today:</span>
-                  <span className="text-white font-medium">{downloadCount}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Plan:</span>
-                  <span className="text-emerald-400 font-medium">Free Tier</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Limit:</span>
-                  <span className="text-white font-medium">5 downloads/month</span>
-                </div>
-                {/* Progress bar */}
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>Used: {downloadCount}/5</span>
-                    <span>{Math.max(0, 5 - downloadCount)} remaining</span>
-                  </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                    <ProgressBarRef
-                      percentage={Math.min((downloadCount / 5) * 100, 100)}
-                      className="h-full bg-emerald-500"
-                    />
-                  </div>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-4">
-                💡 <a href="/signup" className="text-emerald-400 hover:underline">Create an account</a> to track your usage and unlock more downloads!
-              </p>
-            </div>
-
-            {/* Live Data Templates */}
-            <div className="bg-gradient-to-br from-blue-500/10 to-purple-600/10 rounded-xl border border-blue-500/20 p-6">
-              <h2 className="text-lg font-semibold text-white mb-2">📊 Live Data Templates</h2>
-              <p className="text-gray-400 text-sm mb-4">
-                Get live, auto-refreshing crypto data in Excel or Google Sheets!
-              </p>
-
-              <button
-                type="button"
-                onClick={() => downloadLiveDataTemplate()}
-                className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+              <Link
+                href="/template-requirements"
+                className="inline-block mt-2 text-sm text-yellow-400 hover:text-yellow-300"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Download Excel Template
-              </button>
-
-              <div className="mt-4 space-y-2 text-xs text-gray-400">
-                <p className="flex items-start gap-2">
-                  <span className="text-emerald-400">✓</span>
-                  <span>Power Query setup instructions</span>
-                </p>
-                <p className="flex items-start gap-2">
-                  <span className="text-emerald-400">✓</span>
-                  <span>Google Sheets IMPORTDATA formulas</span>
-                </p>
-                <p className="flex items-start gap-2">
-                  <span className="text-emerald-400">✓</span>
-                  <span>10+ data category URLs included</span>
-                </p>
-                <p className="flex items-start gap-2">
-                  <span className="text-emerald-400">✓</span>
-                  <span>Auto-refresh configuration guide</span>
-                </p>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <p className="text-xs text-gray-500">
-                  <span className="text-blue-400 font-medium">Tip:</span> Use Power Query in Excel for automatic data refresh every few minutes
-                </p>
-              </div>
-            </div>
-
-            {/* Google Sheets Quick Start */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-              <h2 className="text-lg font-semibold text-white mb-3">📝 Google Sheets Quick Start</h2>
-              <p className="text-gray-400 text-sm mb-3">
-                Paste this formula in any Google Sheets cell:
-              </p>
-              <div className="bg-gray-800 rounded-lg p-3 font-mono text-xs text-emerald-400 break-all select-all">
-                {`=IMPORTDATA("https://datasimplify.com/api/download?category=market_overview&format=csv")`}
-              </div>
-              <p className="text-xs text-gray-500 mt-3">
-                This imports live market data that refreshes automatically every hour.
-              </p>
-              <div className="mt-3 space-y-1 text-xs text-gray-500">
-                <p><span className="text-purple-400">Other options:</span></p>
-                <p>• Fear &amp; Greed: <code className="text-emerald-400">...category=fear_greed</code></p>
-                <p>• DeFi TVL: <code className="text-emerald-400">...category=defi_protocols</code></p>
-                <p>• Gainers: <code className="text-emerald-400">...category=gainers_losers&amp;type=gainers</code></p>
-              </div>
+                View full requirements →
+              </Link>
             </div>
           </div>
         </div>
+
+        {/* Configuration Section */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Coin Selection */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Select Coins for Templates</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              Choose which coins to include in your templates. These will be used when generating any template.
+            </p>
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+              {SUPPORTED_COINS.slice(0, 20).map(coin => (
+                <button
+                  key={coin.symbol}
+                  type="button"
+                  onClick={() => toggleCoin(coin.symbol)}
+                  className={`px-3 py-1.5 text-sm rounded-lg border transition ${
+                    selectedCoins.includes(coin.symbol)
+                      ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  {selectedCoins.includes(coin.symbol) && <span className="mr-1">✓</span>}
+                  {coin.symbol}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3">
+              {selectedCoins.length} coin{selectedCoins.length !== 1 ? 's' : ''} selected
+            </p>
+          </div>
+
+          {/* Timeframe Selection */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Default Timeframe</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              Choose the default timeframe for historical data in templates.
+            </p>
+            <div className="grid grid-cols-3 gap-3">
+              {['24h', '7d', '30d', '90d', '1y', 'all'].map(tf => (
+                <button
+                  key={tf}
+                  type="button"
+                  onClick={() => setSelectedTimeframe(tf)}
+                  className={`py-2 px-4 rounded-lg border transition ${
+                    selectedTimeframe === tf
+                      ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
+                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                  }`}
+                >
+                  {tf}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Templates Grid */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-4">Available Templates</h2>
+          <p className="text-gray-400 mb-6">
+            Select a template to download. Each template is pre-configured with CryptoSheets formulas.
+          </p>
+          <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">How Templates Work</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                1
+              </div>
+              <h3 className="font-medium text-white mb-2">Download Template</h3>
+              <p className="text-gray-400 text-sm">Get the .xlsx file with your configuration</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                2
+              </div>
+              <h3 className="font-medium text-white mb-2">Open in Excel</h3>
+              <p className="text-gray-400 text-sm">Open the file in Microsoft Excel Desktop</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                3
+              </div>
+              <h3 className="font-medium text-white mb-2">Sign In to CryptoSheets</h3>
+              <p className="text-gray-400 text-sm">CryptoSheets add-in fetches the data</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                4
+              </div>
+              <h3 className="font-medium text-white mb-2">Refresh Anytime</h3>
+              <p className="text-gray-400 text-sm">Click Refresh All to update data</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Benefits */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
+            <div className="text-3xl mb-3">🔄</div>
+            <h3 className="font-semibold text-white mb-2">Live Data</h3>
+            <p className="text-gray-400 text-sm">
+              Formulas fetch current data when you refresh - always up to date
+            </p>
+          </div>
+          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
+            <div className="text-3xl mb-3">📊</div>
+            <h3 className="font-semibold text-white mb-2">Pre-built Charts</h3>
+            <p className="text-gray-400 text-sm">
+              Visualizations included - just open and view your data
+            </p>
+          </div>
+          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
+            <div className="text-3xl mb-3">⚙️</div>
+            <h3 className="font-semibold text-white mb-2">Your Configuration</h3>
+            <p className="text-gray-400 text-sm">
+              Templates match your coin selection and preferences
+            </p>
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+          <p className="text-gray-500 text-xs text-center">
+            <strong>Disclaimer:</strong> DataSimplify provides software analytics tools only. Templates contain formulas,
+            not market data. Data is fetched via the CryptoSheets add-in on your machine. We are not a data vendor.
+            Nothing on this platform constitutes financial advice.
+            <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
+              View full disclaimer
+            </Link>
+          </p>
+        </div>
       </main>
+
+      {/* Template Download Modal */}
+      <TemplateDownloadModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        templateType={selectedTemplateId}
+        templateName={selectedTemplateName}
+        userConfig={{
+          coins: selectedCoins,
+          timeframe: selectedTimeframe,
+          currency: 'USD',
+          customizations: {
+            includeCharts: true,
+          },
+        }}
+      />
     </div>
   );
 }

@@ -12,6 +12,8 @@
 // - CryptoPanic API (free tier)
 // - Our own Fear & Greed calculation
 
+import { isFeatureEnabled } from './featureFlags';
+
 const SENTIMENT_APIS = {
   // CryptoPanic API (Developer tier with API key: 1000 calls/hour)
   cryptoPanic: 'https://cryptopanic.com/api/v1',
@@ -81,6 +83,7 @@ export async function getCryptoPanicNews(
   filter: 'rising' | 'hot' | 'bullish' | 'bearish' | 'important' = 'hot',
   currencies?: string // e.g., "BTC,ETH"
 ): Promise<SocialPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) return [];
   try {
     const authToken = process.env.CRYPTOPANIC_API_KEY || 'FREE';
     let url = `${SENTIMENT_APIS.cryptoPanic}/posts/?auth_token=${authToken}&filter=${filter}&public=true`;
@@ -133,6 +136,7 @@ export async function getRedditCryptoSentiment(
   subreddit: string = 'cryptocurrency',
   limit: number = 25
 ): Promise<SocialPost[]> {
+  if (!isFeatureEnabled('socialSentiment')) return [];
   try {
     const response = await fetch(
       `${SENTIMENT_APIS.reddit}/r/${subreddit}/hot.json?limit=${limit}`,
@@ -209,6 +213,8 @@ export async function getRedditCryptoSentiment(
 // ============================================
 
 export async function getTrendingCoins(): Promise<string[]> {
+  if (!isFeatureEnabled('socialSentiment')) return [];
+  if (!isFeatureEnabled('coingecko')) return [];
   try {
     const response = await fetch(SENTIMENT_APIS.coingeckoTrending);
     const data = await response.json();
@@ -275,6 +281,20 @@ export function analyzeSentiment(text: string): {
 // ============================================
 
 export async function getCoinSentiment(symbol: string): Promise<CoinSentiment> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return {
+      symbol,
+      name: symbol,
+      sentimentScore: 0,
+      sentimentLabel: 'Neutral',
+      socialVolume24h: 0,
+      socialVolumeChange24h: 0,
+      trendingRank: null,
+      newsCount24h: 0,
+      redditMentions24h: 0,
+      sources: { reddit: 0, news: 0, twitter: 0 },
+    };
+  }
   const [news, reddit, trending] = await Promise.all([
     getCryptoPanicNews('hot', symbol),
     getRedditCryptoSentiment('cryptocurrency', 50),
@@ -325,6 +345,18 @@ export async function getCoinSentiment(symbol: string): Promise<CoinSentiment> {
 // ============================================
 
 export async function getSentimentDashboard(): Promise<MarketSentiment> {
+  if (!isFeatureEnabled('socialSentiment')) {
+    return {
+      overallScore: 0,
+      overallLabel: 'Unavailable',
+      fearGreedIndex: null,
+      fearGreedLabel: 'Unavailable',
+      socialVolume24h: 0,
+      topBullish: [],
+      topBearish: [],
+      trending: [],
+    };
+  }
   const [fearGreedResponse, trending, news, reddit] = await Promise.all([
     fetch(SENTIMENT_APIS.fearGreed).then(r => r.json()),
     getTrendingCoins(),

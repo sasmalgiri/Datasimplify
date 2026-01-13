@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { isFeatureEnabled } from '@/lib/featureFlags';
+import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Help icon with tooltip
@@ -122,11 +121,6 @@ const COLUMN_OPTIONS = [
   { id: 'low_24h', label: '24h Low', default: false, category: 'Price Levels' },
   { id: 'price_range_24h', label: '24h Range %', default: false, category: 'Price Levels' },
 
-  // AI & Signals
-  { id: 'ai_signal', label: 'AI Signal', default: true, category: 'AI' },
-  { id: 'ai_confidence', label: 'AI Confidence', default: false, category: 'AI' },
-  { id: 'risk_level', label: 'Risk Level', default: false, category: 'AI' },
-
   // Technical Indicators (real, derived from candles)
   { id: 'rsi', label: 'RSI (14)', default: false, category: 'Technical' },
   { id: 'volatility', label: 'Volatility (30d)', default: false, category: 'Technical' },
@@ -135,14 +129,6 @@ const COLUMN_OPTIONS = [
   // Market Dominance
   { id: 'dominance', label: 'Market Dominance', default: false, category: 'Dominance' },
 ];
-
-// Prediction interface
-interface CoinPrediction {
-  coinId: string;
-  prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  confidence: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME';
-}
 
 type TechnicalMetrics = {
   rsi14: number | null;
@@ -155,8 +141,6 @@ type TechnicalMetrics = {
 export default function ComparePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
   const [coins, setCoins] = useState<Coin[]>([]);
-  const [predictions, setPredictions] = useState<Map<string, CoinPrediction>>(new Map());
-  const [predictionsLoading, setPredictionsLoading] = useState(false);
   const [technicals, setTechnicals] = useState<Map<string, TechnicalMetrics>>(new Map());
   const [technicalsLoading, setTechnicalsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -225,56 +209,12 @@ export default function ComparePage() {
     fetchCoins();
   }, [selectedIds, sortBy]);
 
-  // Fetch predictions when coins are loaded
+  // Fetch technicals when coins are loaded
   useEffect(() => {
     if (coins.length > 0) {
-      if (isFeatureEnabled('predictions') && isFeatureEnabled('macro')) {
-        fetchPredictions();
-      }
       fetchTechnicals();
     }
   }, [coins]);
-
-  const fetchPredictions = async () => {
-    if (!isFeatureEnabled('predictions') || !isFeatureEnabled('macro')) {
-      setPredictions(new Map());
-      setPredictionsLoading(false);
-      return;
-    }
-
-    setPredictionsLoading(true);
-    try {
-      const coinsToPredict = coins.map(c => ({ id: c.id, name: c.name }));
-
-      const response = await fetch('/api/predict', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ coins: coinsToPredict })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          const predMap = new Map<string, CoinPrediction>();
-          result.data.forEach((pred: { coinId: string; prediction: 'BULLISH' | 'BEARISH' | 'NEUTRAL'; confidence: number; riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'EXTREME' }) => {
-            if (pred.coinId && pred.prediction) {
-              predMap.set(pred.coinId, {
-                coinId: pred.coinId,
-                prediction: pred.prediction,
-                confidence: pred.confidence || 50,
-                riskLevel: pred.riskLevel || 'MEDIUM'
-              });
-            }
-          });
-          setPredictions(predMap);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching predictions:', error);
-    } finally {
-      setPredictionsLoading(false);
-    }
-  };
 
   const fetchTechnicals = async () => {
     setTechnicalsLoading(true);
@@ -326,36 +266,6 @@ export default function ComparePage() {
     } finally {
       setTechnicalsLoading(false);
     }
-  };
-
-  // Get prediction badge for a coin
-  const getPredictionBadge = (coinId: string) => {
-    const pred = predictions.get(coinId);
-    if (!pred) {
-      return predictionsLoading ? (
-        <span className="text-gray-500 text-xs">...</span>
-      ) : (
-        <span className="text-gray-500 text-xs">-</span>
-      );
-    }
-
-    const { prediction, confidence } = pred;
-    const styles = {
-      BULLISH: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', Icon: TrendingUp },
-      BEARISH: { bg: 'bg-red-500/20', text: 'text-red-400', Icon: TrendingDown },
-      NEUTRAL: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', Icon: Minus }
-    };
-
-    const style = styles[prediction];
-    const Icon = style.Icon;
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${style.bg} ${style.text}`}>
-        <Icon className="w-3 h-3" />
-        <span>{prediction === 'BULLISH' ? 'Bull' : prediction === 'BEARISH' ? 'Bear' : 'Neut'}</span>
-        <span className="opacity-60">{confidence}%</span>
-      </span>
-    );
   };
 
   const toggleCoin = (id: string) => {
@@ -498,20 +408,22 @@ export default function ComparePage() {
             <p className="text-gray-400">Compare up to 10 coins side-by-side with 50+ cryptocurrencies • Free, no login required</p>
           </div>
           <div className="flex gap-2 mt-4 md:mt-0">
-            <button
-              onClick={() => downloadData('csv')}
-              disabled={coins.length === 0}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium flex items-center gap-2 transition-colors text-sm"
-            >
-              <span>📥</span> CSV
-            </button>
-            <button
-              onClick={() => downloadData('json')}
-              disabled={coins.length === 0}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium flex items-center gap-2 transition-colors text-sm"
-            >
-              <span>📥</span> JSON
-            </button>
+            <TemplateDownloadButton
+              pageContext={{
+                pageId: 'compare',
+                comparedCoins: selectedIds,
+                visibleColumns,
+                timeframe: '24h',
+                currency: 'USD',
+                customizations: {
+                  sortBy,
+                  categoryFilter,
+                  includeCharts: true,
+                },
+              }}
+              variant="outline"
+              size="md"
+            />
           </div>
         </div>
 
@@ -521,7 +433,7 @@ export default function ComparePage() {
             <span>🚀</span>
             <span>
               <strong>Powerful comparison tools!</strong> Compare up to 10 coins side-by-side.
-              Filter by category, 50+ coins, 7d/30d changes, ATH/ATL, FDV, and export to CSV/JSON!
+              Filter by category, 50+ coins, 7d/30d changes, ATH/ATL, FDV, and more!
             </span>
           </p>
         </div>
@@ -695,7 +607,6 @@ export default function ComparePage() {
               {visibleColumns.includes('change_24h') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">24h:</span> Day change</span>}
               {visibleColumns.includes('change_7d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">7d:</span> Week change</span>}
               {visibleColumns.includes('change_30d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">30d:</span> Month change</span>}
-              {visibleColumns.includes('ai_signal') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">AI:</span> AI prediction signal</span>}
               {visibleColumns.includes('market_cap') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">MCap:</span> Market cap</span>}
               {visibleColumns.includes('fdv') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">FDV:</span> Fully diluted value</span>}
               {visibleColumns.includes('volume') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">Vol:</span> 24h volume</span>}
@@ -721,9 +632,6 @@ export default function ComparePage() {
                     {visibleColumns.includes('change_7d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">7d</th>}
                     {visibleColumns.includes('change_30d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">30d</th>}
                     {visibleColumns.includes('change_1y') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">1Y</th>}
-                    {visibleColumns.includes('ai_signal') && <th className="px-4 py-3 text-center text-emerald-400 font-medium">AI Signal</th>}
-                    {visibleColumns.includes('ai_confidence') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">AI Conf.</th>}
-                    {visibleColumns.includes('risk_level') && <th className="px-4 py-3 text-center text-emerald-400 font-medium">Risk</th>}
                     {visibleColumns.includes('market_cap') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Market Cap</th>}
                     {visibleColumns.includes('fdv') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">FDV</th>}
                     {visibleColumns.includes('volume') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Volume 24h</th>}
@@ -792,25 +700,6 @@ export default function ComparePage() {
                           (coin.price_change_percentage_1y_in_currency || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                         }`}>
                           {formatPercent(coin.price_change_percentage_1y_in_currency)}
-                        </td>
-                      )}
-                      {visibleColumns.includes('ai_signal') && (
-                        <td className="px-4 py-3 text-center">
-                          {getPredictionBadge(coin.id)}
-                        </td>
-                      )}
-                      {visibleColumns.includes('ai_confidence') && (
-                        <td className="px-4 py-3 text-right text-gray-300">
-                          {predictionsLoading ? 'Loading…' : (
-                            predictions.get(coin.id)
-                              ? `${predictions.get(coin.id)!.confidence.toFixed(0)}%`
-                              : 'Unavailable'
-                          )}
-                        </td>
-                      )}
-                      {visibleColumns.includes('risk_level') && (
-                        <td className="px-4 py-3 text-center text-gray-300">
-                          {predictionsLoading ? 'Loading…' : (predictions.get(coin.id)?.riskLevel ?? 'Unavailable')}
                         </td>
                       )}
                       {visibleColumns.includes('market_cap') && (
