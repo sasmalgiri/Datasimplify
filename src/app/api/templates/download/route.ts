@@ -10,6 +10,7 @@ import {
   generateTemplate,
   validateUserConfig,
   type UserTemplateConfig,
+  type ContentType,
 } from '@/lib/templates/generator';
 import type { TemplateType } from '@/lib/templates/templateConfig';
 
@@ -18,14 +19,22 @@ export async function POST(request: Request) {
     // Parse request body
     const body = await request.json();
 
+    // Validate content type
+    const validContentTypes: ContentType[] = ['full', 'formulas_only', 'addin', 'native_charts'];
+    const contentType: ContentType = validContentTypes.includes(body.contentType)
+      ? body.contentType
+      : 'full';
+
     // Build user configuration
     const userConfig: UserTemplateConfig = {
       templateType: (body.templateType as TemplateType) || 'screener',
       coins: Array.isArray(body.coins) ? body.coins : [],
       timeframe: body.timeframe || '24h',
       currency: body.currency || 'USD',
+      contentType,
       customizations: {
-        includeCharts: body.customizations?.includeCharts !== false, // Default true
+        // For formulas_only, override includeCharts to false
+        includeCharts: contentType === 'formulas_only' ? false : body.customizations?.includeCharts !== false,
         metricsList: body.customizations?.metricsList || [],
         ...body.customizations,
       },
@@ -49,15 +58,19 @@ export async function POST(request: Request) {
     // Generate template
     console.log('[Templates] Generating template:', {
       type: userConfig.templateType,
+      contentType: userConfig.contentType,
       coins: userConfig.coins.length,
       format,
     });
 
     const buffer = await generateTemplate(userConfig, format);
 
-    // Generate filename
+    // Generate filename with content type label
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const filename = `datasimplify_${userConfig.templateType}_${timestamp}.${format}`;
+    const contentLabel = contentType === 'formulas_only' ? '_formulas' :
+                        contentType === 'addin' ? '_interactive' :
+                        contentType === 'native_charts' ? '_native' : '';
+    const filename = `datasimplify_${userConfig.templateType}${contentLabel}_${timestamp}.${format}`;
 
     // Return file (convert Buffer to Uint8Array for NextResponse compatibility)
     return new NextResponse(new Uint8Array(buffer), {
@@ -100,6 +113,12 @@ export async function GET() {
       info: {
         requiresAddons: ['CryptoSheets'],
         supportedFormats: ['xlsx', 'xlsm'],
+        supportedContentTypes: [
+          { id: 'addin', name: 'Interactive Charts', description: 'Animated ChartJS charts via Office.js Add-in (requires M365)' },
+          { id: 'native_charts', name: 'Native Excel Charts', description: 'Chart-ready data layout with instructions (works everywhere)' },
+          { id: 'full', name: 'Embedded Charts', description: 'Formulas + basic Excel chart definitions' },
+          { id: 'formulas_only', name: 'Formulas Only', description: 'Just CryptoSheets formulas, no charts' },
+        ],
         dataIncluded: false,
         formulasOnly: true,
       },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { ContentType } from '@/lib/templates/generator';
 
 interface TemplateDownloadModalProps {
   isOpen: boolean;
@@ -16,10 +17,53 @@ interface TemplateDownloadModalProps {
 }
 
 /**
+ * Content type options for download
+ */
+type ContentOption = {
+  id: ContentType;
+  name: string;
+  description: string;
+  icon: string;
+  badge?: string;
+  badgeColor?: string;
+};
+
+const CONTENT_OPTIONS: ContentOption[] = [
+  {
+    id: 'addin',
+    name: 'Interactive Charts',
+    description: 'Animated ChartJS charts inside Excel via Office.js Add-in. Requires Microsoft 365.',
+    icon: '✨',
+    badge: 'Best Experience',
+    badgeColor: 'bg-emerald-500',
+  },
+  {
+    id: 'native_charts',
+    name: 'Native Excel Charts',
+    description: 'Create beautiful Excel charts manually. No add-in needed for charts! Works everywhere.',
+    icon: '📊',
+    badge: 'No Add-in',
+    badgeColor: 'bg-blue-500',
+  },
+  {
+    id: 'full',
+    name: 'Embedded Charts',
+    description: 'Basic Excel chart definitions included. Charts render when opened in Excel.',
+    icon: '📈',
+  },
+  {
+    id: 'formulas_only',
+    name: 'Formulas Only',
+    description: 'Just CryptoSheets formulas, no charts. Smallest file size, fastest loading.',
+    icon: '📝',
+  },
+];
+
+/**
  * Template Download Modal
  *
  * Gates template downloads with clear requirements and warnings.
- * Ensures users understand they need CryptoSheets add-in.
+ * Offers 3 content types: Interactive Charts (Add-in), Embedded Charts, Formulas Only
  */
 export function TemplateDownloadModal({
   isOpen,
@@ -31,6 +75,7 @@ export function TemplateDownloadModal({
   const [understood, setUnderstood] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<'xlsx' | 'xlsm'>('xlsx');
+  const [contentType, setContentType] = useState<ContentType>('full');
   const [error, setError] = useState<string | null>(null);
 
   const handleDownload = async () => {
@@ -49,6 +94,7 @@ export function TemplateDownloadModal({
         body: JSON.stringify({
           templateType,
           ...userConfig,
+          contentType,
           format,
         }),
       });
@@ -63,7 +109,12 @@ export function TemplateDownloadModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `datasimplify_${templateType}.${format}`;
+
+      // Include content type in filename
+      const contentLabel = contentType === 'formulas_only' ? '_formulas' :
+                          contentType === 'addin' ? '_interactive' :
+                          contentType === 'native_charts' ? '_native' : '';
+      a.download = `datasimplify_${templateType}${contentLabel}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -81,13 +132,15 @@ export function TemplateDownloadModal({
 
   if (!isOpen) return null;
 
+  const selectedOption = CONTENT_OPTIONS.find(opt => opt.id === contentType);
+
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Spreadsheet Template Requirements
+            Download Template
           </h2>
           <button
             type="button"
@@ -110,6 +163,129 @@ export function TemplateDownloadModal({
           Template: <span className="font-semibold text-gray-900 dark:text-white">{templateName}</span>
         </div>
 
+        {/* Content Type Selection */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            Choose Content Type:
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {CONTENT_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setContentType(option.id)}
+                className={`relative p-4 border-2 rounded-lg transition-all text-left ${
+                  contentType === option.id
+                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-2 ring-emerald-500/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                }`}
+              >
+                {option.badge && (
+                  <span className={`absolute -top-2 -right-2 px-2 py-0.5 text-[10px] font-bold text-white rounded-full ${option.badgeColor}`}>
+                    {option.badge}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">{option.icon}</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{option.name}</span>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {option.description}
+                </p>
+                {contentType === option.id && (
+                  <div className="absolute top-2 left-2">
+                    <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content Type Specific Info */}
+        {contentType === 'addin' && (
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 rounded-lg p-4 mb-4">
+            <h3 className="font-bold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center gap-2">
+              <span>✨</span>
+              Interactive Charts with Office.js Add-in
+            </h3>
+            <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Beautiful animated ChartJS charts inside Excel</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Requires <strong>Microsoft 365</strong> (Desktop, Web, or Mobile)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Also works with Office 2021/2019 (Desktop only)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Install DataSimplify Charts add-in after opening the file</span>
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {contentType === 'native_charts' && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 mb-4">
+            <h3 className="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2">
+              <span>📊</span>
+              Native Excel Charts - No Add-in Required
+            </h3>
+            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Works in <strong>all Excel versions</strong> - no Microsoft 365 needed</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Includes a &quot;Chart Guide&quot; sheet with step-by-step instructions</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Pre-formatted data ranges optimized for Excel&apos;s chart wizard</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Dark theme color guide to match DataSimplify styling</span>
+              </li>
+            </ul>
+          </div>
+        )}
+
+        {contentType === 'formulas_only' && (
+          <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-4 mb-4">
+            <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
+              <span>📝</span>
+              Formulas Only Mode
+            </h3>
+            <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Smallest file size - loads instantly</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Only CryptoSheets formulas, no charts included</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Create your own charts manually if needed</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-0.5">•</span>
+                <span>Best for advanced users or large datasets</span>
+              </li>
+            </ul>
+          </div>
+        )}
+
         {/* Requirements Box */}
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 mb-4">
           <h3 className="font-bold text-yellow-800 dark:text-yellow-400 mb-2 flex items-center gap-2">
@@ -120,53 +296,22 @@ export function TemplateDownloadModal({
                 clipRule="evenodd"
               />
             </svg>
-            Requirements
+            Requirements (All Options)
           </h3>
           <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1.5">
             <li className="flex items-start gap-2">
               <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
-              <span>Microsoft Excel Desktop (Windows/Mac) - Excel Online NOT supported</span>
+              <span>Microsoft Excel Desktop (Windows/Mac) - Excel Online NOT supported for formulas</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
-              <span>CryptoSheets Add-in with <strong>active CryptoSheets account</strong> (sign in within Excel)</span>
+              <span>CryptoSheets Add-in with <strong>active CryptoSheets account</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
               <span>Internet connection (data pulls live from CryptoSheets)</span>
             </li>
           </ul>
-        </div>
-
-        {/* How It Works */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 mb-4">
-          <h3 className="font-bold text-blue-800 dark:text-blue-400 mb-2">
-            How This Template Works
-          </h3>
-          <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-            <li className="flex gap-2">
-              <span className="font-semibold min-w-[20px]">1.</span>
-              <span>
-                Download contains <strong>formulas only</strong> (no data included)
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-semibold min-w-[20px]">2.</span>
-              <span>Open in Excel → formulas connect to CryptoSheets add-in</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-semibold min-w-[20px]">3.</span>
-              <span>CryptoSheets pulls data directly from its own sources</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-semibold min-w-[20px]">4.</span>
-              <span>Your configured data/charts appear automatically</span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-semibold min-w-[20px]">5.</span>
-              <span>Click &quot;Refresh All&quot; in Excel to update data anytime</span>
-            </li>
-          </ol>
         </div>
 
         {/* Configuration Summary */}
@@ -198,9 +343,9 @@ export function TemplateDownloadModal({
               </div>
             </div>
             <div>
-              <span className="text-gray-600 dark:text-gray-400">Charts:</span>
+              <span className="text-gray-600 dark:text-gray-400">Content:</span>
               <div className="font-medium text-gray-900 dark:text-white">
-                {userConfig.customizations.includeCharts ? 'Included' : 'Not included'}
+                {selectedOption?.name}
               </div>
             </div>
           </div>
@@ -209,7 +354,7 @@ export function TemplateDownloadModal({
         {/* Format Selection */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Choose Format:
+            File Format:
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -252,7 +397,7 @@ export function TemplateDownloadModal({
               setUnderstood(e.target.checked);
               setError(null);
             }}
-            className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
             I understand this template <strong>requires an active CryptoSheets account</strong> (sign in within Excel)
@@ -294,7 +439,7 @@ export function TemplateDownloadModal({
             rel="noopener noreferrer"
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white transition-colors inline-flex items-center gap-2 font-medium"
           >
-            Install CryptoSheets Add-in
+            Install CryptoSheets
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -331,7 +476,7 @@ export function TemplateDownloadModal({
                 Generating...
               </span>
             ) : (
-              `Download Template (.${format})`
+              `Download ${selectedOption?.name} (.${format})`
             )}
           </button>
         </div>

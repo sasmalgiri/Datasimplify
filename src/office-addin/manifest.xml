@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+
+  <!-- Basic Properties -->
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>DataSimplify</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="DataSimplify Charts" />
+  <Description DefaultValue="Interactive crypto charts powered by ChartJS. Visualize your CryptoSheets data with animations and real-time updates." />
+  <IconUrl DefaultValue="https://datasimplify.com/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://datasimplify.com/icon-64.png" />
+  <SupportUrl DefaultValue="https://datasimplify.com/support" />
+
+  <!-- App Domain - where the add-in is hosted -->
+  <AppDomains>
+    <AppDomain>https://datasimplify.com</AppDomain>
+  </AppDomains>
+
+  <!-- Hosts this add-in supports -->
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+
+  <!-- Default Settings -->
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://datasimplify.com/addin/taskpane.html" />
+  </DefaultSettings>
+
+  <!-- Permissions -->
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <!-- Version Overrides for modern experience -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+
+          <!-- Function File for custom functions -->
+          <FunctionFile resid="Contoso.FunctionFile.Url" />
+
+          <!-- Extension Point: Primary Command Surface -->
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="DataSimplifyGroup">
+                <Label resid="DataSimplify.GroupLabel" />
+                <Icon>
+                  <bt:Image size="16" resid="DataSimplify.Icon16" />
+                  <bt:Image size="32" resid="DataSimplify.Icon32" />
+                  <bt:Image size="80" resid="DataSimplify.Icon80" />
+                </Icon>
+
+                <!-- Show Charts Button -->
+                <Control xsi:type="Button" id="ShowChartsButton">
+                  <Label resid="DataSimplify.ShowCharts.Label" />
+                  <Supertip>
+                    <Title resid="DataSimplify.ShowCharts.Title" />
+                    <Description resid="DataSimplify.ShowCharts.Description" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="DataSimplify.Icon16" />
+                    <bt:Image size="32" resid="DataSimplify.Icon32" />
+                    <bt:Image size="80" resid="DataSimplify.Icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>DataSimplifyTaskpane</TaskpaneId>
+                    <SourceLocation resid="DataSimplify.Taskpane.Url" />
+                  </Action>
+                </Control>
+
+                <!-- Refresh Data Button -->
+                <Control xsi:type="Button" id="RefreshDataButton">
+                  <Label resid="DataSimplify.RefreshData.Label" />
+                  <Supertip>
+                    <Title resid="DataSimplify.RefreshData.Title" />
+                    <Description resid="DataSimplify.RefreshData.Description" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="DataSimplify.RefreshIcon16" />
+                    <bt:Image size="32" resid="DataSimplify.RefreshIcon32" />
+                    <bt:Image size="80" resid="DataSimplify.RefreshIcon80" />
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>refreshAllCharts</FunctionName>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <!-- Resources -->
+    <Resources>
+      <bt:Images>
+        <bt:Image id="DataSimplify.Icon16" DefaultValue="https://datasimplify.com/addin/assets/icon-16.png" />
+        <bt:Image id="DataSimplify.Icon32" DefaultValue="https://datasimplify.com/addin/assets/icon-32.png" />
+        <bt:Image id="DataSimplify.Icon80" DefaultValue="https://datasimplify.com/addin/assets/icon-80.png" />
+        <bt:Image id="DataSimplify.RefreshIcon16" DefaultValue="https://datasimplify.com/addin/assets/refresh-16.png" />
+        <bt:Image id="DataSimplify.RefreshIcon32" DefaultValue="https://datasimplify.com/addin/assets/refresh-32.png" />
+        <bt:Image id="DataSimplify.RefreshIcon80" DefaultValue="https://datasimplify.com/addin/assets/refresh-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="DataSimplify.Taskpane.Url" DefaultValue="https://datasimplify.com/addin/taskpane.html" />
+        <bt:Url id="Contoso.FunctionFile.Url" DefaultValue="https://datasimplify.com/addin/functions.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="DataSimplify.GroupLabel" DefaultValue="DataSimplify" />
+        <bt:String id="DataSimplify.ShowCharts.Label" DefaultValue="Show Charts" />
+        <bt:String id="DataSimplify.ShowCharts.Title" DefaultValue="DataSimplify Interactive Charts" />
+        <bt:String id="DataSimplify.RefreshData.Label" DefaultValue="Refresh" />
+        <bt:String id="DataSimplify.RefreshData.Title" DefaultValue="Refresh Chart Data" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="DataSimplify.ShowCharts.Description" DefaultValue="Open the DataSimplify charts panel to visualize your crypto data with interactive ChartJS charts." />
+        <bt:String id="DataSimplify.RefreshData.Description" DefaultValue="Refresh all charts with the latest data from your spreadsheet." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

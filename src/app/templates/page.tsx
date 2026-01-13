@@ -1,36 +1,144 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { FileSpreadsheet, AlertTriangle, Settings, Star, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
-import { TemplateGrid } from '@/components/TemplateCard';
-import { getTemplateList } from '@/lib/templates/templateConfig';
+import { CoinSelector } from '@/components/CoinSelector';
+import {
+  getTemplatesGroupedByCategory,
+  getSortedCategories,
+  type TemplateCategoryId,
+} from '@/lib/templates/templateConfig';
+import {
+  filterAndScoreTemplates,
+  getBestMatches,
+  getFilteredTemplatesGroupedByCategory,
+  getDefaultConfiguration,
+  TIMEFRAME_OPTIONS,
+  CURRENCY_OPTIONS,
+  getCategoryOptions,
+  type UserConfiguration,
+  type FilteredTemplate,
+} from '@/lib/templates/templateFilter';
+
+// Template Card Component (inline for this page)
+function TemplateCard({
+  template,
+  onSelect,
+  config,
+}: {
+  template: FilteredTemplate;
+  onSelect: (id: string) => void;
+  config: UserConfiguration;
+}) {
+  return (
+    <div
+      onClick={() => onSelect(template.id)}
+      className={`relative bg-gray-800/50 border rounded-xl p-4 cursor-pointer transition-all hover:border-emerald-500/50 hover:bg-gray-800/70 ${
+        template.isBestMatch
+          ? 'border-emerald-500/30 ring-1 ring-emerald-500/20'
+          : 'border-gray-700'
+      }`}
+    >
+      {/* Best Match Badge */}
+      {template.isBestMatch && (
+        <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Star className="w-3 h-3" />
+          Best Match
+        </div>
+      )}
+
+      {/* Icon and Title */}
+      <div className="flex items-start gap-3">
+        <span className="text-2xl">{template.icon}</span>
+        <div className="flex-1">
+          <h3 className="font-medium text-white mb-1">{template.name}</h3>
+          <p className="text-gray-400 text-sm line-clamp-2">
+            {template.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Match Reasons */}
+      {template.matchReasons.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {template.matchReasons.slice(0, 2).map((reason, i) => (
+            <span
+              key={i}
+              className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded"
+            >
+              {reason}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Relevance Score (subtle) */}
+      {template.relevanceScore > 0 && (
+        <div className="mt-2 text-xs text-gray-500">
+          Relevance: {template.relevanceScore}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function TemplatesPage() {
+  // User configuration state
+  const [config, setConfig] = useState<UserConfiguration>(getDefaultConfiguration());
+
   // Template modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>('');
-  const [templates, setTemplates] = useState<Array<{id: string; name: string; description: string; icon: string}>>([]);
 
-  // Load templates on mount
-  useEffect(() => {
-    const templateList = getTemplateList();
-    setTemplates(templateList);
-  }, []);
+  // Category filter UI state
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+  // Compute best matches based on configuration
+  const bestMatches = useMemo(() => {
+    return getBestMatches(config, 4);
+  }, [config]);
+
+  // Compute grouped templates based on configuration
+  const groupedTemplates = useMemo(() => {
+    return getFilteredTemplatesGroupedByCategory(config);
+  }, [config]);
 
   // Handler for template selection
   const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const allTemplates = filterAndScoreTemplates(config);
+    const template = allTemplates.find((t) => t.id === templateId);
     if (template) {
       setSelectedTemplateId(templateId);
       setSelectedTemplateName(template.name);
       setShowTemplateModal(true);
     }
   };
+
+  // Config update handlers
+  const updateCoins = (coins: string[]) => {
+    setConfig((prev) => ({ ...prev, coins }));
+  };
+
+  const updateTimeframe = (timeframe: string) => {
+    setConfig((prev) => ({ ...prev, timeframe }));
+  };
+
+  const updateCurrency = (currency: string) => {
+    setConfig((prev) => ({ ...prev, currency }));
+  };
+
+  const updateCategory = (category: TemplateCategoryId | 'all') => {
+    setConfig((prev) => ({ ...prev, category }));
+    setShowCategoryDropdown(false);
+  };
+
+  const categoryOptions = getCategoryOptions();
+  const selectedCategoryInfo = categoryOptions.find((c) => c.id === config.category);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -43,44 +151,203 @@ export default function TemplatesPage() {
             Excel <span className="text-emerald-400">Templates</span>
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Download Excel templates with CryptoSheets formulas for live data visualization.
+            Configure your data, see matching templates, and download with CryptoSheets formulas.
           </p>
         </div>
 
-        {/* Important Notice */}
-        <div className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 max-w-3xl mx-auto">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-yellow-400 mb-1">CryptoSheets Add-in Required</h3>
-              <p className="text-gray-300 text-sm">
-                These templates contain <strong>formulas only</strong> - no market data is embedded.
-                Data is fetched via the{' '}
-                <a
-                  href="https://www.cryptosheets.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline"
-                >
-                  CryptoSheets Excel add-in
-                </a>{' '}
-                when you open the file in Microsoft Excel Desktop.
-                You must have an <strong>active CryptoSheets account</strong> (sign in within Excel).
+        {/* Configuration Panel */}
+        <div className="mb-8 bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings className="w-5 h-5 text-emerald-500" />
+            <h2 className="text-lg font-semibold text-white">Configure Your Data</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Coin Selector */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Select Coins
+              </label>
+              <CoinSelector
+                selected={config.coins}
+                onChange={updateCoins}
+                maxCoins={50}
+                placeholder="Click to select coins..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Select coins to see relevant templates. Leave empty for market-wide templates.
               </p>
-              <Link
-                href="/template-requirements"
-                className="inline-block mt-2 text-sm text-yellow-400 hover:text-yellow-300"
-              >
-                View full requirements →
-              </Link>
+            </div>
+
+            {/* Timeframe & Currency */}
+            <div className="space-y-4">
+              {/* Timeframe */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Timeframe
+                </label>
+                <div className="flex flex-wrap gap-1">
+                  {TIMEFRAME_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateTimeframe(opt.value)}
+                      className={`px-3 py-1.5 text-sm rounded transition ${
+                        config.timeframe === opt.value
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Currency */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Currency
+                </label>
+                <select
+                  value={config.currency}
+                  onChange={(e) => updateCurrency(e.target.value)}
+                  aria-label="Select currency"
+                  className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {CURRENCY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuration Summary */}
+          <div className="mt-4 pt-4 border-t border-gray-700 flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              {config.coins.length === 0 ? (
+                <span>No coins selected - showing market-wide templates</span>
+              ) : (
+                <span>
+                  <strong className="text-white">{config.coins.length}</strong> coins selected
+                  {config.coins.length <= 3 && (
+                    <span className="text-gray-500 ml-1">
+                      ({config.coins.join(', ')})
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+            <div className="text-sm text-gray-400">
+              {bestMatches.length > 0 && (
+                <span className="text-emerald-400">
+                  <Star className="w-4 h-4 inline mr-1" />
+                  {bestMatches.length} best matches found
+                </span>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="mb-12">
-          <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
+        {/* Category Filter Tabs */}
+        <div className="mb-6 flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-gray-400">Filter by category:</span>
+          <div className="flex flex-wrap gap-1">
+            {categoryOptions.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => updateCategory(cat.id as TemplateCategoryId | 'all')}
+                className={`px-3 py-1.5 text-sm rounded-lg transition flex items-center gap-1 ${
+                  config.category === cat.id
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-gray-800/50 text-gray-300 border border-gray-700 hover:border-gray-600'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{cat.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Important Notice (collapsible) */}
+        <details className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-xl overflow-hidden">
+          <summary className="p-4 cursor-pointer flex items-center gap-3 hover:bg-yellow-900/30 transition">
+            <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+            <span className="font-semibold text-yellow-400">CryptoSheets Add-in Required</span>
+            <ChevronDown className="w-4 h-4 text-yellow-500 ml-auto" />
+          </summary>
+          <div className="px-4 pb-4 pt-0">
+            <p className="text-gray-300 text-sm">
+              These templates contain <strong>formulas only</strong> - no market data is embedded.
+              Data is fetched via the{' '}
+              <a
+                href="https://www.cryptosheets.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:underline"
+              >
+                CryptoSheets Excel add-in
+              </a>{' '}
+              when you open the file in Microsoft Excel Desktop.
+              You must have an <strong>active CryptoSheets account</strong>.
+            </p>
+            <Link
+              href="/template-requirements"
+              className="inline-block mt-2 text-sm text-yellow-400 hover:text-yellow-300"
+            >
+              View full requirements
+            </Link>
+          </div>
+        </details>
+
+        {/* Best Matches Section */}
+        {bestMatches.length > 0 && config.category === 'all' && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-5 h-5 text-emerald-400" />
+              <h2 className="text-xl font-semibold text-white">
+                Best Matches for Your Selection
+              </h2>
+              <span className="text-gray-400 text-sm">({bestMatches.length})</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {bestMatches.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onSelect={handleTemplateSelect}
+                  config={config}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Templates Grouped by Category */}
+        {groupedTemplates.map((group) => (
+          <div key={group.category.id} className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">{group.category.icon}</span>
+              <h2 className="text-xl font-semibold text-white">{group.category.name}</h2>
+              <span className="text-gray-400 text-sm">({group.templates.length})</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {group.templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  onSelect={handleTemplateSelect}
+                  config={config}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
 
         {/* How It Works */}
         <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-6 mb-8">
@@ -93,21 +360,21 @@ export default function TemplatesPage() {
               <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
                 1
               </div>
-              <h3 className="font-medium text-white mb-1">Download</h3>
-              <p className="text-gray-400 text-xs">Get the .xlsx template file</p>
+              <h3 className="font-medium text-white mb-1">Configure</h3>
+              <p className="text-gray-400 text-xs">Select coins and settings above</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
                 2
               </div>
-              <h3 className="font-medium text-white mb-1">Open in Excel</h3>
-              <p className="text-gray-400 text-xs">Microsoft Excel Desktop required</p>
+              <h3 className="font-medium text-white mb-1">Download</h3>
+              <p className="text-gray-400 text-xs">Get the .xlsx template file</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
                 3
               </div>
-              <h3 className="font-medium text-white mb-1">Sign In</h3>
+              <h3 className="font-medium text-white mb-1">Open in Excel</h3>
               <p className="text-gray-400 text-xs">CryptoSheets add-in fetches data</p>
             </div>
             <div className="text-center">
@@ -139,7 +406,7 @@ export default function TemplatesPage() {
               rel="noopener noreferrer"
               className="inline-block bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              Get CryptoSheets →
+              Get CryptoSheets
             </a>
           </div>
         </div>
@@ -163,9 +430,9 @@ export default function TemplatesPage() {
         templateType={selectedTemplateId}
         templateName={selectedTemplateName}
         userConfig={{
-          coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'],
-          timeframe: '24h',
-          currency: 'USD',
+          coins: config.coins.length > 0 ? config.coins : ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'],
+          timeframe: config.timeframe,
+          currency: config.currency,
           customizations: {
             includeCharts: true,
           },

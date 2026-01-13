@@ -1,0 +1,311 @@
+/**
+ * Template Filtering and Scoring Logic
+ *
+ * Filters and scores templates based on user configuration,
+ * providing smart "Best Match" recommendations.
+ */
+
+import {
+  getTemplateList,
+  TemplateCategoryId,
+  TEMPLATE_CATEGORIES,
+  getSortedCategories,
+} from './templateConfig';
+
+// ============================================
+// TYPES
+// ============================================
+
+export interface UserConfiguration {
+  coins: string[];
+  timeframe: string;
+  currency: string;
+  category?: TemplateCategoryId | 'all';
+}
+
+export interface FilteredTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: TemplateCategoryId;
+  relevanceScore: number;
+  matchReasons: string[];
+  isBestMatch: boolean;
+  coinCountHint?: 'single' | 'few' | 'many' | 'any';
+  specificCoins?: string[];
+}
+
+export interface CategoryGroup {
+  category: {
+    id: TemplateCategoryId;
+    name: string;
+    icon: string;
+    order: number;
+    description: string;
+  };
+  templates: FilteredTemplate[];
+}
+
+// ============================================
+// SCORING CONFIGURATION
+// ============================================
+
+const SCORE_THRESHOLDS = {
+  BEST_MATCH: 10,
+  COIN_COUNT_MATCH: 10,
+  SPECIFIC_COIN_MATCH: 8,
+  CATEGORY_FILTER_MATCH: 5,
+};
+
+// ============================================
+// MAIN FILTERING FUNCTION
+// ============================================
+
+/**
+ * Filter and score templates based on user configuration
+ */
+export function filterAndScoreTemplates(
+  config: UserConfiguration
+): FilteredTemplate[] {
+  const allTemplates = getTemplateList();
+
+  const scored = allTemplates.map((template) => {
+    let score = 0;
+    const reasons: string[] = [];
+
+    // === Score based on coin count ===
+    const coinCount = config.coins.length;
+
+    if (coinCount === 1 && template.coinCountHint === 'single') {
+      score += SCORE_THRESHOLDS.COIN_COUNT_MATCH;
+      reasons.push('Best for single coin analysis');
+    } else if (coinCount >= 2 && coinCount <= 5 && template.coinCountHint === 'few') {
+      score += SCORE_THRESHOLDS.COIN_COUNT_MATCH;
+      reasons.push('Best for comparing 2-5 coins');
+    } else if (coinCount > 5 && template.coinCountHint === 'many') {
+      score += SCORE_THRESHOLDS.COIN_COUNT_MATCH;
+      reasons.push('Best for many coins');
+    } else if (template.coinCountHint === 'any') {
+      score += 2; // Small bonus for versatile templates
+    }
+
+    // === Score based on specific coin matches ===
+    if (template.specificCoins && config.coins.length > 0) {
+      const matchingCoins = template.specificCoins.filter((coin) =>
+        config.coins.some(
+          (userCoin) => userCoin.toUpperCase() === coin.toUpperCase()
+        )
+      );
+
+      if (matchingCoins.length > 0) {
+        score += SCORE_THRESHOLDS.SPECIFIC_COIN_MATCH;
+        reasons.push(`Specialized for ${matchingCoins.join(', ')}`);
+      }
+    }
+
+    // === Special template recommendations ===
+    // BTC on-chain for BTC
+    if (
+      template.id === 'onchain_btc' &&
+      config.coins.some((c) => c.toUpperCase() === 'BTC')
+    ) {
+      score += 5;
+      reasons.push('BTC on-chain metrics');
+    }
+
+    // ETH gas tracker for ETH
+    if (
+      template.id === 'eth_gas_tracker' &&
+      config.coins.some((c) => c.toUpperCase() === 'ETH')
+    ) {
+      score += 5;
+      reasons.push('ETH gas price tracking');
+    }
+
+    // Mining stats for BTC
+    if (
+      template.id === 'mining_stats' &&
+      config.coins.some((c) => c.toUpperCase() === 'BTC')
+    ) {
+      score += 3;
+      reasons.push('Mining profitability data');
+    }
+
+    // ETF tracker for BTC/ETH
+    if (
+      template.id === 'etf_tracker' &&
+      config.coins.some((c) =>
+        ['BTC', 'ETH'].includes(c.toUpperCase())
+      )
+    ) {
+      score += 4;
+      reasons.push('ETF flow tracking');
+    }
+
+    // Compare template for 2-10 coins
+    if (
+      template.id === 'compare' &&
+      coinCount >= 2 &&
+      coinCount <= 10
+    ) {
+      score += 8;
+      reasons.push('Side-by-side comparison');
+    }
+
+    // Correlation matrix for 2+ coins
+    if (
+      template.id === 'correlation_matrix' &&
+      coinCount >= 2
+    ) {
+      score += 6;
+      reasons.push('Portfolio correlation');
+    }
+
+    // Portfolio tracker for 2+ coins
+    if (
+      template.id === 'portfolio_tracker' &&
+      coinCount >= 2
+    ) {
+      score += 5;
+      reasons.push('Track multiple holdings');
+    }
+
+    // Risk dashboard for 2+ coins
+    if (
+      template.id === 'risk_dashboard' &&
+      coinCount >= 2
+    ) {
+      score += 4;
+      reasons.push('Risk analysis');
+    }
+
+    // Screener/overview for many coins or no coins selected
+    if (
+      (template.id === 'screener' || template.id === 'market_overview') &&
+      (coinCount === 0 || coinCount > 5)
+    ) {
+      score += 6;
+      reasons.push('Market-wide screening');
+    }
+
+    // Technical indicators for single coin
+    if (
+      template.id === 'technical_indicators' &&
+      coinCount === 1
+    ) {
+      score += 8;
+      reasons.push('Technical analysis');
+    }
+
+    // OHLCV history for single coin
+    if (
+      template.id === 'ohlcv_history' &&
+      coinCount === 1
+    ) {
+      score += 8;
+      reasons.push('Candlestick data');
+    }
+
+    return {
+      id: template.id,
+      name: template.name,
+      description: template.description,
+      icon: template.icon,
+      category: template.category,
+      relevanceScore: score,
+      matchReasons: reasons,
+      isBestMatch: score >= SCORE_THRESHOLDS.BEST_MATCH,
+      coinCountHint: template.coinCountHint,
+      specificCoins: template.specificCoins,
+    };
+  });
+
+  // Sort by relevance score (highest first)
+  return scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
+}
+
+/**
+ * Get best match templates
+ */
+export function getBestMatches(
+  config: UserConfiguration,
+  limit: number = 3
+): FilteredTemplate[] {
+  const scored = filterAndScoreTemplates(config);
+  return scored.filter((t) => t.isBestMatch).slice(0, limit);
+}
+
+/**
+ * Get templates grouped by category with filtering
+ */
+export function getFilteredTemplatesGroupedByCategory(
+  config: UserConfiguration
+): CategoryGroup[] {
+  const scoredTemplates = filterAndScoreTemplates(config);
+  const categories = getSortedCategories();
+
+  // Filter by category if specified
+  const filtered =
+    config.category && config.category !== 'all'
+      ? scoredTemplates.filter((t) => t.category === config.category)
+      : scoredTemplates;
+
+  return categories
+    .map((category) => ({
+      category,
+      templates: filtered
+        .filter((t) => t.category === category.id)
+        .sort((a, b) => b.relevanceScore - a.relevanceScore),
+    }))
+    .filter((group) => group.templates.length > 0);
+}
+
+/**
+ * Get default configuration
+ */
+export function getDefaultConfiguration(): UserConfiguration {
+  return {
+    coins: [],
+    timeframe: '24h',
+    currency: 'USD',
+    category: 'all',
+  };
+}
+
+/**
+ * Timeframe options for the selector
+ */
+export const TIMEFRAME_OPTIONS = [
+  { value: '24h', label: '24h' },
+  { value: '7d', label: '7d' },
+  { value: '30d', label: '30d' },
+  { value: '90d', label: '90d' },
+  { value: '1y', label: '1y' },
+];
+
+/**
+ * Currency options for the selector
+ */
+export const CURRENCY_OPTIONS = [
+  { value: 'USD', label: 'USD ($)' },
+  { value: 'EUR', label: 'EUR' },
+  { value: 'GBP', label: 'GBP' },
+  { value: 'BTC', label: 'BTC' },
+  { value: 'ETH', label: 'ETH' },
+];
+
+/**
+ * Get category options including "All"
+ */
+export function getCategoryOptions() {
+  const categories = getSortedCategories();
+  return [
+    { id: 'all' as const, name: 'All Categories', icon: '📋' },
+    ...categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon,
+    })),
+  ];
+}

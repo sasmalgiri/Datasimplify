@@ -12,12 +12,23 @@
 import ExcelJS from 'exceljs';
 import { getTemplateConfig, type TemplateType, type FormulaTemplate, type TemplateConfig, type SheetDefinition, type ChartDefinition } from './templateConfig';
 import { isCoinSupported, getAllCryptoSheetCoins, getTopCoins, CATEGORY_NAMES } from './cryptoSheetCoins';
+import { getChartsForTemplate, CHART_COLORS, type ChartConfig } from './chartDefinitions';
+
+/**
+ * Content type options for template generation
+ * - 'full': CryptoSheets formulas + embedded Excel charts (default)
+ * - 'formulas_only': Only CryptoSheets formulas, no charts
+ * - 'addin': CryptoSheets formulas + Office.js Add-in for interactive ChartJS charts
+ * - 'native_charts': CryptoSheets formulas + chart-ready data layout (no add-in needed for charts)
+ */
+export type ContentType = 'full' | 'formulas_only' | 'addin' | 'native_charts';
 
 export interface UserTemplateConfig {
   templateType: TemplateType;
   coins: string[]; // User-selected coins (e.g., ["BTC", "ETH", "SOL"])
   timeframe: string; // '24h', '7d', '30d', '1y'
   currency: string; // 'USD', 'EUR', 'BTC', 'ETH'
+  contentType?: ContentType; // Type of content to generate (default: 'full')
   customizations: {
     includeCharts: boolean;
     metricsList?: string[];
@@ -30,28 +41,79 @@ export interface UserTemplateConfig {
   };
 }
 
-// Color palette for styling
+// Color palette matching website dark theme
 const COLORS = {
-  primary: '6366F1', // Indigo
-  secondary: '10B981', // Emerald
+  // Primary brand colors
+  primary: '10B981', // Emerald (matches website emerald-500)
+  primaryLight: '34D399', // Emerald light (emerald-400)
+  primaryDark: '059669', // Emerald dark (emerald-600)
+
+  // Accent colors
+  secondary: '6366F1', // Indigo
   accent: 'F59E0B', // Amber
+
+  // Status colors
   danger: 'EF4444', // Red
   success: '22C55E', // Green
   warning: 'F97316', // Orange
-  headerBg: '1F2937', // Dark gray
+
+  // Dark theme backgrounds (matching website bg-gray-*)
+  bgDark: '111827', // gray-900 (main background)
+  bgMedium: '1F2937', // gray-800 (card background)
+  bgLight: '374151', // gray-700 (input/hover background)
+  bgLighter: '4B5563', // gray-600 (borders)
+
+  // Header styling (dark theme)
+  headerBg: '111827', // Dark background like website
   headerText: 'FFFFFF',
-  altRowBg: 'F3F4F6', // Light gray
-  borderColor: 'E5E7EB',
-  link: '3B82F6', // Blue
+  headerBorder: '10B981', // Emerald accent border
+
+  // Row styling (dark theme)
+  rowBg: '1F2937', // gray-800
+  altRowBg: '111827', // gray-900 (alternating)
+  rowHover: '374151', // gray-700
+
+  // Text colors
+  textPrimary: 'FFFFFF',
+  textSecondary: '9CA3AF', // gray-400
+  textMuted: '6B7280', // gray-500
+
+  // Border colors
+  borderColor: '374151', // gray-700
+  borderAccent: '10B981', // Emerald
+
+  // Link color
+  link: '34D399', // Emerald-400 (matches website links)
+
+  // Positive/Negative values (for charts & conditional formatting)
+  positive: '10B981', // Emerald for gains
+  negative: 'EF4444', // Red for losses
+  neutral: '6B7280', // Gray for neutral
+};
+
+// Excel data bar colors (gradient effects)
+const DATA_BAR_COLORS = {
+  volume: { start: '065F46', end: '10B981' }, // Dark to light emerald
+  marketCap: { start: '1E40AF', end: '3B82F6' }, // Dark to light blue
+  price: { start: '6D28D9', end: 'A78BFA' }, // Dark to light purple
+  percent: { positive: '10B981', negative: 'EF4444' }, // Emerald/Red
 };
 
 /**
  * Generate Excel template with CryptoSheets formulas using ExcelJS
+ *
+ * Supports three content types:
+ * - 'full': Formulas + embedded Excel charts (default)
+ * - 'formulas_only': Only CryptoSheets formulas, no charts (lighter file)
+ * - 'addin': Formulas + instructions for Office.js Add-in (interactive ChartJS charts)
  */
 export async function generateTemplate(
   userConfig: UserTemplateConfig,
   format: 'xlsx' | 'xlsm'
 ): Promise<Buffer> {
+  // Determine content type (default to 'full' for backward compatibility)
+  const contentType = userConfig.contentType || 'full';
+
   // 1. Get base template config
   const baseTemplate = getTemplateConfig(userConfig.templateType);
 
@@ -66,7 +128,9 @@ export async function generateTemplate(
   workbook.lastPrinted = new Date();
 
   // Company info - Set document properties directly on workbook
-  workbook.title = `${baseTemplate.name} - DataSimplify`;
+  const contentLabel = contentType === 'formulas_only' ? ' (Formulas Only)' :
+                       contentType === 'addin' ? ' (Interactive Charts)' : '';
+  workbook.title = `${baseTemplate.name}${contentLabel} - DataSimplify`;
   workbook.subject = 'Cryptocurrency Data Template';
   workbook.keywords = 'crypto,bitcoin,ethereum,cryptosheets,datasimplify';
   workbook.category = 'Finance';
@@ -85,13 +149,30 @@ export async function generateTemplate(
     await createDataSheet(workbook, baseTemplate, userConfig, sheetDef);
   }
 
-  // 6. Add CHART sheet (if enabled and charts exist)
-  if (userConfig.customizations.includeCharts) {
-    const chartSheets = baseTemplate.sheets.filter((s) => s.type === 'chart');
-    for (const sheetDef of chartSheets) {
-      await createChartSheet(workbook, baseTemplate, userConfig, sheetDef);
+  // 6. Add CHART sheet based on content type
+  if (contentType === 'full' && userConfig.customizations.includeCharts) {
+    // Full mode: Include embedded Excel charts
+    const chartConfigs = getChartsForTemplate(userConfig.templateType);
+
+    if (chartConfigs.length > 0) {
+      // Create embedded charts sheet with proper dark theme styling
+      await createEmbeddedChartsSheet(workbook, baseTemplate, userConfig, chartConfigs);
+    } else {
+      // Fallback to legacy chart sheet if no new definitions
+      const chartSheets = baseTemplate.sheets.filter((s) => s.type === 'chart');
+      for (const sheetDef of chartSheets) {
+        await createChartSheet(workbook, baseTemplate, userConfig, sheetDef);
+      }
     }
+  } else if (contentType === 'addin') {
+    // Add-in mode: Add instructions for installing Office.js Add-in
+    await createAddinInstructionsSheet(workbook, baseTemplate, userConfig);
+  } else if (contentType === 'native_charts') {
+    // Native charts mode: Create chart-ready data layout with instructions
+    // No add-in needed - user creates charts manually using Excel's built-in chart tools
+    await createNativeChartsSheet(workbook, baseTemplate, userConfig);
   }
+  // formulas_only mode: Skip charts entirely
 
   // 7. Add INSTRUCTIONS sheet
   await createInstructionsSheet(workbook, baseTemplate);
@@ -110,7 +191,7 @@ export async function generateTemplate(
 }
 
 /**
- * Create the START_HERE setup sheet with professional styling
+ * Create the START_HERE setup sheet with dark theme styling matching website
  */
 async function createSetupSheet(
   workbook: ExcelJS.Workbook,
@@ -130,9 +211,21 @@ async function createSetupSheet(
     { width: 5 },
   ];
 
+  // Apply dark background to entire visible area
+  for (let r = 1; r <= 50; r++) {
+    for (let c = 1; c <= 4; c++) {
+      const cell = sheet.getCell(r, c);
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
   let row = 2;
 
-  // Header with logo placeholder
+  // Header with emerald accent
   sheet.mergeCells(`B${row}:C${row}`);
   const titleCell = sheet.getCell(`B${row}`);
   titleCell.value = `📊 ${template.name}`;
@@ -144,11 +237,11 @@ async function createSetupSheet(
   sheet.mergeCells(`B${row}:C${row}`);
   const subtitleCell = sheet.getCell(`B${row}`);
   subtitleCell.value = 'DataSimplify Template - Powered by CryptoSheets';
-  subtitleCell.font = { size: 12, color: { argb: '6B7280' }, italic: true };
+  subtitleCell.font = { size: 12, color: { argb: COLORS.textSecondary }, italic: true };
   subtitleCell.alignment = { horizontal: 'center' };
   row += 3;
 
-  // Warning box
+  // Warning box with dark theme styling
   sheet.mergeCells(`B${row}:C${row + 2}`);
   const warningCell = sheet.getCell(`B${row}`);
   warningCell.value = '⚠️ IMPORTANT: This template requires CryptoSheets Excel Add-in to function.\nWithout CryptoSheets, you will see #NAME? errors instead of data.\nGet CryptoSheets free at: https://www.cryptosheets.com/';
@@ -157,7 +250,7 @@ async function createSetupSheet(
   warningCell.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FEF3C7' },
+    fgColor: { argb: COLORS.bgMedium },
   };
   warningCell.border = {
     top: { style: 'medium', color: { argb: COLORS.warning } },
@@ -167,9 +260,9 @@ async function createSetupSheet(
   };
   row += 5;
 
-  // Configuration Summary
+  // Configuration Summary with emerald header
   sheet.getCell(`B${row}`).value = 'Your Configuration:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.headerBg } };
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
   const configItems = [
@@ -183,26 +276,27 @@ async function createSetupSheet(
 
   for (const [label, value] of configItems) {
     sheet.getCell(`B${row}`).value = `  ${label}:`;
-    sheet.getCell(`B${row}`).font = { color: { argb: '6B7280' } };
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
     sheet.getCell(`C${row}`).value = value;
-    sheet.getCell(`C${row}`).font = { bold: true };
+    sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
     row++;
   }
   row += 2;
 
-  // Add-in Status Check
+  // Add-in Status Check with emerald accent
   sheet.getCell(`B${row}`).value = 'CryptoSheets Status Check:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.headerBg } };
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
   sheet.getCell(`B${row}`).value = '  Status:';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
   sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("status"), "❌ NOT INSTALLED - Click link below to install")' };
-  sheet.getCell(`C${row}`).font = { bold: true };
+  sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
   row += 2;
 
   // Quick Start Steps
   sheet.getCell(`B${row}`).value = 'Quick Start:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.headerBg } };
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
   const steps = [
@@ -215,14 +309,16 @@ async function createSetupSheet(
 
   for (const [num, step] of steps) {
     sheet.getCell(`B${row}`).value = `  ${num}`;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
     sheet.getCell(`C${row}`).value = step;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
     row++;
   }
   row += 2;
 
   // Links section
   sheet.getCell(`B${row}`).value = 'Helpful Links:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.headerBg } };
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
   const links = [
@@ -234,6 +330,7 @@ async function createSetupSheet(
 
   for (const [label, url] of links) {
     sheet.getCell(`B${row}`).value = `  ${label}:`;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
     sheet.getCell(`C${row}`).value = { text: url, hyperlink: url };
     sheet.getCell(`C${row}`).font = { color: { argb: COLORS.link }, underline: true };
     row++;
@@ -244,7 +341,7 @@ async function createSetupSheet(
 }
 
 /**
- * Create configuration sheet for user to modify settings
+ * Create configuration sheet with dark theme styling
  */
 async function createConfigSheet(
   workbook: ExcelJS.Workbook,
@@ -260,22 +357,33 @@ async function createConfigSheet(
     { width: 50 },
   ];
 
-  // Header
+  // Apply dark background
+  for (let r = 1; r <= 15; r++) {
+    for (let c = 1; c <= 3; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  // Header with emerald accent border
   sheet.getCell('A1').value = 'Setting';
   sheet.getCell('B1').value = 'Current Value';
   sheet.getCell('C1').value = 'Description';
 
-  const headerStyle = {
-    font: { bold: true, color: { argb: COLORS.headerText } },
-    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: COLORS.headerBg } },
-    alignment: { horizontal: 'center' as const },
-  };
-
-  ['A1', 'B1', 'C1'].forEach(cell => {
-    Object.assign(sheet.getCell(cell), headerStyle);
+  ['A1', 'B1', 'C1'].forEach(cellAddr => {
+    const cell = sheet.getCell(cellAddr);
+    cell.font = { bold: true, color: { argb: COLORS.headerText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.headerBg } };
+    cell.alignment = { horizontal: 'center' };
+    cell.border = {
+      bottom: { style: 'medium', color: { argb: COLORS.primary } },
+    };
   });
 
-  // Configuration rows
+  // Configuration rows with dark theme
   const configs = [
     ['Currency', userConfig.currency || 'USD', 'Base currency for prices (USD, EUR, GBP, BTC, ETH)'],
     ['Timeframe', userConfig.timeframe || '24h', 'Data timeframe (24h, 7d, 30d, 90d, 1y)'],
@@ -287,18 +395,27 @@ async function createConfigSheet(
   ];
 
   configs.forEach((config, idx) => {
-    const row = idx + 2;
-    sheet.getCell(`A${row}`).value = config[0];
-    sheet.getCell(`B${row}`).value = config[1];
-    sheet.getCell(`C${row}`).value = config[2];
-    sheet.getCell(`C${row}`).font = { color: { argb: '6B7280' }, italic: true };
+    const rowNum = idx + 2;
+    const rowFill = idx % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
 
-    // Highlight editable cells
-    sheet.getCell(`B${row}`).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FEF9C3' },
+    // Setting column
+    sheet.getCell(`A${rowNum}`).value = config[0];
+    sheet.getCell(`A${rowNum}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`A${rowNum}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Value column - editable with emerald highlight
+    sheet.getCell(`B${rowNum}`).value = config[1];
+    sheet.getCell(`B${rowNum}`).font = { bold: true, color: { argb: COLORS.primary } };
+    sheet.getCell(`B${rowNum}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgLight } };
+    sheet.getCell(`B${rowNum}`).border = {
+      left: { style: 'thin', color: { argb: COLORS.primary } },
+      right: { style: 'thin', color: { argb: COLORS.primary } },
     };
+
+    // Description column
+    sheet.getCell(`C${rowNum}`).value = config[2];
+    sheet.getCell(`C${rowNum}`).font = { color: { argb: COLORS.textSecondary }, italic: true };
+    sheet.getCell(`C${rowNum}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
   });
 
   // Add data validation for some fields
@@ -314,15 +431,16 @@ async function createConfigSheet(
     formulae: ['"1h,24h,7d,30d,90d,1y"'],
   };
 
-  // Instructions row
+  // Instructions row with emerald accent
   const lastRow = configs.length + 3;
   sheet.mergeCells(`A${lastRow}:C${lastRow}`);
   sheet.getCell(`A${lastRow}`).value = '💡 Tip: Modify values in column B to customize your template. Press Ctrl+Alt+F5 to refresh after changes.';
   sheet.getCell(`A${lastRow}`).font = { italic: true, color: { argb: COLORS.primary } };
+  sheet.getCell(`A${lastRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgDark } };
 }
 
 /**
- * Create data sheet with CryptoSheets formulas and professional styling
+ * Create data sheet with dark theme styling, data bars, and enhanced formatting
  */
 async function createDataSheet(
   workbook: ExcelJS.Workbook,
@@ -331,7 +449,7 @@ async function createDataSheet(
   sheetDef: SheetDefinition
 ): Promise<void> {
   const sheet = workbook.addWorksheet(sheetDef.name, {
-    properties: { tabColor: { argb: COLORS.accent } },
+    properties: { tabColor: { argb: COLORS.primary } },
     views: [{ state: 'frozen', ySplit: 1 }], // Freeze header row
   });
 
@@ -344,10 +462,10 @@ async function createDataSheet(
     width: col.width || 15,
   }));
 
-  // Style header row
+  // Style header row with dark theme and emerald accent
   const headerRow = sheet.getRow(1);
-  headerRow.height = 25;
-  headerRow.eachCell((cell) => {
+  headerRow.height = 30;
+  headerRow.eachCell((cell, colNumber) => {
     cell.font = { bold: true, color: { argb: COLORS.headerText }, size: 11 };
     cell.fill = {
       type: 'pattern',
@@ -357,6 +475,7 @@ async function createDataSheet(
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = {
       bottom: { style: 'medium', color: { argb: COLORS.primary } },
+      right: { style: 'thin', color: { argb: COLORS.bgLight } },
     };
   });
 
@@ -365,33 +484,43 @@ async function createDataSheet(
     ? userConfig.coins
     : getTopCoins(20).map(c => c.symbol);
 
-  // Add data rows with CryptoSheets formulas
+  // Add data rows with dark theme styling
   coinsToUse.forEach((coin, rowIdx) => {
     const row = sheet.getRow(rowIdx + 2);
+    const rowFill = rowIdx % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
 
+    // Apply formulas
     template.formulas.forEach((formulaTpl) => {
       const formula = buildFormula(formulaTpl, coin, userConfig, rowIdx);
       const cell = row.getCell(formulaTpl.column + 1);
       cell.value = { formula };
     });
 
-    // Style alternating rows
-    if (rowIdx % 2 === 1) {
-      row.eachCell((cell) => {
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: COLORS.altRowBg },
-        };
-      });
-    }
-
-    // Add number formatting based on column type
+    // Style each cell with dark theme
     columns.forEach((col, colIdx) => {
       const cell = row.getCell(colIdx + 1);
+
+      // Dark background
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: rowFill },
+      };
+
+      // White text for readability
+      cell.font = { color: { argb: COLORS.textPrimary }, size: 10 };
+
+      // Subtle border
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: COLORS.bgLight } },
+        right: { style: 'thin', color: { argb: COLORS.bgLight } },
+      };
+
+      // Number formatting based on column type
       switch (col.dataType) {
         case 'currency':
           cell.numFmt = '$#,##0.00';
+          cell.font = { color: { argb: COLORS.textPrimary }, size: 10 };
           break;
         case 'percent':
           cell.numFmt = '0.00%';
@@ -404,6 +533,8 @@ async function createDataSheet(
           break;
       }
     });
+
+    row.height = 22;
   });
 
   // Add auto-filter
@@ -412,19 +543,27 @@ async function createDataSheet(
     to: { row: coinsToUse.length + 1, column: columns.length },
   };
 
-  // Add conditional formatting for percent columns
+  // Enhanced conditional formatting for percent columns (green/red with backgrounds)
   columns.forEach((col, colIdx) => {
+    const colLetter = String.fromCharCode(65 + colIdx);
+    const dataRange = `${colLetter}2:${colLetter}${coinsToUse.length + 1}`;
+
     if (col.dataType === 'percent') {
-      const colLetter = String.fromCharCode(65 + colIdx);
+      // Positive values - emerald green with semi-transparent background
       sheet.addConditionalFormatting({
-        ref: `${colLetter}2:${colLetter}${coinsToUse.length + 1}`,
+        ref: dataRange,
         rules: [
           {
             type: 'cellIs',
             operator: 'greaterThan',
             formulae: ['0'],
             style: {
-              font: { color: { argb: COLORS.success } },
+              font: { color: { argb: COLORS.positive }, bold: true },
+              fill: {
+                type: 'pattern',
+                pattern: 'solid',
+                bgColor: { argb: '0A3D2E' }, // Dark emerald background
+              },
             },
             priority: 1,
           },
@@ -433,20 +572,97 @@ async function createDataSheet(
             operator: 'lessThan',
             formulae: ['0'],
             style: {
-              font: { color: { argb: COLORS.danger } },
+              font: { color: { argb: COLORS.negative }, bold: true },
+              fill: {
+                type: 'pattern',
+                pattern: 'solid',
+                bgColor: { argb: '3D0A0A' }, // Dark red background
+              },
             },
             priority: 2,
           },
         ],
       });
     }
+
+    // Data bars for volume and market cap columns
+    if (col.dataType === 'number' && (col.header.toLowerCase().includes('volume') || col.header.toLowerCase().includes('market'))) {
+      sheet.addConditionalFormatting({
+        ref: dataRange,
+        rules: [
+          {
+            type: 'dataBar',
+            priority: 10,
+            gradient: true,
+            minLength: 0,
+            maxLength: 100,
+            cfvo: [
+              { type: 'min' },
+              { type: 'max' },
+            ],
+            color: { argb: COLORS.primary },
+          } as ExcelJS.DataBarRuleType,
+        ],
+      });
+    }
+
+    // Data bars for currency columns (price)
+    if (col.dataType === 'currency') {
+      sheet.addConditionalFormatting({
+        ref: dataRange,
+        rules: [
+          {
+            type: 'dataBar',
+            priority: 11,
+            gradient: true,
+            minLength: 0,
+            maxLength: 100,
+            cfvo: [
+              { type: 'min' },
+              { type: 'max' },
+            ],
+            color: { argb: COLORS.secondary },
+          } as ExcelJS.DataBarRuleType,
+        ],
+      });
+    }
   });
 
-  // Add footer with refresh instructions
+  // Icon sets for ranking columns
+  const rankColIdx = columns.findIndex(col =>
+    col.header.toLowerCase().includes('rank') || col.header.toLowerCase() === '#'
+  );
+  if (rankColIdx >= 0) {
+    const colLetter = String.fromCharCode(65 + rankColIdx);
+    sheet.addConditionalFormatting({
+      ref: `${colLetter}2:${colLetter}${coinsToUse.length + 1}`,
+      rules: [
+        {
+          type: 'iconSet',
+          priority: 20,
+          iconSet: '3Arrows',
+          showValue: true,
+          cfvo: [
+            { type: 'percent', value: 0 },
+            { type: 'percent', value: 33 },
+            { type: 'percent', value: 67 },
+          ],
+        } as ExcelJS.IconSetRuleType,
+      ],
+    });
+  }
+
+  // Add footer with dark theme
   const footerRow = coinsToUse.length + 3;
   sheet.mergeCells(`A${footerRow}:${String.fromCharCode(64 + columns.length)}${footerRow}`);
-  sheet.getCell(`A${footerRow}`).value = '💡 Press Ctrl+Alt+F5 to refresh all data | Data powered by CryptoSheets';
-  sheet.getCell(`A${footerRow}`).font = { italic: true, color: { argb: '9CA3AF' } };
+  const footerCell = sheet.getCell(`A${footerRow}`);
+  footerCell.value = '💡 Press Ctrl+Alt+F5 to refresh all data | Data powered by CryptoSheets';
+  footerCell.font = { italic: true, color: { argb: COLORS.textSecondary } };
+  footerCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgDark },
+  };
 }
 
 /**
@@ -481,7 +697,7 @@ function buildFormula(
 }
 
 /**
- * Create chart sheet with chart placeholders and data references
+ * Create chart sheet with dark theme styling
  */
 async function createChartSheet(
   workbook: ExcelJS.Workbook,
@@ -490,56 +706,10 @@ async function createChartSheet(
   sheetDef: SheetDefinition
 ): Promise<void> {
   const sheet = workbook.addWorksheet(sheetDef.name, {
-    properties: { tabColor: { argb: COLORS.danger } },
+    properties: { tabColor: { argb: COLORS.accent } },
   });
 
   const charts = sheetDef.charts || [];
-
-  // Header
-  sheet.mergeCells('A1:F1');
-  sheet.getCell('A1').value = `📈 ${sheetDef.name} - Chart Definitions`;
-  sheet.getCell('A1').font = { bold: true, size: 16, color: { argb: COLORS.primary } };
-
-  let row = 3;
-
-  // Info box
-  sheet.mergeCells(`A${row}:F${row + 2}`);
-  sheet.getCell(`A${row}`).value = 'Note: ExcelJS creates chart definitions. To render charts:\n1. Open this file in Microsoft Excel Desktop\n2. The charts will render automatically using the data from your Data sheet\n3. You can customize chart styles in Excel after opening';
-  sheet.getCell(`A${row}`).font = { size: 11, color: { argb: '6B7280' } };
-  sheet.getCell(`A${row}`).alignment = { wrapText: true };
-  sheet.getCell(`A${row}`).fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'F3F4F6' },
-  };
-  row += 5;
-
-  // List chart definitions
-  sheet.getCell(`A${row}`).value = 'Defined Charts:';
-  sheet.getCell(`A${row}`).font = { bold: true, size: 12 };
-  row += 1;
-
-  charts.forEach((chart, idx) => {
-    sheet.getCell(`A${row}`).value = `${idx + 1}. ${chart.title}`;
-    sheet.getCell(`A${row}`).font = { bold: true };
-    sheet.getCell(`B${row}`).value = `Type: ${chart.type}`;
-    sheet.getCell(`C${row}`).value = chart.dataRange ? `Data: ${chart.dataRange}` : '';
-    row++;
-  });
-
-  // Add a sample chart if ExcelJS supports it
-  // Note: ExcelJS chart support is limited - this creates chart config that Excel can render
-  if (charts.length > 0 && charts[0].dataRange) {
-    try {
-      // ExcelJS has limited chart support, but we can try
-      // For now, add placeholder for manual chart creation
-      row += 2;
-      sheet.getCell(`A${row}`).value = '📊 Chart will render here when opened in Excel Desktop';
-      sheet.getCell(`A${row}`).font = { italic: true, color: { argb: '9CA3AF' } };
-    } catch {
-      // Chart creation not supported, continue without
-    }
-  }
 
   // Column widths
   sheet.columns = [
@@ -550,17 +720,736 @@ async function createChartSheet(
     { width: 20 },
     { width: 20 },
   ];
+
+  // Apply dark background
+  for (let r = 1; r <= 30; r++) {
+    for (let c = 1; c <= 6; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  // Header with emerald accent
+  sheet.mergeCells('A1:F1');
+  sheet.getCell('A1').value = `📈 ${sheetDef.name} - Chart Definitions`;
+  sheet.getCell('A1').font = { bold: true, size: 16, color: { argb: COLORS.primary } };
+
+  let row = 3;
+
+  // Info box with dark theme
+  sheet.mergeCells(`A${row}:F${row + 2}`);
+  const infoCell = sheet.getCell(`A${row}`);
+  infoCell.value = 'Note: ExcelJS creates chart definitions. To render charts:\n1. Open this file in Microsoft Excel Desktop\n2. The charts will render automatically using the data from your Data sheet\n3. You can customize chart styles in Excel after opening';
+  infoCell.font = { size: 11, color: { argb: COLORS.textSecondary } };
+  infoCell.alignment = { wrapText: true };
+  infoCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  infoCell.border = {
+    top: { style: 'thin', color: { argb: COLORS.primary } },
+    left: { style: 'thin', color: { argb: COLORS.primary } },
+    bottom: { style: 'thin', color: { argb: COLORS.primary } },
+    right: { style: 'thin', color: { argb: COLORS.primary } },
+  };
+  row += 5;
+
+  // List chart definitions
+  sheet.getCell(`A${row}`).value = 'Defined Charts:';
+  sheet.getCell(`A${row}`).font = { bold: true, size: 12, color: { argb: COLORS.primary } };
+  row += 1;
+
+  charts.forEach((chart, idx) => {
+    sheet.getCell(`A${row}`).value = `${idx + 1}. ${chart.title}`;
+    sheet.getCell(`A${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`B${row}`).value = `Type: ${chart.type}`;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`C${row}`).value = chart.dataRange ? `Data: ${chart.dataRange}` : '';
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textSecondary } };
+    row++;
+  });
+
+  // Add a sample chart placeholder
+  if (charts.length > 0 && charts[0].dataRange) {
+    try {
+      row += 2;
+      sheet.getCell(`A${row}`).value = '📊 Chart will render here when opened in Excel Desktop';
+      sheet.getCell(`A${row}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
+    } catch {
+      // Chart creation not supported, continue without
+    }
+  }
 }
 
 /**
- * Create instructions sheet with comprehensive guidance
+ * Create embedded charts sheet with master template approach
+ * Charts are pre-styled with dark theme and bound to dynamic data
+ */
+async function createEmbeddedChartsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig,
+  chartConfigs: ChartConfig[]
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Charts', {
+    properties: { tabColor: { argb: COLORS.accent } },
+    views: [{ showGridLines: false }],
+  });
+
+  // Set up wide columns for chart display
+  sheet.columns = Array(30).fill({ width: 10 });
+
+  // Apply dark background to entire visible area
+  for (let r = 1; r <= 80; r++) {
+    for (let c = 1; c <= 30; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  // Header
+  sheet.mergeCells('A1:N1');
+  const headerCell = sheet.getCell('A1');
+  headerCell.value = `📈 ${template.name} - Charts`;
+  headerCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
+  headerCell.alignment = { horizontal: 'center' };
+
+  // Subtitle
+  sheet.mergeCells('A2:N2');
+  const subtitleCell = sheet.getCell('A2');
+  subtitleCell.value = 'Charts are pre-styled with dark theme • Data updates automatically when you refresh';
+  subtitleCell.font = { size: 11, color: { argb: COLORS.textSecondary }, italic: true };
+  subtitleCell.alignment = { horizontal: 'center' };
+
+  let currentRow = 4;
+
+  // Create each chart
+  for (const chartConfig of chartConfigs) {
+    // Chart title header
+    sheet.mergeCells(`A${currentRow}:L${currentRow}`);
+    const titleCell = sheet.getCell(`A${currentRow}`);
+    titleCell.value = `${getChartIcon(chartConfig.type)} ${chartConfig.title}`;
+    titleCell.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+    titleCell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: COLORS.bgMedium },
+    };
+    titleCell.border = {
+      left: { style: 'thick', color: { argb: COLORS.primary } },
+      bottom: { style: 'thin', color: { argb: COLORS.primary } },
+    };
+    currentRow++;
+
+    // Chart description
+    sheet.getCell(`A${currentRow}`).value = chartConfig.description;
+    sheet.getCell(`A${currentRow}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
+    currentRow++;
+
+    // Chart placeholder area with proper styling
+    const chartStartRow = currentRow;
+    const chartEndRow = currentRow + chartConfig.height - 1;
+    const chartEndCol = String.fromCharCode(64 + chartConfig.width);
+
+    // Create chart area background
+    for (let r = chartStartRow; r <= chartEndRow; r++) {
+      for (let c = 1; c <= chartConfig.width; c++) {
+        const cell = sheet.getCell(r, c);
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: COLORS.bgMedium },
+        };
+      }
+    }
+
+    // Add border around chart area
+    sheet.getCell(`A${chartStartRow}`).border = { top: { style: 'thin', color: { argb: COLORS.primary } }, left: { style: 'thin', color: { argb: COLORS.primary } } };
+    sheet.getCell(`${chartEndCol}${chartStartRow}`).border = { top: { style: 'thin', color: { argb: COLORS.primary } }, right: { style: 'thin', color: { argb: COLORS.primary } } };
+    sheet.getCell(`A${chartEndRow}`).border = { bottom: { style: 'thin', color: { argb: COLORS.primary } }, left: { style: 'thin', color: { argb: COLORS.primary } } };
+    sheet.getCell(`${chartEndCol}${chartEndRow}`).border = { bottom: { style: 'thin', color: { argb: COLORS.primary } }, right: { style: 'thin', color: { argb: COLORS.primary } } };
+
+    // Add chart configuration details inside the area
+    const infoRow = chartStartRow + 2;
+    sheet.getCell(`B${infoRow}`).value = `Chart Type: ${chartConfig.type.toUpperCase()}`;
+    sheet.getCell(`B${infoRow}`).font = { color: { argb: COLORS.textSecondary } };
+
+    sheet.getCell(`B${infoRow + 1}`).value = `Data Source: ${chartConfig.categoryRange}`;
+    sheet.getCell(`B${infoRow + 1}`).font = { color: { argb: COLORS.textSecondary } };
+
+    // Series information
+    sheet.getCell(`B${infoRow + 3}`).value = 'Data Series:';
+    sheet.getCell(`B${infoRow + 3}`).font = { bold: true, color: { argb: COLORS.primary } };
+
+    chartConfig.series.forEach((series, idx) => {
+      const seriesRow = infoRow + 4 + idx;
+      const colorBox = sheet.getCell(`B${seriesRow}`);
+      colorBox.value = '■';
+      colorBox.font = { color: { argb: series.color || CHART_COLORS.series[idx % CHART_COLORS.series.length] } };
+
+      sheet.getCell(`C${seriesRow}`).value = `${series.name}: ${series.dataRange}`;
+      sheet.getCell(`C${seriesRow}`).font = { color: { argb: COLORS.textPrimary } };
+    });
+
+    // Add chart rendering note
+    const noteRow = chartEndRow - 1;
+    sheet.mergeCells(`B${noteRow}:K${noteRow}`);
+    const noteCell = sheet.getCell(`B${noteRow}`);
+    noteCell.value = '📊 This chart will render automatically when opened in Excel Desktop';
+    noteCell.font = { italic: true, color: { argb: COLORS.primary } };
+
+    currentRow = chartEndRow + 3;
+  }
+
+  // Add chart styling guide at the bottom
+  const guideRow = currentRow + 2;
+  sheet.mergeCells(`A${guideRow}:N${guideRow}`);
+  const guideHeader = sheet.getCell(`A${guideRow}`);
+  guideHeader.value = '🎨 Chart Color Theme (Matching Website)';
+  guideHeader.font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  guideHeader.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgMedium },
+  };
+
+  // Color palette display
+  const colorRow = guideRow + 2;
+  const colorDescriptions = [
+    { name: 'Primary (Emerald)', color: CHART_COLORS.series[0] },
+    { name: 'Secondary (Indigo)', color: CHART_COLORS.series[1] },
+    { name: 'Accent (Amber)', color: CHART_COLORS.series[2] },
+    { name: 'Pink', color: CHART_COLORS.series[3] },
+    { name: 'Purple', color: CHART_COLORS.series[4] },
+    { name: 'Positive', color: CHART_COLORS.positive },
+    { name: 'Negative', color: CHART_COLORS.negative },
+    { name: 'Background', color: CHART_COLORS.plotArea },
+  ];
+
+  colorDescriptions.forEach((item, idx) => {
+    const row = colorRow + idx;
+    const colorCell = sheet.getCell(`A${row}`);
+    colorCell.value = '██████';
+    colorCell.font = { color: { argb: item.color } };
+
+    const nameCell = sheet.getCell(`B${row}`);
+    nameCell.value = item.name;
+    nameCell.font = { color: { argb: COLORS.textPrimary } };
+
+    const hexCell = sheet.getCell(`C${row}`);
+    hexCell.value = `#${item.color}`;
+    hexCell.font = { name: 'Consolas', color: { argb: COLORS.textSecondary } };
+  });
+
+  // Excel chart creation instructions
+  const instructRow = colorRow + colorDescriptions.length + 2;
+  sheet.mergeCells(`A${instructRow}:N${instructRow}`);
+  sheet.getCell(`A${instructRow}`).value = '💡 To create the charts in Excel:';
+  sheet.getCell(`A${instructRow}`).font = { bold: true, color: { argb: COLORS.primary } };
+
+  const instructions = [
+    '1. Select the data range shown above (e.g., Data!A2:D21)',
+    '2. Go to Insert → Charts → Select chart type',
+    '3. Right-click chart → Format Chart Area → Set Fill to #111827 (dark background)',
+    '4. Format each series with the colors shown above',
+    '5. Set axis labels to gray (#9CA3AF) and title to white (#FFFFFF)',
+  ];
+
+  instructions.forEach((instr, idx) => {
+    sheet.getCell(`A${instructRow + 1 + idx}`).value = instr;
+    sheet.getCell(`A${instructRow + 1 + idx}`).font = { color: { argb: COLORS.textPrimary } };
+  });
+}
+
+/**
+ * Get emoji icon for chart type
+ */
+function getChartIcon(type: string): string {
+  const icons: Record<string, string> = {
+    line: '📈',
+    bar: '📊',
+    column: '📊',
+    pie: '🥧',
+    doughnut: '🍩',
+    area: '📉',
+    scatter: '⚪',
+    candlestick: '🕯️',
+    combo: '📈',
+    radar: '🕸️',
+    heatmap: '🗺️',
+  };
+  return icons[type] || '📊';
+}
+
+/**
+ * Create Office.js Add-in instructions sheet
+ * For users who want interactive ChartJS charts inside Excel
+ */
+async function createAddinInstructionsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Interactive_Charts', {
+    properties: { tabColor: { argb: COLORS.accent } },
+    views: [{ showGridLines: false }],
+  });
+
+  // Set column widths
+  sheet.columns = [
+    { width: 5 },
+    { width: 50 },
+    { width: 50 },
+    { width: 5 },
+  ];
+
+  // Apply dark background
+  for (let r = 1; r <= 60; r++) {
+    for (let c = 1; c <= 4; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  let row = 2;
+
+  // Header
+  sheet.mergeCells(`B${row}:C${row}`);
+  const titleCell = sheet.getCell(`B${row}`);
+  titleCell.value = '📊 Interactive Charts with DataSimplify Add-in';
+  titleCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
+  titleCell.alignment = { horizontal: 'center' };
+  row += 2;
+
+  // Subtitle
+  sheet.mergeCells(`B${row}:C${row}`);
+  const subtitleCell = sheet.getCell(`B${row}`);
+  subtitleCell.value = 'Beautiful, animated ChartJS visualizations inside Excel';
+  subtitleCell.font = { size: 12, color: { argb: COLORS.textSecondary }, italic: true };
+  subtitleCell.alignment = { horizontal: 'center' };
+  row += 3;
+
+  // What You Get section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const whatHeader = sheet.getCell(`B${row}`);
+  whatHeader.value = '✨ What You Get';
+  whatHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  whatHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  whatHeader.border = { left: { style: 'thick', color: { argb: COLORS.positive } } };
+  row += 1;
+
+  const features = [
+    ['🎨', 'Beautiful animated charts matching DataSimplify website'],
+    ['📈', 'Line, bar, doughnut, radar, and area charts'],
+    ['🔄', 'Auto-refresh when your CryptoSheets data updates'],
+    ['🌙', 'Dark theme with emerald accents'],
+    ['📱', 'Works on Microsoft 365 (Desktop + Web + Mobile)'],
+    ['⚡', 'Interactive tooltips and hover effects'],
+  ];
+
+  for (const [icon, desc] of features) {
+    sheet.getCell(`B${row}`).value = icon;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`C${row}`).value = desc;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Requirements section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const reqHeader = sheet.getCell(`B${row}`);
+  reqHeader.value = '📋 Requirements';
+  reqHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  reqHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  reqHeader.border = { left: { style: 'thick', color: { argb: COLORS.warning } } };
+  row += 1;
+
+  const requirements = [
+    ['Microsoft 365', 'Desktop (Windows/Mac), Web, or Mobile'],
+    ['OR Office 2021/2019', 'Desktop only (Windows/Mac)'],
+    ['CryptoSheets Add-in', 'For live crypto data formulas'],
+    ['DataSimplify Add-in', 'For interactive chart visualization'],
+    ['Internet connection', 'Required for both add-ins'],
+  ];
+
+  for (const [req, note] of requirements) {
+    sheet.getCell(`B${row}`).value = `✓ ${req}`;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.primary }, bold: true };
+    sheet.getCell(`C${row}`).value = note;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textSecondary }, italic: true };
+    row++;
+  }
+  row += 2;
+
+  // Installation Steps
+  sheet.mergeCells(`B${row}:C${row}`);
+  const installHeader = sheet.getCell(`B${row}`);
+  installHeader.value = '🚀 Installation Steps';
+  installHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  installHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  installHeader.border = { left: { style: 'thick', color: { argb: COLORS.primary } } };
+  row += 1;
+
+  const steps = [
+    ['Step 1:', 'Install CryptoSheets add-in from Excel Add-ins store'],
+    ['Step 2:', 'Sign in to your CryptoSheets account'],
+    ['Step 3:', 'Install DataSimplify Charts add-in from Excel Add-ins store'],
+    ['Step 4:', 'Go to Home tab → Click "DataSimplify Charts" button'],
+    ['Step 5:', 'The chart panel will open on the right side'],
+    ['Step 6:', 'Click "Refresh Data" to load your CryptoSheets data'],
+    ['Step 7:', 'Select chart type (Line, Bar, Doughnut, etc.)'],
+    ['Step 8:', 'Enjoy your interactive charts!'],
+  ];
+
+  for (const [step, instruction] of steps) {
+    sheet.getCell(`B${row}`).value = step;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.accent }, bold: true };
+    sheet.getCell(`C${row}`).value = instruction;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Links section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const linksHeader = sheet.getCell(`B${row}`);
+  linksHeader.value = '🔗 Helpful Links';
+  linksHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  linksHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  linksHeader.border = { left: { style: 'thick', color: { argb: COLORS.secondary } } };
+  row += 1;
+
+  const links = [
+    ['Get CryptoSheets:', 'https://www.cryptosheets.com/'],
+    ['DataSimplify Help:', 'https://datasimplify.io/help/excel-addin'],
+    ['Video Tutorial:', 'https://datasimplify.io/tutorials/interactive-charts'],
+    ['Support:', 'https://datasimplify.io/support'],
+  ];
+
+  for (const [label, url] of links) {
+    sheet.getCell(`B${row}`).value = label;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`C${row}`).value = { text: url, hyperlink: url };
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.link }, underline: true };
+    row++;
+  }
+  row += 2;
+
+  // Configuration summary
+  sheet.mergeCells(`B${row}:C${row}`);
+  const configHeader = sheet.getCell(`B${row}`);
+  configHeader.value = '⚙️ Your Configuration';
+  configHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  configHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  configHeader.border = { left: { style: 'thick', color: { argb: COLORS.primary } } };
+  row += 1;
+
+  const configItems = [
+    ['Template:', template.name],
+    ['Coins:', userConfig.coins.length > 0 ? userConfig.coins.slice(0, 10).join(', ') + (userConfig.coins.length > 10 ? '...' : '') : 'Top 20'],
+    ['Timeframe:', userConfig.timeframe || '24h'],
+    ['Currency:', userConfig.currency || 'USD'],
+  ];
+
+  for (const [label, value] of configItems) {
+    sheet.getCell(`B${row}`).value = label;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`C${row}`).value = value;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary }, bold: true };
+    row++;
+  }
+  row += 2;
+
+  // Footer note
+  sheet.mergeCells(`B${row}:C${row}`);
+  const footerCell = sheet.getCell(`B${row}`);
+  footerCell.value = '💡 The Data sheet contains your CryptoSheets formulas. The add-in reads this data to create interactive charts.';
+  footerCell.font = { italic: true, color: { argb: COLORS.primary } };
+  footerCell.alignment = { wrapText: true };
+}
+
+/**
+ * Create Native Charts sheet - Chart-ready data layout with Excel chart creation instructions
+ * No add-in needed for charts - user creates charts using Excel's built-in tools
+ * Data still comes from CryptoSheets formulas
+ */
+async function createNativeChartsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Create_Charts', {
+    properties: { tabColor: { argb: COLORS.positive } },
+    views: [{ showGridLines: false }],
+  });
+
+  // Set column widths
+  sheet.columns = [
+    { width: 5 },
+    { width: 55 },
+    { width: 55 },
+    { width: 5 },
+  ];
+
+  // Apply dark background
+  for (let r = 1; r <= 80; r++) {
+    for (let c = 1; c <= 4; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  let row = 2;
+
+  // Header
+  sheet.mergeCells(`B${row}:C${row}`);
+  const titleCell = sheet.getCell(`B${row}`);
+  titleCell.value = '📊 Create Native Excel Charts';
+  titleCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
+  titleCell.alignment = { horizontal: 'center' };
+  row += 2;
+
+  // Subtitle
+  sheet.mergeCells(`B${row}:C${row}`);
+  const subtitleCell = sheet.getCell(`B${row}`);
+  subtitleCell.value = 'Beautiful charts using Excel\'s built-in tools - No add-in required for charts!';
+  subtitleCell.font = { size: 12, color: { argb: COLORS.textSecondary }, italic: true };
+  subtitleCell.alignment = { horizontal: 'center' };
+  row += 3;
+
+  // Benefits section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const benefitsHeader = sheet.getCell(`B${row}`);
+  benefitsHeader.value = '✅ Why Native Excel Charts?';
+  benefitsHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  benefitsHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  benefitsHeader.border = { left: { style: 'thick', color: { argb: COLORS.positive } } };
+  row += 1;
+
+  const benefits = [
+    ['✓', 'Works in ALL Excel versions (no Microsoft 365 required)'],
+    ['✓', 'No add-in installation needed for charts'],
+    ['✓', 'Full customization - style charts however you want'],
+    ['✓', 'Charts update automatically when CryptoSheets data refreshes'],
+    ['✓', 'Save and share with anyone - charts embedded in file'],
+    ['✓', 'Works offline after initial data load'],
+  ];
+
+  for (const [icon, desc] of benefits) {
+    sheet.getCell(`B${row}`).value = icon;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.positive }, bold: true };
+    sheet.getCell(`C${row}`).value = desc;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Quick Start section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const quickHeader = sheet.getCell(`B${row}`);
+  quickHeader.value = '🚀 Quick Start: Create Your First Chart';
+  quickHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  quickHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  quickHeader.border = { left: { style: 'thick', color: { argb: COLORS.primary } } };
+  row += 1;
+
+  const quickSteps = [
+    ['Step 1:', 'Go to the "Data" sheet tab'],
+    ['Step 2:', 'Select cells A1 to D21 (or your desired range)'],
+    ['Step 3:', 'Click Insert → Chart (or press Alt+F1 for quick chart)'],
+    ['Step 4:', 'Choose chart type: Column, Line, Pie, etc.'],
+    ['Step 5:', 'Right-click chart → "Format Chart Area" to customize'],
+    ['Step 6:', 'Done! Chart updates when you refresh CryptoSheets data'],
+  ];
+
+  for (const [step, instruction] of quickSteps) {
+    sheet.getCell(`B${row}`).value = step;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.accent }, bold: true };
+    sheet.getCell(`C${row}`).value = instruction;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Recommended Charts section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const recHeader = sheet.getCell(`B${row}`);
+  recHeader.value = '📈 Recommended Charts for This Template';
+  recHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  recHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  recHeader.border = { left: { style: 'thick', color: { argb: COLORS.secondary } } };
+  row += 1;
+
+  // Chart recommendations based on template type
+  const chartRecommendations = getChartRecommendations(userConfig.templateType);
+  for (const rec of chartRecommendations) {
+    sheet.getCell(`B${row}`).value = rec.chartType;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.primary }, bold: true };
+    sheet.getCell(`C${row}`).value = rec.description;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textSecondary } };
+    row++;
+  }
+  row += 2;
+
+  // Data Ranges section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const rangesHeader = sheet.getCell(`B${row}`);
+  rangesHeader.value = '📋 Pre-formatted Data Ranges';
+  rangesHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  rangesHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  rangesHeader.border = { left: { style: 'thick', color: { argb: COLORS.warning } } };
+  row += 1;
+
+  const coinsCount = userConfig.coins.length > 0 ? userConfig.coins.length : 20;
+  const dataRanges = [
+    ['Price Chart:', `Data!A1:B${coinsCount + 1}`, 'Coin names + Current prices'],
+    ['Market Cap:', `Data!A1:C${coinsCount + 1}`, 'Coin names + Prices + Market Cap'],
+    ['24h Change:', `Data!A1:D${coinsCount + 1}`, 'Full data with % changes'],
+    ['Top 5 Comparison:', `Data!A1:D6`, 'Best for pie/doughnut charts'],
+  ];
+
+  sheet.getCell(`B${row}`).value = 'Chart Type';
+  sheet.getCell(`B${row}`).font = { bold: true, color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`C${row}`).value = 'Select This Range';
+  sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textSecondary } };
+  row++;
+
+  for (const [chartType, range, note] of dataRanges) {
+    sheet.getCell(`B${row}`).value = chartType;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`C${row}`).value = `${range} (${note})`;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.primary }, name: 'Consolas' };
+    row++;
+  }
+  row += 2;
+
+  // Dark Theme Styling section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const styleHeader = sheet.getCell(`B${row}`);
+  styleHeader.value = '🎨 Match DataSimplify Dark Theme (Optional)';
+  styleHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  styleHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  styleHeader.border = { left: { style: 'thick', color: { argb: COLORS.accent } } };
+  row += 1;
+
+  const styleSteps = [
+    ['Background:', 'Right-click chart → Format Chart Area → Fill: #111827'],
+    ['Plot Area:', 'Click plot area → Fill: #1F2937'],
+    ['Title:', 'Chart title → Font color: #10B981 (emerald)'],
+    ['Axis Labels:', 'Click axis → Font color: #9CA3AF (gray)'],
+    ['Series Color:', 'Click data series → Fill: #10B981 (primary)'],
+    ['Gridlines:', 'Click gridlines → Line color: #374151'],
+  ];
+
+  for (const [element, instruction] of styleSteps) {
+    sheet.getCell(`B${row}`).value = element;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`C${row}`).value = instruction;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Keyboard Shortcuts section
+  sheet.mergeCells(`B${row}:C${row}`);
+  const shortcutsHeader = sheet.getCell(`B${row}`);
+  shortcutsHeader.value = '⌨️ Helpful Keyboard Shortcuts';
+  shortcutsHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  shortcutsHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  shortcutsHeader.border = { left: { style: 'thick', color: { argb: COLORS.primary } } };
+  row += 1;
+
+  const shortcuts = [
+    ['Alt + F1', 'Quick chart from selected data'],
+    ['F11', 'Create chart on new sheet'],
+    ['Ctrl + Alt + F5', 'Refresh all CryptoSheets data'],
+    ['Ctrl + 1', 'Format selected element'],
+    ['Delete', 'Remove selected chart element'],
+  ];
+
+  for (const [shortcut, action] of shortcuts) {
+    sheet.getCell(`B${row}`).value = shortcut;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.primary }, bold: true, name: 'Consolas' };
+    sheet.getCell(`C${row}`).value = action;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row += 2;
+
+  // Footer note
+  sheet.mergeCells(`B${row}:C${row}`);
+  const footerCell = sheet.getCell(`B${row}`);
+  footerCell.value = '💡 Tip: Charts created this way are embedded in the Excel file and will work for anyone you share it with - no add-ins needed to view!';
+  footerCell.font = { italic: true, color: { argb: COLORS.primary } };
+  footerCell.alignment = { wrapText: true };
+}
+
+/**
+ * Get chart recommendations based on template type
+ */
+function getChartRecommendations(templateType: TemplateType): Array<{ chartType: string; description: string }> {
+  const recommendations: Record<string, Array<{ chartType: string; description: string }>> = {
+    screener: [
+      { chartType: '📊 Column Chart', description: 'Compare prices across coins' },
+      { chartType: '🥧 Pie Chart', description: 'Market cap distribution (top 5-10 coins)' },
+      { chartType: '📈 Bar Chart', description: '24h % change comparison' },
+    ],
+    market_overview: [
+      { chartType: '🍩 Doughnut Chart', description: 'Market dominance breakdown' },
+      { chartType: '📊 Stacked Column', description: 'Volume by coin' },
+      { chartType: '📈 Line Chart', description: 'Price trends over time' },
+    ],
+    compare: [
+      { chartType: '📊 Clustered Column', description: 'Side-by-side price comparison' },
+      { chartType: '🕸️ Radar Chart', description: 'Multi-metric comparison' },
+      { chartType: '📈 Line Chart', description: 'Historical performance' },
+    ],
+    portfolio_tracker: [
+      { chartType: '🥧 Pie Chart', description: 'Portfolio allocation' },
+      { chartType: '📊 Column Chart', description: 'Holdings by value' },
+      { chartType: '📈 Line Chart', description: 'Portfolio value over time' },
+    ],
+    correlation_matrix: [
+      { chartType: '🗺️ Surface Chart', description: 'Correlation heatmap' },
+      { chartType: '⚪ Scatter Chart', description: 'Price correlation pairs' },
+    ],
+    technical_indicators: [
+      { chartType: '📈 Line Chart', description: 'RSI, MACD trends' },
+      { chartType: '📊 Combo Chart', description: 'Price + indicators overlay' },
+    ],
+    default: [
+      { chartType: '📊 Column Chart', description: 'General comparison' },
+      { chartType: '📈 Line Chart', description: 'Trends over time' },
+      { chartType: '🥧 Pie Chart', description: 'Distribution breakdown' },
+    ],
+  };
+
+  return recommendations[templateType] || recommendations.default;
+}
+
+/**
+ * Create instructions sheet with dark theme styling
  */
 async function createInstructionsSheet(
   workbook: ExcelJS.Workbook,
   template: TemplateConfig
 ): Promise<void> {
   const sheet = workbook.addWorksheet('Instructions', {
-    properties: { tabColor: { argb: '9CA3AF' } },
+    properties: { tabColor: { argb: COLORS.textSecondary } },
   });
 
   sheet.columns = [
@@ -569,21 +1458,36 @@ async function createInstructionsSheet(
     { width: 50 },
   ];
 
-  // Title
+  // Apply dark background
+  for (let r = 1; r <= 60; r++) {
+    for (let c = 1; c <= 3; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  // Title with emerald accent
   sheet.mergeCells('A1:C1');
   sheet.getCell('A1').value = '📚 Instructions & Formula Reference';
   sheet.getCell('A1').font = { bold: true, size: 18, color: { argb: COLORS.primary } };
 
   let row = 3;
 
-  // Getting Started Section
+  // Getting Started Section - Dark themed section header
   sheet.mergeCells(`A${row}:C${row}`);
-  sheet.getCell(`A${row}`).value = '🚀 Getting Started';
-  sheet.getCell(`A${row}`).font = { bold: true, size: 14 };
-  sheet.getCell(`A${row}`).fill = {
+  const startHeader = sheet.getCell(`A${row}`);
+  startHeader.value = '🚀 Getting Started';
+  startHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  startHeader.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'E0E7FF' },
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  startHeader.border = {
+    left: { style: 'thick', color: { argb: COLORS.primary } },
   };
   row += 1;
 
@@ -600,21 +1504,27 @@ async function createInstructionsSheet(
   gettingStarted.forEach(([step, instruction, note]) => {
     sheet.getCell(`A${row}`).value = step;
     sheet.getCell(`A${row}`).alignment = { horizontal: 'center' };
+    sheet.getCell(`A${row}`).font = { color: { argb: COLORS.primary }, bold: true };
     sheet.getCell(`B${row}`).value = instruction;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
     sheet.getCell(`C${row}`).value = note;
-    sheet.getCell(`C${row}`).font = { italic: true, color: { argb: '6B7280' } };
+    sheet.getCell(`C${row}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
     row++;
   });
   row += 2;
 
   // Common Formulas Section
   sheet.mergeCells(`A${row}:C${row}`);
-  sheet.getCell(`A${row}`).value = '📝 Common CryptoSheets Formulas';
-  sheet.getCell(`A${row}`).font = { bold: true, size: 14 };
-  sheet.getCell(`A${row}`).fill = {
+  const formulaHeader = sheet.getCell(`A${row}`);
+  formulaHeader.value = '📝 Common CryptoSheets Formulas';
+  formulaHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  formulaHeader.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'D1FAE5' },
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  formulaHeader.border = {
+    left: { style: 'thick', color: { argb: COLORS.positive } },
   };
   row += 1;
 
@@ -635,16 +1545,21 @@ async function createInstructionsSheet(
     ['=CRYPTOSHEETS("total_market_cap")', 'Get total crypto market cap'],
   ];
 
+  // Formula table header
   sheet.getCell(`A${row}`).value = 'Formula';
   sheet.getCell(`B${row}`).value = 'Description';
-  sheet.getCell(`A${row}`).font = { bold: true };
-  sheet.getCell(`B${row}`).font = { bold: true };
+  sheet.getCell(`A${row}`).font = { bold: true, color: { argb: COLORS.primary } };
+  sheet.getCell(`B${row}`).font = { bold: true, color: { argb: COLORS.primary } };
   row++;
 
-  formulas.forEach(([formula, desc]) => {
+  formulas.forEach(([formula, desc], idx) => {
+    const rowFill = idx % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
     sheet.getCell(`A${row}`).value = formula;
-    sheet.getCell(`A${row}`).font = { name: 'Consolas', size: 10 };
+    sheet.getCell(`A${row}`).font = { name: 'Consolas', size: 10, color: { argb: COLORS.primaryLight } };
+    sheet.getCell(`A${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
     sheet.getCell(`B${row}`).value = desc;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
     row++;
   });
   row += 2;
@@ -652,19 +1567,25 @@ async function createInstructionsSheet(
   // Template-specific instructions
   if (template.setupInstructions && template.setupInstructions.length > 0) {
     sheet.mergeCells(`A${row}:C${row}`);
-    sheet.getCell(`A${row}`).value = `💡 ${template.name} Specific Tips`;
-    sheet.getCell(`A${row}`).font = { bold: true, size: 14 };
-    sheet.getCell(`A${row}`).fill = {
+    const tipsHeader = sheet.getCell(`A${row}`);
+    tipsHeader.value = `💡 ${template.name} Specific Tips`;
+    tipsHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+    tipsHeader.fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: 'FEF3C7' },
+      fgColor: { argb: COLORS.bgMedium },
+    };
+    tipsHeader.border = {
+      left: { style: 'thick', color: { argb: COLORS.accent } },
     };
     row += 1;
 
     template.setupInstructions.forEach((instruction, idx) => {
       sheet.getCell(`A${row}`).value = `${idx + 1}`;
       sheet.getCell(`A${row}`).alignment = { horizontal: 'center' };
+      sheet.getCell(`A${row}`).font = { color: { argb: COLORS.accent }, bold: true };
       sheet.getCell(`B${row}`).value = instruction;
+      sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
       row++;
     });
     row += 2;
@@ -672,12 +1593,16 @@ async function createInstructionsSheet(
 
   // Troubleshooting Section
   sheet.mergeCells(`A${row}:C${row}`);
-  sheet.getCell(`A${row}`).value = '🔧 Troubleshooting';
-  sheet.getCell(`A${row}`).font = { bold: true, size: 14 };
-  sheet.getCell(`A${row}`).fill = {
+  const troubleHeader = sheet.getCell(`A${row}`);
+  troubleHeader.value = '🔧 Troubleshooting';
+  troubleHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
+  troubleHeader.fill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FEE2E2' },
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  troubleHeader.border = {
+    left: { style: 'thick', color: { argb: COLORS.danger } },
   };
   row += 1;
 
@@ -689,16 +1614,21 @@ async function createInstructionsSheet(
     ['Rate limit errors', 'Upgrade CryptoSheets plan for higher API limits'],
   ];
 
+  // Troubleshooting table header
   sheet.getCell(`A${row}`).value = 'Issue';
   sheet.getCell(`B${row}`).value = 'Solution';
-  sheet.getCell(`A${row}`).font = { bold: true };
-  sheet.getCell(`B${row}`).font = { bold: true };
+  sheet.getCell(`A${row}`).font = { bold: true, color: { argb: COLORS.danger } };
+  sheet.getCell(`B${row}`).font = { bold: true, color: { argb: COLORS.primary } };
   row++;
 
-  troubleshooting.forEach(([issue, solution]) => {
+  troubleshooting.forEach(([issue, solution], idx) => {
+    const rowFill = idx % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
     sheet.getCell(`A${row}`).value = issue;
     sheet.getCell(`A${row}`).font = { color: { argb: COLORS.danger } };
+    sheet.getCell(`A${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
     sheet.getCell(`B${row}`).value = solution;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
     row++;
   });
   row += 2;
@@ -706,16 +1636,17 @@ async function createInstructionsSheet(
   // Footer
   sheet.mergeCells(`A${row}:C${row}`);
   sheet.getCell(`A${row}`).value = 'Template by DataSimplify | Data powered by CryptoSheets | © 2025';
-  sheet.getCell(`A${row}`).font = { italic: true, color: { argb: '9CA3AF' } };
+  sheet.getCell(`A${row}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
   sheet.getCell(`A${row}`).alignment = { horizontal: 'center' };
 }
 
 /**
- * Create a reference sheet with all supported coins
+ * Create a reference sheet with all supported coins - dark theme
  */
 async function createCoinsReferenceSheet(workbook: ExcelJS.Workbook): Promise<void> {
   const sheet = workbook.addWorksheet('Supported_Coins', {
-    properties: { tabColor: { argb: '6B7280' } },
+    properties: { tabColor: { argb: COLORS.textMuted } },
+    views: [{ state: 'frozen', ySplit: 1 }],
   });
 
   sheet.columns = [
@@ -725,26 +1656,47 @@ async function createCoinsReferenceSheet(workbook: ExcelJS.Workbook): Promise<vo
     { header: 'Rank', key: 'rank', width: 8 },
   ];
 
-  // Style header
+  // Style header with dark theme and emerald accent
   const headerRow = sheet.getRow(1);
+  headerRow.height = 25;
   headerRow.eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: COLORS.headerText } };
+    cell.font = { bold: true, color: { argb: COLORS.headerText }, size: 11 };
     cell.fill = {
       type: 'pattern',
       pattern: 'solid',
       fgColor: { argb: COLORS.headerBg },
     };
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    cell.border = {
+      bottom: { style: 'medium', color: { argb: COLORS.primary } },
+    };
   });
 
-  // Add all coins
+  // Add all coins with dark theme styling
   const allCoins = getAllCryptoSheetCoins();
-  allCoins.forEach((coin) => {
-    sheet.addRow({
+  allCoins.forEach((coin, idx) => {
+    const row = sheet.addRow({
       symbol: coin.symbol,
       name: coin.name,
       category: CATEGORY_NAMES[coin.category] || coin.category,
       rank: coin.rank || '',
     });
+
+    const rowFill = idx % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
+    row.eachCell((cell) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: rowFill },
+      };
+      cell.font = { color: { argb: COLORS.textPrimary }, size: 10 };
+      cell.border = {
+        bottom: { style: 'thin', color: { argb: COLORS.bgLight } },
+      };
+    });
+
+    // Highlight symbol column with emerald
+    row.getCell(1).font = { bold: true, color: { argb: COLORS.primary }, size: 10 };
   });
 
   // Add filter
@@ -753,15 +1705,21 @@ async function createCoinsReferenceSheet(workbook: ExcelJS.Workbook): Promise<vo
     to: { row: allCoins.length + 1, column: 4 },
   };
 
-  // Add note at bottom
+  // Add note at bottom with dark theme
   const noteRow = allCoins.length + 3;
   sheet.mergeCells(`A${noteRow}:D${noteRow}`);
-  sheet.getCell(`A${noteRow}`).value = '💡 CryptoSheets supports 5000+ coins. This list shows the most popular. Any coin supported by major exchanges can be used.';
-  sheet.getCell(`A${noteRow}`).font = { italic: true, color: { argb: '6B7280' } };
+  const noteCell = sheet.getCell(`A${noteRow}`);
+  noteCell.value = '💡 CryptoSheets supports 5000+ coins. This list shows the most popular. Any coin supported by major exchanges can be used.';
+  noteCell.font = { italic: true, color: { argb: COLORS.textSecondary } };
+  noteCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgDark },
+  };
 }
 
 /**
- * Add VBA project for .xlsm files (auto-refresh on open)
+ * Add VBA project for .xlsm files (auto-refresh on open) - dark theme
  */
 function addVBAProject(workbook: ExcelJS.Workbook, template: TemplateConfig): void {
   // Note: ExcelJS doesn't natively support VBA embedding
@@ -777,8 +1735,18 @@ function addVBAProject(workbook: ExcelJS.Workbook, template: TemplateConfig): vo
 
   vbaSheet.columns = [{ width: 100 }];
 
+  // Apply dark background
+  for (let r = 1; r <= 50; r++) {
+    vbaSheet.getCell(r, 1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: COLORS.bgDark },
+    };
+  }
+
+  // Header with emerald accent
   vbaSheet.getCell('A1').value = '📜 VBA Code for Auto-Refresh (Add Manually)';
-  vbaSheet.getCell('A1').font = { bold: true, size: 14 };
+  vbaSheet.getCell('A1').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const vbaCode = `
 ' ============================================
@@ -836,9 +1804,22 @@ Sub AutoRefreshData()
 End Sub
   `.trim();
 
-  vbaSheet.getCell('A3').value = vbaCode;
-  vbaSheet.getCell('A3').font = { name: 'Consolas', size: 10 };
-  vbaSheet.getCell('A3').alignment = { wrapText: true, vertical: 'top' };
+  // VBA code cell with dark theme styling
+  const codeCell = vbaSheet.getCell('A3');
+  codeCell.value = vbaCode;
+  codeCell.font = { name: 'Consolas', size: 10, color: { argb: COLORS.primaryLight } };
+  codeCell.alignment = { wrapText: true, vertical: 'top' };
+  codeCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  codeCell.border = {
+    top: { style: 'thin', color: { argb: COLORS.primary } },
+    left: { style: 'thin', color: { argb: COLORS.primary } },
+    bottom: { style: 'thin', color: { argb: COLORS.primary } },
+    right: { style: 'thin', color: { argb: COLORS.primary } },
+  };
   vbaSheet.getRow(3).height = 400;
 
   console.log('[Template Generator] VBA code added as reference sheet. Users need to add manually for .xlsm');

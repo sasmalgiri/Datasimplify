@@ -5,6 +5,106 @@
  * Excel files with CryptoSheets formulas (no data redistribution).
  */
 
+// ============================================
+// TEMPLATE CATEGORIES
+// ============================================
+
+export type TemplateCategoryId =
+  | 'market'
+  | 'technical'
+  | 'onchain'
+  | 'defi'
+  | 'sentiment'
+  | 'derivatives'
+  | 'portfolio'
+  | 'nft'
+  | 'tokens';
+
+export interface TemplateCategory {
+  id: TemplateCategoryId;
+  name: string;
+  icon: string;
+  order: number;
+  description: string;
+}
+
+export const TEMPLATE_CATEGORIES: Record<TemplateCategoryId, TemplateCategory> = {
+  market: {
+    id: 'market',
+    name: 'Market Data',
+    icon: '📊',
+    order: 1,
+    description: 'Market overview, screeners, and price data',
+  },
+  technical: {
+    id: 'technical',
+    name: 'Technical Analysis',
+    icon: '📈',
+    order: 2,
+    description: 'Indicators, charts, and historical data',
+  },
+  onchain: {
+    id: 'onchain',
+    name: 'On-Chain',
+    icon: '⛓️',
+    order: 3,
+    description: 'Blockchain network metrics and activity',
+  },
+  defi: {
+    id: 'defi',
+    name: 'DeFi',
+    icon: '🏦',
+    order: 4,
+    description: 'DeFi protocols, TVL, and yields',
+  },
+  sentiment: {
+    id: 'sentiment',
+    name: 'Sentiment',
+    icon: '😨',
+    order: 5,
+    description: 'Fear & Greed, social sentiment analysis',
+  },
+  derivatives: {
+    id: 'derivatives',
+    name: 'Derivatives',
+    icon: '📉',
+    order: 6,
+    description: 'Futures, funding rates, and liquidations',
+  },
+  portfolio: {
+    id: 'portfolio',
+    name: 'Portfolio',
+    icon: '💼',
+    order: 7,
+    description: 'Portfolio tracking and risk analysis',
+  },
+  nft: {
+    id: 'nft',
+    name: 'NFT',
+    icon: '🖼️',
+    order: 8,
+    description: 'NFT collections and marketplace data',
+  },
+  tokens: {
+    id: 'tokens',
+    name: 'Token Economics',
+    icon: '🔓',
+    order: 9,
+    description: 'Token unlocks, staking, and economics',
+  },
+};
+
+/**
+ * Get all categories sorted by order
+ */
+export function getSortedCategories(): TemplateCategory[] {
+  return Object.values(TEMPLATE_CATEGORIES).sort((a, b) => a.order - b.order);
+}
+
+// ============================================
+// TEMPLATE TYPES
+// ============================================
+
 export type TemplateType =
   | 'screener'
   | 'compare'
@@ -93,8 +193,13 @@ export interface TemplateConfig {
   name: string;
   description: string;
   icon: string;
+  category: TemplateCategoryId;
   requiredAddons: 'cryptosheets'[];
   supportedFormats: ('xlsx' | 'xlsm')[];
+
+  // Matching hints for smart recommendations
+  coinCountHint?: 'single' | 'few' | 'many' | 'any'; // single=1, few=2-5, many=5+
+  specificCoins?: string[]; // e.g., ['BTC'] for onchain_btc
 
   // Schema definition
   sheets: SheetDefinition[];
@@ -117,6 +222,8 @@ const SCREENER_TEMPLATE: TemplateConfig = {
   name: 'Crypto Screener',
   description: 'Real-time market data with customizable filters and metrics',
   icon: '🔍',
+  category: 'market',
+  coinCountHint: 'many',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
 
@@ -250,6 +357,8 @@ const COMPARE_TEMPLATE: TemplateConfig = {
   name: 'Coin Comparison',
   description: 'Compare multiple cryptocurrencies side-by-side',
   icon: '⚖️',
+  category: 'portfolio',
+  coinCountHint: 'few',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
 
@@ -363,6 +472,8 @@ const RISK_DASHBOARD_TEMPLATE: TemplateConfig = {
   name: 'Risk Dashboard',
   description: 'Volatility, drawdown, and risk analysis metrics',
   icon: '⚠️',
+  category: 'portfolio',
+  coinCountHint: 'few',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
 
@@ -480,6 +591,8 @@ const WATCHLIST_TEMPLATE: TemplateConfig = {
   name: 'Personal Watchlist',
   description: 'Track your favorite coins with alerts and daily summaries',
   icon: '⭐',
+  category: 'market',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
 
@@ -583,6 +696,8 @@ const MARKET_OVERVIEW_TEMPLATE: TemplateConfig = {
   name: 'Market Overview',
   description: 'Global crypto market stats, BTC dominance, and top coins',
   icon: '🌐',
+  category: 'market',
+  coinCountHint: 'many',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -631,6 +746,8 @@ const GAINERS_LOSERS_TEMPLATE: TemplateConfig = {
   name: 'Gainers & Losers',
   description: 'Top daily performers and biggest drops',
   icon: '📊',
+  category: 'market',
+  coinCountHint: 'many',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -676,6 +793,8 @@ const OHLCV_HISTORY_TEMPLATE: TemplateConfig = {
   name: 'OHLCV Historical Data',
   description: 'Open, High, Low, Close, Volume candlestick data',
   icon: '📈',
+  category: 'technical',
+  coinCountHint: 'single',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -715,6 +834,8 @@ const TECHNICAL_INDICATORS_TEMPLATE: TemplateConfig = {
   name: 'Technical Indicators',
   description: 'RSI, MACD, Moving Averages, Bollinger Bands',
   icon: '📉',
+  category: 'technical',
+  coinCountHint: 'single',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -759,6 +880,8 @@ const ONCHAIN_BTC_TEMPLATE: TemplateConfig = {
   name: 'Bitcoin On-Chain',
   description: 'BTC hashrate, difficulty, active addresses, mempool',
   icon: '⛓️',
+  category: 'onchain',
+  specificCoins: ['BTC'],
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -792,6 +915,8 @@ const ETH_GAS_TRACKER_TEMPLATE: TemplateConfig = {
   name: 'ETH Gas Tracker',
   description: 'Current Ethereum gas prices and trends',
   icon: '⛽',
+  category: 'onchain',
+  specificCoins: ['ETH'],
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -825,6 +950,8 @@ const DEFI_TVL_TEMPLATE: TemplateConfig = {
   name: 'DeFi TVL Tracker',
   description: 'Total Value Locked across DeFi protocols',
   icon: '🏦',
+  category: 'defi',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -860,6 +987,8 @@ const DEFI_YIELDS_TEMPLATE: TemplateConfig = {
   name: 'DeFi Yields',
   description: 'Best yield farming APYs across protocols',
   icon: '💰',
+  category: 'defi',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -894,6 +1023,8 @@ const FEAR_GREED_TEMPLATE: TemplateConfig = {
   name: 'Fear & Greed Index',
   description: 'Market sentiment with historical trends',
   icon: '😱',
+  category: 'sentiment',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -933,6 +1064,8 @@ const SOCIAL_SENTIMENT_TEMPLATE: TemplateConfig = {
   name: 'Social Sentiment',
   description: 'Twitter, Reddit, news sentiment analysis',
   icon: '📱',
+  category: 'sentiment',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -968,6 +1101,8 @@ const FUNDING_RATES_TEMPLATE: TemplateConfig = {
   name: 'Funding Rates',
   description: 'Perpetual futures funding rates across exchanges',
   icon: '📋',
+  category: 'derivatives',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1003,6 +1138,8 @@ const OPEN_INTEREST_TEMPLATE: TemplateConfig = {
   name: 'Open Interest',
   description: 'Futures open interest and liquidations',
   icon: '📊',
+  category: 'derivatives',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1038,6 +1175,8 @@ const TOKEN_UNLOCKS_TEMPLATE: TemplateConfig = {
   name: 'Token Unlocks',
   description: 'Upcoming token vesting unlocks',
   icon: '🔓',
+  category: 'tokens',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1072,6 +1211,8 @@ const STAKING_REWARDS_TEMPLATE: TemplateConfig = {
   name: 'Staking Rewards',
   description: 'Staking APY comparison across coins',
   icon: '🥩',
+  category: 'tokens',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1106,6 +1247,8 @@ const NFT_COLLECTIONS_TEMPLATE: TemplateConfig = {
   name: 'NFT Collections',
   description: 'Top NFT collections by volume and floor price',
   icon: '🖼️',
+  category: 'nft',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1141,6 +1284,8 @@ const PORTFOLIO_TRACKER_TEMPLATE: TemplateConfig = {
   name: 'Portfolio Tracker',
   description: 'Track your holdings with P&L calculations',
   icon: '💼',
+  category: 'portfolio',
+  coinCountHint: 'few',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1177,6 +1322,8 @@ const CORRELATION_MATRIX_TEMPLATE: TemplateConfig = {
   name: 'Correlation Matrix',
   description: 'Price correlation between cryptocurrencies',
   icon: '🔗',
+  category: 'portfolio',
+  coinCountHint: 'few',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1213,6 +1360,8 @@ const ETF_TRACKER_TEMPLATE: TemplateConfig = {
   name: 'ETF Tracker',
   description: 'Bitcoin & Crypto ETF flows, holdings, and performance',
   icon: '📊',
+  category: 'market',
+  specificCoins: ['BTC', 'ETH'],
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1260,6 +1409,8 @@ const WHALE_TRACKER_TEMPLATE: TemplateConfig = {
   name: 'Whale Tracker',
   description: 'Large holder activity, wallet distribution, and movements',
   icon: '🐋',
+  category: 'onchain',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1316,6 +1467,8 @@ const BACKTEST_RESULTS_TEMPLATE: TemplateConfig = {
   name: 'Historical Analysis',
   description: 'Educational historical price study and performance metrics',
   icon: '📈',
+  category: 'technical',
+  coinCountHint: 'single',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1366,6 +1519,8 @@ const MACRO_INDICATORS_TEMPLATE: TemplateConfig = {
   name: 'Macro Indicators',
   description: 'Economic indicators affecting crypto markets',
   icon: '🏛️',
+  category: 'market',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1411,6 +1566,8 @@ const EXCHANGE_FLOWS_TEMPLATE: TemplateConfig = {
   name: 'Exchange Flows',
   description: 'Crypto exchange inflows and outflows',
   icon: '🔄',
+  category: 'onchain',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1455,6 +1612,8 @@ const MINING_STATS_TEMPLATE: TemplateConfig = {
   name: 'Mining Statistics',
   description: 'Cryptocurrency mining metrics and profitability',
   icon: '⛏️',
+  category: 'onchain',
+  specificCoins: ['BTC'],
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1509,6 +1668,8 @@ const LIQUIDATIONS_TEMPLATE: TemplateConfig = {
   name: 'Liquidations',
   description: 'Futures liquidation data across exchanges',
   icon: '💥',
+  category: 'derivatives',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1564,6 +1725,8 @@ const ALERTS_SUMMARY_TEMPLATE: TemplateConfig = {
   name: 'Alerts Summary',
   description: 'Price alerts, risk alerts, and market notifications',
   icon: '🔔',
+  category: 'market',
+  coinCountHint: 'any',
   requiredAddons: ['cryptosheets'],
   supportedFormats: ['xlsx', 'xlsm'],
   sheets: [
@@ -1671,6 +1834,31 @@ export function getTemplateList() {
       name: config.name,
       description: config.description,
       icon: config.icon,
+      category: config.category,
+      coinCountHint: config.coinCountHint,
+      specificCoins: config.specificCoins,
     };
   });
+}
+
+/**
+ * Get templates by category
+ */
+export function getTemplatesByCategory(categoryId: TemplateCategoryId) {
+  return getTemplateList().filter((t) => t.category === categoryId);
+}
+
+/**
+ * Get templates grouped by category (sorted by category order)
+ */
+export function getTemplatesGroupedByCategory() {
+  const categories = getSortedCategories();
+  const templates = getTemplateList();
+
+  return categories
+    .map((category) => ({
+      category,
+      templates: templates.filter((t) => t.category === category.id),
+    }))
+    .filter((group) => group.templates.length > 0);
 }
