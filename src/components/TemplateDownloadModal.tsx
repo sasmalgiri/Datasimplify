@@ -287,29 +287,33 @@ export function TemplateDownloadModal({
         )}
 
         {/* Requirements Box */}
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg p-4 mb-4">
-          <h3 className="font-bold text-yellow-800 dark:text-yellow-400 mb-2 flex items-center gap-2">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-400 dark:border-emerald-600 rounded-lg p-4 mb-4">
+          <h3 className="font-bold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center gap-2">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path
                 fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                 clipRule="evenodd"
               />
             </svg>
-            Requirements (All Options)
+            Requirements
           </h3>
-          <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1.5">
+          <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
             <li className="flex items-start gap-2">
-              <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
-              <span>Microsoft Excel Desktop (Windows/Mac) - Excel Online NOT supported for formulas</span>
+              <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
+              <span>Microsoft Excel (Desktop, Online, or Mobile) - <strong>works everywhere!</strong></span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
+              <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
               <span>CryptoSheets Add-in with <strong>active CryptoSheets account</strong></span>
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-yellow-600 dark:text-yellow-400 mt-0.5">✓</span>
-              <span>Internet connection (data pulls live from CryptoSheets)</span>
+              <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
+              <span>Internet connection (live data from CryptoSheets)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
+              <span>Charts included with formulas - auto-update when data refreshes</span>
             </li>
           </ul>
         </div>
@@ -400,9 +404,8 @@ export function TemplateDownloadModal({
             className="mt-1 w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-            I understand this template <strong>requires an active CryptoSheets account</strong> (sign in within Excel)
-            and will not work without it. This template contains formulas only - no market data is included.
-            Data is fetched via the CryptoSheets add-in on my machine.
+            I understand this template <strong>requires an active CryptoSheets account</strong> to fetch live data.
+            The template includes formulas and charts that auto-update when CryptoSheets refreshes.
           </span>
         </label>
 
