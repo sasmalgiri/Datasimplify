@@ -8,6 +8,7 @@ import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
 import { TemplateGrid } from '@/components/TemplateCard';
 import { getTemplateList } from '@/lib/templates/templateConfig';
+import { DataPreview } from '@/components/DataPreview';
 
 export default function DownloadPage() {
   // Template modal state
@@ -145,6 +146,14 @@ export default function DownloadPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Data Preview Section */}
+        <div className="mb-8">
+          <DataPreview
+            selectedCoins={selectedCoins}
+            timeframe={selectedTimeframe}
+          />
         </div>
 
         {/* Templates Grid */}
