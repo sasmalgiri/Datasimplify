@@ -6,6 +6,8 @@ import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { TrendingCoins } from '@/components/TrendingCoins';
+import { GainersLosers } from '@/components/GainersLosers';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
 
 // Tooltip Component for hover explanations - improved visibility
@@ -415,6 +417,13 @@ export default function MarketPage() {
               {globalData ? globalData.active_cryptocurrencies.toLocaleString() : '-'}
             </p>
           </div>
+        </div>
+
+        {/* Trending & Market Movers Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <TrendingCoins limit={5} showTitle={true} compact={true} />
+          <GainersLosers type="gainers" limit={5} showTitle={true} compact={true} />
+          <GainersLosers type="losers" limit={5} showTitle={true} compact={true} />
         </div>
 
         {/* Search and Filters */}

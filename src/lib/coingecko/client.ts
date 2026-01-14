@@ -392,3 +392,204 @@ export function getRateLimitStatus(): {
     circuitOpen: circuitBreakerState.isOpen,
   };
 }
+
+// === NEW ANALYST PLAN ENDPOINTS ===
+
+export interface TrendingCoin {
+  item: {
+    id: string;
+    coin_id: number;
+    name: string;
+    symbol: string;
+    market_cap_rank: number;
+    thumb: string;
+    small: string;
+    large: string;
+    slug: string;
+    price_btc: number;
+    score: number;
+    data?: {
+      price: number;
+      price_btc: string;
+      price_change_percentage_24h: Record<string, number>;
+      market_cap: string;
+      market_cap_btc: string;
+      total_volume: string;
+      total_volume_btc: string;
+      sparkline: string;
+      content: { title: string; description: string } | null;
+    };
+  };
+}
+
+export interface TrendingResponse {
+  coins: TrendingCoin[];
+  nfts?: Array<{
+    id: string;
+    name: string;
+    symbol: string;
+    thumb: string;
+  }>;
+  categories?: Array<{
+    id: number;
+    name: string;
+    market_cap_1h_change: number;
+    slug: string;
+  }>;
+}
+
+/**
+ * Get trending coins (Analyst plan feature)
+ * Returns top 7 trending coins based on search activity
+ */
+export async function getTrendingCoins(): Promise<CoinGeckoResponse<TrendingResponse>> {
+  return fetchFromCoinGecko<TrendingResponse>('/search/trending');
+}
+
+export interface CoinCategory {
+  id: string;
+  name: string;
+  market_cap?: number;
+  market_cap_change_24h?: number;
+  content?: string;
+  top_3_coins?: string[];
+  volume_24h?: number;
+  updated_at?: string;
+}
+
+/**
+ * Get all coin categories
+ */
+export async function getCategories(): Promise<CoinGeckoResponse<CoinCategory[]>> {
+  return fetchFromCoinGecko<CoinCategory[]>('/coins/categories');
+}
+
+/**
+ * Get coins by category
+ */
+export async function getCoinsByCategory(
+  categoryId: string,
+  vsCurrency = 'usd',
+  page = 1,
+  perPage = 100
+): Promise<CoinGeckoResponse<CoinGeckoCoin[]>> {
+  return fetchFromCoinGecko<CoinGeckoCoin[]>('/coins/markets', {
+    vs_currency: vsCurrency,
+    category: categoryId,
+    order: 'market_cap_desc',
+    per_page: perPage,
+    page,
+    sparkline: false,
+    price_change_percentage: '24h,7d',
+  });
+}
+
+/**
+ * Get top gainers (coins with highest 24h price increase)
+ * Uses market data sorted by price change
+ */
+export async function getTopGainers(
+  vsCurrency = 'usd',
+  limit = 10
+): Promise<CoinGeckoResponse<CoinGeckoCoin[]>> {
+  // Fetch top 250 coins and sort by price change
+  const result = await fetchFromCoinGecko<CoinGeckoCoin[]>('/coins/markets', {
+    vs_currency: vsCurrency,
+    order: 'market_cap_desc',
+    per_page: 250,
+    page: 1,
+    sparkline: false,
+    price_change_percentage: '24h',
+  });
+
+  if (!result.success || !result.data) {
+    return result;
+  }
+
+  // Sort by 24h price change (descending) and take top gainers
+  const gainers = result.data
+    .filter((coin) => coin.price_change_percentage_24h && coin.price_change_percentage_24h > 0)
+    .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0))
+    .slice(0, limit);
+
+  return {
+    success: true,
+    data: gainers,
+    fetchedAt: result.fetchedAt,
+  };
+}
+
+/**
+ * Get top losers (coins with highest 24h price decrease)
+ * Uses market data sorted by price change
+ */
+export async function getTopLosers(
+  vsCurrency = 'usd',
+  limit = 10
+): Promise<CoinGeckoResponse<CoinGeckoCoin[]>> {
+  // Fetch top 250 coins and sort by price change
+  const result = await fetchFromCoinGecko<CoinGeckoCoin[]>('/coins/markets', {
+    vs_currency: vsCurrency,
+    order: 'market_cap_desc',
+    per_page: 250,
+    page: 1,
+    sparkline: false,
+    price_change_percentage: '24h',
+  });
+
+  if (!result.success || !result.data) {
+    return result;
+  }
+
+  // Sort by 24h price change (ascending) and take top losers
+  const losers = result.data
+    .filter((coin) => coin.price_change_percentage_24h && coin.price_change_percentage_24h < 0)
+    .sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0))
+    .slice(0, limit);
+
+  return {
+    success: true,
+    data: losers,
+    fetchedAt: result.fetchedAt,
+  };
+}
+
+/**
+ * Get global market chart (historical global data)
+ * Available for Analyst plan
+ */
+export async function getGlobalMarketChart(
+  days: number | 'max' = 30
+): Promise<
+  CoinGeckoResponse<{
+    market_cap_chart: { [date: string]: number[] };
+  }>
+> {
+  return fetchFromCoinGecko('/global/market_cap_chart', {
+    days: String(days),
+  });
+}
+
+/**
+ * Search for coins by query
+ */
+export async function searchCoins(
+  query: string
+): Promise<
+  CoinGeckoResponse<{
+    coins: Array<{
+      id: string;
+      name: string;
+      api_symbol: string;
+      symbol: string;
+      market_cap_rank: number;
+      thumb: string;
+      large: string;
+    }>;
+    exchanges: Array<{ id: string; name: string; market_type: string; thumb: string; large: string }>;
+    categories: Array<{ id: number; name: string }>;
+    nfts: Array<{ id: string; name: string; symbol: string; thumb: string }>;
+  }>
+> {
+  return fetchFromCoinGecko('/search', { query });
+}
