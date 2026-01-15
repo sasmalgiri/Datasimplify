@@ -157,19 +157,40 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
     (value: string) => {
       if (!pendingIntent) return;
 
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use defaults
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
       let coins: string[] = [];
-      if (value === 'top5') coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
-      else if (value === 'top10') coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'];
-      else if (value === 'defi') coins = ['UNI', 'AAVE', 'LINK', 'CRV', 'MKR'];
-      else if (value === 'custom') {
+      if (isSkip) {
+        // Use default top 5 coins
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+      } else if (value === 'top5') {
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+      } else if (value === 'top10') {
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'];
+      } else if (value === 'defi') {
+        coins = ['UNI', 'AAVE', 'LINK', 'CRV', 'MKR'];
+      } else if (value === 'custom') {
         addMessage({ type: 'assistant', content: 'Type coin symbols (e.g. BTC, ETH, SOL):' });
         return;
       } else {
-        coins = value.toUpperCase().split(/[,\s]+/).filter((c) => c.length >= 2 && c.length <= 6);
+        // Filter out common words that aren't coins
+        const filtered = value.toUpperCase().split(/[,\s]+/).filter((c) => {
+          if (c.length < 2 || c.length > 6) return false;
+          const nonCoins = ['THE', 'AND', 'FOR', 'WITH', 'ALL', 'WANT', 'NEED', 'JUST', 'ONLY'];
+          return !nonCoins.includes(c);
+        });
+        coins = filtered;
       }
 
       if (coins.length === 0) {
-        addMessage({ type: 'assistant', content: "Try: BTC, ETH, SOL" });
+        addMessage({ type: 'assistant', content: "I'll use the top 5 coins (BTC, ETH, SOL, BNB, XRP). Time range?" , quickReplies: TIMEFRAME_QUICK_REPLIES });
+        const updatedIntent: ParsedIntent = { ...pendingIntent, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'] };
+        setPendingIntent(updatedIntent);
+        setCurrentStep('clarify_timeframe');
         return;
       }
 
@@ -195,8 +216,17 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
     (value: string) => {
       if (!pendingIntent) return;
 
-      const tfMap: Record<string, string> = { '1d': '1d', '1h': '1h', '1w': '1w', daily: '1d', hourly: '1h', weekly: '1w' };
-      const timeframe = tfMap[value.toLowerCase()] || '1d';
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use daily as default
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
+      let timeframe = '1d'; // Default to daily
+      if (!isSkip) {
+        const tfMap: Record<string, string> = { '1d': '1d', '1h': '1h', '1w': '1w', daily: '1d', hourly: '1h', weekly: '1w' };
+        timeframe = tfMap[normalizedValue] || '1d';
+      }
 
       const updatedIntent: ParsedIntent = { ...pendingIntent, timeframe };
       setPendingIntent(updatedIntent);

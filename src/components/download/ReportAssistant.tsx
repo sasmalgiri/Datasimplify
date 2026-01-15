@@ -204,10 +204,18 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
     (value: string) => {
       if (!pendingIntent) return;
 
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use defaults
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
       let coins: string[] = [];
 
-      // Handle presets
-      if (value === 'top5') {
+      if (isSkip) {
+        // Use default top 5 coins
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+      } else if (value === 'top5') {
         coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
       } else if (value === 'top10') {
         coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'];
@@ -221,18 +229,25 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
         });
         return;
       } else {
-        // Parse custom input
+        // Parse custom input, filtering out common non-coin words
+        const nonCoins = ['THE', 'AND', 'FOR', 'WITH', 'ALL', 'WANT', 'NEED', 'JUST', 'ONLY'];
         coins = value
           .toUpperCase()
           .split(/[,\s]+/)
-          .filter((c) => c.length >= 2 && c.length <= 6);
+          .filter((c) => c.length >= 2 && c.length <= 6 && !nonCoins.includes(c));
       }
 
       if (coins.length === 0) {
+        // Default to top 5 instead of asking again
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
         addMessage({
           type: 'assistant',
-          content: "I couldn't recognize those coins. Try something like: BTC, ETH, SOL",
+          content: "I'll use the top 5 coins (BTC, ETH, SOL, BNB, XRP).\n\nWhat time range do you want?",
+          quickReplies: TIMEFRAME_QUICK_REPLIES,
         });
+        const updatedIntent: ParsedIntent = { ...pendingIntent, coins };
+        setPendingIntent(updatedIntent);
+        setCurrentStep('clarify_timeframe');
         return;
       }
 
@@ -262,17 +277,24 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
     (value: string) => {
       if (!pendingIntent) return;
 
-      // Map input to timeframe
-      let timeframe = value;
-      const tfMap: Record<string, string> = {
-        '1d': '1d',
-        '1h': '1h',
-        '1w': '1w',
-        daily: '1d',
-        hourly: '1h',
-        weekly: '1w',
-      };
-      timeframe = tfMap[value.toLowerCase()] || '1d';
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use daily as default
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
+      let timeframe = '1d'; // Default to daily
+      if (!isSkip) {
+        const tfMap: Record<string, string> = {
+          '1d': '1d',
+          '1h': '1h',
+          '1w': '1w',
+          daily: '1d',
+          hourly: '1h',
+          weekly: '1w',
+        };
+        timeframe = tfMap[normalizedValue] || '1d';
+      }
 
       // Update intent
       const updatedIntent: ParsedIntent = { ...pendingIntent, timeframe };
