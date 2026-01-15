@@ -215,7 +215,7 @@ export function FreeNavbar() {
             </Link>
             <Link
               href="/signup"
-              className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition font-medium"
+              className="px-4 py-2 bg-emerald-500 rounded-lg hover:bg-emerald-600 transition font-medium whitespace-nowrap"
             >
               Sign Up Free
             </Link>
