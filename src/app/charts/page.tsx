@@ -6,6 +6,7 @@ import Link from 'next/link';
 import html2canvas from 'html2canvas';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
+import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import {
   areAllSourcesRedistributableClient,
@@ -294,6 +295,7 @@ function ChartsContent() {
   const [showMA, setShowMA] = useState(true);
   const [showVolume, setShowVolume] = useState(true);
   const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
+  const [excelModalChart, setExcelModalChart] = useState<{ type: string; title: string } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Enforce allowed chart types in strict redistribution mode
@@ -1735,29 +1737,47 @@ function ChartsContent() {
             <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 sticky top-4">
               <h3 className="font-medium mb-4">Chart Types</h3>
 
-              {['historical', 'volatility', 'comparison'].map(category => (
+              {['historical', 'volatility', 'comparison', 'derivatives', 'onchain', 'sentiment'].map(category => {
+                const categoryCharts = AVAILABLE_CHART_CONFIGS.filter(c => c.category === category);
+                if (categoryCharts.length === 0) return null;
+                return (
                 <div key={category} className="mb-4">
                   <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">
                     {category}
                   </div>
-                  {AVAILABLE_CHART_CONFIGS.filter(c => c.category === category).map(config => (
-                    <button
+                  {categoryCharts.map(config => {
+                    const excelConfig = CHART_EXCEL_CONFIG[config.type];
+                    return (
+                    <div
                       key={config.type}
-                      onClick={() => setSelectedChart(config.type)}
-                      className={`w-full text-left p-3 rounded-lg mb-1 transition ${
+                      className={`flex items-center gap-1 rounded-lg mb-1 transition ${
                         selectedChart === config.type
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        <span>{config.icon}</span>
-                        <span className="text-sm font-medium">{config.title}</span>
-                      </div>
-                    </button>
-                  ))}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedChart(config.type)}
+                        className="flex-1 text-left p-3"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>{config.icon}</span>
+                          <span className="text-sm font-medium">{config.title}</span>
+                          {excelConfig?.tier === 'pro' && (
+                            <span className="text-[8px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">PRO</span>
+                          )}
+                        </div>
+                      </button>
+                      <ChartExcelButton
+                        chartType={config.type}
+                        chartTitle={config.title}
+                        onClick={() => setExcelModalChart({ type: config.type, title: config.title })}
+                      />
+                    </div>
+                  )})}
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
@@ -1888,6 +1908,14 @@ function ChartsContent() {
           </div>
         </div>
       </div>
+
+      {/* Excel Template Modal */}
+      <ChartExcelModal
+        chartType={excelModalChart?.type || ''}
+        chartTitle={excelModalChart?.title || ''}
+        isOpen={!!excelModalChart}
+        onClose={() => setExcelModalChart(null)}
+      />
     </div>
   );
 }
