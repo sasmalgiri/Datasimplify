@@ -549,9 +549,9 @@ export default function MarketPage() {
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data updates every 60 seconds • Powered by Binance market data</p>
+          <p>Data updates every 60 seconds • Powered by CoinGecko (via cache)</p>
           <p className="mt-2">
-            Want more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for unlimited downloads, advanced analytics, and more!
+            Want more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for more templates, advanced analytics, and more!
           </p>
         </div>
       </div>

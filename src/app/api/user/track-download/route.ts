@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     if (currentMonthDownloads >= FREE_DOWNLOAD_LIMIT) {
       return NextResponse.json({
         success: false,
-        error: 'Monthly download limit reached',
+        error: 'Monthly template download limit reached',
         downloadsRemaining: 0,
         upgradeRequired: true,
       }, { status: 403 });

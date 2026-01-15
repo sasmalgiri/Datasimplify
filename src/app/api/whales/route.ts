@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         error: 'Whale tracking is disabled.',
         reason: 'This data domain is not enabled for this deployment.',
       },
-      { status: 403 }
+      { status: 404 }
     );
   }
 

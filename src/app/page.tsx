@@ -384,7 +384,7 @@ export default function LandingPage() {
               <div className="text-sm text-gray-400 mb-1">Premium</div>
               <div className="text-3xl font-bold mb-3">$79<span className="text-sm text-gray-400">/mo</span></div>
               <ul className="space-y-2 text-sm text-gray-300 mb-4">
-                <li>✓ Unlimited downloads</li>
+                <li>✓ Unlimited template downloads</li>
                 <li>✓ All Pro features</li>
                 <li>✓ White-label templates</li>
                 <li>✓ Priority support</li>
@@ -405,7 +405,7 @@ export default function LandingPage() {
             Ready to Research Smarter?
           </h2>
           <p className="text-lg text-gray-400 mb-6">
-            Start with downloads, charts, and comparisons.
+            Start with templates, charts, and comparisons.
           </p>
           <Link
             href="/research"

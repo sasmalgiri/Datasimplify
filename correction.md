@@ -44,17 +44,21 @@ Based on the current workspace state, you **did implement several key fixes** (p
 - Charts downloads are image-only (no `json`/`xlsx` exports) in [src/app/charts/page.tsx](src/app/charts/page.tsx) and [src/app/charts/advanced/page.tsx](src/app/charts/advanced/page.tsx).
 - Coin page no longer offers CSV/XLSX data export UI (replaced with templates CTA) in [src/app/coin/[id]/page.tsx](src/app/coin/[id]/page.tsx).
 - Compare page no longer includes CSV/JSON export code paths (removed client-side blob download) in [src/app/compare/page.tsx](src/app/compare/page.tsx).
-- The generic download component defaults to “Get Excel Template” unless explicitly enabled via `NEXT_PUBLIC_ENABLE_DATA_EXPORTS=true` in [src/components/DownloadButton.tsx](src/components/DownloadButton.tsx).
+- The generic download component is template-only (no CSV/XLSX market-data exports) in [src/components/DownloadButton.tsx](src/components/DownloadButton.tsx).
 - The legacy “live data template” helper no longer instructs users to connect to `/api/download` (template-only instructions) in [src/lib/excelTemplate.ts](src/lib/excelTemplate.ts).
+
+✅ Copy cleanup (to avoid “we sell data downloads” interpretation):
+- Pricing/dashboard/market copy now refers to **template downloads** (not raw data exports) in [src/app/page.tsx](src/app/page.tsx), [src/app/dashboard/page.tsx](src/app/dashboard/page.tsx), and [src/app/market/page.tsx](src/app/market/page.tsx).
 
 ✅ Remaining downloads that are OK (not market-data redistribution):
 - Template file downloads via [src/app/api/templates/download/route.ts](src/app/api/templates/download/route.ts) are expected (this product ships `.xlsx` templates).
 - User privacy export (GDPR/CCPA data portability) downloads a JSON file of the user’s own account data via [src/app/api/user/export/route.ts](src/app/api/user/export/route.ts) (triggered from [src/app/dashboard/page.tsx](src/app/dashboard/page.tsx)).
 
 **Acceptance check**
-- In your Paddle-safe production env, keep `NEXT_PUBLIC_ENABLE_DATA_EXPORTS` unset/false.
+- In your Paddle-safe production env, keep `NEXT_PUBLIC_ENABLE_DATA_EXPORTS` unset/false (even though the primary UI no longer exports market data).
 - Codebase search for `IQY|market data downloads` should only hit the intentional “downloads not available” copy in `/api/download`.
 - Codebase search for client-side `.csv/.json` market exports should come up empty; the only `.json` download should be the user privacy export endpoint.
+- Codebase search for `unlimited downloads|Excel, CSV, JSON|Download Data` should come up empty (or be clearly scoped to template downloads).
 
 ## 1) Must-change items to be Paddle-safe (submission blocking)
 
@@ -79,6 +83,7 @@ You already have feature flags for this in [src/lib/featureFlags.ts](src/lib/fea
    - `/api/whales` ([src/app/api/whales/route.ts](src/app/api/whales/route.ts))
    - `/api/risk` ([src/app/api/risk/route.ts](src/app/api/risk/route.ts))
    - `/api/community` ([src/app/api/community/route.ts](src/app/api/community/route.ts))
+  - `/api/community/interact` ([src/app/api/community/interact/route.ts](src/app/api/community/interact/route.ts))
 
 **Acceptance check**
 - In `NEXT_PUBLIC_APP_MODE=paddle_safe`, direct navigation to those pages yields a 404/redirect and no “signals-like” wording appears anywhere.

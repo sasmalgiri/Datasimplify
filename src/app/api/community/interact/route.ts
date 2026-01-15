@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   votePrediction,
   addPredictionComment,
@@ -25,6 +26,10 @@ function supabaseRequiredResponse() {
 
 // GET - Get comments or check follow status
 export async function GET(request: Request) {
+  if (!isFeatureEnabled('community')) {
+    return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
@@ -104,6 +109,10 @@ export async function GET(request: Request) {
 
 // POST - Vote, comment, follow
 export async function POST(request: Request) {
+  if (!isFeatureEnabled('community')) {
+    return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
+  }
+
   try {
     const body = await request.json();
     const { action } = body;

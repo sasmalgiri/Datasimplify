@@ -54,11 +54,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check download limit (unless premium - unlimited downloads)
+    // Check download limit (unless premium - unlimited template downloads)
     if (profile.subscription_tier !== 'premium') {
       if (profile.downloads_this_month >= profile.downloads_limit) {
         return NextResponse.json({
-          error: 'Download limit reached',
+          error: 'Template download limit reached',
           limit: profile.downloads_limit,
           used: profile.downloads_this_month,
           upgrade: true,

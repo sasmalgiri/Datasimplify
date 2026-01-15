@@ -290,7 +290,7 @@ export default function DashboardPage() {
               <div>
                 <h3 className="text-xl font-bold mb-2">🚀 Upgrade for More Downloads</h3>
                 <p className="text-gray-600">
-                  Get unlimited downloads, advanced analytics, and priority support.
+                  Get more template downloads, advanced analytics, and priority support.
                 </p>
               </div>
               <div className="flex gap-3">
@@ -320,8 +320,8 @@ export default function DashboardPage() {
             className="bg-white rounded-lg p-6 border border-gray-200 hover:border-blue-500 transition shadow-sm"
           >
             <div className="text-3xl mb-2">📊</div>
-            <h3 className="font-medium">Download Data</h3>
-            <p className="text-gray-600 text-sm">Excel, CSV, JSON</p>
+            <h3 className="font-medium">Download Templates</h3>
+            <p className="text-gray-600 text-sm">Excel templates (CryptoSheets)</p>
           </Link>
           <Link
             href="/compare"
