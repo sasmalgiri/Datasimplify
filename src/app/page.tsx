@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
+import QuickActionsCard from '@/components/QuickActionsCard';
 import { isFeatureEnabled, isPaddleSafe } from '@/lib/featureFlags';
 
 // Verification types
@@ -199,33 +201,15 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Highlight */}
+          {/* Main Feature Cards - Template Finder + Quick Actions */}
           <div className="grid md:grid-cols-2 gap-4">
-            {isFeatureEnabled('smartContractVerifier') && <SafeContractPreview />}
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 h-full">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-white">Research Workspace</h3>
-                  <p className="text-gray-400 text-xs">Charts, comparisons, and downloads</p>
-                </div>
-                <Link href="/research" className="text-blue-400 text-xs hover:text-blue-300 transition">
-                  Open →
-                </Link>
-              </div>
-              <p className="text-gray-300 text-sm">
-                Education-first analytics and visualization. No predictions, signals, or trade calls.
-              </p>
-              <div className="mt-4 flex gap-2">
-                <Link href="/templates" className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm hover:bg-white/20 transition">
-                  Download
-                </Link>
-                <Link href="/charts" className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm hover:bg-white/20 transition">
-                  Charts
-                </Link>
-                <Link href="/compare" className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm hover:bg-white/20 transition">
-                  Compare
-                </Link>
-              </div>
+            {/* Template Finder - Smart search for finding the right template */}
+            <HomepageTemplateFinder />
+
+            {/* Quick Actions - Fast navigation + optional SafeContract */}
+            <div className="flex flex-col gap-4">
+              {isFeatureEnabled('smartContractVerifier') && <SafeContractPreview />}
+              <QuickActionsCard className={isFeatureEnabled('smartContractVerifier') ? 'h-auto' : ''} />
             </div>
           </div>
         </div>

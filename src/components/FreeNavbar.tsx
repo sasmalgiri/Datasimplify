@@ -52,7 +52,8 @@ function NavDropdown({ label, icon, items, isActive }: NavDropdownProps) {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-1 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden z-50">
-          <div className="p-2">
+          {/* Scrollable container with max height for uniform dropdown size */}
+          <div className="max-h-[350px] overflow-y-auto dropdown-scroll p-2">
             {items.map((item) => (
               <Link
                 key={item.href}

@@ -50,7 +50,7 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
       id: '1',
       type: 'assistant',
       content:
-        "Hi! I'm your Report Assistant. Tell me what kind of report you need, and I'll help you get it set up.\n\nFor example: \"I want a weekly report of BTC, ETH, SOL with charts\" or just pick a type below.",
+        "Welcome to Template Finder! Describe what you're looking for in your own words, and I'll match you with the right template.\n\nExample: \"track bitcoin weekly\" or \"compare my coins\" - or pick a type below.",
       quickReplies: REPORT_TYPE_QUICK_REPLIES,
     },
   ]);
@@ -416,8 +416,8 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
             </svg>
           </div>
           <div>
-            <h2 className="font-bold text-white">Report Assistant</h2>
-            <p className="text-sm text-gray-400">Describe what you need, I'll find the right report</p>
+            <h2 className="font-bold text-white">Template Finder</h2>
+            <p className="text-sm text-gray-400">Search templates by keyword. Setup guidance included.</p>
           </div>
         </div>
       </div>
@@ -532,7 +532,7 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center">
-          I help with reports only. No trading advice, predictions, or buy/sell signals.
+          Keyword search tool - matches your words to our template catalog. Not AI analysis.
         </p>
       </form>
     </div>
