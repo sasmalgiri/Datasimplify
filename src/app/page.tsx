@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
 import QuickActionsCard from '@/components/QuickActionsCard';
+import StickySignupButton from '@/components/StickySignupButton';
 import { isFeatureEnabled, isPaddleSafe } from '@/lib/featureFlags';
 
 // Verification types
@@ -149,6 +150,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
+
+      {/* Sticky Sign Up Button - appears on scroll */}
+      <StickySignupButton />
 
       {/* Hero Section */}
       <section className="pt-4 pb-4 px-4">
