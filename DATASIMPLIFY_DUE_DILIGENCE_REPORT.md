@@ -491,9 +491,9 @@ Paddle acts as Merchant of Record (MoR), handling:
 |-------------|--------|----------------|
 | No trading signals/advice | Compliant | `paddle_safe` mode disables predictions |
 | No community-as-product | Compliant | Community feature disabled in paddle_safe |
-| Digital goods only | Compliant | Software + data downloads |
+| Digital goods only | Compliant | Software + template downloads |
 | Clear pricing | Compliant | Public pricing page |
-| Refund policy | Compliant | 14-day no-questions refund |
+| Refund policy | Compliant | 30-day money-back guarantee (plus statutory cooling-off rights where applicable) |
 | No prohibited content | Compliant | Educational disclaimers |
 
 ### Paddle-Safe Mode

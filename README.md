@@ -23,20 +23,18 @@
 
 ### CryptoSheets - Excel Template Generator
 Download professional Excel templates that pull live crypto data:
-- **Interactive Templates** - Power Query formulas that refresh automatically
-- **Native Chart Templates** - Pre-built Excel charts with live data feeds
-- **Embedded Data Templates** - Static snapshots for offline analysis
-- **Formula-Only Templates** - Build your own dashboards with our formulas
+- **Interactive Templates** - CryptoSheets formulas that refresh via your add-in
+- **Native Chart Templates** - Pre-built Excel charts powered by live formulas
+- **Formula-Only Templates** - DIY building blocks (formulas only)
 
-**4 content types available:**
-1. Interactive (Power Query + Auto-refresh)
-2. Native Charts (Excel charts with live data)
-3. Embedded (Static data snapshot)
-4. Formulas Only (DIY building blocks)
+**3 content types available:**
+1. Interactive (CryptoSheets formulas)
+2. Native Charts (Excel charts with live formulas)
+3. Formulas Only (DIY building blocks)
 
 ### Real-Time Market Data
 - **200+ cryptocurrencies** tracked in real-time
-- **Binance** as primary source (fast, reliable, redistributable)
+- Multiple upstream sources (display-only, subject to provider terms)
 - **CoinGecko Analyst** integration (500K API calls/month)
 - **2 years historical data** (daily, hourly, 5-minute intervals)
 
@@ -52,12 +50,12 @@ Download professional Excel templates that pull live crypto data:
 | DeFi | DeFi Dashboard, Global Market, Categories |
 | Tools | Portfolio, Backtest, Alerts, Compare, Predictions |
 | Learn | Academy, Glossary, Research, FAQ |
-| Downloads | CryptoSheets Templates, Data Export |
+| Downloads | CryptoSheets Templates |
 
 ### 24+ Protected API Endpoints
 
 All external data APIs are protected against scraping:
-- `/api/crypto/*` - Market data (Binance primary, CoinGecko fallback)
+- `/api/crypto/*` - Market data (protected; display-only posture)
 - `/api/charts/*` - OHLCV candlestick data
 - `/api/sentiment/*` - Fear & Greed Index
 - `/api/defi/*` - DeFi protocol data (DefiLlama)
@@ -69,11 +67,10 @@ All external data APIs are protected against scraping:
 
 ## Data Sources & Compliance
 
-### Primary: Binance (Redistributable)
+### Primary: Exchange APIs (where enabled)
 - Real-time prices, 24h volume, market cap
-- OHLCV candlestick data (1h, 4h, 1d, 1w intervals)
-- Up to 1000 candles per request (~2.7 years daily data)
-- **No API key required** for public endpoints
+- OHLCV candlestick data (when available)
+- Subject to provider terms and redistribution limits
 
 ### Secondary: CoinGecko Analyst ($103.2/mo)
 - 500,000 API calls/month

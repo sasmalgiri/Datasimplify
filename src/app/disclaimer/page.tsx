@@ -82,7 +82,7 @@ export default function DisclaimerPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Alternative.me (Fear & Greed Index)</li>
-                <li>Binance (Market Data)</li>
+                <li>Exchange APIs (Market Data)</li>
                 <li>CoinGecko (when enabled - display only)</li>
                 <li>DeFiLlama (DeFi metrics)</li>
                 <li>Public blockchain explorers</li>

@@ -321,14 +321,14 @@ export default function GlobalMarketPage() {
           </div>
         )}
 
-        {/* Export Options */}
+        {/* Template Download CTA */}
         <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Globe className="w-6 h-6 text-blue-500" />
-            <h2 className="text-xl font-semibold text-white">Export Market Data</h2>
+            <h2 className="text-xl font-semibold text-white">Download Excel Templates</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download global market data as Excel templates with live CryptoSheets formulas.
+            Get Excel templates with formulas that fetch live data via your CryptoSheets add-in.
           </p>
           <Link
             href="/templates"
