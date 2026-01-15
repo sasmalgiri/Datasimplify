@@ -51,24 +51,27 @@ function NavDropdown({ label, icon, items, isActive }: NavDropdownProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden z-50">
-          {/* Scrollable container with max height for uniform dropdown size */}
-          <div className="max-h-[350px] overflow-y-auto dropdown-scroll p-2">
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-700/50 transition group"
-              >
-                <div className="p-2 rounded-lg bg-gray-700/50 text-emerald-400 group-hover:bg-emerald-500/20">
-                  {item.icon}
-                </div>
-                <div>
-                  <div className="text-white font-medium text-sm">{item.label}</div>
-                  <div className="text-gray-400 text-xs">{item.description}</div>
-                </div>
-              </Link>
-            ))}
+        <div className="absolute top-full left-0 pt-1 w-72 z-50">
+          {/* Invisible bridge to prevent dropdown from closing when mouse moves between button and menu */}
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl overflow-hidden">
+            {/* Scrollable container with max height for uniform dropdown size */}
+            <div className="max-h-[350px] overflow-y-auto dropdown-scroll p-2">
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-700/50 transition group"
+                >
+                  <div className="p-2 rounded-lg bg-gray-700/50 text-emerald-400 group-hover:bg-emerald-500/20">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="text-white font-medium text-sm">{item.label}</div>
+                    <div className="text-gray-400 text-xs">{item.description}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
