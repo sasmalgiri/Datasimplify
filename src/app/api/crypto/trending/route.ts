@@ -3,10 +3,14 @@
  *
  * Returns top trending coins from CoinGecko Analyst API
  * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ * CoinGecko data cannot be redistributed without a Data Redistribution License.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getTrendingCoins, TrendingResponse } from '@/lib/coingecko/client';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Cache trending data for 5 minutes
 let cachedData: {
@@ -19,7 +23,11 @@ let cachedData: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto/trending');
+  if (blocked) return blocked;
+
   try {
     // Check cache first
     const now = Date.now();

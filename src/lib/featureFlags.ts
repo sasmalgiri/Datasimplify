@@ -21,12 +21,13 @@ export const FEATURES = {
   // Data providers
   // CoinGecko: DISPLAY-ONLY mode (UI charts/dashboards only, NO downloads)
   // Requires Analyst plan or higher. Attribution required.
-  // Keep this OFF if you only want redistributable sources.
-  coingecko: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_COINGECKO, false),
+  // In paddle_safe mode: enabled but forced to display-only (no redistribution)
+  coingecko: isFreeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_COINGECKO, isPaddleSafeMode ? true : false),
 
   // CoinGecko display-only mode: when true, CoinGecko data is shown in UI but NOT available for download
   // This is the legally compliant way to use CoinGecko without a redistribution license
-  coingeckoDisplayOnly: parseBool(process.env.NEXT_PUBLIC_COINGECKO_DISPLAY_ONLY, true),
+  // FORCED to true in paddle_safe mode (no data redistribution allowed)
+  coingeckoDisplayOnly: isPaddleSafeMode ? true : parseBool(process.env.NEXT_PUBLIC_COINGECKO_DISPLAY_ONLY, true),
 
   // Social/news aggregation can have higher ToS/redistribution risk.
   // Defaults to OFF even in "full" mode; enable only if you're comfortable with the sources' terms.

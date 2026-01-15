@@ -3,10 +3,14 @@
  *
  * Returns top performing and worst performing coins from CoinGecko
  * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ * CoinGecko data cannot be redistributed without a Data Redistribution License.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getTopGainers, getTopLosers, CoinGeckoCoin } from '@/lib/coingecko/client';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Cache data for 5 minutes
 let cachedData: {
@@ -21,7 +25,11 @@ let cachedData: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto/gainers-losers');
+  if (blocked) return blocked;
+
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'both'; // 'gainers', 'losers', or 'both'

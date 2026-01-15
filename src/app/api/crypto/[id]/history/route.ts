@@ -1,16 +1,39 @@
-import { NextResponse } from 'next/server';
+/**
+ * Coin Price History API Route
+ *
+ * Returns historical price data from Binance (primary) or CoinGecko (fallback)
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ *
+ * ANALYST PLAN LIMITS:
+ * - Daily historical data: 2 years max (730 days)
+ * - Hourly historical data: 2 years max
+ * - 5-minute data: 1 day max
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { getPriceHistory } from '@/lib/coingecko';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
+
+// Analyst plan limit: 2 years of daily historical data
+const MAX_HISTORICAL_DAYS = 730;
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto/[id]/history');
+  if (blocked) return blocked;
+
   const { id } = await params;
   const { searchParams } = new URL(request.url);
-  const days = parseInt(searchParams.get('days') || '30');
+  // Limit to Analyst plan max (2 years = 730 days)
+  const days = Math.min(parseInt(searchParams.get('days') || '30'), MAX_HISTORICAL_DAYS);
 
   try {
     const symbol = getCoinSymbol(id);

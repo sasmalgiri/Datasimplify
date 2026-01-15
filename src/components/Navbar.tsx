@@ -67,9 +67,8 @@ export function Navbar() {
                   {profile && (
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       profile.subscription_tier === 'free' ? 'bg-gray-200 text-gray-700' :
-                      profile.subscription_tier === 'starter' ? 'bg-blue-100 text-blue-700' :
-                      profile.subscription_tier === 'pro' ? 'bg-purple-100 text-purple-700' :
-                      'bg-yellow-100 text-yellow-700'
+                      profile.subscription_tier === 'pro' ? 'bg-blue-100 text-blue-700' :
+                      'bg-purple-100 text-purple-700'
                     }`}>
                       {profile.subscription_tier.charAt(0).toUpperCase() + profile.subscription_tier.slice(1)}
                     </span>

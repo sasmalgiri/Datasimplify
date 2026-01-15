@@ -1,255 +1,46 @@
-// Excel Live Data Template Generator
-// Creates an Excel file with instructions for Power Query live data connections
+// Excel Template Generator (safe, template-oriented)
+//
+// This module intentionally does NOT generate or instruct raw market-data exports.
+// DataSimplify ships Excel templates that rely on third-party spreadsheet add-ins
+// (e.g., CryptoSheets) to fetch data directly within the user’s spreadsheet.
 
 import * as XLSX from 'xlsx';
-import { isDownloadCategoryRedistributableClient } from '@/lib/redistributionPolicyClient';
-
-// Base URL - will be configured based on deployment
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-  return 'https://datasimplify.com'; // Fallback for SSR
-};
-
-// Data categories with their API endpoints
-const DATA_ENDPOINTS = [
-  {
-    category: 'Market Overview',
-    endpoint: '/api/download?category=market_overview&format=json',
-    description: 'Current prices, market cap, volume for all cryptocurrencies',
-    refreshRate: 'Every 10 seconds',
-  },
-  {
-    category: 'Historical Prices (OHLCV)',
-    endpoint: '/api/download?category=historical_prices&format=json&symbol=BTC&interval=1d&limit=100',
-    description: 'Open, High, Low, Close, Volume candlestick data',
-    refreshRate: 'Based on interval',
-  },
-  {
-    category: 'DeFi Protocols (TVL)',
-    endpoint: '/api/download?category=defi_protocols&format=json&limit=50',
-    description: 'Total Value Locked in DeFi protocols',
-    refreshRate: 'Every 10 minutes',
-  },
-  {
-    category: 'Fear & Greed Index',
-    endpoint: '/api/download?category=fear_greed&format=json',
-    description: 'Market sentiment indicator (0-100)',
-    refreshRate: 'Daily',
-  },
-  {
-    category: 'Top Gainers & Losers',
-    endpoint: '/api/download?category=gainers_losers&format=json&type=both&limit=20',
-    description: 'Biggest price movers in 24 hours',
-    refreshRate: 'Every minute',
-  },
-  {
-    category: 'Funding Rates',
-    endpoint: '/api/download?category=funding_rates&format=json',
-    description: 'Perpetual futures funding rates',
-    refreshRate: 'Every 8 hours',
-  },
-  {
-    category: 'Open Interest',
-    endpoint: '/api/download?category=open_interest&format=json',
-    description: 'Total value of outstanding futures contracts',
-    refreshRate: 'Real-time',
-  },
-  {
-    category: 'Whale Transactions',
-    endpoint: '/api/download?category=whale_transactions&format=json',
-    description: 'Large cryptocurrency transactions (>$1M)',
-    refreshRate: 'Every 5 minutes',
-  },
-  {
-    category: 'Technical Indicators',
-    endpoint: '/api/download?category=technical_indicators&format=json',
-    description: 'RSI, MACD, Moving Averages, Bollinger Bands',
-    refreshRate: 'Based on interval',
-  },
-  {
-    category: 'NFT Collections',
-    endpoint: '/api/download?category=nft_collections&format=json&limit=50',
-    description: 'Top NFT collections by volume and floor price',
-    refreshRate: 'Every 5 minutes',
-  },
-];
-
-function extractCategoryId(endpoint: string): string {
-  try {
-    const url = new URL(endpoint, 'https://datasimplify.com');
-    return (url.searchParams.get('category') || '').trim();
-  } catch {
-    const match = endpoint.match(/[?&]category=([^&]+)/i);
-    return match ? decodeURIComponent(match[1] || '').trim() : '';
-  }
-}
-
-function getAllowedDataEndpoints() {
-  return DATA_ENDPOINTS.filter((e) => {
-    const categoryId = extractCategoryId(e.endpoint);
-    if (!categoryId) return false;
-    return isDownloadCategoryRedistributableClient(categoryId);
-  });
-}
 
 /**
- * Generate an Excel template with live data connection instructions
+ * Generate a lightweight Excel template containing setup instructions.
+ * This is a template file (not a data export).
  */
 export function generateLiveDataTemplate(): Uint8Array {
-  const baseUrl = getBaseUrl();
   const wb = XLSX.utils.book_new();
 
-  const allowedEndpoints = getAllowedDataEndpoints();
-  const firstAllowedEndpoint = allowedEndpoints[0]?.endpoint || '/api/download?category=market_overview&format=json';
-
-  // =====================
-  // Sheet 1: Instructions
-  // =====================
   const instructionsData = [
-    ['DataSimplify Live Data Template'],
+    ['DataSimplify Template Setup'],
     [''],
-    ['HOW TO GET LIVE DATA IN EXCEL'],
+    ['WHAT THIS IS'],
+    ['• This is an Excel template file (.xlsx). It does not include raw market data exports.'],
     [''],
-    ['Method 1: Power Query (Recommended for Excel Desktop)'],
-    ['1. Go to Data tab → Get Data → From Other Sources → From Web'],
-    ['2. Paste one of the URLs from the "Data URLs" sheet'],
-    ['3. Click OK and follow the prompts to transform JSON to table'],
-    ['4. Right-click the query → Properties → Enable "Refresh every X minutes"'],
-    [''],
-    ['Method 2: WEBSERVICE + JSON Functions (Excel 365)'],
-    ['1. Use =WEBSERVICE(url) to fetch data'],
-    ['2. Parse with FILTERXML or custom functions'],
-    [''],
-    ['HOW TO GET LIVE DATA IN GOOGLE SHEETS'],
-    [''],
-    ['Method 1: IMPORTDATA (for CSV)'],
-    ['=IMPORTDATA("' + baseUrl + '/api/download?category=market_overview&format=csv")'],
-    [''],
-    ['Method 2: IMPORTJSON (requires Google Apps Script)'],
-    ['1. Go to Extensions → Apps Script'],
-    ['2. Add the ImportJSON library'],
-    ['3. Use =IMPORTJSON(url) function'],
-    [''],
-    ['AVAILABLE DATA CATEGORIES'],
-    ['See the "Data URLs" sheet for available endpoints'],
+    ['RECOMMENDED SETUP (EXCEL DESKTOP)'],
+    ['1) Open this file in Microsoft Excel Desktop (Windows/Mac).'],
+    ['2) Install and enable your spreadsheet data add-in (e.g., CryptoSheets).'],
+    ['3) Sign in to your add-in account.'],
+    ['4) Use the template sheets as a starting point for your dashboard/report.'],
     [''],
     ['NOTES'],
-    ['• Free tier: 5 downloads/month limit'],
-    ['• Data sources depend on your deployment configuration'],
-    ['• All times are in UTC'],
-    ['• For API documentation, visit ' + baseUrl + '/download'],
+    ['• Avoid sharing or redistributing third-party market data; follow your data provider’s terms.'],
   ];
+
   const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
-  wsInstructions['!cols'] = [{ wch: 80 }];
+  wsInstructions['!cols'] = [{ wch: 90 }];
   XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
 
-  // =====================
-  // Sheet 2: Data URLs
-  // =====================
-  const urlsHeader = ['Category', 'JSON URL', 'CSV URL', 'Description', 'Refresh Rate'];
-  const urlsData = allowedEndpoints.map(ep => [
-    ep.category,
-    baseUrl + ep.endpoint,
-    baseUrl + ep.endpoint.replace('format=json', 'format=csv'),
-    ep.description,
-    ep.refreshRate,
-  ]);
-  const wsUrls = XLSX.utils.aoa_to_sheet([urlsHeader, ...urlsData]);
-  wsUrls['!cols'] = [
-    { wch: 25 },
-    { wch: 70 },
-    { wch: 70 },
-    { wch: 45 },
-    { wch: 18 },
-  ];
-  XLSX.utils.book_append_sheet(wb, wsUrls, 'Data URLs');
-
-  // =====================
-  // Sheet 3: Power Query Guide
-  // =====================
-  const powerQueryGuide = [
-    ['Power Query Step-by-Step Guide'],
-    [''],
-    ['STEP 1: Open Power Query Editor'],
-    ['• Go to Data tab → Get Data → Launch Power Query Editor'],
-    [''],
-    ['STEP 2: Create New Query from Web'],
-    ['• Click "New Source" → Web'],
-    ['• Paste this URL:'],
-    [baseUrl + firstAllowedEndpoint],
-    [''],
-    ['STEP 3: Transform JSON to Table'],
-    ['• Click "To Table" if prompted'],
-    ['• Expand the "data" column'],
-    ['• Select columns you want to keep'],
-    [''],
-    ['STEP 4: Set Up Auto-Refresh'],
-    ['• Right-click your query in the Queries pane'],
-    ['• Select "Properties"'],
-    ['• Check "Refresh every X minutes"'],
-    ['• Check "Refresh data when opening the file"'],
-    [''],
-    ['STEP 5: Load Data to Worksheet'],
-    ['• Click "Close & Load"'],
-    ['• Data will appear in a new sheet'],
-    ['• It will refresh automatically based on your settings'],
-    [''],
-    ['TIPS'],
-    ['• Create multiple queries for different data types'],
-    ['• Use "Append Queries" to combine data sources'],
-    ['• Save your workbook as .xlsx (macros not required)'],
-  ];
-  const wsPowerQuery = XLSX.utils.aoa_to_sheet(powerQueryGuide);
-  wsPowerQuery['!cols'] = [{ wch: 70 }];
-  XLSX.utils.book_append_sheet(wb, wsPowerQuery, 'Power Query Guide');
-
-  // =====================
-  // Sheet 4: Google Sheets Guide
-  // =====================
-  const googleSheetsGuide = [
-    ['Google Sheets Live Data Guide'],
-    [''],
-    ['METHOD 1: IMPORTDATA (Simple - CSV Format)'],
-    [''],
-    ['Paste this formula in any cell:'],
-    ['=IMPORTDATA("' + baseUrl + firstAllowedEndpoint.replace('format=json', 'format=csv') + '")'],
-    [''],
-    ['NOTE: IMPORTDATA refreshes approximately every hour automatically.'],
-    [''],
-    ['METHOD 2: Apps Script (Advanced - JSON Format)'],
-    [''],
-    ['1. Go to Extensions → Apps Script'],
-    ['2. Create a new script with this code:'],
-    [''],
-    ['function IMPORTJSON(url) {'],
-    ['  var response = UrlFetchApp.fetch(url);'],
-    ['  var json = JSON.parse(response.getContentText());'],
-    ['  var data = json.data;'],
-    ['  if (!data || !data.length) return [["No data"]];'],
-    ['  var headers = Object.keys(data[0]);'],
-    ['  var rows = data.map(row => headers.map(h => row[h]));'],
-    ['  return [headers, ...rows];'],
-    ['}'],
-    [''],
-    ['3. Save and refresh your spreadsheet'],
-    ['4. Use =IMPORTJSON("url") in any cell'],
-  ];
-  const wsGoogleSheets = XLSX.utils.aoa_to_sheet(googleSheetsGuide);
-  wsGoogleSheets['!cols'] = [{ wch: 85 }];
-  XLSX.utils.book_append_sheet(wb, wsGoogleSheets, 'Google Sheets Guide');
-
-  // Generate buffer
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
 }
 
 /**
- * Download the live data template in browser
+ * Trigger download of the template in-browser.
  */
 export function downloadLiveDataTemplate(): void {
   const data = generateLiveDataTemplate();
-  // Create a new Uint8Array to ensure proper ArrayBuffer type
   const buffer = new Uint8Array(data);
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -257,7 +48,7 @@ export function downloadLiveDataTemplate(): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `DataSimplify_Live_Data_Template_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.download = `DataSimplify_Template_${new Date().toISOString().split('T')[0]}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

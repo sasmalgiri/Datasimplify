@@ -126,7 +126,7 @@ export interface UserDownload {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  tier: 'free' | 'starter' | 'pro' | 'business';
+  tier: 'free' | 'pro' | 'premium';
   paddle_customer_id?: string;
   paddle_subscription_id?: string;
   status: 'active' | 'canceled' | 'past_due';
@@ -134,7 +134,7 @@ export interface UserSubscription {
 }
 
 export interface SubscriptionTier {
-  id: 'free' | 'starter' | 'pro' | 'business';
+  id: 'free' | 'pro' | 'premium';
   name: string;
   price: number;
   downloads_per_month: number;

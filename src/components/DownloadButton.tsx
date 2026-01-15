@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Download, FileSpreadsheet, FileText, Loader2, ChevronDown, AlertCircle } from 'lucide-react';
 import { CoinMarketData } from '@/types/crypto';
 import { downloadExcel, downloadCSV } from '@/lib/export';
@@ -21,6 +22,8 @@ export default function DownloadButton({
   size = 'md',
   showDropdown = true,
 }: DownloadButtonProps) {
+  const exportsEnabled = (process.env.NEXT_PUBLIC_ENABLE_DATA_EXPORTS || '').trim().toLowerCase() === 'true';
+
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -150,6 +153,18 @@ export default function DownloadButton({
     md: 'px-4 py-2',
     lg: 'px-6 py-3 text-lg',
   };
+
+  if (!exportsEnabled) {
+    return (
+      <Link
+        href="/templates"
+        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]}`}
+      >
+        <FileSpreadsheet className="w-4 h-4" />
+        Get Excel Template
+      </Link>
+    );
+  }
 
   // Show remaining downloads badge
   const DownloadsBadge = () => {

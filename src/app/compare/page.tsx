@@ -339,49 +339,6 @@ export default function ComparePage() {
     return `${sign}${pct.toFixed(2)}%`;
   };
 
-  // Download as CSV/Excel
-  const downloadData = (format: 'csv' | 'json') => {
-    if (coins.length === 0) return;
-
-    const data = coins.map(coin => ({
-      Name: coin.name,
-      Symbol: coin.symbol.toUpperCase(),
-      Rank: coin.market_cap_rank,
-      Price: coin.current_price,
-      '24h Change %': typeof coin.price_change_percentage_24h === 'number' ? coin.price_change_percentage_24h.toFixed(2) : 'Unavailable',
-      '7d Change %': typeof coin.price_change_percentage_7d_in_currency === 'number' ? coin.price_change_percentage_7d_in_currency.toFixed(2) : 'Unavailable',
-      '30d Change %': typeof coin.price_change_percentage_30d_in_currency === 'number' ? coin.price_change_percentage_30d_in_currency.toFixed(2) : 'Unavailable',
-      'Market Cap': coin.market_cap,
-      'FDV': typeof coin.fully_diluted_valuation === 'number' ? coin.fully_diluted_valuation : 'Unavailable',
-      'Volume 24h': coin.total_volume,
-      'Circulating Supply': coin.circulating_supply,
-      'Max Supply': typeof coin.max_supply === 'number' ? coin.max_supply : 'Unavailable',
-      'ATH': coin.ath,
-      'ATH Change %': typeof coin.ath_change_percentage === 'number' ? coin.ath_change_percentage.toFixed(2) : 'Unavailable',
-      'ATL': coin.atl,
-      'ATL Change %': typeof coin.atl_change_percentage === 'number' ? coin.atl_change_percentage.toFixed(2) : 'Unavailable',
-    }));
-
-    if (format === 'json') {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `crypto-comparison-${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-    } else {
-      const headers = Object.keys(data[0]);
-      const rows = data.map(row => headers.map(h => (row as Record<string, unknown>)[h]));
-      const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `crypto-comparison-${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-    }
-  };
-
   // Find best/worst for highlighting
   const getBestWorst = (field: keyof Coin) => {
     if (coins.length === 0) return { best: '', worst: '' };
@@ -837,7 +794,7 @@ export default function ComparePage() {
         <div className="mt-8 text-center text-gray-400 text-sm">
           <p>Data from exchange market data • Updates frequently • 50+ coins available</p>
           <p className="mt-2">
-            Need more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for historical charts, alerts, and AI analysis!
+            Need more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for historical charts, alerts, and advanced analytics!
           </p>
         </div>
       </div>

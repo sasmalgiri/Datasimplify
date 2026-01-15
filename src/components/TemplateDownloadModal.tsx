@@ -46,12 +46,6 @@ const CONTENT_OPTIONS: ContentOption[] = [
     badgeColor: 'bg-blue-500',
   },
   {
-    id: 'full',
-    name: 'Embedded Charts',
-    description: 'Basic Excel chart definitions included. Charts render when opened in Excel.',
-    icon: '📈',
-  },
-  {
     id: 'formulas_only',
     name: 'Formulas Only',
     description: 'Just CryptoSheets formulas, no charts. Smallest file size, fastest loading.',
@@ -63,7 +57,7 @@ const CONTENT_OPTIONS: ContentOption[] = [
  * Template Download Modal
  *
  * Gates template downloads with clear requirements and warnings.
- * Offers 3 content types: Interactive Charts (Add-in), Embedded Charts, Formulas Only
+ * Offers 3 content types: Interactive Charts (Add-in), Native Excel Charts, Formulas Only
  */
 export function TemplateDownloadModal({
   isOpen,
@@ -75,7 +69,7 @@ export function TemplateDownloadModal({
   const [understood, setUnderstood] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<'xlsx' | 'xlsm'>('xlsx');
-  const [contentType, setContentType] = useState<ContentType>('full');
+  const [contentType, setContentType] = useState<ContentType>('addin');
   const [error, setError] = useState<string | null>(null);
 
   const handleDownload = async () => {

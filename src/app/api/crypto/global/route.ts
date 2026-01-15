@@ -1,11 +1,25 @@
-import { NextResponse } from 'next/server';
+/**
+ * Global Market Stats API Route
+ *
+ * Returns global market statistics derived from Binance
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto/global');
+  if (blocked) return blocked;
+
   try {
     assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/global' });
     // Redistributable-only mode: derive stats from Binance tickers for our SUPPORTED_COINS universe.

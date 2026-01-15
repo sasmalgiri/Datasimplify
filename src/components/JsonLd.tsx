@@ -6,7 +6,7 @@ export function OrganizationJsonLd() {
     name: 'DataSimplify',
     url: 'https://datasimplify.com',
     logo: 'https://datasimplify.com/logo.png',
-    description: 'Crypto data platform with market data downloads and optional analytics tools (availability depends on configuration).',
+    description: 'Software analytics tooling providing Excel templates with CryptoSheets formulas for crypto research and portfolio tracking.',
     sameAs: [
       'https://twitter.com/datasimplify',
       'https://linkedin.com/company/datasimplify',
@@ -32,7 +32,7 @@ export function WebsiteJsonLd() {
     '@type': 'WebSite',
     name: 'DataSimplify',
     url: 'https://datasimplify.com',
-    description: 'Crypto research tools with charts, comparisons, and Excel downloads powered by CryptoSheets.',
+    description: 'Crypto research software providing interactive charts, comparisons, and Excel templates powered by CryptoSheets formulas.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -65,11 +65,11 @@ export function SoftwareApplicationJsonLd() {
       description: 'Free tier available',
     },
     featureList: [
-      'Crypto market data',
-      'Interactive charts and comparisons',
+      'Interactive market charts and analytics',
+      'Coin comparisons and correlations',
       'Fear & Greed Index tracking',
-      'Excel downloads powered by CryptoSheets',
-      'Educational analytics tools',
+      'Excel templates with CryptoSheets formulas',
+      'Educational visualization tools',
       'No coding required',
     ],
   };
@@ -86,19 +86,19 @@ export function FAQJsonLd() {
   const faqs = [
     {
       question: 'What is DataSimplify?',
-      answer: 'DataSimplify is a crypto research platform that provides charts, comparisons, and Excel downloads powered by CryptoSheets for educational analysis.',
+      answer: 'DataSimplify is software analytics tooling that provides interactive charts, comparisons, and Excel templates with CryptoSheets formulas for educational crypto research.',
     },
     {
       question: 'Is DataSimplify free to use?',
-      answer: 'Yes! DataSimplify offers a free tier with charts, comparisons, and basic downloads. Premium plans are available for advanced features.',
+      answer: 'Yes! DataSimplify offers a free tier with charts, comparisons, and template downloads. Pro and Premium plans are available for more templates and features.',
     },
     {
       question: 'What analytics does DataSimplify provide?',
-      answer: 'DataSimplify provides market analytics using multiple data sources including market data, sentiment analysis, and on-chain metrics. All analytics are for educational purposes only and should not be considered financial advice.',
+      answer: 'DataSimplify provides educational visualization tools for market analytics, sentiment analysis, and comparisons. All content is for educational purposes only and should not be considered financial advice.',
     },
     {
-      question: 'How do Excel downloads work?',
-      answer: 'Excel downloads are powered by CryptoSheets - they contain formulas that connect to live data when opened in Excel with the CryptoSheets add-in installed. Configure your view on DataSimplify, then download.',
+      question: 'How do Excel templates work?',
+      answer: 'Excel templates contain CryptoSheets formulas that fetch live data when opened in Excel with the CryptoSheets add-in installed. Templates do not contain embedded market data.',
     },
   ];
 

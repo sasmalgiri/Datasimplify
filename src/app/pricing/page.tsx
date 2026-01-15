@@ -33,21 +33,30 @@ function HelpIcon({ text }: { text: string }) {
 
 // Feature explanations for tooltips
 const FEATURE_EXPLANATIONS: Record<string, string> = {
-  '5 templates per month': 'Generate up to 5 Excel templates with CryptoSheets formulas each month.',
-  '50 templates per month': 'More monthly template generations for regular workflows.',
-  'Unlimited templates': 'No monthly template generation limits.',
-  'Basic templates (XLSX)': 'Excel templates with CryptoSheets formulas for data visualization.',
-  'All template types': 'Access to all template categories: screener, compare, risk, watchlist.',
-  'Custom template configurations': 'Configure templates with your preferred coins, timeframes, and metrics.',
+  // Free tier
+  '5 templates per month': 'Generate up to 5 Excel templates with CryptoSheets formulas each month. Templates run on your CryptoSheets account.',
+  'Basic market dashboards': 'Access to market overview, trending coins, and gainers/losers displays on our website.',
+  'Community support': 'Help via community resources and documentation.',
+  'Basic templates (XLSX)': 'Excel templates with CryptoSheets formulas. Data is fetched via your CryptoSheets account.',
+  'Low-Quota Mode (5-10 assets)': 'Templates configured for CryptoSheets Free tier (100 calls/day). Manual refresh only.',
+
+  // Pro tier
+  '50 templates per month': 'Generate up to 50 Excel templates per month for regular workflows.',
+  'All template types': 'Access to all template categories: screener, compare, risk, watchlist, and more.',
+  'Advanced analytics dashboards': 'Full access to on-chain, sentiment, technical, and correlation analysis on our website.',
+  'Pro Mode templates (up to 100 assets)': 'Templates supporting larger watchlists. Requires CryptoSheets Pro plan.',
+  'All timeframe options': 'Use hourly, 4-hour, daily, and weekly timeframes in templates.',
+  'Email support': 'Email support with 24-48 hour response time for account and billing questions.',
+  'Export to multiple formats': 'Download templates in XLSX with native Excel charts.',
+
+  // Premium tier
+  'Unlimited templates': 'No monthly limits on template generation.',
+  'Everything in Pro': 'All Pro tier features included.',
   'Priority template generation': 'Faster template generation with dedicated processing.',
-  'Educational dashboards': 'Access to display-only dashboards for educational data visualization.',
-  'Community support': 'Help via community resources and docs.',
-  'Email support': 'Email support for account and billing questions.',
-  'Priority support': 'Faster response times for paid tiers.',
-  'Everything in Pro': 'All Pro features included.',
   'API access (authenticated)': 'Use authenticated endpoints for integrations and automation.',
-  'Higher limits by request': 'If you need higher limits, we can discuss a tailored setup.',
-  'Priority onboarding (email)': 'Help getting your template workflow set up.',
+  'Priority support (4hr response)': 'Priority support with 4-hour response time during business hours.',
+  'Custom integrations': 'Work with our team to build custom template integrations for your workflow.',
+  'White-label options': 'Remove DataSimplify branding for business use (subject to agreement).',
 };
 
 interface PricingInfo {
@@ -222,55 +231,53 @@ export default function PricingPage() {
       name: 'Free',
       key: 'free',
       price: 0,
+      description: 'Try our templates',
       features: [
         '5 templates per month',
         'Basic templates (XLSX)',
-        'Educational dashboards',
+        'Low-Quota Mode (5-10 assets)',
+        'Basic market dashboards',
         'Community support',
       ],
-      cta: 'Get Started',
+      cta: 'Get Started Free',
       popular: false,
-    },
-    {
-      name: 'Starter',
-      key: 'starter',
-      price: 19,
-      features: [
-        '50 templates per month',
-        'All template types',
-        'Custom template configurations',
-        'Email support',
-      ],
-      cta: 'Subscribe',
-      popular: false,
+      note: 'Templates run on your CryptoSheets account',
     },
     {
       name: 'Pro',
       key: 'pro',
-      price: 49,
+      price: 29,
+      description: 'For regular workflows',
       features: [
-        'Unlimited templates',
+        '50 templates per month',
         'All template types',
-        'Priority template generation',
-        'Educational dashboards',
-        'Priority support',
+        'Pro Mode templates (up to 100 assets)',
+        'All timeframe options',
+        'Advanced analytics dashboards',
+        'Export to multiple formats',
+        'Email support',
       ],
-      cta: 'Subscribe',
+      cta: 'Start Pro Trial',
       popular: true,
+      note: 'Larger templates may require CryptoSheets Pro',
     },
     {
-      name: 'Business',
-      key: 'business',
-      price: 99,
+      name: 'Premium',
+      key: 'premium',
+      price: 79,
+      description: 'For power users & businesses',
       features: [
         'Everything in Pro',
+        'Unlimited templates',
+        'Priority template generation',
         'API access (authenticated)',
-        'Higher limits by request',
-        'Priority onboarding (email)',
-        'Priority support',
+        'Priority support (4hr response)',
+        'Custom integrations',
+        'White-label options',
       ],
-      cta: 'Subscribe',
+      cta: 'Go Premium',
       popular: false,
+      note: 'Best for high-volume template usage',
     },
   ];
 
@@ -318,39 +325,47 @@ export default function PricingPage() {
           {/* Title */}
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <h1 className="text-4xl font-bold">Software Tools & Templates</h1>
-              <HelpIcon text="Choose a plan based on how many templates you need. Templates contain formulas only - data is fetched via CryptoSheets add-in. Cancel anytime." />
+              <h1 className="text-4xl font-bold">Templates & Workflows</h1>
+              <HelpIcon text="We sell Excel template software and workflows, not data. Templates contain CryptoSheets formulas. Data is fetched via your CryptoSheets account. Cancel anytime." />
             </div>
             <p className="text-gray-600 text-lg mb-2">
-              Excel templates powered by CryptoSheets. Start free, upgrade anytime.
+              Professional Excel templates with CryptoSheets formulas. Start free, upgrade anytime.
             </p>
             <p className="text-gray-500">
               All prices in USD • Paddle handles all taxes automatically
             </p>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+              <span>💡</span>
+              <span>
+                <strong>Note:</strong> Templates run on your CryptoSheets account. Data usage depends on your CryptoSheets plan and refresh settings.
+              </span>
+            </div>
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {tiers.map((tier) => (
               <div
                 key={tier.key}
-                className={`bg-white rounded-lg border ${
-                  tier.popular ? 'border-blue-500 ring-2 ring-blue-500' : 'border-gray-200'
-                } p-6 relative shadow-sm`}
+                className={`bg-white rounded-xl border-2 ${
+                  tier.popular ? 'border-emerald-500 ring-2 ring-emerald-500 scale-105' : 'border-gray-200'
+                } p-6 relative shadow-lg`}
               >
                 {tier.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      MOST POPULAR
+                    <span className="bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full">
+                      BEST VALUE
                     </span>
                   </div>
                 )}
 
-                <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
+                <h3 className="text-2xl font-bold mb-1">{tier.name}</h3>
+                <p className="text-gray-500 text-sm mb-4">{tier.description}</p>
 
                 <div className="mb-6">
-                  <span className="text-4xl font-bold">${tier.price}</span>
+                  <span className="text-5xl font-bold">${tier.price}</span>
                   {tier.price > 0 && <span className="text-gray-600">/month</span>}
+                  {tier.price === 0 && <span className="text-gray-600 ml-2">forever</span>}
                 </div>
 
                 <ul className="space-y-3 mb-6">
@@ -376,11 +391,12 @@ export default function PricingPage() {
                   </Link>
                 ) : (
                   <button
+                    type="button"
                     onClick={() => handleSubscribe(tier.key)}
                     disabled={isProcessing || profile?.subscription_tier === tier.key || pricingInfo?.blocked}
                     className={`w-full py-3 rounded-lg font-medium transition ${
                       tier.popular
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
@@ -392,6 +408,11 @@ export default function PricingPage() {
                       ? 'Coming Soon'
                       : tier.cta}
                   </button>
+                )}
+
+                {/* Tier note about CryptoSheets dependency */}
+                {'note' in tier && tier.note && (
+                  <p className="mt-3 text-xs text-gray-500 text-center">{tier.note}</p>
                 )}
               </div>
             ))}
@@ -416,16 +437,24 @@ export default function PricingPage() {
             <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="font-bold mb-2">Do I need CryptoSheets to use templates?</h3>
+                <p className="text-gray-600">Yes. Our templates contain CryptoSheets formulas. You need the free CryptoSheets add-in installed and a CryptoSheets account for data to populate.</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="font-bold mb-2">What do I get with my plan?</h3>
+                <p className="text-gray-600">You get access to our template software and workflows. Data comes from your CryptoSheets account. We sell templates, not data.</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Can I cancel anytime?</h3>
                 <p className="text-gray-600">Yes! Cancel anytime. You&apos;ll keep access until the end of your billing period.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">What payment methods do you accept?</h3>
-                <p className="text-gray-600">Credit/debit cards and PayPal. All major currencies supported.</p>
+                <h3 className="font-bold mb-2">What about CryptoSheets limits?</h3>
+                <p className="text-gray-600">Free CryptoSheets tier is 100 calls/day. Our Low-Quota Mode (5-10 assets, manual refresh) fits within this. Larger templates may need CryptoSheets Pro.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">Do you offer refunds?</h3>
-                <p className="text-gray-600">Refunds are available according to our refund policy.</p>
+                <h3 className="font-bold mb-2">What payment methods do you accept?</h3>
+                <p className="text-gray-600">Credit/debit cards and PayPal. All major currencies supported.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Is tax included?</h3>
@@ -437,8 +466,9 @@ export default function PricingPage() {
           {/* Disclaimer */}
           <div className="mt-12 p-4 bg-gray-100 rounded-lg border border-gray-200">
             <p className="text-gray-500 text-xs text-center">
-              <strong>Disclaimer:</strong> DataSimplify provides software analytics tools and Excel templates for educational purposes only.
-              Templates contain formulas only - no market data is embedded. Data is fetched via the CryptoSheets add-in on your machine.
+              <strong>Disclaimer:</strong> DataSimplify sells template software and workflows, not data.
+              Templates contain CryptoSheets formulas - data is fetched via your CryptoSheets account.
+              Data usage depends on your CryptoSheets plan and refresh settings. Free CryptoSheets users may hit monthly request limits.
               We do not provide financial advice, trading signals, or investment recommendations. Not a data vendor or broker.
             </p>
           </div>

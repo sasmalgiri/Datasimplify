@@ -3,14 +3,26 @@
  * Returns price history data for charts
  * Uses Binance API as primary source
  * Falls back to CoinGecko if enabled
+ *
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ *
+ * ANALYST PLAN LIMITS:
+ * - Daily historical data: 2 years max (730 days)
+ * - Hourly historical data: 2 years max
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+// Analyst plan limit: 2 years of historical data
+const MAX_HISTORICAL_DAYS = 730;
 
 type MarketChart = {
   prices: [number, number][];
@@ -81,11 +93,16 @@ async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<
   return data;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/charts/history');
+  if (blocked) return blocked;
+
   try {
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin') || 'bitcoin';
-    const days = parseInt(searchParams.get('days') || '30');
+    // Limit to Analyst plan max (2 years = 730 days)
+    const days = Math.min(parseInt(searchParams.get('days') || '30'), MAX_HISTORICAL_DAYS);
 
     // Try Binance first (supports up to 1000 daily candles = ~2.7 years)
     const binanceSymbol = getCoinSymbol(coin);

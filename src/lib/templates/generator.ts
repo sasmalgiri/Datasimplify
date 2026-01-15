@@ -16,19 +16,18 @@ import { getChartsForTemplate, CHART_COLORS, type ChartConfig } from './chartDef
 
 /**
  * Content type options for template generation
- * - 'full': CryptoSheets formulas + embedded Excel charts (default)
- * - 'formulas_only': Only CryptoSheets formulas, no charts
- * - 'addin': CryptoSheets formulas + Office.js Add-in for interactive ChartJS charts
+ * - 'addin': CryptoSheets formulas + Office.js Add-in for interactive ChartJS charts (default)
  * - 'native_charts': CryptoSheets formulas + chart-ready data layout (no add-in needed for charts)
+ * - 'formulas_only': Only CryptoSheets formulas, no charts
  */
-export type ContentType = 'full' | 'formulas_only' | 'addin' | 'native_charts';
+export type ContentType = 'formulas_only' | 'addin' | 'native_charts';
 
 export interface UserTemplateConfig {
   templateType: TemplateType;
   coins: string[]; // User-selected coins (e.g., ["BTC", "ETH", "SOL"])
   timeframe: string; // '24h', '7d', '30d', '1y'
   currency: string; // 'USD', 'EUR', 'BTC', 'ETH'
-  contentType?: ContentType; // Type of content to generate (default: 'full')
+  contentType?: ContentType; // Type of content to generate (default: 'addin')
   customizations: {
     includeCharts: boolean;
     metricsList?: string[];
@@ -103,16 +102,16 @@ const DATA_BAR_COLORS = {
  * Generate Excel template with CryptoSheets formulas using ExcelJS
  *
  * Supports three content types:
- * - 'full': Formulas + embedded Excel charts (default)
+ * - 'addin': Formulas + instructions for Office.js Add-in (interactive ChartJS charts) - default
+ * - 'native_charts': Formulas + chart-ready data layout (no add-in needed)
  * - 'formulas_only': Only CryptoSheets formulas, no charts (lighter file)
- * - 'addin': Formulas + instructions for Office.js Add-in (interactive ChartJS charts)
  */
 export async function generateTemplate(
   userConfig: UserTemplateConfig,
   format: 'xlsx' | 'xlsm'
 ): Promise<Buffer> {
-  // Determine content type (default to 'full' for backward compatibility)
-  const contentType = userConfig.contentType || 'full';
+  // Determine content type (default to 'addin' for best experience)
+  const contentType = userConfig.contentType || 'addin';
 
   // 1. Get base template config
   const baseTemplate = getTemplateConfig(userConfig.templateType);
@@ -150,21 +149,7 @@ export async function generateTemplate(
   }
 
   // 6. Add CHART sheet based on content type
-  if (contentType === 'full' && userConfig.customizations.includeCharts) {
-    // Full mode: Include embedded Excel charts
-    const chartConfigs = getChartsForTemplate(userConfig.templateType);
-
-    if (chartConfigs.length > 0) {
-      // Create embedded charts sheet with proper dark theme styling
-      await createEmbeddedChartsSheet(workbook, baseTemplate, userConfig, chartConfigs);
-    } else {
-      // Fallback to legacy chart sheet if no new definitions
-      const chartSheets = baseTemplate.sheets.filter((s) => s.type === 'chart');
-      for (const sheetDef of chartSheets) {
-        await createChartSheet(workbook, baseTemplate, userConfig, sheetDef);
-      }
-    }
-  } else if (contentType === 'addin') {
+  if (contentType === 'addin') {
     // Add-in mode: Add instructions for installing Office.js Add-in
     await createAddinInstructionsSheet(workbook, baseTemplate, userConfig);
   } else if (contentType === 'native_charts') {
@@ -192,6 +177,7 @@ export async function generateTemplate(
 
 /**
  * Create the START_HERE setup sheet with dark theme styling matching website
+ * Includes quota-aware messaging and failure state detection
  */
 async function createSetupSheet(
   workbook: ExcelJS.Workbook,
@@ -212,7 +198,7 @@ async function createSetupSheet(
   ];
 
   // Apply dark background to entire visible area
-  for (let r = 1; r <= 50; r++) {
+  for (let r = 1; r <= 70; r++) {
     for (let c = 1; c <= 4; c++) {
       const cell = sheet.getCell(r, c);
       cell.fill = {
@@ -241,34 +227,117 @@ async function createSetupSheet(
   subtitleCell.alignment = { horizontal: 'center' };
   row += 3;
 
-  // Warning box with dark theme styling
-  sheet.mergeCells(`B${row}:C${row + 2}`);
-  const warningCell = sheet.getCell(`B${row}`);
-  warningCell.value = '⚠️ IMPORTANT: This template requires CryptoSheets Excel Add-in to function.\nWithout CryptoSheets, you will see #NAME? errors instead of data.\nGet CryptoSheets free at: https://www.cryptosheets.com/';
-  warningCell.font = { size: 11, color: { argb: COLORS.warning } };
-  warningCell.alignment = { wrapText: true, vertical: 'middle' };
-  warningCell.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: COLORS.bgMedium },
-  };
-  warningCell.border = {
-    top: { style: 'medium', color: { argb: COLORS.warning } },
-    left: { style: 'medium', color: { argb: COLORS.warning } },
-    bottom: { style: 'medium', color: { argb: COLORS.warning } },
-    right: { style: 'medium', color: { argb: COLORS.warning } },
-  };
-  row += 5;
+  // ============ REQUIREMENTS BOX ============
+  sheet.mergeCells(`B${row}:C${row}`);
+  const reqHeader = sheet.getCell(`B${row}`);
+  reqHeader.value = '⚠️ REQUIREMENTS - READ BEFORE CONTINUING';
+  reqHeader.font = { bold: true, size: 14, color: { argb: COLORS.warning } };
+  reqHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  reqHeader.border = { top: { style: 'medium', color: { argb: COLORS.warning } }, left: { style: 'medium', color: { argb: COLORS.warning } } };
+  row += 1;
 
-  // Configuration Summary with emerald header
+  const requirements = [
+    ['✓ Excel Desktop', 'Windows or Mac (Excel Online NOT supported)'],
+    ['✓ CryptoSheets Add-in', 'Install from cryptosheets.com'],
+    ['✓ CryptoSheets Account', 'Free tier available (100 calls/day)'],
+  ];
+
+  for (const [req, note] of requirements) {
+    sheet.getCell(`B${row}`).value = req;
+    sheet.getCell(`B${row}`).font = { bold: true, color: { argb: COLORS.warning } };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+    sheet.getCell(`B${row}`).border = { left: { style: 'medium', color: { argb: COLORS.warning } } };
+    sheet.getCell(`C${row}`).value = note;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+    sheet.getCell(`C${row}`).border = { right: { style: 'medium', color: { argb: COLORS.warning } } };
+    row++;
+  }
+
+  // Close box
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`B${row}`).border = { bottom: { style: 'medium', color: { argb: COLORS.warning } }, left: { style: 'medium', color: { argb: COLORS.warning } } };
+  sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`C${row}`).border = { bottom: { style: 'medium', color: { argb: COLORS.warning } }, right: { style: 'medium', color: { argb: COLORS.warning } } };
+  row += 2;
+
+  // ============ STATUS CHECKER ============
+  sheet.mergeCells(`B${row}:C${row}`);
+  const statusHeader = sheet.getCell(`B${row}`);
+  statusHeader.value = '🔍 STATUS CHECKER';
+  statusHeader.font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  statusHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  statusHeader.border = { top: { style: 'medium', color: { argb: COLORS.primary } }, left: { style: 'medium', color: { argb: COLORS.primary } } };
+  row += 1;
+
+  // CryptoSheets Status
+  sheet.getCell(`B${row}`).value = 'CryptoSheets Status:';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`B${row}`).border = { left: { style: 'medium', color: { argb: COLORS.primary } } };
+  sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("status"), "❌ NOT INSTALLED")' };
+  sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+  sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`C${row}`).border = { right: { style: 'medium', color: { argb: COLORS.primary } } };
+  row++;
+
+  // Sample Data Check
+  sheet.getCell(`B${row}`).value = 'Sample Data (BTC Price):';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`B${row}`).border = { left: { style: 'medium', color: { argb: COLORS.primary } } };
+  sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("price","BTC","USD"), "❌ ERROR - Check status above")' };
+  sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+  sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`C${row}`).border = { right: { style: 'medium', color: { argb: COLORS.primary } } };
+  row++;
+
+  // Close box
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`B${row}`).border = { bottom: { style: 'medium', color: { argb: COLORS.primary } }, left: { style: 'medium', color: { argb: COLORS.primary } } };
+  sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+  sheet.getCell(`C${row}`).border = { bottom: { style: 'medium', color: { argb: COLORS.primary } }, right: { style: 'medium', color: { argb: COLORS.primary } } };
+  row += 2;
+
+  // ============ REFRESH BUTTON AREA ============
+  sheet.mergeCells(`B${row}:C${row}`);
+  const refreshHeader = sheet.getCell(`B${row}`);
+  refreshHeader.value = '🔄 REFRESH DATA';
+  refreshHeader.font = { bold: true, size: 16, color: { argb: COLORS.textPrimary } };
+  refreshHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.positive } };
+  refreshHeader.alignment = { horizontal: 'center' };
+  refreshHeader.border = {
+    top: { style: 'thick', color: { argb: COLORS.positive } },
+    left: { style: 'thick', color: { argb: COLORS.positive } },
+    right: { style: 'thick', color: { argb: COLORS.positive } },
+  };
+  row++;
+
+  sheet.mergeCells(`B${row}:C${row}`);
+  const refreshInstr = sheet.getCell(`B${row}`);
+  refreshInstr.value = 'Press Ctrl+Alt+F5 (Windows) or Cmd+Alt+F5 (Mac)';
+  refreshInstr.font = { size: 12, color: { argb: COLORS.bgDark } };
+  refreshInstr.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.positive } };
+  refreshInstr.alignment = { horizontal: 'center' };
+  refreshInstr.border = {
+    bottom: { style: 'thick', color: { argb: COLORS.positive } },
+    left: { style: 'thick', color: { argb: COLORS.positive } },
+    right: { style: 'thick', color: { argb: COLORS.positive } },
+  };
+  row += 2;
+
+  // ============ CONFIGURATION SUMMARY ============
   sheet.getCell(`B${row}`).value = 'Your Configuration:';
   sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
-  const configItems = [
+  const refreshFrequencyRaw = userConfig.customizations.refreshFrequency;
+  const refreshFrequency = typeof refreshFrequencyRaw === 'string' ? refreshFrequencyRaw : 'manual';
+  const configItems: [string, string][] = [
     ['Template', template.name],
-    ['Coins', userConfig.coins.length > 0 ? userConfig.coins.join(', ') : 'All supported coins'],
-    ['Timeframe', userConfig.timeframe || '24h'],
+    ['Assets', `${userConfig.coins.length} coins${userConfig.coins.length <= 10 ? ' (Free tier OK)' : ' (May need Pro)'}`],
+    ['Timeframe', userConfig.timeframe || '1d'],
+    ['Refresh Mode', refreshFrequency === 'manual' ? 'Manual (Recommended)' : refreshFrequency],
     ['Currency', userConfig.currency || 'USD'],
     ['Charts', userConfig.customizations.includeCharts ? 'Enabled' : 'Disabled'],
     ['Generated', new Date().toLocaleString()],
@@ -283,49 +352,55 @@ async function createSetupSheet(
   }
   row += 2;
 
-  // Add-in Status Check with emerald accent
-  sheet.getCell(`B${row}`).value = 'CryptoSheets Status Check:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  // ============ QUOTA WARNING (if applicable) ============
+  if (userConfig.coins.length > 10 || refreshFrequency !== 'manual') {
+    sheet.mergeCells(`B${row}:C${row + 1}`);
+    const quotaWarning = sheet.getCell(`B${row}`);
+    quotaWarning.value = '⚠️ QUOTA WARNING: Your configuration may exceed CryptoSheets Free tier limits.\nFree tier: 100 calls/day. Reduce assets to 10 or use manual refresh to stay within limits.';
+    quotaWarning.font = { size: 11, color: { argb: COLORS.warning } };
+    quotaWarning.alignment = { wrapText: true, vertical: 'middle' };
+    quotaWarning.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+    quotaWarning.border = {
+      top: { style: 'medium', color: { argb: COLORS.warning } },
+      left: { style: 'medium', color: { argb: COLORS.warning } },
+      bottom: { style: 'medium', color: { argb: COLORS.warning } },
+      right: { style: 'medium', color: { argb: COLORS.warning } },
+    };
+    row += 3;
+  }
+
+  // ============ TROUBLESHOOTING ============
+  sheet.getCell(`B${row}`).value = 'Common Issues:';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.danger } };
   row += 1;
 
-  sheet.getCell(`B${row}`).value = '  Status:';
-  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
-  sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("status"), "❌ NOT INSTALLED - Click link below to install")' };
-  sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
-  row += 2;
-
-  // Quick Start Steps
-  sheet.getCell(`B${row}`).value = 'Quick Start:';
-  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
-  row += 1;
-
-  const steps = [
-    ['1️⃣', 'Install CryptoSheets from Excel Add-ins or cryptosheets.com'],
-    ['2️⃣', 'Sign in to your CryptoSheets account (free tier available)'],
-    ['3️⃣', 'Press Ctrl+Alt+F5 (Windows) or Cmd+Alt+F5 (Mac) to refresh all data'],
-    ['4️⃣', 'Navigate to the Data sheet to see your configured data'],
-    ['5️⃣', 'Customize formulas as needed - see Instructions sheet for help'],
+  const issues = [
+    ['#NAME? errors', 'CryptoSheets add-in not installed → Install from cryptosheets.com'],
+    ['#VALUE! errors', 'Not signed in to CryptoSheets → Sign in via CryptoSheets tab'],
+    ['Data not updating', 'Press Ctrl+Alt+F5 to refresh (auto-refresh is disabled)'],
+    ['Rate limit errors', 'CryptoSheets quota exceeded → Wait or reduce asset count'],
+    ['Stale data', 'Last refresh was too long ago → Press Ctrl+Alt+F5'],
   ];
 
-  for (const [num, step] of steps) {
-    sheet.getCell(`B${row}`).value = `  ${num}`;
-    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
-    sheet.getCell(`C${row}`).value = step;
-    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+  for (const [issue, solution] of issues) {
+    sheet.getCell(`B${row}`).value = `  ${issue}:`;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.danger } };
+    sheet.getCell(`C${row}`).value = solution;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textSecondary }, size: 10 };
     row++;
   }
   row += 2;
 
-  // Links section
+  // ============ LINKS ============
   sheet.getCell(`B${row}`).value = 'Helpful Links:';
   sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
   row += 1;
 
   const links = [
     ['Get CryptoSheets', 'https://www.cryptosheets.com/'],
+    ['CryptoSheets Pricing', 'https://www.cryptosheets.com/pricing'],
     ['DataSimplify Help', 'https://datasimplify.io/help/templates'],
     ['CryptoSheets Docs', 'https://docs.cryptosheets.com/'],
-    ['Formula Reference', 'https://docs.cryptosheets.com/functions'],
   ];
 
   for (const [label, url] of links) {
@@ -785,208 +860,8 @@ async function createChartSheet(
   }
 }
 
-/**
- * Create embedded charts sheet with master template approach
- * Charts are pre-styled with dark theme and bound to dynamic data
- */
-async function createEmbeddedChartsSheet(
-  workbook: ExcelJS.Workbook,
-  template: TemplateConfig,
-  userConfig: UserTemplateConfig,
-  chartConfigs: ChartConfig[]
-): Promise<void> {
-  const sheet = workbook.addWorksheet('Charts', {
-    properties: { tabColor: { argb: COLORS.accent } },
-    views: [{ showGridLines: false }],
-  });
-
-  // Set up wide columns for chart display
-  sheet.columns = Array(30).fill({ width: 10 });
-
-  // Apply dark background to entire visible area
-  for (let r = 1; r <= 80; r++) {
-    for (let c = 1; c <= 30; c++) {
-      sheet.getCell(r, c).fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: COLORS.bgDark },
-      };
-    }
-  }
-
-  // Header
-  sheet.mergeCells('A1:N1');
-  const headerCell = sheet.getCell('A1');
-  headerCell.value = `📈 ${template.name} - Charts`;
-  headerCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
-  headerCell.alignment = { horizontal: 'center' };
-
-  // Subtitle
-  sheet.mergeCells('A2:N2');
-  const subtitleCell = sheet.getCell('A2');
-  subtitleCell.value = 'Charts are pre-styled with dark theme • Data updates automatically when you refresh';
-  subtitleCell.font = { size: 11, color: { argb: COLORS.textSecondary }, italic: true };
-  subtitleCell.alignment = { horizontal: 'center' };
-
-  let currentRow = 4;
-
-  // Create each chart
-  for (const chartConfig of chartConfigs) {
-    // Chart title header
-    sheet.mergeCells(`A${currentRow}:L${currentRow}`);
-    const titleCell = sheet.getCell(`A${currentRow}`);
-    titleCell.value = `${getChartIcon(chartConfig.type)} ${chartConfig.title}`;
-    titleCell.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
-    titleCell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: COLORS.bgMedium },
-    };
-    titleCell.border = {
-      left: { style: 'thick', color: { argb: COLORS.primary } },
-      bottom: { style: 'thin', color: { argb: COLORS.primary } },
-    };
-    currentRow++;
-
-    // Chart description
-    sheet.getCell(`A${currentRow}`).value = chartConfig.description;
-    sheet.getCell(`A${currentRow}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
-    currentRow++;
-
-    // Chart placeholder area with proper styling
-    const chartStartRow = currentRow;
-    const chartEndRow = currentRow + chartConfig.height - 1;
-    const chartEndCol = String.fromCharCode(64 + chartConfig.width);
-
-    // Create chart area background
-    for (let r = chartStartRow; r <= chartEndRow; r++) {
-      for (let c = 1; c <= chartConfig.width; c++) {
-        const cell = sheet.getCell(r, c);
-        cell.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: COLORS.bgMedium },
-        };
-      }
-    }
-
-    // Add border around chart area
-    sheet.getCell(`A${chartStartRow}`).border = { top: { style: 'thin', color: { argb: COLORS.primary } }, left: { style: 'thin', color: { argb: COLORS.primary } } };
-    sheet.getCell(`${chartEndCol}${chartStartRow}`).border = { top: { style: 'thin', color: { argb: COLORS.primary } }, right: { style: 'thin', color: { argb: COLORS.primary } } };
-    sheet.getCell(`A${chartEndRow}`).border = { bottom: { style: 'thin', color: { argb: COLORS.primary } }, left: { style: 'thin', color: { argb: COLORS.primary } } };
-    sheet.getCell(`${chartEndCol}${chartEndRow}`).border = { bottom: { style: 'thin', color: { argb: COLORS.primary } }, right: { style: 'thin', color: { argb: COLORS.primary } } };
-
-    // Add chart configuration details inside the area
-    const infoRow = chartStartRow + 2;
-    sheet.getCell(`B${infoRow}`).value = `Chart Type: ${chartConfig.type.toUpperCase()}`;
-    sheet.getCell(`B${infoRow}`).font = { color: { argb: COLORS.textSecondary } };
-
-    sheet.getCell(`B${infoRow + 1}`).value = `Data Source: ${chartConfig.categoryRange}`;
-    sheet.getCell(`B${infoRow + 1}`).font = { color: { argb: COLORS.textSecondary } };
-
-    // Series information
-    sheet.getCell(`B${infoRow + 3}`).value = 'Data Series:';
-    sheet.getCell(`B${infoRow + 3}`).font = { bold: true, color: { argb: COLORS.primary } };
-
-    chartConfig.series.forEach((series, idx) => {
-      const seriesRow = infoRow + 4 + idx;
-      const colorBox = sheet.getCell(`B${seriesRow}`);
-      colorBox.value = '■';
-      colorBox.font = { color: { argb: series.color || CHART_COLORS.series[idx % CHART_COLORS.series.length] } };
-
-      sheet.getCell(`C${seriesRow}`).value = `${series.name}: ${series.dataRange}`;
-      sheet.getCell(`C${seriesRow}`).font = { color: { argb: COLORS.textPrimary } };
-    });
-
-    // Add chart rendering note
-    const noteRow = chartEndRow - 1;
-    sheet.mergeCells(`B${noteRow}:K${noteRow}`);
-    const noteCell = sheet.getCell(`B${noteRow}`);
-    noteCell.value = '📊 This chart will render automatically when opened in Excel Desktop';
-    noteCell.font = { italic: true, color: { argb: COLORS.primary } };
-
-    currentRow = chartEndRow + 3;
-  }
-
-  // Add chart styling guide at the bottom
-  const guideRow = currentRow + 2;
-  sheet.mergeCells(`A${guideRow}:N${guideRow}`);
-  const guideHeader = sheet.getCell(`A${guideRow}`);
-  guideHeader.value = '🎨 Chart Color Theme (Matching Website)';
-  guideHeader.font = { bold: true, size: 14, color: { argb: COLORS.primary } };
-  guideHeader.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: COLORS.bgMedium },
-  };
-
-  // Color palette display
-  const colorRow = guideRow + 2;
-  const colorDescriptions = [
-    { name: 'Primary (Emerald)', color: CHART_COLORS.series[0] },
-    { name: 'Secondary (Indigo)', color: CHART_COLORS.series[1] },
-    { name: 'Accent (Amber)', color: CHART_COLORS.series[2] },
-    { name: 'Pink', color: CHART_COLORS.series[3] },
-    { name: 'Purple', color: CHART_COLORS.series[4] },
-    { name: 'Positive', color: CHART_COLORS.positive },
-    { name: 'Negative', color: CHART_COLORS.negative },
-    { name: 'Background', color: CHART_COLORS.plotArea },
-  ];
-
-  colorDescriptions.forEach((item, idx) => {
-    const row = colorRow + idx;
-    const colorCell = sheet.getCell(`A${row}`);
-    colorCell.value = '██████';
-    colorCell.font = { color: { argb: item.color } };
-
-    const nameCell = sheet.getCell(`B${row}`);
-    nameCell.value = item.name;
-    nameCell.font = { color: { argb: COLORS.textPrimary } };
-
-    const hexCell = sheet.getCell(`C${row}`);
-    hexCell.value = `#${item.color}`;
-    hexCell.font = { name: 'Consolas', color: { argb: COLORS.textSecondary } };
-  });
-
-  // Excel chart creation instructions
-  const instructRow = colorRow + colorDescriptions.length + 2;
-  sheet.mergeCells(`A${instructRow}:N${instructRow}`);
-  sheet.getCell(`A${instructRow}`).value = '💡 To create the charts in Excel:';
-  sheet.getCell(`A${instructRow}`).font = { bold: true, color: { argb: COLORS.primary } };
-
-  const instructions = [
-    '1. Select the data range shown above (e.g., Data!A2:D21)',
-    '2. Go to Insert → Charts → Select chart type',
-    '3. Right-click chart → Format Chart Area → Set Fill to #111827 (dark background)',
-    '4. Format each series with the colors shown above',
-    '5. Set axis labels to gray (#9CA3AF) and title to white (#FFFFFF)',
-  ];
-
-  instructions.forEach((instr, idx) => {
-    sheet.getCell(`A${instructRow + 1 + idx}`).value = instr;
-    sheet.getCell(`A${instructRow + 1 + idx}`).font = { color: { argb: COLORS.textPrimary } };
-  });
-}
-
-/**
- * Get emoji icon for chart type
- */
-function getChartIcon(type: string): string {
-  const icons: Record<string, string> = {
-    line: '📈',
-    bar: '📊',
-    column: '📊',
-    pie: '🥧',
-    doughnut: '🍩',
-    area: '📉',
-    scatter: '⚪',
-    candlestick: '🕯️',
-    combo: '📈',
-    radar: '🕸️',
-    heatmap: '🗺️',
-  };
-  return icons[type] || '📊';
-}
+// Note: createEmbeddedChartsSheet removed - Embedded Charts content type no longer supported
+// Only addin, native_charts, and formulas_only content types are available
 
 /**
  * Create Office.js Add-in instructions sheet

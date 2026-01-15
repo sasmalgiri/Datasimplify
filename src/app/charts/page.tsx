@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import ExcelJS from 'exceljs';
 import html2canvas from 'html2canvas';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
@@ -638,215 +637,9 @@ function ChartsContent() {
     }
   }, [isPlaying, racingData.length]);
 
-  const downloadIqy = (csvUrl: string, filename: string) => {
-    const iqy = `WEB\n1\n${csvUrl}\n`;
-    const blob = new Blob([iqy], { type: 'text/plain; charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Download chart as image / data
-  const downloadChart = async (format: 'png' | 'svg' | 'json' | 'xlsx' | 'iqy') => {
-    if (!chartRef.current && (format === 'png' || format === 'svg')) return;
-
-    if (format === 'iqy') {
-      // IQY/Live Excel format is no longer available - redirect to templates
-      alert('Live Excel connections are no longer available.\n\nFor live data in Excel, use our CryptoSheets templates instead.\n\nVisit: /templates');
-      window.location.href = '/templates';
-      return;
-    }
-
-    if (format === 'json') {
-      const blob = new Blob([JSON.stringify(chartData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${selectedCoin}_${selectedChart}_${timeRange}d.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      return;
-    }
-
-    if (format === 'xlsx') {
-      // Check if we have data to export
-      if (!chartData || chartData.length === 0) {
-        alert('No chart data available to export. Please wait for the chart to load.');
-        return;
-      }
-
-      // Create ExcelJS workbook with interactive chart
-      const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'DataSimplify';
-      workbook.created = new Date();
-
-      // Sheet 1: Chart Data
-      const dataSheet = workbook.addWorksheet('Chart Data');
-      const coinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
-
-      // Determine columns based on chart type and available data
-      const sampleData = chartData[0] as Record<string, unknown>;
-      const columns: { header: string; key: string; width: number }[] = [];
-
-      // Add date column first
-      if (sampleData.date) columns.push({ header: 'Date', key: 'date', width: 12 });
-
-      // Add price columns
-      if (sampleData.price !== undefined) columns.push({ header: 'Price (USD)', key: 'price', width: 15 });
-      if (sampleData.open !== undefined) columns.push({ header: 'Open', key: 'open', width: 12 });
-      if (sampleData.high !== undefined) columns.push({ header: 'High', key: 'high', width: 12 });
-      if (sampleData.low !== undefined) columns.push({ header: 'Low', key: 'low', width: 12 });
-      if (sampleData.close !== undefined) columns.push({ header: 'Close', key: 'close', width: 12 });
-
-      // Add technical indicators
-      if (sampleData.ma7 !== undefined) columns.push({ header: 'MA 7-Day', key: 'ma7', width: 12 });
-      if (sampleData.ma30 !== undefined) columns.push({ header: 'MA 30-Day', key: 'ma30', width: 12 });
-      if (sampleData.volatility !== undefined) columns.push({ header: 'Volatility (%)', key: 'volatility', width: 14 });
-      if (sampleData.volume !== undefined) columns.push({ header: 'Volume (USD)', key: 'volume', width: 18 });
-      if (sampleData.rsi !== undefined) columns.push({ header: 'RSI', key: 'rsi', width: 10 });
-      if (sampleData.macd !== undefined) columns.push({ header: 'MACD', key: 'macd', width: 12 });
-
-      dataSheet.columns = columns;
-
-      // Style header row
-      const headerRow = dataSheet.getRow(1);
-      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
-      headerRow.alignment = { horizontal: 'center' };
-
-      // Add data rows
-      chartData.forEach((d: Record<string, unknown>) => {
-        const row: Record<string, unknown> = {};
-        columns.forEach(col => {
-          const value = d[col.key];
-          if (value !== undefined && value !== null) {
-            row[col.key] = typeof value === 'number' ? Math.round(value * 100) / 100 : value;
-          }
-        });
-        dataSheet.addRow(row);
-      });
-
-      // Create the Summary & Instructions sheet
-      const chartSheet = workbook.addWorksheet('Summary');
-
-      // Determine recommended Excel chart type based on chart category
-      let recommendedChart = 'Line Chart';
-      if (selectedChart === 'volume_analysis' || selectedChart === 'volume_profile') {
-        recommendedChart = 'Column Chart';
-      } else if (selectedChart === 'candlestick') {
-        recommendedChart = 'Stock Chart (OHLC)';
-      } else if (selectedChart === 'market_dominance' || selectedChart === 'wallet_distribution' || selectedChart === 'btc_dominance') {
-        recommendedChart = 'Pie Chart';
-      } else if (selectedChart === 'correlation') {
-        recommendedChart = 'Scatter Chart';
-      } else if (selectedChart === 'racing_bar') {
-        recommendedChart = 'Bar Chart';
-      } else if (selectedChart === 'liquidation_heatmap') {
-        recommendedChart = 'Heatmap (use conditional formatting)';
-      }
-
-      // Title
-      chartSheet.getCell('A1').value = `${coinName} - ${selectedChart.charAt(0).toUpperCase() + selectedChart.slice(1)} Analysis`;
-      chartSheet.getCell('A1').font = { bold: true, size: 18, color: { argb: 'FF2563EB' } };
-      chartSheet.mergeCells('A1:D1');
-
-      // Easy Chart Creation Instructions
-      chartSheet.getCell('A3').value = '📊 CREATE YOUR CHART IN 3 STEPS:';
-      chartSheet.getCell('A3').font = { bold: true, size: 12 };
-
-      chartSheet.getCell('A4').value = '1. Click on "Chart Data" sheet tab below';
-      chartSheet.getCell('A5').value = '2. Select all data: Press Ctrl+A (or Cmd+A on Mac)';
-      chartSheet.getCell('A6').value = `3. Go to Insert → Charts → ${recommendedChart}`;
-      chartSheet.getCell('A7').value = '   Your interactive chart will appear instantly!';
-      chartSheet.getCell('A7').font = { italic: true, color: { argb: 'FF22C55E' } };
-
-      chartSheet.getCell('A9').value = '💡 TIP: The chart auto-updates when you change the data!';
-      chartSheet.getCell('A9').font = { italic: true };
-
-      chartSheet.getCell('A11').value = '📈 QUICK STATS:';
-      chartSheet.getCell('A11').font = { bold: true, size: 12 };
-
-      // Calculate stats from data
-      const prices = chartData
-        .map((d: Record<string, unknown>) => Number(d.price || d.close || 0))
-        .filter((p: number) => !isNaN(p) && p > 0);
-
-      if (prices.length > 0) {
-        const latestPrice = prices[prices.length - 1];
-        const highPrice = Math.max(...prices);
-        const lowPrice = Math.min(...prices);
-        const avgPrice = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
-        const priceChange = ((latestPrice - prices[0]) / prices[0]) * 100;
-
-        chartSheet.getCell('A12').value = 'Current Price:';
-        chartSheet.getCell('B12').value = `$${latestPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        chartSheet.getCell('A13').value = 'Period High:';
-        chartSheet.getCell('B13').value = `$${highPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        chartSheet.getCell('A14').value = 'Period Low:';
-        chartSheet.getCell('B14').value = `$${lowPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        chartSheet.getCell('A15').value = 'Average:';
-        chartSheet.getCell('B15').value = `$${avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        chartSheet.getCell('A16').value = 'Change:';
-        chartSheet.getCell('B16').value = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
-        chartSheet.getCell('B16').font = { bold: true, color: { argb: priceChange >= 0 ? 'FF22C55E' : 'FFEF4444' } };
-        chartSheet.getCell('A17').value = 'Data Points:';
-        chartSheet.getCell('B17').value = chartData.length;
-      }
-
-      chartSheet.getColumn('A').width = 25;
-      chartSheet.getColumn('B').width = 30;
-
-      // Sheet 3: About DataSimplify
-      const instructionSheet = workbook.addWorksheet('About');
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
-
-      const instructions = [
-        ['DataSimplify - Educational Chart Export', ''],
-        ['', ''],
-        ['Coin:', coinName],
-        ['Chart Type:', selectedChart],
-        ['Time Range:', `${timeRange} days`],
-        ['Generated:', new Date().toISOString()],
-        ['', ''],
-        ['ABOUT THIS FILE:', ''],
-        ['This file contains a snapshot of chart data for educational purposes.', ''],
-        ['It is NOT a live data feed. Data is static from the time of export.', ''],
-        ['', ''],
-        ['FOR LIVE DATA IN EXCEL:', ''],
-        ['Use our CryptoSheets formula templates for live data.', ''],
-        ['Templates require the CryptoSheets add-in.', ''],
-        ['Learn more:', `${baseUrl}/templates`],
-        ['Setup guide:', `${baseUrl}/template-requirements`],
-        ['', ''],
-        ['DISCLAIMER:', ''],
-        ['This data is for educational purposes only. Not financial advice.', ''],
-        ['See full disclaimer at:', `${baseUrl}/disclaimer`],
-      ];
-
-      instructions.forEach((row, idx) => {
-        instructionSheet.getRow(idx + 1).values = row;
-      });
-
-      instructionSheet.getColumn(1).width = 40;
-      instructionSheet.getColumn(2).width = 70;
-
-      // Style the instruction header
-      instructionSheet.getCell('A1').font = { bold: true, size: 14 };
-
-      // Generate and download the workbook
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${selectedCoin}_${selectedChart}_${timeRange}d_${new Date().toISOString().split('T')[0]}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      return;
-    }
+  // Download chart as image (PNG/SVG only)
+  const downloadChart = async (format: 'png' | 'svg') => {
+    if (!chartRef.current) return;
 
     // For PNG/SVG, use html2canvas for reliable capture
     try {
@@ -1245,101 +1038,6 @@ function ChartsContent() {
           link.click();
         };
 
-        // Download correlation as Excel
-        const downloadCorrelationExcel = async () => {
-          const workbook = new ExcelJS.Workbook();
-          workbook.creator = 'DataSimplify';
-          workbook.created = new Date();
-
-          const sheet = workbook.addWorksheet('Correlation Matrix');
-
-          // Add title
-          sheet.mergeCells('A1:G1');
-          const titleCell = sheet.getCell('A1');
-          titleCell.value = `Correlation Matrix - ${selectedCoinData?.name || 'Bitcoin'} & Top Coins`;
-          titleCell.font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
-          titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
-          titleCell.alignment = { horizontal: 'center' };
-
-          // Add headers (row 3)
-          const headerRow = sheet.getRow(3);
-          headerRow.getCell(1).value = '';
-          correlationCoins.forEach((coin, idx) => {
-            const cell = headerRow.getCell(idx + 2);
-            cell.value = coin.symbol;
-            cell.font = { bold: true, color: { argb: coin.id === selectedCoin ? 'FF3B82F6' : 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
-            cell.alignment = { horizontal: 'center' };
-          });
-
-          // Add data rows
-          matrix.forEach((row, i) => {
-            const dataRow = sheet.getRow(i + 4);
-            const isSelectedRow = correlationCoins[i]?.id === selectedCoin;
-
-            // Row header (coin symbol)
-            const labelCell = dataRow.getCell(1);
-            labelCell.value = row.name;
-            labelCell.font = { bold: true, color: { argb: isSelectedRow ? 'FF3B82F6' : 'FFFFFFFF' } };
-            labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
-
-            // Correlation values
-            correlationCoins.forEach((coin, j) => {
-              const value = row[coin.symbol];
-              const cell = dataRow.getCell(j + 2);
-              cell.value = value === null ? null : value;
-              cell.numFmt = '0.00';
-              cell.alignment = { horizontal: 'center' };
-
-              // Color based on value
-              let bgColor = 'FF374151'; // Gray (unknown)
-              if (value !== null) {
-                bgColor = 'FFDC2626'; // Red (low)
-                if (value === 1) bgColor = 'FF2563EB'; // Blue (self)
-                else if (value > 0.7) bgColor = 'FF16A34A'; // Green (high)
-                else if (value > 0.4) bgColor = 'FFCA8A04'; // Yellow (medium)
-              }
-
-              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
-              cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
-            });
-          });
-
-          // Set column widths
-          sheet.getColumn(1).width = 8;
-          correlationCoins.forEach((_, idx) => {
-            sheet.getColumn(idx + 2).width = 10;
-          });
-
-          // Add legend
-          const legendRow = sheet.getRow(matrix.length + 6);
-          legendRow.getCell(1).value = 'Legend:';
-          legendRow.getCell(1).font = { bold: true };
-
-          const legendItems = [
-            { label: 'High (0.7+)', color: 'FF16A34A' },
-            { label: 'Medium (0.4-0.7)', color: 'FFCA8A04' },
-            { label: 'Low (<0.4)', color: 'FFDC2626' },
-          ];
-
-          legendItems.forEach((item, idx) => {
-            const cell = sheet.getCell(matrix.length + 7 + idx, 1);
-            cell.value = item.label;
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: item.color } };
-            cell.font = { color: { argb: 'FFFFFFFF' } };
-          });
-
-          // Download
-          const buffer = await workbook.xlsx.writeBuffer();
-          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `correlation_${selectedCoinData?.symbol || 'BTC'}_${new Date().toISOString().split('T')[0]}.xlsx`;
-          link.click();
-          URL.revokeObjectURL(url);
-        };
-
         return (
           <div className="p-4">
             {/* Header with download buttons */}
@@ -1349,20 +1047,12 @@ function ChartsContent() {
                 <span className="text-blue-400 font-bold">{selectedCoinData?.name || 'Bitcoin'}</span>
               </div>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={downloadCorrelationPNG}
+                <Link
+                  href="/templates"
                   className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
                 >
-                  📷 Download PNG
-                </button>
-                <button
-                  type="button"
-                  onClick={downloadCorrelationExcel}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-                >
-                  📊 Download Excel
-                </button>
+                  📊 Get Excel Template
+                </Link>
               </div>
             </div>
 
@@ -2011,48 +1701,17 @@ function ChartsContent() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold">Interactive Charts</h1>
-            <p className="text-gray-400 mt-1">Powerful visualizations for crypto analysis and AI predictions</p>
+            <p className="text-gray-400 mt-1">Powerful visualizations for crypto analysis and market trends</p>
           </div>
 
-          {/* Download Buttons */}
+          {/* Download Templates */}
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => downloadChart('png')}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition"
+            <Link
+              href="/templates"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
             >
-              PNG
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadChart('svg')}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
-            >
-              SVG
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadChart('json')}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition"
-            >
-              JSON
-            </button>
-            <button
-              type="button"
-              onClick={() => downloadChart('xlsx')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
-              title="Download Excel with chart snapshot (calculated indicators only)"
-            >
-              Excel
-            </button>
-            <button
-              type="button"
-              onClick={() => window.location.href = '/templates'}
-              className="px-4 py-2 bg-purple-700 hover:bg-purple-600 rounded-lg text-sm font-medium transition"
-              title="Get CryptoSheets templates for live data in Excel"
-            >
-              Templates
-            </button>
+              📊 Excel Templates
+            </Link>
             <TemplateDownloadButton
               pageContext={{
                 pageId: 'charts',

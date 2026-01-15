@@ -7,7 +7,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-        <p className="text-gray-600 mb-8">Last updated: December 2024</p>
+        <p className="text-gray-600 mb-8">Last updated: January 2026</p>
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
           
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
                   <li><strong>Paddle:</strong> Payment processing (Merchant of Record)</li>
                   <li><strong>Supabase:</strong> Database and authentication services</li>
                   <li><strong>Vercel:</strong> Website hosting and content delivery</li>
-                  <li><strong>Groq/OpenAI:</strong> AI-powered features (anonymized queries only)</li>
+                  <li><strong>Data Providers:</strong> Market data aggregation services</li>
                 </ul>
               </li>
               <li><strong>Legal Requirements:</strong> If required by law, court order, or government request</li>

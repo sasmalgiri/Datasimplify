@@ -363,33 +363,17 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">
-              <div className="text-sm text-gray-400 mb-1">Starter</div>
-              <div className="text-3xl font-bold mb-3">$19<span className="text-sm text-gray-400">/mo</span></div>
-              <ul className="space-y-2 text-sm text-gray-300 mb-4">
-                <li>✓ All templates</li>
-                <li>✓ Custom configurations</li>
-                <li>✓ Comparison tools</li>
-              </ul>
-              <Link href="/signup?plan=starter" className="block text-center py-2 bg-gray-700 rounded-lg hover:bg-gray-600 text-sm">
-                Start Trial
-              </Link>
-            </div>
-
             <div className="bg-gradient-to-b from-blue-500/20 to-purple-500/20 border-2 border-blue-500 rounded-2xl p-5 relative">
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-xs font-bold px-2 py-0.5 rounded-full">
                 POPULAR
               </div>
               <div className="text-sm text-blue-400 mb-1">Pro</div>
-              <div className="text-3xl font-bold mb-3">$49<span className="text-sm text-gray-400">/mo</span></div>
+              <div className="text-3xl font-bold mb-3">$29<span className="text-sm text-gray-400">/mo</span></div>
               <ul className="space-y-2 text-sm text-gray-300 mb-4">
-                <li>✓ Premium templates</li>
-                <li>✓ Advanced analytics</li>
-                {isPaddleSafe() ? (
-                  <li>✓ Contract verification</li>
-                ) : (
-                  <li>✓ Technical indicators</li>
-                )}
+                <li>✓ 100 template downloads/mo</li>
+                <li>✓ All template categories</li>
+                <li>✓ Custom column selection</li>
+                <li>✓ Email support</li>
               </ul>
               <Link href="/signup?plan=pro" className="block text-center py-2 bg-blue-500 rounded-lg hover:bg-blue-600 font-semibold text-sm">
                 Start Trial
@@ -397,14 +381,15 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-5">
-              <div className="text-sm text-gray-400 mb-1">Business</div>
-              <div className="text-3xl font-bold mb-3">$99<span className="text-sm text-gray-400">/mo</span></div>
+              <div className="text-sm text-gray-400 mb-1">Premium</div>
+              <div className="text-3xl font-bold mb-3">$79<span className="text-sm text-gray-400">/mo</span></div>
               <ul className="space-y-2 text-sm text-gray-300 mb-4">
-                <li>✓ Everything in Pro</li>
-                <li>✓ API access</li>
+                <li>✓ Unlimited downloads</li>
+                <li>✓ All Pro features</li>
+                <li>✓ White-label templates</li>
                 <li>✓ Priority support</li>
               </ul>
-              <Link href="/signup?plan=business" className="block text-center py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-sm">
+              <Link href="/signup?plan=premium" className="block text-center py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-sm">
                 Start Trial
               </Link>
             </div>

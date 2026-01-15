@@ -20,10 +20,11 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Validate content type
-    const validContentTypes: ContentType[] = ['full', 'formulas_only', 'addin', 'native_charts'];
+    // Note: 'full' (embedded charts) removed - only offer Interactive, Native Charts, Formulas Only
+    const validContentTypes: ContentType[] = ['formulas_only', 'addin', 'native_charts'];
     const contentType: ContentType = validContentTypes.includes(body.contentType)
       ? body.contentType
-      : 'full';
+      : 'addin';
 
     // Build user configuration
     const userConfig: UserTemplateConfig = {
@@ -68,8 +69,7 @@ export async function POST(request: Request) {
     // Generate filename with content type label
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const contentLabel = contentType === 'formulas_only' ? '_formulas' :
-                        contentType === 'addin' ? '_interactive' :
-                        contentType === 'native_charts' ? '_native' : '';
+                        contentType === 'addin' ? '_interactive' : '_native';
     const filename = `datasimplify_${userConfig.templateType}${contentLabel}_${timestamp}.${format}`;
 
     // Return file (convert Buffer to Uint8Array for NextResponse compatibility)
@@ -116,7 +116,6 @@ export async function GET() {
         supportedContentTypes: [
           { id: 'addin', name: 'Interactive Charts', description: 'Animated ChartJS charts via Office.js Add-in (requires M365)' },
           { id: 'native_charts', name: 'Native Excel Charts', description: 'Chart-ready data layout with instructions (works everywhere)' },
-          { id: 'full', name: 'Embedded Charts', description: 'Formulas + basic Excel chart definitions' },
           { id: 'formulas_only', name: 'Formulas Only', description: 'Just CryptoSheets formulas, no charts' },
         ],
         dataIncluded: false,

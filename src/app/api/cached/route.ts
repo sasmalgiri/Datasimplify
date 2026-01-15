@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       error: 'Supabase not configured',
       message: 'Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local',
-      alternative: 'Use /api/download for direct API access (no caching)',
+      alternative: 'Configure Supabase or use the standard (non-cached) app pages.',
     }, { status: 503 });
   }
 

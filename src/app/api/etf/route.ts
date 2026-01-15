@@ -1,6 +1,16 @@
-import { NextResponse } from 'next/server';
+/**
+ * Bitcoin ETF Data API
+ *
+ * Returns BTC price context (ETF flow/AUM data not available from free APIs)
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { isRedistributionPolicyEnabled, isSourceRedistributable } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Bitcoin ETF Data API
 // Free, reliable ETF flow + AUM data is not consistently available via public APIs.
@@ -54,7 +64,11 @@ async function fetchBtcPriceContext(): Promise<{ btcPrice: number; btcChange24h:
   return { btcPrice, btcChange24h, source: 'coingecko' };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/etf');
+  if (blocked) return blocked;
+
   try {
     const { btcPrice, btcChange24h, source } = await fetchBtcPriceContext();
 

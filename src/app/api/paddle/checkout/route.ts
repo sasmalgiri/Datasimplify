@@ -24,7 +24,9 @@ export async function POST(request: Request) {
 
     const { tier } = await request.json();
 
-    if (!tier || !['starter', 'pro', 'business'].includes(tier)) {
+    // Valid paid tiers: pro ($29), premium ($79)
+    // Free tier ($0) doesn't go through Paddle checkout
+    if (!tier || !['pro', 'premium'].includes(tier)) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
     }
 

@@ -10,7 +10,7 @@ import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-
 export interface UserProfile {
   id: string;
   email: string;
-  subscription_tier: 'free' | 'starter' | 'pro' | 'business';
+  subscription_tier: 'free' | 'pro' | 'premium';
   downloads_this_month: number;
   downloads_limit: number;
   created_at: string;
@@ -82,12 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState<SupabaseClient | null>(() => getSupabaseClient());
   const [isConfigured] = useState(() => supabase !== null);
 
-  // Download limits by tier
+  // Download limits by tier (Free: 5, Pro: 100, Premium: unlimited)
   const downloadLimits: Record<string, number> = {
     free: 5,
-    starter: 50,
-    pro: 999999,
-    business: 999999,
+    pro: 100,
+    premium: 999999,
   };
 
   // Fetch user profile from database
@@ -262,8 +261,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user can download
   const canDownload = () => {
     if (!profile) return true;
-    if (profile.subscription_tier === 'pro' || profile.subscription_tier === 'business') {
-      return true;
+    if (profile.subscription_tier === 'premium') {
+      return true; // Premium has unlimited
     }
     return profile.downloads_this_month < profile.downloads_limit;
   };
@@ -271,8 +270,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Get remaining downloads
   const remainingDownloads = () => {
     if (!profile) return 5;
-    if (profile.subscription_tier === 'pro' || profile.subscription_tier === 'business') {
-      return 999999;
+    if (profile.subscription_tier === 'premium') {
+      return 999999; // Premium has unlimited
     }
     return Math.max(0, profile.downloads_limit - profile.downloads_this_month);
   };

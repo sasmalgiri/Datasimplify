@@ -1,7 +1,26 @@
 /**
  * CoinGecko API Call Budget Management
  *
- * Analyst plan: 500k calls/month = ~16,666/day = ~694/hour
+ * Analyst plan ($103.2/mo billed yearly): 500k calls/month = ~16,666/day = ~694/hour
+ * Rate limit: 500 calls/minute
+ *
+ * ANALYST PLAN HISTORICAL DATA LIMITS:
+ * - Daily historical data: 2 years max (730 days)
+ * - Hourly historical data: 2 years max
+ * - 5-minute data: 1 day max
+ *
+ * FEATURES INCLUDED IN ANALYST:
+ * - 70+ endpoints (vs 30+ in Demo)
+ * - Top gainers/losers
+ * - Recently listed coins
+ * - NFT floor price
+ * - On-chain DEX data (GeckoTerminal)
+ * - Historical global market cap
+ *
+ * FEATURES NOT IN ANALYST (Enterprise only):
+ * - WebSocket API
+ * - Derivatives data
+ * - Historical derivatives data
  *
  * Budget allocation:
  * - Top 200 coins prices (batched): ~1,440 calls/day (every 60s)
@@ -20,6 +39,10 @@ export const ANALYST_PLAN = {
   dailyBudget: 16_666,
   hourlyBudget: 694,
   ratePerMinute: 500,
+  // Historical data limits
+  maxDailyHistoricalDays: 730,   // 2 years of daily data
+  maxHourlyHistoricalDays: 730,  // 2 years of hourly data
+  max5MinHistoricalDays: 1,      // 1 day of 5-minute data
 };
 
 // Budget allocation by category

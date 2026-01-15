@@ -1,4 +1,13 @@
-import { NextResponse } from 'next/server';
+/**
+ * Whale Tracking API
+ *
+ * Returns whale transaction data from Etherscan/Blockchair + CoinGecko for USD pricing
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   getWhaleDashboard,
@@ -16,11 +25,15 @@ import {
   getExchangeFlowsFromCache
 } from '@/lib/supabaseData';
 import { validationError, internalError, validateEnum, validatePositiveNumber } from '@/lib/apiErrors';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Valid whale tracking types
 const VALID_TYPES = ['dashboard', 'eth-whales', 'btc-whales', 'exchange-balances', 'exchange-flows'] as const;
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/whales');
+  if (blocked) return blocked;
   if (!isFeatureEnabled('whales')) {
     return NextResponse.json(
       {

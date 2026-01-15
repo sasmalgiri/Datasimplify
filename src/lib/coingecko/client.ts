@@ -593,3 +593,89 @@ export async function searchCoins(
 > {
   return fetchFromCoinGecko('/search', { query });
 }
+
+// === DEVELOPER AND SOCIAL DATA ===
+
+export interface DeveloperData {
+  forks: number;
+  stars: number;
+  subscribers: number;
+  total_issues: number;
+  closed_issues: number;
+  pull_requests_merged: number;
+  pull_request_contributors: number;
+  code_additions_deletions_4_weeks: {
+    additions: number;
+    deletions: number;
+  };
+  commit_count_4_weeks: number;
+  last_4_weeks_commit_activity_series: number[];
+}
+
+export interface CommunityData {
+  facebook_likes: number | null;
+  twitter_followers: number | null;
+  reddit_average_posts_48h: number;
+  reddit_average_comments_48h: number;
+  reddit_subscribers: number;
+  reddit_accounts_active_48h: number;
+  telegram_channel_user_count: number | null;
+}
+
+export interface CoinDetailedInfo {
+  id: string;
+  symbol: string;
+  name: string;
+  description: { en: string };
+  links: {
+    homepage: string[];
+    blockchain_site: string[];
+    official_forum_url: string[];
+    chat_url: string[];
+    announcement_url: string[];
+    twitter_screen_name: string | null;
+    facebook_username: string | null;
+    telegram_channel_identifier: string | null;
+    subreddit_url: string | null;
+    repos_url: {
+      github: string[];
+      bitbucket: string[];
+    };
+  };
+  image: { large: string; small: string; thumb: string };
+  market_data: {
+    current_price: Record<string, number>;
+    market_cap: Record<string, number>;
+    total_volume: Record<string, number>;
+    price_change_percentage_24h: number;
+    price_change_percentage_7d: number;
+    price_change_percentage_30d: number;
+  };
+  categories: string[];
+  genesis_date: string | null;
+  developer_data: DeveloperData;
+  community_data: CommunityData;
+  public_interest_stats: {
+    alexa_rank: number | null;
+    bing_matches: number | null;
+  };
+  sentiment_votes_up_percentage: number;
+  sentiment_votes_down_percentage: number;
+  watchlist_portfolio_users: number;
+  last_updated: string;
+}
+
+/**
+ * Get detailed coin info with developer and community data
+ * (Analyst plan feature)
+ */
+export async function getCoinDetailedInfo(coinId: string): Promise<CoinGeckoResponse<CoinDetailedInfo>> {
+  return fetchFromCoinGecko<CoinDetailedInfo>(`/coins/${coinId}`, {
+    localization: false,
+    tickers: false,
+    market_data: true,
+    community_data: true,
+    developer_data: true,
+    sparkline: false,
+  });
+}

@@ -1,25 +1,38 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
 import { TemplateGrid } from '@/components/TemplateCard';
 import { getTemplateList } from '@/lib/templates/templateConfig';
 import { DataPreview } from '@/components/DataPreview';
+import { RequirementsGate } from '@/components/download/RequirementsGate';
+import { QuotaEstimator } from '@/components/download/QuotaEstimator';
+import { TemplateControls } from '@/components/download/TemplateControls';
+import { ReportAssistant } from '@/components/download/ReportAssistant';
+import type { RefreshFrequency } from '@/lib/templates/templateModes';
+import type { RoutedTemplate } from '@/lib/templates/reportAssistant';
 
 export default function DownloadPage() {
+  // Gate state - user must confirm requirements before seeing templates
+  const [hasConfirmedRequirements, setHasConfirmedRequirements] = useState(false);
+
+  // Mode toggle: 'wizard' (Report Builder) or 'manual' (direct controls)
+  const [selectionMode, setSelectionMode] = useState<'wizard' | 'manual'>('wizard');
+
   // Template modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>('');
   const [templates, setTemplates] = useState<Array<{id: string; name: string; description: string; icon: string}>>([]);
 
-  // Configuration state for templates
-  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'SOL']);
-  const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
+  // Configuration state for templates (with quota-aware defaults)
+  const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'SOL', 'BNB', 'XRP']); // 5 coins default (Low-Quota Mode)
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1d'); // Daily only in Low-Quota Mode
+  const [refreshFrequency, setRefreshFrequency] = useState<RefreshFrequency>('manual'); // Manual by default
+  const [includeCharts, setIncludeCharts] = useState(true);
 
   // Load templates on mount
   useEffect(() => {
@@ -27,7 +40,21 @@ export default function DownloadPage() {
     setTemplates(templateList);
   }, []);
 
-  // Handler for template selection
+  // Check if user previously confirmed (persist for session)
+  useEffect(() => {
+    const confirmed = sessionStorage.getItem('cryptosheets_requirements_confirmed');
+    if (confirmed === 'true') {
+      setHasConfirmedRequirements(true);
+    }
+  }, []);
+
+  // Handler for requirements confirmation
+  const handleRequirementsConfirmed = () => {
+    setHasConfirmedRequirements(true);
+    sessionStorage.setItem('cryptosheets_requirements_confirmed', 'true');
+  };
+
+  // Handler for template selection (manual mode)
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
@@ -37,14 +64,22 @@ export default function DownloadPage() {
     }
   };
 
-  // Toggle coin selection
-  const toggleCoin = (symbol: string) => {
-    setSelectedCoins(prev =>
-      prev.includes(symbol)
-        ? prev.filter(s => s !== symbol)
-        : [...prev, symbol]
-    );
-  };
+  // Handler for Report Assistant template selection (wizard mode)
+  const handleAssistantSelect = useCallback((templateId: string, config: RoutedTemplate['config']) => {
+    const template = templates.find(t => t.id === templateId);
+
+    // Apply config from Report Assistant
+    setSelectedCoins(config.coins);
+    setSelectedTimeframe(config.timeframe);
+    setRefreshFrequency(config.refreshFrequency as RefreshFrequency);
+    setIncludeCharts(config.includeCharts);
+
+    if (template) {
+      setSelectedTemplateId(templateId);
+      setSelectedTemplateName(template.name);
+      setShowTemplateModal(true);
+    }
+  }, [templates]);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -55,187 +90,227 @@ export default function DownloadPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Excel Templates</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">CryptoSheets Templates</h1>
           <p className="text-gray-400">
-            Download Excel templates with CryptoSheets formulas for live data visualization.
-            Templates contain formulas only - data is fetched via the CryptoSheets add-in.
+            Download Excel templates with CryptoSheets formulas. Templates run on your CryptoSheets
+            account - data usage depends on your CryptoSheets plan and refresh settings.
           </p>
         </div>
 
-        {/* Important Notice */}
-        <div className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            <div>
-              <h3 className="font-semibold text-yellow-400 mb-1">CryptoSheets Add-in Required</h3>
-              <p className="text-gray-300 text-sm">
-                These templates require the{' '}
-                <a
-                  href="https://www.cryptosheets.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline"
+        {/* Requirements Gate - Must confirm before accessing templates */}
+        {!hasConfirmedRequirements ? (
+          <RequirementsGate onConfirm={handleRequirementsConfirmed} className="max-w-2xl mx-auto" />
+        ) : (
+          <>
+            {/* Mode Toggle */}
+            <div className="mb-8">
+              <div className="flex items-center justify-center gap-4 p-2 bg-gray-900 rounded-xl border border-gray-800 max-w-md mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectionMode('wizard')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    selectionMode === 'wizard'
+                      ? 'bg-emerald-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
                 >
-                  CryptoSheets Excel add-in
-                </a>{' '}
-                to function. Templates contain formulas only - no market data is embedded.
-                Data is fetched by CryptoSheets when you open the file in Excel.
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  Report Assistant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectionMode('manual')}
+                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    selectionMode === 'manual'
+                      ? 'bg-emerald-600 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  Browse All
+                </button>
+              </div>
+              <p className="text-center text-sm text-gray-500 mt-2">
+                {selectionMode === 'wizard'
+                  ? 'Describe what you need in plain language'
+                  : 'Configure and browse all templates directly'}
               </p>
-              <Link
-                href="/template-requirements"
-                className="inline-block mt-2 text-sm text-yellow-400 hover:text-yellow-300"
-              >
-                View full requirements →
-              </Link>
             </div>
-          </div>
-        </div>
 
-        {/* Configuration Section */}
-        <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Coin Selection */}
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Select Coins for Templates</h2>
-            <p className="text-gray-400 text-sm mb-4">
-              Choose which coins to include in your templates. These will be used when generating any template.
-            </p>
-            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-              {SUPPORTED_COINS.slice(0, 20).map(coin => (
-                <button
-                  key={coin.symbol}
-                  type="button"
-                  onClick={() => toggleCoin(coin.symbol)}
-                  className={`px-3 py-1.5 text-sm rounded-lg border transition ${
-                    selectedCoins.includes(coin.symbol)
-                      ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
-                >
-                  {selectedCoins.includes(coin.symbol) && <span className="mr-1">✓</span>}
-                  {coin.symbol}
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mt-3">
-              {selectedCoins.length} coin{selectedCoins.length !== 1 ? 's' : ''} selected
-            </p>
-          </div>
-
-          {/* Timeframe Selection */}
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-white mb-4">Default Timeframe</h2>
-            <p className="text-gray-400 text-sm mb-4">
-              Choose the default timeframe for historical data in templates.
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {['24h', '7d', '30d', '90d', '1y', 'all'].map(tf => (
-                <button
-                  key={tf}
-                  type="button"
-                  onClick={() => setSelectedTimeframe(tf)}
-                  className={`py-2 px-4 rounded-lg border transition ${
-                    selectedTimeframe === tf
-                      ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
-                  }`}
-                >
-                  {tf}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Data Preview Section */}
-        <div className="mb-8">
-          <DataPreview
-            selectedCoins={selectedCoins}
-            timeframe={selectedTimeframe}
-          />
-        </div>
-
-        {/* Templates Grid */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Available Templates</h2>
-          <p className="text-gray-400 mb-6">
-            Select a template to download. Each template is pre-configured with CryptoSheets formulas.
-          </p>
-          <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
-        </div>
-
-        {/* How It Works */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">How Templates Work</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                1
+            {/* Wizard Mode: Report Assistant */}
+            {selectionMode === 'wizard' ? (
+              <div className="max-w-2xl mx-auto mb-8">
+                <ReportAssistant onTemplateSelect={handleAssistantSelect} />
               </div>
-              <h3 className="font-medium text-white mb-2">Download Template</h3>
-              <p className="text-gray-400 text-sm">Get the .xlsx file with your configuration</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                2
-              </div>
-              <h3 className="font-medium text-white mb-2">Open in Excel</h3>
-              <p className="text-gray-400 text-sm">Open the file in Microsoft Excel Desktop</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                3
-              </div>
-              <h3 className="font-medium text-white mb-2">Sign In to CryptoSheets</h3>
-              <p className="text-gray-400 text-sm">CryptoSheets add-in fetches the data</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                4
-              </div>
-              <h3 className="font-medium text-white mb-2">Refresh Anytime</h3>
-              <p className="text-gray-400 text-sm">Click Refresh All to update data</p>
-            </div>
-          </div>
-        </div>
+            ) : (
+              <>
+                {/* Manual Mode: Direct Controls */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                  {/* Left Column: Controls */}
+                  <div className="lg:col-span-2">
+                    <TemplateControls
+                      selectedCoins={selectedCoins}
+                      onCoinsChange={setSelectedCoins}
+                      timeframe={selectedTimeframe}
+                      onTimeframeChange={setSelectedTimeframe}
+                      refreshFrequency={refreshFrequency}
+                      onRefreshFrequencyChange={setRefreshFrequency}
+                      includeCharts={includeCharts}
+                      onIncludeChartsChange={setIncludeCharts}
+                    />
+                  </div>
 
-        {/* Benefits */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <div className="text-3xl mb-3">🔄</div>
-            <h3 className="font-semibold text-white mb-2">Live Data</h3>
-            <p className="text-gray-400 text-sm">
-              Formulas fetch current data when you refresh - always up to date
-            </p>
-          </div>
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <div className="text-3xl mb-3">📊</div>
-            <h3 className="font-semibold text-white mb-2">Pre-built Charts</h3>
-            <p className="text-gray-400 text-sm">
-              Visualizations included - just open and view your data
-            </p>
-          </div>
-          <div className="bg-gray-900/50 rounded-xl border border-gray-800 p-6">
-            <div className="text-3xl mb-3">⚙️</div>
-            <h3 className="font-semibold text-white mb-2">Your Configuration</h3>
-            <p className="text-gray-400 text-sm">
-              Templates match your coin selection and preferences
-            </p>
-          </div>
-        </div>
+                  {/* Right Column: Quota Estimator */}
+                  <div className="lg:col-span-1">
+                    <div className="sticky top-4 space-y-4">
+                      <QuotaEstimator
+                        assetCount={selectedCoins.length}
+                        refreshFrequency={refreshFrequency}
+                        timeframe={selectedTimeframe}
+                        includeCharts={includeCharts}
+                      />
 
-        {/* Disclaimer */}
-        <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
-          <p className="text-gray-500 text-xs text-center">
-            <strong>Disclaimer:</strong> DataSimplify provides software analytics tools only. Templates contain formulas,
-            not market data. Data is fetched via the CryptoSheets add-in on your machine. We are not a data vendor.
-            Nothing on this platform constitutes financial advice.
-            <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
-              View full disclaimer
-            </Link>
-          </p>
-        </div>
+                      {/* Quick Info Card */}
+                      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+                        <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          What You Get
+                        </h4>
+                        <ul className="space-y-2 text-sm text-gray-300">
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400">✓</span>
+                            <span>Templates with CryptoSheets formulas</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400">✓</span>
+                            <span>Pre-styled Excel charts</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400">✓</span>
+                            <span>START sheet with status checker</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-emerald-400">✓</span>
+                            <span>Quota-aware configuration</span>
+                          </li>
+                        </ul>
+                        <div className="mt-3 pt-3 border-t border-gray-700">
+                          <p className="text-xs text-gray-400">
+                            <strong>Note:</strong> We sell templates + workflows, not data.
+                            Data comes from your CryptoSheets account.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Preview Section */}
+                <div className="mb-8">
+                  <DataPreview
+                    selectedCoins={selectedCoins}
+                    timeframe={selectedTimeframe}
+                  />
+                </div>
+
+                {/* Templates Grid */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-white mb-4">Available Templates</h2>
+                  <p className="text-gray-400 mb-6">
+                    Select a template to download. Each template is pre-configured with your settings above.
+                  </p>
+                  <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
+                </div>
+              </>
+            )}
+
+            {/* How It Works - Updated messaging */}
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-8">
+              <h2 className="text-xl font-semibold text-white mb-4">How Templates Work</h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                    1
+                  </div>
+                  <h3 className="font-medium text-white mb-2">Download Template</h3>
+                  <p className="text-gray-400 text-sm">Get the .xlsx file with your configuration</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                    2
+                  </div>
+                  <h3 className="font-medium text-white mb-2">Open in Excel Desktop</h3>
+                  <p className="text-gray-400 text-sm">Excel Online is NOT supported</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                    3
+                  </div>
+                  <h3 className="font-medium text-white mb-2">Sign In to CryptoSheets</h3>
+                  <p className="text-gray-400 text-sm">Install add-in if not already done</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
+                    4
+                  </div>
+                  <h3 className="font-medium text-white mb-2">Click "Refresh Now"</h3>
+                  <p className="text-gray-400 text-sm">Manual refresh conserves API quota</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Refresh Instructions Card */}
+            <div className="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5 mb-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-emerald-400 mb-2">Refresh Data in Templates</h3>
+                  <p className="text-gray-300 text-sm mb-3">
+                    Templates use <strong>manual refresh by default</strong> to conserve your CryptoSheets API quota.
+                  </p>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-2 text-white">
+                      <kbd className="px-2 py-1 bg-gray-700 rounded text-emerald-400 text-xs">Ctrl+Alt+F5</kbd>
+                      <span className="text-gray-400">Windows</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white">
+                      <kbd className="px-2 py-1 bg-gray-700 rounded text-emerald-400 text-xs">Cmd+Alt+F5</kbd>
+                      <span className="text-gray-400">Mac</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-white">
+                      <span className="text-emerald-400">Or click "Refresh Now" button</span>
+                      <span className="text-gray-400">in START_HERE sheet</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Disclaimer - Updated */}
+            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+              <p className="text-gray-500 text-xs text-center">
+                <strong>Disclaimer:</strong> DataSimplify provides template software tools only. We are not a data vendor.
+                Templates contain formulas - data is fetched via your CryptoSheets account on your machine.
+                Data usage depends on your CryptoSheets plan and refresh settings.
+                Free CryptoSheets users may hit monthly request limits.
+                Nothing on this platform constitutes financial advice.
+                <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
+                  View full disclaimer
+                </Link>
+              </p>
+            </div>
+          </>
+        )}
       </main>
 
       {/* Template Download Modal */}
@@ -249,7 +324,8 @@ export default function DownloadPage() {
           timeframe: selectedTimeframe,
           currency: 'USD',
           customizations: {
-            includeCharts: true,
+            includeCharts,
+            refreshFrequency,
           },
         }}
       />

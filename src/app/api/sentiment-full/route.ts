@@ -1,4 +1,13 @@
-import { NextResponse } from 'next/server';
+/**
+ * Comprehensive Sentiment API
+ *
+ * Aggregates sentiment from Reddit, CryptoPanic, RSS, 4chan, CoinGecko, and GitHub
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
   aggregateAllSentiment,
@@ -10,8 +19,12 @@ import {
   fetchCoinGeckoTrending,
   fetchGitHubActivity,
 } from '@/lib/comprehensiveSentiment';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/sentiment-full');
+  if (blocked) return blocked;
   if (!isFeatureEnabled('socialSentiment')) {
     return NextResponse.json(
       { error: 'This feature is currently disabled.', disabled: true },

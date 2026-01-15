@@ -1,13 +1,26 @@
-import { NextResponse } from 'next/server';
+/**
+ * Fear & Greed Index API
+ *
+ * Returns crypto market sentiment from Alternative.me
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getFearGreedFromCache, saveFearGreedToCache } from '@/lib/supabaseData';
 import { externalApiError } from '@/lib/apiErrors';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Alternative.me Fear & Greed Index API (FREE)
 const FEAR_GREED_API = 'https://api.alternative.me/fng/';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/sentiment');
+  if (blocked) return blocked;
   try {
     assertRedistributionAllowed('alternativeme', { purpose: 'chart', route: '/api/sentiment' });
 

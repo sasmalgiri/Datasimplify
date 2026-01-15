@@ -1,9 +1,19 @@
-import { NextResponse } from 'next/server';
+/**
+ * Crypto Market API Route
+ *
+ * Returns market data from Binance (with Supabase cache)
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getBulkMarketDataFromCache, saveBulkMarketDataToCache, getMarketDataFromCache } from '@/lib/supabaseData';
 import { fetchMarketOverview } from '@/lib/dataApi';
 import { findCoinByGeckoId, getCoinGeckoId } from '@/lib/dataTypes';
 import { assertRedistributionAllowed, isRedistributionPolicyEnabled, isSourceRedistributable } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 import {
   validationError,
   internalError,
@@ -14,7 +24,11 @@ import {
 const MAX_LIMIT = 250;
 const DEFAULT_LIMIT = 100;
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto');
+  if (blocked) return blocked;
+
   const { searchParams } = new URL(request.url);
   const limitParam = searchParams.get('limit');
   const ids = searchParams.get('ids'); // comma-separated list of coin IDs

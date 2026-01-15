@@ -1,14 +1,28 @@
 /**
  * Candlestick Chart API
  * Returns OHLCV data for candlestick charts
+ *
+ * Uses Binance API as primary source, CoinGecko as fallback
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ *
+ * ANALYST PLAN LIMITS:
+ * - Daily historical data: 2 years max (730 days)
+ * - Hourly historical data: 2 years max
+ * - 5-minute data: 1 day max
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+
+// Analyst plan limit: 2 years of historical data
+const MAX_HISTORICAL_DAYS = 730;
 
 type MarketChart = {
   prices: [number, number][];
@@ -78,11 +92,16 @@ async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<
   return data;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/charts/candles');
+  if (blocked) return blocked;
+
   try {
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin') || 'bitcoin';
-    const days = parseInt(searchParams.get('days') || '30');
+    // Limit to Analyst plan max (2 years = 730 days)
+    const days = Math.min(parseInt(searchParams.get('days') || '30'), MAX_HISTORICAL_DAYS);
     const requestedInterval = searchParams.get('interval');
     const interval = (requestedInterval === '1h' || requestedInterval === '4h' || requestedInterval === '1d' || requestedInterval === '1w')
       ? requestedInterval

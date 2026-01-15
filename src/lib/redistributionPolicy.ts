@@ -118,17 +118,20 @@ export function assertRedistributionAllowed(sources: string | string[], context:
     .map(s => String(s || '').trim().toLowerCase())
     .filter(Boolean);
 
-  // ALWAYS check display-only sources, regardless of policy setting
-  // Display-only sources can NEVER be redistributed without a special license
-  for (const source of normalized) {
-    if (DISPLAY_ONLY_SOURCES.has(source) || isDisplayOnly(source)) {
-      const sourceInfo = getDataSource(source);
-      const where = context.route ? ` (route: ${context.route})` : '';
-      const what = context.category ? ` (category: ${context.category})` : '';
-      throw new Error(
-        `Redistribution blocked: ${sourceInfo?.name || source} is display-only${where}${what}. ` +
-        `A Data Redistribution License is required for downloads.`
-      );
+  // Display-only sources (like CoinGecko) can be used for internal chart display
+  // but CANNOT be redistributed in downloads/exports without a special license.
+  // Only block display-only sources for 'download' purpose, not 'chart' display.
+  if (context.purpose === 'download') {
+    for (const source of normalized) {
+      if (DISPLAY_ONLY_SOURCES.has(source) || isDisplayOnly(source)) {
+        const sourceInfo = getDataSource(source);
+        const where = context.route ? ` (route: ${context.route})` : '';
+        const what = context.category ? ` (category: ${context.category})` : '';
+        throw new Error(
+          `Redistribution blocked: ${sourceInfo?.name || source} is display-only${where}${what}. ` +
+          `A Data Redistribution License is required for downloads.`
+        );
+      }
     }
   }
 

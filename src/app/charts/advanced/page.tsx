@@ -5,15 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { ECharts } from 'echarts';
-import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas';
-import JSZip from 'jszip';
 import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import {
   areAllSourcesRedistributableClient,
   isAnySourceRedistributableClient,
-  isDownloadCategoryRedistributableClient,
 } from '@/lib/redistributionPolicyClient';
 
 // Import echarts-gl after echarts core (must be in this order)
@@ -465,126 +462,9 @@ function AdvancedChartsContent() {
   }, []);
 
   // Download chart function
-  const downloadChart = useCallback(async (format: 'png' | 'svg' | 'json' | 'xlsx' | 'iqy') => {
+  const downloadChart = useCallback(async (format: 'png' | 'svg') => {
     setIsDownloading(true);
     try {
-      if (format === 'iqy') {
-        // IQY/Live Excel format is no longer available - redirect to templates
-        alert('Live Excel connections are no longer available.\n\nFor live data in Excel, use our CryptoSheets templates instead.\n\nVisit: /templates');
-        window.location.href = '/templates';
-        setIsDownloading(false);
-        return;
-      }
-
-      if (format === 'json') {
-        // Export chart data as JSON
-        const blob = new Blob([JSON.stringify(filteredCoins, null, 2)], { type: 'application/json' });
-        downloadBlob(blob, `${selectedChart}_data.json`);
-        setIsDownloading(false);
-        return;
-      }
-
-      if (format === 'xlsx') {
-        // Export chart data as Excel with chart image bundled in ZIP
-        const zip = new JSZip();
-        const dateStr = new Date().toISOString().split('T')[0];
-
-        // Create Excel workbook
-        const wb = XLSX.utils.book_new();
-
-        // Sheet 1: Current chart data
-        const chartDataForExcel = filteredCoins.map(coin => ({
-          'Symbol': coin.symbol,
-          'Name': coin.name,
-          'Price (USD)': typeof coin.price === 'number' ? `$${coin.price.toLocaleString()}` : 'Unavailable',
-          'Market Cap ($B)': typeof coin.marketCap === 'number' ? coin.marketCap : null,
-          'Volume ($B)': typeof coin.volume === 'number' ? coin.volume : null,
-          '24h Change (%)': typeof coin.change === 'number' ? coin.change : null,
-          'Holders (M)': 'Unavailable',
-          'Sentiment Score': 'Unavailable',
-        }));
-        const wsData = XLSX.utils.json_to_sheet(chartDataForExcel);
-        wsData['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-        XLSX.utils.book_append_sheet(wb, wsData, 'Chart Data');
-
-        // Sheet 2: Live Data Instructions
-        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://datasimplify.com';
-        const allowMarketOverview = isDownloadCategoryRedistributableClient('market_overview');
-        const marketOverviewJsonUrl = allowMarketOverview
-          ? `${baseUrl}/api/download?category=market_overview&format=json`
-          : 'Disabled by redistribution policy';
-        const marketOverviewCsvFormula = allowMarketOverview
-          ? `=IMPORTDATA("${baseUrl}/api/download?category=market_overview&format=csv")`
-          : 'Disabled by redistribution policy';
-        const liveDataInstructions = [
-          ['DataSimplify - Live Data Connection'],
-          [''],
-          ['Chart Type:', selectedChart],
-          ['Generated:', new Date().toISOString()],
-          ['Coins:', selectedCoins.join(', ')],
-          [''],
-          ['GET LIVE DATA IN EXCEL:'],
-          ['For live updating data in Excel, use our CryptoSheets templates.'],
-          ['Visit:', `${baseUrl}/templates`],
-          [''],
-          ['WHAT\'S INCLUDED IN THIS DOWNLOAD:'],
-          ['- Chart image (PNG format)'],
-          ['- Static snapshot of current data'],
-          [''],
-          ['For live, refreshable data, use CryptoSheets templates at:', `${baseUrl}/templates`],
-          [''],
-          ['NOTE: Chart image is included in this ZIP file as a PNG.'],
-        ];
-        const wsInstructions = XLSX.utils.aoa_to_sheet(liveDataInstructions);
-        wsInstructions['!cols'] = [{ wch: 35 }, { wch: 70 }];
-        XLSX.utils.book_append_sheet(wb, wsInstructions, 'Live Data Guide');
-
-        // Generate Excel buffer
-        const excelBuffer = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-        zip.file(`${selectedChart}_data.xlsx`, new Uint8Array(excelBuffer));
-
-        // Get chart image
-        let chartImageBlob: Blob | null = null;
-        const echartsInstance = chartInstanceRef.current;
-
-        if (echartsInstance) {
-          const dataURL = echartsInstance.getDataURL({
-            type: 'png',
-            pixelRatio: 2,
-            backgroundColor: '#1f2937'
-          });
-          // Convert data URL to blob
-          const response = await fetch(dataURL);
-          chartImageBlob = await response.blob();
-        } else {
-          // Fallback to html2canvas
-          const chartContainer = document.querySelector('.echarts-for-react');
-          if (chartContainer) {
-            const canvas = await html2canvas(chartContainer as HTMLElement, {
-              backgroundColor: '#1f2937',
-              scale: 2,
-              logging: false,
-              useCORS: true,
-            });
-            chartImageBlob = await new Promise<Blob | null>((resolve) => {
-              canvas.toBlob((blob) => resolve(blob), 'image/png', 0.95);
-            });
-          }
-        }
-
-        // Add chart image to ZIP
-        if (chartImageBlob) {
-          zip.file(`${selectedChart}_chart.png`, chartImageBlob);
-        }
-
-        // Generate and download ZIP
-        const zipBlob = await zip.generateAsync({ type: 'blob' });
-        downloadBlob(zipBlob, `${selectedChart}_export_${dateStr}.zip`);
-
-        setIsDownloading(false);
-        return;
-      }
-
       // For PNG/SVG only - Generate and download
       const echartsInstance = chartInstanceRef.current;
 
@@ -643,7 +523,7 @@ function AdvancedChartsContent() {
     } finally {
       setIsDownloading(false);
     }
-  }, [selectedChart, filteredCoins, selectedCoins]);
+  }, [selectedChart]);
 
   // Chart options generators
   const getChartOption = useMemo(() => {
@@ -1385,67 +1265,18 @@ function AdvancedChartsContent() {
                   <p className="text-gray-400 text-sm">{selectedConfig?.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Download Buttons */}
+                  {/* Download Templates */}
                   <div className="flex items-center gap-1 mr-2">
-                    <button
-                      type="button"
-                      onClick={() => downloadChart('png')}
-                      disabled={isDownloading}
-                      className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Download as PNG image"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      PNG
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadChart('svg')}
-                      disabled={isDownloading}
-                      className="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Download as SVG vector"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      SVG
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadChart('json')}
-                      disabled={isDownloading}
-                      className="px-2 py-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Download chart data as JSON"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      JSON
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadChart('xlsx')}
-                      disabled={isDownloading}
-                      className="px-2 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Download ZIP with Excel data + Chart image"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      ZIP
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => window.location.href = '/templates'}
-                      className="px-2 py-1 bg-purple-700 hover:bg-purple-600 text-white text-xs rounded transition flex items-center gap-1"
+                    <Link
+                      href="/templates"
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded transition flex items-center gap-1"
                       title="Get CryptoSheets templates for live data in Excel"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      Templates
-                    </button>
+                      Excel Templates
+                    </Link>
                   </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
                     ECharts
@@ -1494,7 +1325,7 @@ function AdvancedChartsContent() {
                 {selectedChart === 'treemap' && 'Treemap visualization shows market cap distribution with color indicating price change. Green indicates positive movement, red indicates negative.'}
                 {selectedChart === 'sunburst' && 'Sunburst chart shows the hierarchical structure of the crypto ecosystem, with categories expanding outward from the center.'}
                 {selectedChart === 'sankey' && 'Sankey diagram visualizes the flow of money between different entities in the crypto ecosystem - from investors through exchanges to final destinations.'}
-                {selectedChart === 'gauge' && 'Gauge charts display key market metrics at a glance. The Fear & Greed index and AI Confidence scores are shown as intuitive dial indicators.'}
+                {selectedChart === 'gauge' && 'Gauge charts display key market metrics at a glance. The Fear & Greed index and market confidence scores are shown as intuitive dial indicators.'}
                 {selectedChart === 'radar_advanced' && 'Radar chart enables multi-dimensional comparison of different cryptocurrencies across various metrics like market cap, volume, sentiment, and more.'}
                 {selectedChart === 'graph_network' && 'Network graph shows relationships and connections between different entities in the crypto ecosystem. Drag nodes to explore connections.'}
                 {selectedChart === 'parallel' && 'Parallel coordinates chart allows you to see multiple metrics for each coin simultaneously. Each line represents a coin flowing through different metric axes.'}

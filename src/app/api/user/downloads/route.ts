@@ -54,8 +54,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    // Check download limit (unless pro/business)
-    if (profile.subscription_tier !== 'pro' && profile.subscription_tier !== 'business') {
+    // Check download limit (unless premium - unlimited downloads)
+    if (profile.subscription_tier !== 'premium') {
       if (profile.downloads_this_month >= profile.downloads_limit) {
         return NextResponse.json({
           error: 'Download limit reached',

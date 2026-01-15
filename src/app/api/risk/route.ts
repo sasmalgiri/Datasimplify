@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { findCoinByGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { FEATURES } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
@@ -132,6 +133,14 @@ async function buildCoinRisk(coinId: string, days: number): Promise<CoinRisk | n
 }
 
 export async function GET(request: Request) {
+  // Risk feature is disabled in paddle_safe mode - return 404
+  if (!FEATURES.risk) {
+    return NextResponse.json(
+      { error: 'Risk analysis feature is disabled', code: 'FEATURE_DISABLED' },
+      { status: 404 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const coinsParam = searchParams.get('coins');
   const daysParam = Number.parseInt(searchParams.get('days') || '365');

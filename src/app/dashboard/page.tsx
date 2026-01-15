@@ -189,16 +189,14 @@ export default function DashboardPage() {
 
   const tierColors: Record<string, string> = {
     free: 'bg-gray-600',
-    starter: 'bg-blue-600',
-    pro: 'bg-purple-600',
-    business: 'bg-yellow-600',
+    pro: 'bg-blue-600',
+    premium: 'bg-purple-600',
   };
 
   const tierLabels: Record<string, string> = {
     free: 'Free',
-    starter: 'Starter',
     pro: 'Pro',
-    business: 'Business',
+    premium: 'Premium',
   };
 
   return (
@@ -242,9 +240,8 @@ export default function DashboardPage() {
               </span>
             </div>
             <p className="text-2xl font-bold">
-              {profile.subscription_tier === 'free' ? 'Free' : 
-               profile.subscription_tier === 'starter' ? '$19/mo' :
-               profile.subscription_tier === 'pro' ? '$49/mo' : '$99/mo'}
+              {profile.subscription_tier === 'free' ? 'Free' :
+               profile.subscription_tier === 'pro' ? '$29/mo' : '$79/mo'}
             </p>
             {profile.subscription_tier !== 'free' && (
               <button
@@ -293,23 +290,23 @@ export default function DashboardPage() {
               <div>
                 <h3 className="text-xl font-bold mb-2">🚀 Upgrade for More Downloads</h3>
                 <p className="text-gray-600">
-                  Get unlimited downloads, AI analysis, and priority support.
+                  Get unlimited downloads, advanced analytics, and priority support.
                 </p>
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => handleUpgrade('starter')}
+                  onClick={() => handleUpgrade('pro')}
                   disabled={isUpgrading}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition"
                 >
-                  Starter $19/mo
+                  Pro $29/mo
                 </button>
                 <button
-                  onClick={() => handleUpgrade('pro')}
+                  onClick={() => handleUpgrade('premium')}
                   disabled={isUpgrading}
                   className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition"
                 >
-                  Pro $49/mo
+                  Premium $79/mo
                 </button>
               </div>
             </div>

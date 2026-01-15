@@ -1,30 +1,14 @@
-'use client';
-
+import { notFound } from 'next/navigation';
 import { PriceAlerts } from '@/components/features/PriceAlerts';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { isFeatureEnabled } from '@/lib/featureFlags';
+import { FEATURES } from '@/lib/featureFlags';
 
+// Check feature flag at build/request time - return 404 if disabled
 export default function AlertsPage() {
-  const alertsEnabled = isFeatureEnabled('alerts');
-
-  if (!alertsEnabled) {
-    return (
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-        <FreeNavbar />
-        <Breadcrumb />
-        <div className="max-w-3xl mx-auto px-4 py-16">
-          <h1 className="text-3xl font-bold mb-4">Price Alerts</h1>
-          <p className="text-gray-700 mb-4">
-            This feature is currently disabled in this configuration.
-          </p>
-          <p className="text-gray-600 text-sm">
-            DataSimplify provides research and comparison tools for education purposes.
-            Price alert functionality is not available in the current mode.
-          </p>
-        </div>
-      </div>
-    );
+  // In paddle_safe mode, alerts feature is disabled - return proper 404
+  if (!FEATURES.alerts) {
+    notFound();
   }
 
   return (

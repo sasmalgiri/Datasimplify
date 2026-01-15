@@ -1,9 +1,19 @@
-import { NextResponse } from 'next/server';
+/**
+ * Coin Detail API Route
+ *
+ * Returns individual coin data from Binance
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { findCoinByGeckoId, getCoinGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
 import { FEATURES } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getCoinFromCache, saveBulkMarketDataToCache } from '@/lib/supabaseData';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
@@ -94,9 +104,13 @@ async function setCache(key: string, data: unknown): Promise<void> {
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/crypto/[id]');
+  if (blocked) return blocked;
+
   const { id } = await params;
 
   assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/[id]' });

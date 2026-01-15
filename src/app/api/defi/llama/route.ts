@@ -1,6 +1,16 @@
-import { NextResponse } from 'next/server';
+/**
+ * DefiLlama API Route
+ *
+ * Returns DeFi protocol and stablecoin data from DefiLlama
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const LLAMA_BASE = 'https://api.llama.fi';
 
@@ -11,7 +21,10 @@ function parseType(value: string | null): LlamaType | null {
   return null;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/defi/llama');
+  if (blocked) return blocked;
   if (!isFeatureEnabled('defi')) {
     return NextResponse.json(
       { success: false, disabled: true, error: 'DeFi feature is disabled.' },

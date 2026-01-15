@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
+  FileSpreadsheet,
   Activity,
   Shield,
   BarChart3,
@@ -19,9 +20,10 @@ import {
   Database
 } from 'lucide-react';
 import PriceChart from '@/components/PriceChart';
-import DownloadButton from '@/components/DownloadButton';
 import { TechnicalAnalysisPanel } from '@/components/TechnicalAnalysisPanel';
 import { OnChainMetrics } from '@/components/RiskScoreCard';
+import { DeveloperStats } from '@/components/DeveloperStats';
+import { SocialStats } from '@/components/SocialStats';
 import { CoinMarketData } from '@/types/crypto';
 import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChangeColor } from '@/lib/utils';
 import { fetchWithCache, CACHE_TTL } from '@/lib/clientCache';
@@ -113,6 +115,46 @@ type DerivativesSnapshot = {
   longShortRatio?: number;
 } | null;
 
+interface DeveloperData {
+  forks: number;
+  stars: number;
+  subscribers: number;
+  total_issues: number;
+  closed_issues: number;
+  pull_requests_merged: number;
+  pull_request_contributors: number;
+  commit_count_4_weeks: number;
+  code_additions_4_weeks: number;
+  code_deletions_4_weeks: number;
+  commit_activity: number[];
+}
+
+interface CommunityData {
+  twitter_followers: number;
+  reddit_subscribers: number;
+  reddit_active_accounts: number;
+  reddit_avg_posts_48h: number;
+  reddit_avg_comments_48h: number;
+  telegram_users: number;
+  facebook_likes: number;
+}
+
+interface CoinDetails {
+  developer_data: DeveloperData | null;
+  community_data: CommunityData | null;
+  sentiment: {
+    votes_up_percentage: number;
+    votes_down_percentage: number;
+  } | null;
+  watchlist_users: number;
+  links: {
+    twitter: string | null;
+    reddit: string | null;
+    telegram: string | null;
+    github: string[];
+  };
+}
+
 export default function CoinDetailPage() {
   const params = useParams();
   const coinId = params.id as string;
@@ -127,6 +169,7 @@ export default function CoinDetailPage() {
   const [onchain, setOnchain] = useState<OnChainSnapshot>(null);
   const [macro, setMacro] = useState<MacroSnapshot>(null);
   const [derivatives, setDerivatives] = useState<DerivativesSnapshot>(null);
+  const [coinDetails, setCoinDetails] = useState<CoinDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dataFromCache, setDataFromCache] = useState(false);
@@ -173,6 +216,7 @@ export default function CoinDetailPage() {
       if (macroEnabled) fetchMacro();
       fetchDerivatives();
       fetchOnchain();
+      fetchCoinDetails();
     }
   }, [coinId, fetchCoinData]);
 
@@ -337,6 +381,32 @@ export default function CoinDetailPage() {
     }
   };
 
+  const fetchCoinDetails = async () => {
+    try {
+      const res = await fetch(`/api/crypto/${coinId}/details`);
+      const json = await res.json();
+      if (!json?.success || !json?.data) {
+        setCoinDetails(null);
+        return;
+      }
+      const data = json.data;
+      setCoinDetails({
+        developer_data: data.developer_data || null,
+        community_data: data.community_data || null,
+        sentiment: data.sentiment || null,
+        watchlist_users: data.watchlist_users || 0,
+        links: {
+          twitter: data.links?.twitter || null,
+          reddit: data.links?.reddit || null,
+          telegram: data.links?.telegram || null,
+          github: data.links?.github || [],
+        },
+      });
+    } catch {
+      setCoinDetails(null);
+    }
+  };
+
   const refreshAllData = async () => {
     setRefreshing(true);
     setLoading(true);
@@ -347,7 +417,8 @@ export default function CoinDetailPage() {
       fetchTechnical(),
       fetchMacro(),
       fetchDerivatives(),
-      fetchOnchain()
+      fetchOnchain(),
+      fetchCoinDetails()
     ]);
     setRefreshing(false);
   };
@@ -461,10 +532,13 @@ export default function CoinDetailPage() {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </button>
-            <DownloadButton
-              coins={[coin]}
-              filename={`${coin.symbol}_data`}
-            />
+            <Link
+              href="/templates"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Get Excel Template
+            </Link>
           </div>
         </div>
 
@@ -553,6 +627,30 @@ export default function CoinDetailPage() {
             />
           )}
         </div>
+
+        {/* Developer & Social Stats */}
+        {coinDetails && (coinDetails.developer_data || coinDetails.community_data) && (
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            {coinDetails.developer_data && (
+              <DeveloperStats
+                data={coinDetails.developer_data}
+                githubUrls={coinDetails.links?.github}
+              />
+            )}
+            {coinDetails.community_data && (
+              <SocialStats
+                data={coinDetails.community_data}
+                sentiment={coinDetails.sentiment}
+                watchlistUsers={coinDetails.watchlist_users}
+                links={{
+                  twitter: coinDetails.links?.twitter,
+                  reddit: coinDetails.links?.reddit,
+                  telegram: coinDetails.links?.telegram,
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

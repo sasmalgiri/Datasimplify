@@ -148,7 +148,7 @@ export function FooterDisclaimer() {
         <a href="/terms" className="text-gray-400 hover:text-white">Terms</a> |{' '}
         <a href="/privacy" className="text-gray-400 hover:text-white">Privacy</a>
       </p>
-      <p>© 2024 DataSimplify. All rights reserved. We do not sell your data.</p>
+      <p>© 2026 DataSimplify. All rights reserved. We do not sell your data.</p>
     </div>
   );
 }

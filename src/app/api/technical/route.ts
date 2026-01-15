@@ -1,12 +1,16 @@
 /**
  * Technical Indicators API
  * Calculates technical indicators from price data
+ *
+ * COMPLIANCE: This route is protected against external API access.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
+
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 type MarketChart = {
@@ -284,7 +288,11 @@ function calculateWilliamsR(candles: Candle[], period: number = 14): number {
   return ((highestHigh - currentClose) / (highestHigh - lowestLow)) * -100;
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/technical');
+  if (blocked) return blocked;
+
   try {
     const { searchParams } = new URL(request.url);
     const coin = searchParams.get('coin') || 'bitcoin';

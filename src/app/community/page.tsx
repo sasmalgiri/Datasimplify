@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Users,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { FEATURES } from '@/lib/featureFlags';
 
 interface DiscussionTopic {
   id: string;
@@ -85,7 +87,20 @@ const resources = [
 ];
 
 export default function CommunityPage() {
+  const router = useRouter();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  // In paddle_safe mode, community feature is disabled - redirect to home
+  useEffect(() => {
+    if (!FEATURES.community) {
+      router.replace('/');
+    }
+  }, [router]);
+
+  // Don't render if feature is disabled
+  if (!FEATURES.community) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">

@@ -9,16 +9,16 @@ import { debounce } from '@/lib/utils';
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
-  onAISearch?: (query: string) => void;
+  onSmartSearch?: (query: string) => void;
   placeholder?: string;
 }
 
-export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search coins...' }: SearchBarProps) {
+export default function SearchBar({ onSearch, onSmartSearch, placeholder = 'Search coins...' }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isAIMode, setIsAIMode] = useState(false);
+  const [isSmartMode, setIsSmartMode] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -46,10 +46,10 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
   const debouncedSearch = debounce((q: string) => searchCoins(q), 300);
 
   useEffect(() => {
-    if (!isAIMode) {
+    if (!isSmartMode) {
       debouncedSearch(query);
     }
-  }, [query, isAIMode]);
+  }, [query, isSmartMode]);
 
   // Handle click outside
   useEffect(() => {
@@ -65,8 +65,8 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && query.trim()) {
-      if (isAIMode && onAISearch) {
-        onAISearch(query);
+      if (isSmartMode && onSmartSearch) {
+        onSmartSearch(query);
         setIsOpen(false);
       } else if (onSearch) {
         onSearch(query);
@@ -90,7 +90,7 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
         isOpen ? 'border-orange-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
       }`}>
         <div className="flex items-center pl-4">
-          {isAIMode ? (
+          {isSmartMode ? (
             <Sparkles className="w-5 h-5 text-orange-500" />
           ) : (
             <Search className="w-5 h-5 text-gray-400" />
@@ -107,30 +107,31 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder={isAIMode ? 'Ask AI: "Show me DeFi tokens up 10% today"' : placeholder}
+          placeholder={isSmartMode ? 'Smart search: "DeFi tokens up 10% today"' : placeholder}
           className="flex-1 px-3 py-3 bg-transparent outline-none text-gray-900 placeholder-gray-400"
         />
 
         {query && (
           <button
             onClick={clearQuery}
+            aria-label="Clear search"
             className="p-2 hover:bg-gray-100 rounded-lg mr-1"
           >
             <X className="w-4 h-4 text-gray-400" />
           </button>
         )}
 
-        {/* AI Mode Toggle */}
+        {/* Smart Mode Toggle */}
         <button
-          onClick={() => setIsAIMode(!isAIMode)}
+          onClick={() => setIsSmartMode(!isSmartMode)}
           className={`mr-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-            isAIMode
+            isSmartMode
               ? 'bg-orange-500 text-white'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          AI
+          Smart
         </button>
 
         {loading && (
@@ -141,7 +142,7 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
       </div>
 
       {/* Dropdown Results */}
-      {isOpen && !isAIMode && results.length > 0 && (
+      {isOpen && !isSmartMode && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-gray-200 shadow-xl z-50 max-h-96 overflow-y-auto">
           {results.slice(0, 8).map((coin) => (
             <Link
@@ -169,12 +170,12 @@ export default function SearchBar({ onSearch, onAISearch, placeholder = 'Search 
         </div>
       )}
 
-      {/* AI Mode Instructions */}
-      {isOpen && isAIMode && !query && (
+      {/* Smart Mode Instructions */}
+      {isOpen && isSmartMode && !query && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-gray-200 shadow-xl z-50 p-4">
           <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-orange-500" />
-            AI Search Examples
+            Smart Search Examples
           </h4>
           <div className="space-y-2 text-sm text-gray-600">
             <button

@@ -1,6 +1,16 @@
-import { NextResponse } from 'next/server';
+/**
+ * Portfolio Presets API
+ *
+ * Returns portfolio allocation presets based on Binance-derived market data
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { fetchMarketOverview } from '@/lib/dataApi';
 import { getCoinGeckoId } from '@/lib/dataTypes';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 type Risk = 'conservative' | 'balanced' | 'aggressive';
 
@@ -86,7 +96,11 @@ function buildPreset(risk: Risk, coins: Array<{ id: string; symbol: string; name
   })) as PresetAllocation[];
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/portfolio/presets');
+  if (blocked) return blocked;
+
   const { searchParams } = new URL(request.url);
   const riskParam = (searchParams.get('risk') || '').toLowerCase();
   const risk: Risk = (riskParam === 'conservative' || riskParam === 'balanced' || riskParam === 'aggressive')

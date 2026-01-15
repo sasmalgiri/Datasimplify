@@ -1,10 +1,23 @@
-import { NextResponse } from 'next/server';
+/**
+ * Fear & Greed History API
+ *
+ * Returns historical fear & greed data from Alternative.me
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 // Alternative.me Fear & Greed Index API (FREE)
 const FEAR_GREED_API = 'https://api.alternative.me/fng/';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/onchain/fear-greed-history');
+  if (blocked) return blocked;
   try {
     const { searchParams } = new URL(request.url);
     const limit = Math.min(365, Math.max(1, Number.parseInt(searchParams.get('limit') || '30', 10) || 30));

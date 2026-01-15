@@ -1,32 +1,16 @@
-'use client';
-
+import { notFound } from 'next/navigation';
 import { WhaleTracker } from '@/components/features/WhaleTracker';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
-import { isFeatureEnabled } from '@/lib/featureFlags';
+import { FEATURES } from '@/lib/featureFlags';
 
+// Check feature flag at build/request time - return 404 if disabled
 export default function WhalesPage() {
-  const whalesEnabled = isFeatureEnabled('whales');
-
-  if (!whalesEnabled) {
-    return (
-      <div className="min-h-screen bg-gray-50 text-gray-900">
-        <FreeNavbar />
-        <Breadcrumb />
-        <div className="max-w-3xl mx-auto px-4 py-16">
-          <h1 className="text-3xl font-bold mb-4">Whale Tracking</h1>
-          <p className="text-gray-700 mb-4">
-            This feature is currently disabled in this configuration.
-          </p>
-          <p className="text-gray-600 text-sm">
-            DataSimplify provides research and comparison tools for education purposes.
-            Whale tracking functionality is not available in the current mode.
-          </p>
-        </div>
-      </div>
-    );
+  // In paddle_safe mode, whales feature is disabled - return proper 404
+  if (!FEATURES.whales) {
+    notFound();
   }
 
   return (

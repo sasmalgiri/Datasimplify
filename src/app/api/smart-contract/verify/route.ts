@@ -1,12 +1,17 @@
 /**
  * Smart Contract Verification API
+ *
  * Uses Sourcify to check whether a deployed contract is verified.
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getContractVerificationFromCache, saveContractVerificationToCache } from '@/lib/supabaseData';
+import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const SOURCIFY_BASE_URL = 'https://sourcify.dev/server';
 
@@ -66,7 +71,11 @@ async function fetchSourcifyContract(chainId: number, address: string): Promise<
   };
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Enforce display-only access - block external API scraping
+  const blocked = enforceDisplayOnly(request, '/api/smart-contract/verify');
+  if (blocked) return blocked;
+
   if (!isFeatureEnabled('smartContractVerifier')) {
     return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
   }

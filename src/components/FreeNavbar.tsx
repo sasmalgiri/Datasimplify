@@ -95,15 +95,31 @@ export function FreeNavbar() {
     analytics: {
       label: 'Analytics',
       icon: <TrendingUp className="w-4 h-4" />,
-      paths: ['/market', '/onchain', '/sentiment', '/technical', '/correlation', ...(isFeatureEnabled('risk') ? ['/risk'] : [])],
+      paths: ['/analyst-hub', '/market', '/trending', '/gainers-losers', '/onchain', '/sentiment', '/technical', '/correlation', ...(isFeatureEnabled('risk') ? ['/risk'] : [])],
       items: [
+        { href: '/analyst-hub', label: 'Analyst Hub', description: 'All data in one dashboard', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/market', label: 'Market Analytics', description: 'Market overview and rankings', icon: <TrendingUp className="w-4 h-4" /> },
+        { href: '/trending', label: 'Trending', description: 'Most searched coins', icon: <Zap className="w-4 h-4" /> },
+        { href: '/gainers-losers', label: 'Gainers & Losers', description: 'Top market movers', icon: <TrendingUp className="w-4 h-4" /> },
         { href: '/onchain', label: 'On-Chain Analytics', description: 'Network activity and on-chain metrics', icon: <Zap className="w-4 h-4" /> },
         { href: '/sentiment', label: 'Fear & Greed', description: 'Sentiment index and history', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/technical', label: 'Technical Metrics', description: 'Indicators and levels (educational)', icon: <LineChart className="w-4 h-4" /> },
         { href: '/correlation', label: 'Correlation', description: 'How assets move together', icon: <Scale className="w-4 h-4" /> },
         // Risk metrics hidden in paddle_safe mode (could be perceived as trading advice)
         ...(isFeatureEnabled('risk') ? [{ href: '/risk', label: 'Risk Metrics', description: 'Risk stats and explanations', icon: <Shield className="w-4 h-4" /> }] : []),
+      ],
+    },
+    discover: {
+      label: 'Discover',
+      icon: <Zap className="w-4 h-4" />,
+      paths: ['/recently-added', '/nft', '/exchanges', '/categories', '/global-market', '/dex-pools'],
+      items: [
+        { href: '/recently-added', label: 'New Listings', description: 'Recently added coins', icon: <Zap className="w-4 h-4" /> },
+        { href: '/dex-pools', label: 'DEX Pools', description: 'Trending liquidity pools', icon: <TrendingUp className="w-4 h-4" /> },
+        { href: '/nft', label: 'NFT Collections', description: 'Top NFTs by market cap', icon: <Zap className="w-4 h-4" /> },
+        { href: '/exchanges', label: 'Exchanges', description: 'Exchange rankings', icon: <BarChart3 className="w-4 h-4" /> },
+        { href: '/categories', label: 'Categories', description: 'Browse by category', icon: <LineChart className="w-4 h-4" /> },
+        { href: '/global-market', label: 'Global Market', description: 'Market cap history', icon: <TrendingUp className="w-4 h-4" /> },
       ],
     },
     research: {
@@ -146,8 +162,10 @@ export function FreeNavbar() {
   };
 
   const mobileLinks = [
+    { href: '/analyst-hub', label: 'Analyst Hub', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/templates', label: 'Download', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/market', label: 'Market', icon: <TrendingUp className="w-4 h-4" /> },
+    { href: '/trending', label: 'Trending', icon: <Zap className="w-4 h-4" /> },
     { href: '/onchain', label: 'On-Chain', icon: <Zap className="w-4 h-4" /> },
     { href: '/charts', label: 'Charts', icon: <LineChart className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare', icon: <Scale className="w-4 h-4" /> },
