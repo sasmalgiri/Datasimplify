@@ -6,6 +6,45 @@ _Not legal advice. This file intentionally contains ONLY what still needs to be 
 
 ✅ No further code/content changes were found that block a Paddle-safe launch under the **“templates-only + display-only market data”** posture.
 
+## Global legal note (cannot be auto-verified)
+
+If you are selling **globally**, you should NOT treat “Paddle-safe + display-only” as “legally safe everywhere”. Before launch, you still need real legal/tax review for the jurisdictions you will serve.
+
+Minimum global go-live requirements (non-code):
+- Confirm tax setup for digital services/subscriptions (VAT/GST/Sales Tax as applicable) and ensure invoices/receipts match your seller entity.
+- Confirm consumer protection compliance: clear pricing, auto-renewal disclosures, cancellation flow, and refund policy that matches what you actually honor.
+- Confirm privacy compliance for your target markets (at minimum: GDPR/UK GDPR, CCPA/CPRA, and India DPDP as applicable): data processing purpose, retention, user rights, and a contact/grievance channel.
+- Confirm you are not providing regulated financial/investment advice in any target market (keep “no advice/no signals” posture and avoid recommendation language).
+- Confirm third-party data licensing/attribution requirements (CoinGecko “display-only”, no redistribution, no raw exports).
+
+## Fastest path to “global-ready” (US + EU + UK + India)
+
+Before launch, schedule a short review with:
+- A lawyer (privacy + consumer protection + terms)
+- A CA/accountant (tax + invoicing)
+
+Decisions you must provide them (so they can answer correctly):
+- Seller entity country + legal name + address (India company/sole prop/etc.)
+- What you sell: subscription vs one-time purchase vs both
+- Where you sell: US + EU + UK + India (confirm any exclusions)
+- Whether you store personal data (you do if using Supabase auth) and where it is processed/hosted
+
+Ask your lawyer to confirm (deliverables):
+- A “subscription compliance” check: auto-renew language, cancellation UX, refund language, required pre-purchase disclosures
+- Privacy compliance across: GDPR/UK GDPR, CCPA/CPRA, India DPDP (and whether you need cookie consent banners)
+- Whether you need a DPA and subprocessor list in your Privacy Policy (common if using Supabase + Vercel)
+
+Ask your CA/accountant to confirm (deliverables):
+- Whether you must charge VAT (EU/UK) and how you will handle it (processor-collected vs self-collected)
+- Whether you must charge GST (India) and invoicing requirements
+- US sales tax guidance for digital subscriptions/templates (state-by-state risk; whether to use a tax engine)
+- Invoice/receipt fields you must show (seller entity, tax IDs, customer location, currency)
+
+Artifacts to hand them (from this repo/site):
+- Live pricing page
+- Terms, Privacy, Refund, Disclaimer pages
+- Checkout screenshots/flow (Razorpay/Paddle)
+
 ## Required production configuration (do not skip)
 
 1) Force Paddle-safe mode
