@@ -49,11 +49,10 @@ export default function SentimentPage() {
               <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
                 <h3 className="font-bold text-red-700">😨 Extreme Fear (0-25)</h3>
                 <p className="text-sm text-red-600 mt-1">
-                  People are panicking. Prices are often at their lowest.
-                  &quot;Be greedy when others are fearful&quot; - Warren Buffett
+                  Sentiment is very negative. Markets are often highly volatile during these periods.
                 </p>
                 <p className="text-xs text-red-700 mt-2">
-                  💡 <strong>Tip:</strong> Could be a good buying opportunity, but do your research!
+                  💡 <strong>Tip:</strong> Treat this as educational context, not a recommendation.
                 </p>
               </div>
 
@@ -63,7 +62,7 @@ export default function SentimentPage() {
                   People are nervous but not panicking. Market is uncertain.
                 </p>
                 <p className="text-xs text-orange-700 mt-2">
-                  💡 <strong>Tip:</strong> Watch for signs of recovery or further decline.
+                  💡 <strong>Tip:</strong> Use sentiment alongside other information and risk disclosures.
                 </p>
               </div>
 
@@ -73,7 +72,7 @@ export default function SentimentPage() {
                   Market is balanced. No strong emotions either way.
                 </p>
                 <p className="text-xs text-yellow-700 mt-2">
-                  💡 <strong>Tip:</strong> Good time for rational decision-making.
+                  💡 <strong>Tip:</strong> Use this as a baseline reference point.
                 </p>
               </div>
 
@@ -83,18 +82,17 @@ export default function SentimentPage() {
                   People are optimistic. Prices are rising. FOMO is building.
                 </p>
                 <p className="text-xs text-green-700 mt-2">
-                  💡 <strong>Tip:</strong> Enjoy the ride, but consider taking some profits.
+                  💡 <strong>Tip:</strong> Use sentiment as educational context, not as a recommendation.
                 </p>
               </div>
 
               <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg">
                 <h3 className="font-bold text-emerald-700">🤑 Extreme Greed (75-100)</h3>
                 <p className="text-sm text-emerald-600 mt-1">
-                  Everyone is excited! Prices might be too high.
-                  &quot;Be fearful when others are greedy&quot; - Warren Buffett
+                  Sentiment is very positive. Markets can still be volatile during these periods.
                 </p>
                 <p className="text-xs text-emerald-700 mt-2">
-                  💡 <strong>Tip:</strong> Be careful! Market corrections often follow extreme greed.
+                  💡 <strong>Tip:</strong> Treat this as educational context, not a recommendation.
                 </p>
               </div>
             </div>
@@ -111,8 +109,8 @@ export default function SentimentPage() {
               <div>
                 <h3 className="font-bold">March 2020 - COVID Crash</h3>
                 <p className="text-sm text-gray-600">
-                  Fear & Greed hit 8 (Extreme Fear). Bitcoin dropped to $3,800.
-                  Those who bought during this fear saw 25x gains over 2 years.
+                  Fear & Greed hit 8 (Extreme Fear). Bitcoin dropped to around $3,800.
+                  The market later recovered significantly.
                 </p>
               </div>
             </div>
@@ -122,8 +120,8 @@ export default function SentimentPage() {
               <div>
                 <h3 className="font-bold">November 2021 - All-Time High</h3>
                 <p className="text-sm text-gray-600">
-                  Fear & Greed hit 84 (Extreme Greed). Bitcoin reached $69,000.
-                  Those who sold during this greed avoided the 77% crash that followed.
+                  Fear & Greed hit 84 (Extreme Greed). Bitcoin reached around $69,000.
+                  The market later experienced a major drawdown.
                 </p>
               </div>
             </div>

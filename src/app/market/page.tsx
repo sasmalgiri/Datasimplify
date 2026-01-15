@@ -370,7 +370,7 @@ export default function MarketPage() {
               <p className="text-gray-400 text-sm">
                 <Tooltip text="Total trading volume in the last 24 hours">24h Volume</Tooltip>
               </p>
-              <InfoButton text="High volume = lots of trading activity. Low volume = less interest or harder to buy/sell." />
+              <InfoButton text="High volume = lots of trading activity. Low volume = less activity and potentially lower liquidity." />
             </div>
             <p className="text-2xl font-bold mt-1 group-hover:text-blue-400 transition-colors">
               {globalData ? formatLargeNumber(globalData.total_volume) : '-'}
@@ -383,7 +383,7 @@ export default function MarketPage() {
               <p className="text-gray-400 text-sm">
                 <Tooltip text="Measures market sentiment from 0 (Extreme Fear) to 100 (Extreme Greed)">Fear & Greed Index</Tooltip>
               </p>
-              <InfoButton text="When people are fearful, prices often drop (buying opportunity). When greedy, prices rise (caution)." />
+              <InfoButton text="A sentiment indicator that reflects risk appetite. Use it as context, not as a recommendation." />
             </div>
             <p className={`text-2xl font-bold mt-1 ${fearGreed ? getFearGreedColor(fearGreed.value) : 'text-white'}`}>
               {fearGreed ? fearGreed.value : '-'}

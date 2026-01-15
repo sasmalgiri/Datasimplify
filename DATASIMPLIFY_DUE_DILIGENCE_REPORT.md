@@ -243,7 +243,7 @@ DataSimplify generates Excel templates with CryptoSheets formulas. **Important:*
 ### Business Model Clarity
 | What We Sell | What We Don't Sell |
 |--------------|-------------------|
-| Excel template software | Live data feeds |
+| Excel template software | Data feed subscriptions |
 | Pre-configured formulas | API access to data |
 | Report workflows | Data redistribution |
 | Quota-aware configurations | CryptoSheets subscriptions |

@@ -136,7 +136,7 @@ export default function GlossaryPage() {
     {
       term: 'ATH (All-Time High)',
       simple: 'The highest price a coin has ever reached',
-      detailed: 'ATH is the peak price in a crypto\'s history. Breaking ATH is often seen as very bullish. Many traders wait for ATH breaks to confirm uptrends.',
+      detailed: 'ATH is the peak price in a crypto\'s history. It is commonly referenced as a historical benchmark and psychological level.',
       example: 'Bitcoin\'s ATH was about $99,800 in December 2024.',
       category: 'market',
       related: ['ATL', 'Bull Market', 'Breakout']
@@ -144,7 +144,7 @@ export default function GlossaryPage() {
     {
       term: 'ATL (All-Time Low)',
       simple: 'The lowest price a coin has ever reached',
-      detailed: 'ATL is the lowest price in a crypto\'s history. Buying near ATL can be risky (coin might fail) or profitable (if it recovers).',
+      detailed: 'ATL is the lowest price in a crypto\'s history. It\'s a historical reference point and does not imply future performance.',
       example: 'Many altcoins from 2017 are still 99% below their ATH.',
       category: 'market'
     },
@@ -153,15 +153,15 @@ export default function GlossaryPage() {
     {
       term: 'HODL',
       simple: 'Hold on for dear life - not selling no matter what',
-      detailed: 'HODL started as a typo of "HOLD" in a 2013 Bitcoin forum post. It became a philosophy: don\'t panic sell, just hold through the ups and downs.',
-      example: 'HODLers who bought Bitcoin in 2015 and held through everything are very rich now.',
+      detailed: 'HODL started as a typo of "HOLD" in a 2013 Bitcoin forum post. It became a meme and a long-term holding mindset in crypto culture.',
+      example: 'Some long-term holders keep their positions through multiple market cycles.',
       category: 'trading',
       related: ['Diamond Hands', 'Paper Hands']
     },
     {
       term: 'FOMO',
       simple: 'Fear Of Missing Out - buying because everyone else is buying',
-      detailed: 'FOMO is the anxiety that you\'re missing a profitable opportunity. It often leads to buying at high prices and losing money. Good traders control their FOMO.',
+      detailed: 'FOMO is the anxiety that you\'re missing out. It can lead to impulsive decisions, especially during volatile markets.',
       example: 'FOMO made many people buy Dogecoin at its peak, then lose 80%.',
       category: 'trading',
       related: ['FUD', 'DYOR']
@@ -177,8 +177,8 @@ export default function GlossaryPage() {
     {
       term: 'DYOR',
       simple: 'Do Your Own Research - don\'t trust random advice',
-      detailed: 'DYOR means you should research investments yourself instead of blindly following tips. Check the team, technology, tokenomics, and use cases before investing.',
-      example: 'Someone on Twitter says "buy this coin" - DYOR before you do!',
+      detailed: 'DYOR means you should verify information yourself instead of blindly following tips. Cross-check sources, understand risks, and read primary documentation where possible.',
+      example: 'Someone on social media says "this is guaranteed" — DYOR and verify sources before acting.',
       category: 'trading',
       related: ['NFA']
     },
@@ -193,16 +193,16 @@ export default function GlossaryPage() {
     {
       term: 'Diamond Hands 💎🙌',
       simple: 'Someone who holds their crypto no matter how much it drops',
-      detailed: 'Diamond hands describes investors who don\'t panic sell during crashes. They have strong conviction and hold through volatility.',
-      example: 'Having diamond hands through the 2022 crash would mean still holding at -80%.',
+      detailed: 'Diamond hands is crypto slang for holding through high volatility instead of reacting emotionally.',
+      example: 'Someone might describe themselves as having “diamond hands” during a major drawdown.',
       category: 'trading',
       related: ['Paper Hands', 'HODL']
     },
     {
       term: 'Paper Hands 📄🙌',
       simple: 'Someone who sells at the first sign of trouble',
-      detailed: 'Paper hands describes investors who panic sell at the first price drop. Often they sell the bottom and miss the recovery.',
-      example: 'Paper hands might sell Bitcoin at -20%, then watch it recover +50%.',
+      detailed: 'Paper hands is crypto slang for exiting a position quickly during volatility due to fear or uncertainty.',
+      example: 'Someone might be called “paper hands” for selling during a sudden price drop.',
       category: 'trading',
       related: ['Diamond Hands', 'FUD']
     },
