@@ -169,3 +169,8 @@ body {
 .duration-300 {
   animation-duration: 0.3s;
 }
+
+/* Template finder expanded state */
+.template-content-expanded {
+  max-height: 400px;
+}

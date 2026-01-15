@@ -13,48 +13,102 @@ interface HomepageTemplateFinderProps {
   className?: string;
 }
 
-// Quick Start Presets - one click, no questions
-const QUICK_PRESETS = [
+// All 11 Templates from the catalog
+const ALL_TEMPLATES = [
+  // Market Templates
   {
-    id: 'market-daily',
+    id: 'market-overview',
     label: 'Market Overview',
-    description: 'Top 10 coins, daily',
+    description: 'Top coins, daily data',
     icon: '📊',
+    category: 'market',
+    freeSafe: true,
     config: { reportType: 'market' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'], timeframe: '1d' },
   },
   {
-    id: 'portfolio-tracker',
-    label: 'Portfolio Tracker',
-    description: 'Track your holdings',
-    icon: '💼',
-    config: { reportType: 'portfolio' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+    id: 'market-advanced',
+    label: 'Advanced Market',
+    description: 'Volume analysis & trends',
+    icon: '📈',
+    category: 'market',
+    freeSafe: false,
+    config: { reportType: 'market' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
   },
+  // Watchlist Templates
   {
-    id: 'watchlist-weekly',
-    label: 'Watchlist',
-    description: 'Weekly coin tracking',
+    id: 'watchlist-simple',
+    label: 'Simple Watchlist',
+    description: 'Track 5-10 coins',
     icon: '👁️',
-    config: { reportType: 'watchlist' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1w' },
+    category: 'watchlist',
+    freeSafe: true,
+    config: { reportType: 'watchlist' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
   },
   {
-    id: 'correlation',
-    label: 'Correlation Matrix',
-    description: 'How coins move together',
-    icon: '🔗',
-    config: { reportType: 'correlation' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+    id: 'watchlist-pro',
+    label: 'Pro Watchlist',
+    description: 'Up to 50 coins + charts',
+    icon: '👀',
+    category: 'watchlist',
+    freeSafe: false,
+    config: { reportType: 'watchlist' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
   },
+  // Screener Templates
   {
-    id: 'screener',
-    label: 'Coin Screener',
+    id: 'screener-basic',
+    label: 'Basic Screener',
     description: 'Filter by metrics',
     icon: '🔍',
+    category: 'screener',
+    freeSafe: false,
     config: { reportType: 'screener' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
   },
   {
-    id: 'risk',
-    label: 'Risk Analysis',
+    id: 'screener-advanced',
+    label: 'Advanced Screener',
+    description: 'Technical indicators',
+    icon: '🔎',
+    category: 'screener',
+    freeSafe: false,
+    config: { reportType: 'screener' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+  },
+  // Portfolio Templates
+  {
+    id: 'portfolio-tracker',
+    label: 'Portfolio Tracker',
+    description: 'Track holdings & P&L',
+    icon: '💼',
+    category: 'portfolio',
+    freeSafe: true,
+    config: { reportType: 'portfolio' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+  },
+  {
+    id: 'portfolio-advanced',
+    label: 'Advanced Portfolio',
+    description: 'Risk & rebalancing',
+    icon: '💰',
+    category: 'portfolio',
+    freeSafe: false,
+    config: { reportType: 'portfolio' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+  },
+  // Correlation Template
+  {
+    id: 'correlation-matrix',
+    label: 'Correlation Matrix',
+    description: 'How coins move together',
+    icon: '🔗',
+    category: 'correlation',
+    freeSafe: false,
+    config: { reportType: 'correlation' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
+  },
+  // Risk Template
+  {
+    id: 'risk-dashboard',
+    label: 'Risk Dashboard',
     description: 'Volatility & drawdown',
     icon: '⚠️',
+    category: 'risk',
+    freeSafe: false,
     config: { reportType: 'risk' as const, coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'], timeframe: '1d' },
   },
 ];
@@ -62,7 +116,7 @@ const QUICK_PRESETS = [
 type ViewMode = 'presets' | 'search' | 'result';
 
 /**
- * HomepageTemplateFinder - Compact with Quick Presets + Show More
+ * HomepageTemplateFinder - All 11 Templates with Show More
  */
 export default function HomepageTemplateFinder({ className = '' }: HomepageTemplateFinderProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('presets');
@@ -73,7 +127,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle quick preset click - instant result
-  const handlePresetClick = useCallback((preset: typeof QUICK_PRESETS[0]) => {
+  const handlePresetClick = useCallback((preset: typeof ALL_TEMPLATES[0]) => {
     const intent: ParsedIntent = {
       reportType: preset.config.reportType,
       coins: preset.config.coins,
@@ -151,8 +205,9 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  // Show only first 2 presets unless expanded
-  const visiblePresets = showAllPresets ? QUICK_PRESETS : QUICK_PRESETS.slice(0, 2);
+  // Show only first 4 presets unless expanded
+  const visiblePresets = showAllPresets ? ALL_TEMPLATES : ALL_TEMPLATES.slice(0, 4);
+  const hiddenCount = ALL_TEMPLATES.length - 4;
 
   return (
     <div className={`bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 flex flex-col ${className}`}>
@@ -167,7 +222,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
             </div>
             <div>
               <h3 className="font-semibold text-white text-sm">Template Finder</h3>
-              <p className="text-[10px] text-gray-400">Quick start or search</p>
+              <p className="text-[10px] text-gray-400">{ALL_TEMPLATES.length} Excel templates</p>
             </div>
           </div>
           {viewMode !== 'presets' && (
@@ -183,7 +238,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
       </div>
 
       {/* Content Area */}
-      <div className="p-3">
+      <div className={`p-3 overflow-y-auto dropdown-scroll ${showAllPresets ? 'template-content-expanded' : ''}`}>
         {/* Presets View */}
         {viewMode === 'presets' && (
           <div className="space-y-2">
@@ -195,11 +250,16 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
                   onClick={() => handlePresetClick(preset)}
                   className="flex items-center gap-2 p-2.5 bg-gray-700/30 hover:bg-gray-700/50 border border-gray-600/30 hover:border-emerald-500/30 rounded-lg transition-all text-left group"
                 >
-                  <span className="text-base">{preset.icon}</span>
-                  <div className="min-w-0">
-                    <span className="text-xs font-medium text-white group-hover:text-emerald-400 transition-colors block truncate">
-                      {preset.label}
-                    </span>
+                  <span className="text-base flex-shrink-0">{preset.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs font-medium text-white group-hover:text-emerald-400 transition-colors truncate">
+                        {preset.label}
+                      </span>
+                      {preset.freeSafe && (
+                        <span className="text-[8px] px-1 py-0.5 bg-green-500/20 text-green-400 rounded flex-shrink-0">FREE</span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-gray-500 block truncate">{preset.description}</span>
                   </div>
                 </button>
@@ -207,13 +267,13 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
             </div>
 
             {/* Show More / Less button */}
-            {!showAllPresets && (
+            {!showAllPresets && hiddenCount > 0 && (
               <button
                 type="button"
                 onClick={() => setShowAllPresets(true)}
                 className="w-full py-1.5 text-xs text-gray-400 hover:text-emerald-400 transition-colors flex items-center justify-center gap-1"
               >
-                <span>+{QUICK_PRESETS.length - 2} more templates</span>
+                <span>+{hiddenCount} more templates</span>
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -286,7 +346,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
             </form>
 
             <div className="flex flex-wrap gap-1.5">
-              {['market overview', 'portfolio', 'compare coins'].map((suggestion) => (
+              {['market overview', 'portfolio', 'correlation', 'risk'].map((suggestion) => (
                 <button
                   key={suggestion}
                   type="button"
@@ -324,7 +384,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
 
             <div className="flex gap-2">
               <Link
-                href="/download"
+                href="/templates"
                 className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors text-center"
               >
                 Get Template
@@ -345,7 +405,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
       {viewMode === 'presets' && (
         <div className="border-t border-gray-700/50 px-3 py-1.5 flex-shrink-0">
           <p className="text-[9px] text-gray-500 text-center">
-            Keyword matching - not AI. Templates require CryptoSheets.
+            Powered by CryptoSheets. <span className="text-green-400">FREE</span> = works with free tier.
           </p>
         </div>
       )}
