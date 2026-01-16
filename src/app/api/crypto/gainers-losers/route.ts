@@ -1,29 +1,93 @@
 /**
  * Top Gainers & Losers API Route
  *
- * Returns top performing and worst performing coins from CoinGecko
+ * Returns top performing and worst performing coins
+ * Tries CoinGecko first, falls back to Binance
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
- * CoinGecko data cannot be redistributed without a Data Redistribution License.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getTopGainers, getTopLosers, CoinGeckoCoin } from '@/lib/coingecko/client';
+import { getTopGainers, getTopLosers } from '@/lib/coingecko/client';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
+import { fetchGainersLosers } from '@/lib/dataApi';
+
+interface NormalizedCoin {
+  id: string;
+  symbol: string;
+  name: string;
+  image?: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  market_cap: number;
+  market_cap_rank: number;
+  total_volume: number;
+}
 
 // Cache data for 5 minutes
 let cachedData: {
-  gainers: CoinGeckoCoin[] | null;
-  losers: CoinGeckoCoin[] | null;
+  gainers: NormalizedCoin[] | null;
+  losers: NormalizedCoin[] | null;
   timestamp: number;
+  source: string;
 } = {
   gainers: null,
   losers: null,
   timestamp: 0,
+  source: '',
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Fallback to Binance data
+async function getBinanceGainersLosers(limit: number): Promise<{
+  gainers: NormalizedCoin[];
+  losers: NormalizedCoin[];
+} | null> {
+  try {
+    const data = await fetchGainersLosers({ type: 'both', limit: limit * 2 });
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    const gainers = data
+      .filter(coin => coin.type === 'gainer')
+      .slice(0, limit)
+      .map((coin, idx) => ({
+        id: coin.symbol.toLowerCase(),
+        symbol: coin.symbol.toUpperCase(),
+        name: coin.name,
+        image: coin.image,
+        current_price: coin.price,
+        price_change_percentage_24h: coin.priceChangePercent24h,
+        market_cap: coin.marketCap,
+        market_cap_rank: idx + 1,
+        total_volume: coin.volume24h,
+      }));
+
+    const losers = data
+      .filter(coin => coin.type === 'loser')
+      .slice(0, limit)
+      .map((coin, idx) => ({
+        id: coin.symbol.toLowerCase(),
+        symbol: coin.symbol.toUpperCase(),
+        name: coin.name,
+        image: coin.image,
+        current_price: coin.price,
+        price_change_percentage_24h: coin.priceChangePercent24h,
+        market_cap: coin.marketCap,
+        market_cap_rank: idx + 1,
+        total_volume: coin.volume24h,
+      }));
+
+    return { gainers, losers };
+  } catch (error) {
+    console.error('[Gainers/Losers API] Binance fallback error:', error);
+    return null;
+  }
+}
 
 export async function GET(request: NextRequest) {
   // Enforce display-only access - block external API scraping
@@ -42,8 +106,8 @@ export async function GET(request: NextRequest) {
 
     if (cacheValid && cachedData.gainers && cachedData.losers) {
       const responseData: {
-        gainers?: CoinGeckoCoin[];
-        losers?: CoinGeckoCoin[];
+        gainers?: NormalizedCoin[];
+        losers?: NormalizedCoin[];
       } = {};
 
       if (type === 'gainers' || type === 'both') {
@@ -57,123 +121,138 @@ export async function GET(request: NextRequest) {
         success: true,
         data: responseData,
         cached: true,
-        source: 'coingecko',
-        attribution: 'Data provided by CoinGecko',
+        source: cachedData.source,
+        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
       });
     }
 
-    // Fetch fresh data
+    // Try CoinGecko first
     const [gainersResult, losersResult] = await Promise.all([
       type === 'losers' ? Promise.resolve(null) : getTopGainers(currency, 50),
       type === 'gainers' ? Promise.resolve(null) : getTopLosers(currency, 50),
     ]);
 
-    // Update cache
-    if (gainersResult?.success && gainersResult.data) {
-      cachedData.gainers = gainersResult.data;
-    }
-    if (losersResult?.success && losersResult.data) {
-      cachedData.losers = losersResult.data;
-    }
-    cachedData.timestamp = now;
+    const coingeckoSuccess =
+      (type === 'gainers' && gainersResult?.success) ||
+      (type === 'losers' && losersResult?.success) ||
+      (type === 'both' && (gainersResult?.success || losersResult?.success));
 
-    // Check for errors
-    if (type === 'gainers' && !gainersResult?.success) {
-      if (cachedData.gainers) {
-        return NextResponse.json({
-          success: true,
-          data: { gainers: cachedData.gainers.slice(0, limit) },
-          cached: true,
-          stale: true,
-          source: 'coingecko',
-          attribution: 'Data provided by CoinGecko',
-        });
+    if (coingeckoSuccess) {
+      // Update cache with CoinGecko data
+      if (gainersResult?.success && gainersResult.data) {
+        cachedData.gainers = gainersResult.data.map((coin, idx) => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          image: coin.image,
+          current_price: coin.current_price || 0,
+          price_change_percentage_24h: coin.price_change_percentage_24h || 0,
+          market_cap: coin.market_cap || 0,
+          market_cap_rank: coin.market_cap_rank || idx + 1,
+          total_volume: coin.total_volume || 0,
+        }));
       }
-      return NextResponse.json(
-        { success: false, error: gainersResult?.error || 'Failed to fetch gainers' },
-        { status: 500 }
-      );
-    }
-
-    if (type === 'losers' && !losersResult?.success) {
-      if (cachedData.losers) {
-        return NextResponse.json({
-          success: true,
-          data: { losers: cachedData.losers.slice(0, limit) },
-          cached: true,
-          stale: true,
-          source: 'coingecko',
-          attribution: 'Data provided by CoinGecko',
-        });
+      if (losersResult?.success && losersResult.data) {
+        cachedData.losers = losersResult.data.map((coin, idx) => ({
+          id: coin.id,
+          symbol: coin.symbol.toUpperCase(),
+          name: coin.name,
+          image: coin.image,
+          current_price: coin.current_price || 0,
+          price_change_percentage_24h: coin.price_change_percentage_24h || 0,
+          market_cap: coin.market_cap || 0,
+          market_cap_rank: coin.market_cap_rank || idx + 1,
+          total_volume: coin.total_volume || 0,
+        }));
       }
-      return NextResponse.json(
-        { success: false, error: losersResult?.error || 'Failed to fetch losers' },
-        { status: 500 }
-      );
+      cachedData.timestamp = now;
+      cachedData.source = 'coingecko';
+
+      const responseData: {
+        gainers?: NormalizedCoin[];
+        losers?: NormalizedCoin[];
+      } = {};
+
+      if ((type === 'gainers' || type === 'both') && cachedData.gainers) {
+        responseData.gainers = cachedData.gainers.slice(0, limit);
+      }
+      if ((type === 'losers' || type === 'both') && cachedData.losers) {
+        responseData.losers = cachedData.losers.slice(0, limit);
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: responseData,
+        cached: false,
+        source: 'coingecko',
+        attribution: 'Data provided by CoinGecko',
+        fetchedAt: gainersResult?.fetchedAt || losersResult?.fetchedAt,
+      });
     }
 
-    // Build response
-    const responseData: {
-      gainers?: Array<{
-        id: string;
-        symbol: string;
-        name: string;
-        image?: string;
-        current_price: number;
-        price_change_percentage_24h: number;
-        market_cap: number;
-        market_cap_rank: number;
-        total_volume: number;
-      }>;
-      losers?: Array<{
-        id: string;
-        symbol: string;
-        name: string;
-        image?: string;
-        current_price: number;
-        price_change_percentage_24h: number;
-        market_cap: number;
-        market_cap_rank: number;
-        total_volume: number;
-      }>;
-    } = {};
+    // CoinGecko failed - try Binance fallback
+    console.log('[Gainers/Losers API] CoinGecko failed, trying Binance fallback');
+    const binanceData = await getBinanceGainersLosers(limit);
 
-    if ((type === 'gainers' || type === 'both') && gainersResult?.data) {
-      responseData.gainers = gainersResult.data.slice(0, limit).map((coin) => ({
-        id: coin.id,
-        symbol: coin.symbol.toUpperCase(),
-        name: coin.name,
-        image: coin.image,
-        current_price: coin.current_price || 0,
-        price_change_percentage_24h: coin.price_change_percentage_24h || 0,
-        market_cap: coin.market_cap || 0,
-        market_cap_rank: coin.market_cap_rank || 0,
-        total_volume: coin.total_volume || 0,
-      }));
+    if (binanceData) {
+      // Update cache with Binance data
+      cachedData.gainers = binanceData.gainers;
+      cachedData.losers = binanceData.losers;
+      cachedData.timestamp = now;
+      cachedData.source = 'binance';
+
+      const responseData: {
+        gainers?: NormalizedCoin[];
+        losers?: NormalizedCoin[];
+      } = {};
+
+      if (type === 'gainers' || type === 'both') {
+        responseData.gainers = binanceData.gainers.slice(0, limit);
+      }
+      if (type === 'losers' || type === 'both') {
+        responseData.losers = binanceData.losers.slice(0, limit);
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: responseData,
+        cached: false,
+        source: 'binance',
+        attribution: 'Data derived from Binance',
+      });
     }
 
-    if ((type === 'losers' || type === 'both') && losersResult?.data) {
-      responseData.losers = losersResult.data.slice(0, limit).map((coin) => ({
-        id: coin.id,
-        symbol: coin.symbol.toUpperCase(),
-        name: coin.name,
-        image: coin.image,
-        current_price: coin.current_price || 0,
-        price_change_percentage_24h: coin.price_change_percentage_24h || 0,
-        market_cap: coin.market_cap || 0,
-        market_cap_rank: coin.market_cap_rank || 0,
-        total_volume: coin.total_volume || 0,
-      }));
+    // Both failed - return cached data if available
+    if (cachedData.gainers || cachedData.losers) {
+      const responseData: {
+        gainers?: NormalizedCoin[];
+        losers?: NormalizedCoin[];
+      } = {};
+
+      if ((type === 'gainers' || type === 'both') && cachedData.gainers) {
+        responseData.gainers = cachedData.gainers.slice(0, limit);
+      }
+      if ((type === 'losers' || type === 'both') && cachedData.losers) {
+        responseData.losers = cachedData.losers.slice(0, limit);
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: responseData,
+        cached: true,
+        stale: true,
+        source: cachedData.source,
+        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: responseData,
-      cached: false,
-      source: 'coingecko',
-      attribution: 'Data provided by CoinGecko',
-      fetchedAt: gainersResult?.fetchedAt || losersResult?.fetchedAt,
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch market movers from all sources',
+      },
+      { status: 500 }
+    );
   } catch (error) {
     console.error('[Gainers/Losers API] Error:', error);
 
@@ -187,8 +266,8 @@ export async function GET(request: NextRequest) {
         },
         cached: true,
         stale: true,
-        source: 'coingecko',
-        attribution: 'Data provided by CoinGecko',
+        source: cachedData.source,
+        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
       });
     }
 

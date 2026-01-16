@@ -12,7 +12,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
-const COINGECKO_BASE_URL = 'https://pro-api.coingecko.com/api/v3';
+// Use free API if no key, Pro API if key available
+const COINGECKO_BASE_URL = COINGECKO_API_KEY
+  ? 'https://pro-api.coingecko.com/api/v3'
+  : 'https://api.coingecko.com/api/v3';
 
 // Cache data for 5 minutes
 let cachedData: {
@@ -76,14 +79,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch exchanges
+    const headers: Record<string, string> = { 'Accept': 'application/json' };
+    if (COINGECKO_API_KEY) {
+      headers['x-cg-pro-api-key'] = COINGECKO_API_KEY;
+    }
+
     const response = await fetch(
       `${COINGECKO_BASE_URL}/exchanges?per_page=${limit}&page=${page}`,
-      {
-        headers: {
-          'x-cg-pro-api-key': COINGECKO_API_KEY || '',
-          'Accept': 'application/json',
-        },
-      }
+      { headers }
     );
 
     if (!response.ok) {
