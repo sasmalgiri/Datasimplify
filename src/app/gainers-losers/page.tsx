@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { GainersLosers } from '@/components/GainersLosers';
+import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { TrendingUp, TrendingDown, BarChart3, Download } from 'lucide-react';
 
 export default function GainersLosersPage() {
@@ -28,6 +29,9 @@ export default function GainersLosersPage() {
             Analyze market momentum and identify potential opportunities.
           </p>
         </div>
+
+        {/* Display Only Badge */}
+        <DisplayOnlyBadge pageId="gainers_losers" variant="card" className="mb-6" />
 
         {/* View Toggle */}
         <div className="flex flex-wrap gap-2 mb-6">

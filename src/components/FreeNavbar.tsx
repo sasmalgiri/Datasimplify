@@ -116,14 +116,10 @@ export function FreeNavbar() {
     discover: {
       label: 'Discover',
       icon: <Zap className="w-4 h-4" />,
-      paths: ['/recently-added', '/nft', '/exchanges', '/categories', '/global-market', '/dex-pools'],
+      paths: ['/categories', '/dex-pools'],
       items: [
-        { href: '/recently-added', label: 'New Listings', description: 'Recently added coins', icon: <Zap className="w-4 h-4" /> },
         { href: '/dex-pools', label: 'DEX Pools', description: 'Trending liquidity pools', icon: <TrendingUp className="w-4 h-4" /> },
-        { href: '/nft', label: 'NFT Collections', description: 'Top NFTs by market cap', icon: <Zap className="w-4 h-4" /> },
-        { href: '/exchanges', label: 'Exchanges', description: 'Exchange rankings', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/categories', label: 'Categories', description: 'Browse by category', icon: <LineChart className="w-4 h-4" /> },
-        { href: '/global-market', label: 'Global Market', description: 'Market cap history', icon: <TrendingUp className="w-4 h-4" /> },
       ],
     },
     research: {

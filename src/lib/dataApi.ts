@@ -4,9 +4,14 @@
 
 import { SUPPORTED_COINS } from './dataTypes';
 import { FEATURES } from './featureFlags';
+import { discoverCoins, type DiscoveredCoin } from './coinDiscovery';
 
 const BINANCE_BASE = 'https://api.binance.com/api/v3';
 const DEFAULT_COIN_IMAGE = '/globe.svg';
+
+// Cache for circulating supply estimates (from CoinGecko simple/price)
+const supplyCache = new Map<string, { supply: number; timestamp: number }>();
+const SUPPLY_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 // ============================================
 // TYPE DEFINITIONS
@@ -206,6 +211,113 @@ export async function fetchMarketOverview(options?: {
     console.error('Error fetching market overview:', error);
     return [];
   }
+}
+
+// 1b. FETCH ALL BINANCE COINS (Dynamic Discovery)
+// Returns ALL available Binance USDT pairs (600+ coins)
+export async function fetchAllCoins(options?: {
+  limit?: number;
+  sortBy?: 'volume' | 'price_change' | 'price';
+  sortOrder?: 'asc' | 'desc';
+  category?: string;
+}): Promise<MarketData[]> {
+  try {
+    // Get all discovered coins
+    const discoveredCoins = await discoverCoins();
+
+    // Fetch all 24h tickers from Binance
+    const response = await fetch(`${BINANCE_BASE}/ticker/24hr`, {
+      next: { revalidate: 60 }
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const tickers = await response.json();
+
+    // Create a map for fast lookup
+    const tickerMap = new Map<string, Record<string, unknown>>();
+    for (const t of tickers) {
+      tickerMap.set(t.symbol, t);
+    }
+
+    // Also check for coins in SUPPORTED_COINS for accurate supply data
+    const supportedMap = new Map(SUPPORTED_COINS.map(c => [c.symbol, c]));
+
+    // Map discovered coins to market data
+    const coins: MarketData[] = [];
+
+    for (const coin of discoveredCoins) {
+      const ticker = tickerMap.get(coin.binanceSymbol);
+      if (!ticker) continue;
+
+      // Filter by category if specified
+      if (options?.category && options.category !== 'all') {
+        if (coin.category !== options.category) continue;
+      }
+
+      const price = parseFloat(ticker.lastPrice as string);
+      const quoteVolume = parseFloat(ticker.quoteVolume as string);
+      const bidPrice = parseFloat(ticker.bidPrice as string);
+      const askPrice = parseFloat(ticker.askPrice as string);
+
+      // Get circulating supply from SUPPORTED_COINS if available
+      const supported = supportedMap.get(coin.symbol);
+      const circulatingSupply = supported?.circulatingSupply || 0;
+      const marketCap = circulatingSupply > 0 ? price * circulatingSupply : quoteVolume; // Use volume as proxy if no supply
+
+      coins.push({
+        symbol: coin.symbol,
+        name: coin.name,
+        image: FEATURES.coingecko ? coin.image : DEFAULT_COIN_IMAGE,
+        category: coin.category,
+        price,
+        priceChange24h: parseFloat(ticker.priceChange as string),
+        priceChangePercent24h: parseFloat(ticker.priceChangePercent as string),
+        open24h: parseFloat(ticker.openPrice as string),
+        high24h: parseFloat(ticker.highPrice as string),
+        low24h: parseFloat(ticker.lowPrice as string),
+        volume24h: parseFloat(ticker.volume as string),
+        quoteVolume24h: quoteVolume,
+        tradesCount24h: ticker.count as number,
+        marketCap,
+        circulatingSupply,
+        maxSupply: supported?.maxSupply || null,
+        bidPrice,
+        askPrice,
+        spread: askPrice - bidPrice,
+        spreadPercent: price > 0 ? ((askPrice - bidPrice) / price) * 100 : 0,
+        vwap: parseFloat(ticker.weightedAvgPrice as string),
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    // Sort
+    const sortBy = options?.sortBy || 'volume';
+    const sortOrder = options?.sortOrder || 'desc';
+
+    coins.sort((a, b) => {
+      let aVal: number, bVal: number;
+      switch (sortBy) {
+        case 'volume': aVal = a.quoteVolume24h; bVal = b.quoteVolume24h; break;
+        case 'price_change': aVal = a.priceChangePercent24h; bVal = b.priceChangePercent24h; break;
+        case 'price': aVal = a.price; bVal = b.price; break;
+        default: aVal = a.quoteVolume24h; bVal = b.quoteVolume24h;
+      }
+      return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
+    });
+
+    // Apply limit
+    const limit = options?.limit || coins.length;
+    return coins.slice(0, limit);
+  } catch (error) {
+    console.error('Error fetching all coins:', error);
+    return [];
+  }
+}
+
+// Get count of all available coins
+export async function getAvailableCoinCount(): Promise<number> {
+  const coins = await discoverCoins();
+  return coins.length;
 }
 
 // 2. HISTORICAL OHLCV DATA

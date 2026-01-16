@@ -288,10 +288,18 @@ function ChartsContent() {
   const [racingFrame, setRacingFrame] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [derivativesData, setDerivativesData] = useState<Record<string, unknown> | null>(null);
+  const [fundingHistory, setFundingHistory] = useState<{ timestamp: number; fundingRate: number; fundingTime: string }[] | null>(null);
+  const [oiHistory, setOiHistory] = useState<{ timestamp: number; openInterest: number; openInterestValue: number }[] | null>(null);
+  const [longShortHistory, setLongShortHistory] = useState<{ timestamp: number; longShortRatio: number; longPercent: number; shortPercent: number }[] | null>(null);
   const [whaleFlows, setWhaleFlows] = useState<Record<string, unknown>[] | null>(null);
   const [globalStats, setGlobalStats] = useState<Record<string, unknown> | null>(null);
   const [fearGreedHistory, setFearGreedHistory] = useState<Record<string, unknown>[] | null>(null);
   const [correlationMatrix, setCorrelationMatrix] = useState<Record<string, unknown>[] | null>(null);
+  const [communityData, setCommunityData] = useState<{
+    watchlist_users: number;
+    sentiment_up: number;
+    sentiment_down: number;
+  } | null>(null);
   const [showMA, setShowMA] = useState(true);
   const [showVolume, setShowVolume] = useState(true);
   const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
@@ -452,8 +460,34 @@ function ChartsContent() {
           const res = await fetch('/api/derivatives', { signal: controller.signal });
           const json = await res.json();
           setDerivativesData(json?.success ? (json.data as Record<string, unknown>) : null);
+
+          // Fetch historical data for charts
+          if (selectedChart === 'funding_rate') {
+            const [fundingRes, lsRes] = await Promise.all([
+              fetch('/api/derivatives/history?type=funding&limit=100', { signal: controller.signal }),
+              fetch('/api/derivatives/history?type=longshort&limit=100', { signal: controller.signal })
+            ]);
+            const fundingJson = await fundingRes.json();
+            const lsJson = await lsRes.json();
+            setFundingHistory(fundingJson?.success ? fundingJson.data : null);
+            setLongShortHistory(lsJson?.success ? lsJson.data : null);
+          } else {
+            setFundingHistory(null);
+            setLongShortHistory(null);
+          }
+
+          if (selectedChart === 'open_interest') {
+            const oiRes = await fetch('/api/derivatives/history?type=oi&limit=100', { signal: controller.signal });
+            const oiJson = await oiRes.json();
+            setOiHistory(oiJson?.success ? oiJson.data : null);
+          } else {
+            setOiHistory(null);
+          }
         } else {
           setDerivativesData(null);
+          setFundingHistory(null);
+          setOiHistory(null);
+          setLongShortHistory(null);
         }
 
         if (selectedChart === 'whale_flow') {
@@ -479,11 +513,31 @@ function ChartsContent() {
         } else {
           setFearGreedHistory(null);
         }
+
+        if (selectedChart === 'social_volume') {
+          // Use coin details API which includes community data from CoinGecko
+          const coinId = selectedCoin || 'bitcoin';
+          const res = await fetch(`/api/crypto/${coinId}/details`, { signal: controller.signal });
+          const json = await res.json();
+          if (json?.success && json?.data) {
+            const sentiment = json.data.sentiment;
+            setCommunityData({
+              watchlist_users: json.data.watchlist_users || 0,
+              sentiment_up: sentiment?.votes_up_percentage || 0,
+              sentiment_down: sentiment?.votes_down_percentage || 0,
+            });
+          } else {
+            setCommunityData(null);
+          }
+        } else {
+          setCommunityData(null);
+        }
       } catch (e) {
         if ((e as any)?.name === 'AbortError') return;
         console.error('Error fetching aux chart data:', e);
         setDerivativesData(null);
         setWhaleFlows(null);
+        setCommunityData(null);
         setGlobalStats(null);
         setFearGreedHistory(null);
       }
@@ -491,7 +545,7 @@ function ChartsContent() {
 
     run();
     return () => controller.abort();
-  }, [selectedChart, timeRange]);
+  }, [selectedChart, timeRange, selectedCoin]);
 
   const calculateRSISeries = (prices: number[], period: number = 14): Array<number | null> => {
     if (prices.length < period + 1) return prices.map(() => null);
@@ -1343,7 +1397,18 @@ function ChartsContent() {
           const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
           const interpretation = (derivativesData as any)?.interpretation as string | undefined;
 
-          if (typeof rate !== 'number') {
+          // Prepare historical funding rate data for chart
+          const fundingChartData = fundingHistory?.map((item, idx) => {
+            const lsItem = longShortHistory?.[idx];
+            return {
+              date: new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' }),
+              fundingRate: item.fundingRate,
+              longPercent: lsItem?.longPercent ?? null,
+              shortPercent: lsItem?.shortPercent ?? null,
+            };
+          }) || [];
+
+          if (typeof rate !== 'number' && fundingChartData.length === 0) {
             return <div className="flex items-center justify-center h-96 text-gray-400">No funding rate data available</div>;
           }
 
@@ -1352,7 +1417,9 @@ function ChartsContent() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <div className="text-gray-400 text-sm">Current Rate</div>
-                  <div className={`text-xl font-bold ${rate > 0 ? 'text-green-400' : 'text-red-400'}`}>{rate.toFixed(4)}%</div>
+                  <div className={`text-xl font-bold ${typeof rate === 'number' && rate > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {typeof rate === 'number' ? `${rate.toFixed(4)}%` : '—'}
+                  </div>
                 </div>
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <div className="text-gray-400 text-sm">Long/Short Ratio</div>
@@ -1368,16 +1435,64 @@ function ChartsContent() {
                   <div className="text-xs text-gray-500 mt-1">{lastUpdated ? new Date(lastUpdated).toLocaleString() : ''}</div>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={400}>
-                <ComposedChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                  <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-                </ComposedChart>
-              </ResponsiveContainer>
+
+              {/* Funding Rate History Chart */}
+              <div className="bg-gray-800/30 rounded-xl p-4">
+                <h4 className="text-sm font-medium text-gray-300 mb-3">Funding Rate History (8h intervals)</h4>
+                {fundingChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={fundingChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 10 }} interval="preserveStartEnd" />
+                      <YAxis
+                        yAxisId="rate"
+                        stroke="#9CA3AF"
+                        tick={{ fill: '#9CA3AF' }}
+                        tickFormatter={(v) => `${v.toFixed(3)}%`}
+                        domain={['auto', 'auto']}
+                      />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        formatter={(value, name) => {
+                          const numVal = typeof value === 'number' ? value : 0;
+                          if (name === 'Funding Rate') return [`${numVal.toFixed(4)}%`, name];
+                          return [`${numVal.toFixed(1)}%`, name];
+                        }}
+                      />
+                      <Legend />
+                      <ReferenceLine yAxisId="rate" y={0} stroke="#6B7280" strokeDasharray="3 3" />
+                      <Bar yAxisId="rate" dataKey="fundingRate" name="Funding Rate" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-500">Loading historical data...</div>
+                )}
+              </div>
+
+              {/* Long/Short Ratio History */}
+              {longShortHistory && longShortHistory.length > 0 && (
+                <div className="bg-gray-800/30 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-gray-300 mb-3">Long/Short Account Ratio History</h4>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <AreaChart data={fundingChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 10 }} interval="preserveStartEnd" />
+                      <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : 0}%`]}
+                      />
+                      <Legend />
+                      <Area type="monotone" dataKey="longPercent" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.6} name="Long %" />
+                      <Area type="monotone" dataKey="shortPercent" stackId="1" stroke="#EF4444" fill="#EF4444" fillOpacity={0.6} name="Short %" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 text-center">
+                Data from Binance Futures API • Funding rates settle every 8 hours • For display purposes only
+              </div>
             </div>
           );
         }
@@ -1390,7 +1505,14 @@ function ChartsContent() {
           const volume24h = btc?.volume24h;
           const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
 
-          if (typeof oi !== 'number') {
+          // Prepare historical OI data for chart
+          const oiChartData = oiHistory?.map((item) => ({
+            date: new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' }),
+            openInterest: item.openInterest,
+            openInterestValue: item.openInterestValue,
+          })) || [];
+
+          if (typeof oi !== 'number' && oiChartData.length === 0) {
             return <div className="flex items-center justify-center h-96 text-gray-400">No open interest data available</div>;
           }
 
@@ -1399,7 +1521,7 @@ function ChartsContent() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <div className="text-gray-400 text-sm">Current OI</div>
-                  <div className="text-xl font-bold text-blue-400">{formatValue(oi, 'volume')}</div>
+                  <div className="text-xl font-bold text-blue-400">{typeof oi === 'number' ? formatValue(oi, 'volume') : '—'}</div>
                 </div>
                 <div className="bg-gray-800/50 rounded-xl p-4">
                   <div className="text-gray-400 text-sm">24h Change</div>
@@ -1416,16 +1538,50 @@ function ChartsContent() {
                   <div className="text-lg font-bold text-yellow-400">{lastUpdated ? new Date(lastUpdated).toLocaleString() : '—'}</div>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={400}>
-                <ComposedChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
-                  <YAxis stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} tickFormatter={(v) => formatValue(v)} />
-                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="price" stroke="#3B82F6" dot={false} name="Price" strokeWidth={2} />
-                </ComposedChart>
-              </ResponsiveContainer>
+
+              {/* Open Interest History Chart */}
+              <div className="bg-gray-800/30 rounded-xl p-4">
+                <h4 className="text-sm font-medium text-gray-300 mb-3">Open Interest History (BTC)</h4>
+                {oiChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <ComposedChart data={oiChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF', fontSize: 10 }} interval="preserveStartEnd" />
+                      <YAxis
+                        yAxisId="oi"
+                        stroke="#9CA3AF"
+                        tick={{ fill: '#9CA3AF' }}
+                        tickFormatter={(v) => formatValue(v, 'volume')}
+                        orientation="left"
+                      />
+                      <YAxis
+                        yAxisId="oiValue"
+                        stroke="#10B981"
+                        tick={{ fill: '#10B981' }}
+                        tickFormatter={(v) => formatValue(v, 'volume')}
+                        orientation="right"
+                      />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                        formatter={(value, name) => {
+                          const numVal = typeof value === 'number' ? value : 0;
+                          if (name === 'OI (BTC)') return [numVal.toLocaleString() + ' BTC', name];
+                          return ['$' + formatValue(numVal, 'volume'), name];
+                        }}
+                      />
+                      <Legend />
+                      <Area yAxisId="oiValue" type="monotone" dataKey="openInterestValue" stroke="#10B981" fill="#10B981" fillOpacity={0.2} name="OI Value (USD)" />
+                      <Line yAxisId="oi" type="monotone" dataKey="openInterest" stroke="#3B82F6" dot={false} name="OI (BTC)" strokeWidth={2} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-48 text-gray-500">Loading historical data...</div>
+                )}
+              </div>
+
+              <div className="text-xs text-gray-500 text-center">
+                Data from Binance Futures API • Hourly intervals • For display purposes only
+              </div>
             </div>
           );
         }
@@ -1602,11 +1758,131 @@ function ChartsContent() {
         );
 
       case 'social_volume':
-        return (
-          <div className="flex items-center justify-center h-96 text-gray-400">
-            Social volume is not available from free public APIs
-          </div>
-        );
+        {
+          if (communityData === null) {
+            return <div className="flex items-center justify-center h-96 text-gray-400">Loading community data...</div>;
+          }
+
+          const formatNumber = (n: number) => {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toString();
+          };
+
+          const sentimentData = [
+            { name: 'Bullish', value: communityData.sentiment_up, color: '#10B981' },
+            { name: 'Bearish', value: communityData.sentiment_down, color: '#EF4444' },
+          ];
+
+          const selectedCoinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
+          const hasSentiment = communityData.sentiment_up > 0 || communityData.sentiment_down > 0;
+
+          // Fallback if no data available
+          if (!hasSentiment && communityData.watchlist_users === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center h-96 text-gray-400">
+                <p>No community data available for {selectedCoinName}</p>
+                <p className="text-sm mt-2">Try selecting a different coin</p>
+              </div>
+            );
+          }
+
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-white mb-1">Community Stats: {selectedCoinName}</h3>
+                <p className="text-gray-400 text-sm">Sentiment and watchlist data from CoinGecko</p>
+              </div>
+
+              {/* Stats Cards - Only available data */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+                    <span>👀</span> Watchlist Users
+                  </div>
+                  <div className="text-2xl font-bold text-emerald-400">{formatNumber(communityData.watchlist_users)}</div>
+                  <div className="text-xs text-gray-500 mt-1">Users tracking this coin</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+                    <span>📈</span> Bullish Votes
+                  </div>
+                  <div className="text-2xl font-bold text-green-400">{communityData.sentiment_up.toFixed(1)}%</div>
+                  <div className="text-xs text-gray-500 mt-1">Community sentiment</div>
+                </div>
+                <div className="bg-gray-800/50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-400 text-sm mb-1">
+                    <span>📉</span> Bearish Votes
+                  </div>
+                  <div className="text-2xl font-bold text-red-400">{communityData.sentiment_down.toFixed(1)}%</div>
+                  <div className="text-xs text-gray-500 mt-1">Community sentiment</div>
+                </div>
+              </div>
+
+              {/* Sentiment Visualization */}
+              {hasSentiment && (
+                <div className="bg-gray-800/30 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-gray-300 mb-4">Community Sentiment</h4>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Pie Chart */}
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={sentimentData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+                        >
+                          {sentimentData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                          formatter={(value) => [`${typeof value === 'number' ? value.toFixed(1) : 0}%`]}
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    {/* Sentiment Bar */}
+                    <div className="flex flex-col justify-center">
+                      <div className="mb-4">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span className="text-green-400">Bullish {communityData.sentiment_up.toFixed(1)}%</span>
+                          <span className="text-red-400">Bearish {communityData.sentiment_down.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-4 bg-gray-700 rounded-full overflow-hidden flex">
+                          <div
+                            className="bg-green-500 h-full transition-all"
+                            style={{ width: `${communityData.sentiment_up}%` }}
+                          />
+                          <div
+                            className="bg-red-500 h-full transition-all"
+                            style={{ width: `${communityData.sentiment_down}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-center text-gray-400 text-sm">
+                        {communityData.sentiment_up > 60 ? 'Strong bullish sentiment' :
+                         communityData.sentiment_up > 50 ? 'Slightly bullish' :
+                         communityData.sentiment_down > 60 ? 'Strong bearish sentiment' :
+                         'Slightly bearish'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 text-center">
+                Data from CoinGecko API (free tier) • For display purposes only
+              </div>
+            </div>
+          );
+        }
 
       case 'btc_dominance':
         {

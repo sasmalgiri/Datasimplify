@@ -6,6 +6,7 @@ import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
@@ -343,6 +344,9 @@ export default function MarketPage() {
             />
           </div>
         </div>
+
+        {/* Display Only Badge with Recreate Option */}
+        <DisplayOnlyBadge pageId="market" variant="card" className="mb-6" />
 
         {/* Global Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">

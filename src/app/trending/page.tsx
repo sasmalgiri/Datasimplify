@@ -5,6 +5,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
+import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { Flame, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 
 export default function TrendingPage() {
@@ -25,6 +26,9 @@ export default function TrendingPage() {
             Data powered by CoinGecko Analyst API.
           </p>
         </div>
+
+        {/* Display Only Badge */}
+        <DisplayOnlyBadge pageId="trending" variant="card" className="mb-6" />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">

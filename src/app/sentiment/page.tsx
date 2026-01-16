@@ -5,6 +5,7 @@ import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 
 export default function SentimentPage() {
   return (
@@ -33,6 +34,9 @@ export default function SentimentPage() {
             />
           </div>
         </div>
+
+        {/* Display Only Badge */}
+        <DisplayOnlyBadge pageId="sentiment" variant="card" className="mb-6" />
 
         <div className="grid md:grid-cols-2 gap-6">
           <FearGreedIndex showBeginnerTips={true} />

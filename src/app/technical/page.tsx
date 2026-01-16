@@ -4,6 +4,7 @@ import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 
 export default function TechnicalPage() {
   return (
@@ -33,6 +34,9 @@ export default function TechnicalPage() {
             />
           </div>
         </div>
+
+        {/* Display Only Badge */}
+        <DisplayOnlyBadge pageId="technical" variant="card" className="mb-6" />
 
         <TechnicalAnalysis coin="BTC" showBeginnerTips={true} />
       </div>

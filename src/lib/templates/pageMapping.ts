@@ -28,7 +28,12 @@ export type PageId =
   | 'tokens'
   | 'research'
   | 'risk'
-  // NEW: Additional pages for full coverage
+  // Analytics pages with recreate options
+  | 'trending'
+  | 'gainers_losers'
+  | 'categories'
+  | 'dex_pools'
+  // Additional pages
   | 'etf'
   | 'whales'
   | 'backtest'
@@ -103,7 +108,13 @@ export const PAGE_TEMPLATE_MAP: Record<PageId, TemplateType[]> = {
   // Risk - Risk metrics and analysis
   risk: ['risk_dashboard', 'correlation_matrix'],
 
-  // NEW: Additional page mappings for full coverage
+  // Analytics pages with recreate options
+  trending: ['market_overview', 'gainers_losers', 'watchlist'],
+  gainers_losers: ['gainers_losers', 'screener', 'market_overview'],
+  categories: ['screener', 'market_overview'],
+  dex_pools: ['defi_tvl', 'defi_yields'],
+
+  // Additional page mappings for full coverage
 
   // ETF - Bitcoin ETF tracking
   etf: ['etf_tracker', 'market_overview'],
@@ -312,7 +323,28 @@ export const PAGE_META: Record<PageId, PageMeta> = {
     description: 'Risk metrics and analysis',
     icon: '⚠️',
   },
-  // NEW: Additional page metadata
+  // Analytics pages
+  trending: {
+    title: 'Trending',
+    description: 'Trending coins and market movers',
+    icon: '🔥',
+  },
+  gainers_losers: {
+    title: 'Gainers & Losers',
+    description: 'Top performers and biggest drops',
+    icon: '📊',
+  },
+  categories: {
+    title: 'Categories',
+    description: 'Coin categories and sectors',
+    icon: '🏷️',
+  },
+  dex_pools: {
+    title: 'DEX Pools',
+    description: 'Decentralized exchange liquidity',
+    icon: '💧',
+  },
+  // Additional page metadata
   etf: {
     title: 'ETF Tracker',
     description: 'Bitcoin & Crypto ETF flows',
