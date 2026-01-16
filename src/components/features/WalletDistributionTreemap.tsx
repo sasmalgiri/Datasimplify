@@ -43,10 +43,10 @@ interface DistributionResponse {
 }
 
 const SUPPORTED_COINS = [
-  { symbol: 'BTC', name: 'Bitcoin', supported: true },
-  { symbol: 'ETH', name: 'Ethereum', supported: false },
-  { symbol: 'SOL', name: 'Solana', supported: false },
-  { symbol: 'BNB', name: 'BNB Chain', supported: false },
+  { symbol: 'BTC', name: 'Bitcoin', supported: true, free: true },
+  { symbol: 'ETH', name: 'Ethereum', supported: false, free: false },
+  { symbol: 'SOL', name: 'Solana', supported: false, free: false },
+  { symbol: 'BNB', name: 'BNB Chain', supported: false, free: false },
 ];
 
 const colorClasses: Record<string, string> = {
@@ -236,9 +236,9 @@ export function WalletDistributionTreemap() {
     if (coinInfo?.supported) {
       setSelectedCoin(coin);
     } else {
-      // Show unsupported message
+      // Show contact sales message
       setData(null);
-      setError(`Distribution data for ${coin} requires premium on-chain analytics (Glassnode, IntoTheBlock, Santiment).`);
+      setError(`Wallet distribution data for ${coin} is a premium feature. Bitcoin (BTC) data is available for free!`);
       setLoading(false);
     }
   };
@@ -268,16 +268,16 @@ export function WalletDistributionTreemap() {
                     ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                     : coin.supported
                     ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                    : 'text-gray-600 cursor-not-allowed'
+                    : 'text-gray-600 hover:text-gray-400 hover:bg-gray-700/50'
                 }`}
-                title={coin.supported ? coin.name : `${coin.name} - Premium required`}
+                title={coin.supported ? `${coin.name} - FREE` : `${coin.name} - Contact Sales`}
               >
                 {coin.symbol}
-                {coin.supported && selectedCoin === coin.symbol && (
-                  <Check className="w-3 h-3" />
+                {coin.free && (
+                  <span className="text-[10px] px-1 py-0.5 bg-emerald-500/30 text-emerald-400 rounded font-medium">FREE</span>
                 )}
                 {!coin.supported && (
-                  <span className="text-xs text-yellow-500">$</span>
+                  <span className="text-[10px] px-1 py-0.5 bg-amber-500/30 text-amber-400 rounded font-medium">PRO</span>
                 )}
               </button>
             ))}
@@ -351,11 +351,21 @@ export function WalletDistributionTreemap() {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-amber-400">Data Not Available</h4>
+              <h4 className="font-medium text-amber-400">Premium Feature</h4>
               <p className="text-sm text-gray-300 mt-1">{error}</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Only Bitcoin (BTC) has free public distribution data. Other coins require premium analytics services.
-              </p>
+              <div className="mt-3 p-3 bg-gray-800/50 rounded-lg">
+                <p className="text-sm text-white font-medium mb-2">Want distribution data for other coins?</p>
+                <p className="text-xs text-gray-400 mb-3">
+                  Bitcoin (BTC) distribution is <span className="text-emerald-400 font-medium">FREE</span>.
+                  For ETH, SOL, BNB and other coins, please contact our sales team.
+                </p>
+                <a
+                  href="mailto:sales@datasimplify.com?subject=Wallet%20Distribution%20Data%20Inquiry"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition"
+                >
+                  Contact Sales Team
+                </a>
+              </div>
             </div>
           </div>
         </div>
