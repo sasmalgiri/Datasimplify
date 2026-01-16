@@ -2,13 +2,13 @@
  * All Coins API Route
  *
  * PRIMARY: Binance (441+ tradeable coins with real-time data)
- * FALLBACK: CoinGecko (additional coins NOT on Binance)
+ * FALLBACK: CoinGecko (2000+ additional coins NOT on Binance)
  *
  * No duplicates - Binance data always preferred when available
  *
  * Query params:
  * - source: 'binance' | 'coingecko' | 'combined' (default: combined)
- * - limit: number (default: 100, max: 1500)
+ * - limit: number (default: 100, max: 2500)
  * - sortBy: 'volume' | 'price_change' | 'market_cap' (default: market_cap)
  * - sortOrder: 'asc' | 'desc' (default: desc)
  * - category: filter by category
@@ -43,14 +43,18 @@ async function fetchCoinGeckoCoins(): Promise<{ coins: MarketData[]; symbols: Se
   }
 
   try {
-    // FALLBACK SOURCE: Fetch top 1000 coins from CoinGecko
+    // FALLBACK SOURCE: Fetch top 2000 coins from CoinGecko
     // Only used for coins NOT available on Binance
     // CoinGecko free tier: ~30 calls/min, 250 per page max
-    const [p1, p2, p3, p4] = await Promise.all([
+    const [p1, p2, p3, p4, p5, p6, p7, p8] = await Promise.all([
       getCoinsMarkets('usd', 1, 250),
       getCoinsMarkets('usd', 2, 250),
       getCoinsMarkets('usd', 3, 250),
       getCoinsMarkets('usd', 4, 250),
+      getCoinsMarkets('usd', 5, 250),
+      getCoinsMarkets('usd', 6, 250),
+      getCoinsMarkets('usd', 7, 250),
+      getCoinsMarkets('usd', 8, 250),
     ]);
 
     const allGeckoCoins = [
@@ -58,6 +62,10 @@ async function fetchCoinGeckoCoins(): Promise<{ coins: MarketData[]; symbols: Se
       ...(p2.data || []),
       ...(p3.data || []),
       ...(p4.data || []),
+      ...(p5.data || []),
+      ...(p6.data || []),
+      ...(p7.data || []),
+      ...(p8.data || []),
     ];
 
     const symbols = new Set<string>();
@@ -118,7 +126,7 @@ export async function GET(request: NextRequest) {
   if (blocked) return blocked;
 
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 1500);
+  const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 2500);
   const source = searchParams.get('source') || 'combined';
   const sortBy = (searchParams.get('sortBy') || 'market_cap') as 'volume' | 'price_change' | 'market_cap';
   const sortOrder = (searchParams.get('sortOrder') || 'desc') as 'asc' | 'desc';
