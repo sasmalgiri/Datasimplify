@@ -102,8 +102,8 @@ export const PAGE_TEMPLATE_MAP: Record<PageId, TemplateType[]> = {
   // Tokens - Token unlocks and staking
   tokens: ['token_unlocks', 'staking_rewards'],
 
-  // Research - Watchlist and analysis
-  research: ['watchlist', 'compare', 'correlation_matrix'],
+  // Research - Analysis tools
+  research: ['compare', 'correlation_matrix'],
 
   // Risk - Risk metrics and analysis
   risk: ['risk_dashboard', 'correlation_matrix'],

@@ -57,14 +57,6 @@ export default function ResearchPage() {
           </ul>
         </div>
       </div>
-
-      <div className="mt-6 rounded-lg border p-5">
-        <h2 className="text-lg font-semibold">Watchlists</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Watchlists UI is not implemented yet. If you want, I can add a minimal watchlist (local storage)
-          or a synced watchlist (Supabase) next.
-        </p>
-      </div>
     </div>
   );
 }

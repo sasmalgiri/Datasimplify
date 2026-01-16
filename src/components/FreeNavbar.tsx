@@ -127,7 +127,7 @@ export function FreeNavbar() {
       icon: <LineChart className="w-4 h-4" />,
       paths: ['/research', '/charts', '/compare'],
       items: [
-        { href: '/research', label: 'Research Workspace', description: 'Watchlists, quick links, research flow', icon: <LineChart className="w-4 h-4" /> },
+        { href: '/research', label: 'Research Workspace', description: 'Quick links and research tools', icon: <LineChart className="w-4 h-4" /> },
         { href: '/charts', label: 'Charts', description: 'Explore charts and export snapshots', icon: <LineChart className="w-4 h-4" /> },
         { href: '/compare', label: 'Comparisons', description: 'Compare coins side-by-side', icon: <Scale className="w-4 h-4" /> },
       ],
