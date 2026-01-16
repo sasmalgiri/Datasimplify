@@ -1,6 +1,6 @@
 # DataSimplify Due-Diligence Report
 
-**Version:** 1.4
+**Version:** 1.5
 **Date:** January 2026
 **Status:** Pre-Launch / Pending Compliance Review
 
@@ -19,10 +19,12 @@
 ### Technical Summary
 - **92 pages** built and functional
 - **48 API routes** serving market, DeFi, on-chain, and sentiment data
+- **2400+ coins** available (441 Binance primary + 2000 CoinGecko fallback, no duplicates)
 - **Browser-origin gated + rate-limited endpoints** (good-faith controls, not hard anti-scraping)
 - **3 content types** for Excel templates (Interactive, Native Charts, Formula-only)
 - **Report Assistant** - Natural language template selection wizard
 - **CryptoSheets Quota Safeguards** - Hard gate, quota estimator, Low-Quota/Pro modes
+- **Display Only badges** - All analytics pages marked with "Recreate in Excel" option
 
 ### Compliance Status
 | Area | Status |
@@ -129,18 +131,24 @@ This matrix defines what each tier can access and what data sources power each f
 
 ### Data Source → Feature Mapping
 
-| Feature | Source | License Status |
-|---------|--------|:----------------:|
-| Live prices | CoinGecko Analyst | Display-only |
-| OHLCV candles | CoinGecko Analyst | Display-only |
-| Trending coins | CoinGecko Analyst | Display-only |
-| Top gainers/losers | CoinGecko Analyst | Display-only |
-| Recently added | CoinGecko Analyst | Display-only |
-| Fear & Greed | Alternative.me | Verify before redistribution |
-| DeFi TVL | DefiLlama | Open data (verify terms) |
-| Technical indicators | Computed | Our calculations |
+| Feature | Primary Source | Fallback Source | License Status |
+|---------|---------------|-----------------|:----------------:|
+| Live prices | Binance (441+ coins) | CoinGecko (2000+ unique) | Display-only |
+| OHLCV candles | Binance | CoinGecko | Display-only |
+| Market cap/volume | Binance | CoinGecko | Display-only |
+| Trending coins | CoinGecko | - | Display-only |
+| Top gainers/losers | Binance + CoinGecko | - | Display-only |
+| Recently added | CoinGecko | - | Display-only |
+| Fear & Greed | Alternative.me | - | Verify before redistribution |
+| DeFi TVL | DefiLlama | - | Open data (verify terms) |
+| Technical indicators | Computed | - | Our calculations |
 
-**Important:** All CoinGecko data is display-only on our website. Templates use CryptoSheets formulas - data flows from user's CryptoSheets account, not from us.
+**Data Architecture:**
+- **PRIMARY:** Binance provides real-time trading data for 441+ tradeable coins
+- **FALLBACK:** CoinGecko provides additional 2000 coins NOT on Binance (no duplicates)
+- **Deduplication:** Symbol-based matching ensures no duplicate coins in combined results
+
+**Important:** All market data is display-only on our website. Templates use CryptoSheets formulas - data flows from user's CryptoSheets account, not from us.
 
 ### Template Data Model
 
@@ -156,13 +164,30 @@ This matrix defines what each tier can access and what data sources power each f
 
 ## 3. Data Sources & License Stance
 
-### Primary Data Source: CoinGecko Analyst
+### Primary Data Source: Binance
 
 | Source | License | Cost | Usage | Attribution Required |
 |--------|---------|------|-------|---------------------|
-| **CoinGecko Analyst** | Display-only | $103.2/mo | All market data for website display | Yes |
+| **Binance** | Free API | $0 | Real-time trading data for 441+ coins | Recommended |
 
-**Critical:** CoinGecko Analyst plan is display-only. We do NOT redistribute CoinGecko data. All downloadable templates use CryptoSheets formulas that fetch data via the user's own CryptoSheets account.
+**Why Binance Primary:**
+- Real-time trading data with bid/ask spreads
+- High-quality OHLCV candlestick data
+- 441+ actively tradeable coins
+- No API key required for public endpoints
+- More accurate price data than aggregated sources
+
+### Fallback Data Source: CoinGecko
+
+| Source | License | Cost | Usage | Attribution Required |
+|--------|---------|------|-------|---------------------|
+| **CoinGecko** | Display-only | Free tier / $103.2/mo Analyst | Additional 2000 coins NOT on Binance | Yes |
+
+**CoinGecko Role:**
+- Provides market data for coins not traded on Binance
+- Never duplicates Binance data (symbol-based deduplication)
+- Enables coverage of 2400+ total coins
+- Display-only - we do NOT redistribute CoinGecko data
 
 ### Supplementary Data Sources (Website Display Only)
 
@@ -210,8 +235,9 @@ This matrix defines what each tier can access and what data sources power each f
 │                                                             │
 │  WEBSITE (Display Only):                                    │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │ CoinGecko Analyst → Our Server → User's Browser     │   │
-│  │ (Display-only, no redistribution)                   │   │
+│  │ PRIMARY: Binance API → Our Server → User's Browser  │   │
+│  │ FALLBACK: CoinGecko → Our Server → User's Browser   │   │
+│  │ (Display-only, no redistribution, no duplicates)    │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 │  TEMPLATES (CryptoSheets Formulas):                         │
@@ -232,6 +258,27 @@ This matrix defines what each tier can access and what data sources power each f
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Display Only Feature
+
+All analytics pages on the website include:
+- **"Display Only" badge** - Clearly marks data as for viewing only
+- **"Recreate in Excel" button** - Links to relevant CryptoSheets template
+- **Data source attribution** - Shows whether data is from Binance or CoinGecko
+- **Related templates** - Suggests additional templates for the page context
+
+**Pages with Display Only badges:**
+- Market Analytics (`/market`)
+- Trending (`/trending`)
+- Gainers & Losers (`/gainers-losers`)
+- Technical Analysis (`/technical`)
+- Sentiment (`/sentiment`)
+- Charts (`/charts`)
+- ETF Tracker (`/etf`)
+- Exchanges (`/exchanges`)
+- NFT (`/nft`)
+- Global Market (`/global-market`)
+- Recently Added (`/recently-added`)
 
 ---
 
@@ -784,9 +831,10 @@ export async function GET(request: NextRequest) {
 
 | Route | Method | Source | Protected |
 |-------|--------|--------|:---------:|
-| `/api/crypto` | GET | CoinGecko | Yes |
+| `/api/crypto` | GET | Binance + CoinGecko | Yes |
+| `/api/crypto/all` | GET | Binance (primary) + CoinGecko (fallback) | Yes |
 | `/api/crypto/trending` | GET | CoinGecko | Yes |
-| `/api/crypto/gainers-losers` | GET | CoinGecko | Yes |
+| `/api/crypto/gainers-losers` | GET | Binance + CoinGecko | Yes |
 | `/api/crypto/categories` | GET | CoinGecko | Yes |
 | `/api/crypto/global` | GET | CoinGecko | Yes |
 | `/api/crypto/global-history` | GET | CoinGecko | Yes |
@@ -795,18 +843,25 @@ export async function GET(request: NextRequest) {
 | `/api/crypto/nfts` | GET | CoinGecko | Yes |
 | `/api/crypto/dex-pools` | GET | CoinGecko | Yes |
 | `/api/crypto/search` | GET | CoinGecko | Yes |
-| `/api/crypto/[id]` | GET | CoinGecko | Yes |
+| `/api/crypto/[id]` | GET | Binance + CoinGecko | Yes |
 | `/api/crypto/[id]/details` | GET | CoinGecko | Yes |
-| `/api/crypto/[id]/history` | GET | CoinGecko | Yes |
-| `/api/charts/candles` | GET | CoinGecko | Yes |
-| `/api/charts/history` | GET | CoinGecko | Yes |
+| `/api/crypto/[id]/history` | GET | Binance + CoinGecko | Yes |
+| `/api/charts/candles` | GET | Binance | Yes |
+| `/api/charts/history` | GET | Binance + CoinGecko | Yes |
+| `/api/derivatives` | GET | Binance | Yes |
+| `/api/derivatives/history` | GET | Binance | Yes |
 | `/api/sentiment` | GET | Alternative.me | Yes |
 | `/api/defi/llama` | GET | DefiLlama | Yes |
 | `/api/technical` | GET | Computed | Yes |
 | `/api/templates/download` | POST | N/A (formulas only) | Yes |
 | `/api/portfolio/presets` | GET | Computed | Yes |
 
-**Note:** All CoinGecko routes are display-only. Template download generates formulas, not data.
+**Data Source Legend:**
+- **Binance (primary):** Real-time trading data, 441+ coins
+- **CoinGecko (fallback):** Additional coins not on Binance, 2000+ unique
+- **Combined:** Uses Binance first, CoinGecko for missing coins only
+
+**Note:** All market data routes are display-only. Template download generates formulas, not data.
 
 ### B. Feature Flags Reference
 
@@ -993,6 +1048,36 @@ interface TemplateCatalogEntry {
 | 1.2 | Jan 2026 | DataSimplify Team | Fixed: pricing consistency, claims accuracy, added problem/solution section |
 | 1.3 | Jan 2026 | DataSimplify Team | Synced: Feature entitlements with pricing page |
 | 1.4 | Jan 2026 | DataSimplify Team | Critical fixes: removed unverified claims, CoinGecko-only data source, no data redistribution |
+| 1.5 | Jan 2026 | DataSimplify Team | Data architecture: Binance primary, CoinGecko fallback, Display Only badges, 2400+ coins |
+
+---
+
+### Changelog v1.5
+
+**Data Architecture Overhaul:**
+- **Binance as PRIMARY source** - Real-time trading data for 441+ coins
+- **CoinGecko as FALLBACK** - Additional 2000 coins NOT on Binance
+- **Symbol-based deduplication** - No duplicate coins in combined results
+- **Total coverage: 2400+ coins** - Up from ~1000 previously
+
+**New Features:**
+- **Display Only badges** - Added to all analytics pages
+- **"Recreate in Excel" buttons** - Direct links to relevant CryptoSheets templates
+- **Data source attribution** - Shows Binance vs CoinGecko per coin
+- **Related templates** - Contextual template suggestions on each page
+
+**API Improvements:**
+- `/api/crypto/all` - New combined endpoint with source parameter
+- Supports `source=binance`, `source=coingecko`, `source=combined` (default)
+- Increased max limit from 1500 to 2500 coins
+- Response includes breakdown of coins per source
+
+**Files Added/Modified:**
+- `src/components/DisplayOnlyBadge.tsx` - NEW: Reusable badge component
+- `src/lib/coinDiscovery.ts` - NEW: Binance-CoinGecko mapping
+- `src/app/api/crypto/all/route.ts` - NEW: Combined coins endpoint
+- `src/lib/templates/pageMapping.ts` - Updated page-template mappings
+- Multiple page files updated with DisplayOnlyBadge
 
 ---
 
