@@ -76,6 +76,14 @@ export const FEATURES = {
   // whales: DISABLED in paddle_safe mode (whale tracking can imply trading signals)
   whales: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_WHALES, false),
   nft: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_NFT, false),
+
+  // Placeholder/unfinished features - DISABLED until properly implemented
+  // exchanges: Exchange rankings page (currently showing placeholder data)
+  exchanges: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_EXCHANGES, false),
+  // dashboard: Custom dashboard page (currently under construction)
+  dashboard: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_DASHBOARD, false),
+  // onchain: On-chain analytics page (currently disabled message)
+  onchain: isFreeMode || isPaddleSafeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_ONCHAIN, false),
 } as const;
 
 // Helper to check if we're in Paddle-safe mode

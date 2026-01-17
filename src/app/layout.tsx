@@ -7,6 +7,7 @@ import CookieConsent from '@/components/CookieConsent';
 import { AllJsonLd } from '@/components/JsonLd';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import { FEATURES } from '@/lib/featureFlags';
+import { FeedbackWrapper } from '@/components/FeedbackWrapper';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://datasimplify.com';
 
@@ -105,9 +106,10 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
+              <li><Link href="/templates" className="hover:text-white transition-colors">Report Kits</Link></li>
+              <li><Link href="/download" className="hover:text-white transition-colors">Build a Report</Link></li>
               <li><Link href="/market" className="hover:text-white transition-colors">Market Data</Link></li>
               <li><Link href="/compare" className="hover:text-white transition-colors">Compare</Link></li>
-              <li><Link href="/glossary" className="hover:text-white transition-colors">Glossary</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
@@ -128,10 +130,12 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Resources</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/templates" className="hover:text-white transition-colors">Excel Templates</Link></li>
-              <li><Link href="/template-requirements" className="hover:text-white transition-colors">Template Setup Guide</Link></li>
+              <li><Link href="/template-requirements" className="hover:text-white transition-colors">Setup Guide</Link></li>
+              <li><Link href="/learn" className="hover:text-white transition-colors">Crypto Academy</Link></li>
+              <li><Link href="/glossary" className="hover:text-white transition-colors">Glossary</Link></li>
               <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/community" className="hover:text-white transition-colors">Community</Link></li>
+              <li><Link href="/roadmap" className="hover:text-white transition-colors">Roadmap</Link></li>
+              <li><Link href="/status" className="hover:text-white transition-colors">System Status</Link></li>
             </ul>
           </div>
 
@@ -143,7 +147,6 @@ function Footer() {
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
               <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
-              <li><Link href="/community/guidelines" className="hover:text-white transition-colors">Community Guidelines</Link></li>
             </ul>
           </div>
         </div>
@@ -210,6 +213,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <CookieConsent />
+          <FeedbackWrapper />
         </Providers>
         <AnalyticsGate />
       </body>

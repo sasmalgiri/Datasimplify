@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
@@ -146,6 +146,24 @@ function SafeContractPreview() {
 }
 
 export default function LandingPage() {
+  const [tokenCount, setTokenCount] = useState(500);
+
+  // Fetch dynamic token count
+  useEffect(() => {
+    async function fetchTokenCount() {
+      try {
+        const res = await fetch('/api/crypto/all');
+        const data = await res.json();
+        if (data.success && data.total) {
+          setTokenCount(data.total);
+        }
+      } catch (error) {
+        console.error('Failed to fetch token count:', error);
+      }
+    }
+    fetchTokenCount();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Navigation */}
@@ -228,7 +246,7 @@ export default function LandingPage() {
               <div className="text-gray-400 text-sm">Excel Templates</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">500+</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">{tokenCount}+</div>
               <div className="text-gray-400 text-sm">Tokens Tracked</div>
             </div>
             <div>

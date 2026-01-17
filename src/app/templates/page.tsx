@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { FileSpreadsheet, AlertTriangle, Settings, Star, ChevronDown } from 'lucide-react';
+import { FileSpreadsheet, AlertTriangle, Settings, Star, ChevronDown, ArrowRight, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
+import { ProductDisclaimer } from '@/components/ProductDisclaimer';
+import { REPORT_KITS, type ReportKit } from '@/lib/reportKits';
 import { CoinSelector } from '@/components/CoinSelector';
 import {
   getTemplatesGroupedByCategory,
@@ -148,11 +150,77 @@ export default function TemplatesPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Excel <span className="text-emerald-400">Templates</span>
+            Build Refreshable <span className="text-emerald-400">Crypto Reports</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Configure your data, see matching templates, and download with CryptoSheets formulas.
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-4">
+            Professional Excel templates that update with live data. Start with a Report Kit or browse all templates.
           </p>
+          {/* Trust Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm">
+            <Shield className="w-4 h-4" />
+            30-Day Money-Back Guarantee
+          </div>
+        </div>
+
+        {/* Report Kits Section */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Report Kits</h2>
+              <p className="text-gray-400">Complete solutions for common use cases</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {REPORT_KITS.map((kit) => (
+              <Link
+                key={kit.id}
+                href={`/templates/${kit.slug}`}
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all group"
+              >
+                <div className="flex items-start gap-4">
+                  <span className="text-4xl">{kit.icon}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                        {kit.name}
+                      </h3>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        kit.tier === 'free'
+                          ? 'bg-green-500/20 text-green-400'
+                          : kit.tier === 'pro'
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-purple-500/20 text-purple-400'
+                      }`}>
+                        {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-sm mb-3">{kit.tagline}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{kit.templates.length} template(s)</span>
+                      <span>{kit.presets.coins} coins</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-1 text-emerald-400 text-sm font-medium">
+                  View Details <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Product Disclaimer */}
+        <ProductDisclaimer variant="compact" className="mb-8 bg-gray-800/50 border-gray-700" />
+
+        {/* Browse All Templates Section */}
+        <div id="all" className="border-t border-gray-800 pt-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Browse All Templates</h2>
+              <p className="text-gray-400">Configure and download individual templates</p>
+            </div>
+          </div>
         </div>
 
         {/* Configuration Panel */}

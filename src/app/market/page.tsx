@@ -7,6 +7,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
+import { RequestTemplate } from '@/components/RequestTemplate';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
@@ -126,6 +127,8 @@ export default function MarketPage() {
   const [sortBy, setSortBy] = useState<'market_cap' | 'price_change' | 'volume'>('market_cap');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [dataFromCache, setDataFromCache] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const coinsPerPage = 100;
 
   const fetchData = useCallback(async (forceRefresh = false) => {
     try {
@@ -159,8 +162,9 @@ export default function MarketPage() {
 
   const fetchFreshData = async () => {
     try {
-      // Fetch coins from internal API (uses Supabase cache first, then CoinGecko)
-      const coinsRes = await fetch('/api/crypto?limit=100');
+      // Fetch coins from internal API (uses Supabase cache first, then Binance)
+      // Increased limit to 500 for full coin list
+      const coinsRes = await fetch('/api/crypto?limit=500');
       const coinsJson = await coinsRes.json();
       if (coinsJson?.data && Array.isArray(coinsJson.data)) {
         setCoins(coinsJson.data);
@@ -280,6 +284,18 @@ export default function MarketPage() {
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
 
+  // Pagination
+  const totalPages = Math.ceil(filteredCoins.length / coinsPerPage);
+  const paginatedCoins = filteredCoins.slice(
+    (currentPage - 1) * coinsPerPage,
+    currentPage * coinsPerPage
+  );
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   // CSV downloads removed - use templates for data export
 
   // Fear & Greed color
@@ -341,6 +357,11 @@ export default function MarketPage() {
                 },
               }}
               variant="outline"
+            />
+            <RequestTemplate
+              pagePath="/market"
+              pageTitle="Market Data"
+              suggestedCoins={filteredCoins.slice(0, 5).map(c => c.symbol.toUpperCase())}
             />
           </div>
         </div>
@@ -509,13 +530,13 @@ export default function MarketPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCoins.map((coin) => (
-                  <tr 
-                    key={coin.id} 
+                {paginatedCoins.map((coin, index) => (
+                  <tr
+                    key={coin.id}
                     className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group cursor-pointer"
                     onClick={() => window.location.href = `/coin/${coin.id}`}
                   >
-                    <td className="px-4 py-4 text-gray-400">{coin.market_cap_rank}</td>
+                    <td className="px-4 py-4 text-gray-400">{(currentPage - 1) * coinsPerPage + index + 1}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <img 
@@ -551,9 +572,55 @@ export default function MarketPage() {
           </div>
         )}
 
+        {/* Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-gray-400 text-sm">
+              Showing {(currentPage - 1) * coinsPerPage + 1}-{Math.min(currentPage * coinsPerPage, filteredCoins.length)} of {filteredCoins.length} coins
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                First
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Prev
+              </button>
+              <span className="px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Footer Info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data updates every 60 seconds • Powered by CoinGecko (via cache)</p>
+          <p>Data updates every 60 seconds • Powered by Binance + CoinGecko</p>
           <p className="mt-2">
             Want more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for more templates, advanced analytics, and more!
           </p>

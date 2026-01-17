@@ -77,13 +77,16 @@ const CATEGORIES = [
   { id: 'ai', label: 'AI', color: 'bg-red-600' },
 ];
 
-// Use all 67 supported coins from shared config with categories
-const ALL_COINS = SUPPORTED_COINS.map(coin => ({
+// Initial coin list from static config (will be replaced with dynamic list)
+const INITIAL_ALL_COINS = SUPPORTED_COINS.map(coin => ({
   id: coin.symbol.toLowerCase(),
   symbol: coin.symbol,
   name: coin.name,
   category: coin.category,
 }));
+
+// This will be populated dynamically - use INITIAL_ALL_COINS as fallback
+let ALL_COINS = INITIAL_ALL_COINS;
 
 // Sort options
 const SORT_OPTIONS = [
@@ -152,6 +155,31 @@ export default function ComparePage() {
     COLUMN_OPTIONS.filter(c => c.default).map(c => c.id)
   );
   const [showFilters, setShowFilters] = useState(false);
+  const [availableCoins, setAvailableCoins] = useState(INITIAL_ALL_COINS);
+
+  // Fetch all available coins dynamically (600+)
+  useEffect(() => {
+    async function fetchAllCoins() {
+      try {
+        const res = await fetch('/api/crypto/all');
+        const data = await res.json();
+        if (data.success && data.coins && data.coins.length > 0) {
+          const coinsList = data.coins.map((c: { id: string; name: string; symbol: string; category: string }) => ({
+            id: c.id,
+            symbol: c.symbol,
+            name: c.name,
+            category: c.category || 'other',
+          }));
+          setAvailableCoins(coinsList);
+          // Update module-level ALL_COINS for backwards compatibility
+          ALL_COINS = coinsList;
+        }
+      } catch (error) {
+        console.error('Failed to fetch coins:', error);
+      }
+    }
+    fetchAllCoins();
+  }, []);
 
   const fetchCoins = async () => {
     if (selectedIds.length === 0) {
@@ -285,7 +313,7 @@ export default function ComparePage() {
   };
 
   const selectAllInCategory = (cat: string) => {
-    const catCoins = ALL_COINS.filter(c => c.category === cat).map(c => c.id);
+    const catCoins = availableCoins.filter(c => c.category === cat).map(c => c.id);
     const newSelection = [...new Set([...selectedIds, ...catCoins])].slice(0, 10);
     setSelectedIds(newSelection);
   };
@@ -294,8 +322,8 @@ export default function ComparePage() {
     setSelectedIds([]);
   };
 
-  // Filter coins for display
-  const filteredCoins = ALL_COINS.filter(coin => {
+  // Filter coins for display (uses dynamic availableCoins)
+  const filteredCoins = availableCoins.filter(coin => {
     const matchesCategory = categoryFilter === 'all' || coin.category === categoryFilter;
     const matchesSearch = searchQuery === '' ||
       coin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -435,7 +463,7 @@ export default function ComparePage() {
               >
                 {cat.label}
                 <span className="ml-1 text-xs opacity-75">
-                  ({cat.id === 'all' ? ALL_COINS.length : ALL_COINS.filter(c => c.category === cat.id).length})
+                  ({cat.id === 'all' ? availableCoins.length : availableCoins.filter(c => c.category === cat.id).length})
                 </span>
               </button>
             ))}

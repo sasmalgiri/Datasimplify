@@ -21,6 +21,23 @@ const nextConfig: NextConfig = {
   },
   // Transpile ECharts for Next.js compatibility
   transpilePackages: ['echarts', 'zrender', 'echarts-gl'],
+
+  // Redirects for broken/moved URLs
+  async redirects() {
+    return [
+      // Fix typo routes - redirect to Smart Contract Verifier
+      {
+        source: '/safecontract',
+        destination: '/smart-contract-verifier',
+        permanent: true,
+      },
+      {
+        source: '/contract',
+        destination: '/smart-contract-verifier',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

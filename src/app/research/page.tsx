@@ -44,18 +44,18 @@ const analyticsTools = [
     color: 'orange',
   },
   {
-    href: '/onchain',
-    title: 'On-Chain Analytics',
-    description: 'Network activity and blockchain metrics',
-    icon: Activity,
-    color: 'cyan',
-  },
-  {
     href: '/technical',
     title: 'Technical Metrics',
     description: 'Educational indicators, levels, and signals',
     icon: BarChart3,
     color: 'pink',
+  },
+  {
+    href: '/sentiment',
+    title: 'Sentiment Analysis',
+    description: 'Fear & Greed Index and market mood',
+    icon: Activity,
+    color: 'cyan',
   },
 ];
 

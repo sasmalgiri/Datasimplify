@@ -14,6 +14,7 @@ import { TemplateControls } from '@/components/download/TemplateControls';
 import { ReportAssistant } from '@/components/download/ReportAssistant';
 import type { RefreshFrequency } from '@/lib/templates/templateModes';
 import type { RoutedTemplate } from '@/lib/templates/reportAssistant';
+import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
 export default function DownloadPage() {
   // Gate state - user must confirm requirements before seeing templates
@@ -89,13 +90,16 @@ export default function DownloadPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">CryptoSheets Templates</h1>
           <p className="text-gray-400">
             Download Excel templates with CryptoSheets formulas. Templates run on your CryptoSheets
             account - data usage depends on your CryptoSheets plan and refresh settings.
           </p>
         </div>
+
+        {/* Product Disclaimer */}
+        <ProductDisclaimer variant="compact" className="mb-8 max-w-3xl mx-auto bg-gray-900 border-gray-800" />
 
         {/* Requirements Gate - Must confirm before accessing templates */}
         {!hasConfirmedRequirements ? (

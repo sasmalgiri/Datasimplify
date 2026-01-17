@@ -246,12 +246,15 @@ function isChartTypeAllowed(chartType: ChartType): boolean {
 
 const AVAILABLE_CHART_CONFIGS: ChartConfig[] = CHART_CONFIGS.filter(c => isChartTypeAllowed(c.type));
 
-// Use all 67 supported coins from shared config
-const COINS = SUPPORTED_COINS.map(coin => ({
+// Initial coin list from static config (will be replaced with dynamic list)
+const INITIAL_COINS = SUPPORTED_COINS.map(coin => ({
   id: coin.symbol.toLowerCase(),
   name: coin.name,
   symbol: coin.symbol,
 }));
+
+// This will be populated dynamically - use INITIAL_COINS as fallback
+let COINS = INITIAL_COINS;
 
 const TIME_RANGES = [
   { value: '1', label: '24H' },
@@ -305,6 +308,30 @@ function ChartsContent() {
   const [chartStyle, setChartStyle] = useState<'line' | 'area'>('area');
   const [excelModalChart, setExcelModalChart] = useState<{ type: string; title: string } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+  const [availableCoins, setAvailableCoins] = useState(INITIAL_COINS);
+
+  // Fetch all available coins dynamically (600+)
+  useEffect(() => {
+    async function fetchCoins() {
+      try {
+        const res = await fetch('/api/crypto/all');
+        const data = await res.json();
+        if (data.success && data.coins && data.coins.length > 0) {
+          const coinsList = data.coins.map((c: { id: string; name: string; symbol: string }) => ({
+            id: c.id,
+            name: c.name,
+            symbol: c.symbol,
+          }));
+          setAvailableCoins(coinsList);
+          // Update module-level COINS for backwards compatibility
+          COINS = coinsList;
+        }
+      } catch (error) {
+        console.error('Failed to fetch coins:', error);
+      }
+    }
+    fetchCoins();
+  }, []);
 
   // Enforce allowed chart types in strict redistribution mode
   useEffect(() => {
@@ -2069,9 +2096,9 @@ function ChartsContent() {
                     id="coin-select"
                     value={selectedCoin}
                     onChange={(e) => setSelectedCoin(e.target.value)}
-                    className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
+                    className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 max-h-60"
                   >
-                    {COINS.map(coin => (
+                    {availableCoins.map(coin => (
                       <option key={coin.id} value={coin.id}>{coin.name} ({coin.symbol})</option>
                     ))}
                   </select>

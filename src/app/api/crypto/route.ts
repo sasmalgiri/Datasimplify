@@ -21,8 +21,8 @@ import {
   parseNumericParam
 } from '@/lib/apiErrors';
 
-const MAX_LIMIT = 250;
-const DEFAULT_LIMIT = 100;
+const MAX_LIMIT = 2000;
+const DEFAULT_LIMIT = 250;
 
 export async function GET(request: NextRequest) {
   // Enforce display-only access - block external API scraping

@@ -87,28 +87,31 @@ export function FreeNavbar() {
   const isInSection = (paths: string[]) => paths.some(p => pathname.startsWith(p));
 
   const navSections = {
-    downloads: {
-      label: 'Download',
+    reports: {
+      label: 'Reports',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/template-requirements'],
+      paths: ['/templates', '/download', '/template-requirements'],
       items: [
-        { href: '/templates', label: 'Excel Downloads', description: 'Powered by CryptoSheets', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/download', label: 'Build a Report', description: 'Create custom Excel reports', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/templates', label: 'Report Kits', description: 'Pre-built report templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/templates#all', label: 'All Templates', description: 'Browse all 40+ templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/template-requirements', label: 'Setup Guide', description: 'Requirements & instructions', icon: <HelpCircle className="w-4 h-4" /> },
       ],
     },
     analytics: {
       label: 'Analytics',
       icon: <TrendingUp className="w-4 h-4" />,
-      paths: ['/analyst-hub', '/market', '/trending', '/gainers-losers', '/onchain', '/sentiment', '/technical', '/correlation', ...(isFeatureEnabled('risk') ? ['/risk'] : [])],
+      paths: ['/analyst-hub', '/market', '/trending', '/gainers-losers', '/sentiment', '/technical', '/correlation', ...(isFeatureEnabled('risk') ? ['/risk'] : []), ...(isFeatureEnabled('onchain') ? ['/onchain'] : [])],
       items: [
         { href: '/analyst-hub', label: 'Analyst Hub', description: 'All data in one dashboard', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/market', label: 'Market Analytics', description: 'Market overview and rankings', icon: <TrendingUp className="w-4 h-4" /> },
         { href: '/trending', label: 'Trending', description: 'Most searched coins', icon: <Zap className="w-4 h-4" /> },
         { href: '/gainers-losers', label: 'Gainers & Losers', description: 'Top market movers', icon: <TrendingUp className="w-4 h-4" /> },
-        { href: '/onchain', label: 'On-Chain Analytics', description: 'Network activity and on-chain metrics', icon: <Zap className="w-4 h-4" /> },
         { href: '/sentiment', label: 'Fear & Greed', description: 'Sentiment index and history', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/technical', label: 'Technical Metrics', description: 'Indicators and levels (educational)', icon: <LineChart className="w-4 h-4" /> },
         { href: '/correlation', label: 'Correlation', description: 'How assets move together', icon: <Scale className="w-4 h-4" /> },
+        // On-chain hidden until properly implemented
+        ...(isFeatureEnabled('onchain') ? [{ href: '/onchain', label: 'On-Chain Analytics', description: 'Network activity and on-chain metrics', icon: <Zap className="w-4 h-4" /> }] : []),
         // Risk metrics hidden in paddle_safe mode (could be perceived as trading advice)
         ...(isFeatureEnabled('risk') ? [{ href: '/risk', label: 'Risk Metrics', description: 'Risk stats and explanations', icon: <Shield className="w-4 h-4" /> }] : []),
       ],
@@ -162,17 +165,15 @@ export function FreeNavbar() {
   };
 
   const mobileLinks = [
+    { href: '/templates', label: 'Report Kits', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/download', label: 'Build Report', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/analyst-hub', label: 'Analyst Hub', icon: <BarChart3 className="w-4 h-4" /> },
-    { href: '/templates', label: 'Download', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/market', label: 'Market', icon: <TrendingUp className="w-4 h-4" /> },
     { href: '/trending', label: 'Trending', icon: <Zap className="w-4 h-4" /> },
-    { href: '/onchain', label: 'On-Chain', icon: <Zap className="w-4 h-4" /> },
+    { href: '/sentiment', label: 'Sentiment', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/charts', label: 'Charts', icon: <LineChart className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare', icon: <Scale className="w-4 h-4" /> },
-    { href: '/research', label: 'Research', icon: <LineChart className="w-4 h-4" /> },
-    ...(isFeatureEnabled('smartContractVerifier')
-      ? [{ href: '/smart-contract-verifier', label: 'Contract Verification', icon: <Shield className="w-4 h-4" /> }]
-      : []),
+    { href: '/correlation', label: 'Correlation', icon: <Scale className="w-4 h-4" /> },
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
   ];
 

@@ -124,7 +124,7 @@ export interface CategoryStats {
 // API FUNCTIONS
 // ============================================
 
-// 1. MARKET OVERVIEW - All coins with full data
+// 1. MARKET OVERVIEW - All coins with full data (uses dynamic discovery for 600+ coins)
 export async function fetchMarketOverview(options?: {
   symbols?: string[];
   category?: string;
@@ -133,68 +133,86 @@ export async function fetchMarketOverview(options?: {
   sortOrder?: 'asc' | 'desc';
 }): Promise<MarketData[]> {
   try {
+    // Get all discovered coins (600+ from Binance)
+    const discoveredCoins = await discoverCoins();
+
+    // Create lookup map for supply data from SUPPORTED_COINS
+    const supportedMap = new Map(SUPPORTED_COINS.map(c => [c.symbol, c]));
+
     // Fetch all 24h tickers from Binance
     const response = await fetch(`${BINANCE_BASE}/ticker/24hr`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
+
     const tickers = await response.json();
-    
-    // Map Binance data to our format with metadata
+
+    // Create ticker map for fast lookup
+    const tickerMap = new Map<string, Record<string, unknown>>();
+    for (const t of tickers) {
+      tickerMap.set(t.symbol, t);
+    }
+
+    // Map discovered coins to our format with metadata
     const coins: MarketData[] = [];
-    
-    for (const coinInfo of SUPPORTED_COINS) {
-      const ticker = tickers.find((t: { symbol: string }) => t.symbol === coinInfo.binanceSymbol);
+
+    for (const coin of discoveredCoins) {
+      const ticker = tickerMap.get(coin.binanceSymbol);
       if (!ticker) continue;
-      
+
       // Filter by selected symbols
       if (options?.symbols && options.symbols.length > 0) {
-        if (!options.symbols.includes(coinInfo.symbol)) continue;
+        if (!options.symbols.includes(coin.symbol)) continue;
       }
-      
+
       // Filter by category
       if (options?.category && options.category !== 'all') {
-        if (coinInfo.category !== options.category) continue;
+        if (coin.category !== options.category) continue;
       }
-      
-      const price = parseFloat(ticker.lastPrice);
-      const marketCap = price * coinInfo.circulatingSupply;
-      
+
+      const price = parseFloat(ticker.lastPrice as string);
+      const quoteVolume = parseFloat(ticker.quoteVolume as string);
+
+      // Get circulating supply from SUPPORTED_COINS if available
+      const supported = supportedMap.get(coin.symbol);
+      const circulatingSupply = supported?.circulatingSupply || 0;
+      // Use volume as proxy for market cap if no supply data
+      const marketCap = circulatingSupply > 0 ? price * circulatingSupply : quoteVolume;
+
       // Filter by min market cap
       if (options?.minMarketCap && marketCap < options.minMarketCap) continue;
-      
-      const bidPrice = parseFloat(ticker.bidPrice);
-      const askPrice = parseFloat(ticker.askPrice);
-      
+
+      const bidPrice = parseFloat(ticker.bidPrice as string);
+      const askPrice = parseFloat(ticker.askPrice as string);
+
       coins.push({
-        symbol: coinInfo.symbol,
-        name: coinInfo.name,
-        image: FEATURES.coingecko ? coinInfo.image : DEFAULT_COIN_IMAGE,
-        category: coinInfo.category,
+        symbol: coin.symbol,
+        name: coin.name,
+        image: FEATURES.coingecko ? coin.image : DEFAULT_COIN_IMAGE,
+        category: coin.category,
         price,
-        priceChange24h: parseFloat(ticker.priceChange),
-        priceChangePercent24h: parseFloat(ticker.priceChangePercent),
-        open24h: parseFloat(ticker.openPrice),
-        high24h: parseFloat(ticker.highPrice),
-        low24h: parseFloat(ticker.lowPrice),
-        volume24h: parseFloat(ticker.volume),
-        quoteVolume24h: parseFloat(ticker.quoteVolume),
-        tradesCount24h: ticker.count,
+        priceChange24h: parseFloat(ticker.priceChange as string),
+        priceChangePercent24h: parseFloat(ticker.priceChangePercent as string),
+        open24h: parseFloat(ticker.openPrice as string),
+        high24h: parseFloat(ticker.highPrice as string),
+        low24h: parseFloat(ticker.lowPrice as string),
+        volume24h: parseFloat(ticker.volume as string),
+        quoteVolume24h: quoteVolume,
+        tradesCount24h: ticker.count as number,
         marketCap,
-        circulatingSupply: coinInfo.circulatingSupply,
-        maxSupply: coinInfo.maxSupply,
+        circulatingSupply,
+        maxSupply: supported?.maxSupply || null,
         bidPrice,
         askPrice,
         spread: askPrice - bidPrice,
-        spreadPercent: ((askPrice - bidPrice) / price) * 100,
-        vwap: parseFloat(ticker.weightedAvgPrice),
+        spreadPercent: price > 0 ? ((askPrice - bidPrice) / price) * 100 : 0,
+        vwap: parseFloat(ticker.weightedAvgPrice as string),
         updatedAt: new Date().toISOString(),
       });
     }
-    
+
     // Sort
     const sortBy = options?.sortBy || 'market_cap';
     const sortOrder = options?.sortOrder || 'desc';
-    
+
     coins.sort((a, b) => {
       let aVal: number, bVal: number;
       switch (sortBy) {
@@ -205,7 +223,7 @@ export async function fetchMarketOverview(options?: {
       }
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });
-    
+
     return coins;
   } catch (error) {
     console.error('Error fetching market overview:', error);

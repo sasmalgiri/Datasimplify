@@ -3,17 +3,18 @@ export function OrganizationJsonLd() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'DataSimplify',
-    url: 'https://datasimplify.com',
-    logo: 'https://datasimplify.com/logo.png',
-    description: 'Software analytics tooling providing Excel templates with CryptoSheets formulas for crypto research and portfolio tracking.',
+    name: 'CryptoReportKit',
+    url: 'https://cryptoreportkit.com',
+    logo: 'https://cryptoreportkit.com/logo.png',
+    description:
+      'Excel templates with CryptoSheets formulas for crypto research, portfolio tracking, and market analysis.',
     sameAs: [
-      'https://twitter.com/datasimplify',
-      'https://linkedin.com/company/datasimplify',
+      'https://twitter.com/cryptoreportkit',
+      'https://linkedin.com/company/cryptoreportkit',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      email: 'sasmalgiri@gmail.com',
+      email: 'support@cryptoreportkit.com',
       contactType: 'customer service',
     },
   };
@@ -30,14 +31,15 @@ export function WebsiteJsonLd() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'DataSimplify',
-    url: 'https://datasimplify.com',
-    description: 'Crypto research software providing interactive charts, comparisons, and Excel templates powered by CryptoSheets formulas.',
+    name: 'CryptoReportKit',
+    url: 'https://cryptoreportkit.com',
+    description:
+      'Build refreshable crypto reports in Excel. Excel templates with CryptoSheets formulas for market data, portfolio tracking, and technical analysis.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://datasimplify.com/market?search={search_term_string}',
+        urlTemplate: 'https://cryptoreportkit.com/market?search={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },
@@ -55,21 +57,23 @@ export function SoftwareApplicationJsonLd() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'DataSimplify',
+    name: 'CryptoReportKit',
     applicationCategory: 'FinanceApplication',
-    operatingSystem: 'Web Browser',
+    operatingSystem: 'Microsoft Excel, Web Browser',
     offers: {
-      '@type': 'Offer',
-      price: '0',
+      '@type': 'AggregateOffer',
+      lowPrice: '0',
+      highPrice: '79',
       priceCurrency: 'USD',
-      description: 'Free tier available',
+      offerCount: '3',
     },
     featureList: [
-      'Interactive market charts and analytics',
-      'Coin comparisons and correlations',
-      'Fear & Greed Index tracking',
       'Excel templates with CryptoSheets formulas',
-      'Educational visualization tools',
+      'Market overview and watchlist reports',
+      'Portfolio tracking with P/L analysis',
+      'Technical indicator dashboards',
+      'Correlation and diversification tools',
+      'Gainers and losers tracking',
       'No coding required',
     ],
   };
@@ -85,20 +89,29 @@ export function SoftwareApplicationJsonLd() {
 export function FAQJsonLd() {
   const faqs = [
     {
-      question: 'What is DataSimplify?',
-      answer: 'DataSimplify is software analytics tooling that provides interactive charts, comparisons, and Excel templates with CryptoSheets formulas for educational crypto research.',
+      question: 'What is CryptoReportKit?',
+      answer:
+        'CryptoReportKit provides Excel templates with CryptoSheets formulas for educational crypto research and portfolio tracking. Templates refresh with live data when opened in Excel.',
     },
     {
-      question: 'Is DataSimplify free to use?',
-      answer: 'Yes! DataSimplify offers a free tier with charts, comparisons, and template downloads. Pro and Premium plans are available for more templates and features.',
+      question: 'Is CryptoReportKit free to use?',
+      answer:
+        'Yes! CryptoReportKit offers free Report Kits for market overview and watchlist tracking. Pro and Premium plans are available for more advanced templates.',
     },
     {
-      question: 'What analytics does DataSimplify provide?',
-      answer: 'DataSimplify provides educational visualization tools for market analytics, sentiment analysis, and comparisons. All content is for educational purposes only and should not be considered financial advice.',
+      question: 'How do Report Kits work?',
+      answer:
+        'Report Kits are Excel templates containing CryptoSheets formulas. Download the template, open it in Excel with the CryptoSheets add-in installed, and hit refresh to see live data.',
     },
     {
-      question: 'How do Excel templates work?',
-      answer: 'Excel templates contain CryptoSheets formulas that fetch live data when opened in Excel with the CryptoSheets add-in installed. Templates do not contain embedded market data.',
+      question: 'What is CryptoSheets?',
+      answer:
+        'CryptoSheets is an Excel add-in (by a third-party provider) that enables live crypto data in spreadsheets. CryptoReportKit templates use CryptoSheets formulas to fetch data.',
+    },
+    {
+      question: 'Do you offer refunds?',
+      answer:
+        'Yes! We offer a 30-day money-back guarantee. If you are not satisfied with your purchase, contact us for a full refund within 30 days.',
     },
   ];
 
@@ -113,6 +126,99 @@ export function FAQJsonLd() {
         text: faq.answer,
       },
     })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
+// Product schema for Report Kits
+export function ReportKitProductJsonLd({
+  name,
+  description,
+  tier,
+  slug,
+}: {
+  name: string;
+  description: string;
+  tier: 'free' | 'pro' | 'premium';
+  slug: string;
+}) {
+  const prices = { free: '0', pro: '29', premium: '79' };
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${name} - CryptoReportKit`,
+    description,
+    url: `https://cryptoreportkit.com/templates/${slug}`,
+    brand: {
+      '@type': 'Brand',
+      name: 'CryptoReportKit',
+    },
+    offers: {
+      '@type': 'Offer',
+      price: prices[tier],
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
+// Pricing page schema with aggregate offers
+export function PricingJsonLd() {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'CryptoReportKit Plans',
+    description:
+      'Excel templates with CryptoSheets formulas for crypto research and portfolio tracking.',
+    brand: {
+      '@type': 'Brand',
+      name: 'CryptoReportKit',
+    },
+    offers: {
+      '@type': 'AggregateOffer',
+      lowPrice: '0',
+      highPrice: '79',
+      priceCurrency: 'USD',
+      offerCount: '3',
+      offers: [
+        {
+          '@type': 'Offer',
+          name: 'Free Plan',
+          price: '0',
+          priceCurrency: 'USD',
+          description: 'Basic templates and market overview reports',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Pro Plan',
+          price: '29',
+          priceCurrency: 'USD',
+          description: 'Advanced templates with technical indicators and portfolio tracking',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Premium Plan',
+          price: '79',
+          priceCurrency: 'USD',
+          description: 'Full access to all templates with priority support',
+        },
+      ],
+    },
   };
 
   return (
