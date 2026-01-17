@@ -67,6 +67,9 @@ interface PricingInfo {
   blockedMessage: string | null;
 }
 
+// Check if Paddle is configured
+const isPaddleConfigured = Boolean(process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID);
+
 declare global {
   interface Window {
     Paddle?: {
@@ -295,8 +298,25 @@ export default function PricingPage() {
         <FreeNavbar />
         <Breadcrumb />
 
+        {/* Paid Plans Coming Soon Banner */}
+        {!isPaddleConfigured && (
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-4">
+            <div className="max-w-6xl mx-auto px-4 text-center text-white">
+              <p className="text-lg font-medium">
+                Pro and Premium plans coming soon! Free tier is fully available.
+                <button
+                  onClick={() => setShowWaitlist(true)}
+                  className="underline ml-2 hover:no-underline"
+                >
+                  Get notified when we launch
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* India Waitlist Banner */}
-        {pricingInfo?.blocked && (
+        {isPaddleConfigured && pricingInfo?.blocked && (
           <div className="bg-gradient-to-r from-orange-500 to-orange-400 py-4">
             <div className="max-w-6xl mx-auto px-4 text-center text-white">
               <p className="text-lg font-medium">
@@ -414,7 +434,7 @@ export default function PricingPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleSubscribe(tier.key)}
+                    onClick={() => isPaddleConfigured ? handleSubscribe(tier.key) : setShowWaitlist(true)}
                     disabled={isProcessing || profile?.subscription_tier === tier.key || pricingInfo?.blocked}
                     className={`w-full py-3 rounded-lg font-medium transition ${
                       tier.popular
@@ -426,6 +446,8 @@ export default function PricingPage() {
                       ? 'Processing...'
                       : profile?.subscription_tier === tier.key
                       ? 'Current Plan'
+                      : !isPaddleConfigured
+                      ? 'Coming Soon'
                       : pricingInfo?.blocked
                       ? 'Coming Soon'
                       : tier.cta}
