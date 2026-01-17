@@ -318,7 +318,7 @@ export async function fetchRedditSentiment(
     try {
       const response = await fetch(
         `https://www.reddit.com/r/${sub}/hot.json?limit=${postsPerSub}`,
-        { headers: { 'User-Agent': 'DataSimplify/1.0' } }
+        { headers: { 'User-Agent': 'CryptoReportKit/1.0' } }
       );
       
       if (!response.ok) continue;

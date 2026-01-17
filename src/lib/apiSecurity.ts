@@ -22,8 +22,8 @@ const ALLOWED_HOSTNAMES = new Set([
   '127.0.0.1',
 
   // Production domains - UPDATE THESE FOR YOUR DEPLOYMENT
-  'datasimplify.com',
-  'www.datasimplify.com',
+  'cryptoreportkit.com',
+  'www.cryptoreportkit.com',
 
   // Vercel preview deployments (if using Vercel)
   // Add your specific preview hostnames or use pattern matching below

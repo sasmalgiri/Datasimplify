@@ -57,7 +57,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
   'API access (authenticated)': 'Use authenticated endpoints for integrations and automation.',
   'Priority support (4hr response)': 'Priority support with 4-hour response time during business hours.',
   'Custom integrations': 'Work with our team to build custom template integrations for your workflow.',
-  'White-label options': 'Remove DataSimplify branding for business use (subject to agreement).',
+  'White-label options': 'Remove CryptoReportKit branding for business use (subject to agreement).',
 };
 
 interface PricingInfo {
@@ -114,7 +114,7 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto px-4 py-16">
           <h1 className="text-3xl font-bold mb-4">Pricing</h1>
           <p className="text-gray-700 mb-4">
-            DataSimplify is currently running in free mode. All features are available without payment.
+            CryptoReportKit is currently running in free mode. All features are available without payment.
           </p>
           <p className="text-gray-600 text-sm mb-6">
             We provide software analytics tools and Excel templates for educational data visualization.
@@ -488,7 +488,7 @@ export default function PricingPage() {
           {/* Disclaimer */}
           <div className="mt-12 p-4 bg-gray-100 rounded-lg border border-gray-200">
             <p className="text-gray-500 text-xs text-center">
-              <strong>Disclaimer:</strong> DataSimplify sells template software and workflows, not data.
+              <strong>Disclaimer:</strong> CryptoReportKit sells template software and workflows, not data.
               Templates contain CryptoSheets formulas - data is fetched via your CryptoSheets account.
               Data usage depends on your CryptoSheets plan and refresh settings. Free CryptoSheets users may hit monthly request limits.
               We do not provide financial advice, trading signals, or investment recommendations. Not a data vendor or broker.

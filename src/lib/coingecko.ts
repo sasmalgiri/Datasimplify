@@ -29,7 +29,7 @@ async function fetchWithCache<T>(url: string, cacheKey: string): Promise<T | nul
   try {
     const headers: HeadersInit = {
       'Accept': 'application/json',
-      'User-Agent': 'DataSimplify/1.0',
+      'User-Agent': 'CryptoReportKit/1.0',
     };
     
     // Add API key if available (higher rate limits)

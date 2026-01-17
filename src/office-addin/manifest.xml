@@ -8,17 +8,17 @@
   <!-- Basic Properties -->
   <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>DataSimplify</ProviderName>
+  <ProviderName>CryptoReportKit</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="DataSimplify Charts" />
+  <DisplayName DefaultValue="CryptoReportKit Charts" />
   <Description DefaultValue="Interactive crypto charts powered by ChartJS. Visualize your CryptoSheets data with animations and real-time updates." />
-  <IconUrl DefaultValue="https://datasimplify.com/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="https://datasimplify.com/icon-64.png" />
-  <SupportUrl DefaultValue="https://datasimplify.com/support" />
+  <IconUrl DefaultValue="https://cryptoreportkit.com/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://cryptoreportkit.com/icon-64.png" />
+  <SupportUrl DefaultValue="https://cryptoreportkit.com/support" />
 
   <!-- App Domain - where the add-in is hosted -->
   <AppDomains>
-    <AppDomain>https://datasimplify.com</AppDomain>
+    <AppDomain>https://cryptoreportkit.com</AppDomain>
   </AppDomains>
 
   <!-- Hosts this add-in supports -->
@@ -28,7 +28,7 @@
 
   <!-- Default Settings -->
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://datasimplify.com/addin/taskpane.html" />
+    <SourceLocation DefaultValue="https://cryptoreportkit.com/addin/taskpane.html" />
   </DefaultSettings>
 
   <!-- Permissions -->
@@ -46,43 +46,43 @@
           <!-- Extension Point: Primary Command Surface -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
-              <Group id="DataSimplifyGroup">
-                <Label resid="DataSimplify.GroupLabel" />
+              <Group id="CryptoReportKitGroup">
+                <Label resid="CryptoReportKit.GroupLabel" />
                 <Icon>
-                  <bt:Image size="16" resid="DataSimplify.Icon16" />
-                  <bt:Image size="32" resid="DataSimplify.Icon32" />
-                  <bt:Image size="80" resid="DataSimplify.Icon80" />
+                  <bt:Image size="16" resid="CryptoReportKit.Icon16" />
+                  <bt:Image size="32" resid="CryptoReportKit.Icon32" />
+                  <bt:Image size="80" resid="CryptoReportKit.Icon80" />
                 </Icon>
 
                 <!-- Show Charts Button -->
                 <Control xsi:type="Button" id="ShowChartsButton">
-                  <Label resid="DataSimplify.ShowCharts.Label" />
+                  <Label resid="CryptoReportKit.ShowCharts.Label" />
                   <Supertip>
-                    <Title resid="DataSimplify.ShowCharts.Title" />
-                    <Description resid="DataSimplify.ShowCharts.Description" />
+                    <Title resid="CryptoReportKit.ShowCharts.Title" />
+                    <Description resid="CryptoReportKit.ShowCharts.Description" />
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="DataSimplify.Icon16" />
-                    <bt:Image size="32" resid="DataSimplify.Icon32" />
-                    <bt:Image size="80" resid="DataSimplify.Icon80" />
+                    <bt:Image size="16" resid="CryptoReportKit.Icon16" />
+                    <bt:Image size="32" resid="CryptoReportKit.Icon32" />
+                    <bt:Image size="80" resid="CryptoReportKit.Icon80" />
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>DataSimplifyTaskpane</TaskpaneId>
-                    <SourceLocation resid="DataSimplify.Taskpane.Url" />
+                    <TaskpaneId>CryptoReportKitTaskpane</TaskpaneId>
+                    <SourceLocation resid="CryptoReportKit.Taskpane.Url" />
                   </Action>
                 </Control>
 
                 <!-- Refresh Data Button -->
                 <Control xsi:type="Button" id="RefreshDataButton">
-                  <Label resid="DataSimplify.RefreshData.Label" />
+                  <Label resid="CryptoReportKit.RefreshData.Label" />
                   <Supertip>
-                    <Title resid="DataSimplify.RefreshData.Title" />
-                    <Description resid="DataSimplify.RefreshData.Description" />
+                    <Title resid="CryptoReportKit.RefreshData.Title" />
+                    <Description resid="CryptoReportKit.RefreshData.Description" />
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="DataSimplify.RefreshIcon16" />
-                    <bt:Image size="32" resid="DataSimplify.RefreshIcon32" />
-                    <bt:Image size="80" resid="DataSimplify.RefreshIcon80" />
+                    <bt:Image size="16" resid="CryptoReportKit.RefreshIcon16" />
+                    <bt:Image size="32" resid="CryptoReportKit.RefreshIcon32" />
+                    <bt:Image size="80" resid="CryptoReportKit.RefreshIcon80" />
                   </Icon>
                   <Action xsi:type="ExecuteFunction">
                     <FunctionName>refreshAllCharts</FunctionName>
@@ -98,27 +98,27 @@
     <!-- Resources -->
     <Resources>
       <bt:Images>
-        <bt:Image id="DataSimplify.Icon16" DefaultValue="https://datasimplify.com/addin/assets/icon-16.png" />
-        <bt:Image id="DataSimplify.Icon32" DefaultValue="https://datasimplify.com/addin/assets/icon-32.png" />
-        <bt:Image id="DataSimplify.Icon80" DefaultValue="https://datasimplify.com/addin/assets/icon-80.png" />
-        <bt:Image id="DataSimplify.RefreshIcon16" DefaultValue="https://datasimplify.com/addin/assets/refresh-16.png" />
-        <bt:Image id="DataSimplify.RefreshIcon32" DefaultValue="https://datasimplify.com/addin/assets/refresh-32.png" />
-        <bt:Image id="DataSimplify.RefreshIcon80" DefaultValue="https://datasimplify.com/addin/assets/refresh-80.png" />
+        <bt:Image id="CryptoReportKit.Icon16" DefaultValue="https://cryptoreportkit.com/addin/assets/icon-16.png" />
+        <bt:Image id="CryptoReportKit.Icon32" DefaultValue="https://cryptoreportkit.com/addin/assets/icon-32.png" />
+        <bt:Image id="CryptoReportKit.Icon80" DefaultValue="https://cryptoreportkit.com/addin/assets/icon-80.png" />
+        <bt:Image id="CryptoReportKit.RefreshIcon16" DefaultValue="https://cryptoreportkit.com/addin/assets/refresh-16.png" />
+        <bt:Image id="CryptoReportKit.RefreshIcon32" DefaultValue="https://cryptoreportkit.com/addin/assets/refresh-32.png" />
+        <bt:Image id="CryptoReportKit.RefreshIcon80" DefaultValue="https://cryptoreportkit.com/addin/assets/refresh-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="DataSimplify.Taskpane.Url" DefaultValue="https://datasimplify.com/addin/taskpane.html" />
-        <bt:Url id="Contoso.FunctionFile.Url" DefaultValue="https://datasimplify.com/addin/functions.html" />
+        <bt:Url id="CryptoReportKit.Taskpane.Url" DefaultValue="https://cryptoreportkit.com/addin/taskpane.html" />
+        <bt:Url id="Contoso.FunctionFile.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.html" />
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="DataSimplify.GroupLabel" DefaultValue="DataSimplify" />
-        <bt:String id="DataSimplify.ShowCharts.Label" DefaultValue="Show Charts" />
-        <bt:String id="DataSimplify.ShowCharts.Title" DefaultValue="DataSimplify Interactive Charts" />
-        <bt:String id="DataSimplify.RefreshData.Label" DefaultValue="Refresh" />
-        <bt:String id="DataSimplify.RefreshData.Title" DefaultValue="Refresh Chart Data" />
+        <bt:String id="CryptoReportKit.GroupLabel" DefaultValue="CryptoReportKit" />
+        <bt:String id="CryptoReportKit.ShowCharts.Label" DefaultValue="Show Charts" />
+        <bt:String id="CryptoReportKit.ShowCharts.Title" DefaultValue="CryptoReportKit Interactive Charts" />
+        <bt:String id="CryptoReportKit.RefreshData.Label" DefaultValue="Refresh" />
+        <bt:String id="CryptoReportKit.RefreshData.Title" DefaultValue="Refresh Chart Data" />
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="DataSimplify.ShowCharts.Description" DefaultValue="Open the DataSimplify charts panel to visualize your crypto data with interactive ChartJS charts." />
-        <bt:String id="DataSimplify.RefreshData.Description" DefaultValue="Refresh all charts with the latest data from your spreadsheet." />
+        <bt:String id="CryptoReportKit.ShowCharts.Description" DefaultValue="Open the CryptoReportKit charts panel to visualize your crypto data with interactive ChartJS charts." />
+        <bt:String id="CryptoReportKit.RefreshData.Description" DefaultValue="Refresh all charts with the latest data from your spreadsheet." />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

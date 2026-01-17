@@ -179,31 +179,31 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                CRYPTO ANALYTICS & EXCEL TEMPLATES
+                Refreshable Crypto Reports in Excel
               </span>
               {' '}
-              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                FOR EDUCATIONAL VISUALIZATION
+              <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                (Templates + Report Wizard)
               </span>
             </h1>
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
-              Excel downloads powered by CryptoSheets for live data visualization.
-              <span className="text-white font-semibold"> Educational analytics tools for crypto enthusiasts.</span>
+              Download Excel templates with CryptoSheets formulas. Customize coins & timeframes, open in Excel, refresh.
+              <span className="text-white font-semibold"> Live crypto data at your fingertips.</span>
             </p>
 
             <div className="flex flex-row gap-3 justify-center mb-3">
               <Link
                 href="/templates"
-                className="px-5 py-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-blue-500/25"
+                className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
               >
-                Download Excel →
+                Download Excel Templates
               </Link>
               <Link
-                href="/charts"
+                href="/excel-templates/crypto-portfolio-tracker"
                 className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
               >
-                View Charts
+                Portfolio Tracker
               </Link>
             </div>
 
@@ -214,11 +214,11 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-green-400">✓</span>
-                <span>Educational visualization</span>
+                <span>Customizable templates</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-blue-400">✓</span>
-                <span>No embedded data</span>
+                <span>Free to start</span>
               </div>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function LandingPage() {
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 relative">
               <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">SAVE</div>
-              <div className="text-green-400 text-sm font-medium mb-3">✓ THE DATASIMPLIFY WAY</div>
+              <div className="text-green-400 text-sm font-medium mb-3">✓ THE CRYPTOREPORTKIT WAY</div>
               <h3 className="text-xl font-bold mb-4">All-In-One Platform</h3>
               <ul className="space-y-3 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
@@ -426,7 +426,7 @@ export default function LandingPage() {
       <section className="py-6 px-4 bg-gray-900/50 border-t border-gray-800">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gray-500 text-xs">
-            <strong>Disclaimer:</strong> DataSimplify is a research and comparison tool for education purposes only.
+            <strong>Disclaimer:</strong> CryptoReportKit is a research and comparison tool for education purposes only.
             We do not provide financial advice, trading signals, or investment recommendations.
             Cryptocurrency investments are risky. Always do your own research (DYOR).
           </p>
@@ -438,10 +438,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">📊</span>
-            <span className="font-bold">DataSimplify</span>
+            <span className="font-bold">CryptoReportKit</span>
           </div>
           <div className="text-gray-400 text-sm">
-            © 2024 DataSimplify. All rights reserved.
+            © 2024 CryptoReportKit. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>

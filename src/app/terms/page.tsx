@@ -15,7 +15,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
-              Welcome to DataSimplify, a product of <strong>Ecosanskriti Innovations (OPC) Private Limited</strong>,
+              Welcome to CryptoReportKit, a product of <strong>Ecosanskriti Innovations (OPC) Private Limited</strong>,
               a company registered in India (CIN: U27100WB2025OPC279246), referred to as &quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;.
               These Terms of Service (&quot;Terms&quot;) govern your access to and use of our website,
               applications, APIs, and all related services (collectively, the &quot;Services&quot;).
@@ -31,7 +31,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Definitions</h2>
             <ul className="list-disc list-inside space-y-2">
-              <li><strong>&quot;Services&quot;</strong> means the DataSimplify platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
+              <li><strong>&quot;Services&quot;</strong> means the CryptoReportKit platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
               <li><strong>&quot;Content&quot;</strong> means all analytics visualizations, templates, charts, and educational information provided through our Services.</li>
               <li><strong>&quot;Templates&quot;</strong> means Excel files containing CryptoSheets formulas (no embedded data) that fetch live data via the CryptoSheets add-in on your machine.</li>
@@ -57,7 +57,7 @@ export default function TermsPage() {
           <section className="bg-yellow-50 border border-yellow-300 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-yellow-800 mb-4">4. IMPORTANT: Not Financial Advice</h2>
             <p className="mb-4 text-yellow-900">
-              <strong>DATASIMPLIFY DOES NOT PROVIDE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE.</strong>
+              <strong>CRYPTOREPORTKIT DOES NOT PROVIDE FINANCIAL, INVESTMENT, TAX, OR LEGAL ADVICE.</strong>
             </p>
             <p className="mb-4">
               All Content provided through our Services, including but not limited to cryptocurrency visualizations,
@@ -87,7 +87,7 @@ export default function TermsPage() {
           <section className="bg-blue-50 border border-blue-300 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. Product Scope & Limitations</h2>
             <p className="mb-4">
-              DataSimplify is software analytics tooling. By using our Services, you acknowledge and agree that:
+              CryptoReportKit is software analytics tooling. By using our Services, you acknowledge and agree that:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Software Tools Only:</strong> We provide educational visualization tools and Excel templates
@@ -199,7 +199,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Intellectual Property</h2>
             <p className="mb-4">
               All Content, features, and functionality of our Services, including but not limited to 
-              text, graphics, logos, data, software, and analytics, are owned by DataSimplify or our 
+              text, graphics, logos, data, software, and analytics, are owned by CryptoReportKit or our 
               licensors and are protected by intellectual property laws.
             </p>
             <p>
@@ -229,7 +229,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
             <p className="mb-4">
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, DATASIMPLIFY SHALL NOT BE LIABLE FOR ANY 
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, CRYPTOREPORTKIT SHALL NOT BE LIABLE FOR ANY 
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT 
               LIMITED TO:
             </p>
@@ -250,7 +250,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Indemnification</h2>
             <p>
-              You agree to indemnify, defend, and hold harmless DataSimplify and its officers, directors, 
+              You agree to indemnify, defend, and hold harmless CryptoReportKit and its officers, directors, 
               employees, and agents from any claims, damages, losses, costs, and expenses (including 
               reasonable legal fees) arising from your use of the Services, violation of these Terms, 
               or infringement of any third-party rights.
@@ -386,9 +386,9 @@ export default function TermsPage() {
               court if your claims qualify.
             </p>
             <p className="mb-4 bg-gray-100 p-4 rounded-lg">
-              <strong>CLASS ACTION WAIVER:</strong> YOU AND DATASIMPLIFY AGREE THAT EACH MAY BRING CLAIMS
+              <strong>CLASS ACTION WAIVER:</strong> YOU AND CRYPTOREPORTKIT AGREE THAT EACH MAY BRING CLAIMS
               AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS
-              MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Unless both you and DataSimplify
+              MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Unless both you and CryptoReportKit
               agree otherwise, the arbitrator may not consolidate more than one person&apos;s claims.
             </p>
             <p>
@@ -403,7 +403,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">21. Entire Agreement</h2>
             <p>
               These Terms, together with our Privacy Policy and any other agreements expressly incorporated
-              by reference, constitute the entire agreement between you and DataSimplify regarding your use
+              by reference, constitute the entire agreement between you and CryptoReportKit regarding your use
               of the Services. These Terms supersede any prior agreements or understandings, whether written
               or oral, relating to the subject matter hereof. No waiver of any provision shall be deemed a
               further or continuing waiver of such provision or any other provision.

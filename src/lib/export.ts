@@ -113,13 +113,13 @@ export function generateExcel(
   
   // Add metadata sheet
   const metaWs = XLSX.utils.aoa_to_sheet([
-    ['DataSimplify Export'],
+    ['CryptoReportKit Export'],
     [''],
     ['Generated', new Date().toISOString()],
     ['Total Coins', coins.length],
     ['Data Source', 'CoinGecko + Binance'],
     [''],
-    ['Visit datasimplify.com for more data and analysis'],
+    ['Visit cryptoreportkit.com for more data and analysis'],
   ]);
   XLSX.utils.book_append_sheet(wb, metaWs, 'Info');
   

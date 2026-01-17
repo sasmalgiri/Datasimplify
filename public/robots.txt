@@ -1,5 +1,6 @@
 # CryptoReportKit Robots.txt
 # https://cryptoreportkit.com
+# Refreshable Crypto Excel Templates
 
 User-agent: *
 Allow: /
@@ -7,34 +8,39 @@ Allow: /
 # Sitemaps
 Sitemap: https://cryptoreportkit.com/sitemap.xml
 
-# Disallow API routes
+# Disallow API and auth routes
 Disallow: /api/
 Disallow: /auth/
 
-# Disallow admin/internal pages
+# Disallow internal/demo pages
 Disallow: /demo/
 
-# Allow main features
+# Disallow user account pages (when implemented)
+Disallow: /dashboard/
+Disallow: /account/
+Disallow: /checkout/
+
+# Allow main product pages (explicit for clarity)
+Allow: /excel-templates/
+Allow: /templates
+Allow: /pricing
 Allow: /market
 Allow: /compare
-Allow: /pricing
-Allow: /glossary
-Allow: /learn
+Allow: /screener
 Allow: /sentiment
-Allow: /defi
 Allow: /technical
 Allow: /correlation
 Allow: /etf
-Allow: /screener
+Allow: /defi
 Allow: /portfolio
 Allow: /charts
-Allow: /download
+Allow: /coin/
+Allow: /glossary
+Allow: /learn
+Allow: /faq
+Allow: /contact
+Allow: /roadmap
 Allow: /tools
-Allow: /templates
-Allow: /refund
-Allow: /smart-contract-verifier
-Allow: /coming-soon
-Allow: /status
 
 # Crawl delay for rate limiting
 Crawl-delay: 1

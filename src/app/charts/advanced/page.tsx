@@ -1051,7 +1051,7 @@ function AdvancedChartsContent() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-2xl font-bold text-blue-400">
-              DataSimplify
+              CryptoReportKit
             </Link>
             <div className="flex items-center gap-4">
               <Link href="/charts" className="text-blue-400 hover:text-blue-300">

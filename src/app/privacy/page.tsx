@@ -16,7 +16,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
             <p className="mb-4">
               <strong>Ecosanskriti Innovations (OPC) Private Limited</strong> (CIN: U27100WB2025OPC279246),
-              operating as DataSimplify (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), is committed to protecting your privacy 
+              operating as CryptoReportKit (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), is committed to protecting your privacy 
               and personal data. This Privacy Policy explains how we collect, use, disclose, and 
               safeguard your information when you use our cryptocurrency data analytics platform, 
               website, applications, and related services (collectively, the &quot;Services&quot;).
@@ -189,7 +189,7 @@ export default function PrivacyPage() {
               <li><strong>Right to Lodge a Complaint:</strong> File a complaint with your local data protection authority.</li>
             </ul>
             <p className="mb-4">
-              <strong>Data Controller:</strong> DataSimplify is the data controller for your personal data.
+              <strong>Data Controller:</strong> CryptoReportKit is the data controller for your personal data.
             </p>
             <p>
               To exercise these rights, contact us at <span className="text-emerald-600 font-semibold">sasmalgiri@gmail.com</span>.
@@ -283,7 +283,7 @@ export default function PrivacyPage() {
               our data practices, please contact us:
             </p>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-              <p className="text-emerald-600 font-semibold">DataSimplify</p>
+              <p className="text-emerald-600 font-semibold">CryptoReportKit</p>
               <p>Email: sasmalgiri@gmail.com</p>
             </div>
           </section>

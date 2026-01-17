@@ -15,23 +15,23 @@ const faqs: FAQItem[] = [
   // Getting Started
   {
     category: 'Getting Started',
-    question: 'What is DataSimplify?',
-    answer: 'DataSimplify provides educational crypto analytics tools and Excel templates with CryptoSheets formulas for live data visualization. We offer charts, comparisons, and technical indicator analysis for educational purposes.',
+    question: 'What is CryptoReportKit?',
+    answer: 'CryptoReportKit provides educational crypto analytics tools and Excel templates with CryptoSheets formulas for live data visualization. We offer charts, comparisons, and technical indicator analysis for educational purposes.',
   },
   {
     category: 'Getting Started',
-    question: 'Do I need to create an account to use DataSimplify?',
+    question: 'Do I need to create an account to use CryptoReportKit?',
     answer: 'No account is required to browse our analytics tools and charts. Creating a free account lets you save preferences and access additional features.',
   },
   {
     category: 'Getting Started',
-    question: 'What data sources does DataSimplify use?',
+    question: 'What data sources does CryptoReportKit use?',
     answer: 'Our web dashboards display educational visualizations based on publicly available data sources. Excel templates use CryptoSheets formulas that fetch data via your own CryptoSheets account when opened in Excel.',
   },
   // Templates
   {
     category: 'Templates',
-    question: 'What are DataSimplify Excel Templates?',
+    question: 'What are CryptoReportKit Excel Templates?',
     answer: 'Our Excel templates contain CryptoSheets formulas (no embedded data). When you open a template in Microsoft Excel with the CryptoSheets add-in installed, the formulas fetch live data directly to your spreadsheet.',
   },
   {
@@ -42,7 +42,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Templates',
     question: 'Do templates include market data?',
-    answer: 'No. Templates contain formulas only - no market data is embedded. Data is fetched via the CryptoSheets add-in when you open the file in Excel. DataSimplify is software tooling, not a data vendor.',
+    answer: 'No. Templates contain formulas only - no market data is embedded. Data is fetched via the CryptoSheets add-in when you open the file in Excel. CryptoReportKit is software tooling, not a data vendor.',
   },
   {
     category: 'Templates',
@@ -68,7 +68,7 @@ const faqs: FAQItem[] = [
   // Tools & Features
   {
     category: 'Tools & Features',
-    question: 'What are DataSimplify Excel Templates?',
+    question: 'What are CryptoReportKit Excel Templates?',
     answer: 'Our Excel templates contain CryptoSheets formulas that fetch live crypto data when you open them in Excel. Templates include pre-built charts and visualizations. Requires the CryptoSheets add-in (free or paid) to function.',
   },
   {
@@ -79,13 +79,13 @@ const faqs: FAQItem[] = [
   // Pricing & Limits
   {
     category: 'Pricing & Limits',
-    question: 'Is DataSimplify free?',
-    answer: 'DataSimplify offers free access to our analytics dashboards and charts. Excel templates may require a paid subscription depending on features needed. CryptoSheets (required for templates) has its own pricing.',
+    question: 'Is CryptoReportKit free?',
+    answer: 'CryptoReportKit offers free access to our analytics dashboards and charts. Excel templates may require a paid subscription depending on features needed. CryptoSheets (required for templates) has its own pricing.',
   },
   {
     category: 'Pricing & Limits',
     question: 'What do I need to pay for?',
-    answer: 'DataSimplify dashboards are free. Premium Excel templates may require a subscription. Note: Templates also require a CryptoSheets account (separate product) which has free and paid tiers.',
+    answer: 'CryptoReportKit dashboards are free. Premium Excel templates may require a subscription. Note: Templates also require a CryptoSheets account (separate product) which has free and paid tiers.',
   },
   // Technical
   {
@@ -140,7 +140,7 @@ export default function FAQPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
           <p className="text-gray-400 text-lg">
-            Everything you need to know about DataSimplify
+            Everything you need to know about CryptoReportKit
           </p>
         </div>
 

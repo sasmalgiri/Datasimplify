@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { FEATURES } from '@/lib/featureFlags';
 
-const DISCLAIMER_KEY = 'datasimplify_disclaimer_accepted';
+const DISCLAIMER_KEY = 'cryptoreportkit_disclaimer_accepted';
 
 export default function DisclaimerBanner() {
   const sources = [
@@ -64,7 +64,7 @@ export default function DisclaimerBanner() {
                 </h3>
                 <div className="text-gray-300 text-sm space-y-2">
                   <p>
-                    <strong className="text-yellow-400">DataSimplify provides educational content only.</strong>{' '}
+                    <strong className="text-yellow-400">CryptoReportKit provides educational content only.</strong>{' '}
                     Nothing on this platform constitutes financial, investment, tax, or legal advice.
                   </p>
                   <p>
@@ -148,7 +148,7 @@ export function FooterDisclaimer() {
         <a href="/terms" className="text-gray-400 hover:text-white">Terms</a> |{' '}
         <a href="/privacy" className="text-gray-400 hover:text-white">Privacy</a>
       </p>
-      <p>© 2026 DataSimplify. All rights reserved. We do not sell your data.</p>
+      <p>© 2026 CryptoReportKit. All rights reserved. We do not sell your data.</p>
     </div>
   );
 }

@@ -303,7 +303,7 @@ export default function DownloadPage() {
             {/* Disclaimer - Updated */}
             <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
               <p className="text-gray-500 text-xs text-center">
-                <strong>Disclaimer:</strong> DataSimplify provides template software tools only. We are not a data vendor.
+                <strong>Disclaimer:</strong> CryptoReportKit provides template software tools only. We are not a data vendor.
                 Templates contain formulas - data is fetched via your CryptoSheets account on your machine.
                 Data usage depends on your CryptoSheets plan and refresh settings.
                 Free CryptoSheets users may hit monthly request limits.

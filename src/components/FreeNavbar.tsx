@@ -184,7 +184,7 @@ export function FreeNavbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">📊</span>
-            <span className="text-xl font-bold text-emerald-400">DataSimplify</span>
+            <span className="text-xl font-bold text-emerald-400">CryptoReportKit</span>
           </Link>
 
           {/* Desktop Nav - Mega Menu */}

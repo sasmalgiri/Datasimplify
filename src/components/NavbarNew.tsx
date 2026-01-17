@@ -67,7 +67,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl">📊</span>
-            <span className="font-bold text-xl text-gray-900">DataSimplify</span>
+            <span className="font-bold text-xl text-gray-900">CryptoReportKit</span>
           </Link>
 
           {/* Desktop Navigation */}

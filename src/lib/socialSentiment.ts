@@ -142,7 +142,7 @@ export async function getRedditCryptoSentiment(
       `${SENTIMENT_APIS.reddit}/r/${subreddit}/hot.json?limit=${limit}`,
       {
         headers: {
-          'User-Agent': 'DataSimplify/1.0',
+          'User-Agent': 'CryptoReportKit/1.0',
         },
       }
     );

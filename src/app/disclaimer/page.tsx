@@ -20,7 +20,7 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Product Scope</h2>
             <div className="space-y-4">
               <p>
-                <strong className="text-emerald-400">DataSimplify is software analytics tooling</strong> -
+                <strong className="text-emerald-400">CryptoReportKit is software analytics tooling</strong> -
                 not a data vendor, broker, or financial services provider.
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
@@ -42,7 +42,7 @@ export default function DisclaimerPage() {
               </p>
               <p>
                 All content, tools, charts, and analytics are provided for <strong>educational and informational purposes only</strong>.
-                You should not construe any information on DataSimplify as:
+                You should not construe any information on CryptoReportKit as:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Investment advice or recommendations</li>
@@ -78,7 +78,7 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Data Sources</h2>
             <div className="space-y-4">
               <p>
-                DataSimplify aggregates and displays data from various third-party sources for educational purposes:
+                CryptoReportKit aggregates and displays data from various third-party sources for educational purposes:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Alternative.me (Fear & Greed Index)</li>
@@ -122,13 +122,13 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Limitation of Liability</h2>
             <div className="space-y-4">
               <p>
-                TO THE MAXIMUM EXTENT PERMITTED BY LAW, DATASIMPLIFY AND ITS AFFILIATES SHALL NOT BE
+                TO THE MAXIMUM EXTENT PERMITTED BY LAW, CRYPTOREPORTKIT AND ITS AFFILIATES SHALL NOT BE
                 LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES,
                 OR ANY LOSS OF PROFITS OR REVENUES, WHETHER INCURRED DIRECTLY OR INDIRECTLY,
                 OR ANY LOSS OF DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES.
               </p>
               <p>
-                Your use of any information or tools provided by DataSimplify is entirely at your own risk.
+                Your use of any information or tools provided by CryptoReportKit is entirely at your own risk.
               </p>
             </div>
           </section>
@@ -138,8 +138,8 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Questions?</h2>
             <p>
               If you have questions about this disclaimer, please contact us at{' '}
-              <a href="mailto:legal@datasimplify.com" className="text-emerald-400 hover:underline">
-                legal@datasimplify.com
+              <a href="mailto:legal@cryptoreportkit.com" className="text-emerald-400 hover:underline">
+                legal@cryptoreportkit.com
               </a>
             </p>
           </section>

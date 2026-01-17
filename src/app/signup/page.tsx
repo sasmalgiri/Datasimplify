@@ -77,7 +77,7 @@ function SignupForm() {
       <div className="text-center mb-8">
         <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-600">
           <span>📊</span>
-          <span>DataSimplify</span>
+          <span>CryptoReportKit</span>
         </Link>
         <p className="text-gray-600 mt-2">
           {plan ? `Create account to subscribe to ${plan.charAt(0).toUpperCase() + plan.slice(1)}` : 'Create your account'}

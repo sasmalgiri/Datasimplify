@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const contentLabel = contentType === 'formulas_only' ? '_formulas' :
                         contentType === 'addin' ? '_interactive' : '_native';
-    const filename = `datasimplify_${userConfig.templateType}${contentLabel}_${timestamp}.${format}`;
+    const filename = `cryptoreportkit_${userConfig.templateType}${contentLabel}_${timestamp}.${format}`;
 
     // Return file (convert Buffer to Uint8Array for NextResponse compatibility)
     return new NextResponse(new Uint8Array(buffer), {

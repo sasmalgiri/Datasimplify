@@ -229,6 +229,80 @@ export function PricingJsonLd() {
   );
 }
 
+// Breadcrumb schema for navigation
+export function BreadcrumbJsonLd({
+  items,
+}: {
+  items: { name: string; url: string }[];
+}) {
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url,
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
+// Template/Product page schema for individual Excel templates
+export function ExcelTemplateJsonLd({
+  name,
+  description,
+  slug,
+  category,
+  features,
+  tier = 'free',
+}: {
+  name: string;
+  description: string;
+  slug: string;
+  category: string;
+  features: string[];
+  tier?: 'free' | 'pro' | 'premium';
+}) {
+  const prices = { free: '0', pro: '29', premium: '79' };
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: `${name} Excel Template`,
+    description,
+    url: `https://cryptoreportkit.com/excel-templates/${slug}`,
+    applicationCategory: 'SpreadsheetApplication',
+    operatingSystem: 'Microsoft Excel',
+    offers: {
+      '@type': 'Offer',
+      price: prices[tier],
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+    },
+    featureList: features,
+    softwareRequirements: 'Microsoft Excel 2016+, CryptoSheets Add-in',
+    publisher: {
+      '@type': 'Organization',
+      name: 'CryptoReportKit',
+      url: 'https://cryptoreportkit.com',
+    },
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+    />
+  );
+}
+
 // Combine all JSON-LD for the main layout
 export function AllJsonLd() {
   return (

@@ -164,7 +164,7 @@ export async function GET(request: Request) {
       request,
       category: 'user_export',
       format: 'json',
-      fileName: `datasimplify-export-${new Date().toISOString().split('T')[0]}.json`,
+      fileName: `cryptoreportkit-export-${new Date().toISOString().split('T')[0]}.json`,
       filters: Object.fromEntries(new URL(request.url).searchParams.entries()),
       userId: user.id,
       userEmail: user.email || null,
@@ -174,7 +174,7 @@ export async function GET(request: Request) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="datasimplify-export-${new Date().toISOString().split('T')[0]}.json"`,
+        'Content-Disposition': `attachment; filename="cryptoreportkit-export-${new Date().toISOString().split('T')[0]}.json"`,
       },
     });
 

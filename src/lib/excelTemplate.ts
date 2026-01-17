@@ -1,7 +1,7 @@
 // Excel Template Generator (safe, template-oriented)
 //
 // This module intentionally does NOT generate or instruct raw market-data exports.
-// DataSimplify ships Excel templates that rely on third-party spreadsheet add-ins
+// CryptoReportKit ships Excel templates that rely on third-party spreadsheet add-ins
 // (e.g., CryptoSheets) to fetch data directly within the user’s spreadsheet.
 
 import * as XLSX from 'xlsx';
@@ -14,7 +14,7 @@ export function generateLiveDataTemplate(): Uint8Array {
   const wb = XLSX.utils.book_new();
 
   const instructionsData = [
-    ['DataSimplify Template Setup'],
+    ['CryptoReportKit Template Setup'],
     [''],
     ['WHAT THIS IS'],
     ['• This is an Excel template file (.xlsx). It does not include raw market data exports.'],
@@ -48,7 +48,7 @@ export function downloadLiveDataTemplate(): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `DataSimplify_Template_${new Date().toISOString().split('T')[0]}.xlsx`;
+  a.download = `CryptoReportKit_Template_${new Date().toISOString().split('T')[0]}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

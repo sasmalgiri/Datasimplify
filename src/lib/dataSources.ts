@@ -77,7 +77,7 @@ export const DATA_SOURCES: Record<string, DataSource> = {
 
   computed: {
     id: 'computed',
-    name: 'DataSimplify Computed',
+    name: 'CryptoReportKit Computed',
     license: 'redistributable',
     refreshInterval: 0,
     description: 'Our own computed/derived metrics',

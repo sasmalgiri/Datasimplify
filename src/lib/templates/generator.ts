@@ -120,8 +120,8 @@ export async function generateTemplate(
   const workbook = new ExcelJS.Workbook();
 
   // Set workbook properties
-  workbook.creator = 'DataSimplify';
-  workbook.lastModifiedBy = 'DataSimplify Template Generator';
+  workbook.creator = 'CryptoReportKit';
+  workbook.lastModifiedBy = 'CryptoReportKit Template Generator';
   workbook.created = new Date();
   workbook.modified = new Date();
   workbook.lastPrinted = new Date();
@@ -129,12 +129,12 @@ export async function generateTemplate(
   // Company info - Set document properties directly on workbook
   const contentLabel = contentType === 'formulas_only' ? ' (Formulas Only)' :
                        contentType === 'addin' ? ' (Interactive Charts)' : '';
-  workbook.title = `${baseTemplate.name}${contentLabel} - DataSimplify`;
+  workbook.title = `${baseTemplate.name}${contentLabel} - CryptoReportKit`;
   workbook.subject = 'Cryptocurrency Data Template';
-  workbook.keywords = 'crypto,bitcoin,ethereum,cryptosheets,datasimplify';
+  workbook.keywords = 'crypto,bitcoin,ethereum,cryptosheets,cryptoreportkit';
   workbook.category = 'Finance';
   workbook.description = `${baseTemplate.description} - Powered by CryptoSheets`;
-  workbook.company = 'DataSimplify';
+  workbook.company = 'CryptoReportKit';
 
   // 3. Add START_HERE sheet (always first)
   await createSetupSheet(workbook, baseTemplate, userConfig);
@@ -222,7 +222,7 @@ async function createSetupSheet(
   // Subtitle
   sheet.mergeCells(`B${row}:C${row}`);
   const subtitleCell = sheet.getCell(`B${row}`);
-  subtitleCell.value = 'DataSimplify Template - Powered by CryptoSheets';
+  subtitleCell.value = 'CryptoReportKit Template - Powered by CryptoSheets';
   subtitleCell.font = { size: 12, color: { argb: COLORS.textSecondary }, italic: true };
   subtitleCell.alignment = { horizontal: 'center' };
   row += 3;
@@ -399,7 +399,7 @@ async function createSetupSheet(
   const links = [
     ['Get CryptoSheets', 'https://www.cryptosheets.com/'],
     ['CryptoSheets Pricing', 'https://www.cryptosheets.com/pricing'],
-    ['DataSimplify Help', 'https://datasimplify.io/help/templates'],
+    ['CryptoReportKit Help', 'https://cryptoreportkit.io/help/templates'],
     ['CryptoSheets Docs', 'https://docs.cryptosheets.com/'],
   ];
 
@@ -412,7 +412,7 @@ async function createSetupSheet(
   }
 
   // Protect sheet from accidental edits (but allow formula calculation)
-  sheet.protect('datasimplify', { formatCells: true, selectLockedCells: true, selectUnlockedCells: true });
+  sheet.protect('cryptoreportkit', { formatCells: true, selectLockedCells: true, selectUnlockedCells: true });
 }
 
 /**
@@ -901,7 +901,7 @@ async function createAddinInstructionsSheet(
   // Header
   sheet.mergeCells(`B${row}:C${row}`);
   const titleCell = sheet.getCell(`B${row}`);
-  titleCell.value = '📊 Interactive Charts with DataSimplify Add-in';
+  titleCell.value = '📊 Interactive Charts with CryptoReportKit Add-in';
   titleCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
   titleCell.alignment = { horizontal: 'center' };
   row += 2;
@@ -924,7 +924,7 @@ async function createAddinInstructionsSheet(
   row += 1;
 
   const features = [
-    ['🎨', 'Beautiful animated charts matching DataSimplify website'],
+    ['🎨', 'Beautiful animated charts matching CryptoReportKit website'],
     ['📈', 'Line, bar, doughnut, radar, and area charts'],
     ['🔄', 'Auto-refresh when your CryptoSheets data updates'],
     ['🌙', 'Dark theme with emerald accents'],
@@ -954,7 +954,7 @@ async function createAddinInstructionsSheet(
     ['Microsoft 365', 'Desktop (Windows/Mac), Web, or Mobile'],
     ['OR Office 2021/2019', 'Desktop only (Windows/Mac)'],
     ['CryptoSheets Add-in', 'For live crypto data formulas'],
-    ['DataSimplify Add-in', 'For interactive chart visualization'],
+    ['CryptoReportKit Add-in', 'For interactive chart visualization'],
     ['Internet connection', 'Required for both add-ins'],
   ];
 
@@ -979,8 +979,8 @@ async function createAddinInstructionsSheet(
   const steps = [
     ['Step 1:', 'Install CryptoSheets add-in from Excel Add-ins store'],
     ['Step 2:', 'Sign in to your CryptoSheets account'],
-    ['Step 3:', 'Install DataSimplify Charts add-in from Excel Add-ins store'],
-    ['Step 4:', 'Go to Home tab → Click "DataSimplify Charts" button'],
+    ['Step 3:', 'Install CryptoReportKit Charts add-in from Excel Add-ins store'],
+    ['Step 4:', 'Go to Home tab → Click "CryptoReportKit Charts" button'],
     ['Step 5:', 'The chart panel will open on the right side'],
     ['Step 6:', 'Click "Refresh Data" to load your CryptoSheets data'],
     ['Step 7:', 'Select chart type (Line, Bar, Doughnut, etc.)'],
@@ -1007,9 +1007,9 @@ async function createAddinInstructionsSheet(
 
   const links = [
     ['Get CryptoSheets:', 'https://www.cryptosheets.com/'],
-    ['DataSimplify Help:', 'https://datasimplify.io/help/excel-addin'],
-    ['Video Tutorial:', 'https://datasimplify.io/tutorials/interactive-charts'],
-    ['Support:', 'https://datasimplify.io/support'],
+    ['CryptoReportKit Help:', 'https://cryptoreportkit.io/help/excel-addin'],
+    ['Video Tutorial:', 'https://cryptoreportkit.io/tutorials/interactive-charts'],
+    ['Support:', 'https://cryptoreportkit.io/support'],
   ];
 
   for (const [label, url] of links) {
@@ -1215,7 +1215,7 @@ async function createNativeChartsSheet(
   // Dark Theme Styling section
   sheet.mergeCells(`B${row}:C${row}`);
   const styleHeader = sheet.getCell(`B${row}`);
-  styleHeader.value = '🎨 Match DataSimplify Dark Theme (Optional)';
+  styleHeader.value = '🎨 Match CryptoReportKit Dark Theme (Optional)';
   styleHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
   styleHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
   styleHeader.border = { left: { style: 'thick', color: { argb: COLORS.accent } } };
@@ -1510,7 +1510,7 @@ async function createInstructionsSheet(
 
   // Footer
   sheet.mergeCells(`A${row}:C${row}`);
-  sheet.getCell(`A${row}`).value = 'Template by DataSimplify | Data powered by CryptoSheets | © 2025';
+  sheet.getCell(`A${row}`).value = 'Template by CryptoReportKit | Data powered by CryptoSheets | © 2025';
   sheet.getCell(`A${row}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
   sheet.getCell(`A${row}`).alignment = { horizontal: 'center' };
 }
@@ -1625,7 +1625,7 @@ function addVBAProject(workbook: ExcelJS.Workbook, template: TemplateConfig): vo
 
   const vbaCode = `
 ' ============================================
-' DataSimplify Template - Auto Refresh VBA
+' CryptoReportKit Template - Auto Refresh VBA
 ' ============================================
 ' To add this code:
 ' 1. Press Alt+F11 to open VBA Editor
@@ -1637,7 +1637,7 @@ function addVBAProject(workbook: ExcelJS.Workbook, template: TemplateConfig): vo
 
 Private Sub Workbook_Open()
     ' Show loading message
-    Application.StatusBar = "DataSimplify: Refreshing crypto data..."
+    Application.StatusBar = "CryptoReportKit: Refreshing crypto data..."
 
     ' Refresh all data connections and formulas
     On Error Resume Next
@@ -1649,7 +1649,7 @@ Private Sub Workbook_Open()
     Application.StatusBar = False
 
     ' Optional: Show confirmation
-    ' MsgBox "Data refreshed successfully!", vbInformation, "DataSimplify"
+    ' MsgBox "Data refreshed successfully!", vbInformation, "CryptoReportKit"
 End Sub
 
 ' Manual refresh button
@@ -1658,7 +1658,7 @@ Sub RefreshAllData()
     Application.CalculateFullRebuild
     ThisWorkbook.RefreshAll
     Application.StatusBar = False
-    MsgBox "Data refreshed!", vbInformation, "DataSimplify"
+    MsgBox "Data refreshed!", vbInformation, "CryptoReportKit"
 End Sub
 
 ' Scheduled refresh (every 5 minutes)

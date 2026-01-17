@@ -1,4 +1,4 @@
-# DataSimplify — Project Overview (as of 2026-01-07)
+# CryptoReportKit — Project Overview (as of 2026-01-07)
 
 This document is a **repo-level map** of what exists in the current workspace: the stack, major folders, pages, API surface, data sources, and how the current **free-only mode** works.
 

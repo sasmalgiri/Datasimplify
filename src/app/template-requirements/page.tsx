@@ -13,14 +13,14 @@ export default function TemplateRequirementsPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold mb-4">Spreadsheet Template Requirements</h1>
         <p className="text-gray-400 mb-8 text-lg">
-          What you need to use DataSimplify Excel templates
+          What you need to use CryptoReportKit Excel templates
         </p>
 
         {/* Important Notice */}
         <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-bold text-yellow-400 mb-3">Important: Templates Contain Formulas Only</h2>
           <p className="text-gray-300">
-            DataSimplify templates do <strong>not contain any market data</strong>. They contain
+            CryptoReportKit templates do <strong>not contain any market data</strong>. They contain
             CryptoSheets formulas that fetch live data when you open the file in Excel.
             This means:
           </p>
@@ -35,7 +35,7 @@ export default function TemplateRequirementsPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-yellow-400">•</span>
-              <span>Data is fetched directly by CryptoSheets - DataSimplify does not redistribute data</span>
+              <span>Data is fetched directly by CryptoSheets - CryptoReportKit does not redistribute data</span>
             </li>
           </ul>
         </div>
@@ -106,7 +106,7 @@ export default function TemplateRequirementsPage() {
               <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold shrink-0">1</div>
               <div>
                 <h4 className="font-medium">Download Template</h4>
-                <p className="text-gray-400 text-sm">Get the .xlsx file from DataSimplify</p>
+                <p className="text-gray-400 text-sm">Get the .xlsx file from CryptoReportKit</p>
               </div>
             </div>
             <div className="flex items-start gap-4">

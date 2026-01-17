@@ -108,7 +108,7 @@ export function TemplateDownloadModal({
       const contentLabel = contentType === 'formulas_only' ? '_formulas' :
                           contentType === 'addin' ? '_interactive' :
                           contentType === 'native_charts' ? '_native' : '';
-      a.download = `datasimplify_${templateType}${contentLabel}.${format}`;
+      a.download = `cryptoreportkit_${templateType}${contentLabel}.${format}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -220,7 +220,7 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Install DataSimplify Charts add-in after opening the file</span>
+                <span>Install CryptoReportKit Charts add-in after opening the file</span>
               </li>
             </ul>
           </div>
@@ -247,7 +247,7 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Dark theme color guide to match DataSimplify styling</span>
+                <span>Dark theme color guide to match CryptoReportKit styling</span>
               </li>
             </ul>
           </div>
@@ -491,7 +491,7 @@ export function TemplateDownloadModal({
           </a>
           {' • '}
           Template by{' '}
-          <span className="text-gray-600 dark:text-gray-300">DataSimplify</span>
+          <span className="text-gray-600 dark:text-gray-300">CryptoReportKit</span>
         </div>
       </div>
     </div>

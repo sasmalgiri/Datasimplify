@@ -325,7 +325,7 @@ const SCREENER_TEMPLATE: TemplateConfig = {
     On Error Resume Next
     Application.CalculateFullRebuild
     ActiveWorkbook.RefreshAll
-    MsgBox "DataSimplify Screener loaded! Data is refreshing from CryptoSheets...", vbInformation, "DataSimplify"
+    MsgBox "CryptoReportKit Screener loaded! Data is refreshing from CryptoSheets...", vbInformation, "CryptoReportKit"
 End Sub`,
     },
     {
@@ -335,7 +335,7 @@ End Sub`,
     On Error Resume Next
     Application.CalculateFullRebuild
     ActiveWorkbook.RefreshAll
-    MsgBox "Data refreshed successfully!", vbInformation, "DataSimplify"
+    MsgBox "Data refreshed successfully!", vbInformation, "CryptoReportKit"
 End Sub`,
     },
   ],
@@ -450,7 +450,7 @@ const COMPARE_TEMPLATE: TemplateConfig = {
     On Error Resume Next
     Application.CalculateFullRebuild
     ActiveWorkbook.RefreshAll
-    MsgBox "DataSimplify Comparison loaded! Fetching data from CryptoSheets...", vbInformation, "DataSimplify"
+    MsgBox "CryptoReportKit Comparison loaded! Fetching data from CryptoSheets...", vbInformation, "CryptoReportKit"
 End Sub`,
     },
   ],
@@ -569,7 +569,7 @@ const RISK_DASHBOARD_TEMPLATE: TemplateConfig = {
     On Error Resume Next
     Application.CalculateFullRebuild
     ActiveWorkbook.RefreshAll
-    MsgBox "DataSimplify Risk Dashboard loaded! Calculating metrics...", vbInformation, "DataSimplify"
+    MsgBox "CryptoReportKit Risk Dashboard loaded! Calculating metrics...", vbInformation, "CryptoReportKit"
 End Sub`,
     },
   ],
@@ -670,7 +670,7 @@ const WATCHLIST_TEMPLATE: TemplateConfig = {
     On Error Resume Next
     Application.CalculateFullRebuild
     ActiveWorkbook.RefreshAll
-    MsgBox "DataSimplify Watchlist loaded! Your coins are updating...", vbInformation, "DataSimplify"
+    MsgBox "CryptoReportKit Watchlist loaded! Your coins are updating...", vbInformation, "CryptoReportKit"
 End Sub`,
     },
   ],

@@ -9,16 +9,16 @@ import AnalyticsGate from '@/components/AnalyticsGate';
 import { FEATURES } from '@/lib/featureFlags';
 import { FeedbackWrapper } from '@/components/FeedbackWrapper';
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://datasimplify.com';
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'DataSimplify - Crypto Analytics & Excel Templates',
-    template: '%s | DataSimplify'
+    default: 'CryptoReportKit - Crypto Analytics & Excel Templates',
+    template: '%s | CryptoReportKit'
   },
   description: 'Excel templates with CryptoSheets formulas for live crypto data visualization. Educational analytics tools and indicators. No coding required.',
-  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'ethereum analytics', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'CryptoSheets templates'],
+  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'ethereum analytics', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'CryptoSheets templates', 'crypto report kit'],
 
   // Favicon & Icons
   icons: {
@@ -32,15 +32,15 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: siteUrl,
-    siteName: 'DataSimplify',
-    title: 'DataSimplify - Crypto Analytics & Excel Templates',
+    siteName: 'CryptoReportKit',
+    title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
     description: 'Excel templates with CryptoSheets formulas for live crypto data visualization. Educational analytics tools for crypto enthusiasts.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'DataSimplify - Crypto Data Platform',
+        alt: 'CryptoReportKit - Crypto Data Platform',
       },
     ],
   },
@@ -48,10 +48,10 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'DataSimplify - Crypto Analytics & Excel Templates',
+    title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
     description: 'Excel templates with CryptoSheets formulas for live crypto data. Educational analytics tools and indicators.',
     images: [`${siteUrl}/og-image.png`],
-    creator: '@datasimplify',
+    creator: '@cryptoreportkit',
   },
 
   // Additional SEO
@@ -80,10 +80,10 @@ export const metadata: Metadata = {
   },
 
   // App Info
-  applicationName: 'DataSimplify',
+  applicationName: 'CryptoReportKit',
   category: 'Finance',
-  creator: 'DataSimplify',
-  publisher: 'DataSimplify',
+  creator: 'CryptoReportKit',
+  publisher: 'CryptoReportKit',
 };
 
 function Footer() {
@@ -95,7 +95,7 @@ function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="text-2xl">📊</span>
-              <span className="font-bold text-xl text-white">DataSimplify</span>
+              <span className="font-bold text-xl text-white">CryptoReportKit</span>
             </div>
             <p className="text-sm">
               Democratizing crypto data for everyone. No coding required.
@@ -155,7 +155,7 @@ function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="bg-gray-800/30 rounded-lg p-4 mb-6 space-y-3">
             <p className="text-xs text-gray-500 leading-relaxed">
-              <span className="text-yellow-500 font-medium">⚠️ Important Disclaimer:</span> DataSimplify provides educational software tools only.
+              <span className="text-yellow-500 font-medium">⚠️ Important Disclaimer:</span> CryptoReportKit provides educational software tools only.
               Nothing on this platform constitutes financial, investment, tax, or legal advice.
               Cryptocurrency investments are highly volatile and risky - you may lose some or all of your investment.
               Past performance is not indicative of future results. Always DYOR (Do Your Own Research)
@@ -164,7 +164,7 @@ function Footer() {
             <div className="text-xs text-gray-600 space-y-1">
               <p><strong className="text-gray-400">Product Scope:</strong></p>
               <ul className="list-disc list-inside space-y-0.5 ml-2">
-                <li>DataSimplify is software analytics tooling - not a data vendor or broker.</li>
+                <li>CryptoReportKit is software analytics tooling - not a data vendor or broker.</li>
                 <li>No trading execution, order routing, or brokerage services.</li>
                 <li>No market-data redistribution - we do not sell or license raw data.</li>
                 <li>Excel templates contain formulas only (no embedded data) - data is fetched via CryptoSheets add-in on your machine.</li>
@@ -174,7 +174,7 @@ function Footer() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <p>© {new Date().getFullYear()} DataSimplify. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} CryptoReportKit. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
               <span>🔒 We do not sell your data</span>
               <span>|</span>

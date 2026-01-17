@@ -117,7 +117,7 @@ export default function RefundPage() {
               </li>
             </ul>
             <p className="text-sm text-gray-600">
-              <strong>Note:</strong> DataSimplify provides software tools (templates with formulas), not market data.
+              <strong>Note:</strong> CryptoReportKit provides software tools (templates with formulas), not market data.
               See our <Link href="/disclaimer" className="text-emerald-600 underline">Disclaimer</Link> for details.
             </p>
           </section>
@@ -130,7 +130,7 @@ export default function RefundPage() {
             </p>
             <ol className="list-decimal list-inside space-y-3 mb-6">
               <li>
-                <strong>Find your receipt email</strong> from Paddle (search for &quot;DataSimplify receipt&quot;)
+                <strong>Find your receipt email</strong> from Paddle (search for &quot;CryptoReportKit receipt&quot;)
               </li>
               <li>
                 <strong>Click &quot;Manage Subscription&quot;</strong> or &quot;Manage this Subscription&quot; link
@@ -226,7 +226,7 @@ export default function RefundPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">About Paddle</h2>
             <p className="text-sm text-gray-600">
               <strong>Paddle</strong> is our Merchant of Record and handles all payment processing, billing,
-              and refunds on our behalf. By subscribing to DataSimplify, you also agree to{' '}
+              and refunds on our behalf. By subscribing to CryptoReportKit, you also agree to{' '}
               <a
                 href="https://www.paddle.com/legal/terms"
                 target="_blank"
@@ -247,7 +247,7 @@ export default function RefundPage() {
               issues, contact us:
             </p>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm inline-block">
-              <p className="text-emerald-600 font-semibold">DataSimplify Support</p>
+              <p className="text-emerald-600 font-semibold">CryptoReportKit Support</p>
               <p>Email: <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">sasmalgiri@gmail.com</a></p>
             </div>
           </section>

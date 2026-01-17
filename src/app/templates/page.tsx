@@ -483,7 +483,7 @@ export default function TemplatesPage() {
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-xs">
             <strong>Disclaimer:</strong> Templates contain formulas only - no market data is embedded.
-            DataSimplify is software tooling, not a data vendor.
+            CryptoReportKit is software tooling, not a data vendor.
             <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
               View full disclaimer
             </Link>

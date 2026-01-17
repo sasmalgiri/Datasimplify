@@ -33,7 +33,7 @@ interface DataPreviewProps {
   onDataLoad?: (data: CoinData[]) => void;
 }
 
-// Chart colors matching DataSimplify dark theme
+// Chart colors matching CryptoReportKit dark theme
 const CHART_COLORS = [
   '#10B981', // Emerald
   '#3B82F6', // Blue

@@ -13,7 +13,7 @@ export default function ContactPage() {
       <div className="max-w-4xl mx-auto px-4 py-16">
         <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
         <p className="text-gray-600 mb-8">
-          Have questions about DataSimplify? We&apos;re here to help.
+          Have questions about CryptoReportKit? We&apos;re here to help.
         </p>
 
         <div className="grid md:grid-cols-2 gap-8">
@@ -104,9 +104,9 @@ export default function ContactPage() {
             </div>
 
             <div className="bg-blue-50 rounded-xl border border-blue-200 p-6">
-              <h2 className="text-lg font-semibold text-blue-800 mb-3">About DataSimplify</h2>
+              <h2 className="text-lg font-semibold text-blue-800 mb-3">About CryptoReportKit</h2>
               <p className="text-blue-700 text-sm">
-                DataSimplify is a cryptocurrency research and comparison tool designed for
+                CryptoReportKit is a cryptocurrency research and comparison tool designed for
                 researchers, analysts, and educators. We provide CryptoSheets formula templates
                 for live data analysis, along with smart contract verification tools.
               </p>
