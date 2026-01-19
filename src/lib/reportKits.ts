@@ -43,7 +43,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Get a complete daily snapshot of the crypto market. Track top coins by market cap, see who\'s moving up or down, and monitor overall market health - all in a single refreshable Excel report.',
     icon: '📊',
     tier: 'free',
-    templates: ['market-overview', 'gainers-losers'],
+    templates: ['market_overview', 'gainers_losers'],
     presets: { coins: 50, timeframe: '1d', refresh: 'manual' },
     features: [
       'Top 50 coins by market cap',
@@ -82,7 +82,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Build a personalized watchlist of the coins you care about most. Perfect for tracking your holdings, researching potential investments, or monitoring specific market segments.',
     icon: '👁️',
     tier: 'free',
-    templates: ['personal-watchlist'],
+    templates: ['watchlist'],
     presets: { coins: 25, timeframe: '1d', refresh: 'manual' },
     features: [
       'Customizable coin selection',
@@ -121,7 +121,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Get a complete view of your crypto portfolio. Track holdings, calculate profit/loss, see allocation percentages, and add your own notes for each position.',
     icon: '💼',
     tier: 'pro',
-    templates: ['portfolio-tracker', 'risk-dashboard'],
+    templates: ['portfolio_tracker', 'risk_dashboard'],
     presets: { coins: 20, timeframe: '1d', refresh: 'manual' },
     features: [
       'Holdings and quantities tracking',
@@ -160,7 +160,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Analyze coins with popular technical indicators. See RSI levels, MACD signals, and Bollinger Band positions - educational tools for understanding market momentum.',
     icon: '📈',
     tier: 'pro',
-    templates: ['technical-indicators'],
+    templates: ['technical_indicators'],
     presets: { coins: 10, timeframe: '1d', refresh: 'manual' },
     features: [
       'RSI (Relative Strength Index)',
@@ -199,7 +199,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Understand the relationships between different cryptocurrencies. A correlation matrix shows which coins tend to move together and which provide diversification benefits.',
     icon: '🔗',
     tier: 'pro',
-    templates: ['correlation-matrix', 'coin-comparison'],
+    templates: ['correlation_matrix', 'compare'],
     presets: { coins: 10, timeframe: '30d', refresh: 'manual' },
     features: [
       'Correlation matrix visualization',
@@ -238,7 +238,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Stay on top of market movements. See which coins are making the biggest moves up or down, and track them over time to identify patterns and opportunities.',
     icon: '🚀',
     tier: 'free',
-    templates: ['gainers-losers', 'alerts-summary'],
+    templates: ['gainers_losers', 'alerts_summary'],
     presets: { coins: 50, timeframe: '1d', refresh: 'on_open' },
     features: [
       'Top 50 gainers (24h)',

@@ -24,6 +24,7 @@ interface PageFeedbackProps {
 
 export function PageFeedback({ pagePath, pageTitle, variant = 'floating' }: PageFeedbackProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [step, setStep] = useState<'initial' | 'reason' | 'submitted'>('initial');
   const [helpful, setHelpful] = useState<boolean | null>(null);
   const [reason, setReason] = useState<FeedbackReason | null>(null);
@@ -103,23 +104,34 @@ export function PageFeedback({ pagePath, pageTitle, variant = 'floating' }: Page
   // Floating variant
   return (
     <>
-      {/* Trigger Button */}
-      {!isOpen && step !== 'submitted' && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-full shadow-lg text-sm text-gray-300 hover:text-white transition-all"
-        >
-          <span>Was this helpful?</span>
-          <div className="flex gap-1">
-            <ThumbsUp className="w-4 h-4" />
-            <ThumbsDown className="w-4 h-4" />
-          </div>
-        </button>
+      {/* Trigger Button - positioned higher to avoid blocking page content */}
+      {!isOpen && !isDismissed && step !== 'submitted' && (
+        <div className="fixed bottom-20 right-4 z-40 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full shadow-lg text-xs text-gray-400 hover:text-white transition-all opacity-70 hover:opacity-100"
+          >
+            <span>Feedback</span>
+            <div className="flex gap-0.5">
+              <ThumbsUp className="w-3 h-3" />
+              <ThumbsDown className="w-3 h-3" />
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsDismissed(true)}
+            className="p-1 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full shadow-lg text-gray-500 hover:text-white transition-all opacity-70 hover:opacity-100"
+            title="Dismiss"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
       )}
 
       {/* Floating Panel */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-80 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl overflow-hidden">
+        <div className="fixed bottom-20 right-4 z-50 w-80 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
             <span className="text-sm font-medium text-white">Page Feedback</span>
             <button
@@ -148,9 +160,9 @@ export function PageFeedback({ pagePath, pageTitle, variant = 'floating' }: Page
 
       {/* Success Toast */}
       {step === 'submitted' && !isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 text-sm animate-fade-in">
-          <CheckCircle className="w-4 h-4" />
-          Thanks for your feedback!
+        <div className="fixed bottom-20 right-4 z-40 flex items-center gap-2 px-3 py-2 bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 text-xs animate-fade-in">
+          <CheckCircle className="w-3 h-3" />
+          Thanks!
         </div>
       )}
     </>

@@ -36,6 +36,22 @@ const nextConfig: NextConfig = {
         destination: '/smart-contract-verifier',
         permanent: true,
       },
+      // Disabled features - redirect to coming soon
+      {
+        source: '/whales',
+        destination: '/coming-soon?feature=whales',
+        permanent: false,
+      },
+      {
+        source: '/exchanges',
+        destination: '/coming-soon?feature=exchanges',
+        permanent: false,
+      },
+      {
+        source: '/nft',
+        destination: '/coming-soon?feature=nft',
+        permanent: false,
+      },
     ];
   },
 };

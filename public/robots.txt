@@ -31,7 +31,6 @@ Allow: /sentiment
 Allow: /technical
 Allow: /correlation
 Allow: /etf
-Allow: /defi
 Allow: /portfolio
 Allow: /charts
 Allow: /coin/

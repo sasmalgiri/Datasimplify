@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ContentType } from '@/lib/templates/generator';
+import { useAuth } from '@/lib/auth';
+import { Turnstile } from '@/components/security/Turnstile';
 
 interface TemplateDownloadModalProps {
   isOpen: boolean;
@@ -15,6 +17,8 @@ interface TemplateDownloadModalProps {
     customizations: Record<string, unknown>;
   };
 }
+
+const FREE_DOWNLOAD_LIMIT = 5;
 
 /**
  * Content type options for download
@@ -66,15 +70,105 @@ export function TemplateDownloadModal({
   templateName,
   userConfig,
 }: TemplateDownloadModalProps) {
+  const { user } = useAuth();
   const [understood, setUnderstood] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<'xlsx' | 'xlsm'>('xlsx');
   const [contentType, setContentType] = useState<ContentType>('addin');
   const [error, setError] = useState<string | null>(null);
 
+  // Email registration state
+  const [email, setEmail] = useState('');
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [downloadsRemaining, setDownloadsRemaining] = useState(FREE_DOWNLOAD_LIMIT);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
+
+  // Turnstile CAPTCHA state
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Use logged-in user's email if available
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+      setIsRegistered(true);
+      // Fetch download status for logged-in user
+      fetchDownloadStatus(user.email);
+    } else {
+      // Check for previously registered email in localStorage
+      const savedEmail = localStorage.getItem('crk_user_email');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setIsRegistered(true);
+        fetchDownloadStatus(savedEmail);
+      }
+    }
+  }, [user]);
+
+  // Fetch current download status
+  const fetchDownloadStatus = async (userEmail: string) => {
+    try {
+      const response = await fetch(`/api/user/track-download?email=${encodeURIComponent(userEmail)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDownloadsRemaining(data.downloadsRemaining ?? FREE_DOWNLOAD_LIMIT);
+      }
+    } catch (err) {
+      console.error('Error fetching download status:', err);
+    }
+  };
+
+  // Register email before download
+  const handleRegister = async () => {
+    if (!email || !email.includes('@')) {
+      setRegistrationError('Please enter a valid email address');
+      return;
+    }
+
+    setIsRegistering(true);
+    setRegistrationError(null);
+
+    try {
+      const response = await fetch('/api/user/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          turnstileToken: turnstileToken || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
+
+      // Save email to localStorage for future visits
+      localStorage.setItem('crk_user_email', email.toLowerCase());
+      setIsRegistered(true);
+      setDownloadsRemaining(data.downloadsRemaining ?? FREE_DOWNLOAD_LIMIT);
+    } catch (err) {
+      console.error('Registration error:', err);
+      setRegistrationError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
   const handleDownload = async () => {
     if (!understood) {
       setError('Please confirm you understand the requirements');
+      return;
+    }
+
+    if (!isRegistered || !email) {
+      setError('Please register your email first');
+      return;
+    }
+
+    if (downloadsRemaining <= 0) {
+      setError('Monthly download limit reached. Upgrade for more downloads.');
       return;
     }
 
@@ -90,12 +184,22 @@ export function TemplateDownloadModal({
           ...userConfig,
           contentType,
           format,
+          email, // Include email for tracking
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (errorData.upgradeRequired) {
+          setDownloadsRemaining(0);
+        }
         throw new Error(errorData.message || 'Download failed');
+      }
+
+      // Update remaining downloads from response header
+      const remaining = response.headers.get('X-Downloads-Remaining');
+      if (remaining !== null) {
+        setDownloadsRemaining(parseInt(remaining, 10));
       }
 
       // Download the file
@@ -156,6 +260,87 @@ export function TemplateDownloadModal({
         <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
           Template: <span className="font-semibold text-gray-900 dark:text-white">{templateName}</span>
         </div>
+
+        {/* Email Registration Section */}
+        {!isRegistered ? (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg">
+            <h3 className="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+              </svg>
+              Enter Your Email to Download
+            </h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+              Free users get {FREE_DOWNLOAD_LIMIT} template downloads per month. No spam, just download tracking.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
+              />
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={isRegistering}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 font-medium"
+              >
+                {isRegistering ? 'Registering...' : 'Continue'}
+              </button>
+            </div>
+            {/* Cloudflare Turnstile CAPTCHA */}
+            <Turnstile
+              onVerify={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              theme="auto"
+              size="normal"
+              className="mt-3"
+            />
+            {registrationError && (
+              <p className="text-sm text-red-600 dark:text-red-400 mt-2">{registrationError}</p>
+            )}
+          </div>
+        ) : (
+          <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-emerald-800 dark:text-emerald-300 font-medium">{email}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                  <span className="font-bold text-lg">{downloadsRemaining}</span>/{FREE_DOWNLOAD_LIMIT} downloads remaining
+                </span>
+              </div>
+            </div>
+            {downloadsRemaining <= 0 && (
+              <div className="mt-3 p-2 bg-red-100 dark:bg-red-900/30 rounded border border-red-300 dark:border-red-600">
+                <p className="text-sm text-red-700 dark:text-red-400">
+                  You&apos;ve reached your monthly limit. Downloads reset at the start of next month.
+                </p>
+              </div>
+            )}
+            {!user && (
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('crk_user_email');
+                  setIsRegistered(false);
+                  setEmail('');
+                }}
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline mt-2"
+              >
+                Use a different email
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Content Type Selection */}
         <div className="mb-6">
@@ -449,7 +634,7 @@ export function TemplateDownloadModal({
           <button
             type="button"
             onClick={handleDownload}
-            disabled={!understood || downloading}
+            disabled={!understood || downloading || !isRegistered || downloadsRemaining <= 0}
             className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
             {downloading ? (
@@ -472,6 +657,10 @@ export function TemplateDownloadModal({
                 </svg>
                 Generating...
               </span>
+            ) : !isRegistered ? (
+              'Enter email above to download'
+            ) : downloadsRemaining <= 0 ? (
+              'Download limit reached'
             ) : (
               `Download ${selectedOption?.name} (.${format})`
             )}

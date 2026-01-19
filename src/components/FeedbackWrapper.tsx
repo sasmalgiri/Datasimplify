@@ -3,14 +3,21 @@
 import { usePathname } from 'next/navigation';
 import { PageFeedback } from './PageFeedback';
 
-// Pages where we don't want to show the feedback widget
-const EXCLUDED_PATHS = [
+// Pages where we don't want to show the feedback widget (exact match)
+const EXCLUDED_EXACT = [
+  '/',         // Homepage - don't block CTAs
+  '/pricing',  // Don't interfere with pricing page
+];
+
+// Pages where we don't want to show (prefix match)
+const EXCLUDED_PREFIXES = [
   '/login',
   '/signup',
   '/auth',
   '/api',
   '/admin',
   '/demo',
+  '/checkout',
 ];
 
 // Map paths to readable titles
@@ -68,8 +75,13 @@ function getPageTitle(pathname: string): string {
 export function FeedbackWrapper() {
   const pathname = usePathname();
 
-  // Don't show on excluded paths
-  if (EXCLUDED_PATHS.some((p) => pathname.startsWith(p))) {
+  // Don't show on excluded paths (exact match)
+  if (EXCLUDED_EXACT.includes(pathname)) {
+    return null;
+  }
+
+  // Don't show on excluded paths (prefix match)
+  if (EXCLUDED_PREFIXES.some((p) => pathname.startsWith(p))) {
     return null;
   }
 

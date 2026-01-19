@@ -203,7 +203,7 @@ export default function ReportKitPage() {
               >
                 <div>
                   <h3 className="font-medium text-gray-900 capitalize">
-                    {templateId.replace(/-/g, ' ')}
+                    {templateId.replace(/_/g, ' ')}
                   </h3>
                   <p className="text-sm text-gray-500">Excel template with CryptoSheets formulas</p>
                 </div>
@@ -329,7 +329,7 @@ export default function ReportKitPage() {
           isOpen={showDownloadModal}
           onClose={() => setShowDownloadModal(false)}
           templateType={kit.templates[selectedTemplateIndex]}
-          templateName={kit.templates[selectedTemplateIndex].replace(/-/g, ' ')}
+          templateName={kit.templates[selectedTemplateIndex].replace(/_/g, ' ')}
           userConfig={{
             coins: ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'].slice(0, kit.presets.coins > 5 ? 5 : kit.presets.coins),
             timeframe: kit.presets.timeframe,

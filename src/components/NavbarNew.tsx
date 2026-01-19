@@ -29,10 +29,14 @@ export function Navbar() {
       icon: '📈',
       children: [
         { name: 'Fear & Greed', href: '/sentiment', icon: '😱', desc: 'Market sentiment index' },
-        { name: 'Whale Tracker', href: '/whales', icon: '🐋', desc: 'Big player activity' },
         { name: 'ETF Flows', href: '/etf', icon: '📊', desc: 'Bitcoin ETF tracking' },
-        { name: 'Risk Analysis', href: '/risk', icon: '⚠️', desc: 'Safety metrics' },
         { name: 'Correlation', href: '/correlation', icon: '🔗', desc: 'How coins move together' },
+        ...(isFeatureEnabled('whales')
+          ? [{ name: 'Whale Tracker', href: '/whales', icon: '🐋', desc: 'Big player activity' }]
+          : []),
+        ...(isFeatureEnabled('risk')
+          ? [{ name: 'Risk Analysis', href: '/risk', icon: '⚠️', desc: 'Safety metrics' }]
+          : []),
         ...(socialEnabled
           ? [{ name: 'Social Buzz', href: '/social', icon: '📱', desc: 'Social media sentiment' }]
           : []),
