@@ -12,7 +12,7 @@ export default function DisclaimerPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold mb-8">Disclaimer</h1>
-        <p className="text-gray-400 mb-8">Last updated: January 2025</p>
+        <p className="text-gray-400 mb-8">Last updated: January 2026</p>
 
         <div className="space-y-8 text-gray-300">
           {/* Product Scope */}
@@ -26,9 +26,9 @@ export default function DisclaimerPage() {
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li><strong>No Trading Execution:</strong> We do not execute trades, route orders, or provide brokerage services.</li>
                 <li><strong>No Market-Data Redistribution:</strong> We do not sell, license, or redistribute raw market data.</li>
-                <li><strong>Templates Contain Formulas Only:</strong> Our Excel templates contain CryptoSheets formulas - no embedded data. Data is fetched via the CryptoSheets add-in on your machine using your own account.</li>
-                <li><strong>Display-Only Dashboards:</strong> Website displays are for educational visualization purposes only.</li>
-                <li><strong>Software Tools:</strong> We provide software tools for analytics and visualization - the underlying data comes from third-party providers via your own accounts/subscriptions.</li>
+                <li><strong>Templates Contain Formulas Only:</strong> Our Excel templates contain CRK formulas - no embedded data. Data is fetched via the CRK add-in using your own API keys (BYOK architecture).</li>
+                <li><strong>Display-Only Dashboards:</strong> Website displays are for educational visualization purposes only, showing publicly available information.</li>
+                <li><strong>Software Tools:</strong> We provide software tools for analytics and visualization - the underlying data comes from third-party providers via your own API keys.</li>
               </ul>
             </div>
           </section>
@@ -78,39 +78,41 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Data Sources</h2>
             <div className="space-y-4">
               <p>
-                CryptoReportKit aggregates and displays data from various third-party sources for educational purposes:
+                CryptoReportKit displays data from various third-party sources for educational purposes:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Alternative.me (Fear & Greed Index)</li>
-                <li>Exchange APIs (Market Data)</li>
-                <li>CoinGecko (when enabled - display only)</li>
+                <li>Alternative.me (Fear &amp; Greed Index)</li>
+                <li>CoinGecko (via your own API key - BYOK)</li>
                 <li>DeFiLlama (DeFi metrics)</li>
                 <li>Public blockchain explorers</li>
               </ul>
               <p className="mt-4 text-gray-400 text-sm">
                 We do not guarantee the accuracy, completeness, or timeliness of any data.
                 Data providers may have their own terms of service and usage restrictions.
+                Website displays are for educational demonstration only.
               </p>
             </div>
           </section>
 
           {/* Template Requirements */}
-          <section className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-6">
-            <h2 className="text-2xl font-semibold text-purple-400 mb-4">Excel Template Requirements</h2>
+          <section className="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-6">
+            <h2 className="text-2xl font-semibold text-emerald-400 mb-4">Excel Template Requirements (BYOK)</h2>
             <div className="space-y-4">
-              <p>Our Excel templates require:</p>
+              <p>Our Excel templates use a <strong>BYOK (Bring Your Own Key)</strong> architecture:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li><strong>Microsoft Excel Desktop</strong> (Windows or Mac)</li>
-                <li><strong>CryptoSheets Add-in</strong> installed and signed in</li>
+                <li><strong>CRK Excel Add-in</strong> installed and signed in</li>
+                <li><strong>Your own data provider API key</strong> (e.g., CoinGecko)</li>
                 <li><strong>Active internet connection</strong> for data retrieval</li>
               </ul>
               <p className="mt-4">
                 Templates contain <strong>formulas only</strong> - no market data is embedded.
-                When you open a template, the CryptoSheets add-in fetches live data using your own account.
+                When you open a template, the CRK add-in fetches live data using your own API key.
+                Your keys are encrypted and never shared.
               </p>
               <Link
                 href="/template-requirements"
-                className="inline-block mt-4 text-purple-400 hover:text-purple-300 underline"
+                className="inline-block mt-4 text-emerald-400 hover:text-emerald-300 underline"
               >
                 View full template requirements →
               </Link>
@@ -138,8 +140,8 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Questions?</h2>
             <p>
               If you have questions about this disclaimer, please contact us at{' '}
-              <a href="mailto:legal@cryptoreportkit.com" className="text-emerald-400 hover:underline">
-                legal@cryptoreportkit.com
+              <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-400 hover:underline">
+                sasmalgiri@gmail.com
               </a>
             </p>
           </section>

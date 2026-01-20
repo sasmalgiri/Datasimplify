@@ -405,7 +405,7 @@ export default function HomepageTemplateFinder({ className = '' }: HomepageTempl
       {viewMode === 'presets' && (
         <div className="border-t border-gray-700/50 px-3 py-1.5 flex-shrink-0">
           <p className="text-[9px] text-gray-500 text-center">
-            Powered by CryptoSheets. <span className="text-green-400">FREE</span> = works with free tier.
+            BYOK: Bring Your Own Key. <span className="text-green-400">FREE</span> = works with free CoinGecko API.
           </p>
         </div>
       )}

@@ -1,11 +1,12 @@
 /**
- * CryptoSheets Template Modes Configuration
+ * CRK Template Modes Configuration
  *
- * Templates ship with two modes to manage CryptoSheets API quota:
+ * Templates ship with two modes to manage API quota:
  * - Low-Quota Mode (default): Manual refresh, small watchlist, daily intervals only
  * - Pro Mode: Larger watchlists, more intervals, optional auto-refresh
  *
- * This ensures users don't hit CryptoSheets rate limits unexpectedly.
+ * BYOK Architecture: Users provide their own data provider API key (e.g., CoinGecko).
+ * This ensures users don't hit rate limits unexpectedly.
  */
 
 export type RefreshFrequency = 'manual' | 'on_open' | 'hourly' | 'daily';
@@ -19,13 +20,13 @@ export interface TemplateMode {
   refreshFrequency: RefreshFrequency;
   autoRefresh: boolean;
   estimatedCallsPerRefresh: (assetCount: number) => number;
-  cryptoSheetsRequirement: string;
+  apiRequirement: string;
 }
 
 /**
  * Low-Quota Mode Configuration (Default)
  *
- * Designed to work within CryptoSheets free tier limits:
+ * Designed to work within CoinGecko Demo API limits:
  * - Manual refresh only
  * - Small watchlist (5-10 assets)
  * - Daily intervals only
@@ -33,19 +34,19 @@ export interface TemplateMode {
 export const LOW_QUOTA_MODE: TemplateMode = {
   id: 'low_quota',
   name: 'Low-Quota Mode',
-  description: 'Conservative settings for CryptoSheets Free/Basic plans',
+  description: 'Conservative settings for CoinGecko Demo API (free)',
   maxAssets: 10,
   allowedIntervals: ['1d'],
   refreshFrequency: 'manual',
   autoRefresh: false,
   estimatedCallsPerRefresh: (assetCount) => assetCount * 3, // ~3 calls per asset (price, change, volume)
-  cryptoSheetsRequirement: 'CryptoSheets Free (100 calls/day) or higher',
+  apiRequirement: 'CoinGecko Demo API (10,000 calls/month) or higher',
 };
 
 /**
  * Pro Mode Configuration
  *
- * For CryptoSheets Pro/Premium users with higher limits:
+ * For users with CoinGecko Pro API or higher limits:
  * - Larger watchlists (up to 100 assets)
  * - Multiple intervals (1h, 4h, 1d, 1w)
  * - Optional auto-refresh (disabled by default)
@@ -53,13 +54,13 @@ export const LOW_QUOTA_MODE: TemplateMode = {
 export const PRO_MODE: TemplateMode = {
   id: 'pro',
   name: 'Pro Mode',
-  description: 'Full features for CryptoSheets Pro/Premium plans',
+  description: 'Full features for CoinGecko Pro API or higher',
   maxAssets: 100,
   allowedIntervals: ['1h', '4h', '1d', '1w'],
   refreshFrequency: 'manual', // Still manual by default even in Pro
   autoRefresh: false,
   estimatedCallsPerRefresh: (assetCount) => assetCount * 8, // More metrics per asset
-  cryptoSheetsRequirement: 'CryptoSheets Pro (1,000+ calls/day) or higher',
+  apiRequirement: 'CoinGecko Pro API (500K+ calls/month)',
 };
 
 /**
@@ -69,8 +70,8 @@ export const PRO_MODE: TemplateMode = {
  */
 export interface TemplateRequirements {
   excelDesktop: boolean;
-  cryptoSheetsAddin: boolean;
-  cryptoSheetsAccount: boolean;
+  crkAddin: boolean;
+  apiKeyConnected: boolean;
 }
 
 export const TEMPLATE_REQUIREMENTS: {
@@ -83,23 +84,23 @@ export const TEMPLATE_REQUIREMENTS: {
   {
     id: 'excel_desktop',
     name: 'Microsoft Excel Desktop',
-    description: 'Excel Desktop (Windows or Mac) is required. Excel Online does NOT support CryptoSheets.',
+    description: 'Excel Desktop (Windows or Mac) is required. Excel Online does NOT support CRK add-in.',
     howToCheck: 'Open in Excel Desktop, not browser',
     howToFix: 'Download and install Microsoft Office or Microsoft 365',
   },
   {
-    id: 'cryptosheets_addin',
-    name: 'CryptoSheets Add-in',
-    description: 'The CryptoSheets Excel add-in must be installed for formulas to work.',
-    howToCheck: 'Insert > Get Add-ins > Search "CryptoSheets"',
-    howToFix: 'Visit https://www.cryptosheets.com/ to install the free add-in',
+    id: 'crk_addin',
+    name: 'CRK Excel Add-in',
+    description: 'The CryptoReportKit Excel add-in must be installed for formulas to work.',
+    howToCheck: 'Insert > Get Add-ins > Search "CryptoReportKit"',
+    howToFix: 'Visit the CRK setup guide to install the add-in',
   },
   {
-    id: 'cryptosheets_account',
-    name: 'CryptoSheets Account',
-    description: 'You must be signed in to CryptoSheets to fetch data.',
-    howToCheck: 'Click CryptoSheets tab > Check if signed in',
-    howToFix: 'Create a free account at https://www.cryptosheets.com/signup',
+    id: 'api_key',
+    name: 'Data Provider API Key (BYOK)',
+    description: 'You must connect your own API key (e.g., CoinGecko) to fetch data.',
+    howToCheck: 'Account > API Keys > Check if CoinGecko is connected',
+    howToFix: 'Get a free CoinGecko API key and connect it in your CRK account',
   },
 ];
 
@@ -110,32 +111,38 @@ export const TEMPLATE_REQUIREMENTS: {
  */
 export const QUOTA_STATUS_MESSAGES = {
   missing_addin: {
-    title: 'CryptoSheets Add-in Not Installed',
-    message: 'You will see #NAME? errors because the CryptoSheets add-in is not installed.',
-    action: 'Install CryptoSheets: Insert > Get Add-ins > Search "CryptoSheets"',
+    title: 'CRK Add-in Not Installed',
+    message: 'You will see #NAME? errors because the CRK add-in is not installed.',
+    action: 'Install CRK: Insert > Get Add-ins > Search "CryptoReportKit"',
     severity: 'error' as const,
   },
   not_signed_in: {
-    title: 'Not Signed In to CryptoSheets',
-    message: 'Data cannot be fetched because you are not signed in to CryptoSheets.',
-    action: 'Click the CryptoSheets tab and sign in to your account',
+    title: 'Not Signed In to CRK',
+    message: 'Data cannot be fetched because you are not signed in to the CRK add-in.',
+    action: 'Click the CRK tab in Excel and sign in to your account',
+    severity: 'warning' as const,
+  },
+  no_api_key: {
+    title: 'No API Key Connected',
+    message: 'No data provider API key is connected. Data cannot be fetched.',
+    action: 'Go to Account > API Keys and connect your CoinGecko API key',
     severity: 'warning' as const,
   },
   quota_exceeded: {
-    title: 'CryptoSheets Plan Limit Reached',
-    message: 'Your CryptoSheets plan limit was reached. Data may be stale or missing.',
-    action: 'Reduce watchlist size, lower refresh frequency, or upgrade your CryptoSheets plan',
+    title: 'API Rate Limit Reached',
+    message: 'Your data provider API limit was reached. Data may be stale or missing.',
+    action: 'Reduce watchlist size, lower refresh frequency, or upgrade your data provider plan',
     severity: 'warning' as const,
   },
   rate_limited: {
     title: 'Rate Limited',
-    message: 'Too many requests. CryptoSheets is temporarily blocking new data.',
+    message: 'Too many requests. Your data provider is temporarily blocking new data.',
     action: 'Wait a few minutes and try refreshing again. Consider enabling Low-Quota Mode.',
     severity: 'warning' as const,
   },
   ok: {
-    title: 'CryptoSheets Connected',
-    message: 'CryptoSheets is working correctly.',
+    title: 'CRK Connected',
+    message: 'CRK add-in is working correctly.',
     action: 'Press Ctrl+Alt+F5 to refresh all data',
     severity: 'success' as const,
   },
@@ -194,11 +201,11 @@ export const ASSET_COUNT_PRESETS: {
   mode: 'low_quota' | 'pro';
   description: string;
 }[] = [
-  { label: '5 Assets', count: 5, mode: 'low_quota', description: 'Best for free CryptoSheets plans' },
+  { label: '5 Assets', count: 5, mode: 'low_quota', description: 'Best for free CoinGecko API' },
   { label: '10 Assets', count: 10, mode: 'low_quota', description: 'Recommended for most users' },
-  { label: '25 Assets', count: 25, mode: 'pro', description: 'Requires CryptoSheets Pro' },
-  { label: '50 Assets', count: 50, mode: 'pro', description: 'Requires CryptoSheets Pro' },
-  { label: '100 Assets', count: 100, mode: 'pro', description: 'Requires CryptoSheets Premium' },
+  { label: '25 Assets', count: 25, mode: 'pro', description: 'Requires CoinGecko Pro API' },
+  { label: '50 Assets', count: 50, mode: 'pro', description: 'Requires CoinGecko Pro API' },
+  { label: '100 Assets', count: 100, mode: 'pro', description: 'Requires CoinGecko Pro API' },
 ];
 
 /**
@@ -261,16 +268,16 @@ export function estimateApiCalls(config: {
   const perDay = perRefresh * refreshesPerDay;
   const perMonth = perDay * 30;
 
-  // CryptoSheets limits (approximate)
-  const FREE_DAILY_LIMIT = 100;
-  const PRO_DAILY_LIMIT = 1000;
+  // CoinGecko API limits (approximate)
+  const FREE_MONTHLY_LIMIT = 10000; // Demo API
+  const PRO_MONTHLY_LIMIT = 500000; // Pro API
 
   return {
     perRefresh,
     perDay,
     perMonth,
-    withinFreeLimit: perDay <= FREE_DAILY_LIMIT,
-    withinProLimit: perDay <= PRO_DAILY_LIMIT,
+    withinFreeLimit: perMonth <= FREE_MONTHLY_LIMIT,
+    withinProLimit: perMonth <= PRO_MONTHLY_LIMIT,
   };
 }
 
@@ -319,28 +326,28 @@ export function validateConfigForMode(
 }
 
 /**
- * Get CryptoSheets plan recommendation based on usage
+ * Get API plan recommendation based on usage
  */
-export function getCryptoSheetsPlanRecommendation(
-  estimatedDailyCalls: number
+export function getApiPlanRecommendation(
+  estimatedMonthlyCalls: number
 ): {
   plan: string;
   reason: string;
 } {
-  if (estimatedDailyCalls <= 100) {
+  if (estimatedMonthlyCalls <= 10000) {
     return {
-      plan: 'CryptoSheets Free',
-      reason: 'Your estimated usage fits within the free tier (100 calls/day)',
+      plan: 'CoinGecko Demo API (Free)',
+      reason: 'Your estimated usage fits within the free tier (10,000 calls/month)',
     };
-  } else if (estimatedDailyCalls <= 1000) {
+  } else if (estimatedMonthlyCalls <= 500000) {
     return {
-      plan: 'CryptoSheets Pro',
-      reason: 'Your estimated usage requires Pro tier (1,000 calls/day)',
+      plan: 'CoinGecko Pro API',
+      reason: 'Your estimated usage requires Pro tier (500K+ calls/month)',
     };
   } else {
     return {
-      plan: 'CryptoSheets Premium',
-      reason: 'Your estimated usage requires Premium tier (10,000+ calls/day)',
+      plan: 'CoinGecko Pro API (Higher Tier)',
+      reason: 'Your estimated usage requires a higher Pro tier',
     };
   }
 }

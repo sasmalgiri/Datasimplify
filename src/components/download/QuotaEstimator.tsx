@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import {
   estimateApiCalls,
-  getCryptoSheetsPlanRecommendation,
+  getApiPlanRecommendation,
   REFRESH_FREQUENCY_OPTIONS,
   type RefreshFrequency,
 } from '@/lib/templates/templateModes';
@@ -19,7 +19,7 @@ interface QuotaEstimatorProps {
 /**
  * QuotaEstimator Component
  *
- * Shows users their estimated CryptoSheets API usage based on their
+ * Shows users their estimated API usage based on their BYOK
  * template configuration. Helps them understand quota implications
  * before downloading.
  */
@@ -36,7 +36,7 @@ export function QuotaEstimator({
   );
 
   const recommendation = useMemo(
-    () => getCryptoSheetsPlanRecommendation(estimate.perDay),
+    () => getApiPlanRecommendation(estimate.perDay),
     [estimate.perDay]
   );
 

@@ -43,7 +43,7 @@ export default function DownloadPage() {
 
   // Check if user previously confirmed (persist for session)
   useEffect(() => {
-    const confirmed = sessionStorage.getItem('cryptosheets_requirements_confirmed');
+    const confirmed = sessionStorage.getItem('crk_requirements_confirmed');
     if (confirmed === 'true') {
       setHasConfirmedRequirements(true);
     }
@@ -52,7 +52,7 @@ export default function DownloadPage() {
   // Handler for requirements confirmation
   const handleRequirementsConfirmed = () => {
     setHasConfirmedRequirements(true);
-    sessionStorage.setItem('cryptosheets_requirements_confirmed', 'true');
+    sessionStorage.setItem('crk_requirements_confirmed', 'true');
   };
 
   // Handler for template selection (manual mode)
@@ -91,10 +91,10 @@ export default function DownloadPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">CryptoSheets Templates</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">CRK Excel Templates</h1>
           <p className="text-gray-400">
-            Download Excel templates with CryptoSheets formulas. Templates run on your CryptoSheets
-            account - data usage depends on your CryptoSheets plan and refresh settings.
+            Download Excel templates with CRK formulas. Templates use BYOK (Bring Your Own Key) -
+            you provide your own API key (e.g., CoinGecko) and data is fetched using YOUR credentials.
           </p>
         </div>
 
@@ -189,7 +189,7 @@ export default function DownloadPage() {
                         <ul className="space-y-2 text-sm text-gray-300">
                           <li className="flex items-start gap-2">
                             <span className="text-emerald-400">✓</span>
-                            <span>Templates with CryptoSheets formulas</span>
+                            <span>Templates with CRK formulas (BYOK)</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-emerald-400">✓</span>
@@ -206,8 +206,8 @@ export default function DownloadPage() {
                         </ul>
                         <div className="mt-3 pt-3 border-t border-gray-700">
                           <p className="text-xs text-gray-400">
-                            <strong>Note:</strong> We sell templates + workflows, not data.
-                            Data comes from your CryptoSheets account.
+                            <strong>Note:</strong> We provide template software, not data.
+                            Data comes from your own API key (BYOK).
                           </p>
                         </div>
                       </div>
@@ -256,8 +256,8 @@ export default function DownloadPage() {
                   <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
                     3
                   </div>
-                  <h3 className="font-medium text-white mb-2">Sign In to CryptoSheets</h3>
-                  <p className="text-gray-400 text-sm">Install add-in if not already done</p>
+                  <h3 className="font-medium text-white mb-2">Sign In to CRK Add-in</h3>
+                  <p className="text-gray-400 text-sm">Install add-in + connect API key</p>
                 </div>
                 <div className="text-center">
                   <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
@@ -280,7 +280,7 @@ export default function DownloadPage() {
                 <div>
                   <h3 className="font-semibold text-emerald-400 mb-2">Refresh Data in Templates</h3>
                   <p className="text-gray-300 text-sm mb-3">
-                    Templates use <strong>manual refresh by default</strong> to conserve your CryptoSheets API quota.
+                    Templates use <strong>manual refresh by default</strong> to conserve your API quota (BYOK).
                   </p>
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2 text-white">
@@ -304,9 +304,9 @@ export default function DownloadPage() {
             <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
               <p className="text-gray-500 text-xs text-center">
                 <strong>Disclaimer:</strong> CryptoReportKit provides template software tools only. We are not a data vendor.
-                Templates contain formulas - data is fetched via your CryptoSheets account on your machine.
-                Data usage depends on your CryptoSheets plan and refresh settings.
-                Free CryptoSheets users may hit monthly request limits.
+                Templates contain CRK formulas - data is fetched using your own API key (BYOK architecture).
+                Data usage depends on your provider&apos;s plan and refresh settings.
+                Free CoinGecko API users may hit monthly request limits.
                 Nothing on this platform constitutes financial advice.
                 <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
                   View full disclaimer

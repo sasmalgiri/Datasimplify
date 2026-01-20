@@ -620,9 +620,13 @@ export default function MarketPage() {
 
         {/* Footer Info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Data updates every 60 seconds • Powered by Binance + CoinGecko</p>
+          <p>Educational display • Data refreshes periodically from public APIs</p>
+          <p className="mt-2 text-xs text-gray-600">
+            This page displays publicly available data for educational purposes only.
+            CryptoReportKit does not redistribute or resell market data.
+          </p>
           <p className="mt-2">
-            Want more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for more templates, advanced analytics, and more!
+            Want refreshable Excel reports? <Link href="/builder" className="text-emerald-400 hover:underline">Build a template pack</Link> with your own API keys (BYOK).
           </p>
         </div>
       </div>

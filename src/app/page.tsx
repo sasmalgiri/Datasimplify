@@ -188,7 +188,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
-              Download Excel templates with CryptoSheets formulas. Customize coins & timeframes, open in Excel, refresh.
+              Download Excel templates with CRK formulas. Customize coins & timeframes, connect your API key (BYOK), refresh.
               <span className="text-white font-semibold"> Live crypto data at your fingertips.</span>
             </p>
 
@@ -210,7 +210,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
               <div className="flex items-center gap-1">
                 <span className="text-green-400">✓</span>
-                <span>CryptoSheets formulas</span>
+                <span>CRK formulas + BYOK</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-green-400">✓</span>
@@ -254,8 +254,8 @@ export default function LandingPage() {
               <div className="text-gray-400 text-sm">To Get Started</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">Live</div>
-              <div className="text-gray-400 text-sm">Data via CryptoSheets</div>
+              <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">BYOK</div>
+              <div className="text-gray-400 text-sm">Bring Your Own Key</div>
             </div>
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { icon: '📋', title: 'Excel Downloads', desc: 'Powered by CryptoSheets for live data.' },
+              { icon: '📋', title: 'Excel Downloads', desc: 'CRK formulas + your API key (BYOK).' },
               { icon: '📊', title: 'Charts', desc: 'Explore charts and visual analytics.' },
               { icon: '⚖️', title: 'Comparisons', desc: 'Side-by-side metrics with explanations.' },
               { icon: '📈', title: 'Market Analytics', desc: 'Rankings, movers, and market stats.' },

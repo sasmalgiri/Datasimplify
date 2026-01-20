@@ -346,23 +346,21 @@ export default function TemplatesPage() {
         <details className="mb-8 bg-yellow-900/20 border border-yellow-500/30 rounded-xl overflow-hidden">
           <summary className="p-4 cursor-pointer flex items-center gap-3 hover:bg-yellow-900/30 transition">
             <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-            <span className="font-semibold text-yellow-400">CryptoSheets Add-in Required</span>
+            <span className="font-semibold text-yellow-400">CRK Add-in + API Key Required</span>
             <ChevronDown className="w-4 h-4 text-yellow-500 ml-auto" />
           </summary>
           <div className="px-4 pb-4 pt-0">
             <p className="text-gray-300 text-sm">
               These templates contain <strong>formulas only</strong> - no market data is embedded.
               Data is fetched via the{' '}
-              <a
-                href="https://www.cryptosheets.com/"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/template-requirements"
                 className="text-emerald-400 hover:underline"
               >
-                CryptoSheets Excel add-in
-              </a>{' '}
+                CRK Excel add-in
+              </Link>{' '}
               when you open the file in Microsoft Excel Desktop.
-              You must have an <strong>active CryptoSheets account</strong>.
+              You must have a <strong>CryptoReportKit account</strong> and connect your own API key (BYOK).
             </p>
             <Link
               href="/template-requirements"
@@ -443,7 +441,7 @@ export default function TemplatesPage() {
                 3
               </div>
               <h3 className="font-medium text-white mb-1">Open in Excel</h3>
-              <p className="text-gray-400 text-xs">CryptoSheets add-in fetches data</p>
+              <p className="text-gray-400 text-xs">CRK add-in fetches data via BYOK</p>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
@@ -468,14 +466,12 @@ export default function TemplatesPage() {
             >
               Setup Guide
             </Link>
-            <a
-              href="https://www.cryptosheets.com/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/faq"
               className="inline-block bg-gray-700 hover:bg-gray-600 text-white font-semibold px-6 py-3 rounded-lg transition-colors"
             >
-              Get CryptoSheets
-            </a>
+              View FAQ
+            </Link>
           </div>
         </div>
 

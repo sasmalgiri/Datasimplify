@@ -110,7 +110,7 @@ export function TemplateControls({
               }`}>
                 {currentMode.name}
               </h3>
-              <p className="text-xs text-gray-400">{currentMode.cryptoSheetsRequirement}</p>
+              <p className="text-xs text-gray-400">{currentMode.apiRequirement}</p>
             </div>
           </div>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -203,7 +203,7 @@ export function TemplateControls({
         )}
 
         <p className="text-xs text-gray-500 mt-2">
-          {selectedCoins.length} selected • {selectedCoins.length <= 10 ? 'Free tier compatible' : 'May require CryptoSheets Pro'}
+          {selectedCoins.length} selected • {selectedCoins.length <= 10 ? 'Free tier compatible' : 'May require CoinGecko Pro API (BYOK)'}
         </p>
       </div>
 

@@ -35,29 +35,29 @@ function HelpIcon({ text }: { text: string }) {
 // Feature explanations for tooltips
 const FEATURE_EXPLANATIONS: Record<string, string> = {
   // Free tier
-  '5 templates per month': 'Generate up to 5 Excel templates with CryptoSheets formulas each month. Templates run on your CryptoSheets account.',
+  '5 downloads per month': 'Download up to 5 template packs with CRK formulas each month. Templates use your own API keys (BYOK).',
   'Basic market dashboards': 'Access to market overview, trending coins, and gainers/losers displays on our website.',
   'Community support': 'Help via community resources and documentation.',
-  'Basic templates (XLSX)': 'Excel templates with CryptoSheets formulas. Data is fetched via your CryptoSheets account.',
-  'Low-Quota Mode (5-10 assets)': 'Templates configured for CryptoSheets Free tier (100 calls/day). Manual refresh only.',
+  'Basic templates (XLSX)': 'Excel templates with CRK formulas. Data is fetched via your own API key (BYOK).',
+  'Up to 10 coins per template': 'Templates configured for smaller portfolios. Good for free CoinGecko API tier.',
 
   // Pro tier
-  '50 templates per month': 'Generate up to 50 Excel templates per month for regular workflows.',
+  '100 downloads per month': 'Download up to 100 template packs per month for regular workflows.',
   'All template types': 'Access to all template categories: screener, compare, risk, watchlist, and more.',
   'Advanced analytics dashboards': 'Full access to on-chain, sentiment, technical, and correlation analysis on our website.',
-  'Pro Mode templates (up to 100 assets)': 'Templates supporting larger watchlists. Requires CryptoSheets Pro plan.',
+  'Up to 100 coins per template': 'Templates supporting larger watchlists. May require CoinGecko Pro API.',
   'All timeframe options': 'Use hourly, 4-hour, daily, and weekly timeframes in templates.',
   'Email support': 'Email support with 24-48 hour response time for account and billing questions.',
-  'Export to multiple formats': 'Download templates in XLSX with native Excel charts.',
+  'Scheduled exports': 'Set up automatic report generation and email delivery.',
 
   // Premium tier
-  'Unlimited templates': 'No monthly limits on template generation.',
+  'Unlimited downloads': 'No monthly limits on template pack downloads.',
   'Everything in Pro': 'All Pro tier features included.',
-  'Priority template generation': 'Faster template generation with dedicated processing.',
-  'API access (authenticated)': 'Use authenticated endpoints for integrations and automation.',
+  'Priority generation': 'Faster template generation with dedicated processing.',
+  'Up to 500 coins per template': 'Large templates for comprehensive market coverage.',
+  'API access': 'Use authenticated API endpoints for integrations and automation.',
   'Priority support (4hr response)': 'Priority support with 4-hour response time during business hours.',
   'Custom integrations': 'Work with our team to build custom template integrations for your workflow.',
-  'White-label options': 'Remove CryptoReportKit branding for business use (subject to agreement).',
 };
 
 interface PricingInfo {
@@ -121,11 +121,11 @@ export default function PricingPage() {
           </p>
           <p className="text-gray-600 text-sm mb-6">
             We provide software analytics tools and Excel templates for educational data visualization.
-            Templates contain formulas only - data is fetched via the CryptoSheets add-in.
+            Templates contain formulas only - data is fetched via the CRK add-in using your own API keys (BYOK).
           </p>
           <div className="mt-6 flex gap-4">
-            <Link href="/templates" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-              Browse Templates →
+            <Link href="/builder" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              Build a Report →
             </Link>
             <Link href="/template-requirements" className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
               Setup Requirements
@@ -152,7 +152,7 @@ export default function PricingPage() {
   const initPaddle = () => {
     const vendorId = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID;
     const sandbox = process.env.NEXT_PUBLIC_PADDLE_SANDBOX === 'true';
-    
+
     if (vendorId && window.Paddle) {
       if (sandbox) {
         window.Paddle.Environment.set('sandbox');
@@ -168,7 +168,7 @@ export default function PricingPage() {
       return;
     }
 
-    if (pricingInfo?.blocked) {
+    if (pricingInfo?.blocked || !isPaddleConfigured) {
       setShowWaitlist(true);
       return;
     }
@@ -237,15 +237,15 @@ export default function PricingPage() {
       price: 0,
       description: 'Try our templates',
       features: [
-        '5 templates per month',
+        '5 downloads per month',
         'Basic templates (XLSX)',
-        'Low-Quota Mode (5-10 assets)',
+        'Up to 10 coins per template',
         'Basic market dashboards',
         'Community support',
       ],
       cta: 'Get Started Free',
       popular: false,
-      note: 'Templates run on your CryptoSheets account',
+      note: 'BYOK: Uses your own CoinGecko API key',
     },
     {
       name: 'Pro',
@@ -253,17 +253,17 @@ export default function PricingPage() {
       price: 29,
       description: 'For regular workflows',
       features: [
-        '50 templates per month',
+        '100 downloads per month',
         'All template types',
-        'Pro Mode templates (up to 100 assets)',
+        'Up to 100 coins per template',
         'All timeframe options',
         'Advanced analytics dashboards',
-        'Export to multiple formats',
+        'Scheduled exports',
         'Email support',
       ],
-      cta: 'Start Pro Trial',
+      cta: 'Coming Soon',
       popular: true,
-      note: 'Larger templates may require CryptoSheets Pro',
+      note: 'May require CoinGecko Pro API for large templates',
     },
     {
       name: 'Premium',
@@ -272,14 +272,14 @@ export default function PricingPage() {
       description: 'For power users & businesses',
       features: [
         'Everything in Pro',
-        'Unlimited templates',
-        'Priority template generation',
-        'API access (authenticated)',
+        'Unlimited downloads',
+        'Up to 500 coins per template',
+        'Priority generation',
+        'API access',
         'Priority support (4hr response)',
         'Custom integrations',
-        'White-label options',
       ],
-      cta: 'Go Premium',
+      cta: 'Coming Soon',
       popular: false,
       note: 'Best for high-volume template usage',
     },
@@ -288,49 +288,32 @@ export default function PricingPage() {
   return (
     <>
       <PricingJsonLd />
-      {/* Load Paddle.js */}
-      <Script
-        src="https://cdn.paddle.com/paddle/v2/paddle.js"
-        onLoad={initPaddle}
-      />
+      {/* Load Paddle.js only if configured */}
+      {isPaddleConfigured && (
+        <Script
+          src="https://cdn.paddle.com/paddle/v2/paddle.js"
+          onLoad={initPaddle}
+        />
+      )}
 
       <div className="min-h-screen bg-gray-50 text-gray-900">
         <FreeNavbar />
         <Breadcrumb />
 
         {/* Paid Plans Coming Soon Banner */}
-        {!isPaddleConfigured && (
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-4">
-            <div className="max-w-6xl mx-auto px-4 text-center text-white">
-              <p className="text-lg font-medium">
-                Pro and Premium plans coming soon! Free tier is fully available.
-                <button
-                  onClick={() => setShowWaitlist(true)}
-                  className="underline ml-2 hover:no-underline"
-                >
-                  Get notified when we launch
-                </button>
-              </p>
-            </div>
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 py-4">
+          <div className="max-w-6xl mx-auto px-4 text-center text-white">
+            <p className="text-lg font-medium">
+              Pro and Premium plans launching soon! Free tier is fully available now.
+              <button
+                onClick={() => setShowWaitlist(true)}
+                className="underline ml-2 hover:no-underline"
+              >
+                Get notified when we launch
+              </button>
+            </p>
           </div>
-        )}
-
-        {/* India Waitlist Banner */}
-        {isPaddleConfigured && pricingInfo?.blocked && (
-          <div className="bg-gradient-to-r from-orange-500 to-orange-400 py-4">
-            <div className="max-w-6xl mx-auto px-4 text-center text-white">
-              <p className="text-lg font-medium">
-                🇮🇳 Launching in India soon with UPI payments!
-                <button
-                  onClick={() => setShowWaitlist(true)}
-                  className="underline ml-2 hover:no-underline"
-                >
-                  Join the waitlist
-                </button>
-              </p>
-            </div>
-          </div>
-        )}
+        </div>
 
         <div className="max-w-6xl mx-auto px-4 py-12">
           {/* Beginner Tip */}
@@ -348,18 +331,18 @@ export default function PricingPage() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-2 mb-4">
               <h1 className="text-4xl font-bold">Templates & Workflows</h1>
-              <HelpIcon text="We sell Excel template software and workflows, not data. Templates contain CryptoSheets formulas. Data is fetched via your CryptoSheets account. Cancel anytime." />
+              <HelpIcon text="We sell Excel template software and workflows, not data. Templates contain CRK formulas. Data is fetched via your own API key (BYOK). Cancel anytime." />
             </div>
             <p className="text-gray-600 text-lg mb-2">
-              Professional Excel templates with CryptoSheets formulas. Start free, upgrade anytime.
+              Professional Excel templates with live data. Start free, upgrade anytime.
             </p>
             <p className="text-gray-500">
-              All prices in USD • Paddle handles all taxes automatically
+              All prices in USD
             </p>
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-              <span>💡</span>
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-700">
+              <span>🔑</span>
               <span>
-                <strong>Note:</strong> Templates run on your CryptoSheets account. Data usage depends on your CryptoSheets plan and refresh settings.
+                <strong>BYOK:</strong> Templates use your own API key (e.g., CoinGecko free or Pro). Your keys are encrypted and never shared.
               </span>
             </div>
           </div>
@@ -435,7 +418,7 @@ export default function PricingPage() {
                   <button
                     type="button"
                     onClick={() => isPaddleConfigured ? handleSubscribe(tier.key) : setShowWaitlist(true)}
-                    disabled={isProcessing || profile?.subscription_tier === tier.key || pricingInfo?.blocked}
+                    disabled={isProcessing || profile?.subscription_tier === tier.key}
                     className={`w-full py-3 rounded-lg font-medium transition ${
                       tier.popular
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -446,15 +429,11 @@ export default function PricingPage() {
                       ? 'Processing...'
                       : profile?.subscription_tier === tier.key
                       ? 'Current Plan'
-                      : !isPaddleConfigured
-                      ? 'Coming Soon'
-                      : pricingInfo?.blocked
-                      ? 'Coming Soon'
                       : tier.cta}
                   </button>
                 )}
 
-                {/* Tier note about CryptoSheets dependency */}
+                {/* Tier note about BYOK */}
                 {'note' in tier && tier.note && (
                   <p className="mt-3 text-xs text-gray-500 text-center">{tier.note}</p>
                 )}
@@ -462,17 +441,16 @@ export default function PricingPage() {
             ))}
           </div>
 
-          {/* Payment Info */}
+          {/* Payment Info - Simplified until Paddle is live */}
           <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-4">Secure payments powered by</p>
+            <p className="text-gray-600 mb-4">Payments coming soon</p>
             <div className="flex items-center justify-center gap-8">
-              <div className="text-gray-600">🏦 Paddle</div>
               <div className="text-gray-600">💳 Cards</div>
               <div className="text-gray-600">🅿️ PayPal</div>
               <div className="text-gray-600">🌍 190+ Countries</div>
             </div>
             <p className="text-gray-500 text-sm mt-4">
-              Paddle is our merchant of record and handles all billing, taxes, and compliance.
+              We&apos;re finalizing our payment integration. Join the waitlist to be notified when paid plans launch.
             </p>
           </div>
 
@@ -481,28 +459,28 @@ export default function PricingPage() {
             <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">Do I need CryptoSheets to use templates?</h3>
-                <p className="text-gray-600">Yes. Our templates contain CryptoSheets formulas. You need the free CryptoSheets add-in installed and a CryptoSheets account for data to populate.</p>
+                <h3 className="font-bold mb-2">What is BYOK (Bring Your Own Key)?</h3>
+                <p className="text-gray-600">You provide your own data provider API key (e.g., CoinGecko). Templates fetch data using your key. Your keys are encrypted and only decrypted when making requests on your behalf.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">What do I get with my plan?</h3>
-                <p className="text-gray-600">You get access to our template software and workflows. Data comes from your CryptoSheets account. We sell templates, not data.</p>
+                <p className="text-gray-600">You get access to our template software and workflows. Data comes via your own API key. We sell templates and tools, not data.</p>
+              </div>
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="font-bold mb-2">Do I need a CoinGecko API key?</h3>
+                <p className="text-gray-600">Yes. Get a free Demo API key at coingecko.com/api. For larger templates, you may need CoinGecko Pro. Connect your key in Account → API Keys.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Can I cancel anytime?</h3>
                 <p className="text-gray-600">Yes! Cancel anytime. You&apos;ll keep access until the end of your billing period.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">What about CryptoSheets limits?</h3>
-                <p className="text-gray-600">Free CryptoSheets tier is 100 calls/day. Our Low-Quota Mode (5-10 assets, manual refresh) fits within this. Larger templates may need CryptoSheets Pro.</p>
+                <h3 className="font-bold mb-2">What about API rate limits?</h3>
+                <p className="text-gray-600">Rate limits depend on your CoinGecko plan. Free Demo API: 10K calls/month. CoinGecko Pro: 500K+ calls/month. Our templates are optimized for efficient API usage.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">What payment methods do you accept?</h3>
-                <p className="text-gray-600">Credit/debit cards and PayPal. All major currencies supported.</p>
-              </div>
-              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="font-bold mb-2">Is tax included?</h3>
-                <p className="text-gray-600">Paddle adds applicable taxes at checkout based on your location.</p>
+                <h3 className="font-bold mb-2">When will paid plans launch?</h3>
+                <p className="text-gray-600">We&apos;re finalizing our payment integration. Join the waitlist to be notified. Free tier is fully available now!</p>
               </div>
             </div>
           </div>
@@ -511,8 +489,7 @@ export default function PricingPage() {
           <div className="mt-12 p-4 bg-gray-100 rounded-lg border border-gray-200">
             <p className="text-gray-500 text-xs text-center">
               <strong>Disclaimer:</strong> CryptoReportKit sells template software and workflows, not data.
-              Templates contain CryptoSheets formulas - data is fetched via your CryptoSheets account.
-              Data usage depends on your CryptoSheets plan and refresh settings. Free CryptoSheets users may hit monthly request limits.
+              Templates contain CRK formulas - data is fetched via your own API key (BYOK architecture).
               We do not provide financial advice, trading signals, or investment recommendations. Not a data vendor or broker.
             </p>
           </div>
@@ -527,15 +504,15 @@ export default function PricingPage() {
         </div>
 
         {/* Waitlist Modal */}
-        {showWaitlist && pricingInfo?.blocked && (
+        {showWaitlist && (
           <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
             <div className="bg-gray-800 rounded-lg max-w-md w-full p-6 border border-gray-700">
               <div className="text-center">
-                <div className="text-5xl mb-4">🇮🇳</div>
-                <h3 className="text-2xl font-bold mb-2">Coming Soon to India!</h3>
+                <div className="text-5xl mb-4">🚀</div>
+                <h3 className="text-2xl font-bold mb-2 text-white">Paid Plans Coming Soon!</h3>
                 <p className="text-gray-400 mb-6">
-                  We&apos;re launching with UPI, cards, and all your favorite payment methods.
-                  Join the waitlist to get early access and a special discount!
+                  We&apos;re finalizing our payment integration. Join the waitlist to get early access
+                  and a special discount when we launch!
                 </p>
 
                 {waitlistSubmitted ? (
@@ -564,7 +541,7 @@ export default function PricingPage() {
                     </div>
                     <button
                       type="submit"
-                      className="w-full py-3 bg-orange-500 hover:bg-orange-600 rounded-lg font-medium transition"
+                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 rounded-lg font-medium transition text-white"
                     >
                       Join Waitlist
                     </button>

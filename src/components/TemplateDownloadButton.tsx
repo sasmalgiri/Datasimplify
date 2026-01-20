@@ -19,7 +19,7 @@ interface TemplateDownloadButtonProps {
  * TemplateDownloadButton
  *
  * A reusable button component that opens the template selection modal.
- * Can be placed on any page to offer Excel template downloads with CryptoSheets.
+ * Can be placed on any page to offer Excel template downloads with BYOK data.
  *
  * Features:
  * - Multiple visual variants and sizes

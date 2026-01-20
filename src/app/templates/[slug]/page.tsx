@@ -205,7 +205,7 @@ export default function ReportKitPage() {
                   <h3 className="font-medium text-gray-900 capitalize">
                     {templateId.replace(/_/g, ' ')}
                   </h3>
-                  <p className="text-sm text-gray-500">Excel template with CryptoSheets formulas</p>
+                  <p className="text-sm text-gray-500">Excel template with CRK formulas (BYOK)</p>
                 </div>
                 <button
                   type="button"
@@ -239,18 +239,17 @@ export default function ReportKitPage() {
                 2
               </div>
               <div>
-                <h3 className="font-medium text-gray-900">Install CryptoSheets</h3>
+                <h3 className="font-medium text-gray-900">Connect Your API Key (BYOK)</h3>
                 <p className="text-sm text-gray-600">
-                  Get the{' '}
-                  <a
-                    href="https://cryptosheets.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  Sign in to CryptoReportKit and connect your own API key (e.g., CoinGecko).
+                  See the{' '}
+                  <Link
+                    href="/template-requirements"
                     className="text-blue-600 hover:underline"
                   >
-                    CryptoSheets add-in
-                  </a>{' '}
-                  for Excel (free tier available).
+                    setup guide
+                  </Link>{' '}
+                  for details.
                 </p>
               </div>
             </div>
@@ -261,7 +260,7 @@ export default function ReportKitPage() {
               <div>
                 <h3 className="font-medium text-gray-900">Open and refresh</h3>
                 <p className="text-sm text-gray-600">
-                  Open the template in Excel, sign in to CryptoSheets, and hit refresh to see live
+                  Open the template in Excel Desktop, sign in to the CRK add-in, and hit refresh to see live
                   data.
                 </p>
               </div>

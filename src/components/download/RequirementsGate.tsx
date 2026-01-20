@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { TEMPLATE_REQUIREMENTS } from '@/lib/templates/templateModes';
 
 interface RequirementsGateProps {
@@ -12,10 +13,10 @@ interface RequirementsGateProps {
  * RequirementsGate Component
  *
  * Hard gate that users must acknowledge before downloading templates.
- * Ensures they understand the requirements:
+ * Ensures they understand the BYOK requirements:
  * - Excel Desktop (not Excel Online)
- * - CryptoSheets add-in installed
- * - CryptoSheets account (free or paid)
+ * - CRK add-in installed
+ * - Own API key connected (BYOK)
  */
 export function RequirementsGate({ onConfirm, className = '' }: RequirementsGateProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
@@ -81,15 +82,12 @@ export function RequirementsGate({ onConfirm, className = '' }: RequirementsGate
               <p className="text-sm text-gray-400 mt-1">{req.description}</p>
               {!checkedItems.has(req.id) && (
                 <div className="mt-2 text-xs">
-                  <a
-                    href={req.id === 'cryptosheets_addin' ? 'https://www.cryptosheets.com/' : '#'}
-                    target={req.id === 'cryptosheets_addin' ? '_blank' : undefined}
-                    rel={req.id === 'cryptosheets_addin' ? 'noopener noreferrer' : undefined}
+                  <Link
+                    href="/template-requirements"
                     className="text-emerald-400 hover:underline"
-                    onClick={(e) => req.id !== 'cryptosheets_addin' && e.preventDefault()}
                   >
                     {req.howToFix}
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -103,12 +101,12 @@ export function RequirementsGate({ onConfirm, className = '' }: RequirementsGate
           <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
           </svg>
-          Important: Data Usage
+          Important: BYOK Architecture
         </h4>
         <p className="text-sm text-gray-300">
-          Templates run on <strong>your CryptoSheets account</strong>. Data usage depends on your
-          CryptoSheets plan and refresh settings. Free CryptoSheets users may hit monthly request
-          limits depending on refresh settings.
+          Templates run on <strong>your own API key</strong> (Bring Your Own Key). Data usage depends on
+          your data provider&apos;s plan (e.g., CoinGecko Demo API has 10,000 calls/month).
+          Your keys are encrypted and never shared.
         </p>
       </div>
 
@@ -138,12 +136,12 @@ export function RequirementsGate({ onConfirm, className = '' }: RequirementsGate
       {/* Help Link */}
       <p className="text-center text-xs text-gray-500 mt-4">
         Need help?{' '}
-        <a
+        <Link
           href="/template-requirements"
           className="text-emerald-400 hover:underline"
         >
           View detailed setup guide
-        </a>
+        </Link>
       </p>
     </div>
   );

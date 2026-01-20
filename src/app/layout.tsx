@@ -17,8 +17,8 @@ export const metadata: Metadata = {
     default: 'CryptoReportKit - Crypto Analytics & Excel Templates',
     template: '%s | CryptoReportKit'
   },
-  description: 'Excel templates with CryptoSheets formulas for live crypto data visualization. Educational analytics tools and indicators. No coding required.',
-  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'ethereum analytics', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'CryptoSheets templates', 'crypto report kit'],
+  description: 'Excel templates with CRK formulas for live crypto data visualization. BYOK - bring your own API key. Educational analytics tools and indicators. No coding required.',
+  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'ethereum analytics', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
 
   // Favicon & Icons
   icons: {
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: 'CryptoReportKit',
     title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
-    description: 'Excel templates with CryptoSheets formulas for live crypto data visualization. Educational analytics tools for crypto enthusiasts.',
+    description: 'Excel templates with CRK formulas for live crypto data visualization. BYOK - bring your own API key. Educational analytics tools for crypto enthusiasts.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
-    description: 'Excel templates with CryptoSheets formulas for live crypto data. Educational analytics tools and indicators.',
+    description: 'Excel templates with CRK formulas for live crypto data. BYOK - bring your own API key. Educational analytics tools and indicators.',
     images: [`${siteUrl}/og-image.png`],
     creator: '@cryptoreportkit',
   },
@@ -143,6 +143,7 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Legal</h4>
             <ul className="space-y-2 text-sm">
+              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
@@ -167,7 +168,7 @@ function Footer() {
                 <li>CryptoReportKit is software analytics tooling - not a data vendor or broker.</li>
                 <li>No trading execution, order routing, or brokerage services.</li>
                 <li>No market-data redistribution - we do not sell or license raw data.</li>
-                <li>Excel templates contain formulas only (no embedded data) - data is fetched via CryptoSheets add-in on your machine.</li>
+                <li>Excel templates contain formulas only (no embedded data) - data is fetched via CRK add-in using your own API key (BYOK).</li>
                 <li>Display-only dashboards for educational visualization.</li>
               </ul>
             </div>

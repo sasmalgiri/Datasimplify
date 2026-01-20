@@ -66,7 +66,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
     setError(null);
 
     try {
-      // Fetch data from our API (which gets data from CryptoSheets-compatible sources)
+      // Fetch data from our API (which gets data from BYOK-compatible sources)
       const response = await fetch(`/api/crypto?ids=${selectedCoins.join(',')}&limit=${selectedCoins.length}`);
 
       if (!response.ok) {
@@ -106,7 +106,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
       onDataLoad?.(sortedData);
     } catch (err) {
       console.error('Preview data fetch error:', err);
-      setError('Unable to load preview. Data will be available in Excel via CryptoSheets.');
+      setError('Unable to load preview. Data will be available in Excel via BYOK (your own API key).');
 
       // Show placeholder data so users can see the format
       const placeholderData: CoinData[] = selectedCoins.slice(0, 10).map((symbol, i) => ({
@@ -352,7 +352,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             Data Preview
           </h2>
           <p className="text-gray-400 text-xs mt-1">
-            Preview how your data will appear in Excel • Data from CryptoSheets
+            Preview how your data will appear in Excel • Data via BYOK
           </p>
         </div>
 
@@ -456,10 +456,10 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
         )}
       </div>
 
-      {/* CryptoSheets Note */}
+      {/* BYOK Note */}
       <div className="px-4 py-2 bg-emerald-900/20 border-t border-emerald-500/30">
         <p className="text-xs text-emerald-400 text-center">
-          💡 This preview shows live data. In Excel, CryptoSheets formulas will fetch the latest data automatically.
+          💡 This preview shows live data. In Excel, CRK formulas will fetch the latest data using your own API key (BYOK).
         </p>
       </div>
     </div>

@@ -7,7 +7,7 @@ export function OrganizationJsonLd() {
     url: 'https://cryptoreportkit.com',
     logo: 'https://cryptoreportkit.com/logo.png',
     description:
-      'Excel templates with CryptoSheets formulas for crypto research, portfolio tracking, and market analysis.',
+      'Excel templates with BYOK data for crypto research, portfolio tracking, and market analysis.',
     sameAs: [
       'https://twitter.com/cryptoreportkit',
       'https://linkedin.com/company/cryptoreportkit',
@@ -34,7 +34,7 @@ export function WebsiteJsonLd() {
     name: 'CryptoReportKit',
     url: 'https://cryptoreportkit.com',
     description:
-      'Build refreshable crypto reports in Excel. Excel templates with CryptoSheets formulas for market data, portfolio tracking, and technical analysis.',
+      'Build refreshable crypto reports in Excel. Excel templates with CRK formulas and BYOK data for market data, portfolio tracking, and technical analysis.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -68,7 +68,7 @@ export function SoftwareApplicationJsonLd() {
       offerCount: '3',
     },
     featureList: [
-      'Excel templates with CryptoSheets formulas',
+      'Excel templates with CRK formulas (BYOK)',
       'Market overview and watchlist reports',
       'Portfolio tracking with P/L analysis',
       'Technical indicator dashboards',
@@ -91,7 +91,7 @@ export function FAQJsonLd() {
     {
       question: 'What is CryptoReportKit?',
       answer:
-        'CryptoReportKit provides Excel templates with CryptoSheets formulas for educational crypto research and portfolio tracking. Templates refresh with live data when opened in Excel.',
+        'CryptoReportKit provides Excel templates with CRK formulas for educational crypto research and portfolio tracking. Templates use BYOK (Bring Your Own Key) - you provide your own API key for data.',
     },
     {
       question: 'Is CryptoReportKit free to use?',
@@ -101,12 +101,12 @@ export function FAQJsonLd() {
     {
       question: 'How do Report Kits work?',
       answer:
-        'Report Kits are Excel templates containing CryptoSheets formulas. Download the template, open it in Excel with the CryptoSheets add-in installed, and hit refresh to see live data.',
+        'Report Kits are Excel templates containing CRK formulas. Download the template, install the CRK add-in, connect your API key (BYOK), and refresh to see live data.',
     },
     {
-      question: 'What is CryptoSheets?',
+      question: 'What is BYOK (Bring Your Own Key)?',
       answer:
-        'CryptoSheets is an Excel add-in (by a third-party provider) that enables live crypto data in spreadsheets. CryptoReportKit templates use CryptoSheets formulas to fetch data.',
+        'BYOK means you provide your own data provider API key (e.g., CoinGecko). Your keys are encrypted and used to fetch data directly from the provider through our proxy.',
     },
     {
       question: 'Do you offer refunds?',
@@ -184,7 +184,7 @@ export function PricingJsonLd() {
     '@type': 'Product',
     name: 'CryptoReportKit Plans',
     description:
-      'Excel templates with CryptoSheets formulas for crypto research and portfolio tracking.',
+      'Excel templates with CRK formulas for crypto research and portfolio tracking.',
     brand: {
       '@type': 'Brand',
       name: 'CryptoReportKit',
@@ -287,7 +287,7 @@ export function ExcelTemplateJsonLd({
       availability: 'https://schema.org/InStock',
     },
     featureList: features,
-    softwareRequirements: 'Microsoft Excel 2016+, CryptoSheets Add-in',
+    softwareRequirements: 'Microsoft Excel 2016+, CRK Add-in',
     publisher: {
       '@type': 'Organization',
       name: 'CryptoReportKit',

@@ -52,7 +52,7 @@ const CONTENT_OPTIONS: ContentOption[] = [
   {
     id: 'formulas_only',
     name: 'Formulas Only',
-    description: 'Just CryptoSheets formulas, no charts. Smallest file size, fastest loading.',
+    description: 'Just CRK formulas, no charts. Smallest file size, fastest loading.',
     icon: '📝',
   },
 ];
@@ -451,7 +451,7 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Only CryptoSheets formulas, no charts included</span>
+                <span>Only CRK formulas, no charts included</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
@@ -484,11 +484,11 @@ export function TemplateDownloadModal({
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>CryptoSheets Add-in with <strong>active CryptoSheets account</strong></span>
+              <span>CRK Add-in with <strong>active CRK account</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Internet connection (live data from CryptoSheets)</span>
+              <span>Internet connection (live data from CRK)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
@@ -583,8 +583,8 @@ export function TemplateDownloadModal({
             className="mt-1 w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-            I understand this template <strong>requires an active CryptoSheets account</strong> to fetch live data.
-            The template includes formulas and charts that auto-update when CryptoSheets refreshes.
+            I understand this template <strong>requires an active CRK account</strong> to fetch live data.
+            The template includes formulas and charts that auto-update when CRK refreshes.
           </span>
         </label>
 
@@ -616,12 +616,12 @@ export function TemplateDownloadModal({
             Cancel
           </button>
           <a
-            href="https://www.cryptosheets.com/"
+            href="/template-requirements"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white transition-colors inline-flex items-center gap-2 font-medium"
           >
-            Install CryptoSheets
+            Install CRK
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -667,16 +667,16 @@ export function TemplateDownloadModal({
           </button>
         </div>
 
-        {/* CryptoSheets Attribution */}
+        {/* CRK Attribution */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 text-center">
           Data powered by{' '}
           <a
-            href="https://www.cryptosheets.com/"
+            href="/template-requirements"
             className="text-blue-500 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            CryptoSheets
+            CRK
           </a>
           {' • '}
           Template by{' '}

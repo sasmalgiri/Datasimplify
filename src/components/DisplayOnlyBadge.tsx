@@ -2,7 +2,7 @@
  * Display Only Badge Component
  *
  * Shows "Display Only" indicator and "Recreate in Excel" link
- * for analytics pages that can be recreated with CryptoSheets templates.
+ * for analytics pages that can be recreated with CRK templates.
  */
 
 'use client';
@@ -39,7 +39,7 @@ export function DisplayOnlyBadge({
               Display Only
             </span>
             <span className="text-gray-400 text-sm">
-              Free data from Binance & CoinGecko
+              Educational visualization • Not investment advice
             </span>
           </div>
 

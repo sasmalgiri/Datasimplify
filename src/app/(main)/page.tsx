@@ -84,7 +84,7 @@ export default function HomePage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">🌟 CryptoReportKit — Crypto Research Tools</h1>
-              <p className="text-blue-100 mt-1">Charts, comparisons, and CryptoSheets formula templates for live data analysis.</p>
+              <p className="text-blue-100 mt-1">Charts, comparisons, and Excel templates with BYOK data (bring your own API key).</p>
             </div>
             <UserLevelSelector currentLevel={userLevel} onLevelChange={setUserLevel} />
           </div>
@@ -248,7 +248,7 @@ export default function HomePage() {
             <span className="text-4xl">📊</span>
             <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Excel Templates</h3>
             <p className="text-gray-600 text-sm mt-1">
-              CryptoSheets formula templates for live data.
+              CRK formula templates with BYOK data.
             </p>
           </Link>
 

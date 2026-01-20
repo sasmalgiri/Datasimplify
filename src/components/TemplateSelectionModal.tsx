@@ -104,14 +104,14 @@ export function TemplateSelectionModal({
           </button>
         </div>
 
-        {/* CryptoSheets Info Banner */}
+        {/* CRK Add-in Info Banner */}
         <div className="mx-4 mt-4 p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
             <div className="text-sm">
-              <p className="text-yellow-400 font-medium">CryptoSheets Add-in Required</p>
+              <p className="text-yellow-400 font-medium">CRK Add-in + API Key Required (BYOK)</p>
               <p className="text-yellow-500/80 mt-0.5">
-                Templates contain formulas that connect to CryptoSheets. Data pulls live when you open in Excel.
+                Templates contain CRK formulas. Data is fetched using your own API key when you open in Excel.
               </p>
             </div>
           </div>
@@ -144,7 +144,7 @@ export function TemplateSelectionModal({
                           {template.name}
                         </h3>
                         <span className="px-2 py-0.5 bg-purple-600/20 text-purple-400 text-xs font-medium rounded">
-                          CryptoSheets
+                          BYOK
                         </span>
                       </div>
                       <p className="text-sm text-gray-400 mt-1 line-clamp-2">
@@ -199,12 +199,10 @@ export function TemplateSelectionModal({
               </span>
             </div>
             <a
-              href="https://www.cryptosheets.com/"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/template-requirements"
               className="inline-flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 transition"
             >
-              Get CryptoSheets
+              Setup Guide
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

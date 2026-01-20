@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Info, ExternalLink, FileSpreadsheet, RefreshCw, Shield } from 'lucide-react';
+import { Info, FileSpreadsheet, Shield, Key } from 'lucide-react';
 
 interface ProductDisclaimerProps {
   variant?: 'default' | 'compact' | 'banner';
@@ -25,8 +25,8 @@ export function ProductDisclaimer({
             </span>
             <span className="text-blue-400">•</span>
             <span className="flex items-center gap-1.5">
-              <RefreshCw className="w-4 h-4" />
-              Data via <strong>your</strong> CryptoSheets
+              <Key className="w-4 h-4" />
+              BYOK (Your API Key)
             </span>
             <span className="text-blue-400">•</span>
             <span className="flex items-center gap-1.5">
@@ -44,8 +44,8 @@ export function ProductDisclaimer({
       <div className={`flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm ${className}`}>
         <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
         <p className="text-gray-600">
-          <strong className="text-gray-800">Templates + Workflow:</strong> We sell Excel template software.
-          Data is fetched via your CryptoSheets account (free tier available).
+          <strong className="text-gray-800">Templates + BYOK:</strong> We sell Excel template software.
+          Data is fetched using your own API key (e.g., CoinGecko free tier available).
           {showRefundLink && (
             <> <Link href="/refund" className="text-blue-600 hover:underline">30-day refund policy</Link></>
           )}
@@ -69,15 +69,15 @@ export function ProductDisclaimer({
               <FileSpreadsheet className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Templates + Workflow</p>
-                <p className="text-xs text-gray-600">Excel files with CryptoSheets formulas</p>
+                <p className="text-xs text-gray-600">Excel files with CRK formulas</p>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
-              <RefreshCw className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
+              <Key className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
               <div>
-                <p className="font-medium text-gray-800 text-sm">Your Data Source</p>
-                <p className="text-xs text-gray-600">Data via your CryptoSheets account</p>
+                <p className="font-medium text-gray-800 text-sm">BYOK Architecture</p>
+                <p className="text-xs text-gray-600">Data via your own API key</p>
               </div>
             </div>
 
@@ -91,18 +91,18 @@ export function ProductDisclaimer({
           </div>
 
           <p className="text-sm text-gray-600 mb-3">
-            We provide Excel templates with live data formulas. The templates run on <strong>your</strong> CryptoSheets
-            account - we don&apos;t store or redistribute market data. A free CryptoSheets tier is available.
+            We provide Excel templates with CRK formulas. The templates fetch data using <strong>your own</strong> API
+            key (BYOK = Bring Your Own Key) - we don&apos;t store or redistribute market data. CoinGecko free tier available.
           </p>
 
           <div className="flex flex-wrap gap-3 text-sm">
             <a
-              href="https://cryptosheets.com"
+              href="https://www.coingecko.com/en/api"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800"
             >
-              Get CryptoSheets <ExternalLink className="w-3 h-3" />
+              Get CoinGecko API Key
             </a>
             {showRefundLink && (
               <>
@@ -127,7 +127,7 @@ export function ProductDisclaimer({
 export function ProductDisclaimerInline({ className = '' }: { className?: string }) {
   return (
     <p className={`text-xs text-gray-500 ${className}`}>
-      Templates use CryptoSheets formulas. Data fetched via your CryptoSheets account.{' '}
+      Templates use CRK formulas. Data fetched via your own API key (BYOK).{' '}
       <Link href="/refund" className="underline hover:text-gray-700">
         30-day refund
       </Link>
