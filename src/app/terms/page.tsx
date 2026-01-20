@@ -34,7 +34,7 @@ export default function TermsPage() {
               <li><strong>&quot;Services&quot;</strong> means the CryptoReportKit platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
               <li><strong>&quot;Content&quot;</strong> means all analytics visualizations, templates, charts, and educational information provided through our Services.</li>
-              <li><strong>&quot;Templates&quot;</strong> means Excel files containing CryptoSheets formulas (no embedded data) that fetch live data via the CryptoSheets add-in on your machine.</li>
+              <li><strong>&quot;Templates&quot;</strong> means Excel files containing CRK formulas (no embedded data) that fetch live data via the CRK Excel add-in on your machine using your own API keys (BYOK).</li>
               <li><strong>&quot;Subscription&quot;</strong> means a paid plan providing access to premium features of our Services.</li>
             </ul>
           </section>
@@ -93,11 +93,11 @@ export default function TermsPage() {
               <li><strong>Software Tools Only:</strong> We provide educational visualization tools and Excel templates
                 containing formulas. We do not provide market data, data feeds, or raw data downloads.</li>
               <li><strong>No Data Redistribution:</strong> We do not sell, license, or redistribute market data.
-                Templates contain CryptoSheets formulas that fetch data via the user&apos;s own CryptoSheets account.</li>
+                Templates contain CRK formulas that fetch data via the user&apos;s own API keys (BYOK architecture).</li>
               <li><strong>No Trading Execution:</strong> We do not offer order routing, brokerage, or trading services
                 of any kind. We are not a broker-dealer or exchange.</li>
-              <li><strong>CryptoSheets Requirement:</strong> Excel templates require the CryptoSheets add-in (a separate
-                third-party product) to function. Data availability depends on your CryptoSheets subscription.</li>
+              <li><strong>CRK Add-in Requirement:</strong> Excel templates require the CryptoReportKit Excel add-in
+                to function. You provide your own data provider API keys (e.g., CoinGecko) for data access.</li>
               <li><strong>Display-Only Dashboards:</strong> Web dashboards show educational visualizations based on
                 publicly available data sources. They are not real-time trading terminals.</li>
             </ul>

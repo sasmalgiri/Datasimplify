@@ -97,7 +97,7 @@ export default function RefundPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Excel Templates</h2>
             <p className="mb-4">
               Our Excel templates contain <strong>formulas only</strong> - they do not include embedded market data.
-              Data is fetched via the CryptoSheets add-in when you open the file in Microsoft Excel.
+              Data is fetched via the CRK Excel add-in using your own API keys when you open the file in Microsoft Excel.
             </p>
             <ul className="space-y-3 mb-4">
               <li className="flex items-start gap-3">
@@ -109,8 +109,8 @@ export default function RefundPage() {
               <li className="flex items-start gap-3">
                 <span className="text-blue-600 mt-1">ℹ️</span>
                 <span>
-                  <strong>CryptoSheets required:</strong> Templates require the CryptoSheets add-in (a third-party
-                  product) to fetch live data. Ensure you meet the{' '}
+                  <strong>CRK Add-in + API Key required:</strong> Templates require the CryptoReportKit Excel add-in
+                  and your own data provider API key (e.g., CoinGecko) to fetch live data. Ensure you meet the{' '}
                   <Link href="/template-requirements" className="text-emerald-600 underline">requirements</Link>
                   {' '}before purchasing.
                 </span>

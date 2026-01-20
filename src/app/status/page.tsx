@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import {
@@ -10,25 +10,30 @@ import {
   RefreshCw,
   Clock,
   ArrowLeft,
-  ExternalLink,
+  Calendar,
 } from 'lucide-react';
 
 interface ServiceStatus {
-  name: string;
-  status: 'operational' | 'degraded' | 'down' | 'checking';
-  lastCheck: Date | null;
-  responseTime: number | null;
+  service: string;
+  status: 'operational' | 'degraded' | 'down';
+  latency?: number;
   message?: string;
+  lastCheck: string;
 }
 
-const SERVICES = [
-  { id: 'coingecko', name: 'CoinGecko API', endpoint: '/api/crypto?limit=1' },
-  { id: 'binance', name: 'Binance API', endpoint: '/api/charts/candles?symbol=BTCUSDT&interval=1h&limit=1' },
-  { id: 'sentiment', name: 'Fear & Greed Index', endpoint: '/api/sentiment' },
-  { id: 'defi', name: 'DeFi Llama', endpoint: '/api/defi/llama?limit=1' },
-];
+interface HealthResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+  version: string;
+  services: ServiceStatus[];
+  scheduled_exports?: {
+    last_run: string | null;
+    next_run: string | null;
+    active_count: number;
+  };
+}
 
-function StatusIcon({ status }: { status: ServiceStatus['status'] }) {
+function StatusIcon({ status }: { status: 'operational' | 'degraded' | 'down' | 'checking' }) {
   switch (status) {
     case 'operational':
       return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -41,7 +46,7 @@ function StatusIcon({ status }: { status: ServiceStatus['status'] }) {
   }
 }
 
-function StatusBadge({ status }: { status: ServiceStatus['status'] }) {
+function StatusBadge({ status }: { status: 'operational' | 'degraded' | 'down' | 'checking' }) {
   const colors = {
     operational: 'bg-green-100 text-green-800 border-green-200',
     degraded: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -64,77 +69,48 @@ function StatusBadge({ status }: { status: ServiceStatus['status'] }) {
 }
 
 export default function StatusPage() {
-  const [services, setServices] = useState<ServiceStatus[]>(
-    SERVICES.map((s) => ({
-      name: s.name,
-      status: 'checking',
-      lastCheck: null,
-      responseTime: null,
-    }))
-  );
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
-  const checkServices = async () => {
-    setIsRefreshing(true);
+  const checkHealth = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    const results = await Promise.all(
-      SERVICES.map(async (service) => {
-        const start = Date.now();
-        try {
-          const response = await fetch(service.endpoint, {
-            method: 'GET',
-            cache: 'no-store',
-          });
-          const responseTime = Date.now() - start;
+    try {
+      const response = await fetch('/api/health', {
+        cache: 'no-store',
+      });
 
-          if (response.ok) {
-            return {
-              name: service.name,
-              status: responseTime > 5000 ? 'degraded' : 'operational',
-              lastCheck: new Date(),
-              responseTime,
-            } as ServiceStatus;
-          } else {
-            return {
-              name: service.name,
-              status: 'down',
-              lastCheck: new Date(),
-              responseTime: null,
-              message: `HTTP ${response.status}`,
-            } as ServiceStatus;
-          }
-        } catch {
-          return {
-            name: service.name,
-            status: 'down',
-            lastCheck: new Date(),
-            responseTime: null,
-            message: 'Connection failed',
-          } as ServiceStatus;
-        }
-      })
-    );
+      if (!response.ok && response.status !== 503) {
+        throw new Error(`HTTP ${response.status}`);
+      }
 
-    setServices(results);
-    setLastRefresh(new Date());
-    setIsRefreshing(false);
-  };
-
-  useEffect(() => {
-    checkServices();
-    // Refresh every 60 seconds
-    const interval = setInterval(checkServices, 60000);
-    return () => clearInterval(interval);
+      const data: HealthResponse = await response.json();
+      setHealth(data);
+      setLastRefresh(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch status');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const overallStatus = services.every((s) => s.status === 'operational')
-    ? 'operational'
-    : services.some((s) => s.status === 'down')
-      ? 'down'
-      : services.some((s) => s.status === 'degraded')
+  useEffect(() => {
+    checkHealth();
+    // Refresh every 60 seconds
+    const interval = setInterval(checkHealth, 60000);
+    return () => clearInterval(interval);
+  }, [checkHealth]);
+
+  const overallStatus = isLoading
+    ? 'checking'
+    : health?.status === 'healthy'
+      ? 'operational'
+      : health?.status === 'degraded'
         ? 'degraded'
-        : 'checking';
+        : 'down';
 
   const overallMessages = {
     operational: 'All systems operational',
@@ -148,6 +124,18 @@ export default function StatusPage() {
     degraded: 'bg-yellow-500',
     down: 'bg-red-500',
     checking: 'bg-gray-400',
+  };
+
+  const formatRelativeTime = (isoString: string | null) => {
+    if (!isoString) return 'Never';
+    const date = new Date(isoString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return date.toLocaleDateString();
   };
 
   return (
@@ -167,7 +155,12 @@ export default function StatusPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">System Status</h1>
-          <p className="text-gray-600">Real-time status of CryptoReportKit services and APIs</p>
+          <p className="text-gray-600">
+            Real-time status of CryptoReportKit services
+            {health?.version && (
+              <span className="text-gray-400 ml-2">v{health.version}</span>
+            )}
+          </p>
         </div>
 
         {/* Overall Status Banner */}
@@ -195,62 +188,125 @@ export default function StatusPage() {
               </div>
             </div>
             <button
-              onClick={checkServices}
-              disabled={isRefreshing}
+              onClick={checkHealth}
+              disabled={isLoading}
               className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              {isLoading ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
         </div>
 
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800">
+            <p className="font-medium">Failed to check status</p>
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Services List */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">Data Services</h3>
+            <h3 className="font-semibold text-gray-900">Core Services</h3>
           </div>
           <div className="divide-y divide-gray-100">
-            {services.map((service, index) => (
-              <div key={index} className="px-4 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <StatusIcon status={service.status} />
-                  <div>
-                    <p className="font-medium text-gray-900">{service.name}</p>
-                    {service.message && (
-                      <p className="text-sm text-gray-500">{service.message}</p>
+            {isLoading && !health ? (
+              <div className="px-4 py-8 text-center text-gray-500">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                Checking services...
+              </div>
+            ) : health?.services ? (
+              health.services.map((service, index) => (
+                <div key={index} className="px-4 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <StatusIcon status={service.status} />
+                    <div>
+                      <p className="font-medium text-gray-900">{service.service}</p>
+                      {service.message && (
+                        <p className="text-sm text-gray-500">{service.message}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {service.latency && (
+                      <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <Clock className="w-4 h-4" />
+                        <span>{service.latency}ms</span>
+                      </div>
                     )}
+                    <StatusBadge status={service.status} />
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  {service.responseTime && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      <span>{service.responseTime}ms</span>
-                    </div>
-                  )}
-                  <StatusBadge status={service.status} />
-                </div>
+              ))
+            ) : (
+              <div className="px-4 py-8 text-center text-gray-500">
+                No service data available
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* CryptoSheets Notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-          <h3 className="font-semibold text-blue-900 mb-2">About Template Data</h3>
-          <p className="text-blue-800 text-sm mb-3">
-            CryptoReportKit templates use CryptoSheets formulas to fetch data. Template data
-            availability depends on your CryptoSheets account status.
-          </p>
-          <a
-            href="https://cryptosheets.com/status"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
-          >
-            Check CryptoSheets Status
-            <ExternalLink className="w-4 h-4" />
-          </a>
+        {/* Scheduled Exports Status */}
+        {health?.scheduled_exports && (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
+            <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <h3 className="font-semibold text-gray-900">Scheduled Exports</h3>
+            </div>
+            <div className="px-4 py-4">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {health.scheduled_exports.active_count}
+                  </p>
+                  <p className="text-sm text-gray-500">Active Schedules</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {formatRelativeTime(health.scheduled_exports.last_run)}
+                  </p>
+                  <p className="text-sm text-gray-500">Last Run</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {health.scheduled_exports.next_run
+                      ? new Date(health.scheduled_exports.next_run).toLocaleString()
+                      : 'None scheduled'}
+                  </p>
+                  <p className="text-sm text-gray-500">Next Run</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CRK Add-in Info */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-8">
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-emerald-900 mb-2">
+                CryptoReportKit Add-in
+              </h3>
+              <p className="text-emerald-800 text-sm mb-3">
+                CRK templates use our native Excel Add-in with BYOK (Bring Your Own Key) architecture.
+                Your data requests are proxied securely through our API using your encrypted provider keys.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/account/keys"
+                  className="text-emerald-600 hover:text-emerald-800 text-sm font-medium"
+                >
+                  Manage API Keys
+                </Link>
+                <Link
+                  href="/pricing"
+                  className="text-emerald-600 hover:text-emerald-800 text-sm font-medium"
+                >
+                  View Plans
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Support Info */}

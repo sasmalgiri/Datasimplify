@@ -13,6 +13,10 @@ import ExcelJS from 'exceljs';
 import { getTemplateConfig, type TemplateType, type FormulaTemplate, type TemplateConfig, type SheetDefinition, type ChartDefinition } from './templateConfig';
 import { isCoinSupported, getAllCryptoSheetCoins, getTopCoins, CATEGORY_NAMES } from './cryptoSheetCoins';
 import { getChartsForTemplate, CHART_COLORS, type ChartConfig } from './chartDefinitions';
+import { type FormulaMode, convertToCRK } from './formulaMapping';
+
+// Re-export FormulaMode for use by other components
+export type { FormulaMode } from './formulaMapping';
 
 /**
  * Content type options for template generation
@@ -28,6 +32,7 @@ export interface UserTemplateConfig {
   timeframe: string; // '24h', '7d', '30d', '1y'
   currency: string; // 'USD', 'EUR', 'BTC', 'ETH'
   contentType?: ContentType; // Type of content to generate (default: 'addin')
+  formulaMode?: FormulaMode; // 'cryptosheets' (default) or 'crk' for native CRK add-in
   customizations: {
     includeCharts: boolean;
     metricsList?: string[];
@@ -741,7 +746,8 @@ async function createDataSheet(
 }
 
 /**
- * Build CryptoSheets formula from template with advanced substitutions
+ * Build formula from template with advanced substitutions
+ * Supports both CryptoSheets and CRK formula formats
  */
 function buildFormula(
   formulaTpl: FormulaTemplate,
@@ -749,6 +755,7 @@ function buildFormula(
   userConfig: UserTemplateConfig,
   rowIndex: number = 0
 ): string {
+  // Start with the CryptoSheets formula pattern (source of truth)
   let formula = formulaTpl.formulaPattern
     // Coin placeholders
     .replace(/{COIN}/g, coin)
@@ -767,6 +774,11 @@ function buildFormula(
     .replace(/{POOL}/g, 'eth-usdc') // Default pool
     .replace(/{TOKEN}/g, coin)
     .replace(/{COLLECTION}/g, 'boredapeyachtclub'); // Default NFT collection
+
+  // Convert to CRK format if formulaMode is 'crk'
+  if (userConfig.formulaMode === 'crk') {
+    formula = convertToCRK(formula);
+  }
 
   return formula;
 }

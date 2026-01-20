@@ -4,6 +4,10 @@
     {
       "path": "/api/cleanup/run",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/export",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

@@ -1,0 +1,161 @@
+{
+  "allowCustomDataForDataTypeAny": true,
+  "functions": [
+    {
+      "id": "PRICE",
+      "name": "PRICE",
+      "description": "Get current price of a cryptocurrency",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "type": "string"
+        },
+        {
+          "name": "currency",
+          "description": "Currency (default: usd)",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "result": {
+        "type": "number"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    },
+    {
+      "id": "CHANGE24H",
+      "name": "CHANGE24H",
+      "description": "Get 24-hour price change percentage",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "type": "string"
+        }
+      ],
+      "result": {
+        "type": "number"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    },
+    {
+      "id": "MARKETCAP",
+      "name": "MARKETCAP",
+      "description": "Get market capitalization",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "type": "string"
+        },
+        {
+          "name": "currency",
+          "description": "Currency (default: usd)",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "result": {
+        "type": "number"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    },
+    {
+      "id": "OHLCV",
+      "name": "OHLCV",
+      "description": "Get OHLCV data (Open, High, Low, Close). Spills to a range.",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin)",
+          "type": "string"
+        },
+        {
+          "name": "days",
+          "description": "Number of days (1, 7, 14, 30, 90, 180, 365). Default: 30",
+          "type": "number",
+          "optional": true
+        }
+      ],
+      "result": {
+        "type": "any",
+        "dimensionality": "matrix"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    },
+    {
+      "id": "INFO",
+      "name": "INFO",
+      "description": "Get coin metadata (name, symbol, rank, ath, atl, etc.)",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin)",
+          "type": "string"
+        },
+        {
+          "name": "field",
+          "description": "Field name: name, symbol, rank, ath, atl, circulating_supply, total_supply",
+          "type": "string"
+        }
+      ],
+      "result": {
+        "type": "any"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    },
+    {
+      "id": "VOLUME",
+      "name": "VOLUME",
+      "description": "Get 24-hour trading volume",
+      "parameters": [
+        {
+          "name": "coin",
+          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "type": "string"
+        },
+        {
+          "name": "currency",
+          "description": "Currency (default: usd)",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "result": {
+        "type": "number"
+      },
+      "options": {
+        "cancelable": false,
+        "requiresAddress": false,
+        "stream": false,
+        "volatile": false
+      }
+    }
+  ]
+}
