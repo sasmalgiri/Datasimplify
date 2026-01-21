@@ -12,11 +12,11 @@ export default function ToolsPage() {
       id: 'templates',
       name: 'Excel Templates',
       emoji: '📋',
-      description: 'CryptoSheets formula templates for live data visualization',
+      description: 'CRK formula templates for live data visualization (BYOK)',
       href: '/templates',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,
-      features: ['CryptoSheets formulas', 'Live data', 'No embedded data']
+      features: ['CRK formulas', 'Live data', 'No embedded data']
     },
     {
       id: 'research',

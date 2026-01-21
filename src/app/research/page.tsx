@@ -15,7 +15,7 @@ const researchTools = [
   {
     href: '/templates',
     title: 'Excel Downloads',
-    description: 'CryptoSheets-powered templates for live data in Excel',
+    description: 'CRK formula templates for live data in Excel (BYOK)',
     icon: FileSpreadsheet,
     color: 'emerald',
   },

@@ -441,7 +441,7 @@ export default function LandingPage() {
             <span className="font-bold">CryptoReportKit</span>
           </div>
           <div className="text-gray-400 text-sm">
-            © 2024 CryptoReportKit. All rights reserved.
+            © 2026 CryptoReportKit. All rights reserved.
           </div>
           <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
             <Link href="/privacy" className="hover:text-white">Privacy</Link>

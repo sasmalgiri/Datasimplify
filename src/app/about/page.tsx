@@ -128,8 +128,8 @@ export default function AboutPage() {
               <div>
                 <h3 className="font-medium text-white">BYOK Architecture</h3>
                 <p className="text-gray-400 text-sm">
-                  Your API keys are encrypted with AES-256-GCM before storage. We never see your
-                  plaintext keys - they&apos;re decrypted only when making requests on your behalf.
+                  Your API keys are encrypted at rest with AES-256-GCM and decrypted only in memory
+                  to make API calls on your behalf. Keys are never logged or stored in plaintext.
                 </p>
               </div>
             </div>

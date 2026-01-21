@@ -1522,7 +1522,7 @@ async function createInstructionsSheet(
 
   // Footer
   sheet.mergeCells(`A${row}:C${row}`);
-  sheet.getCell(`A${row}`).value = 'Template by CryptoReportKit | Data powered by CryptoSheets | © 2025';
+  sheet.getCell(`A${row}`).value = 'Template by CryptoReportKit | Data via BYOK | © 2026';
   sheet.getCell(`A${row}`).font = { italic: true, color: { argb: COLORS.textSecondary } };
   sheet.getCell(`A${row}`).alignment = { horizontal: 'center' };
 }

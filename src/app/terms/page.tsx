@@ -130,9 +130,9 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.1 Billing</h3>
             <p className="mb-4">
-              Paid Subscriptions are billed in advance on a monthly or annual basis, depending on your 
-              selected plan. Payments are processed securely through our payment provider, Paddle, 
-              which acts as our Merchant of Record.
+              Paid Subscriptions are billed in advance on a monthly or annual basis, depending on your
+              selected plan. Payments are processed securely through our payment provider.
+              <strong className="text-amber-600"> Note: Paid plans and payment processing are coming soon.</strong>
             </p>
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.2 Automatic Renewal</h3>
@@ -156,10 +156,10 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm mb-3">
                 <li><strong>Eligibility:</strong> Refunds are available within 30 days from the date of your first payment.</li>
-                <li><strong>How to Request:</strong> Click &quot;Manage Subscription&quot; in your Paddle receipt email
-                  to request a refund directly - no need to contact us.</li>
-                <li><strong>Processing:</strong> Refunds are processed through Paddle (our payment provider) and typically
-                  appear in your account within 5-10 business days.</li>
+                <li><strong>How to Request:</strong> Contact us at sasmalgiri@gmail.com or use your payment receipt
+                  to request a refund directly.</li>
+                <li><strong>Processing:</strong> Refunds are typically processed within 5-10 business days and
+                  appear in your account depending on your payment method.</li>
                 <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
                   required by applicable law (e.g., EU/UK statutory rights).</li>
                 <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
@@ -167,12 +167,11 @@ export default function TermsPage() {
                   UK/EU customers have an additional 14-day cooling-off period on annual renewals.</li>
                 <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template
                   purchases follow the same 30-day policy as subscriptions.</li>
-                <li><strong>Chargebacks:</strong> We encourage you to use Paddle&apos;s self-service refund rather than filing chargebacks.
+                <li><strong>Chargebacks:</strong> We encourage you to request refunds directly rather than filing chargebacks.
                   Fraudulent chargebacks may result in account termination.</li>
               </ul>
               <p className="text-sm text-gray-600">
-                <strong>Note:</strong> Paddle, as our Merchant of Record, handles all payment processing and refunds.
-                By subscribing, you also agree to Paddle&apos;s terms of service. See our full <a href="/refund" className="text-green-700 underline">Refund Policy</a> for details.
+                <strong>Note:</strong> See our full <a href="/refund" className="text-green-700 underline">Refund Policy</a> for details.
               </p>
             </div>
           </section>

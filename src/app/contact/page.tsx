@@ -73,7 +73,7 @@ export default function ContactPage() {
                   <h3 className="font-medium text-gray-900">Billing & Subscriptions</h3>
                   <p className="text-gray-600 text-sm">
                     Questions about your subscription, payments, or refunds?
-                    Check your Paddle receipt email for self-service options, or contact us.
+                    Contact us via email and we&apos;ll help you promptly.
                   </p>
                 </div>
 
@@ -107,8 +107,8 @@ export default function ContactPage() {
               <h2 className="text-lg font-semibold text-blue-800 mb-3">About CryptoReportKit</h2>
               <p className="text-blue-700 text-sm">
                 CryptoReportKit is a cryptocurrency research and comparison tool designed for
-                researchers, analysts, and educators. We provide CryptoSheets formula templates
-                for live data analysis, along with smart contract verification tools.
+                researchers, analysts, and educators. We provide CRK formula templates with
+                BYOK (bring your own API key) architecture for live data analysis.
               </p>
               <p className="text-blue-700 text-sm mt-2">
                 <strong>Note:</strong> We do not provide financial advice, trading signals,

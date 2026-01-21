@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Account Information:</strong> Email address, name (optional), password</li>
               <li><strong>Profile Information:</strong> Preferences, settings, communication choices</li>
-              <li><strong>Payment Information:</strong> Processed securely by Paddle (our payment provider). We do not store your credit card details.</li>
+              <li><strong>Payment Information:</strong> Processed securely by our payment provider (coming soon). We do not store your credit card details.</li>
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
             </ul>
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
               <li>
                 <strong>Service Providers:</strong> Third parties who help us operate our Services:
                 <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                  <li><strong>Paddle:</strong> Payment processing (Merchant of Record)</li>
+                  <li><strong>Payment Provider:</strong> Payment processing (coming soon)</li>
                   <li><strong>Supabase:</strong> Database and authentication services</li>
                   <li><strong>Vercel:</strong> Website hosting and content delivery</li>
                   <li><strong>Data Providers:</strong> Market data aggregation services</li>
@@ -294,7 +294,7 @@ export default function PrivacyPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-emerald-600 font-semibold">✓ What we collect:</p>
-                <p className="text-gray-600">Email, usage data, payment info (via Paddle)</p>
+                <p className="text-gray-600">Email, usage data, payment info (when available)</p>
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Why we collect:</p>
@@ -302,7 +302,7 @@ export default function PrivacyPage() {
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Who we share with:</p>
-                <p className="text-gray-600">Only service providers (Paddle, Supabase, Vercel)</p>
+                <p className="text-gray-600">Only service providers (Supabase, Vercel)</p>
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Your rights:</p>

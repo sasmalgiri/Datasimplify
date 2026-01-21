@@ -29,16 +29,16 @@ export default function RefundPage() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                 <div className="text-2xl mb-3">1️⃣</div>
-                <h3 className="font-semibold text-gray-900 mb-2">Find Your Receipt</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
                 <p className="text-sm text-gray-600">
-                  Check your email for the payment receipt from Paddle
+                  Email sasmalgiri@gmail.com with your request
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                 <div className="text-2xl mb-3">2️⃣</div>
                 <h3 className="font-semibold text-gray-900 mb-2">Request Refund</h3>
                 <p className="text-sm text-gray-600">
-                  Click &quot;Manage Subscription&quot; in the receipt email
+                  Provide your email and purchase details
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -64,7 +64,7 @@ export default function RefundPage() {
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-emerald-500 mt-1">✓</span>
-                    <span><strong>Self-service:</strong> Request directly through Paddle - no need to email us</span>
+                    <span><strong>Easy process:</strong> Contact us via email to request a refund</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-emerald-500 mt-1">✓</span>
@@ -126,35 +126,26 @@ export default function RefundPage() {
           <section className="bg-gray-100 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">How to Request a Refund</h2>
             <p className="mb-4">
-              You can request a refund directly through Paddle (our payment provider):
+              To request a refund, simply contact us:
             </p>
             <ol className="list-decimal list-inside space-y-3 mb-6">
               <li>
-                <strong>Find your receipt email</strong> from Paddle (search for &quot;CryptoReportKit receipt&quot;)
+                <strong>Email us</strong> at sasmalgiri@gmail.com with subject &quot;Refund Request&quot;
               </li>
               <li>
-                <strong>Click &quot;Manage Subscription&quot;</strong> or &quot;Manage this Subscription&quot; link
+                <strong>Include your details</strong> - email address used for purchase and purchase date
               </li>
               <li>
-                <strong>Select &quot;Request Refund&quot;</strong> or &quot;Cancel Subscription&quot;
+                <strong>We&apos;ll confirm</strong> your refund request within 24-48 hours
               </li>
               <li>
-                <strong>Confirm your request</strong> - Paddle will process it automatically
+                <strong>Receive your refund</strong> - processed to your original payment method
               </li>
             </ol>
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <p className="text-sm text-gray-600">
-                <strong>Can&apos;t find your receipt?</strong> Search for emails from &quot;paddle.com&quot; or
-                visit{' '}
-                <a
-                  href="https://paddle.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 underline"
-                >
-                  paddle.com
-                </a>
-                {' '}to use their customer lookup feature.
+                <strong>Need help?</strong> If you have any issues with your refund request, email us at
+                sasmalgiri@gmail.com and we&apos;ll assist you promptly.
               </p>
             </div>
           </section>
@@ -163,8 +154,7 @@ export default function RefundPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Refund Processing</h2>
             <p className="mb-4">
-              Refunds are processed through <strong>Paddle</strong> (our Merchant of Record) and typically
-              appear in your account within:
+              Once approved, refunds typically appear in your account within:
             </p>
             <ul className="list-disc list-inside space-y-2 text-gray-600">
               <li>Credit/Debit Cards: 5-10 business days</li>
@@ -212,7 +202,7 @@ export default function RefundPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Chargebacks</h2>
             <p className="mb-4">
-              We encourage you to request refunds through Paddle rather than filing chargebacks with your
+              We encourage you to request refunds directly from us rather than filing chargebacks with your
               bank. Our 30-day refund process is quick and hassle-free.
             </p>
             <p className="text-gray-600">
@@ -221,21 +211,13 @@ export default function RefundPage() {
             </p>
           </section>
 
-          {/* Paddle Note */}
-          <section className="bg-gray-100 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">About Paddle</h2>
-            <p className="text-sm text-gray-600">
-              <strong>Paddle</strong> is our Merchant of Record and handles all payment processing, billing,
-              and refunds on our behalf. By subscribing to CryptoReportKit, you also agree to{' '}
-              <a
-                href="https://www.paddle.com/legal/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:text-emerald-700 underline"
-              >
-                Paddle&apos;s Terms of Service
-              </a>
-              .
+          {/* Payment Note */}
+          <section className="bg-amber-50 p-6 rounded-lg border border-amber-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">Payment Processing</h2>
+            <p className="text-sm text-gray-700">
+              <strong>Note:</strong> Paid plans and payment processing are coming soon. Once payment processing
+              is available, refund requests can be made within 30 days of purchase by contacting us at
+              sasmalgiri@gmail.com.
             </p>
           </section>
 
@@ -261,8 +243,8 @@ export default function RefundPage() {
                 <p className="text-gray-600">Money-back guarantee</p>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-blue-700 font-bold text-2xl">Self-Service</p>
-                <p className="text-gray-600">Via Paddle receipt</p>
+                <p className="text-blue-700 font-bold text-2xl">Easy</p>
+                <p className="text-gray-600">Email request</p>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <p className="text-purple-700 font-bold text-2xl">5-10 Days</p>
