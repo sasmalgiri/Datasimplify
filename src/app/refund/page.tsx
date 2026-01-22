@@ -31,7 +31,7 @@ export default function RefundPage() {
                 <div className="text-2xl mb-3">1️⃣</div>
                 <h3 className="font-semibold text-gray-900 mb-2">Contact Us</h3>
                 <p className="text-sm text-gray-600">
-                  Email sasmalgiri@gmail.com with your request
+                  Email support@cryptoreportkit.com with your request
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
@@ -130,7 +130,7 @@ export default function RefundPage() {
             </p>
             <ol className="list-decimal list-inside space-y-3 mb-6">
               <li>
-                <strong>Email us</strong> at sasmalgiri@gmail.com with subject &quot;Refund Request&quot;
+                <strong>Email us</strong> at support@cryptoreportkit.com with subject &quot;Refund Request&quot;
               </li>
               <li>
                 <strong>Include your details</strong> - email address used for purchase and purchase date
@@ -145,7 +145,7 @@ export default function RefundPage() {
             <div className="bg-white p-4 rounded-lg border border-gray-200">
               <p className="text-sm text-gray-600">
                 <strong>Need help?</strong> If you have any issues with your refund request, email us at
-                sasmalgiri@gmail.com and we&apos;ll assist you promptly.
+                support@cryptoreportkit.com and we&apos;ll assist you promptly.
               </p>
             </div>
           </section>
@@ -217,7 +217,7 @@ export default function RefundPage() {
             <p className="text-sm text-gray-700">
               <strong>Note:</strong> Paid plans and payment processing are coming soon. Once payment processing
               is available, refund requests can be made within 30 days of purchase by contacting us at
-              sasmalgiri@gmail.com.
+              support@cryptoreportkit.com.
             </p>
           </section>
 
@@ -225,12 +225,11 @@ export default function RefundPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Need Help?</h2>
             <p className="mb-4">
-              While most refunds can be handled directly through Paddle, if you have any questions or
-              issues, contact us:
+              If you have any questions or issues with refunds, contact us:
             </p>
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm inline-block">
               <p className="text-emerald-600 font-semibold">CryptoReportKit Support</p>
-              <p>Email: <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-600 hover:text-emerald-700">sasmalgiri@gmail.com</a></p>
+              <p>Email: <a href="mailto:support@cryptoreportkit.com" className="text-emerald-600 hover:text-emerald-700">support@cryptoreportkit.com</a></p>
             </div>
           </section>
 

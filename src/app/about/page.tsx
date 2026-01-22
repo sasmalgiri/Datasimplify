@@ -111,7 +111,7 @@ export default function AboutPage() {
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-white">sasmalgiri@gmail.com</p>
+                  <p className="font-medium text-white">support@cryptoreportkit.com</p>
                   <p className="text-sm text-gray-400">Contact Email</p>
                 </div>
               </div>
@@ -194,7 +194,7 @@ export default function AboutPage() {
             We&apos;re happy to help with any questions about CryptoReportKit.
           </p>
           <a
-            href="mailto:sasmalgiri@gmail.com"
+            href="mailto:support@cryptoreportkit.com"
             className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
           >
             Contact Us

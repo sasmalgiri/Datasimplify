@@ -156,7 +156,7 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm mb-3">
                 <li><strong>Eligibility:</strong> Refunds are available within 30 days from the date of your first payment.</li>
-                <li><strong>How to Request:</strong> Contact us at sasmalgiri@gmail.com or use your payment receipt
+                <li><strong>How to Request:</strong> Contact us at support@cryptoreportkit.com or use your payment receipt
                   to request a refund directly.</li>
                 <li><strong>Processing:</strong> Refunds are typically processed within 5-10 business days and
                   appear in your account depending on your payment method.</li>
@@ -362,7 +362,7 @@ export default function TermsPage() {
               <li>A statement, under penalty of perjury, that the information is accurate and you are authorized to act</li>
             </ul>
             <p className="mb-4">
-              Send DMCA notices to: <span className="text-emerald-600 font-semibold">sasmalgiri@gmail.com</span>
+              Send DMCA notices to: <span className="text-emerald-600 font-semibold">support@cryptoreportkit.com</span>
               with subject line &quot;DMCA Takedown Request&quot;
             </p>
             <p>
@@ -375,7 +375,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Dispute Resolution & Arbitration</h2>
             <p className="mb-4">
               <strong>Informal Resolution:</strong> Before initiating any formal dispute resolution, you agree
-              to first contact us at sasmalgiri@gmail.com to attempt to resolve the dispute informally. We will
+              to first contact us at support@cryptoreportkit.com to attempt to resolve the dispute informally. We will
               attempt to resolve the dispute within 30 days.
             </p>
             <p className="mb-4">
@@ -392,7 +392,7 @@ export default function TermsPage() {
             </p>
             <p>
               <strong>Opt-Out:</strong> You may opt out of this arbitration agreement by sending written
-              notice to sasmalgiri@gmail.com within 30 days of first accepting these Terms, stating your
+              notice to support@cryptoreportkit.com within 30 days of first accepting these Terms, stating your
               name, address, and intent to opt out.
             </p>
           </section>
@@ -416,7 +416,7 @@ export default function TermsPage() {
               If you have any questions about these Terms, please contact us:
             </p>
             <p className="text-emerald-600">
-              Email: sasmalgiri@gmail.com
+              Email: support@cryptoreportkit.com
             </p>
           </section>
 

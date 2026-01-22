@@ -217,7 +217,7 @@ export default function ResearchPage() {
             <Link href="/templates" className="underline ml-1 hover:text-blue-200">
               Download Excel templates
             </Link>
-            {' '}to work with live data via CryptoSheets.
+            {' '}with CRK formulas to work with live data (BYOK).
           </p>
         </div>
       </div>

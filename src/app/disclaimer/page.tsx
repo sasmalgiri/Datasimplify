@@ -140,8 +140,8 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Questions?</h2>
             <p>
               If you have questions about this disclaimer, please contact us at{' '}
-              <a href="mailto:sasmalgiri@gmail.com" className="text-emerald-400 hover:underline">
-                sasmalgiri@gmail.com
+              <a href="mailto:support@cryptoreportkit.com" className="text-emerald-400 hover:underline">
+                support@cryptoreportkit.com
               </a>
             </p>
           </section>

@@ -27,10 +27,10 @@ export default function ContactPage() {
                   <h3 className="font-medium text-gray-900">Email Support</h3>
                   <p className="text-gray-600">For general inquiries and support:</p>
                   <a
-                    href="mailto:sasmalgiri@gmail.com"
+                    href="mailto:support@cryptoreportkit.com"
                     className="text-emerald-600 hover:text-emerald-700 font-medium"
                   >
-                    sasmalgiri@gmail.com
+                    support@cryptoreportkit.com
                   </a>
                 </div>
 

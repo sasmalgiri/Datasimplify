@@ -197,44 +197,44 @@ function SignupFormFallback() {
           <span>📊</span>
           <span>CryptoReportKit</span>
         </Link>
-        <p className="text-gray-400 mt-2">Create your account</p>
+        <p className="text-gray-600 mt-2">Create your account</p>
       </div>
 
       {/* Static Form Skeleton */}
-      <div className="bg-gray-800 rounded-lg p-8 border border-gray-700">
+      <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
         <noscript>
-          <div className="bg-amber-900/50 border border-amber-500/50 text-amber-200 px-4 py-3 rounded text-sm mb-4">
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded text-sm mb-4">
             JavaScript is required to create an account. Please enable JavaScript and refresh the page.
           </div>
         </noscript>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Email address</label>
-            <div className="w-full h-12 bg-gray-700 border border-gray-600 rounded-lg animate-pulse"></div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+            <div className="w-full h-12 bg-gray-100 border border-gray-300 rounded-lg animate-pulse"></div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Password</label>
-            <div className="w-full h-12 bg-gray-700 border border-gray-600 rounded-lg animate-pulse"></div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div className="w-full h-12 bg-gray-100 border border-gray-300 rounded-lg animate-pulse"></div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-2">Confirm Password</label>
-            <div className="w-full h-12 bg-gray-700 border border-gray-600 rounded-lg animate-pulse"></div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+            <div className="w-full h-12 bg-gray-100 border border-gray-300 rounded-lg animate-pulse"></div>
           </div>
-          <div className="w-full h-12 bg-emerald-600/50 rounded-lg animate-pulse"></div>
+          <div className="w-full h-12 bg-emerald-600/30 rounded-lg animate-pulse"></div>
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-500">
+          <p className="text-gray-600">
             Already have an account?{' '}
-            <Link href="/login" className="text-emerald-600 hover:text-emerald-500">Sign in</Link>
+            <Link href="/login" className="text-emerald-600 hover:text-emerald-700">Sign in</Link>
           </p>
         </div>
       </div>
 
       {/* Back link */}
       <div className="mt-6 text-center">
-        <Link href="/market" className="text-gray-500 hover:text-gray-300 text-sm">
+        <Link href="/market" className="text-gray-600 hover:text-gray-900 text-sm">
           ← Back to free features
         </Link>
       </div>
@@ -244,7 +244,7 @@ function SignupFormFallback() {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <FreeNavbar />
       <Breadcrumb />
       <div className="flex items-center justify-center px-4 py-12">
