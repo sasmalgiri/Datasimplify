@@ -16,11 +16,18 @@ import {
 // TYPES
 // ============================================
 
+export type TemplateMode = 'crk' | 'cryptosheets';
+export type RefreshEngine = 'pack' | 'formula';
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+
 export interface UserConfiguration {
   coins: string[];
   timeframe: string;
   currency: string;
   category?: TemplateCategoryId | 'all';
+  mode?: TemplateMode | 'all';
+  refreshEngine?: RefreshEngine | 'all';
+  difficulty?: Difficulty | 'all';
 }
 
 export interface FilteredTemplate {
@@ -34,6 +41,9 @@ export interface FilteredTemplate {
   isBestMatch: boolean;
   coinCountHint?: 'single' | 'few' | 'many' | 'any';
   specificCoins?: string[];
+  mode: TemplateMode;
+  refreshEngine: RefreshEngine;
+  difficulty: Difficulty;
 }
 
 export interface CategoryGroup {
@@ -45,6 +55,75 @@ export interface CategoryGroup {
     description: string;
   };
   templates: FilteredTemplate[];
+}
+
+// ============================================
+// TEMPLATE METADATA MAPPING
+// ============================================
+
+/**
+ * Get template metadata (mode, refreshEngine, difficulty)
+ * Based on template ID and complexity
+ */
+export function getTemplateMetadata(templateId: string): {
+  mode: TemplateMode;
+  refreshEngine: RefreshEngine;
+  difficulty: Difficulty;
+} {
+  // Default: CRK with pack mode (beginner-friendly)
+  const defaults = {
+    mode: 'crk' as TemplateMode,
+    refreshEngine: 'pack' as RefreshEngine,
+    difficulty: 'beginner' as Difficulty,
+  };
+
+  // Mode mapping (CRK vs CryptoSheets)
+  // Most templates use CRK (native BYOK add-in)
+  // CryptoSheets fallback only for specific advanced cases
+  const cryptoSheetsTemplates = [
+    'whale_tracker', // Requires custom scraping
+    'exchange_flows', // Requires exchange-specific APIs
+    'mining_stats', // Requires pool-specific data
+  ];
+
+  // RefreshEngine mapping (Pack vs Formula)
+  // Pack = Pre-built workbook with __CRK__ recipe sheet
+  // Formula = Individual custom functions
+  const formulaTemplates = [
+    'watchlist', // Simple, manual setup preferred
+    'compare', // Direct comparison, no complex recipe
+    'ohlcv_history', // Simple historical data fetch
+  ];
+
+  // Difficulty mapping
+  const beginnerTemplates = [
+    'screener',
+    'watchlist',
+    'market_overview',
+    'gainers_losers',
+    'fear_greed',
+    'nft_collections',
+  ];
+
+  const advancedTemplates = [
+    'correlation_matrix',
+    'backtest_results',
+    'whale_tracker',
+    'exchange_flows',
+    'mining_stats',
+    'staking_rewards',
+    'alerts_summary',
+  ];
+
+  return {
+    mode: cryptoSheetsTemplates.includes(templateId) ? 'cryptosheets' : 'crk',
+    refreshEngine: formulaTemplates.includes(templateId) ? 'formula' : 'pack',
+    difficulty: beginnerTemplates.includes(templateId)
+      ? 'beginner'
+      : advancedTemplates.includes(templateId)
+      ? 'advanced'
+      : 'intermediate',
+  };
 }
 
 // ============================================
@@ -207,6 +286,9 @@ export function filterAndScoreTemplates(
       reasons.push('Candlestick data');
     }
 
+    // Get metadata for this template
+    const metadata = getTemplateMetadata(template.id);
+
     return {
       id: template.id,
       name: template.name,
@@ -218,11 +300,29 @@ export function filterAndScoreTemplates(
       isBestMatch: score >= SCORE_THRESHOLDS.BEST_MATCH,
       coinCountHint: template.coinCountHint,
       specificCoins: template.specificCoins,
+      mode: metadata.mode,
+      refreshEngine: metadata.refreshEngine,
+      difficulty: metadata.difficulty,
     };
   });
 
+  // Filter by mode, refreshEngine, difficulty if specified
+  let filtered = scored;
+
+  if (config.mode && config.mode !== 'all') {
+    filtered = filtered.filter((t) => t.mode === config.mode);
+  }
+
+  if (config.refreshEngine && config.refreshEngine !== 'all') {
+    filtered = filtered.filter((t) => t.refreshEngine === config.refreshEngine);
+  }
+
+  if (config.difficulty && config.difficulty !== 'all') {
+    filtered = filtered.filter((t) => t.difficulty === config.difficulty);
+  }
+
   // Sort by relevance score (highest first)
-  return scored.sort((a, b) => b.relevanceScore - a.relevanceScore);
+  return filtered.sort((a, b) => b.relevanceScore - a.relevanceScore);
 }
 
 /**
@@ -270,6 +370,9 @@ export function getDefaultConfiguration(): UserConfiguration {
     timeframe: '24h',
     currency: 'USD',
     category: 'all',
+    mode: 'all',
+    refreshEngine: 'all',
+    difficulty: 'all',
   };
 }
 
@@ -294,6 +397,34 @@ export const CURRENCY_OPTIONS = [
   { value: 'BTC', label: 'BTC' },
   { value: 'ETH', label: 'ETH' },
 ];
+
+/**
+ * Mode options (CRK vs CryptoSheets)
+ */
+export const MODE_OPTIONS = [
+  { value: 'all', label: 'All Add-ins', icon: '🔌' },
+  { value: 'crk', label: 'CRK (BYOK)', icon: '📊', description: 'Native add-in with your API keys' },
+  { value: 'cryptosheets', label: 'CryptoSheets', icon: '🔗', description: 'Third-party add-in' },
+] as const;
+
+/**
+ * Refresh Engine options (Pack vs Formula)
+ */
+export const REFRESH_ENGINE_OPTIONS = [
+  { value: 'all', label: 'All Types', icon: '🔄' },
+  { value: 'pack', label: 'Pack Mode', icon: '📦', description: 'Pre-built with one-click refresh' },
+  { value: 'formula', label: 'Formula Mode', icon: '⚙️', description: 'Custom functions, manual setup' },
+] as const;
+
+/**
+ * Difficulty options
+ */
+export const DIFFICULTY_OPTIONS = [
+  { value: 'all', label: 'All Levels', icon: '📚' },
+  { value: 'beginner', label: 'Beginner', icon: '🟢', description: 'Easy to use, quick setup' },
+  { value: 'intermediate', label: 'Intermediate', icon: '🟡', description: 'Some Excel knowledge needed' },
+  { value: 'advanced', label: 'Advanced', icon: '🔴', description: 'Complex formulas, requires experience' },
+] as const;
 
 /**
  * Get category options including "All"

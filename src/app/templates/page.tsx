@@ -21,9 +21,15 @@ import {
   getDefaultConfiguration,
   TIMEFRAME_OPTIONS,
   CURRENCY_OPTIONS,
+  MODE_OPTIONS,
+  REFRESH_ENGINE_OPTIONS,
+  DIFFICULTY_OPTIONS,
   getCategoryOptions,
   type UserConfiguration,
   type FilteredTemplate,
+  type TemplateMode,
+  type RefreshEngine,
+  type Difficulty,
 } from '@/lib/templates/templateFilter';
 
 // Template Card Component (inline for this page)
@@ -77,6 +83,43 @@ function TemplateCard({
           ))}
         </div>
       )}
+
+      {/* Mode, Refresh Engine, Difficulty Badges */}
+      <div className="mt-3 flex flex-wrap gap-1 items-center">
+        {/* Mode Badge */}
+        <span
+          className={`text-xs px-2 py-0.5 rounded-full ${
+            template.mode === 'crk'
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+          }`}
+        >
+          {template.mode === 'crk' ? '📊 CRK BYOK' : '🔗 CryptoSheets'}
+        </span>
+
+        {/* Refresh Engine Badge */}
+        <span className="text-xs px-2 py-0.5 rounded bg-gray-700/50 text-gray-300">
+          {template.refreshEngine === 'pack' ? '📦 Pack' : '⚙️ Formula'}
+        </span>
+
+        {/* Difficulty Badge */}
+        <span
+          className={`text-xs px-2 py-0.5 rounded ${
+            template.difficulty === 'beginner'
+              ? 'bg-green-500/20 text-green-400'
+              : template.difficulty === 'intermediate'
+              ? 'bg-yellow-500/20 text-yellow-400'
+              : 'bg-red-500/20 text-red-400'
+          }`}
+        >
+          {template.difficulty === 'beginner'
+            ? '🟢'
+            : template.difficulty === 'intermediate'
+            ? '🟡'
+            : '🔴'}{' '}
+          {template.difficulty}
+        </span>
+      </div>
 
       {/* Relevance Score (subtle) */}
       {template.relevanceScore > 0 && (
@@ -137,6 +180,18 @@ export default function TemplatesPage() {
   const updateCategory = (category: TemplateCategoryId | 'all') => {
     setConfig((prev) => ({ ...prev, category }));
     setShowCategoryDropdown(false);
+  };
+
+  const updateMode = (mode: TemplateMode | 'all') => {
+    setConfig((prev) => ({ ...prev, mode }));
+  };
+
+  const updateRefreshEngine = (refreshEngine: RefreshEngine | 'all') => {
+    setConfig((prev) => ({ ...prev, refreshEngine }));
+  };
+
+  const updateDifficulty = (difficulty: Difficulty | 'all') => {
+    setConfig((prev) => ({ ...prev, difficulty }));
   };
 
   const categoryOptions = getCategoryOptions();
@@ -321,8 +376,8 @@ export default function TemplatesPage() {
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="mb-6 flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-gray-400">Filter by category:</span>
+        <div className="mb-4 flex items-center gap-2 flex-wrap">
+          <span className="text-sm text-gray-400">Category:</span>
           <div className="flex flex-wrap gap-1">
             {categoryOptions.map((cat) => (
               <button
@@ -339,6 +394,111 @@ export default function TemplatesPage() {
                 <span>{cat.name}</span>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Advanced Filters */}
+        <div className="mb-6 bg-gray-800/30 border border-gray-700 rounded-xl p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Mode Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Add-in Mode
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {MODE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateMode(opt.value as TemplateMode | 'all')}
+                    className={`px-3 py-1.5 text-xs rounded transition ${
+                      config.mode === opt.value
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    title={'description' in opt ? opt.description : opt.label}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Refresh Engine Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Refresh Type
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {REFRESH_ENGINE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateRefreshEngine(opt.value as RefreshEngine | 'all')}
+                    className={`px-3 py-1.5 text-xs rounded transition ${
+                      config.refreshEngine === opt.value
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    title={'description' in opt ? opt.description : opt.label}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Difficulty Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Difficulty Level
+              </label>
+              <div className="flex flex-wrap gap-1">
+                {DIFFICULTY_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => updateDifficulty(opt.value as Difficulty | 'all')}
+                    className={`px-3 py-1.5 text-xs rounded transition ${
+                      config.difficulty === opt.value
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
+                    }`}
+                    title={'description' in opt ? opt.description : opt.label}
+                  >
+                    {opt.icon} {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Summary */}
+          <div className="mt-4 pt-3 border-t border-gray-700 flex items-center justify-between text-xs text-gray-400">
+            <div className="flex items-center gap-4 flex-wrap">
+              {config.mode && config.mode !== 'all' && (
+                <span className="text-emerald-400">
+                  Add-in: {MODE_OPTIONS.find((o) => o.value === config.mode)?.label}
+                </span>
+              )}
+              {config.refreshEngine && config.refreshEngine !== 'all' && (
+                <span className="text-emerald-400">
+                  Type: {REFRESH_ENGINE_OPTIONS.find((o) => o.value === config.refreshEngine)?.label}
+                </span>
+              )}
+              {config.difficulty && config.difficulty !== 'all' && (
+                <span className="text-emerald-400">
+                  Level: {DIFFICULTY_OPTIONS.find((o) => o.value === config.difficulty)?.label}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setConfig(getDefaultConfiguration())}
+              className="text-gray-500 hover:text-gray-300 transition"
+            >
+              Reset All Filters
+            </button>
           </div>
         </div>
 
