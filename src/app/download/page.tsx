@@ -12,8 +12,10 @@ import { RequirementsGate } from '@/components/download/RequirementsGate';
 import { QuotaEstimator } from '@/components/download/QuotaEstimator';
 import { TemplateControls } from '@/components/download/TemplateControls';
 import { ReportAssistant } from '@/components/download/ReportAssistant';
+import { FormulaModePicker } from '@/components/download/FormulaModePicker';
 import type { RefreshFrequency } from '@/lib/templates/templateModes';
 import type { RoutedTemplate } from '@/lib/templates/reportAssistant';
+import type { FormulaMode } from '@/lib/templates/generator';
 import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
 export default function DownloadPage() {
@@ -34,6 +36,7 @@ export default function DownloadPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1d'); // Daily only in Low-Quota Mode
   const [refreshFrequency, setRefreshFrequency] = useState<RefreshFrequency>('manual'); // Manual by default
   const [includeCharts, setIncludeCharts] = useState(true);
+  const [formulaMode, setFormulaMode] = useState<FormulaMode>('crk'); // CRK add-in by default (recommended)
 
   // Load templates on mount
   useEffect(() => {
@@ -155,7 +158,16 @@ export default function DownloadPage() {
                 {/* Manual Mode: Direct Controls */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                   {/* Left Column: Controls */}
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Formula Mode Picker */}
+                    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
+                      <FormulaModePicker
+                        mode={formulaMode}
+                        onChange={setFormulaMode}
+                      />
+                    </div>
+
+                    {/* Template Controls */}
                     <TemplateControls
                       selectedCoins={selectedCoins}
                       onCoinsChange={setSelectedCoins}
@@ -327,6 +339,7 @@ export default function DownloadPage() {
           coins: selectedCoins,
           timeframe: selectedTimeframe,
           currency: 'USD',
+          formulaMode,
           customizations: {
             includeCharts,
             refreshFrequency,

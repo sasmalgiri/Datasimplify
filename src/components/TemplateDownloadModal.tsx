@@ -14,6 +14,7 @@ interface TemplateDownloadModalProps {
     coins: string[];
     timeframe: string;
     currency: string;
+    formulaMode?: 'crk' | 'cryptosheets';
     customizations: Record<string, unknown>;
   };
 }
