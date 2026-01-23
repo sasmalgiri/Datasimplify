@@ -84,7 +84,7 @@ export default function RefundPage() {
               <div className="bg-purple-50 p-5 rounded-lg border border-purple-200">
                 <h3 className="font-semibold text-gray-900 mb-2">Annual Renewals (UK/EU Customers)</h3>
                 <p className="text-gray-600">
-                  In compliance with UK DMCC Act 2024 and EU Consumer Rights Directive, you have an additional
+                  In compliance with UK Consumer Rights and EU Consumer Rights Directive, you have an additional
                   <strong> 14-day cooling-off period</strong> when your annual subscription renews for another
                   12+ month term.
                 </p>
@@ -177,8 +177,8 @@ export default function RefundPage() {
               <div className="bg-white p-5 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-blue-700 mb-2">🇬🇧 United Kingdom</h3>
                 <p className="text-sm text-gray-600">
-                  Under the UK DMCC Act 2024, you have <strong>14-day cooling-off rights</strong> plus additional
-                  protections for subscription renewals. Our policy exceeds these requirements.
+                  Under UK Consumer Rights regulations, you have <strong>14-day cooling-off rights</strong> plus additional
+                  protections for subscription renewals. Our 30-day policy exceeds these requirements.
                 </p>
               </div>
               <div className="bg-white p-5 rounded-lg border border-gray-200">

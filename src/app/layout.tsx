@@ -118,11 +118,13 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Data Sources</h4>
             <ul className="space-y-2 text-sm">
+              <li><span className="text-gray-500">CoinGecko (Market Data)</span></li>
+              <li><span className="text-gray-500">Binance (Trading Data)</span></li>
               <li><span className="text-gray-500">Alternative.me (Fear & Greed)</span></li>
-              <li><span className="text-gray-500">Exchange APIs (Market Data)</span></li>
-              {FEATURES.coingecko ? <li><span className="text-gray-500">CoinGecko</span></li> : null}
+              {FEATURES.coingecko ? <li><span className="text-gray-500">CoinMarketCap</span></li> : null}
               {FEATURES.defi ? <li><span className="text-gray-500">DeFiLlama</span></li> : null}
               {FEATURES.whales ? <li><span className="text-gray-500">Etherscan / Blockchair</span></li> : null}
+              <li><Link href="/data-sources" className="text-emerald-400 hover:text-emerald-300 text-xs underline">View All & Terms →</Link></li>
             </ul>
           </div>
 

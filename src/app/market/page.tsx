@@ -327,14 +327,21 @@ export default function MarketPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Cryptocurrency Market</h1>
-            <p className="text-gray-400 flex items-center gap-2">
-              Live prices for top cryptocurrencies • No login required
+            <p className="text-gray-400 flex items-center gap-2 mb-2">
+              Display-only market visualization • Educational purposes • Not investment advice
               {dataFromCache && (
                 <span className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
                   <Database className="w-3 h-3" />
                   Cached
                 </span>
               )}
+            </p>
+            <p className="text-xs text-gray-500">
+              Data sourced from CoinGecko, Binance, and other providers. See{' '}
+              <a href="/data-sources" className="text-emerald-400 hover:text-emerald-300 underline">
+                Data Sources
+              </a>{' '}
+              for full attribution.
             </p>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">

@@ -85,22 +85,60 @@ export default function TermsPage() {
 
           {/* Product Scope */}
           <section className="bg-blue-50 border border-blue-300 p-6 rounded-lg">
-            <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. Product Scope & Limitations</h2>
+            <h2 className="text-2xl font-semibold text-blue-800 mb-4">5. Market Data, Dashboards, and Data Rights</h2>
+
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.1 We Are Not a Data Vendor</h3>
             <p className="mb-4">
-              CryptoReportKit is software analytics tooling. By using our Services, you acknowledge and agree that:
+              CryptoReportKit provides <strong>software tools</strong> (Excel templates, add-ins, formulas) —
+              we are <strong>not a data vendor</strong> and do not sell, license, or redistribute market data as a product.
             </p>
-            <ul className="list-disc list-inside space-y-2 mb-4">
-              <li><strong>Software Tools Only:</strong> We provide educational visualization tools and Excel templates
-                containing formulas. We do not provide market data, data feeds, or raw data downloads.</li>
-              <li><strong>No Data Redistribution:</strong> We do not sell, license, or redistribute market data.
-                Templates contain CRK formulas that fetch data via the user&apos;s own API keys (BYOK architecture).</li>
-              <li><strong>No Trading Execution:</strong> We do not offer order routing, brokerage, or trading services
-                of any kind. We are not a broker-dealer or exchange.</li>
-              <li><strong>CRK Add-in Requirement:</strong> Excel templates require the CryptoReportKit Excel add-in
-                to function. You provide your own data provider API keys (e.g., CoinGecko) for data access.</li>
-              <li><strong>Display-Only Dashboards:</strong> Web dashboards show educational visualizations based on
-                publicly available data sources. They are not real-time trading terminals.</li>
+
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.2 Display-Only Dashboards (Website)</h3>
+            <p className="mb-4">
+              Our website includes <strong>display-only dashboards</strong> (e.g., /market, /research) that show
+              educational visualizations of cryptocurrency market data sourced from third-party APIs. These dashboards:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
+              <li><strong>Educational Purpose Only:</strong> For research, learning, and general informational purposes</li>
+              <li><strong>Not Investment Advice:</strong> Do not constitute financial or investment recommendations</li>
+              <li><strong>Public Display Use:</strong> Displayed publicly on our website in compliance with provider API terms</li>
+              <li><strong>Not for Redistribution:</strong> You may not scrape, export, or redistribute this data commercially</li>
+              <li><strong>Attribution Provided:</strong> Data providers are credited on our{' '}
+                <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page</li>
             </ul>
+
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.3 BYOK (Bring Your Own Keys) Software Tools</h3>
+            <p className="mb-4">
+              Our Excel add-in and templates operate on a <strong>BYOK (Bring Your Own Key)</strong> model:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
+              <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (CoinGecko, Binance, etc.)</li>
+              <li><strong>Formulas Only:</strong> Excel templates contain formulas, not embedded market data</li>
+              <li><strong>Server-Proxy Architecture:</strong> When you use the CRK add-in, our server proxies requests
+                using your encrypted API keys, calling providers on your behalf</li>
+              <li><strong>Your Responsibility:</strong> You must comply with your data provider&apos;s terms of use,
+                rate limits, and acceptable use policies</li>
+              <li><strong>Data Ownership:</strong> Data fetched via your API keys belongs to you and the provider,
+                not to CryptoReportKit</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.4 Third-Party Data Provider Terms</h3>
+            <p className="mb-4">
+              Market data is sourced from third-party APIs. You agree to:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
+              <li>Review and comply with each provider&apos;s terms of service (see{' '}
+                <a href="/data-sources" className="underline text-blue-700">Data Sources</a>)</li>
+              <li>Respect rate limits and usage restrictions of your API tier (free, pro, etc.)</li>
+              <li>Understand that CryptoReportKit is not liable for provider API downtime, data accuracy, or policy changes</li>
+              <li>Not violate provider policies (e.g., no unauthorized resale of data obtained via your keys)</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.5 No Trading Execution</h3>
+            <p className="mb-4">
+              We do not offer order routing, brokerage, or trading services of any kind. We are not a broker-dealer or exchange.
+            </p>
+
             <p className="text-blue-800 font-semibold">
               See our <a href="/template-requirements" className="underline">Template Requirements</a> page for
               detailed setup instructions and <a href="/disclaimer" className="underline">Disclaimer</a> for full details.
