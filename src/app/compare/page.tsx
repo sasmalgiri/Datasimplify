@@ -822,7 +822,7 @@ export default function ComparePage() {
         <div className="mt-8 text-center text-gray-400 text-sm">
           <p>Data from exchange market data • Updates frequently • 50+ coins available</p>
           <p className="mt-2">
-            Need more features? <Link href="/pricing" className="text-emerald-400 hover:underline">Upgrade to Pro</Link> for historical charts, alerts, and advanced analytics!
+            Want historical charts, alerts, and advanced analytics? <Link href="/pricing" className="text-emerald-400 hover:underline">View pricing</Link> for upcoming Pro features!
           </p>
         </div>
       </div>

@@ -132,7 +132,7 @@ export default function ToolsPage() {
         <BeginnerTip title="💡 Where to Start?">
           If you&apos;re new, start with:
           <br/>
-          1. <strong>Excel Templates</strong> - CryptoSheets formula templates for live data
+          1. <strong>Excel Templates</strong> - CRK formula templates for live data
           <br/>
           2. <strong>Charts</strong> - Explore interactive visualizations
           <br/>
