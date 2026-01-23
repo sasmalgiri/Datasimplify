@@ -151,8 +151,13 @@ export default function PrivacyPage() {
               <li><strong>Functional Cookies:</strong> Enable enhanced features and personalization</li>
             </ul>
             <p className="mb-4">
-              You can control cookies through your browser settings. Disabling certain cookies may 
+              You can control cookies through your browser settings. Disabling certain cookies may
               affect the functionality of our Services.
+            </p>
+            <p className="mb-4">
+              <strong>Cookie Controls (EU/UK):</strong> Where required by law, we only set analytics cookies
+              after you opt in via our cookie banner. You can withdraw consent anytime using the cookie settings
+              link in the footer or through your browser settings.
             </p>
             <p>
               We do not use advertising cookies or sell your data to advertisers.
@@ -253,14 +258,43 @@ export default function PrivacyPage() {
               information to third parties for monetary consideration.
             </p>
             <p>
-              To exercise your rights, email us at <span className="text-emerald-600 font-semibold">support@cryptoreportkit.com</span>
-              with subject &quot;CCPA Request&quot;. We will verify your identity and respond within 45 days.
+              <strong>How to Request:</strong> To exercise your rights, email us at{' '}
+              <span className="text-emerald-600 font-semibold">support@cryptoreportkit.com</span> with subject
+              &quot;CCPA Request&quot;. If we are subject to CCPA and operate exclusively online, email may be sufficient;
+              otherwise we provide additional request methods as required by law. We will verify your identity and
+              respond within 45 days.
+            </p>
+          </section>
+
+          {/* India DPDP Compliance */}
+          <section className="bg-orange-50 border border-orange-200 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. India (DPDP Act)</h2>
+            <p className="mb-4">
+              We process personal data in accordance with India&apos;s Digital Personal Data Protection Act, 2023 (DPDP)
+              and related rules operationalized in 2025. If you are located in India, you have the following rights:
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li><strong>Right to Access:</strong> Request a summary of personal data we hold about you.</li>
+              <li><strong>Right to Correction:</strong> Request correction of inaccurate or incomplete personal data.</li>
+              <li><strong>Right to Erasure:</strong> Request deletion of your personal data, subject to legal retention requirements.</li>
+              <li><strong>Right to Grievance Redressal:</strong> Lodge complaints regarding data processing.</li>
+              <li><strong>Right to Nominate:</strong> Nominate another individual to exercise your rights in the event of death or incapacity.</li>
+              <li><strong>Withdrawal of Consent:</strong> Withdraw consent for processing at any time (where processing is based on consent).</li>
+            </ul>
+            <p className="mb-4">
+              <strong>Consent:</strong> Where we process your data based on consent, you have given such consent by creating
+              an account and using our Services. You may withdraw consent at any time by contacting us or deleting your account.
+            </p>
+            <p>
+              <strong>Grievance Officer:</strong> To exercise your rights or file a grievance, contact us at{' '}
+              <span className="text-emerald-600 font-semibold">support@cryptoreportkit.com</span> with subject &quot;India DPDP Request&quot;.
+              We will address grievances within a reasonable time as required by law.
             </p>
           </section>
 
           {/* Children's Privacy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Children&apos;s Privacy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Children&apos;s Privacy</h2>
             <p>
               Our Services are not intended for users under 18 years of age. We do not knowingly
               collect personal data from children. If we learn that we have collected data from a
@@ -271,7 +305,7 @@ export default function PrivacyPage() {
 
           {/* International Transfers */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. International Data Transfers</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. International Data Transfers</h2>
             <p>
               Our Services are operated globally, and your data may be processed in countries other 
               than your own. By using our Services, you consent to the transfer of your information 
@@ -283,7 +317,7 @@ export default function PrivacyPage() {
 
           {/* Third-Party Links */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Third-Party Links</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Third-Party Links</h2>
             <p>
               Our Services may contain links to third-party websites, services, or applications. 
               We are not responsible for the privacy practices of these third parties. We encourage 
@@ -293,7 +327,7 @@ export default function PrivacyPage() {
 
           {/* Changes to Policy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Changes to This Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Changes to This Privacy Policy</h2>
             <p>
               We may update this Privacy Policy from time to time. We will notify you of material 
               changes by posting the updated policy on our website and updating the &quot;Last updated&quot; date. 
@@ -304,7 +338,7 @@ export default function PrivacyPage() {
 
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Contact Us</h2>
             <p className="mb-4">
               If you have any questions, concerns, or requests regarding this Privacy Policy or
               our data practices, please contact us:

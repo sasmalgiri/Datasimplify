@@ -82,11 +82,11 @@ export default function RefundPage() {
               </div>
 
               <div className="bg-purple-50 p-5 rounded-lg border border-purple-200">
-                <h3 className="font-semibold text-gray-900 mb-2">Annual Renewals (UK/EU Customers)</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">Statutory Rights</h3>
                 <p className="text-gray-600">
-                  In compliance with UK Consumer Rights and EU Consumer Rights Directive, you have an additional
-                  <strong> 14-day cooling-off period</strong> when your annual subscription renews for another
-                  12+ month term.
+                  Your statutory consumer rights depend on your country/region and are not limited by this policy.
+                  Where cancellation rights apply to digital content/services, those rights may be lost once
+                  supply/performance begins if you requested immediate supply and acknowledged this (where required by law).
                 </p>
               </div>
             </div>
@@ -170,15 +170,17 @@ export default function RefundPage() {
               <div className="bg-white p-5 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-blue-700 mb-2">🇪🇺 European Union</h3>
                 <p className="text-sm text-gray-600">
-                  Under the EU Consumer Rights Directive, you have a <strong>14-day cooling-off period</strong> for
-                  online purchases. Our 30-day guarantee exceeds this requirement.
+                  Under the EU Consumer Rights Directive, you may have a <strong>14-day cooling-off period</strong> for
+                  online purchases. For digital content, this right may be lost once supply begins if you requested
+                  immediate supply and acknowledged the waiver (where required). Our 30-day guarantee provides additional protection.
                 </p>
               </div>
               <div className="bg-white p-5 rounded-lg border border-gray-200">
                 <h3 className="font-semibold text-blue-700 mb-2">🇬🇧 United Kingdom</h3>
                 <p className="text-sm text-gray-600">
-                  Under UK Consumer Rights regulations, you have <strong>14-day cooling-off rights</strong> plus additional
-                  protections for subscription renewals. Our 30-day policy exceeds these requirements.
+                  Under UK Consumer Rights regulations, you may have cooling-off rights for digital content,
+                  though these may be waived once supply begins. Our 30-day guarantee provides protection beyond
+                  statutory minimums.
                 </p>
               </div>
               <div className="bg-white p-5 rounded-lg border border-gray-200">

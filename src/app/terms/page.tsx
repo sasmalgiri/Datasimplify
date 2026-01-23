@@ -336,15 +336,15 @@ export default function TermsPage() {
 
           {/* Governing Law */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law & Venue</h2>
             <p className="mb-4">
               These Terms shall be governed by and construed in accordance with the laws of India,
               without regard to conflict of law principles.
             </p>
             <p>
-              The courts of Kolkata, India shall have exclusive jurisdiction for any matters not subject
-              to arbitration (such as requests for injunctive relief or enforcement of arbitration awards)
-              as described in Section 20 below.
+              Any disputes arising from these Terms or use of the Services shall be resolved through
+              good faith negotiation. If negotiation fails, the courts of Kolkata, West Bengal, India
+              shall have exclusive jurisdiction, except where applicable consumer law requires a different forum.
             </p>
           </section>
 
@@ -408,36 +408,9 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* Dispute Resolution */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Dispute Resolution & Arbitration</h2>
-            <p className="mb-4">
-              <strong>Informal Resolution:</strong> Before initiating any formal dispute resolution, you agree
-              to first contact us at support@cryptoreportkit.com to attempt to resolve the dispute informally. We will
-              attempt to resolve the dispute within 30 days.
-            </p>
-            <p className="mb-4">
-              <strong>Binding Arbitration:</strong> If informal resolution fails, any dispute, claim, or
-              controversy arising out of or relating to these Terms or the Services shall be resolved by
-              binding arbitration, rather than in court, except that you may assert claims in small claims
-              court if your claims qualify.
-            </p>
-            <p className="mb-4 bg-gray-100 p-4 rounded-lg">
-              <strong>CLASS ACTION WAIVER:</strong> YOU AND CRYPTOREPORTKIT AGREE THAT EACH MAY BRING CLAIMS
-              AGAINST THE OTHER ONLY IN YOUR OR ITS INDIVIDUAL CAPACITY AND NOT AS A PLAINTIFF OR CLASS
-              MEMBER IN ANY PURPORTED CLASS OR REPRESENTATIVE PROCEEDING. Unless both you and CryptoReportKit
-              agree otherwise, the arbitrator may not consolidate more than one person&apos;s claims.
-            </p>
-            <p>
-              <strong>Opt-Out:</strong> You may opt out of this arbitration agreement by sending written
-              notice to support@cryptoreportkit.com within 30 days of first accepting these Terms, stating your
-              name, address, and intent to opt out.
-            </p>
-          </section>
-
           {/* Entire Agreement */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">21. Entire Agreement</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Entire Agreement</h2>
             <p>
               These Terms, together with our Privacy Policy and any other agreements expressly incorporated
               by reference, constitute the entire agreement between you and CryptoReportKit regarding your use
