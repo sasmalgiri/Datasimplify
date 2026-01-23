@@ -336,12 +336,20 @@ export default function MarketPage() {
                 </span>
               )}
             </p>
-            <p className="text-xs text-gray-500">
-              Data sourced from CoinGecko, Binance, and other providers. See{' '}
+            <p className="text-xs text-gray-500 flex items-center gap-2">
+              <a
+                href="https://www.coingecko.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 underline font-medium"
+              >
+                Powered by CoinGecko
+              </a>
+              • See{' '}
               <a href="/data-sources" className="text-emerald-400 hover:text-emerald-300 underline">
                 Data Sources
               </a>{' '}
-              for full attribution.
+              for full attribution
             </p>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">

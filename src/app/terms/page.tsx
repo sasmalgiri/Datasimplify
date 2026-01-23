@@ -336,15 +336,15 @@ export default function TermsPage() {
 
           {/* Governing Law */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law and Disputes</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law</h2>
             <p className="mb-4">
-              These Terms shall be governed by and construed in accordance with the laws of India, 
+              These Terms shall be governed by and construed in accordance with the laws of India,
               without regard to conflict of law principles.
             </p>
             <p>
-              Any disputes arising from these Terms or use of the Services shall be resolved through 
-              good faith negotiation. If negotiation fails, disputes shall be submitted to the 
-              exclusive jurisdiction of the courts located in Kolkata, India.
+              The courts of Kolkata, India shall have exclusive jurisdiction for any matters not subject
+              to arbitration (such as requests for injunctive relief or enforcement of arbitration awards)
+              as described in Section 20 below.
             </p>
           </section>
 

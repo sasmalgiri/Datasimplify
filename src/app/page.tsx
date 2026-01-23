@@ -371,7 +371,7 @@ export default function LandingPage() {
 
             <div className="bg-gradient-to-b from-blue-500/20 to-purple-500/20 border-2 border-blue-500 rounded-2xl p-5 relative">
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-blue-500 text-xs font-bold px-2 py-0.5 rounded-full">
-                POPULAR
+                COMING SOON
               </div>
               <div className="text-sm text-blue-400 mb-1">Pro</div>
               <div className="text-3xl font-bold mb-3">$29<span className="text-sm text-gray-400">/mo</span></div>
@@ -381,8 +381,8 @@ export default function LandingPage() {
                 <li>✓ Custom column selection</li>
                 <li>✓ Email support</li>
               </ul>
-              <Link href="/signup?plan=pro" className="block text-center py-2 bg-blue-500 rounded-lg hover:bg-blue-600 font-semibold text-sm">
-                Start Trial
+              <Link href="/signup?plan=pro" className="block text-center py-2 bg-gray-600 rounded-lg cursor-not-allowed opacity-60 text-sm">
+                Notify Me
               </Link>
             </div>
 
@@ -396,7 +396,7 @@ export default function LandingPage() {
                 <li>✓ Priority support</li>
               </ul>
               <Link href="/signup?plan=premium" className="block text-center py-2 border border-gray-600 rounded-lg hover:bg-gray-700 text-sm">
-                Start Trial
+                Notify Me
               </Link>
             </div>
           </div>

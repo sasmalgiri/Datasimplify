@@ -820,8 +820,18 @@ export default function ComparePage() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-400 text-sm">
-          <p>Data from exchange market data • Updates frequently • 50+ coins available</p>
-          <p className="mt-2">
+          <p className="mb-2">
+            <a
+              href="https://www.coingecko.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 underline font-medium"
+            >
+              Powered by CoinGecko
+            </a>
+            {' '}• Updates frequently • 50+ coins available
+          </p>
+          <p>
             Want historical charts, alerts, and advanced analytics? <Link href="/pricing" className="text-emerald-400 hover:underline">View pricing</Link> for upcoming Pro features!
           </p>
         </div>

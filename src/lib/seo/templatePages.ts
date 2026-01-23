@@ -26,7 +26,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     title: 'Crypto Portfolio Tracker Excel Template (Live Updates)',
     h1: 'Crypto Portfolio Tracker Excel Template',
     description:
-      'Track your crypto portfolio in Excel with live price updates. Download our free portfolio tracker template with CryptoSheets formulas for real-time P&L tracking.',
+      'Track your crypto portfolio in Excel with live price updates. Download our free portfolio tracker template with CRK formulas for real-time P&L tracking.',
     keywords: [
       'crypto portfolio tracker excel',
       'cryptocurrency portfolio spreadsheet',
@@ -41,7 +41,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       'Portfolio allocation breakdown',
       'Cost basis tracking',
       '24h and 7d performance metrics',
-      'Auto-refresh with CryptoSheets',
+      'Auto-refresh with CRK',
     ],
     whoIsItFor: [
       'Crypto investors tracking multiple coins',
@@ -49,7 +49,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       'Analysts building custom portfolio reports',
     ],
     customization: [
-      'Add your own coins (any supported by CryptoSheets)',
+      'Add your own coins (any supported by CRK)',
       'Set your cost basis and purchase dates',
       'Choose your base currency (USD, EUR, etc.)',
       'Add custom columns for notes',
@@ -64,12 +64,12 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How do I update prices in the portfolio tracker?',
         answer:
-          'Open the file in Excel with CryptoSheets installed, then press Ctrl+Alt+F5 or click Data > Refresh All. Prices update automatically via CryptoSheets formulas.',
+          'Open the file in Excel with CRK installed, then press Ctrl+Alt+F5 or click Data > Refresh All. Prices update automatically via CRK formulas.',
       },
       {
         question: 'Can I track any cryptocurrency?',
         answer:
-          'Yes! You can track any coin supported by CryptoSheets (thousands of coins). Simply add the coin symbol to the template.',
+          'Yes! You can track any coin supported by CRK (thousands of coins). Simply add the coin symbol to the template.',
       },
     ],
   },
@@ -116,12 +116,12 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How often does the screener data update?',
         answer:
-          'Data updates whenever you refresh the workbook. CryptoSheets fetches live data from multiple exchanges and aggregators.',
+          'Data updates whenever you refresh the workbook. CRK fetches live data from multiple exchanges and aggregators.',
       },
       {
         question: 'Can I add custom metrics to the screener?',
         answer:
-          'Yes! You can add any CryptoSheets formula to create custom columns with technical indicators, on-chain data, or other metrics.',
+          'Yes! You can add any CRK formula to create custom columns with technical indicators, on-chain data, or other metrics.',
       },
     ],
   },
@@ -221,7 +221,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'Which technical indicators are included?',
         answer:
-          'The template includes RSI, MACD, Moving Averages (SMA/EMA), Bollinger Bands, Volume indicators, and support/resistance calculations. You can add more using CryptoSheets formulas.',
+          'The template includes RSI, MACD, Moving Averages (SMA/EMA), Bollinger Bands, Volume indicators, and support/resistance calculations. You can add more using CRK formulas.',
       },
       {
         question: 'Can I backtest strategies with this template?',
@@ -278,7 +278,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How often does DeFi data update?',
         answer:
-          'DeFi data updates on each refresh. CryptoSheets pulls data from DeFiLlama and other aggregators for accurate TVL tracking.',
+          'DeFi data updates on each refresh. CRK pulls data from DeFiLlama and other aggregators for accurate TVL tracking.',
       },
     ],
   },
@@ -689,7 +689,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How do I add a coin to my watchlist?',
         answer:
-          'Simply add a new row and enter the coin symbol (e.g., BTC, ETH). The CryptoSheets formulas will automatically fetch the data.',
+          'Simply add a new row and enter the coin symbol (e.g., BTC, ETH). The CRK formulas will automatically fetch the data.',
       },
       {
         question: 'Do price alerts work automatically?',
@@ -897,7 +897,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How accurate are staking APY numbers?',
         answer:
-          'APY figures are fetched from live protocol data via CryptoSheets. Actual yields may vary based on network conditions and validator performance.',
+          'APY figures are fetched from live protocol data via CRK. Actual yields may vary based on network conditions and validator performance.',
       },
       {
         question: 'Does the template account for unstaking periods?',
