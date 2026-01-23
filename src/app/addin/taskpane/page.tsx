@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { OnboardingWizard } from '@/components/addin/OnboardingWizard';
 
 /**
  * CryptoReportKit Excel Add-in Taskpane
@@ -109,6 +110,8 @@ export default function TaskpanePage() {
   const [workbookMode, setWorkbookMode] = useState<WorkbookMode>('unknown');
   const [packRecipe, setPackRecipe] = useState<PackRecipe | null>(null);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
   // Initialize Office.js and check for existing token
   useEffect(() => {
@@ -123,12 +126,23 @@ export default function TaskpanePage() {
               if (typeof OfficeRuntime !== 'undefined') {
                 const token = await OfficeRuntime.storage.getItem('crk_auth_token');
                 const email = await OfficeRuntime.storage.getItem('crk_user_email');
+                const onboardingDone = await OfficeRuntime.storage.getItem('crk_onboarding_complete');
+
                 if (token && email) {
                   setUser({ email });
+                }
+
+                // Show onboarding if not completed
+                if (onboardingDone !== 'true') {
+                  setShowOnboarding(true);
+                } else {
+                  setOnboardingComplete(true);
                 }
               }
             } catch (err) {
               console.log('No stored token found');
+              // Show onboarding on first load
+              setShowOnboarding(true);
             }
 
             setIsLoading(false);
@@ -137,9 +151,19 @@ export default function TaskpanePage() {
           // Not in Office - check localStorage for dev mode
           const token = localStorage.getItem('crk_auth_token');
           const email = localStorage.getItem('crk_user_email');
+          const onboardingDone = localStorage.getItem('crk_onboarding_complete');
+
           if (token && email) {
             setUser({ email });
           }
+
+          // Show onboarding if not completed
+          if (onboardingDone !== 'true') {
+            setShowOnboarding(true);
+          } else {
+            setOnboardingComplete(true);
+          }
+
           setIsLoading(false);
         }
       } catch {
@@ -348,6 +372,33 @@ export default function TaskpanePage() {
     }
   };
 
+  // Handle onboarding completion
+  const handleOnboardingComplete = async () => {
+    setShowOnboarding(false);
+    setOnboardingComplete(true);
+
+    // Store completion status
+    try {
+      if (typeof OfficeRuntime !== 'undefined') {
+        await OfficeRuntime.storage.setItem('crk_onboarding_complete', 'true');
+      }
+      localStorage.setItem('crk_onboarding_complete', 'true');
+    } catch (err) {
+      console.error('Failed to save onboarding status:', err);
+    }
+  };
+
+  // Handle onboarding skip
+  const handleOnboardingSkip = async () => {
+    // Same as complete - don't show again
+    await handleOnboardingComplete();
+  };
+
+  // Reopen onboarding
+  const handleReopenOnboarding = () => {
+    setShowOnboarding(true);
+  };
+
   // Refresh pack by calling /api/v1/report/run
   const refreshPack = async () => {
     if (!packRecipe) return;
@@ -496,9 +547,20 @@ export default function TaskpanePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <>
+      {/* Onboarding Wizard Overlay */}
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+          onSignIn={handleSignIn}
+          isSigningIn={isSigningIn}
+        />
+      )}
+
+      <div className="min-h-screen bg-gray-900 text-white p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-lg font-bold">CryptoReportKit</h1>
           <p className="text-xs text-gray-400 truncate max-w-[180px]">{user.email}</p>
@@ -607,6 +669,7 @@ export default function TaskpanePage() {
         </a>
       </div>
     </div>
+    </>
   );
 }
 
