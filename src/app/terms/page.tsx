@@ -101,7 +101,7 @@ export default function TermsPage() {
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
               <li><strong>Educational Purpose Only:</strong> For research, learning, and general informational purposes</li>
               <li><strong>Not Investment Advice:</strong> Do not constitute financial or investment recommendations</li>
-              <li><strong>Public Display Use:</strong> Displayed publicly on our website in compliance with provider API terms</li>
+              <li><strong>Public Display Use:</strong> Displayed publicly on our website. We aim to comply with provider terms; use is subject to provider policies; availability may change.</li>
               <li><strong>Not for Redistribution:</strong> You may not scrape, export, or redistribute this data commercially</li>
               <li><strong>Attribution Provided:</strong> Data providers are credited on our{' '}
                 <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page</li>

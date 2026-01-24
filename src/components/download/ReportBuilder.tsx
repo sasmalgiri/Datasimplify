@@ -158,7 +158,7 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
       case 'asset_scope': return 'How many assets?';
       case 'timeframe': return 'What timeframe?';
       case 'output_format': return 'What output format?';
-      case 'cryptosheets_plan': return 'What CryptoSheets plan do you have?';
+      case 'cryptosheets_plan': return 'What Excel add-in plan do you have?';
       case 'result': return 'Your Template Recommendation';
       default: return '';
     }

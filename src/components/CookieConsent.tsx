@@ -28,6 +28,14 @@ export default function CookieConsent() {
       const timeout = setTimeout(() => setShowBanner(true), 1000);
       return () => clearTimeout(timeout);
     }
+
+    // Make showCookieSettings function globally available
+    if (typeof window !== 'undefined') {
+      (window as any).showCookieSettings = () => {
+        setShowPreferences(true);
+        setShowBanner(true);
+      };
+    }
   }, []);
 
   const broadcastConsentChange = () => {

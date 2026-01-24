@@ -312,7 +312,7 @@ export default function DataSourcesPage() {
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-700">
             <li>Provide clear attribution to all data sources on this page and throughout our services</li>
-            <li>Use data in compliance with each provider&apos;s API terms (display for dashboards, BYOK for user-driven fetching)</li>
+            <li>Aim to use data in compliance with each provider&apos;s API terms (display for dashboards, BYOK for user-driven fetching). Use is subject to provider policies; availability may change.</li>
             <li>Do not scrape, resell, or redistribute provider data beyond permitted use cases</li>
             <li>Encourage users to review and comply with provider terms when using BYOK features</li>
           </ul>
