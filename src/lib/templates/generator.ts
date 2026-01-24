@@ -138,7 +138,8 @@ export async function generateTemplate(
   workbook.subject = 'Cryptocurrency Data Template';
   workbook.keywords = 'crypto,bitcoin,ethereum,cryptosheets,cryptoreportkit';
   workbook.category = 'Finance';
-  workbook.description = `${baseTemplate.description} - Powered by CryptoSheets`;
+  const addinBranding = userConfig.formulaMode === 'crk' ? 'CRK BYOK' : 'CryptoSheets';
+  workbook.description = `${baseTemplate.description} - Data via ${addinBranding}`;
   workbook.company = 'CryptoReportKit';
 
   // 3. Add hidden __CRK__ metadata sheet (for refresh support)
@@ -168,7 +169,7 @@ export async function generateTemplate(
   // formulas_only mode: Skip charts entirely
 
   // 8. Add INSTRUCTIONS sheet
-  await createInstructionsSheet(workbook, baseTemplate);
+  await createInstructionsSheet(workbook, baseTemplate, userConfig);
 
   // 9. Add SUPPORTED_COINS reference sheet
   await createCoinsReferenceSheet(workbook);
@@ -317,6 +318,8 @@ async function createSetupSheet(
   template: TemplateConfig,
   userConfig: UserTemplateConfig
 ): Promise<void> {
+  const isCRK = userConfig.formulaMode === 'crk';
+
   const sheet = workbook.addWorksheet('START_HERE', {
     properties: { tabColor: { argb: COLORS.primary } },
     views: [{ showGridLines: false }],
@@ -355,7 +358,7 @@ async function createSetupSheet(
   // Subtitle
   sheet.mergeCells(`B${row}:C${row}`);
   const subtitleCell = sheet.getCell(`B${row}`);
-  subtitleCell.value = 'CryptoReportKit Template - Powered by CryptoSheets';
+  subtitleCell.value = isCRK ? 'CryptoReportKit Template - Data via BYOK' : 'CryptoReportKit Template - Powered by CryptoSheets';
   subtitleCell.font = { size: 12, color: { argb: COLORS.textSecondary }, italic: true };
   subtitleCell.alignment = { horizontal: 'center' };
   row += 3;
@@ -369,7 +372,11 @@ async function createSetupSheet(
   reqHeader.border = { top: { style: 'medium', color: { argb: COLORS.warning } }, left: { style: 'medium', color: { argb: COLORS.warning } } };
   row += 1;
 
-  const requirements = [
+  const requirements = isCRK ? [
+    ['✓ Excel Desktop', 'Windows or Mac (Excel Online NOT supported)'],
+    ['✓ CRK Add-in', 'Install from cryptoreportkit.com/addin/setup'],
+    ['✓ Provider API Key', 'Your own CoinGecko/Binance key (BYOK)'],
+  ] : [
     ['✓ Excel Desktop', 'Windows or Mac (Excel Online NOT supported)'],
     ['✓ CryptoSheets Add-in', 'Install from cryptosheets.com'],
     ['✓ CryptoSheets Account', 'Free tier available (100 calls/day)'],
@@ -403,23 +410,28 @@ async function createSetupSheet(
   statusHeader.border = { top: { style: 'medium', color: { argb: COLORS.primary } }, left: { style: 'medium', color: { argb: COLORS.primary } } };
   row += 1;
 
-  // CryptoSheets Status
-  sheet.getCell(`B${row}`).value = 'CryptoSheets Status:';
+  // Add-in Status
+  const addinLabel = isCRK ? 'CRK Add-in Status:' : 'CryptoSheets Status:';
+  const statusFormula = isCRK ? 'IFERROR(CRK.INFO("bitcoin","name"), "❌ NOT INSTALLED")' : 'IFERROR(CRYPTOSHEETS("status"), "❌ NOT INSTALLED")';
+
+  sheet.getCell(`B${row}`).value = addinLabel;
   sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
   sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
   sheet.getCell(`B${row}`).border = { left: { style: 'medium', color: { argb: COLORS.primary } } };
-  sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("status"), "❌ NOT INSTALLED")' };
+  sheet.getCell(`C${row}`).value = { formula: statusFormula };
   sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
   sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
   sheet.getCell(`C${row}`).border = { right: { style: 'medium', color: { argb: COLORS.primary } } };
   row++;
 
   // Sample Data Check
+  const sampleFormula = isCRK ? 'IFERROR(CRK.PRICE("bitcoin"), "❌ ERROR - Check status above")' : 'IFERROR(CRYPTOSHEETS("price","BTC","USD"), "❌ ERROR - Check status above")';
+
   sheet.getCell(`B${row}`).value = 'Sample Data (BTC Price):';
   sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
   sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
   sheet.getCell(`B${row}`).border = { left: { style: 'medium', color: { argb: COLORS.primary } } };
-  sheet.getCell(`C${row}`).value = { formula: 'IFERROR(CRYPTOSHEETS("price","BTC","USD"), "❌ ERROR - Check status above")' };
+  sheet.getCell(`C${row}`).value = { formula: sampleFormula };
   sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
   sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
   sheet.getCell(`C${row}`).border = { right: { style: 'medium', color: { argb: COLORS.primary } } };
@@ -864,7 +876,9 @@ async function createDataSheet(
   const footerRow = coinsToUse.length + 3;
   sheet.mergeCells(`A${footerRow}:${String.fromCharCode(64 + columns.length)}${footerRow}`);
   const footerCell = sheet.getCell(`A${footerRow}`);
-  footerCell.value = '💡 Press Ctrl+Alt+F5 to refresh all data | Data powered by CryptoSheets';
+  const isCRK = userConfig.formulaMode === 'crk';
+  const dataSource = isCRK ? 'Data via BYOK' : 'Data powered by CryptoSheets';
+  footerCell.value = `💡 Press Ctrl+Alt+F5 to refresh all data | ${dataSource}`;
   footerCell.font = { italic: true, color: { argb: COLORS.textSecondary } };
   footerCell.fill = {
     type: 'pattern',
@@ -1063,10 +1077,12 @@ async function createAddinInstructionsSheet(
   whatHeader.border = { left: { style: 'thick', color: { argb: COLORS.positive } } };
   row += 1;
 
+  const isCRK = userConfig.formulaMode === 'crk';
+  const dataSource = isCRK ? 'CRK' : 'CryptoSheets';
   const features = [
     ['🎨', 'Beautiful animated charts matching CryptoReportKit website'],
     ['📈', 'Line, bar, doughnut, radar, and area charts'],
-    ['🔄', 'Auto-refresh when your CryptoSheets data updates'],
+    ['🔄', `Auto-refresh when your ${dataSource} data updates`],
     ['🌙', 'Dark theme with emerald accents'],
     ['📱', 'Works on Microsoft 365 (Desktop + Web + Mobile)'],
     ['⚡', 'Interactive tooltips and hover effects'],
@@ -1090,7 +1106,13 @@ async function createAddinInstructionsSheet(
   reqHeader.border = { left: { style: 'thick', color: { argb: COLORS.warning } } };
   row += 1;
 
-  const requirements = [
+  const requirements = isCRK ? [
+    ['Microsoft 365', 'Desktop (Windows/Mac), Web, or Mobile'],
+    ['OR Office 2021/2019', 'Desktop only (Windows/Mac)'],
+    ['CRK Add-in', 'For live crypto data formulas (BYOK)'],
+    ['CryptoReportKit Add-in', 'For interactive chart visualization'],
+    ['Internet connection', 'Required for both add-ins'],
+  ] : [
     ['Microsoft 365', 'Desktop (Windows/Mac), Web, or Mobile'],
     ['OR Office 2021/2019', 'Desktop only (Windows/Mac)'],
     ['CryptoSheets Add-in', 'For live crypto data formulas'],
@@ -1461,7 +1483,8 @@ function getChartRecommendations(templateType: TemplateType): Array<{ chartType:
  */
 async function createInstructionsSheet(
   workbook: ExcelJS.Workbook,
-  template: TemplateConfig
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
 ): Promise<void> {
   const sheet = workbook.addWorksheet('Instructions', {
     properties: { tabColor: { argb: COLORS.textSecondary } },
@@ -1529,9 +1552,10 @@ async function createInstructionsSheet(
   row += 2;
 
   // Common Formulas Section
+  const isCRK = userConfig.formulaMode === 'crk';
   sheet.mergeCells(`A${row}:C${row}`);
   const formulaHeader = sheet.getCell(`A${row}`);
-  formulaHeader.value = '📝 Common CryptoSheets Formulas';
+  formulaHeader.value = isCRK ? '📝 Common CRK Formulas' : '📝 Common CryptoSheets Formulas';
   formulaHeader.font = { bold: true, size: 14, color: { argb: COLORS.textPrimary } };
   formulaHeader.fill = {
     type: 'pattern',
@@ -1543,7 +1567,22 @@ async function createInstructionsSheet(
   };
   row += 1;
 
-  const formulas = [
+  const formulas = isCRK ? [
+    ['=CRK.PRICE("bitcoin")', 'Get current Bitcoin price in USD'],
+    ['=CRK.MARKETCAP("ethereum")', 'Get Ethereum market cap'],
+    ['=CRK.INFO("solana","volume_24h")', 'Get Solana 24h trading volume'],
+    ['=CRK.CHANGE24H("binancecoin")', 'Get BNB 24h price change %'],
+    ['=CRK.INFO("ripple","price_change_7d")', 'Get XRP 7-day price change %'],
+    ['=CRK.INFO("dogecoin","ath")', 'Get Dogecoin all-time high'],
+    ['=CRK.INFO("cardano","ath_change_percentage")', 'Get Cardano % from ATH'],
+    ['=CRK.INFO("matic-network","circulating_supply")', 'Get Polygon circulating supply'],
+    ['=CRK.INFO("chainlink","total_supply")', 'Get Chainlink total supply'],
+    ['=CRK.INFO("avalanche-2","market_cap_rank")', 'Get Avalanche market cap rank'],
+    ['=CRK.RSI("bitcoin",14)', 'Get Bitcoin RSI (14 period)'],
+    ['=CRK.FEARGREED()', 'Get Fear & Greed Index'],
+    ['=CRK.GLOBAL("btc_dominance")', 'Get BTC market dominance %'],
+    ['=CRK.GLOBAL("total_market_cap")', 'Get total crypto market cap'],
+  ] : [
     ['=CRYPTOSHEETS("price", "BTC", "USD")', 'Get current Bitcoin price in USD'],
     ['=CRYPTOSHEETS("market_cap", "ETH")', 'Get Ethereum market cap'],
     ['=CRYPTOSHEETS("volume_24h", "SOL")', 'Get Solana 24h trading volume'],
