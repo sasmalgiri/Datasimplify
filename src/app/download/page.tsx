@@ -31,7 +31,7 @@ export default function DownloadPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1d'); // Daily only in Low-Quota Mode
   const [refreshFrequency, setRefreshFrequency] = useState<RefreshFrequency>('manual'); // Manual by default
   const [includeCharts, setIncludeCharts] = useState(true);
-  const [formulaMode, setFormulaMode] = useState<FormulaMode>('crk'); // CRK add-in by default (recommended)
+  const [formulaMode, setFormulaMode] = useState<FormulaMode>('cryptosheets'); // CryptoSheets until CRK add-in is ready
 
   // Load templates on mount
   useEffect(() => {
