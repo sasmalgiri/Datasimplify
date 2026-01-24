@@ -404,7 +404,7 @@ export const CURRENCY_OPTIONS = [
 export const MODE_OPTIONS = [
   { value: 'all', label: 'All Add-ins', icon: '🔌' },
   { value: 'crk', label: 'CRK (BYOK)', icon: '📊', description: 'Native add-in with your API keys' },
-  { value: 'cryptosheets', label: 'CryptoSheets', icon: '🔗', description: 'Third-party add-in' },
+  { value: 'cryptosheets', label: '3rd Party Integration', icon: '🔗', description: 'Compatible with 3rd party add-ins (not affiliated, separate license required)' },
 ] as const;
 
 /**

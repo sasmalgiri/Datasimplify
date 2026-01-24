@@ -201,8 +201,7 @@ export default function TermsPage() {
                 <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
                   required by applicable law (e.g., EU/UK statutory rights).</li>
                 <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
-                  After 30 days, cancellation stops future billing but no refund is provided for the remaining period.
-                  UK/EU customers have an additional 14-day cooling-off period on annual renewals.</li>
+                  After 30 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
                 <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template
                   purchases follow the same 30-day policy as subscriptions.</li>
                 <li><strong>Chargebacks:</strong> We encourage you to request refunds directly rather than filing chargebacks.

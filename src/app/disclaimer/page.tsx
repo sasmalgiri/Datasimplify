@@ -78,18 +78,31 @@ export default function DisclaimerPage() {
             <h2 className="text-2xl font-semibold text-white mb-4">Data Sources</h2>
             <div className="space-y-4">
               <p>
-                CryptoReportKit displays data from various third-party sources for educational purposes:
+                CryptoReportKit has two usage models for data:
               </p>
-              <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Alternative.me (Fear &amp; Greed Index)</li>
-                <li>CoinGecko (via your own API key - BYOK)</li>
-                <li>DeFiLlama (DeFi metrics)</li>
-                <li>Public blockchain explorers</li>
-              </ul>
+              <div className="bg-gray-800/30 p-4 rounded-lg mb-3">
+                <h3 className="text-emerald-400 font-medium mb-2">📊 Public Website Dashboards (Display-Only)</h3>
+                <p className="text-sm text-gray-400 mb-2">
+                  Our website dashboards (/market, /research, etc.) display aggregated data for educational demonstration purposes using:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-4 text-sm text-gray-400">
+                  <li>Alternative.me (Fear &amp; Greed Index)</li>
+                  <li>CoinGecko (free tier for public display)</li>
+                  <li>DeFiLlama (DeFi metrics)</li>
+                  <li>Public blockchain explorers</li>
+                </ul>
+              </div>
+              <div className="bg-gray-800/30 p-4 rounded-lg">
+                <h3 className="text-blue-400 font-medium mb-2">📋 Excel Templates (BYOK)</h3>
+                <p className="text-sm text-gray-400">
+                  Our Excel templates use <strong>your own API keys</strong> (Bring Your Own Keys). You provide your own
+                  CoinGecko, Binance, or CoinMarketCap keys. Data fetched via your keys is governed by your agreement with
+                  the provider, not by CryptoReportKit.
+                </p>
+              </div>
               <p className="mt-4 text-gray-400 text-sm">
                 We do not guarantee the accuracy, completeness, or timeliness of any data.
                 Data providers may have their own terms of service and usage restrictions.
-                Website displays are for educational demonstration only.
               </p>
             </div>
           </section>
