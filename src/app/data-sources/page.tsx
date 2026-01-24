@@ -21,7 +21,7 @@ export default function DataSourcesPage() {
               <h3 className="font-semibold text-blue-900 mb-2">Two Usage Models</h3>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li><strong>Display-Only Dashboards:</strong> Our website dashboards (e.g., /market, /research) display
-                  aggregated data publicly for educational purposes in compliance with provider API terms.</li>
+                  aggregated data publicly for educational purposes. We aim to comply with provider API terms; use is subject to provider policies.</li>
                 <li><strong>BYOK (Bring Your Own Keys):</strong> Our Excel add-in uses <strong>your own API keys</strong>.
                   Data fetched via your keys is governed by your agreement with the provider.</li>
               </ul>

@@ -13,7 +13,7 @@ export function CookieSettingsButton() {
     <button
       type="button"
       onClick={handleClick}
-      className="hover:text-white cursor-pointer"
+      className="hover:text-white cursor-pointer underline"
     >
       Cookie Settings
     </button>
