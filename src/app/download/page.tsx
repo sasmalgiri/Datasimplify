@@ -23,7 +23,7 @@ export default function DownloadPage() {
   const [hasConfirmedRequirements, setHasConfirmedRequirements] = useState(false);
 
   // Mode toggle: 'wizard' (Report Builder) or 'manual' (direct controls)
-  const [selectionMode, setSelectionMode] = useState<'wizard' | 'manual'>('wizard');
+  const [selectionMode, setSelectionMode] = useState<'wizard' | 'manual'>('manual');
 
   // Template modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
