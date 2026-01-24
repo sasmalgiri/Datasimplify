@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -11,19 +11,14 @@ import { DataPreview } from '@/components/DataPreview';
 import { RequirementsGate } from '@/components/download/RequirementsGate';
 import { QuotaEstimator } from '@/components/download/QuotaEstimator';
 import { TemplateControls } from '@/components/download/TemplateControls';
-import { ReportAssistant } from '@/components/download/ReportAssistant';
 import { FormulaModePicker } from '@/components/download/FormulaModePicker';
 import type { RefreshFrequency } from '@/lib/templates/templateModes';
-import type { RoutedTemplate } from '@/lib/templates/reportAssistant';
 import type { FormulaMode } from '@/lib/templates/generator';
 import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
 export default function DownloadPage() {
   // Gate state - user must confirm requirements before seeing templates
   const [hasConfirmedRequirements, setHasConfirmedRequirements] = useState(false);
-
-  // Mode toggle: 'wizard' (Report Builder) or 'manual' (direct controls)
-  const [selectionMode, setSelectionMode] = useState<'wizard' | 'manual'>('manual');
 
   // Template modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -58,7 +53,7 @@ export default function DownloadPage() {
     sessionStorage.setItem('crk_requirements_confirmed', 'true');
   };
 
-  // Handler for template selection (manual mode)
+  // Handler for template selection
   const handleTemplateSelect = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
@@ -67,23 +62,6 @@ export default function DownloadPage() {
       setShowTemplateModal(true);
     }
   };
-
-  // Handler for Report Assistant template selection (wizard mode)
-  const handleAssistantSelect = useCallback((templateId: string, config: RoutedTemplate['config']) => {
-    const template = templates.find(t => t.id === templateId);
-
-    // Apply config from Report Assistant
-    setSelectedCoins(config.coins);
-    setSelectedTimeframe(config.timeframe);
-    setRefreshFrequency(config.refreshFrequency as RefreshFrequency);
-    setIncludeCharts(config.includeCharts);
-
-    if (template) {
-      setSelectedTemplateId(templateId);
-      setSelectedTemplateName(template.name);
-      setShowTemplateModal(true);
-    }
-  }, [templates]);
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -109,54 +87,8 @@ export default function DownloadPage() {
           <RequirementsGate onConfirm={handleRequirementsConfirmed} className="max-w-2xl mx-auto" />
         ) : (
           <>
-            {/* Mode Toggle */}
-            <div className="mb-8">
-              <div className="flex items-center justify-center gap-4 p-2 bg-gray-900 rounded-xl border border-gray-800 max-w-md mx-auto">
-                <button
-                  type="button"
-                  onClick={() => setSelectionMode('wizard')}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                    selectionMode === 'wizard'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  Report Assistant
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectionMode('manual')}
-                  className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                    selectionMode === 'manual'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                  </svg>
-                  Browse All
-                </button>
-              </div>
-              <p className="text-center text-sm text-gray-500 mt-2">
-                {selectionMode === 'wizard'
-                  ? 'Describe what you need in plain language'
-                  : 'Configure and browse all templates directly'}
-              </p>
-            </div>
-
-            {/* Wizard Mode: Report Assistant */}
-            {selectionMode === 'wizard' ? (
-              <div className="max-w-2xl mx-auto mb-8">
-                <ReportAssistant onTemplateSelect={handleAssistantSelect} />
-              </div>
-            ) : (
-              <>
-                {/* Manual Mode: Direct Controls */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Template Configuration Controls */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                   {/* Left Column: Controls */}
                   <div className="lg:col-span-2 space-y-6">
                     {/* Formula Mode Picker */}
@@ -243,8 +175,6 @@ export default function DownloadPage() {
                   </p>
                   <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
                 </div>
-              </>
-            )}
 
             {/* How It Works - Updated messaging */}
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-8">
