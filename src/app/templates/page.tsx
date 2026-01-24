@@ -94,7 +94,7 @@ function TemplateCard({
               : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
           }`}
         >
-          {template.mode === 'crk' ? '📊 CRK BYOK' : '🔗 CryptoSheets'}
+          {template.mode === 'crk' ? '📊 CRK BYOK' : '🔗 CryptoSheets (3rd party)'}
         </span>
 
         {/* Refresh Engine Badge */}

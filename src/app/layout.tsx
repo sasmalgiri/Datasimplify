@@ -8,6 +8,7 @@ import { AllJsonLd } from '@/components/JsonLd';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import { FEATURES } from '@/lib/featureFlags';
 import { FeedbackWrapper } from '@/components/FeedbackWrapper';
+import { CookieSettingsButton } from '@/components/CookieSettingsButton';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -184,6 +185,8 @@ function Footer() {
               <Link href="/terms" className="hover:text-white">Terms</Link>
               <span>|</span>
               <Link href="/privacy" className="hover:text-white">Privacy</Link>
+              <span>|</span>
+              <CookieSettingsButton />
               <span>|</span>
               <Link href="/disclaimer" className="hover:text-white">Disclaimer</Link>
               <span>|</span>

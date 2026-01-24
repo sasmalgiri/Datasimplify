@@ -431,6 +431,17 @@ export default function MarketPage() {
             <p className="text-sm mt-1 text-gray-400">
               {fearGreed ? fearGreed.value_classification : '-'}
             </p>
+            <p className="text-xs mt-2 text-gray-500">
+              Data by{' '}
+              <a
+                href="https://alternative.me/crypto/fear-and-greed-index/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Alternative.me
+              </a>
+            </p>
           </div>
 
           {/* BTC Dominance */}
