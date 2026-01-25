@@ -1,312 +1,225 @@
 /**
- * Provider Keys API
+ * Provider API Keys Management Endpoint
  *
- * Manages encrypted API keys for data providers (CoinGecko, Binance, etc.)
+ * Handles CRUD operations for user-provided API keys (BYOK)
+ * - GET: Check if key exists and get hint
+ * - POST: Save/update provider key (with validation)
+ * - DELETE: Remove provider key
  *
- * GET /api/v1/keys/:provider - Check if key exists (returns hint only)
- * POST /api/v1/keys/:provider - Save/update provider key
- * DELETE /api/v1/keys/:provider - Remove provider key
+ * Security:
+ * - Keys encrypted at rest with AES-256-GCM
+ * - Validation before storage
+ * - RLS enforced on database level
  */
 
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { encryptApiKey, getKeyHint } from '@/lib/encryption';
 
-const VALID_PROVIDERS = ['coingecko', 'binance', 'coinmarketcap', 'messari'] as const;
-type Provider = (typeof VALID_PROVIDERS)[number];
+const VALID_PROVIDERS = ['coingecko', 'binance', 'coinmarketcap'] as const;
+type Provider = typeof VALID_PROVIDERS[number];
 
-function isValidProvider(provider: string): provider is Provider {
-  return VALID_PROVIDERS.includes(provider as Provider);
-}
-
-/**
- * GET - Check if a provider key exists
- * Returns connection status and key hint (last 4 chars)
- */
+// GET - Check if key exists
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
 
-  if (!isValidProvider(provider)) {
-    return NextResponse.json(
-      { error: 'Invalid provider', validProviders: VALID_PROVIDERS },
-      { status: 400 }
-    );
+  if (!VALID_PROVIDERS.includes(provider as Provider)) {
+    return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { data, error } = await supabase
+      .from('provider_keys')
+      .select('key_hint, is_valid, created_at, last_validated_at')
+      .eq('user_id', user.id)
+      .eq('provider', provider)
+      .single();
+
+    if (error || !data) {
+      return NextResponse.json({ connected: false });
+    }
+
+    return NextResponse.json({
+      connected: true,
+      hint: data.key_hint,
+      isValid: data.is_valid,
+      connectedAt: data.created_at,
+      lastValidated: data.last_validated_at,
+    });
+  } catch (error) {
+    console.error('[Keys API] GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const { data, error } = await supabase
-    .from('provider_keys')
-    .select('key_hint, is_valid, created_at, updated_at')
-    .eq('user_id', user.id)
-    .eq('provider', provider)
-    .single();
-
-  if (error || !data) {
-    return NextResponse.json({ connected: false, provider });
-  }
-
-  return NextResponse.json({
-    connected: true,
-    provider,
-    hint: data.key_hint,
-    isValid: data.is_valid,
-    connectedAt: data.created_at,
-    updatedAt: data.updated_at,
-  });
 }
 
-/**
- * POST - Save or update a provider API key
- * Validates the key before saving
- */
+// POST - Save/update provider key
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
 
-  if (!isValidProvider(provider)) {
-    return NextResponse.json(
-      { error: 'Invalid provider', validProviders: VALID_PROVIDERS },
-      { status: 400 }
-    );
+  if (!VALID_PROVIDERS.includes(provider as Provider)) {
+    return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  let body;
   try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
-  }
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  const { apiKey } = body;
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-  if (!apiKey || typeof apiKey !== 'string') {
-    return NextResponse.json({ error: 'API key is required' }, { status: 400 });
-  }
+    const body = await request.json();
+    const { apiKey } = body;
 
-  if (apiKey.length < 10) {
-    return NextResponse.json(
-      { error: 'API key appears too short' },
-      { status: 400 }
-    );
-  }
+    if (!apiKey || typeof apiKey !== 'string' || apiKey.length < 10) {
+      return NextResponse.json({ error: 'Invalid API key format' }, { status: 400 });
+    }
 
-  // Validate the key by making a test request to the provider
-  const validationResult = await validateProviderKey(provider, apiKey);
+    const validationResult = await validateProviderKey(provider as Provider, apiKey);
 
-  if (!validationResult.valid) {
-    return NextResponse.json(
-      { error: validationResult.error || 'API key validation failed' },
-      { status: 400 }
-    );
-  }
+    if (!validationResult.isValid) {
+      return NextResponse.json({
+        error: 'API key validation failed',
+        message: validationResult.error || 'Invalid API key',
+      }, { status: 400 });
+    }
 
-  // Encrypt and store the key
-  const encryptedKey = encryptApiKey(apiKey);
-  const hint = getKeyHint(apiKey);
+    const encryptedKey = encryptApiKey(apiKey);
+    const hint = getKeyHint(apiKey);
 
-  const { error } = await supabase.from('provider_keys').upsert(
-    {
+    const { error } = await supabase.from('provider_keys').upsert({
       user_id: user.id,
       provider,
       encrypted_key: encryptedKey,
       key_hint: hint,
       is_valid: true,
+      last_validated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: 'user_id,provider',
+    }, { onConflict: 'user_id,provider' });
+
+    if (error) {
+      console.error('[Keys API] Save error:', error);
+      return NextResponse.json({ error: 'Failed to save key' }, { status: 500 });
     }
-  );
 
-  if (error) {
-    console.error('Failed to save provider key:', error);
-    return NextResponse.json(
-      { error: 'Failed to save API key' },
-      { status: 500 }
-    );
+    await supabase.from('usage_events').insert({
+      user_id: user.id,
+      event_type: 'provider_key_connected',
+      metadata: { provider, hint },
+    });
+
+    return NextResponse.json({
+      success: true,
+      hint,
+      message: provider + ' API key connected successfully',
+    });
+  } catch (error) {
+    console.error('[Keys API] POST error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // Log usage event
-  await supabase.from('usage_events').insert({
-    user_id: user.id,
-    event_type: 'provider_key_connected',
-    metadata: { provider },
-  });
-
-  return NextResponse.json({
-    success: true,
-    provider,
-    hint,
-    message: `${getProviderDisplayName(provider)} API key connected successfully`,
-  });
 }
 
-/**
- * DELETE - Remove a provider API key
- */
+// DELETE - Remove provider key
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider } = await params;
 
-  if (!isValidProvider(provider)) {
-    return NextResponse.json(
-      { error: 'Invalid provider', validProviders: VALID_PROVIDERS },
-      { status: 400 }
-    );
+  if (!VALID_PROVIDERS.includes(provider as Provider)) {
+    return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { error } = await supabase.from('provider_keys').delete()
+      .eq('user_id', user.id)
+      .eq('provider', provider);
+
+    if (error) {
+      console.error('[Keys API] Delete error:', error);
+      return NextResponse.json({ error: 'Failed to delete key' }, { status: 500 });
+    }
+
+    await supabase.from('usage_events').insert({
+      user_id: user.id,
+      event_type: 'provider_key_disconnected',
+      metadata: { provider },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[Keys API] DELETE error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  const { error } = await supabase
-    .from('provider_keys')
-    .delete()
-    .eq('user_id', user.id)
-    .eq('provider', provider);
-
-  if (error) {
-    console.error('Failed to delete provider key:', error);
-    return NextResponse.json(
-      { error: 'Failed to remove API key' },
-      { status: 500 }
-    );
-  }
-
-  // Log usage event
-  await supabase.from('usage_events').insert({
-    user_id: user.id,
-    event_type: 'provider_key_disconnected',
-    metadata: { provider },
-  });
-
-  return NextResponse.json({
-    success: true,
-    provider,
-    message: `${getProviderDisplayName(provider)} API key removed`,
-  });
 }
 
-/**
- * Validate an API key by making a test request to the provider
- */
+interface ValidationResult {
+  isValid: boolean;
+  error?: string;
+}
+
 async function validateProviderKey(
   provider: Provider,
   apiKey: string
-): Promise<{ valid: boolean; error?: string }> {
+): Promise<ValidationResult> {
   try {
     switch (provider) {
       case 'coingecko': {
-        // Try the Pro API endpoint first
-        const proRes = await fetch(
-          'https://pro-api.coingecko.com/api/v3/ping',
-          {
-            headers: { 'x-cg-pro-api-key': apiKey },
-          }
-        );
-        if (proRes.ok) {
-          return { valid: true };
-        }
-        // If Pro fails, try Demo API
-        const demoRes = await fetch(
-          'https://api.coingecko.com/api/v3/ping',
-          {
-            headers: { 'x-cg-demo-api-key': apiKey },
-          }
-        );
-        if (demoRes.ok) {
-          return { valid: true };
-        }
-        return { valid: false, error: 'CoinGecko API key is invalid' };
-      }
-
-      case 'binance': {
-        // Binance public endpoints don't require auth, but we can verify key format
-        // A valid Binance API key is 64 characters
-        if (apiKey.length >= 64) {
-          return { valid: true };
-        }
-        return {
-          valid: false,
-          error: 'Binance API key should be at least 64 characters',
-        };
-      }
-
-      case 'coinmarketcap': {
-        const cmcRes = await fetch(
-          'https://pro-api.coinmarketcap.com/v1/key/info',
-          {
-            headers: { 'X-CMC_PRO_API_KEY': apiKey },
-          }
-        );
-        if (cmcRes.ok) {
-          return { valid: true };
-        }
-        const cmcError = await cmcRes.json().catch(() => ({}));
-        return {
-          valid: false,
-          error:
-            cmcError?.status?.error_message || 'CoinMarketCap API key is invalid',
-        };
-      }
-
-      case 'messari': {
-        const messariRes = await fetch('https://data.messari.io/api/v1/assets', {
-          headers: { 'x-messari-api-key': apiKey },
+        const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+          headers: { 'x-cg-pro-api-key': apiKey },
+          signal: AbortSignal.timeout(5000),
         });
-        if (messariRes.ok) {
-          return { valid: true };
+        if (response.ok) return { isValid: true };
+        if (response.status === 401 || response.status === 403) {
+          return { isValid: false, error: 'Invalid API key' };
         }
-        return { valid: false, error: 'Messari API key is invalid' };
+        return { isValid: false, error: 'Validation failed: ' + response.status };
       }
-
+      case 'binance': {
+        if (!/^[A-Za-z0-9]{64}$/.test(apiKey)) {
+          return { isValid: false, error: 'Invalid format (expected 64 alphanumeric chars)' };
+        }
+        return { isValid: true };
+      }
+      case 'coinmarketcap': {
+        const response = await fetch('https://pro-api.coinmarketcap.com/v1/key/info', {
+          headers: { 'X-CMC_PRO_API_KEY': apiKey },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (response.ok) return { isValid: true };
+        if (response.status === 401 || response.status === 403) {
+          return { isValid: false, error: 'Invalid API key' };
+        }
+        return { isValid: false, error: 'Validation failed: ' + response.status };
+      }
       default:
-        return { valid: false, error: 'Unknown provider' };
+        return { isValid: false, error: 'Unsupported provider' };
     }
-  } catch (err) {
-    console.error('Error validating provider key:', err);
-    return { valid: false, error: 'Failed to validate API key' };
+  } catch (error) {
+    console.error('Validation error for ' + provider + ':', error);
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { isValid: false, error: 'Validation timeout' };
+    }
+    return { isValid: false, error: 'Network error' };
   }
-}
-
-/**
- * Get display name for a provider
- */
-function getProviderDisplayName(provider: Provider): string {
-  const names: Record<Provider, string> = {
-    coingecko: 'CoinGecko',
-    binance: 'Binance',
-    coinmarketcap: 'CoinMarketCap',
-    messari: 'Messari',
-  };
-  return names[provider];
 }

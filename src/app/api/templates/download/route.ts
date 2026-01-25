@@ -192,6 +192,7 @@ export async function POST(request: Request) {
       timeframe,
       currency,
       contentType,
+      formulaMode: 'crk', // BYOK: Use CRK formulas by default (not CryptoSheets)
       customizations: {
         // For formulas_only, override includeCharts to false
         includeCharts: contentType === 'formulas_only' ? false : body.customizations?.includeCharts !== false,

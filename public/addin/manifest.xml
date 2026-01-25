@@ -3,29 +3,20 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
            xsi:type="TaskPaneApp">
-
-  <!-- Basic Properties -->
-  <Id>crk-excel-addin-byok-v1</Id>
+  <Id>b3a4dd10-6e51-46c8-9f22-b8e8b8d2c5a7</Id>
   <Version>1.0.0</Version>
   <ProviderName>CryptoReportKit</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="CryptoReportKit"/>
-  <Description DefaultValue="Live crypto data for Excel reports with BYOK (Bring Your Own Key) support. Get real-time prices, historical data, and market metrics."/>
-  <IconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-64.png"/>
+  <Description DefaultValue="Live crypto data for Excel with BYOK (Bring Your Own Keys)"/>
+  <IconUrl DefaultValue="https://cryptoreportkit.com/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://cryptoreportkit.com/icon-64.png"/>
   <SupportUrl DefaultValue="https://cryptoreportkit.com/support"/>
 
-  <!-- App Domains -->
-  <AppDomains>
-    <AppDomain>https://cryptoreportkit.com</AppDomain>
-  </AppDomains>
-
-  <!-- Hosts -->
   <Hosts>
     <Host Name="Workbook"/>
   </Hosts>
 
-  <!-- Requirements -->
   <Requirements>
     <Sets>
       <Set Name="ExcelApi" MinVersion="1.1"/>
@@ -33,30 +24,24 @@
     </Sets>
   </Requirements>
 
-  <!-- Default Settings -->
   <DefaultSettings>
     <SourceLocation DefaultValue="https://cryptoreportkit.com/addin/taskpane"/>
   </DefaultSettings>
 
-  <!-- Permissions -->
   <Permissions>ReadWriteDocument</Permissions>
 
-  <!-- Version Overrides -->
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
     <Hosts>
       <Host xsi:type="Workbook">
         <DesktopFormFactor>
-          <!-- GetStarted -->
           <GetStarted>
             <Title resid="GetStarted.Title"/>
             <Description resid="GetStarted.Description"/>
             <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
           </GetStarted>
 
-          <!-- Function File -->
-          <FunctionFile resid="Functions.Url"/>
+          <FunctionFile resid="Functions.Page.Url"/>
 
-          <!-- Primary Command Surface -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
               <Group id="CRKGroup">
@@ -86,7 +71,6 @@
             </OfficeTab>
           </ExtensionPoint>
 
-          <!-- Custom Functions -->
           <ExtensionPoint xsi:type="CustomFunctions">
             <Script>
               <SourceLocation resid="Functions.Script.Url"/>
@@ -103,30 +87,28 @@
       </Host>
     </Hosts>
 
-    <!-- Resources -->
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://cryptoreportkit.com/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://cryptoreportkit.com/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://cryptoreportkit.com/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cryptoreportkit.com/addin/setup"/>
-        <bt:Url id="Functions.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.html"/>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cryptoreportkit.com/byok"/>
         <bt:Url id="Functions.Script.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.js"/>
         <bt:Url id="Functions.Page.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.html"/>
         <bt:Url id="Functions.Metadata.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.json"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://cryptoreportkit.com/addin/taskpane"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get crypto data in Excel"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with CRK (BYOK)"/>
         <bt:String id="CRKGroup.Label" DefaultValue="CryptoReportKit"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="CRK Panel"/>
         <bt:String id="Functions.Namespace" DefaultValue="CRK"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Use CRK functions to get live crypto prices, historical data, and market metrics in your Excel workbook."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open CryptoReportKit panel to connect your API keys and refresh data"/>
+        <bt:String id="GetStarted.Description" DefaultValue="Use CRK functions to get live crypto prices and data. Connect your own API keys (BYOK) for higher rate limits."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open CRK panel to connect your API keys and manage data"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

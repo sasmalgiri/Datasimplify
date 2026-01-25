@@ -1,24 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CryptoReportKit Functions</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CRK Functions Runtime</title>
 
-  <!-- Office.js -->
-  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- Custom Functions Runtime -->
+    <script type="text/javascript">
+        Office.onReady(function() {
+            console.log('[CRK] Functions runtime initialized');
+        });
+    </script>
+
+    <!-- Custom Functions Implementation -->
+    <script type="text/javascript" src="/addin/functions.js"></script>
 </head>
 <body>
-  <!-- This page hosts the custom functions runtime -->
-  <!-- It is loaded in a hidden iframe by Excel -->
-
-  <script src="functions.js" type="text/javascript"></script>
-
-  <script type="text/javascript">
-    // Initialize Office.js
-    Office.onReady(function(info) {
-      console.log('CryptoReportKit Functions loaded. Host:', info.host);
-    });
-  </script>
+    <!-- This page hosts the custom functions runtime - no visible UI needed -->
+    <div style="display: none;">CRK Functions Runtime</div>
 </body>
 </html>

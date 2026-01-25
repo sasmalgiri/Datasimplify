@@ -23,65 +23,13 @@
       }
     },
     {
-      "id": "PRICES",
-      "name": "PRICES",
-      "description": "Get prices for multiple coins at once. Returns a spilled array.",
-      "parameters": [
-        {
-          "name": "coins",
-          "description": "Comma-separated coin IDs (e.g., 'bitcoin,ethereum,solana')",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
       "id": "CHANGE24H",
       "name": "CHANGE24H",
       "description": "Get 24-hour price change percentage",
       "parameters": [
         {
           "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "CHANGE7D",
-      "name": "CHANGE7D",
-      "description": "Get 7-day price change percentage",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "CHANGE30D",
-      "name": "CHANGE30D",
-      "description": "Get 30-day price change percentage",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "description": "Coin ID",
           "type": "string"
         }
       ],
@@ -96,7 +44,7 @@
       "parameters": [
         {
           "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "description": "Coin ID",
           "type": "string"
         },
         {
@@ -113,11 +61,11 @@
     {
       "id": "VOLUME",
       "name": "VOLUME",
-      "description": "Get 24-hour trading volume",
+      "description": "Get 24h trading volume",
       "parameters": [
         {
           "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
+          "description": "Coin ID",
           "type": "string"
         },
         {
@@ -125,108 +73,6 @@
           "description": "Currency (default: usd)",
           "type": "string",
           "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "RANK",
-      "name": "RANK",
-      "description": "Get market cap rank",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "ATH",
-      "name": "ATH",
-      "description": "Get all-time high price",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "ATL",
-      "name": "ATL",
-      "description": "Get all-time low price",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "CIRCULATING",
-      "name": "CIRCULATING",
-      "description": "Get circulating supply",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "TOTALSUPPLY",
-      "name": "TOTALSUPPLY",
-      "description": "Get total supply",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "MAXSUPPLY",
-      "name": "MAXSUPPLY",
-      "description": "Get maximum supply",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
         }
       ],
       "result": {
@@ -236,33 +82,11 @@
     {
       "id": "OHLCV",
       "name": "OHLCV",
-      "description": "Get OHLCV data (Open, High, Low, Close, Volume). Spills to a range.",
+      "description": "Get OHLCV data (spills to range)",
       "parameters": [
         {
           "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Number of days (1, 7, 14, 30, 90, 180, 365). Default: 30",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "HISTORICAL",
-      "name": "HISTORICAL",
-      "description": "Get historical price data. Returns array with dates and prices.",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
+          "description": "Coin ID",
           "type": "string"
         },
         {
@@ -270,524 +94,31 @@
           "description": "Number of days (default: 30)",
           "type": "number",
           "optional": true
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
         }
       ],
       "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "SPARKLINE",
-      "name": "SPARKLINE",
-      "description": "Get 7-day price sparkline data as horizontal array",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "any",
+        "type": "array",
         "dimensionality": "matrix"
       }
     },
     {
       "id": "INFO",
       "name": "INFO",
-      "description": "Get coin metadata (name, symbol, etc.)",
+      "description": "Get coin metadata",
       "parameters": [
         {
           "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
+          "description": "Coin ID",
           "type": "string"
         },
         {
           "name": "field",
-          "description": "Field: name, symbol, rank, ath, atl, circulating_supply, total_supply, max_supply",
+          "description": "Field name (name, symbol, rank, etc.)",
           "type": "string"
         }
       ],
       "result": {
         "type": "any"
-      }
-    },
-    {
-      "id": "RSI",
-      "name": "RSI",
-      "description": "Calculate Relative Strength Index (14-period default)",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 14)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "MACD",
-      "name": "MACD",
-      "description": "Get MACD (Moving Average Convergence Divergence). Returns [MACD, Signal, Histogram]",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "SMA",
-      "name": "SMA",
-      "description": "Calculate Simple Moving Average",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 20)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "EMA",
-      "name": "EMA",
-      "description": "Calculate Exponential Moving Average",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 20)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "BB",
-      "name": "BB",
-      "description": "Calculate Bollinger Bands. Returns [Upper, Middle, Lower]",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 20)",
-          "type": "number",
-          "optional": true
-        },
-        {
-          "name": "stdDev",
-          "description": "Standard Deviations (default: 2)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "STOCH",
-      "name": "STOCH",
-      "description": "Calculate Stochastic Oscillator. Returns [%K, %D]",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 14)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "ATR",
-      "name": "ATR",
-      "description": "Calculate Average True Range (volatility indicator)",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "period",
-          "description": "Period (default: 14)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "VOLATILITY",
-      "name": "VOLATILITY",
-      "description": "Calculate price volatility (standard deviation of returns)",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Period in days (default: 30)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "CORRELATION",
-      "name": "CORRELATION",
-      "description": "Calculate correlation between two coins",
-      "parameters": [
-        {
-          "name": "coin1",
-          "description": "First coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "coin2",
-          "description": "Second coin ID (e.g., ethereum)",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Period in days (default: 30)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "ROI",
-      "name": "ROI",
-      "description": "Calculate Return on Investment over period",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Period in days (default: 30)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "SHARPE",
-      "name": "SHARPE",
-      "description": "Calculate Sharpe Ratio (risk-adjusted return)",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Period in days (default: 30)",
-          "type": "number",
-          "optional": true
-        },
-        {
-          "name": "riskFreeRate",
-          "description": "Risk-free rate (default: 0.02 = 2%)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "GLOBAL",
-      "name": "GLOBAL",
-      "description": "Get global market metrics",
-      "parameters": [
-        {
-          "name": "metric",
-          "description": "Metric: total_market_cap, total_volume, btc_dominance, eth_dominance, market_cap_change_24h",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "DOMINANCE",
-      "name": "DOMINANCE",
-      "description": "Get coin's market dominance percentage",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "FEARGREED",
-      "name": "FEARGREED",
-      "description": "Get Fear & Greed Index (0-100)",
-      "parameters": [
-        {
-          "name": "field",
-          "description": "Field: value, classification, or timestamp (default: value)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any"
-      }
-    },
-    {
-      "id": "TICKER",
-      "name": "TICKER",
-      "description": "Get detailed ticker data for a coin",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "COMPARE",
-      "name": "COMPARE",
-      "description": "Compare multiple coins side-by-side. Returns comparison table.",
-      "parameters": [
-        {
-          "name": "coins",
-          "description": "Comma-separated coin IDs (e.g., 'bitcoin,ethereum,solana')",
-          "type": "string"
-        },
-        {
-          "name": "metric",
-          "description": "Metric to compare: price, market_cap, volume, change_24h (default: price)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "TRENDING",
-      "name": "TRENDING",
-      "description": "Get trending coins (top 7)",
-      "parameters": [],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "GAINERS",
-      "name": "GAINERS",
-      "description": "Get top gainers (24h)",
-      "parameters": [
-        {
-          "name": "limit",
-          "description": "Number of results (default: 10, max: 50)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "LOSERS",
-      "name": "LOSERS",
-      "description": "Get top losers (24h)",
-      "parameters": [
-        {
-          "name": "limit",
-          "description": "Number of results (default: 10, max: 50)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "SEARCH",
-      "name": "SEARCH",
-      "description": "Search for coins by name or symbol",
-      "parameters": [
-        {
-          "name": "query",
-          "description": "Search query (e.g., 'bitcoin', 'BTC')",
-          "type": "string"
-        },
-        {
-          "name": "limit",
-          "description": "Number of results (default: 10)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "EXCHANGES",
-      "name": "EXCHANGES",
-      "description": "Get coin's exchange volume breakdown",
-      "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin)",
-          "type": "string"
-        },
-        {
-          "name": "limit",
-          "description": "Number of exchanges (default: 10)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "CATEGORIES",
-      "name": "CATEGORIES",
-      "description": "Get top performing categories",
-      "parameters": [
-        {
-          "name": "limit",
-          "description": "Number of categories (default: 10)",
-          "type": "number",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "any",
-        "dimensionality": "matrix"
-      }
-    },
-    {
-      "id": "DEFI",
-      "name": "DEFI",
-      "description": "Get DeFi protocol data",
-      "parameters": [
-        {
-          "name": "protocol",
-          "description": "Protocol name (e.g., 'uniswap', 'aave')",
-          "type": "string"
-        },
-        {
-          "name": "metric",
-          "description": "Metric: tvl, volume, fees, revenue (default: tvl)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
-      }
-    },
-    {
-      "id": "GAS",
-      "name": "GAS",
-      "description": "Get current gas prices (Ethereum)",
-      "parameters": [
-        {
-          "name": "speed",
-          "description": "Speed: slow, average, fast (default: average)",
-          "type": "string",
-          "optional": true
-        }
-      ],
-      "result": {
-        "type": "number"
       }
     }
   ]
