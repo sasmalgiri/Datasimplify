@@ -122,23 +122,29 @@ export default async function TemplateDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* CryptoSheets Notice */}
-        <div className="bg-yellow-900/30 border-2 border-yellow-500/50 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-bold text-yellow-400 mb-2">
-            Requires CryptoSheets Excel Add-in
+        {/* CRK Add-in Notice */}
+        <div className="bg-blue-900/30 border-2 border-blue-500/50 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-bold text-blue-400 mb-2">
+            Requires CryptoReportKit Excel Add-in
           </h2>
-          <p className="text-gray-300 text-sm">
-            This template contains CryptoSheets formulas that fetch live data. You need{' '}
-            <a
-              href="https://www.cryptosheets.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-yellow-400 hover:text-yellow-300 underline"
+          <p className="text-gray-300 text-sm mb-3">
+            This template contains CRK formulas that fetch live cryptocurrency data. You need the{' '}
+            <Link
+              href="/addin/setup"
+              className="text-blue-400 hover:text-blue-300 underline"
             >
-              CryptoSheets
-            </a>{' '}
-            installed in Excel Desktop to refresh data. The template does not redistribute market
-            data.
+              CryptoReportKit (CRK) Excel Add-in
+            </Link>{' '}
+            installed in Excel Desktop to refresh data.
+          </p>
+          <p className="text-gray-400 text-xs">
+            <strong>BYOK (Bring Your Own Keys):</strong> Live data is fetched using your own API key(s)
+            from providers like CoinGecko. The template contains formulas only - no embedded data.
+            See{' '}
+            <Link href="/template-requirements" className="text-blue-400 hover:underline">
+              Template Requirements
+            </Link>{' '}
+            for setup instructions.
           </p>
         </div>
 
@@ -216,15 +222,13 @@ export default async function TemplateDetailPage({ params }: PageProps) {
                 2
               </span>
               <span className="text-gray-300">
-                Install{' '}
-                <a
-                  href="https://www.cryptosheets.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                Install the{' '}
+                <Link
+                  href="/addin/setup"
                   className="text-emerald-400 hover:underline"
                 >
-                  CryptoSheets add-in
-                </a>{' '}
+                  CryptoReportKit Excel Add-in
+                </Link>{' '}
                 in Excel Desktop (Insert &gt; Get Add-ins)
               </span>
             </li>
@@ -232,7 +236,9 @@ export default async function TemplateDetailPage({ params }: PageProps) {
               <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold shrink-0">
                 3
               </span>
-              <span className="text-gray-300">Open the template in Excel and sign in to CryptoSheets</span>
+              <span className="text-gray-300">
+                Open the template in Excel, sign in to CRK, and connect your API key(s) (BYOK)
+              </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold shrink-0">

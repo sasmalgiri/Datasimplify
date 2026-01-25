@@ -174,7 +174,7 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     chartType: 'Bar Chart',
     description: 'Futures funding rate history',
     steps: [
-      'Requires CryptoSheets Pro or Binance API',
+      'Requires provider API key (BYOK) - CoinGecko Pro or Binance',
       'Fetch: =CS.FUTURES("COIN", "funding_rate")',
       'Plot as bar chart with positive/negative colors',
       'Add reference line at 0%',
@@ -187,7 +187,7 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     chartType: 'Combo Chart',
     description: 'Open interest with price overlay',
     steps: [
-      'Requires CryptoSheets Pro or exchange API',
+      'Requires provider API key (BYOK) - CoinGecko Pro or exchange',
       'Fetch OI: =CS.FUTURES("COIN", "open_interest")',
       'Combine with price data',
       'Plot OI as area, price as line',
@@ -228,7 +228,7 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     description: 'Not easily recreated in Excel',
     steps: [
       'Requires Glassnode or similar on-chain API',
-      'Data not available in CryptoSheets free tier',
+      'Requires premium provider API tier (BYOK)',
       'Consider using the web dashboard instead',
     ],
   },
@@ -237,10 +237,10 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     tier: 'pro',
     formula: 'N/A - Requires on-chain API',
     chartType: 'Line Chart',
-    description: 'Not available in CryptoSheets free tier',
+    description: 'Requires premium provider API (BYOK)',
     steps: [
       'Requires Glassnode, Santiment, or similar',
-      'Not available in standard CryptoSheets',
+      'Requires on-chain data provider API (BYOK)',
     ],
   },
 
@@ -263,7 +263,7 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     tier: 'pro',
     formula: 'N/A - Requires LunarCrush/Santiment API',
     chartType: 'Bar Chart',
-    description: 'Not available in CryptoSheets free tier',
+    description: 'Requires premium provider API (BYOK)',
     steps: [
       'Requires LunarCrush or Santiment API',
       'Paid subscription needed',
@@ -321,7 +321,7 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
           {!config.supported && (
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
               <p className="text-yellow-400 text-sm">
-                ⚠️ This chart requires specialized data not available in CryptoSheets free tier.
+                ⚠️ This chart requires specialized data from premium provider APIs (BYOK).
               </p>
             </div>
           )}
@@ -376,19 +376,17 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
             </Link>
           </div>
 
-          {/* CryptoSheets Link */}
+          {/* CRK Add-in Link */}
           <div className="text-center pt-2 border-t border-gray-700">
             <p className="text-xs text-gray-500">
               Powered by{' '}
-              <a
-                href="https://cryptosheets.com"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/addin/setup"
                 className="text-blue-400 hover:underline"
               >
-                CryptoSheets
-              </a>
-              {' '}Excel Add-in
+                CryptoReportKit
+              </Link>
+              {' '}Excel Add-in (BYOK)
             </p>
           </div>
         </div>

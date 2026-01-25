@@ -96,7 +96,7 @@ export function Footer() {
                 <li>No market-data redistribution - we do not sell or license raw data.</li>
                 <li>Excel templates contain formulas only (no embedded data) - data is fetched via CRK add-in using your own API key (BYOK).</li>
                 <li>Display-only dashboards for educational visualization.</li>
-                <li><strong>We do not provide or resell API access.</strong> BYOK means you bring your own provider API keys.</li>
+                <li><strong>We do not provide, sell, or redistribute provider API keys or credentials.</strong> BYOK means you bring your own API keys from data providers.</li>
               </ul>
             </div>
           </div>
