@@ -32,7 +32,7 @@ export interface UserTemplateConfig {
   timeframe: string; // '24h', '7d', '30d', '1y'
   currency: string; // 'USD', 'EUR', 'BTC', 'ETH'
   contentType?: ContentType; // Type of content to generate (default: 'addin')
-  formulaMode?: FormulaMode; // 'cryptosheets' (default) or 'crk' for native CRK add-in
+  formulaMode?: FormulaMode; // 'crk' only - CRK Add-in is the native solution
   customizations: {
     includeCharts: boolean;
     metricsList?: string[];
@@ -220,7 +220,7 @@ async function createCRKMetadataSheet(
     timeframe: userConfig.timeframe,
     currency: userConfig.currency,
     contentType,
-    formulaMode: userConfig.formulaMode || 'cryptosheets',
+    formulaMode: userConfig.formulaMode || 'crk',
     customizations: userConfig.customizations,
     templateName: template.name,
     templateDescription: template.description,

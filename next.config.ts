@@ -25,6 +25,27 @@ const nextConfig: NextConfig = {
   // Redirects for broken/moved URLs
   async redirects() {
     return [
+      // Policy pages - ensure consistent URLs
+      {
+        source: '/refund-policy',
+        destination: '/refund',
+        permanent: true,
+      },
+      {
+        source: '/template-setup',
+        destination: '/template-requirements',
+        permanent: true,
+      },
+      {
+        source: '/setup',
+        destination: '/template-requirements',
+        permanent: true,
+      },
+      {
+        source: '/requirements',
+        destination: '/template-requirements',
+        permanent: true,
+      },
       // Fix typo routes - redirect to Smart Contract Verifier
       {
         source: '/safecontract',
