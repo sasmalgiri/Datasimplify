@@ -136,7 +136,7 @@ export default function TermsPage() {
 
             <p className="mb-4">
               <strong>We Do Not Sell or Sublicense Data:</strong> CryptoReportKit <strong>does not sublicense, sell,
-              syndicate, or redistribute provider API access or data</strong> as a standalone product. When using our
+              syndicate, or redistribute provider API keys, credentials, or data</strong> as a standalone product. When using our
               BYOK (Bring Your Own Keys) tools, you are accessing data directly from providers using your own API keys.
               When using our website dashboards, we display data for educational and informational purposes in compliance
               with provider terms.

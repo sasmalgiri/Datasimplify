@@ -300,7 +300,7 @@ export default function DexPoolsPage() {
             <h2 className="text-xl font-semibold text-white">Export DEX Data</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download DEX pool data as Excel templates with live CryptoSheets formulas.
+            Download DEX pool data as Excel templates with live CRK formulas (BYOK).
           </p>
           <Link
             href="/templates"

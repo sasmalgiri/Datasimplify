@@ -170,8 +170,8 @@ export default function GainersLosersPage() {
             <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download market movers data as Excel templates with live CryptoSheets formulas.
-            Track gainers and losers with auto-updating data.
+            Download market movers data as Excel templates with live CRK formulas (BYOK).
+            Track gainers and losers with auto-updating data using your own API keys.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link

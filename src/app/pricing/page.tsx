@@ -346,7 +346,7 @@ export default function PricingPage() {
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              Data is fetched using your own provider API key(s). We do not provide or resell API access.
+              Data is fetched using your own provider API key(s). We do not provide, sell, or redistribute provider API keys or credentials.
             </p>
           </div>
 

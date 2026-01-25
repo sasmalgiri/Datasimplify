@@ -226,7 +226,7 @@ export default function CategoriesPage() {
             <h2 className="text-xl font-semibold text-white">Export Category Data</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download category data as Excel templates with live CryptoSheets formulas.
+            Download category data as Excel templates with live CRK formulas (BYOK).
           </p>
           <Link
             href="/templates"

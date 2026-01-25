@@ -106,7 +106,7 @@ export default function TrendingPage() {
             <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download trending coins and market movers data as Excel templates with live CryptoSheets formulas.
+            Download trending coins and market movers data as Excel templates with live CRK formulas (BYOK).
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
