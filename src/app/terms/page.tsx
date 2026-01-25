@@ -103,8 +103,9 @@ export default function TermsPage() {
               <li><strong>Not Investment Advice:</strong> Do not constitute financial or investment recommendations</li>
               <li><strong>Public Display Use:</strong> Displayed publicly on our website. We aim to comply with provider terms; use is subject to provider policies; availability may change.</li>
               <li><strong>Not for Redistribution:</strong> You may not scrape, export, or redistribute this data commercially</li>
-              <li><strong>Attribution Provided:</strong> Data providers are credited on our{' '}
-                <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page</li>
+              <li><strong>Attribution Provided:</strong> Required attribution (e.g., &quot;Powered by CoinGecko API&quot;)
+                is displayed in-product wherever provider data is shown, including loading states. See our{' '}
+                <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page for the full list of providers.</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.3 BYOK (Bring Your Own Keys) Software Tools</h3>
@@ -122,17 +123,56 @@ export default function TermsPage() {
                 not to CryptoReportKit</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.4 Third-Party Data Provider Terms</h3>
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.4 Third-Party Data Providers</h3>
+
             <p className="mb-4">
-              Market data is sourced from third-party APIs. You agree to:
+              <strong>Provider Ownership & Rights:</strong> All market data displayed on our platform or accessed via
+              the CRK add-in is sourced from third-party data providers, including but not limited to{' '}
+              <strong>CoinGecko</strong> (cryptocurrency market data), Binance (trading data), and others listed on our{' '}
+              <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
+              This data remains the <strong>intellectual property of the respective providers</strong>.
+              CryptoReportKit does not claim ownership of provider data.
+            </p>
+
+            <p className="mb-4">
+              <strong>We Do Not Sell or Sublicense Data:</strong> CryptoReportKit <strong>does not sublicense, sell,
+              syndicate, or redistribute provider API access or data</strong> as a standalone product. When using our
+              BYOK (Bring Your Own Keys) tools, you are accessing data directly from providers using your own API keys.
+              When using our website dashboards, we display data for educational and informational purposes in compliance
+              with provider terms.
+            </p>
+
+            <p className="mb-4">
+              <strong>Required Provider Attribution:</strong> We display required attribution (e.g., &quot;Powered by
+              CoinGecko API&quot;) <strong>in-product wherever provider data is shown</strong>, including in loading states,
+              error states, and data displays. This ensures compliance with provider terms of service. A full list of data
+              providers is available on our <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
+            </p>
+
+            <p className="mb-4">
+              <strong>Your Compliance Obligations:</strong> When using our Services, you agree to:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
               <li>Review and comply with each provider&apos;s terms of service (see{' '}
                 <a href="/data-sources" className="underline text-blue-700">Data Sources</a>)</li>
               <li>Respect rate limits and usage restrictions of your API tier (free, pro, etc.)</li>
-              <li>Understand that CryptoReportKit is not liable for provider API downtime, data accuracy, or policy changes</li>
               <li>Not violate provider policies (e.g., no unauthorized resale of data obtained via your keys)</li>
+              <li>Understand that CryptoReportKit is not liable for provider API downtime, data accuracy, or policy changes</li>
+              <li>Acknowledge that provider terms may change and it is your responsibility to remain compliant</li>
             </ul>
+
+            <p className="mb-4">
+              <strong>Server-Side Caching:</strong> To improve performance and reduce API load, we may cache data
+              server-side with a Time-to-Live (TTL) of <strong>up to 24 hours</strong>. Cached data is refreshed
+              regularly to ensure compliance with provider requirements (e.g., CoinGecko expects data to be refreshed
+              at least every 24 hours). You acknowledge that data displayed on our website may be cached and may not
+              reflect real-time information.
+            </p>
+
+            <p className="text-blue-800 font-semibold">
+              <strong>Summary:</strong> Provider data is their property. We display it in-product with proper attribution.
+              We do not resell or sublicense access. You must comply with provider terms when using BYOK features.
+            </p>
 
             <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.5 No Trading Execution</h3>
             <p className="mb-4">
@@ -166,27 +206,27 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Subscriptions and Payments</h2>
 
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.1 Billing</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.1 Billing</h3>
             <p className="mb-4">
               Paid Subscriptions are billed in advance on a monthly or annual basis, depending on your
               selected plan. Payments are processed securely through our payment provider.
               <strong className="text-amber-600"> Note: Paid plans and payment processing are coming soon.</strong>
             </p>
             
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.2 Automatic Renewal</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.2 Automatic Renewal</h3>
             <p className="mb-4">
               Subscriptions automatically renew at the end of each billing period unless cancelled 
               before the renewal date. You may cancel your Subscription at any time through your 
               account settings or by contacting support.
             </p>
             
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.3 Price Changes</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.3 Price Changes</h3>
             <p className="mb-4">
               We reserve the right to modify Subscription prices. Any price changes will be communicated 
               to you in advance and will apply to subsequent billing periods.
             </p>
             
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">6.4 Refund Policy</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.4 Refund Policy</h3>
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
               <p className="mb-3">
                 <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> We offer a full refund
