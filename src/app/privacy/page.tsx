@@ -37,7 +37,12 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Account Information:</strong> Email address, name (optional), password</li>
               <li><strong>Profile Information:</strong> Preferences, settings, communication choices</li>
-              <li><strong>Payment Information:</strong> Processed securely by our payment provider (coming soon). We do not store your credit card details.</li>
+              <li><strong>Payment Information:</strong> Processed securely by{' '}
+                <a href="https://www.paddle.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  Paddle
+                </a>{' '}
+                (Paddle.com Market Limited), our Merchant of Record. We do not store your credit card details.
+                Paddle receives your payment information, billing address, and transaction details when you purchase a subscription.</li>
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
               <li><strong>API Keys (BYOK):</strong> If you use our Bring Your Own Key (BYOK) feature, you may
@@ -112,10 +117,15 @@ export default function PrivacyPage() {
               <li>
                 <strong>Service Providers:</strong> Third parties who help us operate our Services:
                 <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                  <li><strong>Payment Provider:</strong> Payment processing (coming soon)</li>
+                  <li><strong>Paddle (Paddle.com Market Limited):</strong> Payment processing, subscription management,
+                    and billing as our Merchant of Record. Paddle receives your payment details, billing address,
+                    email, and transaction information. See{' '}
+                    <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      Paddle&apos;s Privacy Policy
+                    </a>.</li>
                   <li><strong>Supabase:</strong> Database and authentication services</li>
                   <li><strong>Vercel:</strong> Website hosting and content delivery</li>
-                  <li><strong>Data Providers:</strong> Market data aggregation services</li>
+                  <li><strong>Data Providers:</strong> Market data aggregation services (CoinGecko, Binance, etc.)</li>
                 </ul>
               </li>
               <li><strong>Legal Requirements:</strong> If required by law, court order, or government request</li>
@@ -363,7 +373,7 @@ export default function PrivacyPage() {
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Who we share with:</p>
-                <p className="text-gray-600">Only service providers (Supabase, Vercel)</p>
+                <p className="text-gray-600">Only service providers (Paddle, Supabase, Vercel)</p>
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Your rights:</p>
