@@ -36,13 +36,13 @@ const DATA_SOURCES: DataSource[] = [
   {
     name: 'Finnhub',
     url: 'https://finnhub.io',
-    license: 'API access (terms apply)',
+    license: 'Provider API (terms apply)',
     note: 'News and sentiment data',
   },
   {
     name: 'Etherscan',
     url: 'https://etherscan.io',
-    license: 'API access (terms apply)',
+    license: 'Provider API (terms apply)',
     note: 'Ethereum blockchain data',
   },
   {

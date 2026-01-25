@@ -150,7 +150,7 @@ export default function RecentlyAddedPage() {
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
             <p className="text-red-400">{error}</p>
             <p className="text-gray-400 text-sm mt-2">
-              Recently added coins data requires CoinGecko API access
+              Data powered by CoinGecko API - try refreshing
             </p>
           </div>
         )}
