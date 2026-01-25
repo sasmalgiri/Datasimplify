@@ -11,9 +11,8 @@ import { DataPreview } from '@/components/DataPreview';
 import { RequirementsGate } from '@/components/download/RequirementsGate';
 import { QuotaEstimator } from '@/components/download/QuotaEstimator';
 import { TemplateControls } from '@/components/download/TemplateControls';
-import { FormulaModePicker } from '@/components/download/FormulaModePicker';
+import { CRKAddInInfo } from '@/components/download/FormulaModePicker';
 import type { RefreshFrequency } from '@/lib/templates/templateModes';
-import type { FormulaMode } from '@/lib/templates/generator';
 import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
 export default function DownloadPage() {
@@ -31,7 +30,7 @@ export default function DownloadPage() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1d'); // Daily only in Low-Quota Mode
   const [refreshFrequency, setRefreshFrequency] = useState<RefreshFrequency>('manual'); // Manual by default
   const [includeCharts, setIncludeCharts] = useState(true);
-  const [formulaMode, setFormulaMode] = useState<FormulaMode>('cryptosheets'); // CryptoSheets until CRK add-in is ready
+  // Formula mode is always 'crk' - no other options
 
   // Load templates on mount
   useEffect(() => {
@@ -91,13 +90,8 @@ export default function DownloadPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                   {/* Left Column: Controls */}
                   <div className="lg:col-span-2 space-y-6">
-                    {/* Formula Mode Picker */}
-                    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-                      <FormulaModePicker
-                        mode={formulaMode}
-                        onChange={setFormulaMode}
-                      />
-                    </div>
+                    {/* CRK Add-in Info */}
+                    <CRKAddInInfo />
 
                     {/* Template Controls */}
                     <TemplateControls
@@ -269,7 +263,7 @@ export default function DownloadPage() {
           coins: selectedCoins,
           timeframe: selectedTimeframe,
           currency: 'USD',
-          formulaMode,
+          formulaMode: 'crk', // CRK Add-in only
           customizations: {
             includeCharts,
             refreshFrequency,

@@ -1,151 +1,101 @@
 'use client';
 
-import { Info, CheckCircle } from 'lucide-react';
-import type { FormulaMode } from '@/lib/templates/generator';
-
-interface FormulaModePickerProps {
-  mode: FormulaMode;
-  onChange: (mode: FormulaMode) => void;
-  className?: string;
-}
+import { Info, CheckCircle, Key, Zap, Shield } from 'lucide-react';
 
 /**
- * FormulaModePicker - Choose between CryptoSheets and CRK formula formats
+ * CRKAddInInfo - Information card about the CRK Excel Add-in
  *
- * Used on the download page to let users select which Excel add-in they want
- * their templates generated for.
+ * Displays features and requirements for the CRK add-in.
+ * No mode selection - CRK is the only option.
  */
-export function FormulaModePicker({ mode, onChange, className = '' }: FormulaModePickerProps) {
+export function CRKAddInInfo({ className = '' }: { className?: string }) {
   return (
-    <div className={`space-y-3 ${className}`}>
-      <label className="block text-sm font-medium text-gray-300">
-        Excel Add-in
-      </label>
+    <div className={`space-y-4 ${className}`}>
+      <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="p-3 bg-emerald-500/10 rounded-lg">
+            <span className="text-3xl">📊</span>
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-lg font-semibold text-white">CRK Excel Add-in</h3>
+              <span className="text-xs px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-full font-medium border border-emerald-500/30">
+                ✓ Active
+              </span>
+            </div>
+            <p className="text-sm text-gray-400">
+              Native Excel add-in with BYOK (Bring Your Own Keys) architecture.
+              Connect your own API keys for unlimited data access.
+            </p>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {/* CryptoSheets Option (Working Now) */}
-        <button
-          type="button"
-          onClick={() => onChange('cryptosheets')}
-          className={`relative p-4 rounded-lg border-2 text-left transition-all ${
-            mode === 'cryptosheets'
-              ? 'border-emerald-500 bg-emerald-500/10'
-              : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
-          }`}
-        >
-          {mode === 'cryptosheets' && (
-            <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-emerald-500" />
-          )}
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl" role="img" aria-label="link">
-              🔗
-            </span>
-            <span className="font-medium text-white">CryptoSheets</span>
-            <span className="text-xs px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded font-medium">
-              Works Now
-            </span>
+        {/* Key Features */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg">
+            <Key className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium text-white mb-1">BYOK Architecture</h4>
+              <p className="text-xs text-gray-400">Use your own API keys - no rate limits from us</p>
+            </div>
           </div>
 
-          <p className="text-xs text-gray-400 mb-3">
-            Third-party add-in with its own subscription.
-          </p>
-
-          <ul className="text-xs text-gray-500 space-y-1">
-            <li className="flex items-center gap-1">
-              <span className="text-emerald-500">✓</span> Free tier available
-            </li>
-            <li className="flex items-center gap-1">
-              <span className="text-emerald-500">✓</span> Well-established add-in
-            </li>
-            <li className="flex items-center gap-1">
-              <span className="text-emerald-500">✓</span> Works with existing templates
-            </li>
-          </ul>
-        </button>
-
-        {/* CRK Add-in Option (Coming Soon) */}
-        <button
-          type="button"
-          onClick={() => onChange('crk')}
-          className={`relative p-4 rounded-lg border-2 text-left transition-all ${
-            mode === 'crk'
-              ? 'border-emerald-500 bg-emerald-500/10'
-              : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'
-          }`}
-        >
-          {mode === 'crk' && (
-            <CheckCircle className="absolute top-3 right-3 w-5 h-5 text-emerald-500" />
-          )}
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl" role="img" aria-label="chart">
-              📊
-            </span>
-            <span className="font-medium text-white">CRK Add-in</span>
-            <span className="text-xs px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded font-medium">
-              Coming Soon
-            </span>
+          <div className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg">
+            <Zap className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium text-white mb-1">50+ Functions</h4>
+              <p className="text-xs text-gray-400">Comprehensive data, charts, and indicators</p>
+            </div>
           </div>
 
-          <p className="text-xs text-gray-400 mb-3">
-            Our native Excel add-in with BYOK (Bring Your Own Key) support.
-          </p>
+          <div className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg">
+            <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium text-white mb-1">AES-256 Encrypted</h4>
+              <p className="text-xs text-gray-400">Your API keys stored with bank-grade security</p>
+            </div>
+          </div>
+        </div>
 
-          <ul className="text-xs text-gray-500 space-y-1">
-            <li className="flex items-center gap-1">
-              <span className="text-gray-600">•</span> No third-party dependency
-            </li>
-            <li className="flex items-center gap-1">
-              <span className="text-gray-600">•</span> Connect your own API keys
-            </li>
-            <li className="flex items-center gap-1">
-              <span className="text-gray-600">•</span> Higher rate limits with Pro keys
-            </li>
-          </ul>
-        </button>
+        {/* Function Categories */}
+        <div className="bg-gray-800/30 rounded-lg p-4 border border-gray-700">
+          <h4 className="text-sm font-medium text-white mb-3">Available Functions</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <div className="text-emerald-400 font-medium mb-1">Price Data</div>
+              <div className="text-gray-400">PRICE, CHANGE24H, MARKETCAP, VOLUME</div>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-medium mb-1">Historical</div>
+              <div className="text-gray-400">OHLCV, HISTORICAL, SPARKLINE</div>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-medium mb-1">Technical</div>
+              <div className="text-gray-400">RSI, MACD, SMA, EMA, BB, STOCH</div>
+            </div>
+            <div>
+              <div className="text-emerald-400 font-medium mb-1">Market</div>
+              <div className="text-gray-400">GLOBAL, DOMINANCE, FEARGREED</div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Info box based on selection */}
-      {mode === 'cryptosheets' && (
-        <div className="flex items-start gap-2 p-3 bg-emerald-500/10 rounded-lg text-xs border border-emerald-500/30">
-          <Info className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-          <div className="text-gray-300">
-            <p className="mb-1">
-              <strong className="text-white">Ready to use:</strong> CryptoSheets has a free tier (100 calls/day).
-            </p>
-            <p>
-              Get CryptoSheets at{' '}
-              <a
-                href="https://cryptosheets.com"
-                className="text-emerald-400 hover:text-emerald-300 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                cryptosheets.com
-              </a>
-              . Works with both Excel desktop and Excel Online.
-            </p>
-          </div>
+      {/* Installation Info */}
+      <div className="flex items-start gap-2 p-4 bg-emerald-500/10 rounded-lg text-xs border border-emerald-500/30">
+        <Info className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+        <div className="text-gray-300">
+          <p className="mb-2">
+            <strong className="text-white">Installation Required:</strong> After downloading your template,
+            you&apos;ll need to install the CRK Add-in from the Microsoft Office Store.
+          </p>
+          <p className="text-gray-400">
+            <strong>Supported Providers:</strong> CoinGecko (free/pro), Binance, CoinMarketCap, Alternative.me (Fear & Greed)
+          </p>
         </div>
-      )}
-
-      {mode === 'crk' && (
-        <div className="flex items-start gap-2 p-3 bg-yellow-500/10 rounded-lg text-xs border border-yellow-500/30">
-          <Info className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
-          <div className="text-gray-300">
-            <p className="mb-1">
-              <strong className="text-yellow-400">⚠️ Not Available Yet:</strong> The CRK add-in is still in development.
-            </p>
-            <p>
-              Templates generated with CRK formulas will show #NAME? errors until the add-in is released.
-              Use CryptoSheets for working templates.
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
 
-export default FormulaModePicker;
+export default CRKAddInInfo;
