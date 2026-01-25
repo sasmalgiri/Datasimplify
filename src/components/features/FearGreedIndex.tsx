@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { BeginnerTip, InfoButton } from '../ui/BeginnerHelpers';
+import { PoweredByCoinGecko } from '../PoweredByCoinGecko';
 
 // Bar component using ref to set height dynamically (avoids inline style attribute)
 function HistoryBar({ height, bgClass, title }: { height: number; bgClass: string; title: string }) {
@@ -301,6 +302,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
           </div>
         </div>
       )}
+      <PoweredByCoinGecko className="mt-4" />
     </div>
   );
 }

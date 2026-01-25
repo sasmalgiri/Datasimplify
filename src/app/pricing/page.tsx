@@ -55,7 +55,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
   'Everything in Pro': 'All Pro tier features included.',
   'Priority generation': 'Faster template generation with dedicated processing.',
   'Up to 500 coins per template': 'Large templates for comprehensive market coverage.',
-  'API access': 'Use authenticated API endpoints for integrations and automation.',
+  'Advanced Excel functions + connectors': 'Use authenticated API endpoints for integrations and automation.',
   'Priority support (4hr response)': 'Priority support with 4-hour response time during business hours.',
   'Custom integrations': 'Work with our team to build custom template integrations for your workflow.',
 };
@@ -275,7 +275,7 @@ export default function PricingPage() {
         'Unlimited downloads',
         'Up to 500 coins per template',
         'Priority generation',
-        'API access',
+        'Advanced Excel functions + connectors',
         'Priority support (4hr response)',
         'Custom integrations',
       ],
@@ -345,6 +345,9 @@ export default function PricingPage() {
                 <strong>BYOK:</strong> Templates use your own API key (e.g., CoinGecko free or Pro). Your keys are encrypted and never shared.
               </span>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Data is fetched using your own provider API key(s). We do not provide or resell API access.
+            </p>
           </div>
 
           {/* 30-Day Money-Back Guarantee Badge */}

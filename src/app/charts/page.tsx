@@ -39,14 +39,13 @@ import {
   Brush,
 } from 'recharts';
 
+import { LoadingWithAttribution, CoinGeckoAttribution, EmptyWithAttribution } from '@/components/CoinGeckoAttribution';
+
 // Loading fallback for Suspense
 function ChartLoading() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-400">Loading charts...</p>
-      </div>
+      <LoadingWithAttribution message="Loading charts" className="min-h-[400px]" />
     </div>
   );
 }
@@ -814,12 +813,15 @@ function ChartsContent() {
 
   // Render different chart types
   const renderChart = () => {
-    if (isLoading || chartData.length === 0) {
+    if (isLoading) {
+      return <LoadingWithAttribution message="Loading chart data" className="h-96" />;
+    }
+
+    if (chartData.length === 0) {
       return (
-        <div className="flex items-center justify-center h-96">
-          <div className="text-gray-400">
-            {isLoading ? 'Loading chart data...' : 'No data available'}
-          </div>
+        <div className="flex flex-col items-center justify-center h-96 gap-4">
+          <span className="text-gray-400">No data available</span>
+          <CoinGeckoAttribution variant="compact" />
         </div>
       );
     }
@@ -1097,7 +1099,7 @@ function ChartsContent() {
         const matrix = correlationMatrix as CorrelationRow[] | null;
 
         if (matrix === null) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">Loading correlation data...</div>;
+          return <LoadingWithAttribution message="Loading correlation data" className="h-96" />;
         }
 
         if (matrix.length === 0) {
@@ -1492,7 +1494,7 @@ function ChartsContent() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-48 text-gray-500">Loading historical data...</div>
+                  <LoadingWithAttribution message="Loading historical data" className="h-48" />
                 )}
               </div>
 
@@ -1602,7 +1604,7 @@ function ChartsContent() {
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-48 text-gray-500">Loading historical data...</div>
+                  <LoadingWithAttribution message="Loading historical data" className="h-48" />
                 )}
               </div>
 
@@ -1622,7 +1624,7 @@ function ChartsContent() {
 
       case 'whale_flow':
         if (whaleFlows === null) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">Loading whale flow data...</div>;
+          return <LoadingWithAttribution message="Loading whale flow data" className="h-96" />;
         }
 
         if (!Array.isArray(whaleFlows) || whaleFlows.length === 0) {
@@ -1714,7 +1716,7 @@ function ChartsContent() {
 
       case 'fear_greed_history':
         if (fearGreedHistory === null) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">Loading fear & greed data...</div>;
+          return <LoadingWithAttribution message="Loading fear & greed data" className="h-96" />;
         }
 
         if (!Array.isArray(fearGreedHistory) || fearGreedHistory.length === 0) {
@@ -1787,7 +1789,7 @@ function ChartsContent() {
       case 'social_volume':
         {
           if (communityData === null) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">Loading community data...</div>;
+            return <LoadingWithAttribution message="Loading community data" className="h-96" />;
           }
 
           const formatNumber = (n: number) => {
@@ -1904,8 +1906,11 @@ function ChartsContent() {
                 </div>
               )}
 
-              <div className="text-xs text-gray-500 text-center">
-                Data from CoinGecko API (free tier) • For display purposes only
+              <div className="flex justify-center">
+                <CoinGeckoAttribution variant="footer" />
+              </div>
+              <div className="text-xs text-gray-500 text-center mt-2">
+                For educational and display purposes only
               </div>
             </div>
           );
