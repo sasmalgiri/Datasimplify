@@ -629,9 +629,17 @@ export default function TaskpanePage() {
             />
           ))}
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Connect your own API keys for higher rate limits
-        </p>
+        <div className="text-xs text-gray-500 mt-2">
+          <p>Connect your own API keys for higher rate limits (BYOK).</p>
+          <a
+            href="https://cryptoreportkit.com/byok"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+          >
+            How to get a CoinGecko API key ↗
+          </a>
+        </div>
       </div>
 
       {/* Quick Functions */}
@@ -686,6 +694,7 @@ function ProviderKeyRow({
   const [isEditing, setIsEditing] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const providerNames: Record<Provider, string> = {
@@ -695,8 +704,27 @@ function ProviderKeyRow({
     messari: 'Messari',
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const providerUrls: Record<Provider, { signup: string; dashboard: string }> = {
+    coingecko: {
+      signup: 'https://www.coingecko.com/en/api/pricing',
+      dashboard: 'https://www.coingecko.com/en/developers/dashboard',
+    },
+    binance: {
+      signup: 'https://www.binance.com/en/my/settings/api-management',
+      dashboard: 'https://www.binance.com/en/my/settings/api-management',
+    },
+    coinmarketcap: {
+      signup: 'https://coinmarketcap.com/api/',
+      dashboard: 'https://coinmarketcap.com/api/',
+    },
+    messari: {
+      signup: 'https://messari.io/api',
+      dashboard: 'https://messari.io/api',
+    },
+  };
+
+  const handleVerify = async () => {
+    setIsVerifying(true);
     setError(null);
 
     try {
@@ -707,17 +735,19 @@ function ProviderKeyRow({
       });
 
       if (res.ok) {
+        setIsSaving(false);
+        setIsVerifying(false);
         setApiKey('');
         setIsEditing(false);
         onUpdate();
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to save key');
+        setError(data.error || 'Failed to verify key');
+        setIsVerifying(false);
       }
     } catch {
       setError('Network error');
-    } finally {
-      setIsSaving(false);
+      setIsVerifying(false);
     }
   };
 
@@ -732,32 +762,52 @@ function ProviderKeyRow({
 
   if (isEditing) {
     return (
-      <div className="p-3 bg-gray-800 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="p-3 bg-gray-800 rounded-lg border border-gray-700">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium">{providerNames[provider]}</span>
+          <a
+            href={providerUrls[provider].signup}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Get API Key ↗
+          </a>
         </div>
+
         <input
           type="password"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Enter API key"
+          placeholder={provider === 'coingecko' ? 'CG-xxxxxxxxxxxxxxxxxxxx' : 'Enter API key'}
           className="w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm mb-2 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
         />
+
         {error && <p className="text-xs text-red-400 mb-2">{error}</p>}
+
+        {provider === 'coingecko' && (
+          <div className="bg-amber-900/20 border border-amber-500/30 rounded p-2 mb-2">
+            <p className="text-[10px] text-amber-400">
+              ⚠️ Treat your API key like a password. Never share it or paste it in spreadsheet cells.
+            </p>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button
-            onClick={handleSave}
-            disabled={isSaving || !apiKey}
-            className="flex-1 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 rounded text-xs transition-colors"
+            onClick={handleVerify}
+            disabled={isVerifying || !apiKey}
+            className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-600 rounded text-xs transition-colors font-medium"
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            {isVerifying ? 'Verifying...' : 'Verify Key'}
           </button>
           <button
             onClick={() => {
               setIsEditing(false);
               setError(null);
+              setApiKey('');
             }}
-            className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
+            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded text-xs transition-colors"
           >
             Cancel
           </button>
@@ -768,12 +818,26 @@ function ProviderKeyRow({
 
   return (
     <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-1">
         <span className={`w-2 h-2 rounded-full ${status.connected ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-        <span className="text-sm">{providerNames[provider]}</span>
-        {status.hint && (
-          <span className="text-xs text-gray-500">****{status.hint}</span>
-        )}
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">{providerNames[provider]}</span>
+            {status.hint && (
+              <span className="text-xs text-gray-500">****{status.hint}</span>
+            )}
+          </div>
+          {status.connected && (
+            <a
+              href={providerUrls[provider].dashboard}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              View usage ↗
+            </a>
+          )}
+        </div>
       </div>
       {status.connected ? (
         <button
