@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
  * Admin Dashboard - User Management
  *
  * Protected page for managing user subscriptions.
- * Used for manual plan overrides while Paddle integration is pending.
  */
 
 interface User {
@@ -18,8 +17,6 @@ interface User {
   subscription_status: string | null;
   downloads_limit: number;
   downloads_this_month: number;
-  paddle_subscription_id: string | null;
-  paddle_customer_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -227,9 +224,6 @@ export default function AdminPage() {
                     Downloads
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
-                    Paddle
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
                     Joined
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
@@ -240,13 +234,13 @@ export default function AdminPage() {
               <tbody className="divide-y divide-gray-700">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                       Loading...
                     </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                       No users found
                     </td>
                   </tr>
@@ -285,13 +279,6 @@ export default function AdminPage() {
                           <span className="text-white">{user.downloads_this_month}</span>
                           <span className="text-gray-500"> / {user.downloads_limit}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {user.paddle_subscription_id ? (
-                          <span className="text-xs text-emerald-400">Connected</span>
-                        ) : (
-                          <span className="text-xs text-gray-500">-</span>
-                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-400">
                         {new Date(user.created_at).toLocaleDateString()}

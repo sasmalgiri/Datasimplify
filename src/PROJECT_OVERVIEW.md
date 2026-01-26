@@ -128,9 +128,9 @@ Important behavior:
   - `CLEANUP_SECRET`
   - `CLEANUP_ALLOW_VERCEL_CRON=true` (optional; authorizes Vercel cron user-agent)
 
-### 4.5 Payments (Paddle)
+### 4.5 Payments
 
-- `PADDLE_*` and `NEXT_PUBLIC_PADDLE_*` settings
+- Payment integration to be added (coming soon)
 
 ### 4.6 External integrations
 
@@ -259,8 +259,7 @@ Below is a grouped list of API endpoints present under `src/app/api/**/route.ts`
 
 ### 7.7 Payments
 
-- `/api/paddle/checkout`
-- `/api/paddle/webhook`
+- Payment API endpoints (coming soon)
 
 ### 7.8 Maintenance
 

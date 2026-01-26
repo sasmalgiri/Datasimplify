@@ -7,7 +7,7 @@ import { FEATURES } from '@/lib/featureFlags';
 
 // Check feature flag at build/request time - return 404 if disabled
 export default function RiskPage() {
-  // In paddle_safe mode, risk feature is disabled - return proper 404
+  // Return 404 if risk feature is disabled
   if (!FEATURES.risk) {
     notFound();
   }

@@ -2,7 +2,6 @@
  * Admin API - User Management
  *
  * Protected admin endpoints for managing user subscriptions.
- * Used for manual plan overrides while Paddle is pending.
  *
  * GET /api/admin/users - List users (admin only)
  * PATCH /api/admin/users - Update user plan (admin only)
@@ -70,8 +69,6 @@ export async function GET(request: NextRequest) {
       subscription_status,
       downloads_limit,
       downloads_this_month,
-      paddle_subscription_id,
-      paddle_customer_id,
       created_at,
       updated_at
     `,

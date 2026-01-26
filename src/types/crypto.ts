@@ -127,8 +127,6 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   tier: 'free' | 'pro' | 'premium';
-  paddle_customer_id?: string;
-  paddle_subscription_id?: string;
   status: 'active' | 'canceled' | 'past_due';
   current_period_end?: string;
 }
@@ -139,7 +137,6 @@ export interface SubscriptionTier {
   price: number;
   downloads_per_month: number;
   features: string[];
-  paddle_price_id?: string;
 }
 
 // API Response types

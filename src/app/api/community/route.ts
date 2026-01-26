@@ -118,7 +118,7 @@ export async function GET(request: Request) {
 
 // POST - Create new prediction
 export async function POST(request: Request) {
-  // Community feature is disabled in paddle_safe mode
+  // Check if community feature is enabled
   if (!isFeatureEnabled('community')) {
     return NextResponse.json({ error: 'Feature disabled' }, { status: 404 });
   }

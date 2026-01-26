@@ -55,7 +55,6 @@ const SUSPICIOUS_PATHS = [
 const PROTECTED_API_ROUTES = [
   '/api/user/register',
   '/api/templates/download',
-  '/api/paddle/webhook',
 ];
 
 function getClientIp(request: NextRequest): string {

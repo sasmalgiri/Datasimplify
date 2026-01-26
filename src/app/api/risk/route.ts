@@ -133,7 +133,7 @@ async function buildCoinRisk(coinId: string, days: number): Promise<CoinRisk | n
 }
 
 export async function GET(request: Request) {
-  // Risk feature is disabled in paddle_safe mode - return 404
+  // Check if risk feature is enabled
   if (!FEATURES.risk) {
     return NextResponse.json(
       { error: 'Risk analysis feature is disabled', code: 'FEATURE_DISABLED' },

@@ -33,7 +33,7 @@ export default function DownloadButton({
     lg: 'px-6 py-3 text-lg',
   };
 
-  // IMPORTANT (Paddle-safe + licensing posture): this app ships templates (formulas/workflows),
+  // IMPORTANT: this app ships templates (formulas/workflows),
   // not raw market-data exports. This button is intentionally template-only.
   void coins;
   void filename;

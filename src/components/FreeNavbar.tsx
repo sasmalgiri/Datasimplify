@@ -112,7 +112,7 @@ export function FreeNavbar() {
         { href: '/correlation', label: 'Correlation', description: 'How assets move together', icon: <Scale className="w-4 h-4" /> },
         // On-chain hidden until properly implemented
         ...(isFeatureEnabled('onchain') ? [{ href: '/onchain', label: 'On-Chain Analytics', description: 'Network activity and on-chain metrics', icon: <Zap className="w-4 h-4" /> }] : []),
-        // Risk metrics hidden in paddle_safe mode (could be perceived as trading advice)
+        // Risk metrics (optional feature)
         ...(isFeatureEnabled('risk') ? [{ href: '/risk', label: 'Risk Metrics', description: 'Risk stats and explanations', icon: <Shield className="w-4 h-4" /> }] : []),
       ],
     },
