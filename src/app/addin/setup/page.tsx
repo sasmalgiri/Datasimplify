@@ -224,19 +224,6 @@ export default function AddinSetupPage() {
                         <ExternalLink className="w-3 h-3 inline ml-1" />
                       </a>
                     </li>
-                    <li>
-                      <strong>CoinMarketCap</strong> - Free plan available at{' '}
-                      <a
-                        href="https://coinmarketcap.com/api/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-emerald-600 hover:underline"
-                      >
-                        coinmarketcap.com/api
-                        <ExternalLink className="w-3 h-3 inline ml-1" />
-                      </a>
-                    </li>
-                    <li><strong>Messari</strong> - For enterprise data</li>
                   </ul>
                   <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
                     <p className="text-sm text-orange-900">

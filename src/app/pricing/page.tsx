@@ -365,7 +365,7 @@ export default function PricingPage() {
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">What about API rate limits?</h3>
-                <p className="text-gray-600">Rate limits depend on your CoinGecko plan. Free Demo API: 10K calls/month. CoinGecko Pro: 500K+ calls/month. Our templates are optimized for efficient API usage.</p>
+                <p className="text-gray-600">Rate limits depend on your CoinGecko plan (Demo, Analyst, Pro). See <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-emerald-600 underline">CoinGecko pricing</a> for current limits. Our templates are optimized for efficient API usage.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">When will paid plans launch?</h3>

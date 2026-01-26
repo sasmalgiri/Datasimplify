@@ -51,6 +51,10 @@ export default function BYOKPage() {
               <span><strong>Compliance:</strong> You comply directly with CoinGecko&apos;s terms of service</span>
             </li>
           </ul>
+          <p className="mt-4 text-sm text-gray-400 border-t border-gray-600 pt-4">
+            <strong>Important:</strong> Your key is used only to fetch data for your account.
+            We do not provide or resell API access. You maintain a direct relationship with CoinGecko.
+          </p>
         </div>
 
         {/* Step-by-Step Guide */}
@@ -86,21 +90,16 @@ export default function BYOKPage() {
                 2
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Enable the Demo Plan (Free)</h3>
+                <h3 className="font-semibold text-lg mb-2">Choose a CoinGecko Plan</h3>
                 <p className="text-gray-300 mb-2">
-                  The Demo plan is free and doesn&apos;t require a credit card. It includes:
+                  CoinGecko offers multiple plans including a free Demo tier. Check their pricing page for current limits and features.
                 </p>
-                <ul className="list-disc list-inside text-gray-400 text-sm space-y-1 ml-4">
-                  <li>Up to 10,000 API calls per month</li>
-                  <li>30 calls per minute rate limit</li>
-                  <li>Access to core crypto data endpoints</li>
-                </ul>
-                <p className="text-xs text-gray-500 mt-2">
-                  <strong>Note:</strong> Limits may change. See{' '}
+                <p className="text-sm text-gray-400">
+                  <strong>Limits depend on your CoinGecko plan.</strong> See{' '}
                   <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                    CoinGecko pricing
+                    CoinGecko API pricing
                   </a>{' '}
-                  for current details.
+                  for current rate limits and call quotas.
                 </p>
               </div>
             </div>
@@ -257,8 +256,12 @@ export default function BYOKPage() {
             <div>
               <h3 className="font-medium text-white mb-1">Is the Demo plan really free?</h3>
               <p className="text-sm text-gray-400">
-                Yes! CoinGecko&apos;s Demo plan is free and doesn&apos;t require a credit card. It includes up to 10,000 calls/month
-                (limits may change—check CoinGecko pricing for current details).
+                Yes! CoinGecko offers a free Demo plan that doesn&apos;t require a credit card.
+                Limits depend on your CoinGecko plan—check{' '}
+                <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                  CoinGecko pricing
+                </a>{' '}
+                for current details.
               </p>
             </div>
 

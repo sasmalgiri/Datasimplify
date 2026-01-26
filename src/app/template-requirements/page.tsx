@@ -157,22 +157,26 @@ export default function TemplateRequirementsPage() {
             <div className="bg-gray-800/50 rounded-lg p-4">
               <h4 className="font-semibold text-white mb-2">Free Demo API</h4>
               <ul className="text-sm text-gray-300 space-y-1">
-                <li>• 10,000 calls/month</li>
                 <li>• Good for small templates (5-10 coins)</li>
-                <li>• Rate limited: 10-30 calls/min</li>
+                <li>• Basic rate limits</li>
+                <li>• No credit card required</li>
               </ul>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-4">
               <h4 className="font-semibold text-white mb-2">CoinGecko Pro</h4>
               <ul className="text-sm text-gray-300 space-y-1">
-                <li>• 500K+ calls/month</li>
                 <li>• Large templates (100+ coins)</li>
                 <li>• Higher rate limits</li>
+                <li>• Priority support from CoinGecko</li>
               </ul>
             </div>
           </div>
           <p className="mt-4 text-sm text-gray-400">
-            Most users start with the free CoinGecko Demo API. Upgrade to Pro if you need more capacity.
+            Limits depend on your CoinGecko plan. See{' '}
+            <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline hover:text-blue-300">
+              CoinGecko API pricing
+            </a>{' '}
+            for current rate limits and call quotas.
           </p>
         </div>
 

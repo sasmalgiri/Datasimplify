@@ -163,41 +163,14 @@ export default function RefundPage() {
             </ul>
           </section>
 
-          {/* Regional Rights */}
-          <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Regional Rights</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white p-5 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-blue-700 mb-2">🇪🇺 European Union</h3>
-                <p className="text-sm text-gray-600">
-                  Under the EU Consumer Rights Directive, you may have a <strong>14-day cooling-off period</strong> for
-                  online purchases. For digital content, this right may be lost once supply begins if you requested
-                  immediate supply and acknowledged the waiver (where required). Our 30-day guarantee provides additional protection.
-                </p>
-              </div>
-              <div className="bg-white p-5 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-blue-700 mb-2">🇬🇧 United Kingdom</h3>
-                <p className="text-sm text-gray-600">
-                  Under UK Consumer Rights regulations, you may have cooling-off rights for digital content,
-                  though these may be waived once supply begins. Our 30-day guarantee provides protection beyond
-                  statutory minimums.
-                </p>
-              </div>
-              <div className="bg-white p-5 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-blue-700 mb-2">🇺🇸 United States</h3>
-                <p className="text-sm text-gray-600">
-                  While US federal law doesn&apos;t mandate cooling-off periods for digital services, our 30-day
-                  guarantee provides you with comprehensive protection.
-                </p>
-              </div>
-              <div className="bg-white p-5 rounded-lg border border-gray-200">
-                <h3 className="font-semibold text-blue-700 mb-2">🌍 Other Regions</h3>
-                <p className="text-sm text-gray-600">
-                  Where local law provides greater protection than our policy, your statutory rights will apply.
-                  Our 30-day guarantee is a minimum standard.
-                </p>
-              </div>
-            </div>
+          {/* Statutory Rights */}
+          <section className="bg-gray-100 p-6 rounded-lg">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Statutory Rights</h2>
+            <p className="text-gray-700">
+              Refunds are handled according to our policy and applicable law. Statutory consumer rights may vary by country.
+              Where local law provides greater protection than our policy, your statutory rights will apply.
+              Our 30-day money-back guarantee is provided in addition to any statutory rights you may have.
+            </p>
           </section>
 
           {/* Chargebacks */}

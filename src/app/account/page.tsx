@@ -52,7 +52,7 @@ export default function AccountPage() {
     {
       href: '/account/keys',
       title: 'API Keys',
-      description: 'Manage your API keys for data providers (CoinGecko, CoinMarketCap)',
+      description: 'Manage your API keys for data providers (CoinGecko)',
       icon: Key,
       color: 'emerald',
     },

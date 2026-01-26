@@ -113,7 +113,7 @@ export default function TermsPage() {
               Our Excel add-in and templates operate on a <strong>BYOK (Bring Your Own Key)</strong> model:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
-              <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (CoinGecko, CoinMarketCap, etc.)</li>
+              <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (e.g., CoinGecko)</li>
               <li><strong>Formulas Only:</strong> Excel templates contain formulas, not embedded market data</li>
               <li><strong>Server-Proxy Architecture:</strong> When you use the CRK add-in, our server proxies requests
                 using your encrypted API keys, calling providers on your behalf</li>

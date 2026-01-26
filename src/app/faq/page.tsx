@@ -80,12 +80,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Pricing & Limits',
     question: 'Is CryptoReportKit free?',
-    answer: 'CryptoReportKit offers a free tier with limited downloads. Paid plans (coming soon) unlock more templates and features. Note: You also need a data provider API key - CoinGecko offers a free Demo API with 10,000 calls/month.',
+    answer: 'CryptoReportKit offers a free tier with limited downloads. Paid plans (coming soon) unlock more templates and features. Note: You also need a data provider API key - CoinGecko offers a free Demo API tier. See coingecko.com/api/pricing for current limits.',
   },
   {
     category: 'Pricing & Limits',
     question: 'What about API rate limits?',
-    answer: 'Rate limits depend on your data provider\'s plan. CoinGecko free (Demo API) allows ~10-30 calls/minute. If you need more capacity, upgrade to CoinGecko Pro or another provider with higher limits.',
+    answer: 'Rate limits depend on your data provider\'s plan. Limits vary by CoinGecko tier (Demo, Analyst, Pro). See coingecko.com/api/pricing for current rate limits. Upgrade if you need more capacity.',
   },
   // Technical
   {

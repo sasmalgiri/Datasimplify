@@ -149,15 +149,15 @@ export default function DataSourcesPage() {
             </div>
           </div>
 
-          {/* CoinMarketCap */}
+          {/* Sourcify */}
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">CoinMarketCap</h2>
-                <p className="text-sm text-gray-500">Alternative market data source (BYOK only)</p>
+                <h2 className="text-2xl font-semibold text-gray-900">Sourcify</h2>
+                <p className="text-sm text-gray-500">Smart contract verification</p>
               </div>
               <a
-                href="https://coinmarketcap.com"
+                href="https://sourcify.dev"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1 text-sm"
@@ -169,46 +169,36 @@ export default function DataSourcesPage() {
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Data Types</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Market rankings</li>
-                  <li>• Price quotes & metadata</li>
-                  <li>• Exchange data</li>
-                  <li>• Global market metrics</li>
+                  <li>• Contract verification status</li>
+                  <li>• Source code matching</li>
+                  <li>• Multi-chain support</li>
                 </ul>
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 mb-2">Usage Context</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• <strong>Website:</strong> Not used (no free tier available)</li>
-                  <li>• <strong>Excel Add-in:</strong> BYOK - optional provider (you provide API key)</li>
+                  <li>• <strong>Website:</strong> SafeContract verification tool</li>
+                  <li>• <strong>Excel Add-in:</strong> Not currently used</li>
                 </ul>
               </div>
             </div>
             <div className="flex flex-wrap gap-3 text-sm">
               <a
-                href="https://coinmarketcap.com/api/"
+                href="https://docs.sourcify.dev/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-emerald-600 hover:underline"
               >
-                Get API Key →
+                Documentation →
               </a>
               <span className="text-gray-400">|</span>
               <a
-                href="https://coinmarketcap.com/api/documentation/v1/"
+                href="https://sourcify.dev"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-emerald-600 hover:underline"
               >
-                API Documentation →
-              </a>
-              <span className="text-gray-400">|</span>
-              <a
-                href="https://coinmarketcap.com/terms/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:underline"
-              >
-                Terms of Service →
+                Verify Contract →
               </a>
             </div>
           </div>
@@ -224,7 +214,7 @@ export default function DataSourcesPage() {
                 Our Excel add-in operates on a <strong>server-proxy BYOK architecture</strong>. Here&apos;s how it works:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                <li><strong>You provide:</strong> Your own API keys from data providers (CoinGecko, CoinMarketCap, etc.)</li>
+                <li><strong>You provide:</strong> Your own API keys from data providers (e.g., CoinGecko)</li>
                 <li><strong>We encrypt:</strong> Your keys are encrypted with AES-256-GCM before storage</li>
                 <li><strong>We proxy:</strong> Our server calls providers on your behalf using your encrypted keys</li>
                 <li><strong>You control:</strong> You can update or delete your keys anytime from{' '}

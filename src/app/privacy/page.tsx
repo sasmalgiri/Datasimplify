@@ -43,7 +43,7 @@ export default function PrivacyPage() {
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
               <li><strong>API Keys (BYOK):</strong> If you use our Bring Your Own Key (BYOK) feature, you may
-                provide API keys from third-party data providers (CoinGecko, CoinMarketCap, etc.).
+                provide API keys from third-party data providers (e.g., CoinGecko).
                 See Section 2.4 below for details on how we handle these keys.</li>
             </ul>
 
