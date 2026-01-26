@@ -96,7 +96,7 @@ export default function DisclaimerPage() {
                 <h3 className="text-blue-400 font-medium mb-2">📋 Excel Templates (BYOK)</h3>
                 <p className="text-sm text-gray-400">
                   Our Excel templates use <strong>your own API keys</strong> (Bring Your Own Keys). You provide your own
-                  CoinGecko, Binance, or CoinMarketCap keys. Data fetched via your keys is governed by your agreement with
+                  CoinGecko or CoinMarketCap keys. Data fetched via your keys is governed by your agreement with
                   the provider, not by CryptoReportKit.
                 </p>
               </div>

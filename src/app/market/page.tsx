@@ -162,7 +162,7 @@ export default function MarketPage() {
 
   const fetchFreshData = async () => {
     try {
-      // Fetch coins from internal API (uses Supabase cache first, then Binance)
+      // Fetch coins from internal API (uses Supabase cache first, then CoinGecko)
       // Increased limit to 500 for full coin list
       const coinsRes = await fetch('/api/crypto?limit=500');
       const coinsJson = await coinsRes.json();

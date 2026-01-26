@@ -6,16 +6,13 @@ import { usePathname } from 'next/navigation';
 import {
   ChevronDown,
   BarChart3,
-  TrendingUp,
   BookOpen,
   Menu,
   X,
-  LineChart,
   Scale,
   FileSpreadsheet,
   GraduationCap,
   HelpCircle,
-  Zap,
   Shield,
 } from 'lucide-react';
 
@@ -86,66 +83,41 @@ export function FreeNavbar() {
   const isActive = (path: string) => pathname === path;
   const isInSection = (paths: string[]) => paths.some(p => pathname.startsWith(p));
 
+  // Focused navigation: Only A/B/C features
+  // A) Reports/Downloads - Excel template packs
+  // B) Compare - Coin comparison with market cap calculator
+  // C) Verify - Smart contract verification (Sourcify + Z3)
   const navSections = {
     reports: {
       label: 'Reports',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/download', '/template-requirements'],
+      paths: ['/templates', '/download', '/template-requirements', '/byok'],
       items: [
-        { href: '/download', label: 'Build a Report', description: 'Create custom Excel reports', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { href: '/templates', label: 'Report Kits', description: 'Pre-built report templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { href: '/templates#all', label: 'All Templates', description: 'Browse all 40+ templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { href: '/template-requirements', label: 'Setup Guide', description: 'Requirements & instructions', icon: <HelpCircle className="w-4 h-4" /> },
+        { href: '/templates', label: 'Report Kits', description: '6 curated Excel template packs', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/download', label: 'Build a Report', description: 'Customize and download templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/template-requirements', label: 'Setup Guide', description: 'How to use BYOK templates', icon: <HelpCircle className="w-4 h-4" /> },
+        { href: '/byok', label: 'BYOK Explained', description: 'Bring Your Own Key architecture', icon: <Shield className="w-4 h-4" /> },
       ],
     },
-    analytics: {
-      label: 'Analytics',
-      icon: <TrendingUp className="w-4 h-4" />,
-      paths: ['/analyst-hub', '/market', '/trending', '/gainers-losers', '/sentiment', '/technical', '/correlation', ...(isFeatureEnabled('risk') ? ['/risk'] : []), ...(isFeatureEnabled('onchain') ? ['/onchain'] : [])],
+    compare: {
+      label: 'Compare',
+      icon: <Scale className="w-4 h-4" />,
+      paths: ['/compare'],
       items: [
-        { href: '/analyst-hub', label: 'Analyst Hub', description: 'All data in one dashboard', icon: <BarChart3 className="w-4 h-4" /> },
-        { href: '/market', label: 'Market Analytics', description: 'Market overview and rankings', icon: <TrendingUp className="w-4 h-4" /> },
-        { href: '/trending', label: 'Trending', description: 'Most searched coins', icon: <Zap className="w-4 h-4" /> },
-        { href: '/gainers-losers', label: 'Gainers & Losers', description: 'Top market movers', icon: <TrendingUp className="w-4 h-4" /> },
-        { href: '/sentiment', label: 'Fear & Greed', description: 'Sentiment index and history', icon: <BarChart3 className="w-4 h-4" /> },
-        { href: '/technical', label: 'Technical Metrics', description: 'Indicators and levels (educational)', icon: <LineChart className="w-4 h-4" /> },
-        { href: '/correlation', label: 'Correlation', description: 'How assets move together', icon: <Scale className="w-4 h-4" /> },
-        // On-chain hidden until properly implemented
-        ...(isFeatureEnabled('onchain') ? [{ href: '/onchain', label: 'On-Chain Analytics', description: 'Network activity and on-chain metrics', icon: <Zap className="w-4 h-4" /> }] : []),
-        // Risk metrics (optional feature)
-        ...(isFeatureEnabled('risk') ? [{ href: '/risk', label: 'Risk Metrics', description: 'Risk stats and explanations', icon: <Shield className="w-4 h-4" /> }] : []),
+        { href: '/compare', label: 'Coin Comparison', description: 'Compare 2-5 coins side-by-side', icon: <Scale className="w-4 h-4" /> },
       ],
     },
-    discover: {
-      label: 'Discover',
-      icon: <Zap className="w-4 h-4" />,
-      paths: ['/categories', '/dex-pools'],
-      items: [
-        { href: '/dex-pools', label: 'DEX Pools', description: 'Trending liquidity pools', icon: <TrendingUp className="w-4 h-4" /> },
-        { href: '/categories', label: 'Categories', description: 'Browse by category', icon: <LineChart className="w-4 h-4" /> },
-      ],
-    },
-    research: {
-      label: 'Research',
-      icon: <LineChart className="w-4 h-4" />,
-      paths: ['/research', '/charts', '/compare'],
-      items: [
-        { href: '/research', label: 'Research Workspace', description: 'Quick links and research tools', icon: <LineChart className="w-4 h-4" /> },
-        { href: '/charts', label: 'Charts', description: 'Explore charts and export snapshots', icon: <LineChart className="w-4 h-4" /> },
-        { href: '/compare', label: 'Comparisons', description: 'Compare coins side-by-side', icon: <Scale className="w-4 h-4" /> },
-      ],
-    },
-    tools: {
-      label: 'Tools',
-      icon: <Zap className="w-4 h-4" />,
-      paths: ['/smart-contract-verifier', '/tools'],
+    verify: {
+      label: 'Verify',
+      icon: <Shield className="w-4 h-4" />,
+      paths: ['/smart-contract-verifier', '/tools/verify'],
       items: [
         ...(isFeatureEnabled('smartContractVerifier')
           ? [
               {
                 href: '/smart-contract-verifier',
-                label: 'Smart Contract Verification',
-                description: 'Check verification status (not a security audit)',
+                label: 'Contract Verification',
+                description: 'Check Sourcify verification status',
                 icon: <Shield className="w-4 h-4" />,
               },
             ]
@@ -155,26 +127,26 @@ export function FreeNavbar() {
     more: {
       label: 'Learn',
       icon: <BookOpen className="w-4 h-4" />,
-      paths: ['/learn', '/glossary', '/faq'],
+      paths: ['/learn', '/glossary', '/faq', '/data-sources'],
       items: [
         { href: '/learn', label: 'Academy', description: 'Crypto education & guides', icon: <GraduationCap className="w-4 h-4" /> },
         { href: '/glossary', label: 'Glossary', description: 'Crypto terms explained', icon: <BookOpen className="w-4 h-4" /> },
         { href: '/faq', label: 'FAQ', description: 'Common questions answered', icon: <HelpCircle className="w-4 h-4" /> },
+        { href: '/data-sources', label: 'Data Sources', description: 'CoinGecko attribution & info', icon: <BarChart3 className="w-4 h-4" /> },
       ],
     },
   };
 
+  // Mobile links - focused on A/B/C features only
   const mobileLinks = [
     { href: '/templates', label: 'Report Kits', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/download', label: 'Build Report', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { href: '/analyst-hub', label: 'Analyst Hub', icon: <BarChart3 className="w-4 h-4" /> },
-    { href: '/market', label: 'Market', icon: <TrendingUp className="w-4 h-4" /> },
-    { href: '/trending', label: 'Trending', icon: <Zap className="w-4 h-4" /> },
-    { href: '/sentiment', label: 'Sentiment', icon: <BarChart3 className="w-4 h-4" /> },
-    { href: '/charts', label: 'Charts', icon: <LineChart className="w-4 h-4" /> },
-    { href: '/compare', label: 'Compare', icon: <Scale className="w-4 h-4" /> },
-    { href: '/correlation', label: 'Correlation', icon: <Scale className="w-4 h-4" /> },
+    { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
+    ...(isFeatureEnabled('smartContractVerifier')
+      ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]
+      : []),
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
+    { href: '/faq', label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
   ];
 
   return (

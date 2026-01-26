@@ -299,7 +299,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     features: [
       'Real-time funding rates by exchange',
       'Funding rate history charts',
-      'Exchange comparison (Binance, Bybit, OKX)',
+      'Exchange comparison (Bybit, OKX, etc.)',
       'Funding arbitrage opportunities',
       'Open interest correlation',
       'Funding payment calculations',

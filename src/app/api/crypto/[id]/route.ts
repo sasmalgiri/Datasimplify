@@ -1,7 +1,7 @@
 /**
  * Coin Detail API Route
  *
- * Returns individual coin data from Binance
+ * Returns individual coin data from CoinGecko
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -15,7 +15,7 @@ import { getCoinFromCache, saveBulkMarketDataToCache } from '@/lib/supabaseData'
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
-const BINANCE_BASE = 'https://api.binance.com/api/v3';
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 // In-memory cache for quick access (fallback when Supabase not available)
 const coinCache = new Map<string, { data: unknown; timestamp: number }>();
@@ -113,7 +113,7 @@ export async function GET(
 
   const { id } = await params;
 
-  assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/[id]' });
+  assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto/[id]' });
 
   // Check cache first (Supabase + memory)
   const cached = await getCached(id);
@@ -135,53 +135,44 @@ export async function GET(
       );
     }
 
+    const geckoId = getCoinGeckoId(coinInfo.symbol);
     const response = await fetch(
-      `${BINANCE_BASE}/ticker/24hr?symbol=${encodeURIComponent(coinInfo.binanceSymbol)}`,
+      `${COINGECKO_BASE}/coins/${geckoId}?localization=false&tickers=false&community_data=false&developer_data=false`,
       { headers: { Accept: 'application/json' }, next: { revalidate: 60 } }
     );
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: 'Failed to fetch coin ticker', status: response.status },
+        { error: 'Failed to fetch coin data', status: response.status },
         { status: 502 }
       );
     }
 
-    const ticker: {
-      lastPrice: string;
-      openPrice: string;
-      highPrice: string;
-      lowPrice: string;
-      quoteVolume: string;
-      priceChange: string;
-      priceChangePercent: string;
-    } = await response.json();
+    const data = await response.json();
+    const marketData = data.market_data || {};
 
-    const currentPrice = Number.parseFloat(ticker.lastPrice);
-    const openPrice = Number.parseFloat(ticker.openPrice);
-    const high24h = Number.parseFloat(ticker.highPrice);
-    const low24h = Number.parseFloat(ticker.lowPrice);
-    const totalVolume = Number.parseFloat(ticker.quoteVolume);
-    const priceChange24h = Number.parseFloat(ticker.priceChange);
-    const priceChangePct24h = Number.parseFloat(ticker.priceChangePercent);
-
-    const marketCap = (Number.isFinite(currentPrice) ? currentPrice : 0) * coinInfo.circulatingSupply;
-    const prevMarketCap = (Number.isFinite(openPrice) ? openPrice : 0) * coinInfo.circulatingSupply;
-    const marketCapChange24h = marketCap - prevMarketCap;
-    const marketCapChangePct24h = prevMarketCap > 0 ? (marketCapChange24h / prevMarketCap) * 100 : 0;
+    const currentPrice = marketData.current_price?.usd ?? 0;
+    const high24h = marketData.high_24h?.usd ?? 0;
+    const low24h = marketData.low_24h?.usd ?? 0;
+    const totalVolume = marketData.total_volume?.usd ?? 0;
+    const priceChange24h = marketData.price_change_24h ?? 0;
+    const priceChangePct24h = marketData.price_change_percentage_24h ?? 0;
+    const marketCap = marketData.market_cap?.usd ?? 0;
+    const marketCapChange24h = marketData.market_cap_change_24h ?? 0;
+    const marketCapChangePct24h = marketData.market_cap_change_percentage_24h ?? 0;
 
     const maxSupply = coinInfo.maxSupply;
-    const fullyDiluted = typeof maxSupply === 'number' ? maxSupply * (Number.isFinite(currentPrice) ? currentPrice : 0) : null;
+    const fullyDiluted = marketData.fully_diluted_valuation?.usd ?? null;
     const now = new Date().toISOString();
 
     const coin = {
-      id: getCoinGeckoId(coinInfo.symbol),
+      id: geckoId,
       symbol: coinInfo.symbol.toLowerCase(),
       name: coinInfo.name,
       image: FEATURES.coingecko ? coinInfo.image : '/globe.svg',
       current_price: Number.isFinite(currentPrice) ? currentPrice : 0,
       market_cap: Number.isFinite(marketCap) ? marketCap : 0,
-      market_cap_rank: 0,
+      market_cap_rank: marketData.market_cap_rank ?? 0,
       fully_diluted_valuation: fullyDiluted,
       total_volume: Number.isFinite(totalVolume) ? totalVolume : 0,
       high_24h: Number.isFinite(high24h) ? high24h : 0,
@@ -190,16 +181,16 @@ export async function GET(
       price_change_percentage_24h: Number.isFinite(priceChangePct24h) ? priceChangePct24h : 0,
       market_cap_change_24h: Number.isFinite(marketCapChange24h) ? marketCapChange24h : 0,
       market_cap_change_percentage_24h: Number.isFinite(marketCapChangePct24h) ? marketCapChangePct24h : 0,
-      circulating_supply: coinInfo.circulatingSupply,
-      total_supply: null,
-      max_supply: maxSupply,
-      ath: Number.isFinite(high24h) ? high24h : (Number.isFinite(currentPrice) ? currentPrice : 0),
-      ath_change_percentage: 0,
-      ath_date: now,
-      atl: Number.isFinite(low24h) ? low24h : (Number.isFinite(currentPrice) ? currentPrice : 0),
-      atl_change_percentage: 0,
-      atl_date: now,
-      last_updated: now,
+      circulating_supply: marketData.circulating_supply ?? coinInfo.circulatingSupply,
+      total_supply: marketData.total_supply ?? null,
+      max_supply: marketData.max_supply ?? maxSupply,
+      ath: marketData.ath?.usd ?? high24h,
+      ath_change_percentage: marketData.ath_change_percentage?.usd ?? 0,
+      ath_date: marketData.ath_date?.usd ?? now,
+      atl: marketData.atl?.usd ?? low24h,
+      atl_change_percentage: marketData.atl_change_percentage?.usd ?? 0,
+      atl_date: marketData.atl_date?.usd ?? now,
+      last_updated: marketData.last_updated ?? now,
     };
 
     // Cache the result (Supabase + memory)

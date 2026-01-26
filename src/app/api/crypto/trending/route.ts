@@ -1,7 +1,7 @@
 /**
  * Trending Coins API Route
  *
- * Returns top trending coins - tries CoinGecko first, falls back to Binance
+ * Returns top trending coins from CoinGecko
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -25,8 +25,8 @@ let cachedData: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Fallback to Binance - derive "trending" from high volume + positive price change
-async function getBinanceTrending(): Promise<TrendingResponse | null> {
+// Fallback to internal market data - derive "trending" from high volume + positive price change
+async function getMarketDataTrending(): Promise<TrendingResponse | null> {
   try {
     const marketData = await fetchMarketOverview({ sortBy: 'volume', sortOrder: 'desc' });
 
@@ -79,7 +79,7 @@ async function getBinanceTrending(): Promise<TrendingResponse | null> {
       categories: [],
     };
   } catch (error) {
-    console.error('[Trending API] Binance fallback error:', error);
+    console.error('[Trending API] Market data fallback error:', error);
     return null;
   }
 }
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
         data: { coins: trending, nfts: cachedData.data.nfts, categories: cachedData.data.categories },
         cached: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 
@@ -161,19 +161,19 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // CoinGecko failed - try Binance fallback
-    console.log('[Trending API] CoinGecko failed, trying Binance fallback');
-    const binanceData = await getBinanceTrending();
+    // CoinGecko failed - try market data fallback
+    console.log('[Trending API] CoinGecko failed, trying market data fallback');
+    const marketDataTrending = await getMarketDataTrending();
 
-    if (binanceData) {
-      // Update cache with Binance data
+    if (marketDataTrending) {
+      // Update cache with fallback data
       cachedData = {
-        data: binanceData,
+        data: marketDataTrending,
         timestamp: now,
-        source: 'binance',
+        source: 'coingecko',
       };
 
-      const trending = binanceData.coins.map((coin) => ({
+      const trending = marketDataTrending.coins.map((coin) => ({
         id: coin.item.id,
         name: coin.item.name,
         symbol: coin.item.symbol.toUpperCase(),
@@ -198,12 +198,12 @@ export async function GET(request: NextRequest) {
           categories: [],
         },
         cached: false,
-        source: 'binance',
-        attribution: 'Data derived from Binance (trending approximation)',
+        source: 'coingecko',
+        attribution: 'Data provided by CoinGecko (trending approximation)',
       });
     }
 
-    // Both failed - return cached data if available
+    // Failed - return cached data if available
     if (cachedData.data) {
       const trending = cachedData.data.coins.map((coin) => ({
         id: coin.item.id,
@@ -228,7 +228,7 @@ export async function GET(request: NextRequest) {
         cached: true,
         stale: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 
@@ -267,7 +267,7 @@ export async function GET(request: NextRequest) {
         cached: true,
         stale: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 

@@ -1,7 +1,7 @@
 /**
  * Crypto Market API Route
  *
- * Returns market data from Binance (with Supabase cache)
+ * Returns market data from CoinGecko (with Supabase cache)
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -11,8 +11,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getBulkMarketDataFromCache, saveBulkMarketDataToCache, getMarketDataFromCache } from '@/lib/supabaseData';
 import { fetchMarketOverview } from '@/lib/dataApi';
-import { findCoinByGeckoId, getCoinGeckoId } from '@/lib/dataTypes';
-import { assertRedistributionAllowed, isRedistributionPolicyEnabled, isSourceRedistributable } from '@/lib/redistributionPolicy';
+import { getGeckoId } from '@/lib/coinDiscovery';
+import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
 import {
   validationError,
@@ -56,16 +56,12 @@ export async function GET(request: NextRequest) {
         return validationError('Maximum 50 coins can be requested at once.');
       }
 
-      // 1. Try cache first for specific coins
+      // 1. Try cache first for specific coins (all cached data is from CoinGecko which is redistributable)
       if (isSupabaseConfigured) {
         const cached = await getMarketDataFromCache({ limit: MAX_LIMIT });
         if (cached && cached.length > 0) {
-          const filteredCached = isRedistributionPolicyEnabled()
-            ? cached.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
-            : cached;
-
           // Filter cached data for requested IDs (match by id or symbol)
-          const matchedCoins = filteredCached.filter((coin: { id: string; symbol: string }) =>
+          const matchedCoins = cached.filter((coin: { id: string; symbol: string }) =>
             idList.includes(coin.id.toLowerCase()) ||
             idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
           );
@@ -83,31 +79,36 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // 2. Derive specific coins from Binance via our supported universe
-      assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto' });
-      const symbols = idList
-        .map(id => findCoinByGeckoId(id))
-        .filter((c): c is NonNullable<ReturnType<typeof findCoinByGeckoId>> => c != null)
-        .map(c => c.symbol);
+      // 2. Fetch from CoinGecko via dataApi
+      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto' });
 
-      const market = await fetchMarketOverview({ symbols });
-      const coins = market.map((coin, idx) => ({
-        id: getCoinGeckoId(coin.symbol),
-        symbol: coin.symbol.toLowerCase(),
-        name: coin.name,
-        image: coin.image,
-        current_price: coin.price,
-        market_cap: coin.marketCap,
-        market_cap_rank: idx + 1,
-        price_change_24h: coin.priceChange24h,
-        price_change_percentage_24h: coin.priceChangePercent24h,
-        total_volume: coin.quoteVolume24h,
-        high_24h: coin.high24h,
-        low_24h: coin.low24h,
-        circulating_supply: coin.circulatingSupply,
-        max_supply: coin.maxSupply,
-        ath: coin.price,
-        ath_change_percentage: 0,
+      // Convert IDs to symbols for our market overview
+      const market = await fetchMarketOverview();
+      const matchedMarket = market.filter(coin =>
+        idList.includes(coin.symbol.toLowerCase()) ||
+        idList.some(reqId => reqId.toLowerCase() === coin.symbol.toLowerCase())
+      );
+
+      const coins = await Promise.all(matchedMarket.map(async (coin, idx) => {
+        const geckoId = await getGeckoId(coin.symbol);
+        return {
+          id: geckoId || coin.symbol.toLowerCase(),
+          symbol: coin.symbol.toLowerCase(),
+          name: coin.name,
+          image: coin.image,
+          current_price: coin.price,
+          market_cap: coin.marketCap,
+          market_cap_rank: coin.marketCapRank || idx + 1,
+          price_change_24h: coin.priceChange24h,
+          price_change_percentage_24h: coin.priceChangePercent24h,
+          total_volume: coin.quoteVolume24h,
+          high_24h: coin.high24h,
+          low_24h: coin.low24h,
+          circulating_supply: coin.circulatingSupply,
+          max_supply: coin.maxSupply,
+          ath: coin.ath,
+          ath_change_percentage: coin.price > 0 && coin.ath > 0 ? ((coin.price - coin.ath) / coin.ath) * 100 : 0,
+        };
       }));
 
       // 3. Save to cache
@@ -119,53 +120,51 @@ export async function GET(request: NextRequest) {
         success: true,
         data: coins,
         total: coins.length,
-        source: 'binance-derived',
+        source: 'coingecko',
         updated: new Date().toISOString(),
       });
     }
 
     // Default behavior: fetch top coins by market cap
-    // 1. Try cache first
+    // 1. Try cache first (all cached data is from CoinGecko which is redistributable)
     if (isSupabaseConfigured) {
       const cached = await getBulkMarketDataFromCache(limit);
       if (cached && cached.length > 0) {
-        const filteredCached = isRedistributionPolicyEnabled()
-          ? cached.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
-          : cached;
-
-        if (filteredCached.length > 0) {
         return NextResponse.json({
           success: true,
-          data: filteredCached,
-          total: filteredCached.length,
+          data: cached,
+          total: cached.length,
           source: 'cache',
           updated: new Date().toISOString(),
         });
-        }
       }
     }
 
-    // 2. Derive from Binance (supported universe only)
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto' });
+    // 2. Fetch from CoinGecko
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto' });
     const market = await fetchMarketOverview();
     const limited = market.slice(0, limit);
-    const coins = limited.map((coin, idx) => ({
-      id: getCoinGeckoId(coin.symbol),
-      symbol: coin.symbol.toLowerCase(),
-      name: coin.name,
-      image: coin.image,
-      current_price: coin.price,
-      market_cap: coin.marketCap,
-      market_cap_rank: idx + 1,
-      price_change_24h: coin.priceChange24h,
-      price_change_percentage_24h: coin.priceChangePercent24h,
-      total_volume: coin.quoteVolume24h,
-      high_24h: coin.high24h,
-      low_24h: coin.low24h,
-      circulating_supply: coin.circulatingSupply,
-      max_supply: coin.maxSupply,
-      ath: coin.price,
-      ath_change_percentage: 0,
+
+    const coins = await Promise.all(limited.map(async (coin, idx) => {
+      const geckoId = await getGeckoId(coin.symbol);
+      return {
+        id: geckoId || coin.symbol.toLowerCase(),
+        symbol: coin.symbol.toLowerCase(),
+        name: coin.name,
+        image: coin.image,
+        current_price: coin.price,
+        market_cap: coin.marketCap,
+        market_cap_rank: coin.marketCapRank || idx + 1,
+        price_change_24h: coin.priceChange24h,
+        price_change_percentage_24h: coin.priceChangePercent24h,
+        total_volume: coin.quoteVolume24h,
+        high_24h: coin.high24h,
+        low_24h: coin.low24h,
+        circulating_supply: coin.circulatingSupply,
+        max_supply: coin.maxSupply,
+        ath: coin.ath,
+        ath_change_percentage: coin.price > 0 && coin.ath > 0 ? ((coin.price - coin.ath) / coin.ath) * 100 : 0,
+      };
     }));
 
     // 3. Save to cache
@@ -177,29 +176,23 @@ export async function GET(request: NextRequest) {
       success: true,
       data: coins,
       total: coins.length,
-      source: 'binance-derived',
+      source: 'coingecko',
       updated: new Date().toISOString(),
     });
 
   } catch (error) {
     console.error('Crypto API error:', error);
-    // On error, try stale cache
+    // On error, try stale cache (all cached data is from CoinGecko which is redistributable)
     if (isSupabaseConfigured) {
       const staleCache = await getBulkMarketDataFromCache(limit);
       if (staleCache && staleCache.length > 0) {
-        const filteredStale = isRedistributionPolicyEnabled()
-          ? staleCache.filter((row: any) => isSourceRedistributable(row?.data_source || row?.source || ''))
-          : staleCache;
-
-        if (filteredStale.length > 0) {
         return NextResponse.json({
           success: true,
-          data: filteredStale,
-          total: filteredStale.length,
+          data: staleCache,
+          total: staleCache.length,
           source: 'stale-cache',
           updated: new Date().toISOString(),
         });
-        }
       }
     }
     return internalError('Unable to fetch market data. Please try again later.');

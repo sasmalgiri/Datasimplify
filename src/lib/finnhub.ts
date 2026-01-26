@@ -70,7 +70,7 @@ export interface FinnhubCryptoCandle {
 
 /**
  * Fetch social sentiment for a crypto symbol
- * Note: Finnhub uses stock-style symbols, crypto needs BINANCE:BTCUSDT format
+ * Note: Finnhub uses stock-style symbols, crypto needs COINBASE:BTCUSD format
  */
 export async function fetchFinnhubSocialSentiment(
   symbol: string
@@ -83,7 +83,7 @@ export async function fetchFinnhubSocialSentiment(
 
   try {
     // Finnhub uses exchange:symbol format for crypto
-    const cryptoSymbol = `BINANCE:${symbol.toUpperCase()}USDT`;
+    const cryptoSymbol = `COINBASE:${symbol.toUpperCase()}USD`;
 
     const response = await fetch(
       `${FINNHUB_BASE}/stock/social-sentiment?symbol=${cryptoSymbol}&from=2024-01-01&token=${apiKey}`,
@@ -189,7 +189,7 @@ export async function fetchFinnhubSymbolNews(
  * Fetch available crypto symbols from an exchange
  */
 export async function fetchFinnhubCryptoSymbols(
-  exchange: string = 'BINANCE'
+  exchange: string = 'COINBASE'
 ): Promise<FinnhubCryptoSymbol[]> {
   const apiKey = getApiKey();
   if (!apiKey) {

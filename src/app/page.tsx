@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
@@ -146,23 +146,6 @@ function SafeContractPreview() {
 }
 
 export default function LandingPage() {
-  const [tokenCount, setTokenCount] = useState(500);
-
-  // Fetch dynamic token count
-  useEffect(() => {
-    async function fetchTokenCount() {
-      try {
-        const res = await fetch('/api/crypto/all');
-        const data = await res.json();
-        if (data.success && data.total) {
-          setTokenCount(data.total);
-        }
-      } catch (error) {
-        console.error('Failed to fetch token count:', error);
-      }
-    }
-    fetchTokenCount();
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -200,10 +183,10 @@ export default function LandingPage() {
                 Download Excel Templates
               </Link>
               <Link
-                href="/excel-templates/crypto-portfolio-tracker"
+                href="/compare"
                 className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
               >
-                Portfolio Tracker
+                Compare Coins
               </Link>
             </div>
 
@@ -242,20 +225,20 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-blue-400 mb-1">15+</div>
-              <div className="text-gray-400 text-sm">Excel Templates</div>
+              <div className="text-3xl md:text-4xl font-bold text-emerald-400 mb-1">6</div>
+              <div className="text-gray-400 text-sm">Report Kits</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">{tokenCount}+</div>
-              <div className="text-gray-400 text-sm">Tokens Tracked</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-400 mb-1">Compare</div>
+              <div className="text-gray-400 text-sm">Side-by-Side</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-green-400 mb-1">Free</div>
-              <div className="text-gray-400 text-sm">To Get Started</div>
+              <div className="text-3xl md:text-4xl font-bold text-green-400 mb-1">Sourcify</div>
+              <div className="text-gray-400 text-sm">Contract Verify</div>
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-1">BYOK</div>
-              <div className="text-gray-400 text-sm">Bring Your Own Key</div>
+              <div className="text-gray-400 text-sm">Your API Keys</div>
             </div>
           </div>
         </div>
@@ -290,21 +273,21 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-6 relative">
-              <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">SAVE</div>
+              <div className="absolute top-3 right-3 bg-green-500 text-black text-xs font-bold px-2 py-1 rounded-full">BYOK</div>
               <div className="text-green-400 text-sm font-medium mb-3">✓ THE CRYPTOREPORTKIT WAY</div>
-              <h3 className="text-xl font-bold mb-4">All-In-One Platform</h3>
+              <h3 className="text-xl font-bold mb-4">Focused Tools</h3>
               <ul className="space-y-3 text-gray-300 text-sm">
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
-                  <span>Market + on-chain analytics (availability varies)</span>
+                  <span>Excel templates with BYOK formulas (your API key)</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
-                  <span>Research workspace (charts, comparisons, templates)</span>
+                  <span>Coin comparison with "What If" calculator</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-green-400">✓</span>
-                  <span>Smart Contract verification tool</span>
+                  <span>Smart Contract verification (Sourcify + Z3)</span>
                 </li>
               </ul>
             </div>
@@ -317,26 +300,23 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-bold mb-3">
-              Built for <span className="text-blue-400">analytics + research</span>
+              Four <span className="text-emerald-400">Focused Tools</span>
             </h2>
+            <p className="text-gray-400">Templates, comparison, verification, and education.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { icon: '📋', title: 'Excel Downloads', desc: 'CRK formulas + your API key (BYOK).' },
-              { icon: '📊', title: 'Charts', desc: 'Explore charts and visual analytics.' },
-              { icon: '⚖️', title: 'Comparisons', desc: 'Side-by-side metrics with explanations.' },
-              { icon: '📈', title: 'Market Analytics', desc: 'Rankings, movers, and market stats.' },
-              { icon: '⛓️', title: 'On-Chain Analytics', desc: 'Network activity metrics (availability varies).' },
-              { icon: '😱', title: 'Fear & Greed', desc: 'Sentiment context with history.' },
-              { icon: '🔐', title: 'Contract Verification', desc: 'Check verified status on Sourcify.' },
-              { icon: '📚', title: 'Academy + Glossary', desc: 'Educational explanations of metrics.' },
+              { icon: '📋', title: 'Excel Templates', desc: 'Download 6 curated report kits with CRK formulas. BYOK (Bring Your Own Key) architecture.', href: '/templates' },
+              { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side comparison with "What If Market Cap" calculator. Display-only.', href: '/compare' },
+              { icon: '🔐', title: 'Contract Verification', desc: 'Check Sourcify verification + Z3 formal checks for smart contracts.', href: '/smart-contract-verifier' },
+              { icon: '📚', title: 'Learn', desc: 'Academy guides, crypto glossary, and FAQ for education.', href: '/learn' },
             ].map((f, i) => (
-              <div key={i} className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-blue-500/50 transition">
-                <div className="text-3xl mb-2">{f.icon}</div>
-                <h3 className="text-lg font-bold mb-1">{f.title}</h3>
+              <a key={i} href={f.href} className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group">
+                <div className="text-3xl mb-3">{f.icon}</div>
+                <h3 className="text-lg font-bold mb-2 group-hover:text-emerald-400 transition">{f.title}</h3>
                 <p className="text-gray-400 text-sm">{f.desc}</p>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -405,19 +385,19 @@ export default function LandingPage() {
       ) : null}
 
       {/* CTA */}
-      <section className="py-16 px-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20">
+      <section className="py-16 px-4 bg-gradient-to-r from-emerald-600/20 to-blue-600/20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl md:text-4xl font-bold mb-4">
-            Ready to Research Smarter?
+            Ready to Build Better Reports?
           </h2>
           <p className="text-lg text-gray-400 mb-6">
-            Start with templates, charts, and comparisons.
+            Download Excel templates with BYOK formulas. Compare coins. Verify contracts.
           </p>
           <Link
-            href="/research"
-            className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold shadow-lg"
+            href="/templates"
+            className="inline-block px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl font-semibold shadow-lg"
           >
-            Open Research Workspace
+            Browse Report Kits
           </Link>
         </div>
       </section>

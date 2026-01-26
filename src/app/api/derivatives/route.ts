@@ -9,7 +9,7 @@ export const revalidate = 60; // 1 minute
 
 export async function GET() {
   try {
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/derivatives' });
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/derivatives' });
     // 1. Try cache first for BTC (main coin)
     if (isSupabaseConfigured) {
       const cached = await getDerivativesFromCache('BTCUSDT');

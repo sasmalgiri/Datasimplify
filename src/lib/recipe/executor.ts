@@ -69,14 +69,6 @@ export async function executeDataset(
         }
         break;
 
-      case 'binance':
-        if (dataset.type === 'ohlcv') {
-          const result = await fetchBinanceOHLCV(dataset, context);
-          data = result.data;
-          columns = result.columns;
-        }
-        break;
-
       case 'alternative':
         if (dataset.type === 'fear_greed') {
           const result = await fetchFearGreed(dataset, context);
@@ -265,42 +257,6 @@ async function fetchCoinGeckoOHLCV(
   }));
 
   const columns = ['timestamp', 'date', 'open', 'high', 'low', 'close'];
-
-  return { data, columns };
-}
-
-/**
- * Fetch OHLCV from Binance
- */
-async function fetchBinanceOHLCV(
-  dataset: DatasetConfig,
-  context: ExecutionContext
-): Promise<{ data: any[]; columns: string[] }> {
-  const symbols = (dataset.params.symbols || []) as string[];
-  const symbol = symbols[0] || 'BTCUSDT';
-  const interval = String(dataset.params.interval || '1d');
-  const limit = Number(dataset.params.limit || 100);
-
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Binance API error: ${response.status}`);
-  }
-
-  const rawData = await response.json();
-
-  const data = rawData.map((row: any[]) => ({
-    timestamp: row[0],
-    date: new Date(row[0]).toLocaleDateString(),
-    open: parseFloat(row[1]),
-    high: parseFloat(row[2]),
-    low: parseFloat(row[3]),
-    close: parseFloat(row[4]),
-    volume: parseFloat(row[5]),
-  }));
-
-  const columns = ['timestamp', 'date', 'open', 'high', 'low', 'close', 'volume'];
 
   return { data, columns };
 }

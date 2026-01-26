@@ -26,10 +26,6 @@ const WHALE_APIS = {
 // Known exchange wallets (public information)
 // These are well-documented and publicly available
 const KNOWN_EXCHANGE_WALLETS: Record<string, { name: string; type: 'exchange' | 'fund' | 'whale' }> = {
-  // Binance Hot Wallets (ETH)
-  '0x28c6c06298d514db089934071355e5743bf21d60': { name: 'Binance Hot Wallet 1', type: 'exchange' },
-  '0x21a31ee1afc51d94c2efccaa2092ad1028285549': { name: 'Binance Hot Wallet 2', type: 'exchange' },
-  '0xdfd5293d8e347dfe59e90efd55b2956a1343963d': { name: 'Binance Hot Wallet 3', type: 'exchange' },
   
   // Coinbase
   '0x71660c4005ba85c37ccec55d0c4493e66fe775d3': { name: 'Coinbase Hot Wallet', type: 'exchange' },

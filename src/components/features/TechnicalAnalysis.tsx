@@ -55,11 +55,11 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
     'BTC': 'bitcoin',
     'ETH': 'ethereum',
     'SOL': 'solana',
-    'BNB': 'binancecoin',
     'XRP': 'ripple',
     'ADA': 'cardano',
     'DOGE': 'dogecoin',
     'DOT': 'polkadot',
+    'TRX': 'tron',
   };
 
   useEffect(() => {

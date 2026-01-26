@@ -17,27 +17,7 @@ import { enforceDisplayOnly } from '@/lib/apiSecurity';
 // This endpoint intentionally does NOT fabricate/estimate flows or AUM.
 
 async function fetchBtcPriceContext(): Promise<{ btcPrice: number; btcChange24h: number; source: string }> {
-  // 1) Binance ticker (fast, free)
-  const canUseBinance = !isRedistributionPolicyEnabled() || isSourceRedistributable('binance');
-  if (canUseBinance) try {
-    const priceResponse = await fetch(
-      'https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT',
-      { next: { revalidate: 60 } }
-    );
-
-    if (priceResponse.ok) {
-      const priceData = await priceResponse.json();
-      const btcPrice = parseFloat(priceData.lastPrice);
-      const btcChange24h = parseFloat(priceData.priceChangePercent);
-      if (Number.isFinite(btcPrice) && Number.isFinite(btcChange24h)) {
-        return { btcPrice, btcChange24h, source: 'binance' };
-      }
-    }
-  } catch {
-    // fall through
-  }
-
-  // 2) CoinGecko markets (free)
+  // CoinGecko markets (free)
   if (!isFeatureEnabled('coingecko')) {
     throw new Error('Unable to fetch BTC context (CoinGecko disabled)');
   }

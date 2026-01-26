@@ -64,7 +64,6 @@ const TOP_COINS = [
   'bitcoin',
   'ethereum',
   'tether',
-  'binancecoin',
   'solana',
   'ripple',
   'dogecoin',
@@ -76,6 +75,7 @@ const TOP_COINS = [
   'litecoin',
   'uniswap',
   'stellar',
+  'tron',
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

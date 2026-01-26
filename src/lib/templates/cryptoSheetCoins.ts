@@ -210,7 +210,7 @@ export const CRYPTOSHEET_COINS: CryptoSheetCoin[] = [
   { id: 'USDT', symbol: 'USDT', name: 'Tether', category: 'stablecoin', rank: 3 },
   { id: 'USDC', symbol: 'USDC', name: 'USD Coin', category: 'stablecoin', rank: 7 },
   { id: 'DAI', symbol: 'DAI', name: 'Dai', category: 'stablecoin', rank: 20 },
-  { id: 'BUSD', symbol: 'BUSD', name: 'Binance USD', category: 'stablecoin', rank: 25 },
+  { id: 'GUSD', symbol: 'GUSD', name: 'Gemini Dollar', category: 'stablecoin', rank: 25 },
   { id: 'TUSD', symbol: 'TUSD', name: 'TrueUSD', category: 'stablecoin', rank: 50 },
   { id: 'FRAX', symbol: 'FRAX', name: 'Frax', category: 'stablecoin', rank: 60 },
   { id: 'PYUSD', symbol: 'PYUSD', name: 'PayPal USD', category: 'stablecoin', rank: 70 },

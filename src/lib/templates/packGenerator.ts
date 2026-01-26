@@ -685,7 +685,7 @@ export const PACK_RECIPES: Record<string, PackRecipe> = {
     description: 'Top cryptocurrencies by market cap with price, change, and volume data',
     version: '1.0.0',
     coins: [
-      'bitcoin', 'ethereum', 'tether', 'binancecoin', 'solana',
+      'bitcoin', 'ethereum', 'tether', 'solana', 'ripple',
       'ripple', 'usd-coin', 'cardano', 'avalanche-2', 'dogecoin',
       'chainlink', 'polkadot', 'polygon', 'litecoin', 'bitcoin-cash',
       'uniswap', 'stellar', 'cosmos', 'ethereum-classic', 'monero',

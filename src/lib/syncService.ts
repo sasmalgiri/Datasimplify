@@ -327,7 +327,7 @@ export async function syncMarketData(): Promise<{ success: boolean; count: numbe
   try {
     console.log('📊 Syncing market data...');
     
-    // Fetch from Binance API
+    // Fetch from CoinGecko API
     const marketData = await fetchMarketOverview();
     
     if (!marketData || marketData.length === 0) {
@@ -348,9 +348,9 @@ export async function syncMarketData(): Promise<{ success: boolean; count: numbe
       market_cap: coin.marketCap,
       circulating_supply: coin.circulatingSupply,
       max_supply: coin.maxSupply,
-      bid_price: coin.bidPrice,
-      ask_price: coin.askPrice,
-      spread: coin.spread,
+      bid_price: null, // Not available from CoinGecko
+      ask_price: null, // Not available from CoinGecko
+      spread: null, // Not available from CoinGecko
       category: coin.category,
       image_url: SUPPORTED_COINS.find(c => c.symbol === coin.symbol)?.image,
       updated_at: new Date().toISOString()
@@ -788,7 +788,7 @@ export async function syncAllData(): Promise<{
 export const SYNC_INTERVALS = {
   coinlore: 5 * 60 * 1000,       // 5 minutes (CoinLore - check terms)
   coingecko: 5 * 60 * 1000,      // 5 minutes (CoinGecko - check terms)
-  market_data: 60 * 1000,        // 1 minute (Binance - check terms)
+  market_data: 60 * 1000,        // 1 minute (CoinGecko - check terms)
   defi_data: 10 * 60 * 1000,     // 10 minutes (DeFi providers - check terms)
   sentiment: 15 * 60 * 1000,     // 15 minutes (Sentiment sources - check terms)
   whales: 5 * 60 * 1000,         // 5 minutes (Explorer providers - check terms)
@@ -836,12 +836,6 @@ export const DATA_ATTRIBUTIONS = {
     url: 'https://defillama.com',
     license: 'Public data (terms apply)',
     note: 'DeFi TVL and protocol data',
-  },
-  binance: {
-    name: 'Binance',
-    url: 'https://binance.com',
-    license: 'Public API (terms apply)',
-    note: 'Real-time trading data',
   },
   etherscan: {
     name: 'Etherscan',

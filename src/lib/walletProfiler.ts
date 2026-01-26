@@ -98,9 +98,6 @@ export interface WalletSignals {
 
 // Known Exchange Wallets - Pre-seeded from migration
 const KNOWN_EXCHANGE_WALLETS: Record<string, { name: string; type: WalletType }> = {
-  '0x28c6c06298d514db089934071355e5743bf21d60': { name: 'Binance Hot Wallet 1', type: 'exchange' },
-  '0x21a31ee1afc51d94c2efccaa2092ad1028285549': { name: 'Binance Hot Wallet 2', type: 'exchange' },
-  '0xdfd5293d8e347dfe59e90efd55b2956a1343963d': { name: 'Binance Hot Wallet 3', type: 'exchange' },
   '0x71660c4005ba85c37ccec55d0c4493e66fe775d3': { name: 'Coinbase Hot Wallet', type: 'exchange' },
   '0xa090e606e30bd747d4e6245a1517ebe430f0057e': { name: 'Coinbase Cold Wallet', type: 'exchange' },
   '0x2910543af39aba0cd09dbb2d50200b3e800a63d2': { name: 'Kraken Hot Wallet', type: 'exchange' },

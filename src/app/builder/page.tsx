@@ -31,7 +31,6 @@ import {
 const POPULAR_COINS = [
   { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
   { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
-  { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
   { id: 'solana', symbol: 'SOL', name: 'Solana' },
   { id: 'ripple', symbol: 'XRP', name: 'XRP' },
   { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
@@ -39,6 +38,7 @@ const POPULAR_COINS = [
   { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
   { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' },
   { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
+  { id: 'tron', symbol: 'TRX', name: 'Tron' },
 ];
 
 // Predefined templates
@@ -47,7 +47,7 @@ const TEMPLATES = [
     id: 'market_overview',
     name: 'Market Overview',
     description: 'Top 10 cryptocurrencies with prices, changes, and market caps',
-    coins: ['bitcoin', 'ethereum', 'binancecoin', 'solana', 'ripple', 'cardano', 'avalanche-2', 'polkadot', 'dogecoin', 'chainlink'],
+    coins: ['bitcoin', 'ethereum', 'solana', 'ripple', 'cardano', 'avalanche-2', 'polkadot', 'dogecoin', 'chainlink', 'tron'],
     metrics: ['price', 'change_24h', 'market_cap', 'volume', 'movers'],
     movers_count: 5,
     ohlcv_days: 30,

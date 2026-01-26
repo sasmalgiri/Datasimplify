@@ -11,7 +11,6 @@ export type RedistributionContext = {
 const FREE_ONLY_SOURCES = new Set([
   // Sources that are used without paid/API-key requirements in this project.
   // Note: "free" does not automatically mean "redistributable"; use this only for cost-driven restrictions.
-  'binance',
   'coinlore',
   'alternativeme',
   'defillama',
@@ -47,7 +46,7 @@ export function isRedistributionPolicyEnabled(): boolean {
 
 /**
  * Comma-separated allowlist of data source keys that you have verified are legally redistributable.
- * Example: REDISTRIBUTABLE_SOURCES=binance,alternativeme
+ * Example: REDISTRIBUTABLE_SOURCES=coingecko,alternativeme
  */
 export function getRedistributableSourcesAllowlist(): Set<string> {
   const appMode = (process.env.NEXT_PUBLIC_APP_MODE || '').trim().toLowerCase();

@@ -8,7 +8,6 @@ const DISCLAIMER_KEY = 'cryptoreportkit_disclaimer_accepted';
 
 export default function DisclaimerBanner() {
   const sources = [
-    'Binance',
     'Alternative.me',
     ...(FEATURES.coingecko ? ['CoinGecko'] : []),
     ...(FEATURES.defi ? ['DeFiLlama'] : []),
@@ -131,7 +130,6 @@ export function InlineDisclaimer({ className = '' }: { className?: string }) {
 // Compact footer disclaimer
 export function FooterDisclaimer() {
   const sources = [
-    'Binance',
     'Alternative.me',
     ...(FEATURES.coingecko ? ['CoinGecko'] : []),
     ...(FEATURES.defi ? ['DeFiLlama'] : []),

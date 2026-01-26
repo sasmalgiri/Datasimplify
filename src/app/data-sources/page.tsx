@@ -95,70 +95,6 @@ export default function DataSourcesPage() {
             </div>
           </div>
 
-          {/* Binance */}
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900">Binance</h2>
-                <p className="text-sm text-gray-500">Real-time trading data & order book</p>
-              </div>
-              <a
-                href="https://www.binance.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1 text-sm"
-              >
-                Visit Site <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Data Types</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Trading pairs & spot prices</li>
-                  <li>• Order book depth</li>
-                  <li>• Recent trades feed</li>
-                  <li>• Kline/candlestick data</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Usage Context</h3>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• <strong>Website:</strong> Display-only dashboards (public endpoints)</li>
-                  <li>• <strong>Excel Add-in:</strong> BYOK - optional API key for enhanced limits</li>
-                </ul>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 text-sm">
-              <a
-                href="https://www.binance.com/en/support/faq/how-to-create-api-keys-on-binance-360002502072"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:underline"
-              >
-                Get API Key →
-              </a>
-              <span className="text-gray-400">|</span>
-              <a
-                href="https://binance-docs.github.io/apidocs/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:underline"
-              >
-                API Documentation →
-              </a>
-              <span className="text-gray-400">|</span>
-              <a
-                href="https://www.binance.com/en/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-emerald-600 hover:underline"
-              >
-                Terms of Service →
-              </a>
-            </div>
-          </div>
-
           {/* Alternative.me */}
           <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
             <div className="flex items-start justify-between mb-4">
@@ -288,7 +224,7 @@ export default function DataSourcesPage() {
                 Our Excel add-in operates on a <strong>server-proxy BYOK architecture</strong>. Here&apos;s how it works:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                <li><strong>You provide:</strong> Your own API keys from data providers (CoinGecko, Binance, etc.)</li>
+                <li><strong>You provide:</strong> Your own API keys from data providers (CoinGecko, CoinMarketCap, etc.)</li>
                 <li><strong>We encrypt:</strong> Your keys are encrypted with AES-256-GCM before storage</li>
                 <li><strong>We proxy:</strong> Our server calls providers on your behalf using your encrypted keys</li>
                 <li><strong>You control:</strong> You can update or delete your keys anytime from{' '}

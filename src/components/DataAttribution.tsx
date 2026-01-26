@@ -22,12 +22,6 @@ const DATA_SOURCES: DataSource[] = [
     note: 'Market prices and rankings',
   },
   {
-    name: 'Binance',
-    url: 'https://www.binance.com',
-    license: 'Public API (terms apply)',
-    note: 'Trading data',
-  },
-  {
     name: 'DefiLlama',
     url: 'https://defillama.com',
     license: 'Public data (terms apply)',

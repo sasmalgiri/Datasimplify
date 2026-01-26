@@ -27,14 +27,6 @@ export const DATA_SOURCES: Record<string, DataSource> = {
   // === REDISTRIBUTABLE SOURCES ===
   // These can be included in user downloads
 
-  binance: {
-    id: 'binance',
-    name: 'Binance',
-    license: 'redistributable',
-    refreshInterval: 60,
-    description: 'Real-time market data from Binance exchange',
-  },
-
   coinlore: {
     id: 'coinlore',
     name: 'CoinLore',

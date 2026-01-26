@@ -121,7 +121,7 @@ export function createTechnicalAnalysisRecipe(coin: string, days: number = 90): 
     {
       id: 'ohlcv',
       type: 'ohlcv' as const,
-      provider: 'binance' as const,
+      provider: 'coingecko' as const,
       mode: 'byok' as const,
       params: {
         symbols: [coin],

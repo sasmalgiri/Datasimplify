@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 
 // Help icon with tooltip
@@ -27,6 +28,149 @@ function HelpIcon({ text }: { text: string }) {
         </span>
       )}
     </span>
+  );
+}
+
+// "What If Market Cap" Calculator Component
+function WhatIfMarketCapCalculator({ coins }: { coins: Coin[] }) {
+  const [coinA, setCoinA] = useState<string>(coins[0]?.id || '');
+  const [coinB, setCoinB] = useState<string>(coins[1]?.id || '');
+
+  // Update defaults when coins change
+  useEffect(() => {
+    if (coins.length >= 2) {
+      if (!coinA || !coins.find(c => c.id === coinA)) {
+        setCoinA(coins[0].id);
+      }
+      if (!coinB || !coins.find(c => c.id === coinB)) {
+        setCoinB(coins[1].id);
+      }
+    }
+  }, [coins, coinA, coinB]);
+
+  const selectedCoinA = coins.find(c => c.id === coinA);
+  const selectedCoinB = coins.find(c => c.id === coinB);
+
+  // Calculate hypothetical price
+  // Formula: (Coin B Market Cap / Coin A Circulating Supply) = Hypothetical Price
+  const hypotheticalPrice =
+    selectedCoinA && selectedCoinB && selectedCoinA.circulating_supply > 0
+      ? selectedCoinB.market_cap / selectedCoinA.circulating_supply
+      : null;
+
+  const priceMultiplier =
+    selectedCoinA && hypotheticalPrice
+      ? hypotheticalPrice / selectedCoinA.current_price
+      : null;
+
+  const formatPrice = (price: number) => {
+    if (price >= 1000) return `$${price.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+    if (price >= 1) return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (price >= 0.0001) return `$${price.toFixed(6)}`;
+    return `$${price.toExponential(2)}`;
+  };
+
+  const formatLargeNumber = (num: number | undefined) => {
+    if (num === undefined || num === null) return 'N/A';
+    if (num >= 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    return `$${num.toLocaleString()}`;
+  };
+
+  return (
+    <div className="mt-8 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-6">
+      <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+        <span>🤔</span>
+        What If Market Cap Calculator
+        <HelpIcon text="This calculator shows what Coin A's price would be if it had Coin B's market cap. Formula: (Coin B Market Cap / Coin A Circulating Supply) = Hypothetical Price. This is educational only, not a prediction." />
+      </h3>
+      <p className="text-gray-400 text-sm mb-4">
+        Explore hypothetical scenarios: What would {selectedCoinA?.name || 'a coin'}'s price be if it had {selectedCoinB?.name || 'another coin'}'s market cap?
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Coin A Selector */}
+        <div>
+          <label htmlFor="coinA" className="block text-sm font-medium text-gray-300 mb-2">
+            Calculate Price For
+          </label>
+          <select
+            id="coinA"
+            value={coinA}
+            onChange={(e) => setCoinA(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+          >
+            {coins.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.symbol.toUpperCase()})
+              </option>
+            ))}
+          </select>
+          {selectedCoinA && (
+            <p className="mt-1 text-xs text-gray-500">
+              Current: {formatPrice(selectedCoinA.current_price)} • MCap: {formatLargeNumber(selectedCoinA.market_cap)}
+            </p>
+          )}
+        </div>
+
+        {/* Coin B Selector */}
+        <div>
+          <label htmlFor="coinB" className="block text-sm font-medium text-gray-300 mb-2">
+            If It Had Market Cap Of
+          </label>
+          <select
+            id="coinB"
+            value={coinB}
+            onChange={(e) => setCoinB(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+          >
+            {coins.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.symbol.toUpperCase()})
+              </option>
+            ))}
+          </select>
+          {selectedCoinB && (
+            <p className="mt-1 text-xs text-gray-500">
+              Market Cap: {formatLargeNumber(selectedCoinB.market_cap)}
+            </p>
+          )}
+        </div>
+
+        {/* Result */}
+        <div className="bg-gray-800/50 rounded-lg p-4 flex flex-col justify-center">
+          <div className="text-sm text-gray-400 mb-1">Hypothetical Price:</div>
+          {hypotheticalPrice !== null ? (
+            <>
+              <div className="text-2xl font-bold text-purple-400">
+                {formatPrice(hypotheticalPrice)}
+              </div>
+              <div className={`text-sm mt-1 ${(priceMultiplier || 0) >= 1 ? 'text-green-400' : 'text-red-400'}`}>
+                {priceMultiplier !== null && (
+                  <span>
+                    {priceMultiplier >= 1 ? '📈' : '📉'} {priceMultiplier.toFixed(2)}x {priceMultiplier >= 1 ? 'increase' : 'decrease'}
+                  </span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-500">Select different coins</div>
+          )}
+        </div>
+      </div>
+
+      {/* Formula Explanation */}
+      <div className="bg-gray-800/50 rounded-lg p-3 text-xs text-gray-400">
+        <strong className="text-gray-300">Formula:</strong>{' '}
+        {selectedCoinB?.name || 'Coin B'} Market Cap ({formatLargeNumber(selectedCoinB?.market_cap)}) ÷{' '}
+        {selectedCoinA?.name || 'Coin A'} Circulating Supply ({selectedCoinA?.circulating_supply?.toLocaleString() || 'N/A'}) ={' '}
+        <span className="text-purple-400">{hypotheticalPrice !== null ? formatPrice(hypotheticalPrice) : 'N/A'}</span>
+        <span className="block mt-2 text-yellow-500/80">
+          ⚠️ This is for educational purposes only. Market cap comparisons don't account for differences in tokenomics, utility, or adoption.
+        </span>
+      </div>
+    </div>
   );
 }
 
@@ -391,6 +535,9 @@ export default function ComparePage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Compare Cryptocurrencies</h1>
             <p className="text-gray-400">Compare up to 10 coins side-by-side with 50+ cryptocurrencies • Free, no login required</p>
+            <div className="mt-2">
+              <CoinGeckoAttribution variant="compact" showIcon />
+            </div>
           </div>
           <div className="flex gap-2 mt-4 md:mt-0">
             <TemplateDownloadButton
@@ -800,6 +947,11 @@ export default function ComparePage() {
             <p className="text-xl">Select coins above to compare them</p>
             <p className="text-sm mt-2">You can compare up to 10 coins side-by-side</p>
           </div>
+        )}
+
+        {/* What If Market Cap Calculator */}
+        {coins.length >= 2 && (
+          <WhatIfMarketCapCalculator coins={coins} />
         )}
 
         {/* Legend */}

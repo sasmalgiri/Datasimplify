@@ -117,7 +117,7 @@ export function generateExcel(
     [''],
     ['Generated', new Date().toISOString()],
     ['Total Coins', coins.length],
-    ['Data Source', 'CoinGecko + Binance'],
+    ['Data Source', 'CoinGecko'],
     [''],
     ['Visit cryptoreportkit.com for more data and analysis'],
   ]);

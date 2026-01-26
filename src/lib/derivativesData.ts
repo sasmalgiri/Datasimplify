@@ -1,6 +1,7 @@
 /**
  * Derivatives Data Fetcher
- * Fetches Open Interest, Funding Rates, Liquidations from CoinGlass and Binance
+ * Fetches Open Interest, Funding Rates, Liquidations from CoinGlass
+ * Note: Derivatives data requires exchange API access which may have limited availability
  */
 
 // Cache for derivatives data (1 minute TTL - more volatile)

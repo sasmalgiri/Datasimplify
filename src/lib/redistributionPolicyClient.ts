@@ -1,7 +1,6 @@
 export type RedistributableSourceKey = string;
 
 const FREE_ONLY_SOURCES_CLIENT = new Set([
-  'binance',
   'coinlore',
   'alternativeme',
   'defillama',
@@ -61,15 +60,12 @@ export function isAnySourceRedistributableClient(sourceKeys: RedistributableSour
 
 // Keep in sync with server-side assertions in src/app/api/download/route.ts
 export const REQUIRED_SOURCES_BY_DOWNLOAD_CATEGORY: Record<string, RedistributableSourceKey[]> = {
-  // Binance-derived market data
-  market_overview: ['binance'],
-  historical_prices: ['binance'],
-  order_book: ['binance'],
-  recent_trades: ['binance'],
-  global_stats: ['binance'],
-  gainers_losers: ['binance'],
-  categories: ['binance'],
-  exchange_info: ['binance'],
+  // CoinGecko-derived market data
+  market_overview: ['coingecko'],
+  historical_prices: ['coingecko'],
+  global_stats: ['coingecko'],
+  gainers_losers: ['coingecko'],
+  categories: ['coingecko'],
 
   // On-chain / macro sources
   defi_protocols: ['defillama'],
@@ -91,13 +87,10 @@ export const REQUIRED_SOURCES_BY_DOWNLOAD_CATEGORY: Record<string, Redistributab
   exchange_flows: ['etherscan', 'coingecko'],
 
   // Derivatives + technical
-  funding_rates: ['binance'],
-  open_interest: ['binance'],
-  long_short_ratio: ['binance'],
-  liquidations: ['binance'],
-  technical_indicators: ['binance'],
-  correlation_matrix: ['binance'],
-  support_resistance: ['binance'],
+  funding_rates: ['coingecko'],
+  open_interest: ['coingecko'],
+  technical_indicators: ['coingecko'],
+  correlation_matrix: ['coingecko'],
 
   // Token economics
   token_unlocks: ['defillama'],

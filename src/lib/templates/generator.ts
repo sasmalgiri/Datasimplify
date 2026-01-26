@@ -375,7 +375,7 @@ async function createSetupSheet(
   const requirements = isCRK ? [
     ['✓ Excel Desktop', 'Windows or Mac (Excel Online NOT supported)'],
     ['✓ CRK Add-in', 'Install from cryptoreportkit.com/addin/setup'],
-    ['✓ Provider API Key', 'Your own CoinGecko/Binance key (BYOK)'],
+    ['✓ Provider API Key', 'Your own CoinGecko key (BYOK)'],
   ] : [
     ['✓ Excel Desktop', 'Windows or Mac (Excel Online NOT supported)'],
     ['✓ CryptoSheets Add-in', 'Install from cryptosheets.com'],
@@ -1571,7 +1571,7 @@ async function createInstructionsSheet(
     ['=CRK.PRICE("bitcoin")', 'Get current Bitcoin price in USD'],
     ['=CRK.MARKETCAP("ethereum")', 'Get Ethereum market cap'],
     ['=CRK.INFO("solana","volume_24h")', 'Get Solana 24h trading volume'],
-    ['=CRK.CHANGE24H("binancecoin")', 'Get BNB 24h price change %'],
+    ['=CRK.CHANGE24H("avalanche-2")', 'Get AVAX 24h price change %'],
     ['=CRK.INFO("ripple","price_change_7d")', 'Get XRP 7-day price change %'],
     ['=CRK.INFO("dogecoin","ath")', 'Get Dogecoin all-time high'],
     ['=CRK.INFO("cardano","ath_change_percentage")', 'Get Cardano % from ATH'],

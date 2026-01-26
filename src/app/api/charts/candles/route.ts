@@ -2,7 +2,7 @@
  * Candlestick Chart API
  * Returns OHLCV data for candlestick charts
  *
- * Uses Binance API as primary source, CoinGecko as fallback
+ * Uses CoinGecko API as primary source
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -14,7 +14,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
@@ -107,116 +106,50 @@ export async function GET(request: NextRequest) {
       ? requestedInterval
       : (days <= 1 ? '1h' : days <= 7 ? '4h' : '1d');
 
-    const symbol = getCoinSymbol(coin);
-
-    // If Binance doesn't support the coin, use CoinGecko fallback
-    if (!symbol) {
-      if (!isFeatureEnabled('coingecko')) {
-        return NextResponse.json({
-          candles: [],
-          source: 'none',
-          coin,
-          days,
-          interval,
-          error: 'No candle data available from Binance (CoinGecko disabled).',
-        }, { status: 502 });
-      }
-
-      // Serving CoinGecko data in charts is a form of redistribution.
-      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
-
-      const bucketMs = interval === '1h'
-        ? 60 * 60 * 1000
-        : interval === '4h'
-          ? 4 * 60 * 60 * 1000
-          : interval === '1w'
-            ? 7 * 24 * 60 * 60 * 1000
-            : 24 * 60 * 60 * 1000;
-      const chart = await fetchCoinGeckoMarketChart(coin, days);
-      const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
-      if (candles.length === 0) {
-        return NextResponse.json({
-          candles: [],
-          source: 'none',
-          coin,
-          days,
-          interval,
-          error: 'No candle data available from Binance or CoinGecko.',
-        }, { status: 502 });
-      }
+    if (!isFeatureEnabled('coingecko')) {
       return NextResponse.json({
-        candles,
-        source: 'coingecko',
+        candles: [],
+        source: 'none',
         coin,
         days,
         interval,
-      });
+        error: 'CoinGecko is disabled.',
+      }, { status: 502 });
     }
 
-    // Binance supports up to 1000 candles per request
-    const limit = Math.min(
-      interval === '1h'
-        ? 24
-        : interval === '4h'
-          ? days * 6
-          : interval === '1w'
-            ? Math.ceil(days / 7)
-            : days,
-      1000
-    );
-    const klines = await getBinanceKlines(symbol, interval as '1h' | '4h' | '1d' | '1w', limit);
+    // Serving CoinGecko data in charts is a form of redistribution.
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
 
-    if (!klines || klines.length === 0) {
-      if (!isFeatureEnabled('coingecko')) {
-        return NextResponse.json({
-          candles: [],
-          source: 'none',
-          coin,
-          days,
-          interval,
-          error: 'No candle data available from Binance (CoinGecko disabled).',
-        }, { status: 502 });
-      }
+    const bucketMs = interval === '1h'
+      ? 60 * 60 * 1000
+      : interval === '4h'
+        ? 4 * 60 * 60 * 1000
+        : interval === '1w'
+          ? 7 * 24 * 60 * 60 * 1000
+          : 24 * 60 * 60 * 1000;
 
-      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
+    const chart = await fetchCoinGeckoMarketChart(coin, days);
+    const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
 
-      const bucketMs = interval === '1h'
-        ? 60 * 60 * 1000
-        : interval === '4h'
-          ? 4 * 60 * 60 * 1000
-          : interval === '1w'
-            ? 7 * 24 * 60 * 60 * 1000
-            : 24 * 60 * 60 * 1000;
-      const chart = await fetchCoinGeckoMarketChart(coin, days);
-      const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];
-      if (candles.length === 0) {
-        return NextResponse.json({
-          candles: [],
-          source: 'none',
-          coin,
-          days,
-          interval,
-          error: 'No candle data available from Binance or CoinGecko.',
-        }, { status: 502 });
-      }
+    if (candles.length === 0) {
       return NextResponse.json({
-        candles,
-        source: 'coingecko',
+        candles: [],
+        source: 'none',
         coin,
         days,
         interval,
-      });
+        error: 'No candle data available from CoinGecko.',
+      }, { status: 502 });
     }
-
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/charts/candles' });
 
     return NextResponse.json({
-      candles: klines,
-      source: 'binance',
+      candles,
+      source: 'coingecko',
       coin,
       days,
       interval,
     });
+
   } catch (error) {
     console.error('Candles API error:', error);
 

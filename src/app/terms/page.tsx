@@ -113,7 +113,7 @@ export default function TermsPage() {
               Our Excel add-in and templates operate on a <strong>BYOK (Bring Your Own Key)</strong> model:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
-              <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (CoinGecko, Binance, etc.)</li>
+              <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (CoinGecko, CoinMarketCap, etc.)</li>
               <li><strong>Formulas Only:</strong> Excel templates contain formulas, not embedded market data</li>
               <li><strong>Server-Proxy Architecture:</strong> When you use the CRK add-in, our server proxies requests
                 using your encrypted API keys, calling providers on your behalf</li>
@@ -128,7 +128,7 @@ export default function TermsPage() {
             <p className="mb-4">
               <strong>Provider Ownership & Rights:</strong> All market data displayed on our platform or accessed via
               the CRK add-in is sourced from third-party data providers, including but not limited to{' '}
-              <strong>CoinGecko</strong> (cryptocurrency market data), Binance (trading data), and others listed on our{' '}
+              <strong>CoinGecko</strong> (cryptocurrency market data) and others listed on our{' '}
               <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
               This data remains the <strong>intellectual property of the respective providers</strong>.
               CryptoReportKit does not claim ownership of provider data.

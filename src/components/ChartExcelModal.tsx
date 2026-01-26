@@ -174,7 +174,7 @@ export const CHART_EXCEL_CONFIG: Record<string, {
     chartType: 'Bar Chart',
     description: 'Futures funding rate history',
     steps: [
-      'Requires provider API key (BYOK) - CoinGecko Pro or Binance',
+      'Requires provider API key (BYOK) - CoinGecko Pro',
       'Fetch: =CS.FUTURES("COIN", "funding_rate")',
       'Plot as bar chart with positive/negative colors',
       'Add reference line at 0%',

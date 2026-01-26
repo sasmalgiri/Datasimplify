@@ -210,7 +210,7 @@ function isChartTypeAllowed(chartType: ChartType): boolean {
     return true;
   }
 
-  // History/candle-based charts: allow if at least one permitted source can serve (binance or coingecko).
+  // History/candle-based charts: allow if at least one permitted source can serve (coingecko).
   if (
     chartType === 'price_history' ||
     chartType === 'candlestick' ||
@@ -224,11 +224,11 @@ function isChartTypeAllowed(chartType: ChartType): boolean {
     chartType === 'market_dominance' ||
     chartType === 'btc_dominance'
   ) {
-    return isAnySourceRedistributableClient(['binance', 'coingecko']);
+    return isAnySourceRedistributableClient(['coingecko']);
   }
 
   if (chartType === 'funding_rate' || chartType === 'open_interest') {
-    return areAllSourcesRedistributableClient(['binance']);
+    return areAllSourcesRedistributableClient(['coingecko']);
   }
 
   if (chartType === 'whale_flow') {
@@ -1250,10 +1250,9 @@ function ChartsContent() {
             bitcoin: 'btc',
             ethereum: 'eth',
             tether: 'usdt',
-            binancecoin: 'bnb',
             solana: 'sol',
-            'usd-coin': 'usdc',
             ripple: 'xrp',
+            'usd-coin': 'usdc',
             dogecoin: 'doge',
             cardano: 'ada',
             tron: 'trx',
@@ -1520,7 +1519,7 @@ function ChartsContent() {
               )}
 
               <div className="text-xs text-gray-500 text-center">
-                Data from Binance Futures API • Funding rates settle every 8 hours • For display purposes only
+                Funding rates settle every 8 hours • For display purposes only
               </div>
             </div>
           );
@@ -1609,7 +1608,7 @@ function ChartsContent() {
               </div>
 
               <div className="text-xs text-gray-500 text-center">
-                Data from Binance Futures API • Hourly intervals • For display purposes only
+                Hourly intervals • For display purposes only
               </div>
             </div>
           );

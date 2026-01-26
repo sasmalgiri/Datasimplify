@@ -1,7 +1,7 @@
 /**
  * Portfolio Presets API
  *
- * Returns portfolio allocation presets based on Binance-derived market data
+ * Returns portfolio allocation presets based on market data
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
       risk,
       data: allocations,
       updated: new Date().toISOString(),
-      source: 'binance-derived',
+      source: 'coingecko',
     });
   } catch (error) {
     return NextResponse.json({

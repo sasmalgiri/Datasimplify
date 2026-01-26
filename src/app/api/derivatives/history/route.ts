@@ -57,7 +57,7 @@ function setCache(key: string, data: unknown): void {
   }
 }
 
-// Fetch historical funding rates from Binance (free API)
+// Fetch historical funding rates (derivatives API)
 async function fetchFundingRateHistory(symbol: string, limit: number = 100): Promise<FundingRateHistory[]> {
   const cacheKey = `funding_${symbol}_${limit}`;
   const cached = getFromCache<FundingRateHistory[]>(cacheKey);
@@ -69,7 +69,7 @@ async function fetchFundingRateHistory(symbol: string, limit: number = 100): Pro
     );
 
     if (res.status === 429) {
-      console.warn('Binance rate limit hit for funding rate');
+      console.warn('API rate limit hit for funding rate');
       return cached || [];
     }
     if (!res.ok) return [];
@@ -91,7 +91,7 @@ async function fetchFundingRateHistory(symbol: string, limit: number = 100): Pro
   }
 }
 
-// Fetch historical open interest from Binance (free API)
+// Fetch historical open interest (derivatives API)
 async function fetchOIHistory(symbol: string, period: string = '1h', limit: number = 100): Promise<OIHistory[]> {
   const cacheKey = `oi_${symbol}_${period}_${limit}`;
   const cached = getFromCache<OIHistory[]>(cacheKey);
@@ -103,7 +103,7 @@ async function fetchOIHistory(symbol: string, period: string = '1h', limit: numb
     );
 
     if (res.status === 429) {
-      console.warn('Binance rate limit hit for OI history');
+      console.warn('API rate limit hit for OI history');
       return cached || [];
     }
     if (!res.ok) return [];
@@ -125,7 +125,7 @@ async function fetchOIHistory(symbol: string, period: string = '1h', limit: numb
   }
 }
 
-// Fetch long/short ratio history from Binance (free API)
+// Fetch long/short ratio history (derivatives API)
 async function fetchLongShortHistory(symbol: string, period: string = '1h', limit: number = 100) {
   const cacheKey = `ls_${symbol}_${period}_${limit}`;
   const cached = getFromCache<unknown[]>(cacheKey);
@@ -137,7 +137,7 @@ async function fetchLongShortHistory(symbol: string, period: string = '1h', limi
     );
 
     if (res.status === 429) {
-      console.warn('Binance rate limit hit for L/S ratio');
+      console.warn('API rate limit hit for L/S ratio');
       return cached || [];
     }
     if (!res.ok) return [];
@@ -172,7 +172,7 @@ async function fetchTopTraderHistory(symbol: string, period: string = '1h', limi
     );
 
     if (res.status === 429) {
-      console.warn('Binance rate limit hit for top trader');
+      console.warn('API rate limit hit for top trader');
       return cached || [];
     }
     if (!res.ok) return [];
@@ -197,7 +197,7 @@ async function fetchTopTraderHistory(symbol: string, period: string = '1h', limi
 
 export async function GET(request: Request) {
   try {
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/derivatives/history' });
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/derivatives/history' });
 
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol') || 'BTC';
@@ -230,7 +230,7 @@ export async function GET(request: Request) {
       period,
       data,
       dataPoints: data.length,
-      source: 'binance',
+      source: 'derivatives-api',
       lastUpdated: new Date().toISOString(),
     });
   } catch (error) {

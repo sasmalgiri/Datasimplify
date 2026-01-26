@@ -123,7 +123,7 @@ function isAdvancedChartTypeAllowed(chartType: AdvancedChartType): boolean {
   if (chartType === 'wallet_distribution') return true;
   if (chartType === 'whale_tracker') return areAllSourcesRedistributableClient(['etherscan', 'coingecko']);
   // Everything else is built from market data and/or derived metrics.
-  return isAnySourceRedistributableClient(['binance', 'coingecko']);
+  return isAnySourceRedistributableClient(['coingecko']);
 }
 
 const AVAILABLE_CHART_CONFIGS = CHART_CONFIGS.filter(c => isAdvancedChartTypeAllowed(c.type));

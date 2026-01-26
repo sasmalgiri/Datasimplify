@@ -1112,9 +1112,9 @@ const FUNDING_RATES_TEMPLATE: TemplateConfig = {
       type: 'data',
       columns: [
         { header: 'Coin', width: 12, dataType: 'string' },
-        { header: 'Binance', width: 12, dataType: 'percent' },
         { header: 'OKX', width: 12, dataType: 'percent' },
         { header: 'Bybit', width: 12, dataType: 'percent' },
+        { header: 'dYdX', width: 12, dataType: 'percent' },
         { header: 'Average', width: 12, dataType: 'percent' },
         { header: 'Annualized', width: 15, dataType: 'percent' },
       ],
@@ -1123,9 +1123,9 @@ const FUNDING_RATES_TEMPLATE: TemplateConfig = {
   ],
   formulas: [
     { column: 0, formulaPattern: '=CRYPTOSHEETS("symbol", "{COIN}")', description: 'Symbol' },
-    { column: 1, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "binance")', description: 'Binance' },
-    { column: 2, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "okx")', description: 'OKX' },
-    { column: 3, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "bybit")', description: 'Bybit' },
+    { column: 1, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "okx")', description: 'OKX' },
+    { column: 2, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "bybit")', description: 'Bybit' },
+    { column: 3, formulaPattern: '=CRYPTOSHEETS("funding_rate", "{COIN}", "dydx")', description: 'dYdX' },
   ],
   setupInstructions: ['Positive = longs pay shorts', 'Negative = shorts pay longs', 'High rates = potential reversal'],
 };
@@ -1601,7 +1601,7 @@ const EXCHANGE_FLOWS_TEMPLATE: TemplateConfig = {
     { column: 1, formulaPattern: '=CRYPTOSHEETS("exchange_flow", "{COIN}", "inflow")', description: 'Inflow' },
     { column: 2, formulaPattern: '=CRYPTOSHEETS("exchange_flow", "{COIN}", "outflow")', description: 'Outflow' },
   ],
-  setupInstructions: ['Outflow = accumulation (bullish)', 'Inflow = selling pressure (bearish)', 'Major exchanges: Binance, Coinbase, Kraken'],
+  setupInstructions: ['Outflow = accumulation (bullish)', 'Inflow = selling pressure (bearish)', 'Major exchanges: Coinbase, Kraken, OKX'],
 };
 
 /**

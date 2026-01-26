@@ -306,23 +306,6 @@ function KeysStep({ onNext, onBack }: { onNext: () => void; onBack: () => void }
           </a>
         </div>
 
-        <div className="p-3 bg-gray-900 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-white">Binance</h3>
-            <span className="text-xs text-gray-500">Optional</span>
-          </div>
-          <p className="text-xs text-gray-500 mb-2">
-            Real-time trading data. Public endpoints available without API key.
-          </p>
-          <a
-            href="https://www.binance.com/en/support/faq/how-to-create-api-keys-on-binance-360002502072"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-emerald-400 hover:underline"
-          >
-            Get API key →
-          </a>
-        </div>
       </div>
 
       <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-6">

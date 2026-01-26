@@ -100,13 +100,12 @@ export function DisplayOnlyBadge({
  * Data Source Badge - Shows which API provides the data
  */
 interface DataSourceBadgeProps {
-  sources: ('binance' | 'coingecko' | 'defillama' | 'alternative')[];
+  sources: ('coingecko' | 'defillama' | 'alternative')[];
   className?: string;
 }
 
 export function DataSourceBadge({ sources, className = '' }: DataSourceBadgeProps) {
   const sourceInfo: Record<string, { label: string; color: string }> = {
-    binance: { label: 'Binance', color: 'text-yellow-400 bg-yellow-500/20' },
     coingecko: { label: 'CoinGecko', color: 'text-green-400 bg-green-500/20' },
     defillama: { label: 'DeFiLlama', color: 'text-purple-400 bg-purple-500/20' },
     alternative: { label: 'Alternative.me', color: 'text-orange-400 bg-orange-500/20' },
@@ -137,7 +136,7 @@ interface PageHeaderWithBadgeProps {
   title: string;
   description?: string;
   pageId: PageId;
-  sources?: ('binance' | 'coingecko' | 'defillama' | 'alternative')[];
+  sources?: ('coingecko' | 'defillama' | 'alternative')[];
   children?: React.ReactNode;
 }
 
@@ -145,7 +144,7 @@ export function PageHeaderWithBadge({
   title,
   description,
   pageId,
-  sources = ['binance', 'coingecko'],
+  sources = ['coingecko'],
   children,
 }: PageHeaderWithBadgeProps) {
   return (

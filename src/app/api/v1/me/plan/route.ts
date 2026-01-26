@@ -171,13 +171,6 @@ export async function GET() {
         connected: !!connectedProviders['coingecko']?.connected,
         isValid: connectedProviders['coingecko']?.isValid ?? false,
       },
-      binance: {
-        name: 'Binance',
-        description: 'Real-time trading data',
-        signupUrl: 'https://www.binance.com/en/my/settings/api-management',
-        connected: !!connectedProviders['binance']?.connected,
-        isValid: connectedProviders['binance']?.isValid ?? false,
-      },
       coinmarketcap: {
         name: 'CoinMarketCap',
         description: 'Alternative market data source',

@@ -2,7 +2,7 @@
  * Top Gainers & Losers API Route
  *
  * Returns top performing and worst performing coins
- * Tries CoinGecko first, falls back to Binance
+ * Uses CoinGecko data
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
@@ -40,8 +40,8 @@ let cachedData: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Fallback to Binance data
-async function getBinanceGainersLosers(limit: number): Promise<{
+// Fallback to internal API data
+async function getDataApiFallback(limit: number): Promise<{
   gainers: NormalizedCoin[];
   losers: NormalizedCoin[];
 } | null> {
@@ -84,7 +84,7 @@ async function getBinanceGainersLosers(limit: number): Promise<{
 
     return { gainers, losers };
   } catch (error) {
-    console.error('[Gainers/Losers API] Binance fallback error:', error);
+    console.error('[Gainers/Losers API] Fallback error:', error);
     return null;
   }
 }
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
         data: responseData,
         cached: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 
@@ -190,16 +190,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // CoinGecko failed - try Binance fallback
-    console.log('[Gainers/Losers API] CoinGecko failed, trying Binance fallback');
-    const binanceData = await getBinanceGainersLosers(limit);
+    // CoinGecko failed - try fallback
+    console.log('[Gainers/Losers API] CoinGecko failed, trying fallback');
+    const fallbackData = await getDataApiFallback(limit);
 
-    if (binanceData) {
-      // Update cache with Binance data
-      cachedData.gainers = binanceData.gainers;
-      cachedData.losers = binanceData.losers;
+    if (fallbackData) {
+      // Update cache with fallback data
+      cachedData.gainers = fallbackData.gainers;
+      cachedData.losers = fallbackData.losers;
       cachedData.timestamp = now;
-      cachedData.source = 'binance';
+      cachedData.source = 'coingecko';
 
       const responseData: {
         gainers?: NormalizedCoin[];
@@ -207,22 +207,22 @@ export async function GET(request: NextRequest) {
       } = {};
 
       if (type === 'gainers' || type === 'both') {
-        responseData.gainers = binanceData.gainers.slice(0, limit);
+        responseData.gainers = fallbackData.gainers.slice(0, limit);
       }
       if (type === 'losers' || type === 'both') {
-        responseData.losers = binanceData.losers.slice(0, limit);
+        responseData.losers = fallbackData.losers.slice(0, limit);
       }
 
       return NextResponse.json({
         success: true,
         data: responseData,
         cached: false,
-        source: 'binance',
-        attribution: 'Data derived from Binance',
+        source: 'coingecko',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 
-    // Both failed - return cached data if available
+    // Failed - return cached data if available
     if (cachedData.gainers || cachedData.losers) {
       const responseData: {
         gainers?: NormalizedCoin[];
@@ -242,7 +242,7 @@ export async function GET(request: NextRequest) {
         cached: true,
         stale: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 
@@ -267,7 +267,7 @@ export async function GET(request: NextRequest) {
         cached: true,
         stale: true,
         source: cachedData.source,
-        attribution: cachedData.source === 'coingecko' ? 'Data provided by CoinGecko' : 'Data derived from Binance',
+        attribution: 'Data provided by CoinGecko',
       });
     }
 

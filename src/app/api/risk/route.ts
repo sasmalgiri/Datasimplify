@@ -1,11 +1,20 @@
+/**
+ * Risk Analysis API
+ * Calculates risk metrics from CoinGecko price data
+ *
+ * Data is for display only - not redistributable
+ *
+ * COMPLIANCE: This route is protected against external API access.
+ */
+
 import { NextResponse } from 'next/server';
-import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
-import { findCoinByGeckoId, SUPPORTED_COINS } from '@/lib/dataTypes';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
-import { FEATURES } from '@/lib/featureFlags';
+import { FEATURES, isFeatureEnabled } from '@/lib/featureFlags';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 300;
+
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 type RiskLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -21,6 +30,24 @@ type CoinRisk = {
   max_drawdown: number;
   volatility: number;
   risk_level: RiskLevel;
+};
+
+type MarketChart = {
+  prices: [number, number][];
+};
+
+// Known coin info for fallback
+const COIN_INFO: Record<string, { symbol: string; name: string }> = {
+  bitcoin: { symbol: 'BTC', name: 'Bitcoin' },
+  ethereum: { symbol: 'ETH', name: 'Ethereum' },
+  solana: { symbol: 'SOL', name: 'Solana' },
+  dogecoin: { symbol: 'DOGE', name: 'Dogecoin' },
+  'shiba-inu': { symbol: 'SHIB', name: 'Shiba Inu' },
+  cardano: { symbol: 'ADA', name: 'Cardano' },
+  ripple: { symbol: 'XRP', name: 'XRP' },
+  polkadot: { symbol: 'DOT', name: 'Polkadot' },
+  avalanche: { symbol: 'AVAX', name: 'Avalanche' },
+  chainlink: { symbol: 'LINK', name: 'Chainlink' },
 };
 
 function percentile(sorted: number[], p: number): number {
@@ -70,18 +97,26 @@ function computeRiskLevel(volatilityPct: number, maxDrawdownPct: number): RiskLe
   return 5;
 }
 
+async function fetchCoinGeckoMarketChart(coinId: string, days: number): Promise<MarketChart | null> {
+  const url = `${COINGECKO_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`;
+  const response = await fetch(url, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 300 },
+  });
+  if (!response.ok) return null;
+  const data = (await response.json()) as MarketChart;
+  if (!data?.prices || !Array.isArray(data.prices)) return null;
+  return data;
+}
+
 async function buildCoinRisk(coinId: string, days: number): Promise<CoinRisk | null> {
-  const byGeckoId = findCoinByGeckoId(coinId);
-  const bySymbol = SUPPORTED_COINS.find(c => c.symbol.toLowerCase() === coinId.toLowerCase());
-  const coinInfo = byGeckoId || bySymbol;
+  const coinInfo = COIN_INFO[coinId] || { symbol: coinId.toUpperCase(), name: coinId };
 
-  const binanceSymbol = getCoinSymbol(coinId) || (coinInfo?.binanceSymbol ?? null);
-  if (!coinInfo || !binanceSymbol) return null;
+  // Fetch price history from CoinGecko
+  const chart = await fetchCoinGeckoMarketChart(coinId, days);
+  if (!chart || chart.prices.length < 30) return null;
 
-  // Binance klines are capped (1000). Clamp here for reliability.
-  const limit = Math.min(Math.max(days, 30), 1000);
-  const klines = await getBinanceKlines(binanceSymbol, '1d', limit);
-  const prices = klines.map(k => k.close).filter(p => Number.isFinite(p) && p > 0);
+  const prices = chart.prices.map(p => p[1]).filter(p => Number.isFinite(p) && p > 0);
   const currentPrice = prices.length > 0 ? prices[prices.length - 1] : NaN;
 
   if (!Number.isFinite(currentPrice) || prices.length < 30) return null;
@@ -141,17 +176,25 @@ export async function GET(request: Request) {
     );
   }
 
+  if (!isFeatureEnabled('coingecko')) {
+    return NextResponse.json(
+      { error: 'CoinGecko is disabled', code: 'FEATURE_DISABLED' },
+      { status: 502 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const coinsParam = searchParams.get('coins');
   const daysParam = Number.parseInt(searchParams.get('days') || '365');
 
-  const days = Number.isFinite(daysParam) ? Math.min(Math.max(daysParam, 30), 3650) : 365;
+  // CoinGecko free tier supports up to 365 days of historical data
+  const days = Number.isFinite(daysParam) ? Math.min(Math.max(daysParam, 30), 365) : 365;
   const coinIds = (coinsParam ? coinsParam.split(',') : ['bitcoin', 'ethereum', 'solana', 'dogecoin', 'shiba-inu'])
     .map(s => s.trim())
     .filter(Boolean);
 
   try {
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/risk' });
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/risk' });
 
     const results = await Promise.allSettled(coinIds.map(id => buildCoinRisk(id, days)));
     const coins: CoinRisk[] = results
@@ -161,7 +204,7 @@ export async function GET(request: Request) {
 
     if (coins.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Risk metrics unavailable from free public endpoints right now.' },
+        { success: false, error: 'Risk metrics unavailable. CoinGecko may be rate limited.' },
         { status: 503 }
       );
     }
@@ -170,7 +213,7 @@ export async function GET(request: Request) {
       success: true,
       data: { coins, days },
       timestamp: new Date().toISOString(),
-      source: 'binance-derived',
+      source: 'coingecko',
     });
   } catch (err) {
     return NextResponse.json(

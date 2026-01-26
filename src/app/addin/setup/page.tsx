@@ -52,7 +52,7 @@ export default function AddinSetupPage() {
               <div>
                 <p className="font-medium text-gray-900">BYOK Architecture</p>
                 <p className="text-sm text-gray-600">
-                  Use your own CoinGecko, Binance, or CMC API keys
+                  Use your own CoinGecko or CMC API keys
                 </p>
               </div>
             </div>
@@ -236,7 +236,6 @@ export default function AddinSetupPage() {
                         <ExternalLink className="w-3 h-3 inline ml-1" />
                       </a>
                     </li>
-                    <li><strong>Binance</strong> - For advanced users</li>
                     <li><strong>Messari</strong> - For enterprise data</li>
                   </ul>
                   <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">

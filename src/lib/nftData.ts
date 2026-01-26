@@ -93,7 +93,7 @@ const CHAIN_MAP: Record<string, string> = {
   'optimistic-ethereum': 'Optimism',
   'base': 'Base',
   'avalanche': 'Avalanche',
-  'binance-smart-chain': 'BNB Chain',
+  'bnb-chain': 'BNB Chain',
 };
 
 // Top NFT collection IDs on CoinGecko

@@ -90,7 +90,7 @@ export function CRKAddInInfo({ className = '' }: { className?: string }) {
             you&apos;ll need to install the CRK Add-in from the Microsoft Office Store.
           </p>
           <p className="text-gray-400">
-            <strong>Supported Providers:</strong> CoinGecko (free/pro), Binance, CoinMarketCap, Alternative.me (Fear & Greed)
+            <strong>Supported Providers:</strong> CoinGecko (free/pro), CoinMarketCap, Alternative.me (Fear & Greed)
           </p>
         </div>
       </div>

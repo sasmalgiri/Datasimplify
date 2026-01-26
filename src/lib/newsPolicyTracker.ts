@@ -257,8 +257,8 @@ function detectSourceType(sourceName: string, text: string): SourceType {
   if (lowerText.includes('government') || lowerText.includes('ministry')) {
     return 'government';
   }
-  if (lowerSource.includes('binance') || lowerSource.includes('coinbase') ||
-      lowerSource.includes('kraken')) {
+  if (lowerSource.includes('coinbase') || lowerSource.includes('kraken') ||
+      lowerSource.includes('okx')) {
     return 'exchange';
   }
 
@@ -286,8 +286,6 @@ function extractAffectedCoins(text: string): string[] {
     'tether': 'USDT',
     'usdt': 'USDT',
     'usdc': 'USDC',
-    'binance': 'BNB',
-    'bnb': 'BNB',
   };
 
   for (const [pattern, symbol] of Object.entries(coinPatterns)) {

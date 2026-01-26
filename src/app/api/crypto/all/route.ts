@@ -2,7 +2,7 @@
  * All Coins API Route
  *
  * Returns list of all available coins (metadata only, no prices)
- * Uses dynamic coin discovery for 600+ coins from Binance
+ * Uses dynamic coin discovery for 600+ coins
  *
  * Ideal for: dropdowns, coin selectors, search autocomplete
  */
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Discover all coins from Binance
+    // Discover all coins
     const discoveredCoins = await discoverCoins();
 
     // Map to minimal metadata format
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       success: true,
       coins,
       total: coins.length,
-      source: 'binance-discovery',
+      source: 'coin-discovery',
       updated: new Date().toISOString(),
     });
   } catch (error) {

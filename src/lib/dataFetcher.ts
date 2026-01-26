@@ -1,86 +1,39 @@
-// Data Fetcher Service - Fetches ALL available data from Binance
-// No API key needed - 100% FREE
+// Data Fetcher Service - Fetches data from CoinGecko
+// Free tier: 10-30 calls/minute, no API key needed
 
 import { FEATURES } from '@/lib/featureFlags';
+import {
+  discoverCoins,
+  getDiscoveredCoin,
+  type DiscoveredCoin
+} from './coinDiscovery';
 
 const DEFAULT_COIN_IMAGE = '/globe.svg';
+const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
-const BINANCE_BASE = 'https://api.binance.com/api/v3';
-
-// Top trading pairs to fetch data for
+// Top coins to fetch data for (by symbol)
 export const TOP_SYMBOLS = [
-  'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT',
-  'ADAUSDT', 'DOGEUSDT', 'AVAXUSDT', 'LINKUSDT', 'DOTUSDT',
-  'MATICUSDT', 'TRXUSDT', 'LTCUSDT', 'SHIBUSDT', 'UNIUSDT',
-  'XLMUSDT', 'ATOMUSDT', 'NEARUSDT', 'ICPUSDT', 'APTUSDT',
-  'FILUSDT', 'ETCUSDT', 'ARBUSDT', 'OPUSDT', 'SUIUSDT',
-  'INJUSDT', 'AAVEUSDT', 'GRTUSDT', 'SANDUSDT', 'MANAUSDT',
-  'AXSUSDT', 'FTMUSDT', 'ALGOUSDT', 'EGLDUSDT', 'XTZUSDT',
-  'EOSUSDT', 'FLOWUSDT', 'CHZUSDT', 'APEUSDT', 'LRCUSDT',
-  'CRVUSDT', 'LDOUSDT', 'RNDRUSDT', 'MKRUSDT', 'SNXUSDT',
-  'COMPUSDT', 'ZECUSDT', 'ENJUSDT', 'BATUSDT', 'ONEUSDT',
+  'BTC', 'ETH', 'BNB', 'SOL', 'XRP',
+  'ADA', 'DOGE', 'AVAX', 'LINK', 'DOT',
+  'MATIC', 'TRX', 'LTC', 'SHIB', 'UNI',
+  'XLM', 'ATOM', 'NEAR', 'ICP', 'APT',
+  'FIL', 'ETC', 'ARB', 'OP', 'SUI',
+  'INJ', 'AAVE', 'GRT', 'SAND', 'MANA',
+  'AXS', 'FTM', 'ALGO', 'EGLD', 'XTZ',
+  'EOS', 'FLOW', 'CHZ', 'APE', 'LRC',
+  'CRV', 'LDO', 'RNDR', 'MKR', 'SNX',
+  'COMP', 'ZEC', 'ENJ', 'BAT', 'ONE',
 ];
 
-// Coin metadata (for names, images, supply)
-const COIN_INFO_RAW: Record<string, {
+// Coin metadata is now fetched from CoinGecko via coinDiscovery
+export const COIN_INFO: Record<string, {
   id: string;
   name: string;
   image: string;
   circulatingSupply: number;
   maxSupply: number | null;
   category: string;
-}> = {
-  'BTCUSDT': { id: 'bitcoin', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', circulatingSupply: 19800000, maxSupply: 21000000, category: 'Layer 1' },
-  'ETHUSDT': { id: 'ethereum', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', circulatingSupply: 120400000, maxSupply: null, category: 'Layer 1' },
-  'BNBUSDT': { id: 'bnb', name: 'BNB', image: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png', circulatingSupply: 145000000, maxSupply: 200000000, category: 'Exchange' },
-  'SOLUSDT': { id: 'solana', name: 'Solana', image: 'https://assets.coingecko.com/coins/images/4128/large/solana.png', circulatingSupply: 477000000, maxSupply: null, category: 'Layer 1' },
-  'XRPUSDT': { id: 'xrp', name: 'XRP', image: 'https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png', circulatingSupply: 57000000000, maxSupply: 100000000000, category: 'Payments' },
-  'ADAUSDT': { id: 'cardano', name: 'Cardano', image: 'https://assets.coingecko.com/coins/images/975/large/cardano.png', circulatingSupply: 35000000000, maxSupply: 45000000000, category: 'Layer 1' },
-  'DOGEUSDT': { id: 'dogecoin', name: 'Dogecoin', image: 'https://assets.coingecko.com/coins/images/5/large/dogecoin.png', circulatingSupply: 147000000000, maxSupply: null, category: 'Meme' },
-  'AVAXUSDT': { id: 'avalanche', name: 'Avalanche', image: 'https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png', circulatingSupply: 410000000, maxSupply: 720000000, category: 'Layer 1' },
-  'LINKUSDT': { id: 'chainlink', name: 'Chainlink', image: 'https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png', circulatingSupply: 630000000, maxSupply: 1000000000, category: 'Oracle' },
-  'DOTUSDT': { id: 'polkadot', name: 'Polkadot', image: 'https://assets.coingecko.com/coins/images/12171/large/polkadot.png', circulatingSupply: 1500000000, maxSupply: null, category: 'Layer 0' },
-  'MATICUSDT': { id: 'polygon', name: 'Polygon', image: 'https://assets.coingecko.com/coins/images/4713/large/polygon.png', circulatingSupply: 10000000000, maxSupply: 10000000000, category: 'Layer 2' },
-  'TRXUSDT': { id: 'tron', name: 'TRON', image: 'https://assets.coingecko.com/coins/images/1094/large/tron-logo.png', circulatingSupply: 86000000000, maxSupply: null, category: 'Layer 1' },
-  'LTCUSDT': { id: 'litecoin', name: 'Litecoin', image: 'https://assets.coingecko.com/coins/images/2/large/litecoin.png', circulatingSupply: 75000000, maxSupply: 84000000, category: 'Payments' },
-  'SHIBUSDT': { id: 'shiba-inu', name: 'Shiba Inu', image: 'https://assets.coingecko.com/coins/images/11939/large/shiba.png', circulatingSupply: 589000000000000, maxSupply: null, category: 'Meme' },
-  'UNIUSDT': { id: 'uniswap', name: 'Uniswap', image: 'https://assets.coingecko.com/coins/images/12504/large/uni.jpg', circulatingSupply: 600000000, maxSupply: 1000000000, category: 'DeFi' },
-  'XLMUSDT': { id: 'stellar', name: 'Stellar', image: 'https://assets.coingecko.com/coins/images/100/large/Stellar_symbol_black_RGB.png', circulatingSupply: 30000000000, maxSupply: 50000000000, category: 'Payments' },
-  'ATOMUSDT': { id: 'cosmos', name: 'Cosmos', image: 'https://assets.coingecko.com/coins/images/1481/large/cosmos_hub.png', circulatingSupply: 390000000, maxSupply: null, category: 'Layer 0' },
-  'NEARUSDT': { id: 'near', name: 'NEAR Protocol', image: 'https://assets.coingecko.com/coins/images/10365/large/near.jpg', circulatingSupply: 1200000000, maxSupply: 1000000000, category: 'Layer 1' },
-  'ICPUSDT': { id: 'icp', name: 'Internet Computer', image: 'https://assets.coingecko.com/coins/images/14495/large/Internet_Computer_logo.png', circulatingSupply: 470000000, maxSupply: null, category: 'Layer 1' },
-  'APTUSDT': { id: 'aptos', name: 'Aptos', image: 'https://assets.coingecko.com/coins/images/26455/large/aptos_round.png', circulatingSupply: 500000000, maxSupply: null, category: 'Layer 1' },
-  'FILUSDT': { id: 'filecoin', name: 'Filecoin', image: 'https://assets.coingecko.com/coins/images/12817/large/filecoin.png', circulatingSupply: 600000000, maxSupply: null, category: 'Storage' },
-  'ETCUSDT': { id: 'ethereum-classic', name: 'Ethereum Classic', image: 'https://assets.coingecko.com/coins/images/453/large/ethereum-classic-logo.png', circulatingSupply: 148000000, maxSupply: 210700000, category: 'Layer 1' },
-  'ARBUSDT': { id: 'arbitrum', name: 'Arbitrum', image: 'https://assets.coingecko.com/coins/images/16547/large/photo_2023-03-29_21.47.00.jpeg', circulatingSupply: 4000000000, maxSupply: 10000000000, category: 'Layer 2' },
-  'OPUSDT': { id: 'optimism', name: 'Optimism', image: 'https://assets.coingecko.com/coins/images/25244/large/Optimism.png', circulatingSupply: 1200000000, maxSupply: null, category: 'Layer 2' },
-  'SUIUSDT': { id: 'sui', name: 'Sui', image: 'https://assets.coingecko.com/coins/images/26375/large/sui_asset.jpeg', circulatingSupply: 2800000000, maxSupply: 10000000000, category: 'Layer 1' },
-  'INJUSDT': { id: 'injective', name: 'Injective', image: 'https://assets.coingecko.com/coins/images/12882/large/Secondary_Symbol.png', circulatingSupply: 97000000, maxSupply: 100000000, category: 'DeFi' },
-  'AAVEUSDT': { id: 'aave', name: 'Aave', image: 'https://assets.coingecko.com/coins/images/12645/large/AAVE.png', circulatingSupply: 15000000, maxSupply: 16000000, category: 'DeFi' },
-  'GRTUSDT': { id: 'the-graph', name: 'The Graph', image: 'https://assets.coingecko.com/coins/images/13397/large/Graph_Token.png', circulatingSupply: 9500000000, maxSupply: null, category: 'Infrastructure' },
-  'SANDUSDT': { id: 'sandbox', name: 'The Sandbox', image: 'https://assets.coingecko.com/coins/images/12129/large/sandbox_logo.jpg', circulatingSupply: 2300000000, maxSupply: 3000000000, category: 'Gaming' },
-  'MANAUSDT': { id: 'decentraland', name: 'Decentraland', image: 'https://assets.coingecko.com/coins/images/878/large/decentraland-mana.png', circulatingSupply: 1900000000, maxSupply: null, category: 'Gaming' },
-};
-
-export const COIN_INFO: Record<
-  string,
-  {
-    id: string;
-    name: string;
-    image: string;
-    circulatingSupply: number;
-    maxSupply: number | null;
-    category: string;
-  }
-> = Object.fromEntries(
-  Object.entries(COIN_INFO_RAW).map(([symbol, meta]) => [
-    symbol,
-    {
-      ...meta,
-      image: FEATURES.coingecko ? meta.image : DEFAULT_COIN_IMAGE,
-    },
-  ])
-);
+}> = {};
 
 // Types
 export interface TickerData {
@@ -99,7 +52,7 @@ export interface TickerData {
   quoteVolume: number;
   openTime: number;
   closeTime: number;
-  count: number; // Number of trades
+  count: number;
 }
 
 export interface KlineData {
@@ -121,7 +74,7 @@ export interface KlineData {
 export interface OrderBookData {
   symbol: string;
   lastUpdateId: number;
-  bids: [string, string][]; // [price, quantity][]
+  bids: [string, string][];
   asks: [string, string][];
   timestamp: number;
 }
@@ -137,38 +90,35 @@ export interface TradeData {
 }
 
 // ============================================
-// DATA FETCHERS
+// DATA FETCHERS (CoinGecko)
 // ============================================
 
-// 1. Fetch 24h Ticker Data for ALL symbols (single API call)
+// 1. Fetch ticker data for all top coins
 export async function fetchAllTickers(): Promise<TickerData[]> {
   try {
-    const response = await fetch(`${BINANCE_BASE}/ticker/24hr`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
-    // Filter to only USDT pairs we care about
-    return data
-      .filter((t: { symbol: string }) => TOP_SYMBOLS.includes(t.symbol))
-      .map((t: Record<string, string | number>) => ({
-        symbol: t.symbol,
-        priceChange: parseFloat(t.priceChange as string),
-        priceChangePercent: parseFloat(t.priceChangePercent as string),
-        weightedAvgPrice: parseFloat(t.weightedAvgPrice as string),
-        prevClosePrice: parseFloat(t.prevClosePrice as string),
-        lastPrice: parseFloat(t.lastPrice as string),
-        bidPrice: parseFloat(t.bidPrice as string),
-        askPrice: parseFloat(t.askPrice as string),
-        openPrice: parseFloat(t.openPrice as string),
-        highPrice: parseFloat(t.highPrice as string),
-        lowPrice: parseFloat(t.lowPrice as string),
-        volume: parseFloat(t.volume as string),
-        quoteVolume: parseFloat(t.quoteVolume as string),
-        openTime: t.openTime as number,
-        closeTime: t.closeTime as number,
-        count: t.count as number,
-      }));
+    const coins = await discoverCoins();
+
+    // Filter to top symbols
+    const topCoins = coins.filter(c => TOP_SYMBOLS.includes(c.symbol));
+
+    return topCoins.map(coin => ({
+      symbol: coin.symbol,
+      priceChange: coin.currentPrice * (coin.priceChangePercent24h / 100),
+      priceChangePercent: coin.priceChangePercent24h,
+      weightedAvgPrice: coin.currentPrice, // CoinGecko doesn't provide VWAP
+      prevClosePrice: coin.currentPrice / (1 + coin.priceChangePercent24h / 100),
+      lastPrice: coin.currentPrice,
+      bidPrice: coin.currentPrice, // CoinGecko doesn't provide bid/ask
+      askPrice: coin.currentPrice,
+      openPrice: coin.currentPrice / (1 + coin.priceChangePercent24h / 100),
+      highPrice: 0, // Not available in markets endpoint
+      lowPrice: 0,
+      volume: coin.volume24h / coin.currentPrice, // Estimate base volume
+      quoteVolume: coin.volume24h,
+      openTime: Date.now() - 24 * 60 * 60 * 1000,
+      closeTime: Date.now(),
+      count: 0, // Not available
+    }));
   } catch (error) {
     console.error('Error fetching tickers:', error);
     return [];
@@ -182,27 +132,69 @@ export async function fetchKlines(
   limit: number = 500
 ): Promise<KlineData[]> {
   try {
+    const coin = await getDiscoveredCoin(symbol.replace('USDT', ''));
+    if (!coin) {
+      console.warn(`Coin not found: ${symbol}`);
+      return [];
+    }
+
+    // Map interval to CoinGecko days
+    let days: number;
+    switch (interval) {
+      case '1m':
+      case '5m':
+      case '15m':
+      case '30m':
+        days = 1;
+        break;
+      case '1h':
+        days = 7;
+        break;
+      case '4h':
+        days = 30;
+        break;
+      case '1d':
+        days = Math.min(limit, 90);
+        break;
+      case '1w':
+        days = Math.min(limit * 7, 180);
+        break;
+      case '1M':
+        days = 365;
+        break;
+      default:
+        days = 30;
+    }
+
     const response = await fetch(
-      `${BINANCE_BASE}/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+      `${COINGECKO_BASE}/coins/${coin.geckoId}/ohlc?vs_currency=usd&days=${days}`,
+      {
+        headers: { 'Accept': 'application/json' },
+        next: { revalidate: 300 }
+      }
     );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
-    return data.map((k: (string | number)[]) => ({
+
+    if (!response.ok) {
+      console.error(`CoinGecko OHLC failed for ${symbol}: ${response.status}`);
+      return [];
+    }
+
+    const data: [number, number, number, number, number][] = await response.json();
+
+    return data.slice(-limit).map((k) => ({
       symbol,
       interval,
-      openTime: k[0] as number,
-      open: parseFloat(k[1] as string),
-      high: parseFloat(k[2] as string),
-      low: parseFloat(k[3] as string),
-      close: parseFloat(k[4] as string),
-      volume: parseFloat(k[5] as string),
-      closeTime: k[6] as number,
-      quoteVolume: parseFloat(k[7] as string),
-      trades: k[8] as number,
-      takerBuyBaseVolume: parseFloat(k[9] as string),
-      takerBuyQuoteVolume: parseFloat(k[10] as string),
+      openTime: k[0],
+      open: k[1],
+      high: k[2],
+      low: k[3],
+      close: k[4],
+      volume: 0, // Not available in OHLC endpoint
+      closeTime: k[0],
+      quoteVolume: 0,
+      trades: 0,
+      takerBuyBaseVolume: 0,
+      takerBuyQuoteVolume: 0,
     }));
   } catch (error) {
     console.error(`Error fetching klines for ${symbol}:`, error);
@@ -210,61 +202,25 @@ export async function fetchKlines(
   }
 }
 
-// 3. Fetch Order Book (Market Depth)
+// 3. Fetch Order Book - Not available from CoinGecko
 export async function fetchOrderBook(
-  symbol: string,
-  limit: 5 | 10 | 20 | 50 | 100 | 500 | 1000 = 20
+  _symbol: string,
+  _limit: 5 | 10 | 20 | 50 | 100 | 500 | 1000 = 20
 ): Promise<OrderBookData | null> {
-  try {
-    const response = await fetch(
-      `${BINANCE_BASE}/depth?symbol=${symbol}&limit=${limit}`
-    );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
-    return {
-      symbol,
-      lastUpdateId: data.lastUpdateId,
-      bids: data.bids,
-      asks: data.asks,
-      timestamp: Date.now(),
-    };
-  } catch (error) {
-    console.error(`Error fetching order book for ${symbol}:`, error);
-    return null;
-  }
+  console.warn('Order book data requires exchange API access. CoinGecko does not provide order book data.');
+  return null;
 }
 
-// 4. Fetch Recent Trades
+// 4. Fetch Recent Trades - Not available from CoinGecko
 export async function fetchRecentTrades(
-  symbol: string,
-  limit: number = 100
+  _symbol: string,
+  _limit: number = 100
 ): Promise<TradeData[]> {
-  try {
-    const response = await fetch(
-      `${BINANCE_BASE}/trades?symbol=${symbol}&limit=${limit}`
-    );
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
-    return data.map((t: Record<string, string | number | boolean>) => ({
-      symbol,
-      id: t.id as number,
-      price: parseFloat(t.price as string),
-      qty: parseFloat(t.qty as string),
-      quoteQty: parseFloat(t.quoteQty as string),
-      time: t.time as number,
-      isBuyerMaker: t.isBuyerMaker as boolean,
-    }));
-  } catch (error) {
-    console.error(`Error fetching trades for ${symbol}:`, error);
-    return [];
-  }
+  console.warn('Recent trades data requires exchange API access. CoinGecko does not provide trade data.');
+  return [];
 }
 
-// 5. Fetch Exchange Info (Trading Rules)
+// 5. Fetch Exchange Info - Return basic info from CoinGecko
 export async function fetchExchangeInfo(): Promise<{
   symbols: Array<{
     symbol: string;
@@ -275,21 +231,17 @@ export async function fetchExchangeInfo(): Promise<{
   }>;
 } | null> {
   try {
-    const response = await fetch(`${BINANCE_BASE}/exchangeInfo`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    
-    const data = await response.json();
-    
+    const coins = await discoverCoins();
+    const topCoins = coins.filter(c => TOP_SYMBOLS.includes(c.symbol));
+
     return {
-      symbols: data.symbols
-        .filter((s: { symbol: string }) => TOP_SYMBOLS.includes(s.symbol))
-        .map((s: Record<string, unknown>) => ({
-          symbol: s.symbol,
-          status: s.status,
-          baseAsset: s.baseAsset,
-          quoteAsset: s.quoteAsset,
-          filters: s.filters,
-        })),
+      symbols: topCoins.map(coin => ({
+        symbol: coin.symbol,
+        status: 'TRADING',
+        baseAsset: coin.symbol,
+        quoteAsset: 'USD',
+        filters: [],
+      })),
     };
   } catch (error) {
     console.error('Error fetching exchange info:', error);
@@ -298,28 +250,28 @@ export async function fetchExchangeInfo(): Promise<{
 }
 
 // ============================================
-// BATCH FETCHERS (For Supabase storage)
+// BATCH FETCHERS
 // ============================================
 
 // Fetch ALL data for storage
 export async function fetchAllData() {
-  console.log('Fetching all market data...');
-  
-  // 1. Fetch all tickers (single API call)
+  console.log('Fetching all market data from CoinGecko...');
+
+  // 1. Fetch all tickers
   const tickers = await fetchAllTickers();
   console.log(`Fetched ${tickers.length} tickers`);
-  
-  // 2. Fetch klines for each symbol (multiple calls, but cached)
+
+  // 2. Fetch klines for top coins
   const klines: Record<string, KlineData[]> = {};
-  for (const symbol of TOP_SYMBOLS.slice(0, 20)) { // Top 20 only to save API calls
-    klines[symbol] = await fetchKlines(symbol, '1d', 30); // Last 30 days
-    await new Promise(r => setTimeout(r, 100)); // Rate limit protection
+  for (const symbol of TOP_SYMBOLS.slice(0, 20)) {
+    klines[symbol] = await fetchKlines(symbol, '1d', 30);
+    await new Promise(r => setTimeout(r, 200)); // Rate limit protection
   }
   console.log(`Fetched klines for ${Object.keys(klines).length} symbols`);
-  
+
   // 3. Fetch exchange info
   const exchangeInfo = await fetchExchangeInfo();
-  
+
   return {
     tickers,
     klines,
@@ -328,19 +280,19 @@ export async function fetchAllData() {
   };
 }
 
-// Transform ticker data to our format with metadata
+// Transform discovered coin data to enriched format
 export function enrichTickerData(tickers: TickerData[]) {
   return tickers.map(ticker => {
-    const info = COIN_INFO[ticker.symbol];
-    const marketCap = info ? ticker.lastPrice * info.circulatingSupply : 0;
-    
+    // Get coin info from discovered coins
+    const symbol = ticker.symbol.replace('USDT', '');
+
     return {
       // Basic Info
-      symbol: ticker.symbol.replace('USDT', ''),
-      name: info?.name || ticker.symbol.replace('USDT', ''),
-      image: info?.image || '',
-      category: info?.category || 'Unknown',
-      
+      symbol,
+      name: symbol, // Will be enriched from discovered coins
+      image: FEATURES.coingecko ? '' : DEFAULT_COIN_IMAGE,
+      category: 'Unknown',
+
       // Price Data
       price: ticker.lastPrice,
       priceChange24h: ticker.priceChange,
@@ -348,30 +300,72 @@ export function enrichTickerData(tickers: TickerData[]) {
       open24h: ticker.openPrice,
       high24h: ticker.highPrice,
       low24h: ticker.lowPrice,
-      
+
       // Volume
       volume24h: ticker.volume,
       quoteVolume24h: ticker.quoteVolume,
       trades24h: ticker.count,
-      
-      // Market Cap (calculated)
-      marketCap,
-      circulatingSupply: info?.circulatingSupply || 0,
-      maxSupply: info?.maxSupply,
-      
-      // Order Book
+
+      // Market Cap (to be enriched)
+      marketCap: 0,
+      circulatingSupply: 0,
+      maxSupply: null,
+
+      // Order Book (not available)
       bidPrice: ticker.bidPrice,
       askPrice: ticker.askPrice,
-      spread: ticker.askPrice - ticker.bidPrice,
-      spreadPercent: ((ticker.askPrice - ticker.bidPrice) / ticker.lastPrice) * 100,
-      
+      spread: 0,
+      spreadPercent: 0,
+
       // Averages
-      vwap: ticker.weightedAvgPrice, // Volume Weighted Average Price
-      
+      vwap: ticker.weightedAvgPrice,
+
       // Timestamps
       openTime: new Date(ticker.openTime).toISOString(),
       closeTime: new Date(ticker.closeTime).toISOString(),
       updatedAt: new Date().toISOString(),
     };
-  }).sort((a, b) => b.marketCap - a.marketCap);
+  }).sort((a, b) => b.quoteVolume24h - a.quoteVolume24h);
+}
+
+// Get enriched market data directly from CoinGecko
+export async function getEnrichedMarketData(): Promise<ReturnType<typeof enrichDiscoveredCoins>> {
+  const coins = await discoverCoins();
+  return enrichDiscoveredCoins(coins.filter(c => TOP_SYMBOLS.includes(c.symbol)));
+}
+
+// Enrich discovered coins to the expected format
+function enrichDiscoveredCoins(coins: DiscoveredCoin[]) {
+  return coins.map(coin => ({
+    symbol: coin.symbol,
+    name: coin.name,
+    image: FEATURES.coingecko ? coin.image : DEFAULT_COIN_IMAGE,
+    category: coin.category,
+
+    price: coin.currentPrice,
+    priceChange24h: coin.currentPrice * (coin.priceChangePercent24h / 100),
+    priceChangePercent24h: coin.priceChangePercent24h,
+    open24h: coin.currentPrice / (1 + coin.priceChangePercent24h / 100),
+    high24h: 0,
+    low24h: 0,
+
+    volume24h: coin.volume24h / coin.currentPrice,
+    quoteVolume24h: coin.volume24h,
+    trades24h: 0,
+
+    marketCap: coin.marketCap,
+    circulatingSupply: coin.circulatingSupply,
+    maxSupply: coin.maxSupply,
+
+    bidPrice: coin.currentPrice,
+    askPrice: coin.currentPrice,
+    spread: 0,
+    spreadPercent: 0,
+
+    vwap: coin.currentPrice,
+
+    openTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    closeTime: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })).sort((a, b) => b.marketCap - a.marketCap);
 }

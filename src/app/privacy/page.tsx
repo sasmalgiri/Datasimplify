@@ -43,7 +43,7 @@ export default function PrivacyPage() {
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
               <li><strong>API Keys (BYOK):</strong> If you use our Bring Your Own Key (BYOK) feature, you may
-                provide API keys from third-party data providers (CoinGecko, Binance, CoinMarketCap, etc.).
+                provide API keys from third-party data providers (CoinGecko, CoinMarketCap, etc.).
                 See Section 2.4 below for details on how we handle these keys.</li>
             </ul>
 
@@ -118,7 +118,7 @@ export default function PrivacyPage() {
                     Your payment details, billing address, email, and transaction information are shared with our payment processor.</li>
                   <li><strong>Supabase:</strong> Database and authentication services</li>
                   <li><strong>Vercel:</strong> Website hosting and content delivery</li>
-                  <li><strong>Data Providers:</strong> Market data aggregation services (CoinGecko, Binance, etc.)</li>
+                  <li><strong>Data Providers:</strong> Market data aggregation services (CoinGecko, etc.)</li>
                 </ul>
               </li>
               <li><strong>Legal Requirements:</strong> If required by law, court order, or government request</li>

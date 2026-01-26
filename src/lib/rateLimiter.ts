@@ -29,11 +29,6 @@ const API_CONFIGS: Record<string, RateLimiterConfig> = {
     maxRetries: 2,
     retryDelayMs: 500
   },
-  binance: {
-    requestsPerSecond: 20,
-    maxRetries: 2,
-    retryDelayMs: 500
-  },
   default: {
     requestsPerSecond: 5,
     maxRetries: 3,
@@ -53,7 +48,6 @@ class RateLimiter {
   private getApiName(url: string): string {
     if (url.includes('coingecko.com')) return 'coingecko';
     if (url.includes('llama.fi')) return 'defillama';
-    if (url.includes('binance.com')) return 'binance';
     return 'default';
   }
 

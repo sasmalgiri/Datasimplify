@@ -1,291 +1,170 @@
 /**
- * Dynamic Coin Discovery
+ * Dynamic Coin Discovery - CoinGecko Primary
  *
- * Fetches all available coins from Binance and maps them to CoinGecko data.
- * This allows supporting ALL Binance USDT pairs (600+) instead of a hardcoded list.
+ * Fetches all available coins from CoinGecko's markets endpoint.
+ * This provides comprehensive market data including prices, market cap, and volume.
  */
 
-const BINANCE_BASE = 'https://api.binance.com/api/v3';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
 // Cache for discovered coins
 let discoveredCoins: DiscoveredCoin[] | null = null;
 let coinMap: Map<string, DiscoveredCoin> | null = null;
 let lastDiscoveryTime = 0;
-const DISCOVERY_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const DISCOVERY_CACHE_TTL = 10 * 60 * 1000; // 10 minutes (CoinGecko rate limit friendly)
 
 export interface DiscoveredCoin {
   symbol: string;           // BTC, ETH, etc.
-  binanceSymbol: string;    // BTCUSDT
+  geckoId: string;          // bitcoin (CoinGecko ID for lookups)
   name: string;             // Bitcoin
-  geckoId: string | null;   // bitcoin (CoinGecko ID for lookups)
-  image: string;            // CoinGecko image URL or fallback
-  category: string;         // layer1, defi, meme, etc. (basic categorization)
+  image: string;            // CoinGecko image URL
+  category: string;         // layer1, defi, meme, etc.
+  currentPrice: number;     // Current USD price
+  marketCap: number;        // Market cap in USD
+  marketCapRank: number | null;
+  priceChangePercent24h: number;
+  volume24h: number;
+  circulatingSupply: number;
+  totalSupply: number | null;
+  maxSupply: number | null;
+  ath: number;
+  athDate: string;
+  atl: number;
+  atlDate: string;
 }
 
-interface BinanceSymbol {
-  symbol: string;
-  baseAsset: string;
-  quoteAsset: string;
-  status: string;
-}
-
-interface GeckoCoin {
+interface GeckoMarketCoin {
   id: string;
   symbol: string;
   name: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  market_cap_rank: number | null;
+  fully_diluted_valuation: number | null;
+  total_volume: number;
+  high_24h: number;
+  low_24h: number;
+  price_change_24h: number;
+  price_change_percentage_24h: number;
+  market_cap_change_24h: number;
+  market_cap_change_percentage_24h: number;
+  circulating_supply: number;
+  total_supply: number | null;
+  max_supply: number | null;
+  ath: number;
+  ath_change_percentage: number;
+  ath_date: string;
+  atl: number;
+  atl_change_percentage: number;
+  atl_date: string;
+  last_updated: string;
 }
 
 // Known coin categories (for basic categorization)
 const COIN_CATEGORIES: Record<string, string> = {
   // Layer 1
-  BTC: 'layer1', ETH: 'layer1', SOL: 'layer1', ADA: 'layer1', AVAX: 'layer1',
-  DOT: 'layer1', NEAR: 'layer1', ATOM: 'layer1', ICP: 'layer1', APT: 'layer1',
-  SUI: 'layer1', ETC: 'layer1', FTM: 'layer1', ALGO: 'layer1', XTZ: 'layer1',
-  EGLD: 'layer1', FLOW: 'layer1', EOS: 'layer1', TRX: 'layer1', XLM: 'layer1',
-  HBAR: 'layer1', VET: 'layer1', KAVA: 'layer1',
+  btc: 'layer1', eth: 'layer1', sol: 'layer1', ada: 'layer1', avax: 'layer1',
+  dot: 'layer1', near: 'layer1', atom: 'layer1', icp: 'layer1', apt: 'layer1',
+  sui: 'layer1', etc: 'layer1', ftm: 'layer1', algo: 'layer1', xtz: 'layer1',
+  egld: 'layer1', flow: 'layer1', eos: 'layer1', trx: 'layer1', xlm: 'layer1',
+  hbar: 'layer1', vet: 'layer1', kava: 'layer1', ton: 'layer1', xrp: 'layer1',
 
   // Layer 2
-  MATIC: 'layer2', ARB: 'layer2', OP: 'layer2', LRC: 'layer2', IMX: 'layer2',
-  STRK: 'layer2', METIS: 'layer2', MANTA: 'layer2',
+  matic: 'layer2', arb: 'layer2', op: 'layer2', lrc: 'layer2', imx: 'layer2',
+  strk: 'layer2', metis: 'layer2', manta: 'layer2', pol: 'layer2',
 
   // DeFi
-  UNI: 'defi', LINK: 'defi', AAVE: 'defi', MKR: 'defi', CRV: 'defi',
-  SNX: 'defi', COMP: 'defi', LDO: 'defi', INJ: 'defi', GRT: 'defi',
-  YFI: 'defi', SUSHI: 'defi', BAL: 'defi', DYDX: 'defi', GMX: 'defi',
-  PENDLE: 'defi', JUP: 'defi', RAY: 'defi',
+  uni: 'defi', link: 'defi', aave: 'defi', mkr: 'defi', crv: 'defi',
+  snx: 'defi', comp: 'defi', ldo: 'defi', inj: 'defi', grt: 'defi',
+  yfi: 'defi', sushi: 'defi', bal: 'defi', dydx: 'defi', gmx: 'defi',
+  pendle: 'defi', jup: 'defi', ray: 'defi', rune: 'defi',
 
   // Gaming/Metaverse
-  SAND: 'gaming', MANA: 'gaming', AXS: 'gaming', APE: 'gaming', ENJ: 'gaming',
-  CHZ: 'gaming', RNDR: 'gaming', GALA: 'gaming', ILV: 'gaming', SUPER: 'gaming',
+  sand: 'gaming', mana: 'gaming', axs: 'gaming', ape: 'gaming', enj: 'gaming',
+  chz: 'gaming', rndr: 'gaming', gala: 'gaming', ilv: 'gaming', super: 'gaming',
 
   // Meme
-  DOGE: 'meme', SHIB: 'meme', PEPE: 'meme', FLOKI: 'meme', BONK: 'meme',
-  WIF: 'meme', MEME: 'meme', TURBO: 'meme',
+  doge: 'meme', shib: 'meme', pepe: 'meme', floki: 'meme', bonk: 'meme',
+  wif: 'meme', meme: 'meme', turbo: 'meme',
 
   // AI
-  FET: 'ai', OCEAN: 'ai', AGIX: 'ai', TAO: 'ai', ARKM: 'ai', WLD: 'ai',
+  fet: 'ai', ocean: 'ai', agix: 'ai', tao: 'ai', arkm: 'ai', wld: 'ai',
 
   // Exchange tokens
-  BNB: 'exchange', CRO: 'exchange', OKB: 'exchange', LEO: 'exchange',
+  bnb: 'exchange', cro: 'exchange', okb: 'exchange', leo: 'exchange',
 
-  // Stablecoins
-  USDT: 'stablecoin', USDC: 'stablecoin', DAI: 'stablecoin', TUSD: 'stablecoin',
-  FDUSD: 'stablecoin', BUSD: 'stablecoin',
+  // Stablecoins (usually excluded from tracking)
+  usdt: 'stablecoin', usdc: 'stablecoin', dai: 'stablecoin', tusd: 'stablecoin',
+  fdusd: 'stablecoin', busd: 'stablecoin',
 
   // Privacy
-  XMR: 'privacy', ZEC: 'privacy', DASH: 'privacy',
+  xmr: 'privacy', zec: 'privacy', dash: 'privacy',
 
   // Storage
-  FIL: 'storage', AR: 'storage', STORJ: 'storage',
+  fil: 'storage', ar: 'storage', storj: 'storage',
 
   // Infrastructure
-  QNT: 'infrastructure', THETA: 'infrastructure', STX: 'infrastructure',
+  qnt: 'infrastructure', theta: 'infrastructure', stx: 'infrastructure',
 };
 
 /**
- * Fetch all USDT trading pairs from Binance
+ * Fetch coins from CoinGecko markets endpoint
+ * This is the primary data source for all coin information
  */
-async function fetchBinanceSymbols(): Promise<BinanceSymbol[]> {
+async function fetchGeckoMarkets(page: number = 1, perPage: number = 250): Promise<GeckoMarketCoin[]> {
   try {
-    const response = await fetch(`${BINANCE_BASE}/exchangeInfo`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
+    const url = `${COINGECKO_BASE}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=false&price_change_percentage=24h`;
+
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/json' },
+      next: { revalidate: 300 } // Cache for 5 minutes
     });
 
     if (!response.ok) {
-      console.error('Binance exchangeInfo failed:', response.status);
-      return [];
-    }
-
-    const data = await response.json();
-
-    // Filter for USDT pairs that are actively trading
-    return (data.symbols || []).filter((s: BinanceSymbol) =>
-      s.quoteAsset === 'USDT' &&
-      s.status === 'TRADING' &&
-      !s.baseAsset.endsWith('UP') && // Exclude leveraged tokens
-      !s.baseAsset.endsWith('DOWN') &&
-      !s.baseAsset.endsWith('BEAR') &&
-      !s.baseAsset.endsWith('BULL')
-    );
-  } catch (error) {
-    console.error('Error fetching Binance symbols:', error);
-    return [];
-  }
-}
-
-/**
- * Fetch coin list from CoinGecko (free API - just IDs and names)
- */
-async function fetchGeckoList(): Promise<GeckoCoin[]> {
-  try {
-    const response = await fetch(`${COINGECKO_BASE}/coins/list`, {
-      next: { revalidate: 86400 } // Cache for 24 hours (this list rarely changes)
-    });
-
-    if (!response.ok) {
-      console.error('CoinGecko coins/list failed:', response.status);
+      if (response.status === 429) {
+        console.warn('[CoinDiscovery] CoinGecko rate limit hit, using cached data');
+        return [];
+      }
+      console.error('[CoinDiscovery] CoinGecko markets failed:', response.status);
       return [];
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error fetching CoinGecko list:', error);
+    console.error('[CoinDiscovery] Error fetching CoinGecko markets:', error);
     return [];
   }
 }
 
 /**
- * Known symbol to CoinGecko ID mappings for major coins
- * This ensures we get the correct main coin, not a bridged/wrapped version
+ * Map CoinGecko market data to our DiscoveredCoin format
  */
-const KNOWN_GECKO_IDS: Record<string, string> = {
-  'BTC': 'bitcoin',
-  'ETH': 'ethereum',
-  'USDT': 'tether',
-  'USDC': 'usd-coin',
-  'BNB': 'binancecoin',
-  'XRP': 'ripple',
-  'SOL': 'solana',
-  'ADA': 'cardano',
-  'DOGE': 'dogecoin',
-  'TRX': 'tron',
-  'AVAX': 'avalanche-2',
-  'LINK': 'chainlink',
-  'DOT': 'polkadot',
-  'MATIC': 'matic-network',
-  'SHIB': 'shiba-inu',
-  'TON': 'the-open-network',
-  'UNI': 'uniswap',
-  'ATOM': 'cosmos',
-  'LTC': 'litecoin',
-  'BCH': 'bitcoin-cash',
-  'NEAR': 'near',
-  'XLM': 'stellar',
-  'APT': 'aptos',
-  'PEPE': 'pepe',
-  'ARB': 'arbitrum',
-  'OP': 'optimism',
-  'ICP': 'internet-computer',
-  'FIL': 'filecoin',
-  'ETC': 'ethereum-classic',
-  'HBAR': 'hedera-hashgraph',
-  'VET': 'vechain',
-  'MKR': 'maker',
-  'AAVE': 'aave',
-  'GRT': 'the-graph',
-  'INJ': 'injective-protocol',
-  'FTM': 'fantom',
-  'ALGO': 'algorand',
-  'EGLD': 'elrond-erd-2',
-  'SAND': 'the-sandbox',
-  'MANA': 'decentraland',
-  'AXS': 'axie-infinity',
-  'APE': 'apecoin',
-  'XTZ': 'tezos',
-  'EOS': 'eos',
-  'FLOW': 'flow',
-  'CHZ': 'chiliz',
-  'CRV': 'curve-dao-token',
-  'SNX': 'havven',
-  'LDO': 'lido-dao',
-  'RNDR': 'render-token',
-  'ENJ': 'enjincoin',
-  'FET': 'fetch-ai',
-  'GALA': 'gala',
-  'LRC': 'loopring',
-  'COMP': 'compound-governance-token',
-  'YFI': 'yearn-finance',
-  'BAL': 'balancer',
-  'SUSHI': 'sushi',
-  'ZEC': 'zcash',
-  'XMR': 'monero',
-  'DASH': 'dash',
-  'NEO': 'neo',
-  'WAVES': 'waves',
-  'QTUM': 'qtum',
-  'ZIL': 'zilliqa',
-  'ONT': 'ontology',
-  'ICX': 'icon',
-  'LUNA': 'terra-luna-2',
-  'LUNC': 'terra-luna',
-  'KAVA': 'kava',
-  'AR': 'arweave',
-  'THETA': 'theta-token',
-  'STORJ': 'storj',
-  'QNT': 'quant-network',
-  'STX': 'blockstack',
-  'SUI': 'sui',
-  'IMX': 'immutable-x',
-  'FLOKI': 'floki',
-  'BONK': 'bonk',
-  'WIF': 'dogwifcoin',
-  'TAO': 'bittensor',
-  'WLD': 'worldcoin-wld',
-  'ARKM': 'arkham',
-  'OCEAN': 'ocean-protocol',
-  'AGIX': 'singularitynet',
-  'CRO': 'crypto-com-chain',
-  'OKB': 'okb',
-  'LEO': 'leo-token',
-  'DAI': 'dai',
-  'GMX': 'gmx',
-  'DYDX': 'dydx',
-  'JUP': 'jupiter-exchange-solana',
-  'RAY': 'raydium',
-  'PENDLE': 'pendle',
-  'SUPER': 'superfarm',
-  'ILV': 'illuvium',
-  'MEME': 'memecoin',
-  'TURBO': 'turbo',
-  'STRK': 'starknet',
-  'METIS': 'metis-token',
-  'MANTA': 'manta-network',
-  'FDUSD': 'first-digital-usd',
-  'TUSD': 'true-usd',
-  'BUSD': 'binance-usd',
-};
-
-/**
- * Map Binance symbol to CoinGecko coin
- */
-function findGeckoCoin(symbol: string, geckoCoins: GeckoCoin[]): GeckoCoin | null {
-  const upperSymbol = symbol.toUpperCase();
-
-  // First check our known mappings (most reliable)
-  if (KNOWN_GECKO_IDS[upperSymbol]) {
-    const known = geckoCoins.find(c => c.id === KNOWN_GECKO_IDS[upperSymbol]);
-    if (known) return known;
-  }
-
-  const lowerSymbol = symbol.toLowerCase();
-
-  // Try to find by matching symbol AND checking it's a main coin (not bridged)
-  // Bridged coins usually have names like "Bridged X (Network)" or "Wrapped X"
-  const candidates = geckoCoins.filter(c => c.symbol.toLowerCase() === lowerSymbol);
-
-  if (candidates.length === 1) {
-    return candidates[0];
-  }
-
-  if (candidates.length > 1) {
-    // Prefer coins whose name doesn't contain "Bridged", "Wrapped", or network names
-    const mainCoin = candidates.find(c =>
-      !c.name.toLowerCase().includes('bridged') &&
-      !c.name.toLowerCase().includes('wrapped') &&
-      !c.name.includes('(') // Usually bridged coins have "(Network)" suffix
-    );
-    if (mainCoin) return mainCoin;
-
-    // Otherwise return the first one with shortest name (usually the main coin)
-    return candidates.sort((a, b) => a.name.length - b.name.length)[0];
-  }
-
-  return null;
+function mapGeckoCoin(coin: GeckoMarketCoin): DiscoveredCoin {
+  return {
+    symbol: coin.symbol.toUpperCase(),
+    geckoId: coin.id,
+    name: coin.name,
+    image: coin.image || '/globe.svg',
+    category: COIN_CATEGORIES[coin.symbol.toLowerCase()] || 'other',
+    currentPrice: coin.current_price || 0,
+    marketCap: coin.market_cap || 0,
+    marketCapRank: coin.market_cap_rank,
+    priceChangePercent24h: coin.price_change_percentage_24h || 0,
+    volume24h: coin.total_volume || 0,
+    circulatingSupply: coin.circulating_supply || 0,
+    totalSupply: coin.total_supply,
+    maxSupply: coin.max_supply,
+    ath: coin.ath || 0,
+    athDate: coin.ath_date || '',
+    atl: coin.atl || 0,
+    atlDate: coin.atl_date || '',
+  };
 }
 
 /**
- * Discover all available coins from Binance and map to CoinGecko
+ * Discover all available coins from CoinGecko
+ * Fetches top coins by market cap (up to 500)
  */
 export async function discoverCoins(): Promise<DiscoveredCoin[]> {
   // Return cached data if still valid
@@ -293,49 +172,34 @@ export async function discoverCoins(): Promise<DiscoveredCoin[]> {
     return discoveredCoins;
   }
 
-  console.log('[CoinDiscovery] Fetching all available coins...');
+  console.log('[CoinDiscovery] Fetching coins from CoinGecko...');
 
-  const [binanceSymbols, geckoCoins] = await Promise.all([
-    fetchBinanceSymbols(),
-    fetchGeckoList()
+  // Fetch first two pages (500 coins total) to cover major coins
+  const [page1, page2] = await Promise.all([
+    fetchGeckoMarkets(1, 250),
+    fetchGeckoMarkets(2, 250)
   ]);
 
-  console.log(`[CoinDiscovery] Found ${binanceSymbols.length} Binance USDT pairs, ${geckoCoins.length} CoinGecko coins`);
+  const allCoins = [...page1, ...page2];
 
-  const coins: DiscoveredCoin[] = [];
-
-  for (const bs of binanceSymbols) {
-    const geckoCoin = findGeckoCoin(bs.baseAsset, geckoCoins);
-
-    coins.push({
-      symbol: bs.baseAsset,
-      binanceSymbol: bs.symbol,
-      name: geckoCoin?.name || bs.baseAsset,
-      geckoId: geckoCoin?.id || null,
-      image: geckoCoin?.id
-        ? `https://assets.coingecko.com/coins/images/1/large/${geckoCoin.id}.png`
-        : '/globe.svg',
-      category: COIN_CATEGORIES[bs.baseAsset] || 'other',
-    });
+  if (allCoins.length === 0 && discoveredCoins) {
+    console.warn('[CoinDiscovery] No new data, returning cached coins');
+    return discoveredCoins;
   }
 
-  // Sort by common importance (BTC, ETH first, then alphabetically)
-  const priorityOrder = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'LINK'];
-  coins.sort((a, b) => {
-    const aIdx = priorityOrder.indexOf(a.symbol);
-    const bIdx = priorityOrder.indexOf(b.symbol);
-    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-    if (aIdx !== -1) return -1;
-    if (bIdx !== -1) return 1;
-    return a.symbol.localeCompare(b.symbol);
-  });
+  console.log(`[CoinDiscovery] Found ${allCoins.length} coins from CoinGecko`);
+
+  // Filter out stablecoins from the main list (but keep them discoverable)
+  const coins = allCoins
+    .map(mapGeckoCoin)
+    .filter(c => c.marketCap > 0); // Only include coins with market cap
 
   // Cache the results
   discoveredCoins = coins;
   coinMap = new Map(coins.map(c => [c.symbol.toUpperCase(), c]));
   lastDiscoveryTime = Date.now();
 
-  console.log(`[CoinDiscovery] Discovered ${coins.length} tradeable coins`);
+  console.log(`[CoinDiscovery] Processed ${coins.length} tradeable coins`);
 
   return coins;
 }
@@ -348,6 +212,14 @@ export async function getDiscoveredCoin(symbol: string): Promise<DiscoveredCoin 
     await discoverCoins();
   }
   return coinMap?.get(symbol.toUpperCase()) || null;
+}
+
+/**
+ * Get a specific coin by CoinGecko ID
+ */
+export async function getDiscoveredCoinById(geckoId: string): Promise<DiscoveredCoin | null> {
+  const coins = await discoverCoins();
+  return coins.find(c => c.geckoId === geckoId) || null;
 }
 
 /**
@@ -375,17 +247,61 @@ export async function getCoinsByCategory(category: string): Promise<DiscoveredCo
 }
 
 /**
- * Get Binance symbol for a coin
- */
-export async function getBinanceSymbol(symbol: string): Promise<string | null> {
-  const coin = await getDiscoveredCoin(symbol);
-  return coin?.binanceSymbol || null;
-}
-
-/**
- * Get CoinGecko ID for a coin
+ * Get CoinGecko ID for a coin symbol
  */
 export async function getGeckoId(symbol: string): Promise<string | null> {
   const coin = await getDiscoveredCoin(symbol);
   return coin?.geckoId || null;
+}
+
+/**
+ * Search coins by name or symbol
+ */
+export async function searchCoins(query: string): Promise<DiscoveredCoin[]> {
+  const coins = await discoverCoins();
+  const lowerQuery = query.toLowerCase();
+
+  return coins.filter(c =>
+    c.symbol.toLowerCase().includes(lowerQuery) ||
+    c.name.toLowerCase().includes(lowerQuery) ||
+    c.geckoId.toLowerCase().includes(lowerQuery)
+  );
+}
+
+/**
+ * Get top coins by market cap
+ */
+export async function getTopCoins(limit: number = 100): Promise<DiscoveredCoin[]> {
+  const coins = await discoverCoins();
+  return coins.slice(0, limit);
+}
+
+/**
+ * Get top gainers (highest 24h change)
+ */
+export async function getTopGainers(limit: number = 20): Promise<DiscoveredCoin[]> {
+  const coins = await discoverCoins();
+  return [...coins]
+    .filter(c => c.priceChangePercent24h > 0)
+    .sort((a, b) => b.priceChangePercent24h - a.priceChangePercent24h)
+    .slice(0, limit);
+}
+
+/**
+ * Get top losers (lowest 24h change)
+ */
+export async function getTopLosers(limit: number = 20): Promise<DiscoveredCoin[]> {
+  const coins = await discoverCoins();
+  return [...coins]
+    .filter(c => c.priceChangePercent24h < 0)
+    .sort((a, b) => a.priceChangePercent24h - b.priceChangePercent24h)
+    .slice(0, limit);
+}
+
+/**
+ * Refresh coin data (force refetch)
+ */
+export async function refreshCoinData(): Promise<DiscoveredCoin[]> {
+  lastDiscoveryTime = 0; // Invalidate cache
+  return discoverCoins();
 }

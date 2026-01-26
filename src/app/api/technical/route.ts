@@ -1,12 +1,11 @@
 /**
  * Technical Indicators API
- * Calculates technical indicators from price data
+ * Calculates technical indicators from CoinGecko price data
  *
  * COMPLIANCE: This route is protected against external API access.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getBinanceKlines, getCoinSymbol } from '@/lib/binance';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
@@ -307,52 +306,31 @@ export async function GET(request: NextRequest) {
     };
 
     const { interval, days } = intervalMap[timeframe] || intervalMap['1d'];
-    const symbol = getCoinSymbol(coin);
 
-    let candles: Candle[] = [];
-    let source: 'binance' | 'coingecko' = 'binance';
-
-    if (symbol) {
-      try {
-        const klines = await getBinanceKlines(symbol, interval, Math.min(days, 500));
-        if (klines && klines.length > 0) {
-          assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/technical' });
-          candles = klines;
-          source = 'binance';
-        }
-      } catch (e) {
-        console.error('Binance fetch error:', e);
-      }
+    if (!isFeatureEnabled('coingecko')) {
+      return NextResponse.json({
+        success: false,
+        error: 'CoinGecko is disabled.',
+        coin,
+        timeframe,
+      }, { status: 502 });
     }
 
-    // Fallback to CoinGecko market chart if Binance is unavailable
-    if (candles.length === 0) {
-      if (!isFeatureEnabled('coingecko')) {
-        return NextResponse.json({
-          success: false,
-          error: 'No candle data available from Binance (CoinGecko disabled).',
-          coin,
-          timeframe,
-        }, { status: 502 });
-      }
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/technical' });
 
-      assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/technical' });
+    const bucketMs = interval === '1h'
+      ? 60 * 60 * 1000
+      : interval === '4h'
+        ? 4 * 60 * 60 * 1000
+        : 24 * 60 * 60 * 1000;
 
-      const bucketMs = interval === '1h'
-        ? 60 * 60 * 1000
-        : interval === '4h'
-          ? 4 * 60 * 60 * 1000
-          : 24 * 60 * 60 * 1000;
-
-      const chart = await fetchCoinGeckoMarketChart(coin, days);
-      candles = chart ? bucketToCandles(chart.prices, chart.total_volumes, bucketMs) : [];
-      source = 'coingecko';
-    }
+    const chart = await fetchCoinGeckoMarketChart(coin, days);
+    const candles = chart ? bucketToCandles(chart.prices, chart.total_volumes, bucketMs) : [];
 
     if (candles.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'No candle data available from Binance or CoinGecko.',
+        error: 'No candle data available from CoinGecko.',
         coin,
         timeframe,
       }, { status: 502 });
@@ -547,7 +525,7 @@ export async function GET(request: NextRequest) {
         meta: {
           coin,
           timeframe,
-          source,
+          source: 'coingecko',
           dataPoints: candles.length,
           lastUpdate: new Date().toISOString(),
         },

@@ -1,19 +1,16 @@
 /**
  * Global Market Stats API Route
  *
- * Returns global market statistics derived from Binance
+ * Returns global market statistics from CoinGecko
  * Data is for display only - not redistributable
  *
  * COMPLIANCE: This route is protected against external API access.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { fetchGlobalStats } from '@/lib/dataApi';
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
-
-const BINANCE_BASE = 'https://api.binance.com/api/v3';
 
 export async function GET(request: NextRequest) {
   // Enforce display-only access - block external API scraping
@@ -21,77 +18,30 @@ export async function GET(request: NextRequest) {
   if (blocked) return blocked;
 
   try {
-    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/crypto/global' });
-    // Redistributable-only mode: derive stats from Binance tickers for our SUPPORTED_COINS universe.
-    // Response keeps the legacy CoinGecko /global shape used by UI.
-    const response = await fetch(`${BINANCE_BASE}/ticker/24hr`, {
-      headers: { Accept: 'application/json' },
-      next: { revalidate: 60 },
-    });
+    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto/global' });
 
-    if (!response.ok) {
-      console.error('Binance ticker API error:', response.status);
-      return NextResponse.json({ data: null, error: 'API error' }, { status: response.status });
+    const globalStats = await fetchGlobalStats();
+
+    if (!globalStats) {
+      return NextResponse.json({ data: null, error: 'Unable to fetch global stats' }, { status: 502 });
     }
 
-    const tickers: Array<{
-      symbol: string;
-      lastPrice: string;
-      openPrice: string;
-      quoteVolume: string;
-    }> = await response.json();
-
-    let totalMarketCap = 0;
-    let totalMarketCapPrev = 0;
-    let totalVolume24h = 0;
-
-    const capBySymbol: Record<string, number> = {};
-
-    for (const coin of SUPPORTED_COINS) {
-      const ticker = tickers.find(t => t.symbol === coin.binanceSymbol);
-      if (!ticker) continue;
-
-      const price = Number.parseFloat(ticker.lastPrice);
-      const open = Number.parseFloat(ticker.openPrice);
-      const quoteVolume = Number.parseFloat(ticker.quoteVolume);
-
-      if (!Number.isFinite(price) || !Number.isFinite(open)) continue;
-
-      const marketCap = price * coin.circulatingSupply;
-      const prevMarketCap = open * coin.circulatingSupply;
-
-      totalMarketCap += marketCap;
-      totalMarketCapPrev += prevMarketCap;
-      if (Number.isFinite(quoteVolume)) totalVolume24h += quoteVolume;
-
-      capBySymbol[coin.symbol.toUpperCase()] = marketCap;
-    }
-
-    if (!Number.isFinite(totalMarketCap) || totalMarketCap <= 0) {
-      return NextResponse.json({ data: null, error: 'Insufficient data' }, { status: 502 });
-    }
-
-    const marketCapChange24h =
-      totalMarketCapPrev > 0 ? ((totalMarketCap - totalMarketCapPrev) / totalMarketCapPrev) * 100 : 0;
-
-    const market_cap_percentage: Record<string, number> = {};
-    for (const [symbol, cap] of Object.entries(capBySymbol)) {
-      const key = symbol.toLowerCase();
-      market_cap_percentage[key] = (cap / totalMarketCap) * 100;
-    }
-
+    // Format response to match expected shape used by UI
     const data = {
-      total_market_cap: { usd: totalMarketCap },
-      total_volume: { usd: totalVolume24h },
-      market_cap_percentage,
-      market_cap_change_percentage_24h_usd: Number.isFinite(marketCapChange24h) ? marketCapChange24h : 0,
-      active_cryptocurrencies: SUPPORTED_COINS.length,
+      total_market_cap: { usd: globalStats.totalMarketCap },
+      total_volume: { usd: globalStats.totalVolume24h },
+      market_cap_percentage: {
+        btc: globalStats.btcDominance,
+        eth: globalStats.ethDominance,
+      },
+      market_cap_change_percentage_24h_usd: globalStats.marketCapChange24h,
+      active_cryptocurrencies: globalStats.activeCryptocurrencies,
     };
 
     return NextResponse.json({
       data,
-      source: 'binance-derived',
-      updated: new Date().toISOString(),
+      source: 'coingecko',
+      updated: globalStats.updatedAt,
     });
 
   } catch (error) {

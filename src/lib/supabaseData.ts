@@ -397,7 +397,7 @@ export async function getGasHistoryFromCache(hours: number = 24) {
 }
 
 // ============================================
-// DERIVATIVES CACHE (Binance Futures)
+// DERIVATIVES CACHE (Futures Data)
 // ============================================
 
 // Cache TTL: 1 minute for derivatives data

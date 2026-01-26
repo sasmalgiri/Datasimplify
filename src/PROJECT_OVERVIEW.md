@@ -29,7 +29,7 @@ This document is a **repo-level map** of what exists in the current workspace: t
   - Feature components under `src/components/features/`
 
 - `src/lib/`
-  - Provider clients (Binance, CoinGecko, etc)
+  - Provider clients (CoinGecko, etc)
   - Business logic (templates, chart transforms, caching)
   - Policy + feature flag system
 
@@ -65,7 +65,7 @@ Effects:
 - Sets an internal, built-in **free-only allowlist** (and intersects with `REDISTRIBUTABLE_SOURCES` if provided):
 
   ```text
-  binance, coinlore, alternativeme, defillama, blockchaininfo, publicrpc
+  coinlore, alternativeme, defillama, blockchaininfo, publicrpc
   ```
 
 Notes:
@@ -145,8 +145,8 @@ This is a **code-level view** of upstream providers referenced in `src/lib/*` an
 
 ### 5.1 Market / price data
 
-- Binance REST (`https://api.binance.com/api/v3`)
-  - Used heavily in `src/lib/dataApi.ts` (market overview, OHLCV, order book, trades)
+- CoinGecko (feature-flagged)
+  - Primary source for market data, prices, and metadata
 
 - CoinLore
   - Used by sync service as “commercial-friendly alternative” (see `syncCoinLoreData` in `src/lib/syncService.ts`)

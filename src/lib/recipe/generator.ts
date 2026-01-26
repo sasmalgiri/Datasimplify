@@ -327,7 +327,7 @@ async function createInstructionsSheet(
     '',
     '3. Connect Your API Keys (Optional)',
     '   In the CRK Panel, connect your provider API keys for higher rate limits',
-    '   Supported: CoinGecko, Binance, CoinMarketCap, etc.',
+    '   Supported: CoinGecko, CoinMarketCap, etc.',
     '',
     '4. Refresh Data',
     '   Click "Refresh All Data" in the CRK Panel',

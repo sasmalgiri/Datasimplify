@@ -1,44 +1,45 @@
 'use client';
 
 import Link from 'next/link';
-import { TrendingUp, BarChart3, LineChart, FileSpreadsheet, Zap, ArrowRight } from 'lucide-react';
+import { Shield, BarChart3, BookOpen, FileSpreadsheet, Zap, ArrowRight } from 'lucide-react';
 
 interface QuickActionsCardProps {
   className?: string;
 }
 
+// A/B/C/D features only
 const QUICK_ACTIONS = [
   {
-    icon: LineChart,
-    label: 'View Charts',
-    description: 'Interactive price charts',
-    href: '/charts',
-    color: 'from-blue-500/20 to-blue-600/10',
-    iconColor: 'text-blue-400',
+    icon: FileSpreadsheet,
+    label: 'Excel Templates',
+    description: 'Download report kits (BYOK)',
+    href: '/templates',
+    color: 'from-emerald-500/20 to-emerald-600/10',
+    iconColor: 'text-emerald-400',
   },
   {
     icon: BarChart3,
     label: 'Compare Coins',
-    description: 'Side-by-side analysis',
+    description: 'Side-by-side + market cap calculator',
     href: '/compare',
     color: 'from-purple-500/20 to-purple-600/10',
     iconColor: 'text-purple-400',
   },
   {
-    icon: TrendingUp,
-    label: 'Market Overview',
-    description: 'Top movers & gainers',
-    href: '/market',
-    color: 'from-emerald-500/20 to-emerald-600/10',
-    iconColor: 'text-emerald-400',
+    icon: Shield,
+    label: 'Verify Contracts',
+    description: 'Sourcify + Z3 verification',
+    href: '/smart-contract-verifier',
+    color: 'from-green-500/20 to-green-600/10',
+    iconColor: 'text-green-400',
   },
   {
-    icon: FileSpreadsheet,
-    label: 'All Templates',
-    description: 'Browse our catalog',
-    href: '/templates',
-    color: 'from-orange-500/20 to-orange-600/10',
-    iconColor: 'text-orange-400',
+    icon: BookOpen,
+    label: 'Learn',
+    description: 'Academy, Glossary, FAQ',
+    href: '/learn',
+    color: 'from-blue-500/20 to-blue-600/10',
+    iconColor: 'text-blue-400',
   },
 ];
 

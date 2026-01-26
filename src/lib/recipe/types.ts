@@ -20,7 +20,6 @@ export type DatasetType =
 
 export type DataProvider =
   | 'coingecko'
-  | 'binance'
   | 'defillama'
   | 'alternative'
   | 'etherscan'
