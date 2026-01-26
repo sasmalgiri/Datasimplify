@@ -11,7 +11,6 @@ import { DataPreview } from '@/components/DataPreview';
 import { RequirementsGate } from '@/components/download/RequirementsGate';
 import { QuotaEstimator } from '@/components/download/QuotaEstimator';
 import { TemplateControls } from '@/components/download/TemplateControls';
-import { CRKAddInInfo } from '@/components/download/FormulaModePicker';
 import type { RefreshFrequency } from '@/lib/templates/templateModes';
 import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
@@ -90,9 +89,6 @@ export default function DownloadPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
                   {/* Left Column: Controls */}
                   <div className="lg:col-span-2 space-y-6">
-                    {/* CRK Add-in Info */}
-                    <CRKAddInInfo />
-
                     {/* Template Controls */}
                     <TemplateControls
                       selectedCoins={selectedCoins}
