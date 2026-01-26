@@ -5,7 +5,7 @@ import { Key, Trash2, Plus, CheckCircle, XCircle, ExternalLink, Shield, AlertCir
 import { useAuth } from '@/lib/auth';
 import Link from 'next/link';
 
-type Provider = 'coingecko' | 'binance' | 'coinmarketcap';
+type Provider = 'coingecko';
 
 interface ProviderKey {
   provider: Provider;
@@ -29,20 +29,6 @@ const PROVIDER_INFO: Record<Provider, {
     docsUrl: 'https://docs.coingecko.com/reference/introduction',
     features: ['Real-time prices', 'Historical OHLCV', 'Market cap data', 'Coin metadata'],
   },
-  binance: {
-    name: 'Binance',
-    description: 'Real-time trading data and order book',
-    signupUrl: 'https://www.binance.com/en/my/settings/api-management',
-    docsUrl: 'https://binance-docs.github.io/apidocs/',
-    features: ['Trading pairs', 'Order book depth', 'Recent trades', 'Kline data'],
-  },
-  coinmarketcap: {
-    name: 'CoinMarketCap',
-    description: 'Alternative market data source',
-    signupUrl: 'https://coinmarketcap.com/api/',
-    docsUrl: 'https://coinmarketcap.com/api/documentation/v1/',
-    features: ['Market rankings', 'Price quotes', 'Exchange data', 'Global metrics'],
-  },
 };
 
 export default function ApiKeysPage() {
@@ -64,7 +50,7 @@ export default function ApiKeysPage() {
     setError(null);
 
     try {
-      const providers: Provider[] = ['coingecko', 'binance', 'coinmarketcap'];
+      const providers: Provider[] = ['coingecko'];
       const results: ProviderKey[] = [];
 
       for (const provider of providers) {

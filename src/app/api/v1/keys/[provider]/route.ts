@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { encryptApiKey, getKeyHint } from '@/lib/encryption';
 
-const VALID_PROVIDERS = ['coingecko', 'binance', 'coinmarketcap'] as const;
+const VALID_PROVIDERS = ['coingecko'] as const;
 type Provider = typeof VALID_PROVIDERS[number];
 
 // GET - Check if key exists
@@ -183,40 +183,23 @@ async function validateProviderKey(
   apiKey: string
 ): Promise<ValidationResult> {
   try {
-    switch (provider) {
-      case 'coingecko': {
-        const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
-          headers: { 'x-cg-pro-api-key': apiKey },
-          signal: AbortSignal.timeout(5000),
-        });
-        if (response.ok) return { isValid: true };
-        if (response.status === 401 || response.status === 403) {
-          return { isValid: false, error: 'Invalid API key' };
-        }
-        return { isValid: false, error: 'Validation failed: ' + response.status };
-      }
-      case 'binance': {
-        if (!/^[A-Za-z0-9]{64}$/.test(apiKey)) {
-          return { isValid: false, error: 'Invalid format (expected 64 alphanumeric chars)' };
-        }
-        return { isValid: true };
-      }
-      case 'coinmarketcap': {
-        const response = await fetch('https://pro-api.coinmarketcap.com/v1/key/info', {
-          headers: { 'X-CMC_PRO_API_KEY': apiKey },
-          signal: AbortSignal.timeout(5000),
-        });
-        if (response.ok) return { isValid: true };
-        if (response.status === 401 || response.status === 403) {
-          return { isValid: false, error: 'Invalid API key' };
-        }
-        return { isValid: false, error: 'Validation failed: ' + response.status };
-      }
-      default:
-        return { isValid: false, error: 'Unsupported provider' };
+    if (provider !== 'coingecko') {
+      return { isValid: false, error: 'Only CoinGecko is supported' };
     }
+
+    // Validate CoinGecko API key
+    const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+      headers: { 'x-cg-pro-api-key': apiKey },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (response.ok) return { isValid: true };
+    if (response.status === 401 || response.status === 403) {
+      return { isValid: false, error: 'Invalid API key' };
+    }
+    return { isValid: false, error: 'Validation failed: ' + response.status };
   } catch (error) {
-    console.error('Validation error for ' + provider + ':', error);
+    console.error('Validation error for CoinGecko:', error);
     if (error instanceof Error && error.name === 'AbortError') {
       return { isValid: false, error: 'Validation timeout' };
     }

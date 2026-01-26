@@ -14,7 +14,7 @@ import { OnboardingWizard } from '@/components/addin/OnboardingWizard';
  * Stores token in OfficeRuntime.storage (persists across sessions)
  */
 
-type Provider = 'coingecko' | 'binance' | 'coinmarketcap' | 'messari';
+type Provider = 'coingecko';
 
 type WorkbookMode = 'formula' | 'pack' | 'unknown';
 
@@ -99,9 +99,6 @@ export default function TaskpanePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [providers, setProviders] = useState<Record<Provider, ProviderStatus>>({
     coingecko: { connected: false },
-    binance: { connected: false },
-    coinmarketcap: { connected: false },
-    messari: { connected: false },
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -267,12 +264,9 @@ export default function TaskpanePage() {
   const loadProviderStatus = useCallback(async () => {
     if (!user) return;
 
-    const providerList: Provider[] = ['coingecko', 'binance', 'coinmarketcap', 'messari'];
+    const providerList: Provider[] = ['coingecko'];
     const status: Record<Provider, ProviderStatus> = {
       coingecko: { connected: false },
-      binance: { connected: false },
-      coinmarketcap: { connected: false },
-      messari: { connected: false },
     };
 
     for (const provider of providerList) {
@@ -620,7 +614,7 @@ export default function TaskpanePage() {
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3">API Keys</h2>
         <div className="space-y-2">
-          {(['coingecko', 'binance', 'coinmarketcap', 'messari'] as Provider[]).map((provider) => (
+          {(['coingecko'] as Provider[]).map((provider) => (
             <ProviderKeyRow
               key={provider}
               provider={provider}
@@ -699,27 +693,12 @@ function ProviderKeyRow({
 
   const providerNames: Record<Provider, string> = {
     coingecko: 'CoinGecko',
-    binance: 'Binance',
-    coinmarketcap: 'CoinMarketCap',
-    messari: 'Messari',
   };
 
   const providerUrls: Record<Provider, { signup: string; dashboard: string }> = {
     coingecko: {
       signup: 'https://www.coingecko.com/en/api/pricing',
       dashboard: 'https://www.coingecko.com/en/developers/dashboard',
-    },
-    binance: {
-      signup: 'https://www.binance.com/en/my/settings/api-management',
-      dashboard: 'https://www.binance.com/en/my/settings/api-management',
-    },
-    coinmarketcap: {
-      signup: 'https://coinmarketcap.com/api/',
-      dashboard: 'https://coinmarketcap.com/api/',
-    },
-    messari: {
-      signup: 'https://messari.io/api',
-      dashboard: 'https://messari.io/api',
     },
   };
 
