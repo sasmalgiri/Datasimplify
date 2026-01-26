@@ -28,9 +28,10 @@ export async function GET(request: NextRequest) {
 
     // Try to get user's CoinGecko API key
     let apiKey: string | null = null;
+    let keyType: string = 'demo';
     const { data: keyData } = await supabase
       .from('provider_keys')
-      .select('encrypted_key, is_valid')
+      .select('encrypted_key, is_valid, key_type')
       .eq('user_id', user.id)
       .eq('provider', 'coingecko')
       .eq('is_valid', true)
@@ -39,23 +40,29 @@ export async function GET(request: NextRequest) {
     if (keyData?.encrypted_key) {
       try {
         apiKey = decryptApiKey(keyData.encrypted_key);
+        keyType = keyData.key_type || 'demo';
       } catch (error) {
         console.error('[Price API] Decryption error:', error);
         // Continue without key (use free tier)
       }
     }
 
-    // Fetch from CoinGecko
-    const baseUrl = apiKey
+    // Fetch from CoinGecko - use correct endpoint based on key type
+    const baseUrl = apiKey && keyType === 'pro'
       ? 'https://pro-api.coingecko.com/api/v3'
       : 'https://api.coingecko.com/api/v3';
 
-    const url = baseUrl + '/simple/price?ids=' + coinId + '&vs_currencies=' + currency + 
+    const url = baseUrl + '/simple/price?ids=' + coinId + '&vs_currencies=' + currency +
                 '&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true';
 
     const headers: Record<string, string> = {};
     if (apiKey) {
-      headers['x-cg-pro-api-key'] = apiKey;
+      // Use correct header based on key type
+      if (keyType === 'pro') {
+        headers['x-cg-pro-api-key'] = apiKey;
+      } else {
+        headers['x-cg-demo-api-key'] = apiKey;
+      }
     }
 
     const response = await fetch(url, { headers });

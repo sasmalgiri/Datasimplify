@@ -105,6 +105,7 @@ export async function POST(
       provider,
       encrypted_key: encryptedKey,
       key_hint: hint,
+      key_type: validationResult.keyType || 'demo', // Store whether it's demo or pro
       is_valid: true,
       last_validated_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -175,6 +176,7 @@ export async function DELETE(
 
 interface ValidationResult {
   isValid: boolean;
+  keyType?: 'demo' | 'pro';
   error?: string;
 }
 
@@ -187,22 +189,38 @@ async function validateProviderKey(
       return { isValid: false, error: 'Only CoinGecko is supported' };
     }
 
-    // Validate CoinGecko API key
-    const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+    // Try Pro API first
+    const proResponse = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
       headers: { 'x-cg-pro-api-key': apiKey },
       signal: AbortSignal.timeout(5000),
     });
 
-    if (response.ok) return { isValid: true };
-    if (response.status === 401 || response.status === 403) {
-      return { isValid: false, error: 'Invalid API key' };
+    if (proResponse.ok) {
+      return { isValid: true, keyType: 'pro' };
     }
-    return { isValid: false, error: 'Validation failed: ' + response.status };
+
+    // Try Demo API (free tier)
+    const demoResponse = await fetch('https://api.coingecko.com/api/v3/ping', {
+      headers: { 'x-cg-demo-api-key': apiKey },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (demoResponse.ok) {
+      return { isValid: true, keyType: 'demo' };
+    }
+
+    // Both failed
+    if (proResponse.status === 401 || proResponse.status === 403 ||
+        demoResponse.status === 401 || demoResponse.status === 403) {
+      return { isValid: false, error: 'Invalid API key. Make sure you have a valid CoinGecko Demo or Pro key.' };
+    }
+
+    return { isValid: false, error: 'Validation failed. Please try again.' };
   } catch (error) {
     console.error('Validation error for CoinGecko:', error);
     if (error instanceof Error && error.name === 'AbortError') {
       return { isValid: false, error: 'Validation timeout' };
     }
-    return { isValid: false, error: 'Network error' };
+    return { isValid: false, error: 'Network error during validation' };
   }
 }

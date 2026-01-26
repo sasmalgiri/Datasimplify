@@ -28,9 +28,10 @@ export async function GET(request: NextRequest) {
 
     // Try to get user's CoinGecko API key
     let apiKey: string | null = null;
+    let keyType: string | null = null;
     const { data: keyData } = await supabase
       .from('provider_keys')
-      .select('encrypted_key, is_valid')
+      .select('encrypted_key, key_type, is_valid')
       .eq('user_id', user.id)
       .eq('provider', 'coingecko')
       .eq('is_valid', true)
@@ -39,13 +40,14 @@ export async function GET(request: NextRequest) {
     if (keyData?.encrypted_key) {
       try {
         apiKey = decryptApiKey(keyData.encrypted_key);
+        keyType = keyData.key_type || 'demo';
       } catch (error) {
         console.error('[OHLCV API] Decryption error:', error);
       }
     }
 
-    // Fetch from CoinGecko
-    const baseUrl = apiKey
+    // Fetch from CoinGecko - use correct endpoint based on key type
+    const baseUrl = apiKey && keyType === 'pro'
       ? 'https://pro-api.coingecko.com/api/v3'
       : 'https://api.coingecko.com/api/v3';
 
@@ -53,7 +55,11 @@ export async function GET(request: NextRequest) {
 
     const headers: Record<string, string> = {};
     if (apiKey) {
-      headers['x-cg-pro-api-key'] = apiKey;
+      if (keyType === 'pro') {
+        headers['x-cg-pro-api-key'] = apiKey;
+      } else {
+        headers['x-cg-demo-api-key'] = apiKey;
+      }
     }
 
     const response = await fetch(url, { headers });
