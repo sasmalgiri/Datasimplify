@@ -62,28 +62,30 @@ export default function PrivacyPage() {
               such as wallet addresses (if you choose to link them) or social login providers.
             </p>
 
-            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.4 API Keys (BYOK)</h3>
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.4 API Keys (BYOK - Optional)</h3>
             <p className="mb-4">
-              If you use our <strong>Bring Your Own Key (BYOK)</strong> feature, we collect and store your API keys from
-              third-party data providers to enable our Excel add-in to fetch data on your behalf. Here&apos;s how we handle them:
+              Our <strong>Bring Your Own Key (BYOK)</strong> feature is <strong>optional</strong>. If you choose to use it,
+              you may provide your own API keys from third-party data providers (e.g., CoinGecko).
+              <strong> We do not provide, sell, or redistribute API keys or data access.</strong>
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4">
-              <li><strong>Encryption at Rest:</strong> All API keys are encrypted using AES-256-GCM before storage.
-                We never store your keys in plaintext.</li>
-              <li><strong>Usage:</strong> Your encrypted keys are decrypted only in memory when making API calls to
-                data providers on your behalf (server-proxy architecture).</li>
-              <li><strong>Never Sold or Shared:</strong> We never sell, rent, or share your API keys with third parties
-                for marketing or any other purpose.</li>
-              <li><strong>Deletion:</strong> You can delete your API keys at any time from your account settings.
-                Keys are also permanently deleted when you close your account.</li>
-              <li><strong>Logs & Metadata:</strong> We may log API call metadata (timestamp, endpoint, response status)
-                for troubleshooting and rate limit monitoring, but never log your plaintext keys.</li>
-              <li><strong>Provider Terms:</strong> You are responsible for complying with your data provider&apos;s
-                terms of service. We are not liable for provider API changes, downtime, or policy violations.</li>
+              <li><strong>Your Keys, Your Responsibility:</strong> You obtain API keys directly from data providers
+                under their terms. We have no relationship with your provider account.</li>
+              <li><strong>Optional Storage:</strong> If you choose to store keys with us for convenience, they are
+                encrypted using AES-256-GCM before storage. We never store keys in plaintext.</li>
+              <li><strong>Request Proxying:</strong> When you use templates that require data, your encrypted key is
+                decrypted in memory solely to make the API call you initiated. We act as a technical proxy only.</li>
+              <li><strong>No Access Provision:</strong> We do not &quot;provide access&quot; to any data provider. You maintain
+                your own provider account and are solely responsible for compliance with their terms.</li>
+              <li><strong>Full Control:</strong> You can delete your stored keys at any time from Account Settings.
+                Keys are permanently deleted when you close your account.</li>
+              <li><strong>Minimal Logging:</strong> We may log request metadata (timestamp, response status) for
+                troubleshooting, but never log your plaintext keys.</li>
             </ul>
             <p className="mb-4">
-              <strong>Important:</strong> Your API keys grant access to your data provider accounts. Keep your CryptoReportKit
-              account secure (strong password, enable 2FA if available) to protect your keys.
+              <strong>Disclaimer:</strong> By using BYOK, you acknowledge that (a) you obtained your API keys directly
+              from the provider, (b) you are responsible for complying with provider terms, rate limits, and policies,
+              and (c) we are not liable for provider API changes, downtime, or your policy violations.
             </p>
           </section>
 
@@ -358,7 +360,7 @@ export default function PrivacyPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-emerald-600 font-semibold">✓ What we collect:</p>
-                <p className="text-gray-600">Email, usage data, encrypted API keys (BYOK), payment info (when available)</p>
+                <p className="text-gray-600">Email, usage data, your API keys (optional BYOK, encrypted), payment info (when available)</p>
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Why we collect:</p>
