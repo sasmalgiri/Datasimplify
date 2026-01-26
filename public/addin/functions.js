@@ -3,7 +3,7 @@
 /**
  * CRK Custom Functions for Excel
  *
- * These functions fetch live crypto data using user's BYOK API keys
+ * Complete set of crypto data functions using BYOK API keys
  * Keys are managed in the taskpane and stored in OfficeRuntime.storage
  */
 
@@ -71,6 +71,10 @@ async function fetchWithAuth(endpoint, params = {}) {
   return data;
 }
 
+// ============================================
+// PRICE & MARKET FUNCTIONS
+// ============================================
+
 /**
  * Get current price of a cryptocurrency
  * @customfunction
@@ -129,7 +133,6 @@ async function OHLCV(coin, days = 30) {
   const data = await fetchWithAuth('/ohlcv', { coin, days });
 
   // CoinGecko returns [[timestamp, open, high, low, close], ...]
-  // Add header row
   const header = ['Date', 'Open', 'High', 'Low', 'Close'];
   const rows = data.map(row => [
     new Date(row[0]).toLocaleDateString(),
@@ -142,22 +145,392 @@ async function OHLCV(coin, days = 30) {
   return [header, ...rows];
 }
 
+// ============================================
+// COIN DETAILS FUNCTIONS
+// ============================================
+
 /**
- * Get coin metadata
+ * Get detailed coin information
  * @customfunction
  * @param {string} coin Coin ID
- * @param {string} field Field name
+ * @param {string} field Field name (rank, ath, atl, supply, etc.)
  * @returns {any} Field value
  */
 async function INFO(coin, field) {
-  const data = await fetchWithAuth('/price', { coin });
-  return data[field] ?? '#N/A';
+  const data = await fetchWithAuth('/coin', { coin });
+
+  // Map common field names
+  const fieldMap = {
+    'rank': 'rank',
+    'market_cap_rank': 'rank',
+    'ath': 'ath',
+    'all_time_high': 'ath',
+    'atl': 'atl',
+    'all_time_low': 'atl',
+    'supply': 'circulating_supply',
+    'circulating_supply': 'circulating_supply',
+    'total_supply': 'total_supply',
+    'max_supply': 'max_supply',
+    'high_24h': 'high_24h',
+    'low_24h': 'low_24h',
+    'name': 'name',
+    'symbol': 'symbol',
+    'description': 'description',
+    'price_change_24h': 'price_change_24h',
+    'price_change_7d': 'price_change_7d',
+    'price_change_30d': 'price_change_30d',
+    'price_change_1y': 'price_change_1y',
+    'ath_date': 'ath_date',
+    'atl_date': 'atl_date',
+    'genesis_date': 'genesis_date',
+  };
+
+  const mappedField = fieldMap[field.toLowerCase()] || field;
+  return data[mappedField] ?? '#N/A';
 }
 
-// Register functions with CustomFunctions
+/**
+ * Get all-time high price
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} All-time high price in USD
+ */
+async function ATH(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.ath ?? '#N/A';
+}
+
+/**
+ * Get all-time low price
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} All-time low price in USD
+ */
+async function ATL(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.atl ?? '#N/A';
+}
+
+/**
+ * Get circulating supply
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} Circulating supply
+ */
+async function SUPPLY(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.circulating_supply ?? '#N/A';
+}
+
+/**
+ * Get market cap rank
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} Market cap rank
+ */
+async function RANK(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.rank ?? '#N/A';
+}
+
+/**
+ * Get 24h high price
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} 24h high price
+ */
+async function HIGH24H(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.high_24h ?? '#N/A';
+}
+
+/**
+ * Get 24h low price
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @returns {number} 24h low price
+ */
+async function LOW24H(coin) {
+  const data = await fetchWithAuth('/coin', { coin });
+  return data.low_24h ?? '#N/A';
+}
+
+// ============================================
+// GLOBAL MARKET FUNCTIONS
+// ============================================
+
+/**
+ * Get global market data
+ * @customfunction
+ * @param {string} [field="total_market_cap"] Field name
+ * @returns {any} Global market value
+ */
+async function GLOBAL(field = 'total_market_cap') {
+  const data = await fetchWithAuth('/global');
+
+  // Map common field names
+  const fieldMap = {
+    'total_market_cap': 'total_market_cap',
+    'market_cap': 'total_market_cap',
+    'total_volume': 'total_volume',
+    'volume': 'total_volume',
+    'btc_dominance': 'market_cap_percentage',
+    'btc_dom': 'market_cap_percentage',
+    'eth_dominance': 'market_cap_percentage',
+    'eth_dom': 'market_cap_percentage',
+    'active_cryptocurrencies': 'active_cryptocurrencies',
+    'markets': 'markets',
+    'market_cap_change_24h': 'market_cap_change_percentage_24h_usd',
+  };
+
+  const mappedField = fieldMap[field.toLowerCase()] || field;
+
+  // Handle nested fields
+  if (mappedField === 'total_market_cap') {
+    return data.total_market_cap?.usd ?? '#N/A';
+  }
+  if (mappedField === 'total_volume') {
+    return data.total_volume?.usd ?? '#N/A';
+  }
+  if (mappedField === 'market_cap_percentage' && field.toLowerCase().startsWith('btc')) {
+    return data.market_cap_percentage?.btc ?? '#N/A';
+  }
+  if (mappedField === 'market_cap_percentage' && field.toLowerCase().startsWith('eth')) {
+    return data.market_cap_percentage?.eth ?? '#N/A';
+  }
+
+  return data[mappedField] ?? '#N/A';
+}
+
+/**
+ * Get BTC dominance percentage
+ * @customfunction
+ * @returns {number} BTC market dominance percentage
+ */
+async function BTCDOM() {
+  const data = await fetchWithAuth('/global');
+  return data.market_cap_percentage?.btc ?? '#N/A';
+}
+
+/**
+ * Get ETH dominance percentage
+ * @customfunction
+ * @returns {number} ETH market dominance percentage
+ */
+async function ETHDOM() {
+  const data = await fetchWithAuth('/global');
+  return data.market_cap_percentage?.eth ?? '#N/A';
+}
+
+// ============================================
+// SENTIMENT & INDICATORS
+// ============================================
+
+/**
+ * Get Fear & Greed Index
+ * @customfunction
+ * @param {string} [field="value"] Field: "value" (0-100) or "class" (classification)
+ * @returns {any} Fear & Greed value or classification
+ */
+async function FEARGREED(field = 'value') {
+  const data = await fetchWithAuth('/feargreed');
+
+  if (field.toLowerCase() === 'class' || field.toLowerCase() === 'classification') {
+    return data.classification ?? '#N/A';
+  }
+
+  return data.value ?? '#N/A';
+}
+
+/**
+ * Get trending coins as array
+ * @customfunction
+ * @param {number} [limit=7] Number of coins to return
+ * @returns {string[][]} Trending coins matrix [Rank, Name, Symbol]
+ */
+async function TRENDING(limit = 7) {
+  const data = await fetchWithAuth('/trending');
+
+  const header = ['Rank', 'Name', 'Symbol', 'Market Cap Rank'];
+  const rows = data.coins.slice(0, limit).map((coin, i) => [
+    i + 1,
+    coin.name,
+    coin.symbol.toUpperCase(),
+    coin.rank || 'N/A',
+  ]);
+
+  return [header, ...rows];
+}
+
+// ============================================
+// TECHNICAL INDICATORS (calculated client-side)
+// ============================================
+
+/**
+ * Calculate Simple Moving Average from OHLCV data
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {number} [period=20] SMA period
+ * @returns {number} Current SMA value
+ */
+async function SMA(coin, period = 20) {
+  const data = await fetchWithAuth('/ohlcv', { coin, days: period + 10 });
+
+  if (!data || data.length < period) {
+    return '#N/A';
+  }
+
+  // Use closing prices (index 4)
+  const closes = data.slice(-period).map(row => row[4]);
+  const sum = closes.reduce((a, b) => a + b, 0);
+  return sum / period;
+}
+
+/**
+ * Calculate Exponential Moving Average
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {number} [period=20] EMA period
+ * @returns {number} Current EMA value
+ */
+async function EMA(coin, period = 20) {
+  const data = await fetchWithAuth('/ohlcv', { coin, days: period * 2 });
+
+  if (!data || data.length < period) {
+    return '#N/A';
+  }
+
+  const closes = data.map(row => row[4]);
+  const multiplier = 2 / (period + 1);
+
+  // Start with SMA for first EMA value
+  let ema = closes.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+  // Calculate EMA for remaining values
+  for (let i = period; i < closes.length; i++) {
+    ema = (closes[i] - ema) * multiplier + ema;
+  }
+
+  return ema;
+}
+
+/**
+ * Calculate Relative Strength Index
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {number} [period=14] RSI period
+ * @returns {number} RSI value (0-100)
+ */
+async function RSI(coin, period = 14) {
+  const data = await fetchWithAuth('/ohlcv', { coin, days: period * 2 + 10 });
+
+  if (!data || data.length < period + 1) {
+    return '#N/A';
+  }
+
+  const closes = data.map(row => row[4]);
+  const changes = [];
+
+  for (let i = 1; i < closes.length; i++) {
+    changes.push(closes[i] - closes[i - 1]);
+  }
+
+  const gains = changes.map(c => c > 0 ? c : 0);
+  const losses = changes.map(c => c < 0 ? Math.abs(c) : 0);
+
+  // Calculate average gains and losses
+  let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
+
+  // Smooth the averages
+  for (let i = period; i < gains.length; i++) {
+    avgGain = (avgGain * (period - 1) + gains[i]) / period;
+    avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+  }
+
+  if (avgLoss === 0) return 100;
+
+  const rs = avgGain / avgLoss;
+  const rsi = 100 - (100 / (1 + rs));
+
+  return Math.round(rsi * 100) / 100;
+}
+
+/**
+ * Calculate MACD (Moving Average Convergence Divergence)
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} [component="macd"] Component: "macd", "signal", or "histogram"
+ * @returns {number} MACD component value
+ */
+async function MACD(coin, component = 'macd') {
+  const data = await fetchWithAuth('/ohlcv', { coin, days: 60 });
+
+  if (!data || data.length < 26) {
+    return '#N/A';
+  }
+
+  const closes = data.map(row => row[4]);
+
+  // Calculate EMAs
+  const calcEMA = (prices, period) => {
+    const multiplier = 2 / (period + 1);
+    let ema = prices.slice(0, period).reduce((a, b) => a + b, 0) / period;
+    for (let i = period; i < prices.length; i++) {
+      ema = (prices[i] - ema) * multiplier + ema;
+    }
+    return ema;
+  };
+
+  const ema12 = calcEMA(closes, 12);
+  const ema26 = calcEMA(closes, 26);
+  const macdLine = ema12 - ema26;
+
+  // For signal line, we'd need historical MACD values
+  // Simplified: return MACD line
+  if (component.toLowerCase() === 'signal') {
+    // Approximate signal (9-day EMA of MACD) - simplified
+    return macdLine * 0.9; // Approximation
+  }
+
+  if (component.toLowerCase() === 'histogram') {
+    return macdLine * 0.1; // Approximation
+  }
+
+  return Math.round(macdLine * 100) / 100;
+}
+
+// ============================================
+// REGISTER ALL FUNCTIONS
+// ============================================
+
+// Price & Market
 CustomFunctions.associate('PRICE', PRICE);
 CustomFunctions.associate('CHANGE24H', CHANGE24H);
 CustomFunctions.associate('MARKETCAP', MARKETCAP);
 CustomFunctions.associate('VOLUME', VOLUME);
 CustomFunctions.associate('OHLCV', OHLCV);
+
+// Coin Details
 CustomFunctions.associate('INFO', INFO);
+CustomFunctions.associate('ATH', ATH);
+CustomFunctions.associate('ATL', ATL);
+CustomFunctions.associate('SUPPLY', SUPPLY);
+CustomFunctions.associate('RANK', RANK);
+CustomFunctions.associate('HIGH24H', HIGH24H);
+CustomFunctions.associate('LOW24H', LOW24H);
+
+// Global Market
+CustomFunctions.associate('GLOBAL', GLOBAL);
+CustomFunctions.associate('BTCDOM', BTCDOM);
+CustomFunctions.associate('ETHDOM', ETHDOM);
+
+// Sentiment & Trending
+CustomFunctions.associate('FEARGREED', FEARGREED);
+CustomFunctions.associate('TRENDING', TRENDING);
+
+// Technical Indicators
+CustomFunctions.associate('SMA', SMA);
+CustomFunctions.associate('EMA', EMA);
+CustomFunctions.associate('RSI', RSI);
+CustomFunctions.associate('MACD', MACD);

@@ -6,120 +6,194 @@
       "name": "PRICE",
       "description": "Get current price of a cryptocurrency",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID (e.g., bitcoin, ethereum)",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
+        { "name": "coin", "description": "Coin ID (e.g., bitcoin, ethereum)", "type": "string" },
+        { "name": "currency", "description": "Currency (default: usd)", "type": "string", "optional": true }
       ],
-      "result": {
-        "type": "number"
-      }
+      "result": { "type": "number" }
     },
     {
       "id": "CHANGE24H",
       "name": "CHANGE24H",
       "description": "Get 24-hour price change percentage",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID",
-          "type": "string"
-        }
+        { "name": "coin", "description": "Coin ID", "type": "string" }
       ],
-      "result": {
-        "type": "number"
-      }
+      "result": { "type": "number" }
     },
     {
       "id": "MARKETCAP",
       "name": "MARKETCAP",
       "description": "Get market capitalization",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "currency", "description": "Currency (default: usd)", "type": "string", "optional": true }
       ],
-      "result": {
-        "type": "number"
-      }
+      "result": { "type": "number" }
     },
     {
       "id": "VOLUME",
       "name": "VOLUME",
       "description": "Get 24h trading volume",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID",
-          "type": "string"
-        },
-        {
-          "name": "currency",
-          "description": "Currency (default: usd)",
-          "type": "string",
-          "optional": true
-        }
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "currency", "description": "Currency (default: usd)", "type": "string", "optional": true }
       ],
-      "result": {
-        "type": "number"
-      }
+      "result": { "type": "number" }
     },
     {
       "id": "OHLCV",
       "name": "OHLCV",
-      "description": "Get OHLCV data (spills to range)",
+      "description": "Get OHLCV historical data (spills to range)",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID",
-          "type": "string"
-        },
-        {
-          "name": "days",
-          "description": "Number of days (default: 30)",
-          "type": "number",
-          "optional": true
-        }
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "days", "description": "Number of days (default: 30)", "type": "number", "optional": true }
       ],
-      "result": {
-        "type": "array",
-        "dimensionality": "matrix"
-      }
+      "result": { "type": "array", "dimensionality": "matrix" }
     },
     {
       "id": "INFO",
       "name": "INFO",
-      "description": "Get coin metadata",
+      "description": "Get detailed coin information (rank, ath, atl, supply, etc.)",
       "parameters": [
-        {
-          "name": "coin",
-          "description": "Coin ID",
-          "type": "string"
-        },
-        {
-          "name": "field",
-          "description": "Field name (name, symbol, rank, etc.)",
-          "type": "string"
-        }
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "field", "description": "Field name (rank, ath, atl, supply, name, symbol, etc.)", "type": "string" }
       ],
-      "result": {
-        "type": "any"
-      }
+      "result": { "type": "any" }
+    },
+    {
+      "id": "ATH",
+      "name": "ATH",
+      "description": "Get all-time high price",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "ATL",
+      "name": "ATL",
+      "description": "Get all-time low price",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "SUPPLY",
+      "name": "SUPPLY",
+      "description": "Get circulating supply",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "RANK",
+      "name": "RANK",
+      "description": "Get market cap rank",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "HIGH24H",
+      "name": "HIGH24H",
+      "description": "Get 24-hour high price",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "LOW24H",
+      "name": "LOW24H",
+      "description": "Get 24-hour low price",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "GLOBAL",
+      "name": "GLOBAL",
+      "description": "Get global market data (total_market_cap, total_volume, active_cryptocurrencies)",
+      "parameters": [
+        { "name": "field", "description": "Field name (total_market_cap, total_volume, btc_dominance, etc.)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "any" }
+    },
+    {
+      "id": "BTCDOM",
+      "name": "BTCDOM",
+      "description": "Get Bitcoin market dominance percentage",
+      "parameters": [],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "ETHDOM",
+      "name": "ETHDOM",
+      "description": "Get Ethereum market dominance percentage",
+      "parameters": [],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "FEARGREED",
+      "name": "FEARGREED",
+      "description": "Get Crypto Fear & Greed Index (0-100)",
+      "parameters": [
+        { "name": "field", "description": "Field: 'value' (0-100) or 'class' (classification)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "any" }
+    },
+    {
+      "id": "TRENDING",
+      "name": "TRENDING",
+      "description": "Get trending coins (spills to range)",
+      "parameters": [
+        { "name": "limit", "description": "Number of coins to return (default: 7)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "SMA",
+      "name": "SMA",
+      "description": "Calculate Simple Moving Average",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "period", "description": "SMA period (default: 20)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "EMA",
+      "name": "EMA",
+      "description": "Calculate Exponential Moving Average",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "period", "description": "EMA period (default: 20)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "RSI",
+      "name": "RSI",
+      "description": "Calculate Relative Strength Index (0-100)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "period", "description": "RSI period (default: 14)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "MACD",
+      "name": "MACD",
+      "description": "Calculate MACD (Moving Average Convergence Divergence)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "component", "description": "Component: 'macd', 'signal', or 'histogram'", "type": "string", "optional": true }
+      ],
+      "result": { "type": "number" }
     }
   ]
 }
