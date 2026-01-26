@@ -94,7 +94,7 @@ export function FreeNavbar() {
       paths: ['/templates', '/download', '/template-requirements', '/byok'],
       items: [
         { href: '/templates', label: 'Report Kits', description: '6 curated Excel template packs', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { href: '/download', label: 'Build a Report', description: 'Customize and download templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/download', label: 'Customize Templates', description: 'Configure coins, timeframe & download', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/template-requirements', label: 'Setup Guide', description: 'How to use BYOK templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Bring Your Own Key architecture', icon: <Shield className="w-4 h-4" /> },
       ],
@@ -140,7 +140,7 @@ export function FreeNavbar() {
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
     { href: '/templates', label: 'Report Kits', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { href: '/download', label: 'Build Report', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]

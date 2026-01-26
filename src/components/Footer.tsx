@@ -21,14 +21,14 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Product */}
+          {/* Product - A/B/C/D only */}
           <div>
             <h4 className="font-semibold text-white mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/templates" className="hover:text-white transition-colors">Report Kits</Link></li>
-              <li><Link href="/download" className="hover:text-white transition-colors">Build a Report</Link></li>
-              <li><Link href="/market" className="hover:text-white transition-colors">Market Data</Link></li>
-              <li><Link href="/compare" className="hover:text-white transition-colors">Compare</Link></li>
+              <li><Link href="/download" className="hover:text-white transition-colors">Customize Templates</Link></li>
+              <li><Link href="/compare" className="hover:text-white transition-colors">Compare Coins</Link></li>
+              <li><Link href="/smart-contract-verifier" className="hover:text-white transition-colors">Verify Contracts</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
             </ul>
           </div>
