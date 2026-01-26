@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -17,17 +17,19 @@ import {
 } from 'lucide-react';
 
 export default function AccountPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const redirectedRef = useRef(false);
 
   useEffect(() => {
-    if (!user) {
+    // Only redirect if auth is done loading and there's no user
+    if (!authLoading && !user && !redirectedRef.current) {
+      redirectedRef.current = true;
       router.push('/login');
-    } else {
-      setIsLoading(false);
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
+
+  const isLoading = authLoading;
 
   const handleSignOut = async () => {
     await signOut();

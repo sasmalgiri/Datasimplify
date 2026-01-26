@@ -26,7 +26,7 @@ interface NormalizedCoin {
 }
 
 // Cache data for 5 minutes
-let cachedData: {
+const cachedData: {
   gainers: NormalizedCoin[] | null;
   losers: NormalizedCoin[] | null;
   timestamp: number;

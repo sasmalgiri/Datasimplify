@@ -304,6 +304,8 @@ export default function BuilderPage() {
                       <button
                         onClick={() => toggleCoin(coinId)}
                         className="text-gray-400 hover:text-red-400"
+                        aria-label={`Remove ${coin?.symbol || coinId}`}
+                        title={`Remove ${coin?.symbol || coinId}`}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -373,6 +375,8 @@ export default function BuilderPage() {
                       value={ohlcvDays}
                       onChange={(e) => setOhlcvDays(Number(e.target.value))}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                      aria-label="History Days"
+                      title="Select history days"
                     >
                       <option value={7}>7 days</option>
                       <option value={30}>30 days</option>
@@ -401,6 +405,8 @@ export default function BuilderPage() {
                       value={moversCount}
                       onChange={(e) => setMoversCount(Number(e.target.value))}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
+                      aria-label="Number of Movers"
+                      title="Select number of top movers"
                     >
                       <option value={3}>Top 3</option>
                       <option value={5}>Top 5</option>

@@ -46,14 +46,14 @@ interface CircuitBreakerState {
 }
 
 // In-memory state (would use Redis in production)
-let rateLimitState: RateLimitState = {
+const rateLimitState: RateLimitState = {
   requestCount: 0,
   windowStart: Date.now(),
   dailyCount: 0,
   dayStart: Date.now(),
 };
 
-let circuitBreakerState: CircuitBreakerState = {
+const circuitBreakerState: CircuitBreakerState = {
   failures: 0,
   lastFailure: 0,
   isOpen: false,

@@ -157,7 +157,7 @@ async function createDashboardSheet(
   sheet.mergeCells('A2:F2');
 
   // Add KPIs
-  let currentRow = 4;
+  const _startRow = 4; // Starting row for KPIs (used by kpi.cell.row)
   for (const kpi of recipe.kpis) {
     if (kpi.cell.sheet === 'Dashboard') {
       const cell = sheet.getCell(kpi.cell.row, kpi.cell.col);

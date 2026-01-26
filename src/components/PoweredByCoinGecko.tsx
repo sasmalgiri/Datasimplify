@@ -6,7 +6,7 @@ export function PoweredByCoinGecko({ className = "" }: { className?: string }) {
       <a
         href="https://www.coingecko.com/en/api"
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className="underline"
       >
         CoinGecko API

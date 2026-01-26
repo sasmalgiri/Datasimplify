@@ -75,7 +75,7 @@ export function selectTemplate(requirements: UserRequirements): TemplateRecommen
   }
 
   // Determine coin count based on asset scope
-  let targetCoinCount = requirements.coinCount || getCoinCountFromScope(assetScope, isFreeUser);
+  const targetCoinCount = requirements.coinCount || getCoinCountFromScope(assetScope, isFreeUser);
 
   // Filter by coin count range
   const coinCountCompatible = candidates.filter(
