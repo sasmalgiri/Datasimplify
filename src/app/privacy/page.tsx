@@ -37,9 +37,9 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Account Information:</strong> Email address, name (optional), password</li>
               <li><strong>Profile Information:</strong> Preferences, settings, communication choices</li>
-              <li><strong>Payment Information:</strong> Processed securely by our payment processor.
-                We do not store your credit card details. Payment processors receive your payment information,
-                billing address, and transaction details when you purchase a subscription.</li>
+              <li><strong>Payment Information:</strong> If we enable payments in the future, payments will be processed
+                securely by a payment processor. We do not store your credit card details.
+                <em className="text-gray-500"> (Note: Payments are not currently enabled.)</em></li>
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
               <li><strong>API Keys (BYOK):</strong> If you use our Bring Your Own Key (BYOK) feature, you may

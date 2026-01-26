@@ -228,8 +228,11 @@ export default function TermsPage() {
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.4 Refund Policy</h3>
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+              <p className="mb-2 text-sm text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                <strong>Note:</strong> Payments are not currently enabled. This refund policy will apply when paid plans become available.
+              </p>
               <p className="mb-3">
-                <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> We offer a full refund
+                <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> When paid plans launch, we will offer a full refund
                 within 30 days of your initial subscription purchase, no questions asked.
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm mb-3">
@@ -239,7 +242,7 @@ export default function TermsPage() {
                 <li><strong>Processing:</strong> Refunds are typically processed within 5-10 business days and
                   appear in your account depending on your payment method.</li>
                 <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
-                  required by applicable law (e.g., EU/UK statutory rights).</li>
+                  required by applicable law. Your statutory rights are not affected by this policy.</li>
                 <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
                   After 30 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
                 <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template

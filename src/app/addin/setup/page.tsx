@@ -213,14 +213,14 @@ export default function AddinSetupPage() {
                   </p>
                   <ul className="text-sm text-gray-700 space-y-2 ml-4 list-disc">
                     <li>
-                      <strong>CoinGecko</strong> - Get a free demo API key at{' '}
+                      <strong>CoinGecko</strong> - Get a free CoinGecko API key (Demo plan) directly from{' '}
                       <a
-                        href="https://www.coingecko.com/en/api"
+                        href="https://www.coingecko.com/en/api/pricing"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-emerald-600 hover:underline"
                       >
-                        coingecko.com/api
+                        CoinGecko
                         <ExternalLink className="w-3 h-3 inline ml-1" />
                       </a>
                     </li>

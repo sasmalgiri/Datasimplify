@@ -158,7 +158,7 @@ export default function PricingPage() {
         'Scheduled exports',
         'Email support',
       ],
-      cta: 'Coming Soon',
+      cta: 'Join Waitlist',
       popular: true,
       note: 'May require CoinGecko Pro API for large templates',
     },
@@ -176,7 +176,7 @@ export default function PricingPage() {
         'Priority support (4hr response)',
         'Custom integrations',
       ],
-      cta: 'Coming Soon',
+      cta: 'Join Waitlist',
       popular: false,
       note: 'Best for high-volume template usage',
     },
@@ -251,7 +251,7 @@ export default function PricingPage() {
               <div className="flex-1">
                 <h3 className="font-semibold text-emerald-800 text-lg">30-Day Money-Back Guarantee</h3>
                 <p className="text-emerald-700 text-sm">
-                  Not satisfied? Get a full refund within 30 days, no questions asked.{' '}
+                  When paid plans launch, we&apos;ll offer a full refund within 30 days, no questions asked.{' '}
                   <Link href="/refund" className="underline hover:text-emerald-900 font-medium">
                     Learn more about our refund policy →
                   </Link>
@@ -332,6 +332,9 @@ export default function PricingPage() {
 
           {/* Payment Info */}
           <div className="mt-12 text-center">
+            <div className="inline-block px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+              <p className="text-amber-800 font-medium">⚠️ Payments are not enabled yet</p>
+            </div>
             <p className="text-gray-600 mb-4">Secure payments coming soon</p>
             <div className="flex items-center justify-center gap-8">
               <div className="text-gray-600">💳 Cards</div>
@@ -357,7 +360,7 @@ export default function PricingPage() {
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Do I need a CoinGecko API key?</h3>
-                <p className="text-gray-600">Yes. Get a free Demo API key at coingecko.com/api. For larger templates, you may need CoinGecko Pro. Connect your key in Account → API Keys.</p>
+                <p className="text-gray-600">Yes. Get a free CoinGecko API key (Demo plan) directly from <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-emerald-600 underline">CoinGecko</a>. For larger templates, you may need CoinGecko Pro. Connect your key in Account → API Keys.</p>
               </div>
               <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="font-bold mb-2">Can I cancel anytime?</h3>

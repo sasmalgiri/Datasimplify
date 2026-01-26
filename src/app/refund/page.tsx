@@ -11,13 +11,27 @@ export default function RefundPage() {
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
 
+          {/* Important: No payments yet notice */}
+          <section className="bg-amber-50 border-2 border-amber-300 p-6 rounded-xl">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <h2 className="text-lg font-bold text-amber-800 mb-2">Payments Not Currently Enabled</h2>
+                <p className="text-amber-700">
+                  We are not currently processing payments. The refund policy below will apply once paid plans become available.
+                  Currently, CryptoReportKit operates as a free service.
+                </p>
+              </div>
+            </div>
+          </section>
+
           {/* Money-Back Guarantee Hero */}
           <section className="bg-emerald-50 border border-emerald-200 p-8 rounded-xl">
             <div className="text-center">
               <span className="text-5xl mb-4 block">💰</span>
               <h2 className="text-3xl font-bold text-emerald-700 mb-4">30-Day Money-Back Guarantee</h2>
               <p className="text-lg text-gray-700">
-                We offer a <strong>full refund within 30 days</strong> of your initial subscription purchase,
+                When paid plans launch, we will offer a <strong>full refund within 30 days</strong> of your initial subscription purchase,
                 no questions asked.
               </p>
             </div>
@@ -216,8 +230,8 @@ export default function RefundPage() {
 
           {/* Summary Box */}
           <section className="bg-white border-2 border-emerald-200 p-6 rounded-xl shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Refund Policy Summary</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Refund Policy Summary (When Available)</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div className="text-center p-3 bg-emerald-50 rounded-lg">
                 <p className="text-emerald-700 font-bold text-2xl">30 Days</p>
                 <p className="text-gray-600">Money-back guarantee</p>
@@ -229,10 +243,6 @@ export default function RefundPage() {
               <div className="text-center p-3 bg-purple-50 rounded-lg">
                 <p className="text-purple-700 font-bold text-2xl">5-10 Days</p>
                 <p className="text-gray-600">Processing time</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-gray-700 font-bold text-2xl">EU/UK</p>
-                <p className="text-gray-600">Compliant</p>
               </div>
             </div>
           </section>
