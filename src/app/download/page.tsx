@@ -67,182 +67,109 @@ export default function DownloadPage() {
       <FreeNavbar />
       <Breadcrumb />
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">CRK Excel Templates</h1>
-          <p className="text-gray-400">
-            Download Excel templates with CRK formulas. Templates use BYOK (Bring Your Own Key) -
-            you provide your own API key (e.g., CoinGecko) and data is fetched using YOUR credentials.
+      <main className="container mx-auto px-4 py-6">
+        {/* Compact Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-white">CRK Excel Templates</h1>
+          <p className="text-gray-400 text-sm">
+            BYOK templates - data fetched using your own API key
           </p>
         </div>
 
-        {/* Product Disclaimer */}
-        <ProductDisclaimer variant="compact" className="mb-8 max-w-3xl mx-auto bg-gray-900 border-gray-800" />
+        {/* Product Disclaimer - Compact */}
+        <ProductDisclaimer variant="compact" className="mb-4 bg-gray-900 border-gray-800" />
 
         {/* Requirements Gate - Must confirm before accessing templates */}
         {!hasConfirmedRequirements ? (
           <RequirementsGate onConfirm={handleRequirementsConfirmed} className="max-w-2xl mx-auto" />
         ) : (
           <>
-            {/* Template Configuration Controls */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                  {/* Left Column: Controls */}
-                  <div className="lg:col-span-2 space-y-6">
-                    {/* Template Controls */}
-                    <TemplateControls
-                      selectedCoins={selectedCoins}
-                      onCoinsChange={setSelectedCoins}
-                      timeframe={selectedTimeframe}
-                      onTimeframeChange={setSelectedTimeframe}
-                      refreshFrequency={refreshFrequency}
-                      onRefreshFrequencyChange={setRefreshFrequency}
-                      includeCharts={includeCharts}
-                      onIncludeChartsChange={setIncludeCharts}
-                    />
-                  </div>
+            {/* Data Preview First - Full Width */}
+            <div className="mb-6">
+              <DataPreview
+                selectedCoins={selectedCoins}
+                timeframe={selectedTimeframe}
+              />
+            </div>
 
-                  {/* Right Column: Quota Estimator */}
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-4 space-y-4">
-                      <QuotaEstimator
-                        assetCount={selectedCoins.length}
-                        refreshFrequency={refreshFrequency}
-                        timeframe={selectedTimeframe}
-                        includeCharts={includeCharts}
-                      />
+            {/* Compact Controls Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+              {/* Controls - Takes 3 columns */}
+              <div className="lg:col-span-3">
+                <TemplateControls
+                  selectedCoins={selectedCoins}
+                  onCoinsChange={setSelectedCoins}
+                  timeframe={selectedTimeframe}
+                  onTimeframeChange={setSelectedTimeframe}
+                  refreshFrequency={refreshFrequency}
+                  onRefreshFrequencyChange={setRefreshFrequency}
+                  includeCharts={includeCharts}
+                  onIncludeChartsChange={setIncludeCharts}
+                />
+              </div>
 
-                      {/* Quick Info Card */}
-                      <div className="bg-gray-900 rounded-xl border border-gray-800 p-4">
-                        <h4 className="font-medium text-white mb-3 flex items-center gap-2">
-                          <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
-                          What You Get
-                        </h4>
-                        <ul className="space-y-2 text-sm text-gray-300">
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-400">✓</span>
-                            <span>Templates with CRK formulas (BYOK)</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-400">✓</span>
-                            <span>Pre-styled Excel charts</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-400">✓</span>
-                            <span>START sheet with status checker</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-emerald-400">✓</span>
-                            <span>Quota-aware configuration</span>
-                          </li>
-                        </ul>
-                        <div className="mt-3 pt-3 border-t border-gray-700">
-                          <p className="text-xs text-gray-400">
-                            <strong>Note:</strong> We provide template software, not data.
-                            Data comes from your own API key (BYOK).
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Data Preview Section */}
-                <div className="mb-8">
-                  <DataPreview
-                    selectedCoins={selectedCoins}
-                    timeframe={selectedTimeframe}
-                  />
-                </div>
-
-                {/* Templates Grid */}
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-white mb-4">Available Templates</h2>
-                  <p className="text-gray-400 mb-6">
-                    Select a template to download. Each template is pre-configured with your settings above.
-                  </p>
-                  <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
-                </div>
-
-            {/* How It Works - Updated messaging */}
-            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 mb-8">
-              <h2 className="text-xl font-semibold text-white mb-4">How Templates Work</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                    1
-                  </div>
-                  <h3 className="font-medium text-white mb-2">Download Template</h3>
-                  <p className="text-gray-400 text-sm">Get the .xlsx file with your configuration</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                    2
-                  </div>
-                  <h3 className="font-medium text-white mb-2">Open in Excel Desktop</h3>
-                  <p className="text-gray-400 text-sm">Excel Online is NOT supported</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                    3
-                  </div>
-                  <h3 className="font-medium text-white mb-2">Sign In to CRK Add-in</h3>
-                  <p className="text-gray-400 text-sm">Install add-in + connect API key</p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-3 text-white font-bold">
-                    4
-                  </div>
-                  <h3 className="font-medium text-white mb-2">Click "Refresh Now"</h3>
-                  <p className="text-gray-400 text-sm">Manual refresh conserves API quota</p>
-                </div>
+              {/* Quota Estimator - Takes 1 column */}
+              <div className="lg:col-span-1">
+                <QuotaEstimator
+                  assetCount={selectedCoins.length}
+                  refreshFrequency={refreshFrequency}
+                  timeframe={selectedTimeframe}
+                  includeCharts={includeCharts}
+                />
               </div>
             </div>
 
-            {/* Refresh Instructions Card */}
-            <div className="bg-emerald-900/20 rounded-xl border border-emerald-500/30 p-5 mb-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
+            {/* Templates Grid - Compact */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xl font-bold text-white">Available Templates</h2>
+                <span className="text-xs text-gray-500">Pre-configured with your settings</span>
+              </div>
+              <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
+            </div>
+
+            {/* How It Works - Compact Horizontal */}
+            <div className="bg-gray-900 rounded-lg border border-gray-800 p-4 mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">1</div>
+                  <div>
+                    <p className="text-white text-sm font-medium">Download</p>
+                    <p className="text-gray-500 text-xs">.xlsx file</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-emerald-400 mb-2">Refresh Data in Templates</h3>
-                  <p className="text-gray-300 text-sm mb-3">
-                    Templates use <strong>manual refresh by default</strong> to conserve your API quota (BYOK).
-                  </p>
-                  <div className="flex flex-wrap gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-white">
-                      <kbd className="px-2 py-1 bg-gray-700 rounded text-emerald-400 text-xs">Ctrl+Alt+F5</kbd>
-                      <span className="text-gray-400">Windows</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white">
-                      <kbd className="px-2 py-1 bg-gray-700 rounded text-emerald-400 text-xs">Cmd+Alt+F5</kbd>
-                      <span className="text-gray-400">Mac</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white">
-                      <span className="text-emerald-400">Or click "Refresh Now" button</span>
-                      <span className="text-gray-400">in START_HERE sheet</span>
-                    </div>
+                <div className="text-gray-600">→</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">2</div>
+                  <div>
+                    <p className="text-white text-sm font-medium">Open in Excel</p>
+                    <p className="text-gray-500 text-xs">Desktop only</p>
+                  </div>
+                </div>
+                <div className="text-gray-600">→</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">3</div>
+                  <div>
+                    <p className="text-white text-sm font-medium">Sign In</p>
+                    <p className="text-gray-500 text-xs">CRK Add-in</p>
+                  </div>
+                </div>
+                <div className="text-gray-600">→</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">4</div>
+                  <div>
+                    <p className="text-white text-sm font-medium">Refresh</p>
+                    <p className="text-gray-500 text-xs">Ctrl+Alt+F5</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Disclaimer - Updated */}
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
-              <p className="text-gray-500 text-xs text-center">
-                <strong>Disclaimer:</strong> CryptoReportKit provides template software tools only. We are not a data vendor.
-                Templates contain CRK formulas - data is fetched using your own API key (BYOK architecture).
-                Data usage depends on your provider&apos;s plan and refresh settings.
-                Free CoinGecko API users may hit monthly request limits.
-                Nothing on this platform constitutes financial advice.
-                <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">
-                  View full disclaimer
-                </Link>
+            {/* Compact Disclaimer */}
+            <div className="text-center">
+              <p className="text-gray-500 text-xs">
+                Templates use CRK formulas (BYOK). Data from your own API key.
+                <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">Disclaimer</Link>
               </p>
             </div>
           </>
