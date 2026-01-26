@@ -117,7 +117,10 @@ export function middleware(request: NextRequest) {
   }
 
   // 3. Check for blocked user agents on API routes
-  if (pathname.startsWith('/api/')) {
+  // Exception: Allow /api/v1/* and /api/cron/* for server-side access (BYOK APIs, cron jobs)
+  const isInternalApi = pathname.startsWith('/api/v1/') || pathname.startsWith('/api/cron/');
+
+  if (pathname.startsWith('/api/') && !isInternalApi) {
     if (isBlockedUserAgent(userAgent)) {
       console.warn(`[Middleware] Blocked UA on API: ${userAgent?.slice(0, 50)} from ${clientIp}`);
       return NextResponse.json(
