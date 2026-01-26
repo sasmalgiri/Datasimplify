@@ -43,16 +43,14 @@ CREATE TABLE IF NOT EXISTS report_recipes (
 CREATE INDEX IF NOT EXISTS idx_report_recipes_user ON report_recipes(user_id);
 
 -- ============================================
--- Subscription State (Paddle Sync)
+-- Subscription State
 -- ============================================
 -- Note: profiles table already exists with plan column
--- This table adds Paddle-specific subscription fields
+-- This table tracks user subscription status
 CREATE TABLE IF NOT EXISTS subscription_state (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'premium')),
-  paddle_subscription_id TEXT,
-  paddle_customer_id TEXT,
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'past_due', 'cancelled', 'paused', 'trialing')),
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ,
@@ -63,7 +61,6 @@ CREATE TABLE IF NOT EXISTS subscription_state (
 );
 
 CREATE INDEX IF NOT EXISTS idx_subscription_state_user ON subscription_state(user_id);
-CREATE INDEX IF NOT EXISTS idx_subscription_state_paddle_sub ON subscription_state(paddle_subscription_id);
 
 -- ============================================
 -- Usage Events (Analytics & Rate Limiting)

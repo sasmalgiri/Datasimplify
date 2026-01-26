@@ -217,17 +217,13 @@ export default function RefundPage() {
           <section className="bg-blue-50 p-6 rounded-lg border border-blue-200">
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Payment Processing</h2>
             <p className="text-sm text-gray-700 mb-3">
-              <strong>Payment Processor:</strong> Subscriptions are processed securely through{' '}
-              <a href="https://www.paddle.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                Paddle
-              </a>{' '}
-              (Paddle.com Market Limited), our Merchant of Record.
+              <strong>Payment Processor:</strong> Subscriptions are processed securely through our payment processor.
             </p>
             <div className="text-sm text-gray-700 space-y-2">
               <p><strong>To Request a Refund:</strong></p>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 <li>Email us at support@cryptoreportkit.com within 30 days of purchase</li>
-                <li>Or manage your subscription directly through your Paddle receipt email</li>
+                <li>Or manage your subscription directly through your payment receipt email</li>
                 <li>Refunds are processed to your original payment method within 5-10 business days</li>
               </ul>
             </div>

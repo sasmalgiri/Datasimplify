@@ -6,7 +6,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
 import QuickActionsCard from '@/components/QuickActionsCard';
 import StickySignupButton from '@/components/StickySignupButton';
-import { isFeatureEnabled, isPaddleSafe } from '@/lib/featureFlags';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Verification types
 interface SourcifyVerificationResponse {

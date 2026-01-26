@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-import Script from 'next/script';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { isFeatureEnabled } from '@/lib/featureFlags';
@@ -60,54 +59,15 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
   'Custom integrations': 'Work with our team to build custom template integrations for your workflow.',
 };
 
-interface PricingInfo {
-  available: boolean;
-  country: string;
-  blocked: boolean;
-  blockedMessage: string | null;
-}
-
-// Check if Paddle is configured
-const isPaddleConfigured = Boolean(process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID);
-
-declare global {
-  interface Window {
-    Paddle?: {
-      Environment: {
-        set: (env: 'sandbox' | 'production') => void;
-      };
-      Setup: (config: { vendor: string }) => void;
-      Checkout: {
-        open: (config: {
-          items: Array<{ priceId: string; quantity: number }>;
-          customer?: { email?: string };
-          customData?: Record<string, string>;
-          settings?: {
-            displayMode?: 'overlay' | 'inline';
-            theme?: 'light' | 'dark';
-            successUrl?: string;
-          };
-        }) => void;
-      };
-    };
-  }
-}
+// Payment integration coming soon
 
 export default function PricingPage() {
   const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
-  const [pricingInfo, setPricingInfo] = useState<PricingInfo | null>(null);
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showWaitlist, setShowWaitlist] = useState(false);
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   const [waitlistError, setWaitlistError] = useState('');
-
-  useEffect(() => {
-    if (!pricingEnabled) return;
-    fetchPricingInfo();
-  }, [pricingEnabled]);
 
   if (!pricingEnabled) {
     return (
@@ -136,78 +96,15 @@ export default function PricingPage() {
     );
   }
 
-  const fetchPricingInfo = async () => {
-    try {
-      const res = await fetch('/api/paddle/checkout');
-      const data = await res.json();
-      setPricingInfo(data);
-      if (data.blocked) {
-        setShowWaitlist(true);
-      }
-    } catch (error) {
-      console.error('Failed to fetch pricing:', error);
-    }
-  };
-
-  const initPaddle = () => {
-    const vendorId = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID;
-    const sandbox = process.env.NEXT_PUBLIC_PADDLE_SANDBOX === 'true';
-
-    if (vendorId && window.Paddle) {
-      if (sandbox) {
-        window.Paddle.Environment.set('sandbox');
-      }
-      window.Paddle.Setup({ vendor: vendorId });
-    }
-  };
-
-  const handleSubscribe = async (tier: string) => {
+  const handleSubscribe = (tier: string) => {
     // Always redirect to signup first (users create account then pay)
     if (!user) {
       window.location.href = `/signup?plan=${tier}`;
       return;
     }
 
-    if (pricingInfo?.blocked || !isPaddleConfigured) {
-      setShowWaitlist(true);
-      return;
-    }
-
-    setSelectedTier(tier);
-    setIsProcessing(true);
-
-    try {
-      const res = await fetch('/api/paddle/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier }),
-      });
-
-      const data = await res.json();
-
-      if (data.blocked) {
-        setShowWaitlist(true);
-        return;
-      }
-
-      if (data.provider === 'paddle' && window.Paddle) {
-        window.Paddle.Checkout.open({
-          items: [{ priceId: data.priceId, quantity: 1 }],
-          customer: { email: user.email || undefined },
-          customData: { user_id: user.id },
-          settings: {
-            displayMode: 'overlay',
-            theme: 'dark',
-            successUrl: data.config.successUrl,
-          },
-        });
-      }
-    } catch (error) {
-      console.error('Checkout error:', error);
-    } finally {
-      setIsProcessing(false);
-      setSelectedTier(null);
-    }
+    // Show waitlist for paid plans (payment integration coming soon)
+    setShowWaitlist(true);
   };
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
@@ -288,13 +185,6 @@ export default function PricingPage() {
   return (
     <>
       <PricingJsonLd />
-      {/* Load Paddle.js only if configured */}
-      {isPaddleConfigured && (
-        <Script
-          src="https://cdn.paddle.com/paddle/v2/paddle.js"
-          onLoad={initPaddle}
-        />
-      )}
 
       <div className="min-h-screen bg-gray-50 text-gray-900">
         <FreeNavbar />
@@ -420,19 +310,15 @@ export default function PricingPage() {
                 ) : (
                   <button
                     type="button"
-                    onClick={() => isPaddleConfigured ? handleSubscribe(tier.key) : setShowWaitlist(true)}
-                    disabled={isProcessing || profile?.subscription_tier === tier.key}
+                    onClick={() => handleSubscribe(tier.key)}
+                    disabled={profile?.subscription_tier === tier.key}
                     className={`w-full py-3 rounded-lg font-medium transition ${
                       tier.popular
                         ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    {isProcessing && selectedTier === tier.key
-                      ? 'Processing...'
-                      : profile?.subscription_tier === tier.key
-                      ? 'Current Plan'
-                      : tier.cta}
+                    {profile?.subscription_tier === tier.key ? 'Current Plan' : tier.cta}
                   </button>
                 )}
 
@@ -444,9 +330,9 @@ export default function PricingPage() {
             ))}
           </div>
 
-          {/* Payment Info - Simplified until Paddle is live */}
+          {/* Payment Info */}
           <div className="mt-12 text-center">
-            <p className="text-gray-600 mb-4">Payments coming soon</p>
+            <p className="text-gray-600 mb-4">Secure payments coming soon</p>
             <div className="flex items-center justify-center gap-8">
               <div className="text-gray-600">💳 Cards</div>
               <div className="text-gray-600">🅿️ PayPal</div>
