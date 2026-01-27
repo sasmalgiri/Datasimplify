@@ -72,11 +72,13 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
 
-  // Verification (add your IDs later)
+  // Search Engine Verification
+  // Get codes from: Google Search Console (search.google.com/search-console)
+  // Bing Webmaster Tools (bing.com/webmasters)
+  // After adding property, copy the meta tag content value here
   verification: {
-    google: 'your-google-verification-code',
-    // yandex: 'your-yandex-code',
-    // bing: 'your-bing-code',
+    // google: 'paste-your-google-site-verification-code-here',
+    // bing: 'paste-your-bing-verification-code-here',
   },
 
   // App Info

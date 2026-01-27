@@ -54,11 +54,11 @@ export function Footer() {
             <h4 className="font-semibold text-white mb-4">Resources</h4>
             <ul className="space-y-2 text-sm">
               <li><Link href="/template-requirements" className="hover:text-white transition-colors">Setup Guide</Link></li>
+              <li><Link href="/byok" className="hover:text-white transition-colors">BYOK Guide</Link></li>
               <li><Link href="/learn" className="hover:text-white transition-colors">Crypto Academy</Link></li>
               <li><Link href="/glossary" className="hover:text-white transition-colors">Glossary</Link></li>
               <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/roadmap" className="hover:text-white transition-colors">Roadmap</Link></li>
-              <li><Link href="/status" className="hover:text-white transition-colors">System Status</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
