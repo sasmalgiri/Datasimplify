@@ -335,14 +335,11 @@ export default function PricingPage() {
             <div className="inline-block px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg mb-4">
               <p className="text-amber-800 font-medium">⚠️ Payments are not enabled yet</p>
             </div>
-            <p className="text-gray-600 mb-4">Secure payments coming soon</p>
-            <div className="flex items-center justify-center gap-8">
-              <div className="text-gray-600">💳 Cards</div>
-              <div className="text-gray-600">🅿️ PayPal</div>
-              <div className="text-gray-600">🌍 190+ Countries</div>
-            </div>
+            <p className="text-gray-600 mb-4">
+              Payments will be enabled after provider approval. We sell Excel templates and add-in features, not data or resold API access.
+            </p>
             <p className="text-gray-500 text-sm mt-4">
-              We&apos;re finalizing our payment integration. Join the waitlist to be notified when paid plans launch.
+              Join the waitlist to be notified when paid plans launch.
             </p>
           </div>
 
