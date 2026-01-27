@@ -116,8 +116,9 @@ export default function PrivacyPage() {
               <li>
                 <strong>Service Providers:</strong> Third parties who help us operate our Services:
                 <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
-                  <li><strong>Payment Processor:</strong> Payment processing and subscription management.
-                    Your payment details, billing address, email, and transaction information are shared with our payment processor.</li>
+                  <li><strong>Payment Processor:</strong> Once payments are enabled, payment processing and subscription management
+                    will be handled by a third-party payment processor. Payment details will be shared directly with that processor.
+                    <em className="text-gray-500"> (Note: Payments are not currently enabled.)</em></li>
                   <li><strong>Supabase:</strong> Database and authentication services</li>
                   <li><strong>Vercel:</strong> Website hosting and content delivery</li>
                   <li><strong>Data Providers:</strong> Market data aggregation services (CoinGecko, etc.)</li>
