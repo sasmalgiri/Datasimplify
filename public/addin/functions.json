@@ -194,6 +194,55 @@
         { "name": "component", "description": "Component: 'macd', 'signal', or 'histogram'", "type": "string", "optional": true }
       ],
       "result": { "type": "number" }
+    },
+    {
+      "id": "SEARCH",
+      "name": "SEARCH",
+      "description": "Search for coins by name or symbol (returns coin IDs you can use with other functions)",
+      "parameters": [
+        { "name": "query", "description": "Search query (e.g., 'bitcoin' or 'btc')", "type": "string" },
+        { "name": "limit", "description": "Number of results (default: 10)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "TOP",
+      "name": "TOP",
+      "description": "Get top coins by market cap with full data (spills to range)",
+      "parameters": [
+        { "name": "limit", "description": "Number of coins (default: 100, max: 250)", "type": "number", "optional": true },
+        { "name": "page", "description": "Page number for pagination (default: 1)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "CATEGORY",
+      "name": "CATEGORY",
+      "description": "Get coins in a specific category (e.g., 'decentralized-finance-defi', 'layer-1')",
+      "parameters": [
+        { "name": "category", "description": "Category ID (use CATEGORIES to see available)", "type": "string" },
+        { "name": "limit", "description": "Number of coins (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "CATEGORIES",
+      "name": "CATEGORIES",
+      "description": "List all coin categories with market caps (DeFi, Layer-1, NFT, etc.)",
+      "parameters": [
+        { "name": "limit", "description": "Number of categories (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "BATCH",
+      "name": "BATCH",
+      "description": "Get data for multiple coins at once (efficient batch query)",
+      "parameters": [
+        { "name": "coins", "description": "Comma-separated coin IDs (e.g., 'bitcoin,ethereum,solana')", "type": "string" },
+        { "name": "field", "description": "Field to return: price, change_24h, market_cap, volume, rank (default: price)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
     }
   ]
 }

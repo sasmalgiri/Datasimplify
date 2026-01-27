@@ -501,6 +501,131 @@ async function MACD(coin, component = 'macd') {
 }
 
 // ============================================
+// COIN DISCOVERY FUNCTIONS
+// ============================================
+
+/**
+ * Search for coins by name or symbol
+ * @customfunction
+ * @param {string} query Search query (e.g., "bitcoin" or "btc")
+ * @param {number} [limit=10] Number of results to return
+ * @returns {string[][]} Search results [ID, Name, Symbol, Rank]
+ */
+async function SEARCH(query, limit = 10) {
+  const data = await fetchWithAuth('/search', { query });
+
+  const header = ['Coin ID', 'Name', 'Symbol', 'Market Cap Rank'];
+  const rows = data.coins.slice(0, limit).map(coin => [
+    coin.id,
+    coin.name,
+    coin.symbol?.toUpperCase(),
+    coin.rank || 'N/A',
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get top coins by market cap
+ * @customfunction
+ * @param {number} [limit=100] Number of coins (max 250)
+ * @param {number} [page=1] Page number
+ * @returns {any[][]} Top coins [Rank, ID, Name, Symbol, Price, MarketCap, Change24h]
+ */
+async function TOP(limit = 100, page = 1) {
+  const data = await fetchWithAuth('/top', { limit, page });
+
+  const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', 'Market Cap', '24h %', '7d %'];
+  const rows = data.coins.map(coin => [
+    coin.rank,
+    coin.id,
+    coin.name,
+    coin.symbol,
+    coin.price,
+    coin.market_cap,
+    coin.change_24h,
+    coin.change_7d,
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get coins in a category (e.g., "defi", "layer-1")
+ * @customfunction
+ * @param {string} category Category ID (e.g., "decentralized-finance-defi")
+ * @param {number} [limit=50] Number of coins to return
+ * @returns {any[][]} Coins in category [Rank, ID, Name, Symbol, Price, Change24h]
+ */
+async function CATEGORY(category, limit = 50) {
+  const data = await fetchWithAuth('/categories', { category });
+
+  const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
+  const rows = data.coins.slice(0, limit).map(coin => [
+    coin.rank,
+    coin.id,
+    coin.name,
+    coin.symbol,
+    coin.price,
+    coin.change_24h,
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * List all coin categories
+ * @customfunction
+ * @param {number} [limit=50] Number of categories to return
+ * @returns {any[][]} Categories [ID, Name, MarketCap, Change24h]
+ */
+async function CATEGORIES(limit = 50) {
+  const data = await fetchWithAuth('/categories');
+
+  const header = ['Category ID', 'Name', 'Market Cap', '24h %'];
+  const rows = data.categories.slice(0, limit).map(cat => [
+    cat.id,
+    cat.name,
+    cat.market_cap,
+    cat.market_cap_change_24h,
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get data for multiple coins at once (batch)
+ * @customfunction
+ * @param {string} coins Comma-separated coin IDs (e.g., "bitcoin,ethereum,solana")
+ * @param {string} [field="price"] Field to return (price, change_24h, market_cap)
+ * @returns {any[][]} Coin data matrix
+ */
+async function BATCH(coins, field = 'price') {
+  const coinList = coins.split(',').map(c => c.trim());
+  const data = await fetchWithAuth('/top', { limit: 250 });
+
+  const fieldMap = {
+    'price': 'price',
+    'change_24h': 'change_24h',
+    'change_7d': 'change_7d',
+    'market_cap': 'market_cap',
+    'volume': 'volume_24h',
+    'rank': 'rank',
+  };
+
+  const mappedField = fieldMap[field.toLowerCase()] || 'price';
+  const header = ['Coin', field.toUpperCase()];
+  const rows = [];
+
+  for (const coinId of coinList) {
+    const coin = data.coins.find(c => c.id === coinId.toLowerCase());
+    rows.push([coinId, coin ? coin[mappedField] : '#N/A']);
+  }
+
+  return [header, ...rows];
+}
+
+// ============================================
 // REGISTER ALL FUNCTIONS
 // ============================================
 
@@ -534,3 +659,10 @@ CustomFunctions.associate('SMA', SMA);
 CustomFunctions.associate('EMA', EMA);
 CustomFunctions.associate('RSI', RSI);
 CustomFunctions.associate('MACD', MACD);
+
+// Coin Discovery
+CustomFunctions.associate('SEARCH', SEARCH);
+CustomFunctions.associate('TOP', TOP);
+CustomFunctions.associate('CATEGORY', CATEGORY);
+CustomFunctions.associate('CATEGORIES', CATEGORIES);
+CustomFunctions.associate('BATCH', BATCH);
