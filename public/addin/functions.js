@@ -626,6 +626,208 @@ async function BATCH(coins, field = 'price') {
 }
 
 // ============================================
+// EXCHANGES & TRADING
+// ============================================
+
+/**
+ * Get list of exchanges with volume
+ * @customfunction
+ * @param {number} [limit=50] Number of exchanges
+ * @returns {any[][]} Exchanges [Rank, Name, Country, TrustScore, Volume24hBTC]
+ */
+async function EXCHANGES(limit = 50) {
+  const data = await fetchWithAuth('/exchanges', { limit });
+
+  const header = ['Rank', 'ID', 'Name', 'Country', 'Trust Score', 'Volume 24h (BTC)'];
+  const rows = data.exchanges.map((ex, i) => [
+    ex.trust_score_rank || i + 1,
+    ex.id,
+    ex.name,
+    ex.country || 'N/A',
+    ex.trust_score,
+    ex.trade_volume_24h_btc,
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get top gainers (biggest price increases)
+ * @customfunction
+ * @param {number} [limit=20] Number of coins
+ * @returns {any[][]} Gainers [Rank, Name, Symbol, Price, Change24h]
+ */
+async function GAINERS(limit = 20) {
+  const data = await fetchWithAuth('/gainers', { type: 'gainers', limit });
+
+  const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
+  const rows = data.coins.map(coin => [
+    coin.rank,
+    coin.id,
+    coin.name,
+    coin.symbol,
+    coin.price,
+    coin.change_24h,
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get top losers (biggest price decreases)
+ * @customfunction
+ * @param {number} [limit=20] Number of coins
+ * @returns {any[][]} Losers [Rank, Name, Symbol, Price, Change24h]
+ */
+async function LOSERS(limit = 20) {
+  const data = await fetchWithAuth('/gainers', { type: 'losers', limit });
+
+  const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
+  const rows = data.coins.map(coin => [
+    coin.rank,
+    coin.id,
+    coin.name,
+    coin.symbol,
+    coin.price,
+    coin.change_24h,
+  ]);
+
+  return [header, ...rows];
+}
+
+// ============================================
+// DEFI & TVL
+// ============================================
+
+/**
+ * Get DeFi protocols by TVL
+ * @customfunction
+ * @param {number} [limit=50] Number of protocols
+ * @returns {any[][]} Protocols [Rank, Name, Symbol, TVL, Change1d]
+ */
+async function DEFI(limit = 50) {
+  const data = await fetchWithAuth('/defi', { limit });
+
+  const header = ['Rank', 'ID', 'Name', 'Symbol', 'TVL ($)', '1d %', '7d %', 'Category'];
+  const rows = data.protocols.map(p => [
+    p.rank,
+    p.id,
+    p.name,
+    p.symbol || 'N/A',
+    p.tvl,
+    p.change_1d,
+    p.change_7d,
+    p.category || 'N/A',
+  ]);
+
+  return [header, ...rows];
+}
+
+/**
+ * Get TVL for a specific protocol
+ * @customfunction
+ * @param {string} protocol Protocol ID (e.g., "aave", "uniswap")
+ * @returns {number} Total Value Locked in USD
+ */
+async function TVL(protocol) {
+  const data = await fetchWithAuth('/defi', { protocol });
+  return data.tvl ?? '#N/A';
+}
+
+// ============================================
+// NFTS
+// ============================================
+
+/**
+ * Get NFT collections
+ * @customfunction
+ * @param {number} [limit=50] Number of collections
+ * @returns {any[][]} NFT collections [ID, Name, Symbol, Platform]
+ */
+async function NFTS(limit = 50) {
+  const data = await fetchWithAuth('/nfts', { limit });
+
+  const header = ['ID', 'Name', 'Symbol', 'Platform'];
+  const rows = data.nfts.map(nft => [
+    nft.id,
+    nft.name,
+    nft.symbol || 'N/A',
+    nft.asset_platform_id || 'N/A',
+  ]);
+
+  return [header, ...rows];
+}
+
+// ============================================
+// DERIVATIVES & FUTURES
+// ============================================
+
+/**
+ * Get derivatives/futures data
+ * @customfunction
+ * @param {number} [limit=50] Number of contracts
+ * @returns {any[][]} Derivatives [Market, Symbol, Price, Change24h, FundingRate, OpenInterest]
+ */
+async function DERIVATIVES(limit = 50) {
+  const data = await fetchWithAuth('/derivatives', { limit });
+
+  const header = ['Market', 'Symbol', 'Price', '24h %', 'Funding Rate', 'Open Interest', 'Volume 24h'];
+  const rows = data.derivatives.map(d => [
+    d.market,
+    d.symbol,
+    d.price,
+    d.price_percentage_change_24h,
+    d.funding_rate,
+    d.open_interest,
+    d.volume_24h,
+  ]);
+
+  return [header, ...rows];
+}
+
+// ============================================
+// HISTORICAL DATA
+// ============================================
+
+/**
+ * Get price at a specific date
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} date Date in DD-MM-YYYY format
+ * @returns {number} Price on that date
+ */
+async function PRICEHISTORY(coin, date) {
+  const data = await fetchWithAuth('/history', { coin, date });
+  return data.price ?? '#N/A';
+}
+
+// ============================================
+// STABLECOINS
+// ============================================
+
+/**
+ * Get stablecoin market caps
+ * @customfunction
+ * @param {number} [limit=20] Number of stablecoins
+ * @returns {any[][]} Stablecoins [Rank, Name, Symbol, Circulating, Price, PegType]
+ */
+async function STABLECOINS(limit = 20) {
+  const data = await fetchWithAuth('/stablecoins', { limit });
+
+  const header = ['Rank', 'Name', 'Symbol', 'Circulating ($)', 'Price', 'Peg Type'];
+  const rows = data.stablecoins.map(s => [
+    s.rank,
+    s.name,
+    s.symbol,
+    s.circulating,
+    s.price,
+    s.peg_type || 'USD',
+  ]);
+
+  return [header, ...rows];
+}
+
+// ============================================
 // REGISTER ALL FUNCTIONS
 // ============================================
 
@@ -666,3 +868,24 @@ CustomFunctions.associate('TOP', TOP);
 CustomFunctions.associate('CATEGORY', CATEGORY);
 CustomFunctions.associate('CATEGORIES', CATEGORIES);
 CustomFunctions.associate('BATCH', BATCH);
+
+// Exchanges & Trading
+CustomFunctions.associate('EXCHANGES', EXCHANGES);
+CustomFunctions.associate('GAINERS', GAINERS);
+CustomFunctions.associate('LOSERS', LOSERS);
+
+// DeFi & TVL
+CustomFunctions.associate('DEFI', DEFI);
+CustomFunctions.associate('TVL', TVL);
+
+// NFTs
+CustomFunctions.associate('NFTS', NFTS);
+
+// Derivatives
+CustomFunctions.associate('DERIVATIVES', DERIVATIVES);
+
+// Historical
+CustomFunctions.associate('PRICEHISTORY', PRICEHISTORY);
+
+// Stablecoins
+CustomFunctions.associate('STABLECOINS', STABLECOINS);

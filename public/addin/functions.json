@@ -243,6 +243,88 @@
         { "name": "field", "description": "Field to return: price, change_24h, market_cap, volume, rank (default: price)", "type": "string", "optional": true }
       ],
       "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "EXCHANGES",
+      "name": "EXCHANGES",
+      "description": "Get list of crypto exchanges with volume and trust scores",
+      "parameters": [
+        { "name": "limit", "description": "Number of exchanges (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "GAINERS",
+      "name": "GAINERS",
+      "description": "Get top price gainers (biggest 24h increases)",
+      "parameters": [
+        { "name": "limit", "description": "Number of coins (default: 20)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "LOSERS",
+      "name": "LOSERS",
+      "description": "Get top price losers (biggest 24h decreases)",
+      "parameters": [
+        { "name": "limit", "description": "Number of coins (default: 20)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "DEFI",
+      "name": "DEFI",
+      "description": "Get DeFi protocols ranked by TVL (Total Value Locked)",
+      "parameters": [
+        { "name": "limit", "description": "Number of protocols (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "TVL",
+      "name": "TVL",
+      "description": "Get Total Value Locked for a specific DeFi protocol",
+      "parameters": [
+        { "name": "protocol", "description": "Protocol ID (e.g., 'aave', 'uniswap', 'lido')", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "NFTS",
+      "name": "NFTS",
+      "description": "Get NFT collections list",
+      "parameters": [
+        { "name": "limit", "description": "Number of collections (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "DERIVATIVES",
+      "name": "DERIVATIVES",
+      "description": "Get derivatives/futures market data (funding rates, open interest)",
+      "parameters": [
+        { "name": "limit", "description": "Number of contracts (default: 50)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "PRICEHISTORY",
+      "name": "PRICEHISTORY",
+      "description": "Get price at a specific historical date",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., 'bitcoin')", "type": "string" },
+        { "name": "date", "description": "Date in DD-MM-YYYY format (e.g., '01-01-2024')", "type": "string" }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "STABLECOINS",
+      "name": "STABLECOINS",
+      "description": "Get stablecoin market caps and circulation data",
+      "parameters": [
+        { "name": "limit", "description": "Number of stablecoins (default: 20)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
     }
   ]
 }
