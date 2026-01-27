@@ -9,7 +9,7 @@ import {
   getRelatedTemplates,
   TemplateLandingPage,
 } from '@/lib/seo/templatePages';
-import { BreadcrumbJsonLd, ExcelTemplateJsonLd, FAQJsonLd } from '@/components/JsonLd';
+import { BreadcrumbJsonLd, ExcelTemplateJsonLd } from '@/components/JsonLd';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -80,6 +80,26 @@ export default async function TemplateDetailPage({ params }: PageProps) {
         features={template.features}
         tier={template.tier}
       />
+      {/* FAQPage schema for templates with visible FAQs */}
+      {template.faq.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'FAQPage',
+              mainEntity: template.faq.map((faq) => ({
+                '@type': 'Question',
+                name: faq.question,
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: faq.answer,
+                },
+              })),
+            }),
+          }}
+        />
+      )}
 
       <FreeNavbar />
       <Breadcrumb />

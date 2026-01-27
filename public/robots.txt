@@ -14,11 +14,23 @@ Disallow: /auth/
 
 # Disallow internal/demo pages
 Disallow: /demo/
+Disallow: /coming-soon/
 
-# Disallow user account pages (when implemented)
+# Disallow user account pages
 Disallow: /dashboard/
 Disallow: /account/
 Disallow: /checkout/
+Disallow: /admin/
+
+# Disallow auth pages
+Disallow: /login/
+Disallow: /signup/
+Disallow: /addin-auth/
+
+# Disallow utility/app pages
+Disallow: /builder/
+Disallow: /monitor/
+Disallow: /status/
 
 # Allow main product pages (explicit for clarity)
 Allow: /excel-templates/
