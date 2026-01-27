@@ -7,6 +7,8 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { useViewMode } from '@/lib/viewMode';
+import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent } from 'lucide-react';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -286,6 +288,7 @@ type TechnicalMetrics = {
 };
 
 export default function ComparePage() {
+  const { isSimple, isPro } = useViewMode();
   const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [technicals, setTechnicals] = useState<Map<string, TechnicalMetrics>>(new Map());
@@ -300,6 +303,7 @@ export default function ComparePage() {
   );
   const [showFilters, setShowFilters] = useState(false);
   const [availableCoins, setAvailableCoins] = useState(INITIAL_ALL_COINS);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Fetch all available coins dynamically (600+)
   useEffect(() => {
@@ -534,7 +538,12 @@ export default function ComparePage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">Compare Cryptocurrencies</h1>
-            <p className="text-gray-400">Compare up to 10 coins side-by-side with 50+ cryptocurrencies • Free, no login required</p>
+            <p className="text-gray-400">
+              {isSimple
+                ? 'Quick comparison of any two coins • Free, no login required'
+                : 'Compare up to 10 coins side-by-side with 50+ cryptocurrencies • Free, no login required'
+              }
+            </p>
             <div className="mt-2">
               <CoinGeckoAttribution variant="compact" showIcon />
             </div>
@@ -559,260 +568,435 @@ export default function ComparePage() {
           </div>
         </div>
 
-        {/* Feature Highlight */}
-        <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-500/30 rounded-lg p-4 mb-6">
-          <p className="text-emerald-400 text-sm flex items-start gap-2">
-            <span>🚀</span>
-            <span>
-              <strong>Powerful comparison tools!</strong> Compare up to 10 coins side-by-side.
-              Filter by category, 50+ coins, 7d/30d changes, ATH/ATL, FDV, and more!
-            </span>
-          </p>
-        </div>
-
-        {/* Filters Section */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white flex items-center">
-              🔍 Filter & Search
-              <HelpIcon text="Filter coins by category, search by name/symbol, or select from the list below. You can compare up to 10 coins at once." />
-            </h2>
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="text-sm text-emerald-400 hover:text-emerald-300"
-            >
-              {showFilters ? '▼ Hide Advanced' : '▶ Show Advanced'}
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search coins by name or symbol..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Category Filters */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  categoryFilter === cat.id
-                    ? `${cat.color} text-white`
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {cat.label}
-                <span className="ml-1 text-xs opacity-75">
-                  ({cat.id === 'all' ? availableCoins.length : availableCoins.filter(c => c.category === cat.id).length})
-                </span>
-              </button>
-            ))}
-          </div>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="border-t border-gray-700 pt-4 mt-4 space-y-4">
-              {/* Sort By */}
-              <div>
-                <label htmlFor="sort-select" className="block text-sm font-medium text-gray-400 mb-2">Sort Results By</label>
-                <select
-                  id="sort-select"
-                  title="Sort Results By"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full md:w-64 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
-                >
-                  {SORT_OPTIONS.map(opt => (
-                    <option key={opt.id} value={opt.id}>{opt.label}</option>
-                  ))}
-                </select>
+        {/* Simple Mode: Streamlined UI */}
+        {isSimple && (
+          <>
+            {/* Quick Search */}
+            <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search coins (e.g., Bitcoin, ETH, Solana)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none"
+                />
               </div>
 
-              {/* Column Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Visible Columns</label>
-                <div className="flex flex-wrap gap-2">
-                  {COLUMN_OPTIONS.map((col) => (
+              {/* Quick coin picker for What-If */}
+              {searchQuery && filteredCoins.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                  {filteredCoins.slice(0, 12).map((coin) => {
+                    const isSelected = selectedIds.includes(coin.id);
+                    return (
+                      <button
+                        key={coin.id}
+                        type="button"
+                        onClick={() => toggleCoin(coin.id)}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-all ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {coin.symbol.toUpperCase()} ({coin.name})
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* What-If Calculator (Prominent in Simple Mode) */}
+            {coins.length >= 2 && (
+              <WhatIfMarketCapCalculator coins={coins} />
+            )}
+
+            {/* Core Metrics Cards - 5 Key Outputs */}
+            {coins.length >= 2 && !loading && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {coins.slice(0, 2).map((coin) => (
+                  <div key={coin.id} className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                    <div className="flex items-center gap-3 mb-4">
+                      <img src={coin.image} alt={coin.name} className="w-10 h-10 rounded-full" />
+                      <div>
+                        <h3 className="font-bold text-white">{coin.name}</h3>
+                        <span className="text-gray-400 text-sm uppercase">{coin.symbol}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Price */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <DollarSign className="w-4 h-4" /> Price
+                        </span>
+                        <span className="font-medium text-white">{formatPrice(coin.current_price)}</span>
+                      </div>
+
+                      {/* Market Cap */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4" /> Market Cap
+                        </span>
+                        <span className="font-medium text-white">{formatLargeNumber(coin.market_cap)}</span>
+                      </div>
+
+                      {/* Supply */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <Percent className="w-4 h-4" /> Circulating
+                        </span>
+                        <span className="font-medium text-white">{formatSupply(coin.circulating_supply)}</span>
+                      </div>
+
+                      {/* ATH */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <Target className="w-4 h-4" /> All-Time High
+                        </span>
+                        <div className="text-right">
+                          <span className="font-medium text-white">{formatPrice(coin.ath)}</span>
+                          <span className={`ml-2 text-sm ${(coin.ath_change_percentage || 0) >= -10 ? 'text-green-400' : 'text-red-400'}`}>
+                            ({formatPercent(coin.ath_change_percentage)})
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 24h Change */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4" /> 24h Change
+                        </span>
+                        <span className={`font-medium ${(coin.price_change_percentage_24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatPercent(coin.price_change_percentage_24h)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Loading in Simple Mode */}
+            {loading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-emerald-500 border-t-transparent"></div>
+              </div>
+            )}
+
+            {/* No coins selected prompt */}
+            {!loading && coins.length < 2 && (
+              <div className="bg-gray-800 rounded-xl p-8 border border-gray-700 text-center">
+                <p className="text-5xl mb-4">🔍</p>
+                <p className="text-xl text-white mb-2">Select 2 coins to compare</p>
+                <p className="text-gray-400">Search above or click from the popular coins below</p>
+
+                {/* Popular coins quick select */}
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  {['bitcoin', 'ethereum', 'solana', 'cardano', 'dogecoin', 'xrp'].map((coinId) => {
+                    const coin = availableCoins.find(c => c.id === coinId);
+                    const isSelected = selectedIds.includes(coinId);
+                    if (!coin) return null;
+                    return (
+                      <button
+                        key={coinId}
+                        type="button"
+                        onClick={() => toggleCoin(coinId)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        {coin.symbol.toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Show Advanced Toggle */}
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-emerald-400 transition-colors"
+              >
+                {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {showAdvanced ? 'Hide advanced comparison' : 'Show advanced comparison (10 coins, filters, columns)'}
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Pro Mode OR Simple Mode with Advanced expanded */}
+        {(isPro || (isSimple && showAdvanced)) && (
+          <>
+            {/* Feature Highlight (Pro only) */}
+            {isPro && (
+              <div className="bg-gradient-to-r from-emerald-900/30 to-blue-900/30 border border-emerald-500/30 rounded-lg p-4 mb-6">
+                <p className="text-emerald-400 text-sm flex items-start gap-2">
+                  <span>🚀</span>
+                  <span>
+                    <strong>Powerful comparison tools!</strong> Compare up to 10 coins side-by-side.
+                    Filter by category, 50+ coins, 7d/30d changes, ATH/ATL, FDV, and more!
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {/* Filters Section */}
+            <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-white flex items-center">
+                  🔍 Filter & Search
+                  <HelpIcon text="Filter coins by category, search by name/symbol, or select from the list below. You can compare up to 10 coins at once." />
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="text-sm text-emerald-400 hover:text-emerald-300"
+                >
+                  {showFilters ? '▼ Hide Advanced' : '▶ Show Advanced'}
+                </button>
+              </div>
+
+              {/* Search */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search coins by name or symbol..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Category Filters */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategoryFilter(cat.id)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      categoryFilter === cat.id
+                        ? `${cat.color} text-white`
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {cat.label}
+                    <span className="ml-1 text-xs opacity-75">
+                      ({cat.id === 'all' ? availableCoins.length : availableCoins.filter(c => c.category === cat.id).length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Advanced Filters */}
+              {showFilters && (
+                <div className="border-t border-gray-700 pt-4 mt-4 space-y-4">
+                  {/* Sort By */}
+                  <div>
+                    <label htmlFor="sort-select" className="block text-sm font-medium text-gray-400 mb-2">Sort Results By</label>
+                    <select
+                      id="sort-select"
+                      title="Sort Results By"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="w-full md:w-64 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:outline-none"
+                    >
+                      {SORT_OPTIONS.map(opt => (
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Column Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Visible Columns</label>
+                    <div className="flex flex-wrap gap-2">
+                      {COLUMN_OPTIONS.map((col) => (
+                        <button
+                          key={col.id}
+                          type="button"
+                          onClick={() => toggleColumn(col.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            visibleColumns.includes(col.id)
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          {col.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Quick Actions</label>
+                    <div className="flex flex-wrap gap-2">
+                      {categoryFilter !== 'all' && (
+                        <button
+                          type="button"
+                          onClick={() => selectAllInCategory(categoryFilter)}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-medium text-white"
+                        >
+                          Select All {CATEGORIES.find(c => c.id === categoryFilter)?.label}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={clearSelection}
+                        className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-xs font-medium text-white"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Coin Selection */}
+            <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
+                Select Coins to Compare ({selectedIds.length}/10)
+                <HelpIcon text="Click on any coin to add or remove it from comparison. Selected coins appear with a green border. Maximum 10 coins." />
+              </h2>
+              <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2">
+                {filteredCoins.map((coin) => {
+                  const isSelected = selectedIds.includes(coin.id);
+                  const catColor = CATEGORIES.find(c => c.id === coin.category)?.color || 'bg-gray-600';
+                  return (
                     <button
-                      key={col.id}
-                      onClick={() => toggleColumn(col.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        visibleColumns.includes(col.id)
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                      key={coin.id}
+                      type="button"
+                      onClick={() => toggleCoin(coin.id)}
+                      disabled={!isSelected && selectedIds.length >= 10}
+                      className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
+                        isSelected
+                          ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg'
+                          : selectedIds.length >= 10
+                            ? 'bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed'
+                            : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-500'
                       }`}
                     >
-                      {col.label}
+                      <span className="font-medium">{coin.symbol}</span>
+                      <span className="text-xs opacity-75 ml-1">({coin.name})</span>
+                      <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${catColor} opacity-75`}>
+                        {coin.category}
+                      </span>
                     </button>
-                  ))}
+                  );
+                })}
+              </div>
+              {filteredCoins.length === 0 && (
+                <p className="text-gray-400 text-center py-4">No coins match your search/filter criteria</p>
+              )}
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 text-red-400">
+                {error}
+              </div>
+            )}
+
+            {/* Loading */}
+            {loading && (
+              <div className="flex justify-center items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
+              </div>
+            )}
+
+            {/* Column Guide */}
+            {!loading && coins.length > 0 && (
+              <div className="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
+                <p className="text-gray-300 text-sm mb-2 font-medium">📊 Column Guide:</p>
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+                  {visibleColumns.includes('price') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">Price:</span> Current USD</span>}
+                  {visibleColumns.includes('change_24h') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">24h:</span> Day change</span>}
+                  {visibleColumns.includes('change_7d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">7d:</span> Week change</span>}
+                  {visibleColumns.includes('change_30d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">30d:</span> Month change</span>}
+                  {visibleColumns.includes('market_cap') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">MCap:</span> Market cap</span>}
+                  {visibleColumns.includes('fdv') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">FDV:</span> Fully diluted value</span>}
+                  {visibleColumns.includes('volume') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">Vol:</span> 24h volume</span>}
+                  {visibleColumns.includes('ath') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">ATH:</span> All-time high</span>}
+                  {visibleColumns.includes('from_ath') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">%ATH:</span> Distance from peak</span>}
+                  {visibleColumns.includes('atl') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">ATL:</span> All-time low</span>}
+                  {visibleColumns.includes('from_atl') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">%ATL:</span> Gain from bottom</span>}
                 </div>
               </div>
+            )}
 
-              {/* Quick Actions */}
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Quick Actions</label>
-                <div className="flex flex-wrap gap-2">
-                  {categoryFilter !== 'all' && (
-                    <button
-                      onClick={() => selectAllInCategory(categoryFilter)}
-                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg text-xs font-medium text-white"
-                    >
-                      Select All {CATEGORIES.find(c => c.id === categoryFilter)?.label}
-                    </button>
-                  )}
-                  <button
-                    onClick={clearSelection}
-                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-xs font-medium text-white"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Coin Selection */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-            Select Coins to Compare ({selectedIds.length}/10)
-            <HelpIcon text="Click on any coin to add or remove it from comparison. Selected coins appear with a green border. Maximum 10 coins." />
-          </h2>
-          <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2">
-            {filteredCoins.map((coin) => {
-              const isSelected = selectedIds.includes(coin.id);
-              const catColor = CATEGORIES.find(c => c.id === coin.category)?.color || 'bg-gray-600';
-              return (
-                <button
-                  key={coin.id}
-                  onClick={() => toggleCoin(coin.id)}
-                  disabled={!isSelected && selectedIds.length >= 10}
-                  className={`px-3 py-2 rounded-lg border-2 transition-all text-sm ${
-                    isSelected
-                      ? 'bg-emerald-600 border-emerald-400 text-white shadow-lg'
-                      : selectedIds.length >= 10
-                        ? 'bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed'
-                        : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-500'
-                  }`}
-                >
-                  <span className="font-medium">{coin.symbol}</span>
-                  <span className="text-xs opacity-75 ml-1">({coin.name})</span>
-                  <span className={`ml-2 px-1.5 py-0.5 rounded text-xs ${catColor} opacity-75`}>
-                    {coin.category}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          {filteredCoins.length === 0 && (
-            <p className="text-gray-400 text-center py-4">No coins match your search/filter criteria</p>
-          )}
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 text-red-400">
-            {error}
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent"></div>
-          </div>
-        )}
-
-        {/* Column Guide */}
-        {!loading && coins.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-4 mb-4 border border-gray-700">
-            <p className="text-gray-300 text-sm mb-2 font-medium">📊 Column Guide:</p>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
-              {visibleColumns.includes('price') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">Price:</span> Current USD</span>}
-              {visibleColumns.includes('change_24h') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">24h:</span> Day change</span>}
-              {visibleColumns.includes('change_7d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">7d:</span> Week change</span>}
-              {visibleColumns.includes('change_30d') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">30d:</span> Month change</span>}
-              {visibleColumns.includes('market_cap') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">MCap:</span> Market cap</span>}
-              {visibleColumns.includes('fdv') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">FDV:</span> Fully diluted value</span>}
-              {visibleColumns.includes('volume') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">Vol:</span> 24h volume</span>}
-              {visibleColumns.includes('ath') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">ATH:</span> All-time high</span>}
-              {visibleColumns.includes('from_ath') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">%ATH:</span> Distance from peak</span>}
-              {visibleColumns.includes('atl') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">ATL:</span> All-time low</span>}
-              {visibleColumns.includes('from_atl') && <span className="text-gray-400"><span className="text-emerald-400 font-medium">%ATL:</span> Gain from bottom</span>}
-            </div>
-          </div>
-        )}
-
-        {/* Comparison Table */}
-        {!loading && coins.length > 0 && (
-          <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-gray-900">
-                  <tr className="bg-gray-900 border-b border-gray-700">
-                    <th className="px-4 py-3 text-left text-emerald-400 font-medium sticky left-0 bg-gray-900">#</th>
-                    <th className="px-4 py-3 text-left text-emerald-400 font-medium">Coin</th>
-                    {visibleColumns.includes('price') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Price</th>}
-                    {visibleColumns.includes('change_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h</th>}
-                    {visibleColumns.includes('change_7d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">7d</th>}
-                    {visibleColumns.includes('change_30d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">30d</th>}
-                    {visibleColumns.includes('change_1y') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">1Y</th>}
-                    {visibleColumns.includes('market_cap') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Market Cap</th>}
-                    {visibleColumns.includes('fdv') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">FDV</th>}
-                    {visibleColumns.includes('volume') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Volume 24h</th>}
-                    {visibleColumns.includes('vol_mcap_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol/MCap</th>}
-                    {visibleColumns.includes('circulating') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circulating</th>}
-                    {visibleColumns.includes('max_supply') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Max Supply</th>}
-                    {visibleColumns.includes('supply_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circ/Max</th>}
-                    {visibleColumns.includes('ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATH</th>}
-                    {visibleColumns.includes('from_ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATH</th>}
-                    {visibleColumns.includes('atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATL</th>}
-                    {visibleColumns.includes('from_atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATL</th>}
-                    {visibleColumns.includes('high_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h High</th>}
-                    {visibleColumns.includes('low_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Low</th>}
-                    {visibleColumns.includes('price_range_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Range</th>}
-                    {visibleColumns.includes('rsi') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">RSI</th>}
-                    {visibleColumns.includes('volatility') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol (30d)</th>}
-                    {visibleColumns.includes('momentum') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Mom (30d)</th>}
-                    {visibleColumns.includes('dominance') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Dominance</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {coins.map((coin, index) => (
-                    <tr
-                      key={coin.id}
-                      className="border-b border-gray-700 hover:bg-gray-700/50 transition-colors group"
-                    >
-                      <td className="px-4 py-3 text-gray-400 sticky left-0 bg-gray-800 group-hover:bg-gray-700/50">{index + 1}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
-                          <div>
-                            <span className="font-medium text-white group-hover:text-emerald-400 transition-colors">{coin.name}</span>
-                            <span className="text-gray-400 ml-2 uppercase text-xs">{coin.symbol}</span>
-                          </div>
-                        </div>
-                      </td>
-                      {visibleColumns.includes('price') && (
-                        <td className="px-4 py-3 text-right font-medium text-white">{formatPrice(coin.current_price)}</td>
-                      )}
-                      {visibleColumns.includes('change_24h') && (
-                        <td className={`px-4 py-3 text-right font-medium ${
-                          coin.id === priceChangeBW.best ? 'text-green-400 bg-green-400/10' :
-                          coin.id === priceChangeBW.worst && coins.length > 2 ? 'text-red-400 bg-red-400/10' :
-                          (coin.price_change_percentage_24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          {formatPercent(coin.price_change_percentage_24h)}
-                          {coin.id === priceChangeBW.best && <span className="ml-1">🏆</span>}
-                        </td>
-                      )}
+            {/* Comparison Table */}
+            {!loading && coins.length > 0 && (
+              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-10 bg-gray-900">
+                      <tr className="bg-gray-900 border-b border-gray-700">
+                        <th className="px-4 py-3 text-left text-emerald-400 font-medium sticky left-0 bg-gray-900">#</th>
+                        <th className="px-4 py-3 text-left text-emerald-400 font-medium">Coin</th>
+                        {visibleColumns.includes('price') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Price</th>}
+                        {visibleColumns.includes('change_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h</th>}
+                        {visibleColumns.includes('change_7d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">7d</th>}
+                        {visibleColumns.includes('change_30d') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">30d</th>}
+                        {visibleColumns.includes('change_1y') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">1Y</th>}
+                        {visibleColumns.includes('market_cap') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Market Cap</th>}
+                        {visibleColumns.includes('fdv') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">FDV</th>}
+                        {visibleColumns.includes('volume') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Volume 24h</th>}
+                        {visibleColumns.includes('vol_mcap_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol/MCap</th>}
+                        {visibleColumns.includes('circulating') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circulating</th>}
+                        {visibleColumns.includes('max_supply') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Max Supply</th>}
+                        {visibleColumns.includes('supply_ratio') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Circ/Max</th>}
+                        {visibleColumns.includes('ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATH</th>}
+                        {visibleColumns.includes('from_ath') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATH</th>}
+                        {visibleColumns.includes('atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ATL</th>}
+                        {visibleColumns.includes('from_atl') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">From ATL</th>}
+                        {visibleColumns.includes('high_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h High</th>}
+                        {visibleColumns.includes('low_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Low</th>}
+                        {visibleColumns.includes('price_range_24h') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">24h Range</th>}
+                        {visibleColumns.includes('rsi') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">RSI</th>}
+                        {visibleColumns.includes('volatility') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol (30d)</th>}
+                        {visibleColumns.includes('momentum') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Mom (30d)</th>}
+                        {visibleColumns.includes('dominance') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Dominance</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coins.map((coin, index) => (
+                        <tr
+                          key={coin.id}
+                          className="border-b border-gray-700 hover:bg-gray-700/50 transition-colors group"
+                        >
+                          <td className="px-4 py-3 text-gray-400 sticky left-0 bg-gray-800 group-hover:bg-gray-700/50">{index + 1}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                              <div>
+                                <span className="font-medium text-white group-hover:text-emerald-400 transition-colors">{coin.name}</span>
+                                <span className="text-gray-400 ml-2 uppercase text-xs">{coin.symbol}</span>
+                              </div>
+                            </div>
+                          </td>
+                          {visibleColumns.includes('price') && (
+                            <td className="px-4 py-3 text-right font-medium text-white">{formatPrice(coin.current_price)}</td>
+                          )}
+                          {visibleColumns.includes('change_24h') && (
+                            <td className={`px-4 py-3 text-right font-medium ${
+                              coin.id === priceChangeBW.best ? 'text-green-400 bg-green-400/10' :
+                              coin.id === priceChangeBW.worst && coins.length > 2 ? 'text-red-400 bg-red-400/10' :
+                              (coin.price_change_percentage_24h || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                            }`}>
+                              {formatPercent(coin.price_change_percentage_24h)}
+                              {coin.id === priceChangeBW.best && <span className="ml-1">🏆</span>}
+                            </td>
+                          )}
                       {visibleColumns.includes('change_7d') && (
                         <td className={`px-4 py-3 text-right font-medium ${
                           (coin.price_change_percentage_7d_in_currency || 0) >= 0 ? 'text-green-400' : 'text-red-400'
@@ -932,45 +1116,47 @@ export default function ComparePage() {
                       {visibleColumns.includes('dominance') && (
                         <td className="px-4 py-3 text-right text-gray-300">Unavailable</td>
                       )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* No Selection */}
+            {!loading && coins.length === 0 && selectedIds.length === 0 && (
+              <div className="text-center py-20 text-gray-500">
+                <p className="text-6xl mb-4">📊</p>
+                <p className="text-xl">Select coins above to compare them</p>
+                <p className="text-sm mt-2">You can compare up to 10 coins side-by-side</p>
+              </div>
+            )}
+
+            {/* What If Market Cap Calculator (Pro mode) */}
+            {coins.length >= 2 && (
+              <WhatIfMarketCapCalculator coins={coins} />
+            )}
+
+            {/* Legend */}
+            <div className="mt-8 bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <h3 className="font-medium text-white mb-3">Understanding the Data:</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-400">
+                <div><span className="text-green-400">🏆 Trophy</span> = Best 24h performer</div>
+                <div><span className="text-blue-400">👑 Crown</span> = Highest market cap</div>
+                <div><span className="text-purple-400">🔥 Fire</span> = Highest volume</div>
+                <div><span className="text-green-400">Green %</span> = Positive change</div>
+                <div><span className="text-red-400">Red %</span> = Negative change</div>
+                <div><span className="text-yellow-400">Yellow %</span> = Within 50% of ATH</div>
+                <div><span className="text-gray-300">∞</span> = No max supply (inflationary)</div>
+                <div><span className="text-gray-300">FDV</span> = Price × Max Supply</div>
+                <div><span className="text-gray-300">ATH/ATL</span> = All-Time High/Low</div>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
-        {/* No Selection */}
-        {!loading && coins.length === 0 && selectedIds.length === 0 && (
-          <div className="text-center py-20 text-gray-500">
-            <p className="text-6xl mb-4">📊</p>
-            <p className="text-xl">Select coins above to compare them</p>
-            <p className="text-sm mt-2">You can compare up to 10 coins side-by-side</p>
-          </div>
-        )}
-
-        {/* What If Market Cap Calculator */}
-        {coins.length >= 2 && (
-          <WhatIfMarketCapCalculator coins={coins} />
-        )}
-
-        {/* Legend */}
-        <div className="mt-8 bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <h3 className="font-medium text-white mb-3">Understanding the Data:</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm text-gray-400">
-            <div><span className="text-green-400">🏆 Trophy</span> = Best 24h performer</div>
-            <div><span className="text-blue-400">👑 Crown</span> = Highest market cap</div>
-            <div><span className="text-purple-400">🔥 Fire</span> = Highest volume</div>
-            <div><span className="text-green-400">Green %</span> = Positive change</div>
-            <div><span className="text-red-400">Red %</span> = Negative change</div>
-            <div><span className="text-yellow-400">Yellow %</span> = Within 50% of ATH</div>
-            <div><span className="text-gray-300">∞</span> = No max supply (inflationary)</div>
-            <div><span className="text-gray-300">FDV</span> = Price × Max Supply</div>
-            <div><span className="text-gray-300">ATH/ATL</span> = All-Time High/Low</div>
-          </div>
-        </div>
-
-        {/* Footer */}
+        {/* Footer (always visible) */}
         <div className="mt-8 text-center text-gray-400 text-sm">
           <p className="mb-2">
             <a
@@ -981,7 +1167,7 @@ export default function ComparePage() {
             >
               Powered by CoinGecko
             </a>
-            {' '}• Updates frequently • 50+ coins available
+            {' '}• Updates frequently • {isPro ? '50+ coins available' : 'Quick compare tool'}
           </p>
           <p>
             Want historical charts, alerts, and advanced analytics? <Link href="/pricing" className="text-emerald-400 hover:underline">View pricing</Link> for upcoming Pro features!

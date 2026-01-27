@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { ViewModeToggle } from '@/components/ViewModeToggle';
 
 interface NavDropdownProps {
   label: string;
@@ -93,7 +94,7 @@ export function FreeNavbar() {
       icon: <FileSpreadsheet className="w-4 h-4" />,
       paths: ['/templates', '/download', '/template-requirements', '/byok'],
       items: [
-        { href: '/templates', label: 'Report Kits', description: '6 curated Excel template packs', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/templates', label: 'Report Kits', description: '8 curated Excel template packs', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/download', label: 'Customize Templates', description: 'Configure coins, timeframe & download', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/template-requirements', label: 'Setup Guide', description: 'How to use BYOK templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Bring Your Own Key architecture', icon: <Shield className="w-4 h-4" /> },
@@ -176,6 +177,7 @@ export function FreeNavbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
+            <ViewModeToggle />
             <Link
               href="/login"
               className="px-4 py-2 text-gray-300 hover:text-white transition"
@@ -214,7 +216,8 @@ export function FreeNavbar() {
                 </Link>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
+              <ViewModeToggle />
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

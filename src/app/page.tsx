@@ -7,6 +7,8 @@ import HomepageTemplateFinder from '@/components/HomepageTemplateFinder';
 import QuickActionsCard from '@/components/QuickActionsCard';
 import StickySignupButton from '@/components/StickySignupButton';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { useViewMode } from '@/lib/viewMode';
+import { Download, Key, RefreshCw, ArrowRight } from 'lucide-react';
 
 // Verification types
 interface SourcifyVerificationResponse {
@@ -146,6 +148,7 @@ function SafeContractPreview() {
 }
 
 export default function LandingPage() {
+  const { isSimple, isPro } = useViewMode();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -162,160 +165,245 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                Refreshable Crypto Reports in Excel
+                {isSimple ? 'Crypto Data in Excel' : 'Refreshable Crypto Reports in Excel'}
               </span>
-              {' '}
-              <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                (Templates + Report Wizard)
-              </span>
+              {isPro && (
+                <>
+                  {' '}
+                  <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
+                    (Templates + Report Wizard)
+                  </span>
+                </>
+              )}
             </h1>
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
-              Download Excel templates with CRK formulas. Customize coins & timeframes, connect your API key (BYOK), refresh.
-              <span className="text-white font-semibold"> Live crypto data at your fingertips.</span>
+              {isSimple
+                ? 'Download a template, add your API key, and get live crypto prices in Excel.'
+                : 'Download Excel templates with CRK formulas. Customize coins & timeframes, connect your API key (BYOK), refresh.'}
+              <span className="text-white font-semibold"> {isSimple ? 'Start in 60 seconds.' : 'Live crypto data at your fingertips.'}</span>
             </p>
 
-            <div className="flex flex-row gap-3 justify-center mb-3">
-              <Link
-                href="/templates"
-                className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
-              >
-                Download Excel Templates
+            {/* Simple Mode: 3-Step Strip */}
+            {isSimple && (
+              <div className="mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto mb-4">
+                  <Link
+                    href="/templates"
+                    className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-xl hover:border-emerald-400 transition group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">1</div>
+                    <div className="text-left">
+                      <div className="font-semibold text-white flex items-center gap-1">
+                        Download Kit <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
+                      </div>
+                      <div className="text-xs text-gray-400">Pick a template pack</div>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/byok"
+                    className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-500/20 to-blue-600/10 border border-blue-500/30 rounded-xl hover:border-blue-400 transition group"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">2</div>
+                    <div className="text-left">
+                      <div className="font-semibold text-white flex items-center gap-1">
+                        Add API Key <Key className="w-3 h-3" />
+                      </div>
+                      <div className="text-xs text-gray-400">Free from CoinGecko</div>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500/20 to-purple-600/10 border border-purple-500/30 rounded-xl">
+                    <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">3</div>
+                    <div className="text-left">
+                      <div className="font-semibold text-white flex items-center gap-1">
+                        Refresh <RefreshCw className="w-3 h-3" />
+                      </div>
+                      <div className="text-xs text-gray-400">Live data in Excel</div>
+                    </div>
+                  </div>
+                </div>
+                <Link
+                  href="/templates"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
+                >
+                  <Download className="w-4 h-4" />
+                  Start Here - Download a Kit
+                </Link>
+              </div>
+            )}
+
+            {/* Pro Mode: Original buttons */}
+            {isPro && (
+              <>
+                <div className="flex flex-row gap-3 justify-center mb-3">
+                  <Link
+                    href="/templates"
+                    className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
+                  >
+                    Download Excel Templates
+                  </Link>
+                  <Link
+                    href="/compare"
+                    className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
+                  >
+                    Compare Coins
+                  </Link>
+                </div>
+
+                <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-400">✓</span>
+                    <span>CRK formulas + BYOK</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-400">✓</span>
+                    <span>Customizable templates</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-blue-400">✓</span>
+                    <span>Free to start</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Simple Mode: 3 Feature Tiles */}
+          {isSimple && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <Link href="/templates" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
+                <div className="text-3xl mb-2">📋</div>
+                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Excel Templates</h3>
+                <p className="text-gray-400 text-sm">8 ready-to-use report kits</p>
               </Link>
-              <Link
-                href="/compare"
-                className="px-5 py-2 bg-white/10 border border-white/20 rounded-lg font-semibold text-sm hover:bg-white/20 transition"
-              >
-                Compare Coins
+              <Link href="/compare" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
+                <div className="text-3xl mb-2">⚖️</div>
+                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Compare Coins</h3>
+                <p className="text-gray-400 text-sm">Side-by-side analysis</p>
+              </Link>
+              <Link href="/smart-contract-verifier" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
+                <div className="text-3xl mb-2">🔐</div>
+                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Verify Contracts</h3>
+                <p className="text-gray-400 text-sm">Check if code is verified</p>
               </Link>
             </div>
+          )}
 
-            <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
-              <div className="flex items-center gap-1">
-                <span className="text-green-400">✓</span>
-                <span>CRK formulas + BYOK</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-green-400">✓</span>
-                <span>Customizable templates</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-blue-400">✓</span>
-                <span>Free to start</span>
+          {/* Pro Mode: Main Feature Cards */}
+          {isPro && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <HomepageTemplateFinder />
+              <div className="flex flex-col gap-4">
+                {isFeatureEnabled('smartContractVerifier') && <SafeContractPreview />}
+                <QuickActionsCard className={isFeatureEnabled('smartContractVerifier') ? 'h-auto' : ''} />
               </div>
             </div>
-          </div>
-
-          {/* Main Feature Cards - Template Finder + Quick Actions */}
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Template Finder - Smart search for finding the right template */}
-            <HomepageTemplateFinder />
-
-            {/* Quick Actions - Fast navigation + optional SafeContract */}
-            <div className="flex flex-col gap-4">
-              {isFeatureEnabled('smartContractVerifier') && <SafeContractPreview />}
-              <QuickActionsCard className={isFeatureEnabled('smartContractVerifier') ? 'h-auto' : ''} />
-            </div>
-          </div>
+          )}
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-6 border-y border-gray-800 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-emerald-400">8</div>
-              <div className="text-gray-400 text-xs">Report Kits</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-purple-400">36</div>
-              <div className="text-gray-400 text-xs">CRK Functions</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-green-400">✓</div>
-              <div className="text-gray-400 text-xs">Contract Verify</div>
-            </div>
-            <div>
-              <div className="text-2xl md:text-3xl font-bold text-yellow-400">BYOK</div>
-              <div className="text-gray-400 text-xs">Your API Keys</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem/Solution Section */}
-      <section className="py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-6">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">
-              The <span className="text-red-400">paywalled data</span> problem
-            </h2>
-            <p className="text-sm text-gray-400">Many crypto datasets are behind expensive subscriptions.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-              <div className="text-red-400 text-xs font-medium mb-2">❌ THE OLD WAY</div>
-              <ul className="space-y-1 text-gray-300 text-xs">
-                <li className="flex items-start gap-1">
-                  <span className="text-red-400">✗</span>
-                  <span>High-cost subscriptions, locked exports</span>
-                </li>
-                <li className="flex items-start gap-1">
-                  <span className="text-red-400">✗</span>
-                  <span>Limited Excel portability</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 relative">
-              <div className="absolute top-2 right-2 bg-green-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">BYOK</div>
-              <div className="text-green-400 text-xs font-medium mb-2">✓ THE CRK WAY</div>
-              <ul className="space-y-1 text-gray-300 text-xs">
-                <li className="flex items-start gap-1">
-                  <span className="text-green-400">✓</span>
-                  <span>Excel templates with BYOK formulas</span>
-                </li>
-                <li className="flex items-start gap-1">
-                  <span className="text-green-400">✓</span>
-                  <span>Coin comparison + What If calculator</span>
-                </li>
-                <li className="flex items-start gap-1">
-                  <span className="text-green-400">✓</span>
-                  <span>Smart Contract verification</span>
-                </li>
-              </ul>
+      {/* Stats Section - Pro mode only */}
+      {isPro && (
+        <section className="py-6 border-y border-gray-800 bg-gray-800/30">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="grid grid-cols-4 gap-4 text-center">
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-emerald-400">8</div>
+                <div className="text-gray-400 text-xs">Report Kits</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-purple-400">36</div>
+                <div className="text-gray-400 text-xs">CRK Functions</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-green-400">✓</div>
+                <div className="text-gray-400 text-xs">Contract Verify</div>
+              </div>
+              <div>
+                <div className="text-2xl md:text-3xl font-bold text-yellow-400">BYOK</div>
+                <div className="text-gray-400 text-xs">Your API Keys</div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Features Grid */}
-      <section id="features" className="py-8 px-4 bg-gray-800/30">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-4">
-            <h2 className="text-xl md:text-2xl font-bold mb-1">
-              Four <span className="text-emerald-400">Focused Tools</span>
-            </h2>
-          </div>
+      {/* Problem/Solution Section - Pro mode only */}
+      {isPro && (
+        <section className="py-8 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-2">
+                The <span className="text-red-400">paywalled data</span> problem
+              </h2>
+              <p className="text-sm text-gray-400">Many crypto datasets are behind expensive subscriptions.</p>
+            </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              { icon: '📋', title: 'Excel Templates', desc: '8 report kits with CRK formulas + BYOK', href: '/templates' },
-              { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side + What If calculator', href: '/compare' },
-              { icon: '🔐', title: 'Contract Verify', desc: 'Sourcify + Z3 formal checks', href: '/smart-contract-verifier' },
-              { icon: '📚', title: 'Learn', desc: 'Academy guides + glossary', href: '/learn' },
-            ].map((f, i) => (
-              <a key={i} href={f.href} className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-emerald-500/50 transition group">
-                <div className="text-xl mb-1">{f.icon}</div>
-                <h3 className="text-sm font-bold mb-1 group-hover:text-emerald-400 transition">{f.title}</h3>
-                <p className="text-gray-400 text-xs">{f.desc}</p>
-              </a>
-            ))}
+            <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                <div className="text-red-400 text-xs font-medium mb-2">❌ THE OLD WAY</div>
+                <ul className="space-y-1 text-gray-300 text-xs">
+                  <li className="flex items-start gap-1">
+                    <span className="text-red-400">✗</span>
+                    <span>High-cost subscriptions, locked exports</span>
+                  </li>
+                  <li className="flex items-start gap-1">
+                    <span className="text-red-400">✗</span>
+                    <span>Limited Excel portability</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 relative">
+                <div className="absolute top-2 right-2 bg-green-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">BYOK</div>
+                <div className="text-green-400 text-xs font-medium mb-2">✓ THE CRK WAY</div>
+                <ul className="space-y-1 text-gray-300 text-xs">
+                  <li className="flex items-start gap-1">
+                    <span className="text-green-400">✓</span>
+                    <span>Excel templates with BYOK formulas</span>
+                  </li>
+                  <li className="flex items-start gap-1">
+                    <span className="text-green-400">✓</span>
+                    <span>Coin comparison + What If calculator</span>
+                  </li>
+                  <li className="flex items-start gap-1">
+                    <span className="text-green-400">✓</span>
+                    <span>Smart Contract verification</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* Features Grid - Pro mode only */}
+      {isPro && (
+        <section id="features" className="py-8 px-4 bg-gray-800/30">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-4">
+              <h2 className="text-xl md:text-2xl font-bold mb-1">
+                Four <span className="text-emerald-400">Focused Tools</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { icon: '📋', title: 'Excel Templates', desc: '8 report kits with CRK formulas + BYOK', href: '/templates' },
+                { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side + What If calculator', href: '/compare' },
+                { icon: '🔐', title: 'Contract Verify', desc: 'Sourcify + Z3 formal checks', href: '/smart-contract-verifier' },
+                { icon: '📚', title: 'Learn', desc: 'Academy guides + glossary', href: '/learn' },
+              ].map((f, i) => (
+                <a key={i} href={f.href} className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-emerald-500/50 transition group">
+                  <div className="text-xl mb-1">{f.icon}</div>
+                  <h3 className="text-sm font-bold mb-1 group-hover:text-emerald-400 transition">{f.title}</h3>
+                  <p className="text-gray-400 text-xs">{f.desc}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Pricing */}
       {isFeatureEnabled('pricing') ? (
@@ -372,13 +460,18 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="py-6 px-4 bg-gradient-to-r from-emerald-600/20 to-blue-600/20">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl md:text-2xl font-bold mb-2">Ready to Build Better Reports?</h2>
-          <p className="text-sm text-gray-400 mb-3">Download Excel templates with BYOK formulas.</p>
+          <h2 className="text-xl md:text-2xl font-bold mb-2">
+            {isSimple ? 'Ready to Start?' : 'Ready to Build Better Reports?'}
+          </h2>
+          <p className="text-sm text-gray-400 mb-3">
+            {isSimple ? 'Pick a template and get live crypto data in Excel.' : 'Download Excel templates with BYOK formulas.'}
+          </p>
           <Link
             href="/templates"
-            className="inline-block px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm shadow-lg"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm shadow-lg"
           >
-            Browse Report Kits
+            {isSimple && <Download className="w-4 h-4" />}
+            {isSimple ? 'Download a Kit' : 'Browse Report Kits'}
           </Link>
         </div>
       </section>

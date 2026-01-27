@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Settings, Star, ChevronDown, ChevronUp, ArrowRight, Filter } from 'lucide-react';
+import { Settings, Star, ChevronDown, ChevronUp, ArrowRight, Filter, Clock, Users, Key } from 'lucide-react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -9,6 +9,7 @@ import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
 import { REPORT_KITS } from '@/lib/reportKits';
 import { CoinSelector } from '@/components/CoinSelector';
 import { type TemplateCategoryId } from '@/lib/templates/templateConfig';
+import { useViewMode } from '@/lib/viewMode';
 import {
   filterAndScoreTemplates,
   getBestMatches,
@@ -25,6 +26,18 @@ import {
   type RefreshEngine,
   type Difficulty,
 } from '@/lib/templates/templateFilter';
+
+// Simple mode kit metadata (best for, setup time)
+const KIT_METADATA: Record<string, { bestFor: string; setupTime: string; needsKey: boolean }> = {
+  'portfolio-starter': { bestFor: 'Beginners', setupTime: '3 min', needsKey: true },
+  'market-overview': { bestFor: 'Traders', setupTime: '5 min', needsKey: true },
+  'trader-charts': { bestFor: 'Traders', setupTime: '5 min', needsKey: true },
+  'screener-watchlist': { bestFor: 'Research', setupTime: '5 min', needsKey: true },
+  'coin-research': { bestFor: 'Research', setupTime: '5 min', needsKey: true },
+  'risk-correlation': { bestFor: 'Analysts', setupTime: '10 min', needsKey: true },
+  'defi-tvl': { bestFor: 'DeFi users', setupTime: '5 min', needsKey: true },
+  'stablecoin-monitor': { bestFor: 'Traders', setupTime: '3 min', needsKey: true },
+};
 
 // Compact Template Card Component
 function TemplateCard({
@@ -77,6 +90,7 @@ function TemplateCard({
 }
 
 export default function TemplatesPage() {
+  const { isSimple, isPro } = useViewMode();
   const [config, setConfig] = useState<UserConfiguration>(getDefaultConfiguration());
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -107,48 +121,103 @@ export default function TemplatesPage() {
       <FreeNavbar />
       <Breadcrumb />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Compact Header */}
+        {/* Header - Different messaging for Simple vs Pro */}
         <div className="text-center mb-4">
           <h1 className="text-2xl font-bold text-white">
-            Crypto <span className="text-emerald-400">Report Kits</span>
+            {isSimple ? 'Pick a Template Kit' : 'Crypto'} <span className="text-emerald-400">{isSimple ? '' : 'Report Kits'}</span>
           </h1>
           <p className="text-sm text-gray-400">
-            Professional Excel templates with live data. Pick a kit to get started.
+            {isSimple
+              ? 'Choose one to get started. Each kit has everything you need.'
+              : 'Professional Excel templates with live data. Pick a kit to get started.'}
           </p>
         </div>
 
-        {/* Report Kits - Compact 4-column grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          {REPORT_KITS.map((kit) => (
-            <Link
-              key={kit.id}
-              href={`/templates/${kit.slug}`}
-              className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all group"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xl">{kit.icon}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  kit.tier === 'free'
-                    ? 'bg-green-500/20 text-green-400'
-                    : kit.tier === 'pro'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-purple-500/20 text-purple-400'
-                }`}>
-                  {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
-                </span>
-              </div>
-              <h3 className="font-medium text-white text-sm group-hover:text-emerald-400 transition-colors truncate">
-                {kit.name}
-              </h3>
-              <p className="text-gray-500 text-xs truncate">{kit.tagline}</p>
-              <div className="mt-1 flex items-center gap-1 text-emerald-400 text-xs">
-                View <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </Link>
-          ))}
-        </div>
+        {/* Report Kits - Different layouts for Simple vs Pro */}
+        {isSimple ? (
+          // Simple Mode: Larger cards with more info
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {REPORT_KITS.map((kit) => {
+              const meta = KIT_METADATA[kit.id] || { bestFor: 'All users', setupTime: '5 min', needsKey: true };
+              return (
+                <Link
+                  key={kit.id}
+                  href={`/templates/${kit.slug}`}
+                  className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-2xl">{kit.icon}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      kit.tier === 'free'
+                        ? 'bg-green-500/20 text-green-400'
+                        : kit.tier === 'pro'
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'bg-purple-500/20 text-purple-400'
+                    }`}>
+                      {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors mb-1">
+                    {kit.name}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-3">{kit.tagline}</p>
+                  <div className="flex flex-wrap gap-2 text-[10px]">
+                    <span className="px-2 py-0.5 bg-gray-700/50 rounded text-gray-300">
+                      <Users className="w-3 h-3 inline mr-1" />
+                      {meta.bestFor}
+                    </span>
+                    <span className="px-2 py-0.5 bg-gray-700/50 rounded text-gray-300">
+                      <Clock className="w-3 h-3 inline mr-1" />
+                      {meta.setupTime}
+                    </span>
+                    {meta.needsKey && (
+                      <span className="px-2 py-0.5 bg-yellow-500/20 rounded text-yellow-400">
+                        <Key className="w-3 h-3 inline mr-1" />
+                        API Key
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-center gap-1 text-emerald-400 text-sm font-medium">
+                    Get Started <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          // Pro Mode: Compact 4-column grid
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+            {REPORT_KITS.map((kit) => (
+              <Link
+                key={kit.id}
+                href={`/templates/${kit.slug}`}
+                className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-emerald-500/50 hover:bg-gray-800/70 transition-all group"
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">{kit.icon}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    kit.tier === 'free'
+                      ? 'bg-green-500/20 text-green-400'
+                      : kit.tier === 'pro'
+                      ? 'bg-blue-500/20 text-blue-400'
+                      : 'bg-purple-500/20 text-purple-400'
+                  }`}>
+                    {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
+                  </span>
+                </div>
+                <h3 className="font-medium text-white text-sm group-hover:text-emerald-400 transition-colors truncate">
+                  {kit.name}
+                </h3>
+                <p className="text-gray-500 text-xs truncate">{kit.tagline}</p>
+                <div className="mt-1 flex items-center gap-1 text-emerald-400 text-xs">
+                  View <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
 
-        {/* Browse Templates Toggle */}
+        {/* Browse Templates Toggle - Different labels for Simple vs Pro */}
         <button
           type="button"
           onClick={() => setShowAllTemplates(!showAllTemplates)}
@@ -156,8 +225,12 @@ export default function TemplatesPage() {
         >
           <div className="flex items-center gap-2">
             <Settings className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm font-medium">Browse All Templates</span>
-            <span className="text-xs text-gray-500">({groupedTemplates.reduce((acc, g) => acc + g.templates.length, 0)} templates)</span>
+            <span className="text-sm font-medium">
+              {isSimple ? 'Show Advanced Library' : 'Browse All Templates'}
+            </span>
+            {isPro && (
+              <span className="text-xs text-gray-500">({groupedTemplates.reduce((acc, g) => acc + g.templates.length, 0)} templates)</span>
+            )}
           </div>
           {showAllTemplates ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
         </button>
