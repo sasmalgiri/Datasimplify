@@ -1,7 +1,7 @@
 /**
  * Report Kits Configuration
  *
- * 6 Curated Excel Template Packs for CryptoReportKit
+ * 8 Curated Excel Template Packs for CryptoReportKit
  *
  * All templates use BYOK (Bring Your Own Key) architecture.
  * Data is fetched via the CRK Excel add-in using user's own API key.
@@ -34,263 +34,249 @@ export interface ReportKit {
   useCases: string[];
   faqs: ReportKitFAQ[];
   relatedKits: string[];
+  functions: string[]; // CRK functions used
 }
 
 /**
- * 6 Curated Report Kits
- *
- * 1. Portfolio Starter Kit - Watchlist, Allocation Pie, Basic P&L
- * 2. Technical Analysis Pack - OHLCV, RSI/MACD charts, Bollinger
- * 3. Compare & Compete - Multi-coin table, "What If Market Cap" calculator
- * 4. Macro Dashboard - Fear & Greed timeline, BTC dominance, Global cap
- * 5. DeFi Snapshot - Top 10 TVL protocols, Pool APY tracker
- * 6. On-Chain Essentials - Whale wallet tracker, Exchange flows
+ * 8 Curated Report Kits (Final Scope)
  */
 export const REPORT_KITS: ReportKit[] = [
-  // 1. Portfolio Starter Kit
+  // Pack 1 — Portfolio Starter Kit (Free)
   {
     id: 'portfolio-starter',
     slug: 'portfolio-starter',
     name: 'Portfolio Starter Kit',
-    tagline: 'Watchlist, Allocation Pie, and Basic P&L tracking',
-    description:
-      'Everything you need to track your crypto portfolio. Create a watchlist of your holdings, visualize your allocation with a pie chart, and track basic profit/loss calculations.',
+    tagline: 'Track holdings, allocation & performance',
+    description: 'Convert users into BYOK setup. Everything you need to track your crypto portfolio with live prices.',
     icon: '💼',
     tier: 'free',
-    templates: ['watchlist', 'portfolio_tracker', 'allocation_pie'],
+    templates: ['holdings', 'prices', 'allocation', 'performance', 'settings'],
     presets: { coins: 20, timeframe: '1d', refresh: 'manual' },
     features: [
-      'Customizable coin watchlist',
-      'Allocation percentage breakdown',
-      'Basic P&L calculations',
-      'Cost basis tracking',
-      'Pie chart visualization',
-      'Manual refresh for quota control',
+      'Holdings tracker with cost basis',
+      'Live price updates via BYOK',
+      'Allocation pie chart',
+      'Performance over time chart',
+      'Top winners/losers view',
     ],
     useCases: [
-      'Track your personal holdings',
+      'Track personal crypto holdings',
       'Monitor portfolio allocation',
-      'Calculate profit/loss on positions',
-      'Review portfolio performance',
+      'Calculate profit/loss',
     ],
     faqs: [
-      {
-        question: 'How do I add my holdings?',
-        answer:
-          'Enter your holdings in the configuration sheet. The formulas will automatically fetch current prices via the CRK add-in and calculate your allocation and P&L.',
-      },
-      {
-        question: 'What API key do I need?',
-        answer:
-          'You need a CoinGecko API key (free tier available). Connect it in the CRK add-in to enable data refresh.',
-      },
+      { question: 'What API key do I need?', answer: 'A CoinGecko API key (free tier available). Connect it in the CRK add-in.' },
     ],
-    relatedKits: ['technical-analysis', 'compare-compete'],
+    relatedKits: ['market-overview', 'screener-watchlist'],
+    functions: ['PRICE', 'CHANGE24H', 'MARKETCAP', 'VOLUME', 'OHLCV'],
   },
 
-  // 2. Technical Analysis Pack
+  // Pack 2 — Market Overview Dashboard (Pro)
   {
-    id: 'technical-analysis',
-    slug: 'technical-analysis',
-    name: 'Technical Analysis Pack',
-    tagline: 'OHLCV data, RSI, MACD, and Bollinger Bands',
-    description:
-      'Educational technical analysis templates with popular indicators. Includes OHLCV data, RSI (Relative Strength Index), MACD signals, and Bollinger Bands - all for learning purposes.',
+    id: 'market-overview',
+    slug: 'market-overview',
+    name: 'Market Overview Dashboard',
+    tagline: 'Bloomberg-lite single page market view',
+    description: 'A comprehensive market dashboard showing global stats, dominance, heatmap, movers, and sentiment.',
+    icon: '🌍',
+    tier: 'pro',
+    templates: ['global', 'dominance', 'heatmap', 'movers', 'sentiment'],
+    presets: { coins: 50, timeframe: '1d', refresh: 'manual' },
+    features: [
+      'Total market cap trend',
+      'BTC/ETH dominance charts',
+      'Top 50 heatmap table',
+      'Gainers & losers',
+      'Fear & Greed Index',
+    ],
+    useCases: [
+      'Morning market check',
+      'Quick sentiment gauge',
+      'Track market trends',
+    ],
+    faqs: [
+      { question: 'How often should I refresh?', answer: 'Once per session is typical. The add-in caches data for 30 seconds.' },
+    ],
+    relatedKits: ['portfolio-starter', 'trader-charts'],
+    functions: ['GLOBAL', 'BTCDOM', 'ETHDOM', 'TOP', 'GAINERS', 'LOSERS', 'FEARGREED'],
+  },
+
+  // Pack 3 — Trader Chart Pack (Pro)
+  {
+    id: 'trader-charts',
+    slug: 'trader-charts',
+    name: 'Trader Chart Pack',
+    tagline: 'Technical charts people screenshot',
+    description: 'Candlestick charts with volume, RSI, MACD, and moving average overlays for technical analysis.',
     icon: '📈',
     tier: 'pro',
-    templates: ['ohlcv_data', 'technical_indicators', 'bollinger_bands'],
+    templates: ['candles', 'indicators', 'signals', 'watchlist'],
     presets: { coins: 10, timeframe: '1d', refresh: 'manual' },
     features: [
-      'OHLCV (Open, High, Low, Close, Volume)',
-      'RSI with overbought/oversold levels',
-      'MACD with signal line crossovers',
-      'Bollinger Bands (upper/middle/lower)',
-      'Moving averages (20/50/200 day)',
-      'Candlestick chart data',
+      'Candlestick + volume charts',
+      'RSI with overbought/oversold',
+      'MACD with signal crossovers',
+      'SMA/EMA overlays (20/50)',
+      '24h high/low markers',
     ],
     useCases: [
-      'Learn technical analysis concepts',
-      'Study historical price patterns',
+      'Technical analysis study',
+      'Chart screenshots for reports',
       'Educational demonstrations',
-      'Research and analysis projects',
     ],
     faqs: [
-      {
-        question: 'Are these trading signals?',
-        answer:
-          'No. These are educational technical indicators showing mathematical calculations based on historical price data. They are not trading advice.',
-      },
-      {
-        question: 'What timeframe should I use?',
-        answer:
-          'Daily (1d) is the default and most commonly used. The CRK add-in supports 1h, 4h, 1d, and 1w timeframes depending on your CoinGecko plan.',
-      },
+      { question: 'Are these trading signals?', answer: 'No. Educational indicators only, not financial advice.' },
     ],
-    relatedKits: ['portfolio-starter', 'macro-dashboard'],
+    relatedKits: ['market-overview', 'coin-research'],
+    functions: ['OHLCV', 'SMA', 'EMA', 'RSI', 'MACD', 'HIGH24H', 'LOW24H'],
   },
 
-  // 3. Compare & Compete
+  // Pack 4 — Screener + Watchlist Builder (Pro)
   {
-    id: 'compare-compete',
-    slug: 'compare-compete',
-    name: 'Compare & Compete',
-    tagline: 'Multi-coin comparison with "What If Market Cap" calculator',
-    description:
-      'Compare multiple cryptocurrencies side-by-side and explore hypothetical scenarios. See what a coin\'s price would be if it had another coin\'s market cap - a popular educational exercise.',
-    icon: '⚖️',
-    tier: 'free',
-    templates: ['compare', 'market_cap_calculator'],
-    presets: { coins: 5, timeframe: '1d', refresh: 'manual' },
-    features: [
-      'Side-by-side coin comparison (2-5 coins)',
-      '"What If Market Cap" calculator',
-      'Price, market cap, and volume metrics',
-      'Circulating supply comparison',
-      '24h/7d/30d performance comparison',
-      'Ranking and dominance data',
-    ],
-    useCases: [
-      'Compare potential investments',
-      'Explore "what if" market cap scenarios',
-      'Research similar projects',
-      'Educational market analysis',
-    ],
-    faqs: [
-      {
-        question: 'How does the "What If Market Cap" calculator work?',
-        answer:
-          'It calculates what Coin A\'s price would be if it had Coin B\'s market cap. Formula: (Coin B Market Cap / Coin A Circulating Supply) = Hypothetical Price. This is educational, not a prediction.',
-      },
-      {
-        question: 'Can I compare more than 5 coins?',
-        answer:
-          'The template is optimized for 2-5 coins for readability. You can modify the Excel file to add more columns if needed.',
-      },
-    ],
-    relatedKits: ['portfolio-starter', 'macro-dashboard'],
-  },
-
-  // 4. Macro Dashboard
-  {
-    id: 'macro-dashboard',
-    slug: 'macro-dashboard',
-    name: 'Macro Dashboard',
-    tagline: 'Fear & Greed timeline, BTC dominance, and Global market cap',
-    description:
-      'Track the overall health of the crypto market. Monitor the Fear & Greed Index over time, watch Bitcoin dominance trends, and see total market capitalization changes.',
-    icon: '🌍',
-    tier: 'free',
-    templates: ['fear_greed', 'btc_dominance', 'global_market'],
-    presets: { coins: 0, timeframe: '30d', refresh: 'manual' },
-    features: [
-      'Fear & Greed Index (current + history)',
-      'BTC dominance percentage',
-      'Total crypto market cap',
-      'Market cap change over time',
-      'Altcoin season indicators',
-      '30-day trend visualization',
-    ],
-    useCases: [
-      'Gauge overall market sentiment',
-      'Track Bitcoin dominance cycles',
-      'Monitor total market growth',
-      'Educational market analysis',
-    ],
-    faqs: [
-      {
-        question: 'Where does Fear & Greed data come from?',
-        answer:
-          'Fear & Greed Index is from Alternative.me. Market cap and dominance data is from CoinGecko. Both sources are attributed in the template.',
-      },
-      {
-        question: 'What does BTC dominance mean?',
-        answer:
-          'BTC dominance is Bitcoin\'s market cap as a percentage of total crypto market cap. High dominance means Bitcoin is outperforming altcoins; low dominance suggests an "altcoin season".',
-      },
-    ],
-    relatedKits: ['compare-compete', 'technical-analysis'],
-  },
-
-  // 5. DeFi Snapshot
-  {
-    id: 'defi-snapshot',
-    slug: 'defi-snapshot',
-    name: 'DeFi Snapshot',
-    tagline: 'Top 10 TVL protocols and Pool APY tracker',
-    description:
-      'Track the decentralized finance ecosystem. See top protocols by Total Value Locked (TVL) and monitor liquidity pool APYs across major DeFi platforms.',
-    icon: '🏦',
+    id: 'screener-watchlist',
+    slug: 'screener-watchlist',
+    name: 'Screener + Watchlist Builder',
+    tagline: 'Find coins fast without complexity',
+    description: 'Screen coins by category, filter by metrics, and build custom watchlists with quick alerts.',
+    icon: '🔍',
     tier: 'pro',
-    templates: ['defi_tvl', 'pool_tracker'],
-    presets: { coins: 10, timeframe: '1d', refresh: 'manual' },
+    templates: ['screener', 'filters', 'results', 'watchlist', 'alerts'],
+    presets: { coins: 100, timeframe: '1d', refresh: 'manual' },
     features: [
-      'Top 10 DeFi protocols by TVL',
-      'TVL change tracking (24h/7d/30d)',
-      'Pool APY monitoring',
-      'Protocol dominance breakdown',
-      'Chain-by-chain TVL comparison',
-      'Yield farming opportunities list',
+      'Category-based filtering',
+      'Top coins by market cap',
+      'Gainers/losers screener',
+      'Custom watchlist builder',
+      'Simple alert conditions',
     ],
     useCases: [
-      'Monitor DeFi ecosystem growth',
-      'Track yield farming opportunities',
-      'Research DeFi protocols',
-      'Educational DeFi analysis',
+      'Discover new coins',
+      'Filter by performance',
+      'Build research watchlists',
     ],
     faqs: [
-      {
-        question: 'Where does TVL data come from?',
-        answer:
-          'TVL data is sourced from CoinGecko\'s DeFi endpoints, which aggregate data from multiple on-chain sources. Data is attributed to CoinGecko.',
-      },
-      {
-        question: 'Are the APYs guaranteed?',
-        answer:
-          'No. DeFi APYs are variable and can change frequently. This is educational data, not financial advice. Always verify on the protocol\'s official site.',
-      },
+      { question: 'How many coins can I screen?', answer: 'Up to 250 coins per query with pagination support.' },
     ],
-    relatedKits: ['onchain-essentials', 'macro-dashboard'],
+    relatedKits: ['portfolio-starter', 'coin-research'],
+    functions: ['TOP', 'CATEGORY', 'CATEGORIES', 'SEARCH', 'BATCH', 'GAINERS', 'LOSERS'],
   },
 
-  // 6. On-Chain Essentials
+  // Pack 5 — Coin Research One-Pager (Pro)
   {
-    id: 'onchain-essentials',
-    slug: 'onchain-essentials',
-    name: 'On-Chain Essentials',
-    tagline: 'Whale wallet tracker and Exchange flow indicators',
-    description:
-      'Monitor on-chain activity for educational insights. Track large wallet movements and see when funds flow into or out of exchanges - useful for understanding market dynamics.',
-    icon: '🔗',
-    tier: 'premium',
-    templates: ['whale_tracker', 'exchange_flows'],
-    presets: { coins: 5, timeframe: '1d', refresh: 'manual' },
+    id: 'coin-research',
+    slug: 'coin-research',
+    name: 'Coin Research One-Pager',
+    tagline: 'Per-coin summary report',
+    description: 'Deep-dive into any coin with snapshot, fundamentals, history, and "What-if Market Cap" analysis.',
+    icon: '📋',
+    tier: 'pro',
+    templates: ['snapshot', 'fundamentals', 'history', 'comparison'],
+    presets: { coins: 1, timeframe: '30d', refresh: 'manual' },
     features: [
-      'Large transaction monitoring',
-      'Exchange inflow/outflow indicators',
-      'Whale wallet activity alerts',
-      'Network activity metrics',
-      'Active address counts',
-      'Transaction volume tracking',
+      'Coin snapshot overview',
+      'ATH/ATL with dates',
+      'Supply metrics (circulating/total/max)',
+      'Historical price lookup',
+      '"What-if Market Cap" block',
     ],
     useCases: [
-      'Monitor large holder activity',
-      'Track exchange deposit/withdrawal trends',
-      'Research on-chain metrics',
-      'Educational blockchain analysis',
+      'Research before buying',
+      'Create coin reports',
+      'Compare market cap scenarios',
     ],
     faqs: [
-      {
-        question: 'What counts as a "whale" transaction?',
-        answer:
-          'Typically transactions of $1M+ USD equivalent. The exact threshold depends on the coin and data availability from CoinGecko.',
-      },
-      {
-        question: 'Is this real-time data?',
-        answer:
-          'Data is refreshed when you trigger the CRK add-in. CoinGecko free tier provides data with some delay; Pro tier offers more frequent updates.',
-      },
+      { question: 'What is "What-if Market Cap"?', answer: 'Shows what price would be if the coin had another coin\'s market cap. Educational only.' },
     ],
-    relatedKits: ['defi-snapshot', 'technical-analysis'],
+    relatedKits: ['trader-charts', 'screener-watchlist'],
+    functions: ['INFO', 'ATH', 'ATL', 'SUPPLY', 'RANK', 'PRICEHISTORY', 'OHLCV', 'MARKETCAP'],
+  },
+
+  // Pack 6 — Risk + Correlation Lab (Premium)
+  {
+    id: 'risk-correlation',
+    slug: 'risk-correlation',
+    name: 'Risk + Correlation Lab',
+    tagline: 'High perceived value analytics',
+    description: 'Correlation matrix, rolling correlation, volatility, drawdown, and risk scores - all computed in Excel from OHLCV data.',
+    icon: '⚗️',
+    tier: 'premium',
+    templates: ['correlation_matrix', 'rolling_corr', 'volatility', 'drawdown', 'risk_score'],
+    presets: { coins: 10, timeframe: '30d', refresh: 'manual' },
+    features: [
+      'Correlation matrix (up to 10 coins)',
+      'Rolling correlation charts',
+      'Volatility calculations',
+      'Max drawdown tracking',
+      'Sharpe/Sortino ratios',
+    ],
+    useCases: [
+      'Portfolio risk assessment',
+      'Diversification analysis',
+      'Academic research',
+    ],
+    faqs: [
+      { question: 'How are metrics calculated?', answer: 'All derived from OHLCV data using standard Excel formulas. No external dependencies.' },
+    ],
+    relatedKits: ['portfolio-starter', 'trader-charts'],
+    functions: ['OHLCV'],
+  },
+
+  // Pack 7 — DeFi TVL Dashboard (Premium)
+  {
+    id: 'defi-tvl',
+    slug: 'defi-tvl',
+    name: 'DeFi TVL Dashboard',
+    tagline: 'Track DeFi protocol rankings',
+    description: 'Monitor Total Value Locked across DeFi protocols with trend charts and protocol watchlist.',
+    icon: '🏦',
+    tier: 'premium',
+    templates: ['protocols_list', 'tvl_trend', 'top_chains', 'watchlist'],
+    presets: { coins: 50, timeframe: '1d', refresh: 'manual' },
+    features: [
+      'Top 50 protocols by TVL',
+      'TVL change tracking (1d/7d)',
+      'Protocol category breakdown',
+      'Custom protocol watchlist',
+    ],
+    useCases: [
+      'DeFi ecosystem research',
+      'Protocol comparison',
+      'TVL trend analysis',
+    ],
+    faqs: [
+      { question: 'Where does TVL data come from?', answer: 'DeFi Llama API via our proxy. Free, no API key needed for this data.' },
+    ],
+    relatedKits: ['market-overview', 'stablecoin-monitor'],
+    functions: ['DEFI', 'TVL'],
+  },
+
+  // Pack 8 — Stablecoin Monitor (Pro)
+  {
+    id: 'stablecoin-monitor',
+    slug: 'stablecoin-monitor',
+    name: 'Stablecoin Monitor',
+    tagline: 'Track stablecoin market caps',
+    description: 'Monitor stablecoin circulation, dominance, and peg stability with simple alert conditions.',
+    icon: '💵',
+    tier: 'pro',
+    templates: ['stablecoin_table', 'dominance_view', 'changes', 'alerts'],
+    presets: { coins: 20, timeframe: '1d', refresh: 'manual' },
+    features: [
+      'Top stablecoins by market cap',
+      'Circulation changes',
+      'Stablecoin dominance %',
+      'Peg monitoring',
+    ],
+    useCases: [
+      'Track stablecoin flows',
+      'Monitor market liquidity',
+      'Peg stability research',
+    ],
+    faqs: [
+      { question: 'What stablecoins are tracked?', answer: 'All major stablecoins via DeFi Llama - USDT, USDC, DAI, BUSD, and more.' },
+    ],
+    relatedKits: ['market-overview', 'defi-tvl'],
+    functions: ['STABLECOINS', 'GLOBAL'],
   },
 ];
 
