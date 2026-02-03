@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/security/apiRateLimit';
 import { isValidEmail, sanitizeEmail, detectBotBehavior, checkHoneypot } from '@/lib/security/validation';
-import { verifyTurnstileToken } from '@/components/security/Turnstile';
+import { verifyTurnstileToken } from '@/lib/security/turnstileServer';
 import { logSecurityEvent, checkSuspiciousActivity } from '@/lib/security/auditLog';
 
 const FREE_DOWNLOAD_LIMIT = 5;
