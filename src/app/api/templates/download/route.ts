@@ -129,15 +129,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Bot detection
+    // 2. Bot detection (log only, don't block - too many false positives)
     const botCheck = detectBotBehavior(request);
     if (botCheck.isBot) {
-      console.warn(`[Templates] Bot detected from ${clientIp}: ${botCheck.reason}`);
-      // Return a generic error instead of revealing bot detection
-      return NextResponse.json(
-        { error: 'Request validation failed. Please try again from a browser.' },
-        { status: 400 }
-      );
+      console.warn(`[Templates] Possible bot from ${clientIp}: ${botCheck.reason} - allowing anyway`);
+      // Don't block - just log for monitoring
     }
 
     // Parse request body
@@ -255,11 +251,13 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('[Templates] Generation error:', error);
+    console.error('[Templates] Error stack:', error instanceof Error ? error.stack : 'No stack');
 
     return NextResponse.json(
       {
         error: 'Failed to generate template',
         message: error instanceof Error ? error.message : 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
       { status: 500 }
     );
