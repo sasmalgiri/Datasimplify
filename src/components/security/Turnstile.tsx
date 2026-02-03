@@ -55,7 +55,9 @@ export function Turnstile({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  // Ensure siteKey is always a string (handles edge cases where env var might be parsed incorrectly)
+  const rawSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const siteKey = typeof rawSiteKey === 'string' ? rawSiteKey : String(rawSiteKey || '');
 
   const renderWidget = useCallback(() => {
     if (!containerRef.current || !window.turnstile || !siteKey) return;
