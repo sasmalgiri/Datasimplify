@@ -181,9 +181,48 @@ export async function POST(request: Request) {
     const validCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'BTC', 'ETH'];
     const currency = validCurrencies.includes(body.currency?.toUpperCase()) ? body.currency.toUpperCase() : 'USD';
 
+    // Map kit template names to valid TemplateTypes
+    const TEMPLATE_TYPE_MAP: Record<string, string> = {
+      // Portfolio Starter Kit templates
+      'holdings': 'portfolio_tracker',
+      'prices': 'watchlist',
+      'allocation': 'portfolio_tracker',
+      'performance': 'portfolio_tracker',
+      'settings': 'watchlist',
+      // Market Overview templates
+      'global': 'market_overview',
+      'top_coins': 'screener',
+      'trending': 'gainers_losers',
+      'fear_greed': 'fear_greed_index',
+      // Trader Chart templates
+      'candles': 'ohlcv_history',
+      'indicators': 'technical_indicators',
+      'signals': 'technical_indicators',
+      // Screener templates
+      'screener': 'screener',
+      'watchlist': 'watchlist',
+      // Coin Research templates
+      'snapshot': 'compare',
+      'fundamentals': 'compare',
+      'history': 'ohlcv_history',
+      'comparison': 'compare',
+      // Correlation templates
+      'matrix': 'correlation_matrix',
+      'trend': 'ohlcv_history',
+      // DeFi templates
+      'protocols_list': 'defi_protocols',
+      'tvl_trend': 'defi_protocols',
+      'top_chains': 'defi_protocols',
+      // Stablecoin templates
+      'marketcap': 'market_overview',
+      'dominance': 'market_overview',
+    };
+
+    const mappedTemplateType = TEMPLATE_TYPE_MAP[body.templateType] || body.templateType || 'screener';
+
     // Build user configuration with sanitized inputs
     const userConfig: UserTemplateConfig = {
-      templateType: (body.templateType as TemplateType) || 'screener',
+      templateType: (mappedTemplateType as TemplateType) || 'screener',
       coins: sanitizedCoins,
       timeframe,
       currency,
