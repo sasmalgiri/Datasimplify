@@ -189,33 +189,57 @@ export async function POST(request: Request) {
       'allocation': 'portfolio_tracker',
       'performance': 'portfolio_tracker',
       'settings': 'watchlist',
+
       // Market Overview templates
       'global': 'market_overview',
       'top_coins': 'screener',
       'trending': 'gainers_losers',
-      'fear_greed': 'fear_greed_index',
+      'dominance': 'market_overview',
+      'heatmap': 'market_overview',
+      'movers': 'gainers_losers',
+      'sentiment': 'social_sentiment',
+
       // Trader Chart templates
       'candles': 'ohlcv_history',
       'indicators': 'technical_indicators',
       'signals': 'technical_indicators',
-      // Screener templates
+
+      // Screener Watchlist templates
       'screener': 'screener',
       'watchlist': 'watchlist',
+      'filters': 'screener',
+      'results': 'screener',
+      'alerts': 'alerts_summary',
+
       // Coin Research templates
       'snapshot': 'compare',
       'fundamentals': 'compare',
       'history': 'ohlcv_history',
       'comparison': 'compare',
-      // Correlation templates
+
+      // Correlation & Risk templates
       'matrix': 'correlation_matrix',
+      'correlation_matrix': 'correlation_matrix',
+      'rolling_corr': 'correlation_matrix',
+      'volatility': 'risk_dashboard',
+      'drawdown': 'risk_dashboard',
+      'risk_score': 'risk_dashboard',
       'trend': 'ohlcv_history',
+
       // DeFi templates
-      'protocols_list': 'defi_protocols',
-      'tvl_trend': 'defi_protocols',
-      'top_chains': 'defi_protocols',
-      // Stablecoin templates
+      'protocols_list': 'defi_tvl',
+      'tvl_trend': 'defi_tvl',
+      'top_chains': 'defi_tvl',
+
+      // Stablecoin Monitor templates
+      'stablecoin_table': 'market_overview',
+      'dominance_view': 'market_overview',
+      'changes': 'gainers_losers',
       'marketcap': 'market_overview',
-      'dominance': 'market_overview',
+
+      // Fear & Greed
+      'fear_greed': 'fear_greed',
+      'fear_greed_index': 'fear_greed',
     };
 
     const mappedTemplateType = TEMPLATE_TYPE_MAP[body.templateType] || body.templateType || 'screener';
