@@ -21,16 +21,18 @@ export function ApiKeyStep() {
     setError(null);
 
     try {
-      const response = await fetch('/api/v1/keys/coingecko', {
+      // Use wizard validation endpoint (doesn't require auth)
+      const response = await fetch('/api/wizard/validate-key', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: inputKey }),
+        body: JSON.stringify({ apiKey: inputKey, provider: 'coingecko' }),
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
         dispatch({ type: 'SET_API_KEY', key: inputKey, valid: true });
       } else {
-        const data = await response.json();
         setError(data.error || 'Invalid API key. Please check and try again.');
       }
     } catch (err) {
@@ -153,7 +155,7 @@ export function ApiKeyStep() {
               {/* Security Note */}
               <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
                 <p className="text-xs text-gray-500">
-                  Your API key is encrypted with AES-256 and stored securely. We only use it to fetch data on your behalf.
+                  Your API key is used to fetch live crypto data for your template. It will be embedded in your Excel file for data refresh.
                 </p>
               </div>
             </>
