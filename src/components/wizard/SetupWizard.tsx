@@ -65,8 +65,8 @@ export function SetupWizard({ templateId, templateName, onClose }: SetupWizardPr
   const { user } = useAuth();
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-start justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gray-900 rounded-xl max-w-2xl w-full my-8 shadow-2xl border border-gray-800 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-gray-900 rounded-xl w-full max-w-2xl shadow-2xl border border-gray-800 flex flex-col max-h-[95vh] sm:max-h-[90vh] my-2 sm:my-8">
         <WizardProvider
           templateId={templateId}
           templateName={templateName}
@@ -75,7 +75,7 @@ export function SetupWizard({ templateId, templateName, onClose }: SetupWizardPr
         >
           <WizardHeader onClose={onClose} templateName={templateName} />
           <StepIndicator />
-          <div className="flex-1 overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <WizardContent onClose={onClose} />
           </div>
         </WizardProvider>

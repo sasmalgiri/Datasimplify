@@ -29,8 +29,8 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 px-6 py-8">
+    <div className="flex flex-col min-h-0">
+      <div className="flex-1 px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
         <div className="max-w-lg mx-auto text-center">
           {/* Success Icon */}
           <div className="mb-6">

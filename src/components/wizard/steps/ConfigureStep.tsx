@@ -76,8 +76,8 @@ export function ConfigureStep() {
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 px-6 py-6 overflow-y-auto">
+    <div className="flex flex-col min-h-0">
+      <div className="flex-1 px-4 sm:px-6 py-6 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-6">
@@ -163,6 +163,7 @@ export function ConfigureStep() {
                         type="button"
                         onClick={() => toggleCoin(coinId)}
                         className="hover:text-emerald-300"
+                        aria-label={`Remove ${coin?.symbol || coinId}`}
                       >
                         <X className="w-3 h-3" />
                       </button>

@@ -26,8 +26,8 @@ export function WelcomeStep() {
   ];
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 px-6 py-8">
+    <div className="flex flex-col min-h-0">
+      <div className="flex-1 px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
         {/* Hero */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/20 mb-4">
