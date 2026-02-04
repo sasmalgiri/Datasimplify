@@ -133,12 +133,15 @@ export function TemplatePreview({ selectedCoins, selectedMetrics, dashboardLayou
         const response = await fetch(`/api/crypto?ids=${ids}`);
 
         if (!response.ok) {
-          throw new Error('Failed to fetch data');
+          const errorData = await response.json().catch(() => ({}));
+          console.error('[TemplatePreview] API error:', response.status, errorData);
+          throw new Error(errorData.error || `API error: ${response.status}`);
         }
 
         const result = await response.json();
+        console.log('[TemplatePreview] API response:', result);
 
-        if (result.success && result.data) {
+        if (result.success && result.data && result.data.length > 0) {
           const dataMap = new Map<string, CoinData>();
           for (const coin of result.data) {
             dataMap.set(coin.id, coin);
@@ -147,10 +150,16 @@ export function TemplatePreview({ selectedCoins, selectedMetrics, dashboardLayou
           }
           setCoinData(dataMap);
           setLastUpdated(new Date());
+        } else if (result.data && result.data.length === 0) {
+          console.warn('[TemplatePreview] No coins matched the request');
+          setError('No matching coins found');
+        } else {
+          console.warn('[TemplatePreview] Unexpected response format:', result);
+          setError('Unexpected response format');
         }
       } catch (err) {
         console.error('[TemplatePreview] Error fetching data:', err);
-        setError('Unable to load live data');
+        setError(err instanceof Error ? err.message : 'Unable to load live data');
       } finally {
         setIsLoading(false);
       }
