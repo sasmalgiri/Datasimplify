@@ -3,14 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DataSimplify Charts</title>
+  <title>CryptoReportKit</title>
 
   <!-- Office.js -->
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <style>
     :root {
@@ -21,834 +17,555 @@
       --primary-dark: #059669;
       --text-primary: #FFFFFF;
       --text-secondary: #9CA3AF;
-      --accent-indigo: #6366F1;
-      --accent-amber: #F59E0B;
-      --accent-pink: #EC4899;
-      --positive: #10B981;
-      --negative: #EF4444;
+      --text-muted: #6B7280;
+      --error: #EF4444;
+      --border: #374151;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background-color: var(--bg-dark);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-dark);
       color: var(--text-primary);
       min-height: 100vh;
-      padding: 16px;
+      font-size: 14px;
     }
 
+    .container { padding: 16px; }
+
+    /* Header */
     .header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
       margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid var(--bg-light);
+      border-bottom: 1px solid var(--border);
     }
 
-    .logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--primary), var(--accent-indigo));
+    .logo { display: flex; align-items: center; gap: 10px; }
+
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), #6366F1);
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
       font-size: 18px;
     }
 
-    .title {
-      font-size: 18px;
-      font-weight: 600;
-    }
+    .logo-text h1 { font-size: 16px; font-weight: 600; }
+    .logo-text p { font-size: 11px; color: var(--text-secondary); }
 
-    .subtitle {
-      font-size: 12px;
+    .sign-out-btn {
+      background: none; border: none;
+      color: var(--text-muted); font-size: 12px; cursor: pointer;
+    }
+    .sign-out-btn:hover { color: var(--text-primary); }
+
+    /* Sections */
+    .section { margin-bottom: 20px; }
+    .section-title {
+      font-size: 12px; font-weight: 600;
       color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 10px;
     }
 
-    .status-bar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: var(--bg-medium);
-      border-radius: 8px;
-      margin-bottom: 16px;
-      font-size: 13px;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-secondary);
-    }
-
-    .status-dot.connected {
-      background: var(--positive);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
+    /* Buttons */
     .btn {
-      flex: 1;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      width: 100%; padding: 12px 16px;
+      border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { background: var(--bg-light); cursor: not-allowed; }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-
-    .btn-secondary {
+    /* Cards */
+    .card {
       background: var(--bg-medium);
-      color: var(--text-primary);
-      border: 1px solid var(--bg-light);
+      border-radius: 8px; padding: 12px; margin-bottom: 8px;
     }
 
-    .btn-secondary:hover {
-      background: var(--bg-light);
-    }
+    /* Provider Row */
+    .provider-row { display: flex; align-items: center; justify-content: space-between; }
+    .provider-info { display: flex; align-items: center; gap: 10px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+    .status-dot.connected { background: var(--primary); }
+    .provider-name { font-weight: 500; }
+    .provider-hint { font-size: 11px; color: var(--text-muted); margin-left: 8px; }
+    .provider-action { background: none; border: none; font-size: 12px; cursor: pointer; }
+    .provider-action.connect { color: var(--primary); }
+    .provider-action.remove { color: var(--error); }
 
-    .chart-type-selector {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .chart-type-btn {
-      padding: 6px 12px;
+    /* Quick Insert */
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .quick-btn {
       background: var(--bg-medium);
-      border: 1px solid var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px;
+      color: var(--text-primary); font-size: 12px;
+      text-align: left; cursor: pointer; transition: all 0.2s;
+    }
+    .quick-btn:hover { border-color: var(--primary); background: var(--bg-light); }
+
+    /* Function Reference */
+    .func-item {
+      background: var(--bg-medium);
+      border-radius: 6px; padding: 10px; margin-bottom: 6px;
+      font-family: 'Consolas', 'Monaco', monospace; font-size: 12px;
+    }
+    .func-name { color: var(--primary); }
+    .func-example { color: var(--text-muted); margin-top: 4px; }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px; text-align: center;
+    }
+    .login-logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--primary), #6366F1);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 16px;
+    }
+    .login-title { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .login-subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+    .login-form { width: 100%; max-width: 280px; }
+    .form-group { margin-bottom: 12px; text-align: left; }
+    .form-label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      background: var(--bg-medium);
+      border: 1px solid var(--border);
       border-radius: 6px;
-      color: var(--text-secondary);
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
+      color: var(--text-primary); font-size: 14px;
     }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+    .form-input::placeholder { color: var(--text-muted); }
 
-    .chart-type-btn:hover {
-      border-color: var(--primary);
-      color: var(--text-primary);
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--error); padding: 10px;
+      border-radius: 6px; font-size: 12px; margin-bottom: 12px;
     }
+    .signup-link { margin-top: 16px; font-size: 12px; color: var(--text-muted); }
+    .signup-link a { color: var(--primary); text-decoration: none; }
 
-    .chart-type-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
+    /* Key Input */
+    .key-input-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .key-input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .key-input {
+      flex: 1; padding: 8px 10px;
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary); font-size: 12px;
     }
+    .key-input:focus { outline: none; border-color: var(--primary); }
+    .key-btn { padding: 8px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; }
+    .key-btn-save { background: var(--primary); color: white; }
+    .key-btn-cancel { background: var(--bg-light); color: var(--text-secondary); }
+    .key-help { font-size: 11px; color: var(--text-muted); }
+    .key-help a { color: var(--primary); text-decoration: none; }
 
-    .chart-container {
-      background: var(--bg-medium);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .chart-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .chart-subtitle {
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .chart-wrapper {
-      position: relative;
-      height: 250px;
-    }
-
-    .data-summary {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .data-card {
-      background: var(--bg-medium);
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .data-label {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-
-    .data-value {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .data-value.positive {
-      color: var(--positive);
-    }
-
-    .data-value.negative {
-      color: var(--negative);
-    }
-
+    /* Loading */
     .loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 200px;
-      color: var(--text-secondary);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; color: var(--text-secondary);
     }
-
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--bg-light);
+      width: 24px; height: 24px;
+      border: 2px solid var(--bg-light);
       border-top-color: var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 12px;
+      margin-right: 10px;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    /* Footer */
+    .footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .footer a { color: var(--primary); text-decoration: none; font-size: 13px; }
+    .last-refresh { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
 
-    .error-message {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid var(--negative);
-      border-radius: 8px;
-      padding: 12px;
-      color: var(--negative);
-      font-size: 13px;
-      margin-bottom: 16px;
-    }
-
-    .info-box {
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid var(--primary);
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .info-box strong {
-      color: var(--primary);
-    }
-
-    .coin-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 16px;
-    }
-
-    .coin-tag {
-      background: var(--bg-medium);
-      border: 1px solid var(--bg-light);
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 11px;
-      color: var(--text-secondary);
-    }
-
-    .coin-tag.active {
-      background: rgba(16, 185, 129, 0.2);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">DS</div>
-    <div>
-      <div class="title">DataSimplify Charts</div>
-      <div class="subtitle">Interactive crypto visualizations</div>
+  <!-- Loading State -->
+  <div id="loadingScreen" class="loading">
+    <div class="spinner"></div>
+    <span>Loading...</span>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen hidden">
+    <div class="login-logo">📊</div>
+    <h1 class="login-title">CryptoReportKit</h1>
+    <p class="login-subtitle">Sign in to use CRK functions in Excel</p>
+
+    <div class="login-form">
+      <div id="loginError" class="error-msg hidden"></div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="emailInput" class="form-input" placeholder="you@example.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="passwordInput" class="form-input" placeholder="Enter your password">
+      </div>
+
+      <button id="loginBtn" class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+
+      <p class="signup-link">
+        Don't have an account? <a href="https://cryptoreportkit.com/signup" target="_blank">Sign up</a>
+      </p>
     </div>
   </div>
 
-  <div class="status-bar">
-    <div class="status-dot" id="statusDot"></div>
-    <span id="statusText">Connecting to Excel...</span>
-  </div>
-
-  <div class="controls">
-    <button class="btn btn-primary" id="refreshBtn" onclick="refreshData()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
-        <path d="M21 3v5h-5"/>
-      </svg>
-      Refresh
-    </button>
-    <button class="btn btn-secondary" id="settingsBtn" onclick="toggleSettings()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
-      </svg>
-      Settings
-    </button>
-  </div>
-
-  <div class="section-title">Chart Type</div>
-  <div class="chart-type-selector">
-    <button class="chart-type-btn active" data-type="line" onclick="setChartType('line')">Line</button>
-    <button class="chart-type-btn" data-type="bar" onclick="setChartType('bar')">Bar</button>
-    <button class="chart-type-btn" data-type="doughnut" onclick="setChartType('doughnut')">Doughnut</button>
-    <button class="chart-type-btn" data-type="radar" onclick="setChartType('radar')">Radar</button>
-    <button class="chart-type-btn" data-type="area" onclick="setChartType('area')">Area</button>
-  </div>
-
-  <div class="section-title">Detected Coins</div>
-  <div class="coin-list" id="coinList">
-    <span class="coin-tag">Loading...</span>
-  </div>
-
-  <div class="data-summary" id="dataSummary">
-    <div class="data-card">
-      <div class="data-label">Total Coins</div>
-      <div class="data-value" id="totalCoins">-</div>
+  <!-- Main App -->
+  <div id="mainApp" class="container hidden">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">📊</div>
+        <div class="logo-text">
+          <h1>CryptoReportKit</h1>
+          <p id="userEmail">user@example.com</p>
+        </div>
+      </div>
+      <button class="sign-out-btn" onclick="handleSignOut()">Sign out</button>
     </div>
-    <div class="data-card">
-      <div class="data-label">Data Rows</div>
-      <div class="data-value" id="totalRows">-</div>
-    </div>
-    <div class="data-card">
-      <div class="data-label">Best Performer</div>
-      <div class="data-value positive" id="bestPerformer">-</div>
-    </div>
-    <div class="data-card">
-      <div class="data-label">Worst Performer</div>
-      <div class="data-value negative" id="worstPerformer">-</div>
-    </div>
-  </div>
 
-  <div class="chart-container">
-    <div class="chart-header">
-      <div>
-        <div class="chart-title" id="chartTitle">Price Overview</div>
-        <div class="chart-subtitle" id="chartSubtitle">Loading data from spreadsheet...</div>
+    <!-- Refresh Button -->
+    <div class="section">
+      <button id="refreshBtn" class="btn btn-primary" onclick="handleRefresh()">↻ Refresh All Data</button>
+      <p id="lastRefresh" class="last-refresh hidden">Last refresh: --</p>
+    </div>
+
+    <!-- API Keys -->
+    <div class="section">
+      <div class="section-title">API Keys (BYOK)</div>
+      <div class="card">
+        <div class="provider-row">
+          <div class="provider-info">
+            <div id="cgStatus" class="status-dot"></div>
+            <span class="provider-name">CoinGecko</span>
+            <span id="cgHint" class="provider-hint"></span>
+          </div>
+          <button id="cgAction" class="provider-action connect" onclick="toggleKeyInput()">Connect</button>
+        </div>
+
+        <div id="keyInputSection" class="key-input-section hidden">
+          <div class="key-input-row">
+            <input type="password" id="apiKeyInput" class="key-input" placeholder="CG-xxxxxxxxxxxxxxxxxxxx">
+            <button class="key-btn key-btn-save" onclick="saveApiKey()">Save</button>
+            <button class="key-btn key-btn-cancel" onclick="toggleKeyInput()">Cancel</button>
+          </div>
+          <p class="key-help">
+            <a href="https://www.coingecko.com/en/api/pricing" target="_blank">Get free API key →</a>
+          </p>
+        </div>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+        Optional: Connect your own API key for higher rate limits
+      </p>
+    </div>
+
+    <!-- Quick Insert -->
+    <div class="section">
+      <div class="section-title">Quick Insert</div>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="insertFormula('=CRK.PRICE(&quot;bitcoin&quot;)')">BTC Price</button>
+        <button class="quick-btn" onclick="insertFormula('=CRK.PRICE(&quot;ethereum&quot;)')">ETH Price</button>
+        <button class="quick-btn" onclick="insertFormula('=CRK.CHANGE24H(&quot;bitcoin&quot;)')">BTC 24h %</button>
+        <button class="quick-btn" onclick="insertFormula('=CRK.OHLCV(&quot;bitcoin&quot;,30)')">BTC OHLCV</button>
       </div>
     </div>
-    <div class="chart-wrapper">
-      <canvas id="mainChart"></canvas>
-    </div>
-  </div>
 
-  <div class="info-box">
-    <strong>Tip:</strong> Select cells in your spreadsheet containing coin symbols and prices, then click Refresh to update the chart. The add-in reads data from CryptoSheets formulas automatically.
+    <!-- Function Reference -->
+    <div class="section">
+      <div class="section-title">Available Functions</div>
+      <div class="func-item">
+        <span class="func-name">CRK.PRICE</span>(coin, [currency])
+        <div class="func-example">=CRK.PRICE("bitcoin")</div>
+      </div>
+      <div class="func-item">
+        <span class="func-name">CRK.CHANGE24H</span>(coin)
+        <div class="func-example">=CRK.CHANGE24H("ethereum")</div>
+      </div>
+      <div class="func-item">
+        <span class="func-name">CRK.MARKETCAP</span>(coin)
+        <div class="func-example">=CRK.MARKETCAP("bitcoin")</div>
+      </div>
+      <div class="func-item">
+        <span class="func-name">CRK.OHLCV</span>(coin, [days])
+        <div class="func-example">=CRK.OHLCV("bitcoin", 30)</div>
+      </div>
+      <div class="func-item">
+        <span class="func-name">CRK.INFO</span>(coin, field)
+        <div class="func-example">=CRK.INFO("bitcoin", "rank")</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="https://cryptoreportkit.com/addin/docs" target="_blank">View all 30+ functions →</a>
+    </div>
   </div>
 
   <script>
-    // DataSimplify Add-in JavaScript
-    let mainChart = null;
-    let currentChartType = 'line';
-    let spreadsheetData = {
-      coins: [],
-      prices: [],
-      changes: [],
-      volumes: []
-    };
-
-    // Color palette matching DataSimplify website
-    const COLORS = {
-      primary: '#10B981',
-      secondary: '#6366F1',
-      accent: '#F59E0B',
-      pink: '#EC4899',
-      purple: '#8B5CF6',
-      teal: '#14B8A6',
-      orange: '#F97316',
-      cyan: '#06B6D4',
-      red: '#EF4444',
-      lime: '#84CC16',
-      bgDark: '#111827',
-      bgMedium: '#1F2937',
-      textPrimary: '#FFFFFF',
-      textSecondary: '#9CA3AF'
-    };
-
-    const SERIES_COLORS = [
-      COLORS.primary, COLORS.secondary, COLORS.accent,
-      COLORS.pink, COLORS.purple, COLORS.teal,
-      COLORS.orange, COLORS.cyan, COLORS.red, COLORS.lime
-    ];
+    const API_BASE = 'https://cryptoreportkit.com';
+    let currentUser = null;
+    let authToken = null;
+    let isOfficeReady = false;
 
     // Initialize Office.js
-    Office.onReady((info) => {
-      if (info.host === Office.HostType.Excel) {
-        updateStatus('connected', 'Connected to Excel');
-        initializeAddIn();
-      } else {
-        updateStatus('error', 'Please open in Excel');
-      }
+    Office.onReady(function(info) {
+      console.log('[CRK] Office ready:', info.host);
+      isOfficeReady = true;
+      init();
     });
 
-    function updateStatus(status, text) {
-      const dot = document.getElementById('statusDot');
-      const textEl = document.getElementById('statusText');
-
-      dot.className = 'status-dot';
-      if (status === 'connected') {
-        dot.classList.add('connected');
+    // Fallback for testing outside Excel
+    setTimeout(() => {
+      if (!isOfficeReady) {
+        console.log('[CRK] Running outside Office');
+        init();
       }
-      textEl.textContent = text;
-    }
+    }, 2000);
 
-    async function initializeAddIn() {
+    async function init() {
+      // Check for stored token
       try {
-        await refreshData();
-      } catch (error) {
-        console.error('Init error:', error);
-        updateStatus('error', 'Failed to initialize');
-      }
-    }
-
-    async function refreshData() {
-      updateStatus('loading', 'Reading spreadsheet data...');
-
-      try {
-        await Excel.run(async (context) => {
-          // Try to find data in different sheets
-          const sheets = context.workbook.worksheets;
-          sheets.load('items/name');
-          await context.sync();
-
-          let dataFound = false;
-
-          // Look for Data sheet first
-          for (const sheet of sheets.items) {
-            if (sheet.name.toLowerCase().includes('data') ||
-                sheet.name.toLowerCase().includes('market') ||
-                sheet.name === 'Sheet1') {
-
-              const usedRange = sheet.getUsedRange();
-              usedRange.load(['values', 'rowCount', 'columnCount']);
-              await context.sync();
-
-              if (usedRange.values && usedRange.values.length > 1) {
-                parseSpreadsheetData(usedRange.values);
-                dataFound = true;
-                break;
-              }
-            }
-          }
-
-          if (!dataFound) {
-            // Try active sheet
-            const activeSheet = context.workbook.worksheets.getActiveWorksheet();
-            const usedRange = activeSheet.getUsedRange();
-            usedRange.load(['values', 'rowCount', 'columnCount']);
-            await context.sync();
-
-            if (usedRange.values && usedRange.values.length > 1) {
-              parseSpreadsheetData(usedRange.values);
-              dataFound = true;
-            }
-          }
-
-          if (dataFound) {
-            updateUI();
-            renderChart();
-            updateStatus('connected', `Loaded ${spreadsheetData.coins.length} coins`);
-          } else {
-            updateStatus('error', 'No data found in spreadsheet');
-          }
-        });
-      } catch (error) {
-        console.error('Refresh error:', error);
-        updateStatus('error', 'Error reading data: ' + error.message);
-      }
-    }
-
-    function parseSpreadsheetData(values) {
-      // Reset data
-      spreadsheetData = {
-        coins: [],
-        prices: [],
-        changes: [],
-        volumes: [],
-        labels: []
-      };
-
-      // Try to find header row
-      const headers = values[0].map(h => String(h).toLowerCase());
-
-      // Find column indices
-      let coinCol = headers.findIndex(h => h.includes('coin') || h.includes('symbol') || h.includes('name'));
-      let priceCol = headers.findIndex(h => h.includes('price'));
-      let changeCol = headers.findIndex(h => h.includes('change') || h.includes('24h') || h.includes('%'));
-      let volumeCol = headers.findIndex(h => h.includes('volume') || h.includes('vol'));
-
-      // Default to first columns if not found
-      if (coinCol === -1) coinCol = 0;
-      if (priceCol === -1) priceCol = 1;
-      if (changeCol === -1) changeCol = 2;
-      if (volumeCol === -1) volumeCol = 3;
-
-      // Parse data rows
-      for (let i = 1; i < values.length && i < 51; i++) { // Max 50 coins
-        const row = values[i];
-
-        const coin = String(row[coinCol] || '').trim();
-        const price = parseFloat(row[priceCol]) || 0;
-        const change = parseFloat(row[changeCol]) || 0;
-        const volume = parseFloat(row[volumeCol]) || 0;
-
-        if (coin && !coin.startsWith('#') && coin.length <= 10) {
-          spreadsheetData.coins.push(coin);
-          spreadsheetData.prices.push(price);
-          spreadsheetData.changes.push(change);
-          spreadsheetData.volumes.push(volume);
-          spreadsheetData.labels.push(coin);
+        if (typeof OfficeRuntime !== 'undefined') {
+          authToken = await OfficeRuntime.storage.getItem('crk_auth_token');
+          const email = await OfficeRuntime.storage.getItem('crk_user_email');
+          if (authToken && email) currentUser = { email };
         }
+      } catch (e) {
+        authToken = localStorage.getItem('crk_auth_token');
+        const email = localStorage.getItem('crk_user_email');
+        if (authToken && email) currentUser = { email };
       }
-    }
 
-    function updateUI() {
-      // Update coin list
-      const coinList = document.getElementById('coinList');
-      if (spreadsheetData.coins.length > 0) {
-        coinList.innerHTML = spreadsheetData.coins.slice(0, 15).map((coin, i) =>
-          `<span class="coin-tag ${i < 5 ? 'active' : ''}">${coin}</span>`
-        ).join('') + (spreadsheetData.coins.length > 15 ?
-          `<span class="coin-tag">+${spreadsheetData.coins.length - 15} more</span>` : '');
+      document.getElementById('loadingScreen').classList.add('hidden');
+      if (currentUser) {
+        showMainApp();
+        loadProviderStatus();
       } else {
-        coinList.innerHTML = '<span class="coin-tag">No coins found</span>';
+        showLoginScreen();
       }
-
-      // Update summary cards
-      document.getElementById('totalCoins').textContent = spreadsheetData.coins.length;
-      document.getElementById('totalRows').textContent = spreadsheetData.prices.filter(p => p > 0).length;
-
-      // Find best/worst performers
-      if (spreadsheetData.changes.length > 0) {
-        const maxIdx = spreadsheetData.changes.indexOf(Math.max(...spreadsheetData.changes));
-        const minIdx = spreadsheetData.changes.indexOf(Math.min(...spreadsheetData.changes));
-
-        const bestEl = document.getElementById('bestPerformer');
-        const worstEl = document.getElementById('worstPerformer');
-
-        bestEl.textContent = `${spreadsheetData.coins[maxIdx]} +${spreadsheetData.changes[maxIdx].toFixed(1)}%`;
-        bestEl.className = 'data-value positive';
-
-        worstEl.textContent = `${spreadsheetData.coins[minIdx]} ${spreadsheetData.changes[minIdx].toFixed(1)}%`;
-        worstEl.className = 'data-value negative';
-      }
-
-      // Update chart title
-      document.getElementById('chartSubtitle').textContent =
-        `Showing ${spreadsheetData.coins.length} coins from spreadsheet`;
     }
 
-    function setChartType(type) {
-      currentChartType = type;
-
-      // Update button states
-      document.querySelectorAll('.chart-type-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.type === type) {
-          btn.classList.add('active');
-        }
-      });
-
-      // Update chart title
-      const titles = {
-        line: 'Price Trend',
-        bar: 'Price Comparison',
-        doughnut: 'Market Distribution',
-        radar: 'Multi-Metric Analysis',
-        area: 'Cumulative View'
-      };
-      document.getElementById('chartTitle').textContent = titles[type] || 'Chart';
-
-      renderChart();
+    function showLoginScreen() {
+      document.getElementById('loginScreen').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('hidden');
     }
 
-    function renderChart() {
-      const ctx = document.getElementById('mainChart').getContext('2d');
+    function showMainApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('userEmail').textContent = currentUser.email;
+    }
 
-      // Destroy existing chart
-      if (mainChart) {
-        mainChart.destroy();
-      }
+    async function handleLogin() {
+      const email = document.getElementById('emailInput').value;
+      const password = document.getElementById('passwordInput').value;
+      const errorDiv = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
 
-      // No data check
-      if (spreadsheetData.coins.length === 0) {
+      if (!email || !password) {
+        errorDiv.textContent = 'Please enter email and password';
+        errorDiv.classList.remove('hidden');
         return;
       }
 
-      // Prepare data based on chart type
-      let chartConfig;
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      errorDiv.classList.add('hidden');
 
-      switch (currentChartType) {
-        case 'doughnut':
-          chartConfig = {
-            type: 'doughnut',
-            data: {
-              labels: spreadsheetData.coins.slice(0, 10),
-              datasets: [{
-                data: spreadsheetData.prices.slice(0, 10),
-                backgroundColor: SERIES_COLORS,
-                borderColor: COLORS.bgDark,
-                borderWidth: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: 'right',
-                  labels: { color: COLORS.textSecondary, font: { size: 11 } }
-                }
-              }
-            }
-          };
-          break;
+      try {
+        const response = await fetch(API_BASE + '/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
 
-        case 'radar':
-          // Normalize values for radar
-          const maxPrice = Math.max(...spreadsheetData.prices);
-          const maxChange = Math.max(...spreadsheetData.changes.map(Math.abs));
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Login failed');
 
-          chartConfig = {
-            type: 'radar',
-            data: {
-              labels: spreadsheetData.coins.slice(0, 8),
-              datasets: [{
-                label: 'Price (normalized)',
-                data: spreadsheetData.prices.slice(0, 8).map(p => (p / maxPrice) * 100),
-                backgroundColor: COLORS.primary + '40',
-                borderColor: COLORS.primary,
-                pointBackgroundColor: COLORS.primary
-              }, {
-                label: '24h Change',
-                data: spreadsheetData.changes.slice(0, 8).map(c => 50 + c),
-                backgroundColor: COLORS.secondary + '40',
-                borderColor: COLORS.secondary,
-                pointBackgroundColor: COLORS.secondary
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                r: {
-                  angleLines: { color: COLORS.bgMedium },
-                  grid: { color: COLORS.bgMedium },
-                  pointLabels: { color: COLORS.textSecondary },
-                  ticks: { display: false }
-                }
-              },
-              plugins: {
-                legend: {
-                  labels: { color: COLORS.textSecondary }
-                }
-              }
-            }
-          };
-          break;
+        authToken = data.access_token;
+        currentUser = { email: data.email || email };
 
-        case 'area':
-          chartConfig = {
-            type: 'line',
-            data: {
-              labels: spreadsheetData.coins,
-              datasets: [{
-                label: 'Price',
-                data: spreadsheetData.prices,
-                backgroundColor: COLORS.primary + '40',
-                borderColor: COLORS.primary,
-                fill: true,
-                tension: 0.4
-              }]
-            },
-            options: getLineChartOptions()
-          };
-          break;
-
-        case 'bar':
-          chartConfig = {
-            type: 'bar',
-            data: {
-              labels: spreadsheetData.coins.slice(0, 15),
-              datasets: [{
-                label: 'Price ($)',
-                data: spreadsheetData.prices.slice(0, 15),
-                backgroundColor: spreadsheetData.changes.slice(0, 15).map(c =>
-                  c >= 0 ? COLORS.primary : COLORS.red
-                ),
-                borderRadius: 4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false }
-              },
-              scales: {
-                x: {
-                  grid: { color: COLORS.bgMedium },
-                  ticks: { color: COLORS.textSecondary }
-                },
-                y: {
-                  grid: { color: COLORS.bgMedium },
-                  ticks: { color: COLORS.textSecondary }
-                }
-              }
-            }
-          };
-          break;
-
-        default: // line
-          chartConfig = {
-            type: 'line',
-            data: {
-              labels: spreadsheetData.coins,
-              datasets: [{
-                label: 'Price',
-                data: spreadsheetData.prices,
-                borderColor: COLORS.primary,
-                backgroundColor: COLORS.primary,
-                tension: 0.3,
-                pointRadius: 4,
-                pointHoverRadius: 6
-              }, {
-                label: '24h Change %',
-                data: spreadsheetData.changes,
-                borderColor: COLORS.secondary,
-                backgroundColor: COLORS.secondary,
-                tension: 0.3,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                yAxisID: 'y1'
-              }]
-            },
-            options: getLineChartOptions(true)
-          };
-      }
-
-      // Apply dark theme animation
-      chartConfig.options = {
-        ...chartConfig.options,
-        animation: {
-          duration: 800,
-          easing: 'easeOutQuart'
+        try {
+          if (typeof OfficeRuntime !== 'undefined') {
+            await OfficeRuntime.storage.setItem('crk_auth_token', authToken);
+            await OfficeRuntime.storage.setItem('crk_user_email', currentUser.email);
+          }
+        } catch (e) {
+          localStorage.setItem('crk_auth_token', authToken);
+          localStorage.setItem('crk_user_email', currentUser.email);
         }
-      };
 
-      mainChart = new Chart(ctx, chartConfig);
+        showMainApp();
+        loadProviderStatus();
+      } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
     }
 
-    function getLineChartOptions(dualAxis = false) {
-      const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          mode: 'index',
-          intersect: false
-        },
-        plugins: {
-          legend: {
-            labels: { color: COLORS.textSecondary }
-          },
-          tooltip: {
-            backgroundColor: COLORS.bgMedium,
-            titleColor: COLORS.textPrimary,
-            bodyColor: COLORS.textSecondary,
-            borderColor: COLORS.primary,
-            borderWidth: 1
-          }
-        },
-        scales: {
-          x: {
-            grid: { color: COLORS.bgMedium },
-            ticks: { color: COLORS.textSecondary, maxRotation: 45 }
-          },
-          y: {
-            grid: { color: COLORS.bgMedium },
-            ticks: { color: COLORS.textSecondary }
+    async function handleSignOut() {
+      try {
+        if (typeof OfficeRuntime !== 'undefined') {
+          await OfficeRuntime.storage.removeItem('crk_auth_token');
+          await OfficeRuntime.storage.removeItem('crk_user_email');
+        }
+      } catch (e) {}
+      localStorage.removeItem('crk_auth_token');
+      localStorage.removeItem('crk_user_email');
+      currentUser = null;
+      authToken = null;
+      showLoginScreen();
+    }
+
+    async function loadProviderStatus() {
+      try {
+        const response = await fetch(API_BASE + '/api/v1/keys/coingecko', {
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const statusDot = document.getElementById('cgStatus');
+          const hint = document.getElementById('cgHint');
+          const action = document.getElementById('cgAction');
+
+          if (data.connected) {
+            statusDot.classList.add('connected');
+            hint.textContent = '••••' + (data.hint || '');
+            action.textContent = 'Remove';
+            action.className = 'provider-action remove';
+            action.onclick = removeApiKey;
+          } else {
+            statusDot.classList.remove('connected');
+            hint.textContent = '';
+            action.textContent = 'Connect';
+            action.className = 'provider-action connect';
+            action.onclick = toggleKeyInput;
           }
         }
-      };
-
-      if (dualAxis) {
-        options.scales.y1 = {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          grid: { drawOnChartArea: false },
-          ticks: {
-            color: COLORS.textSecondary,
-            callback: (value) => value + '%'
-          }
-        };
+      } catch (error) {
+        console.error('[CRK] Error loading provider status:', error);
       }
-
-      return options;
     }
 
-    function toggleSettings() {
-      // Future: Add settings panel
-      alert('Settings panel coming soon! You can currently:\n\n- Change chart types using the buttons above\n- Click Refresh to reload data\n- Select different cells to change the data source');
+    function toggleKeyInput() {
+      const section = document.getElementById('keyInputSection');
+      section.classList.toggle('hidden');
+      document.getElementById('apiKeyInput').value = '';
     }
 
-    // Global function for ribbon button
-    window.refreshAllCharts = function() {
-      refreshData();
-    };
+    async function saveApiKey() {
+      const apiKey = document.getElementById('apiKeyInput').value.trim();
+      if (!apiKey) { alert('Please enter an API key'); return; }
+
+      try {
+        const response = await fetch(API_BASE + '/api/v1/keys/coingecko', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + authToken
+          },
+          body: JSON.stringify({ apiKey })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to save key');
+        }
+        toggleKeyInput();
+        loadProviderStatus();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function removeApiKey() {
+      if (!confirm('Remove your CoinGecko API key?')) return;
+      try {
+        await fetch(API_BASE + '/api/v1/keys/coingecko', {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + authToken }
+        });
+        loadProviderStatus();
+      } catch (error) {
+        console.error('[CRK] Error removing key:', error);
+      }
+    }
+
+    async function handleRefresh() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = 'Refreshing...';
+
+      try {
+        if (isOfficeReady && typeof Excel !== 'undefined') {
+          await Excel.run(async (context) => {
+            context.workbook.application.calculate('Full');
+            await context.sync();
+          });
+        }
+        const lastRefresh = document.getElementById('lastRefresh');
+        lastRefresh.textContent = 'Last refresh: ' + new Date().toLocaleTimeString();
+        lastRefresh.classList.remove('hidden');
+      } catch (error) {
+        console.error('[CRK] Refresh error:', error);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '↻ Refresh All Data';
+      }
+    }
+
+    async function insertFormula(formula) {
+      if (isOfficeReady && typeof Excel !== 'undefined') {
+        try {
+          await Excel.run(async (context) => {
+            const range = context.workbook.getSelectedRange();
+            range.formulas = [[formula]];
+            await context.sync();
+          });
+        } catch (error) {
+          await navigator.clipboard.writeText(formula);
+          alert('Formula copied to clipboard: ' + formula);
+        }
+      } else {
+        await navigator.clipboard.writeText(formula);
+        alert('Formula copied to clipboard: ' + formula);
+      }
+    }
+
+    // Enter key handler
+    document.addEventListener('DOMContentLoaded', () => {
+      ['emailInput', 'passwordInput'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') handleLogin();
+        });
+      });
+    });
   </script>
 </body>
 </html>

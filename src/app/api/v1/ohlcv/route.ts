@@ -3,9 +3,11 @@
  *
  * Fetches OHLC (Open, High, Low, Close, Volume) data from CoinGecko
  * using user's BYOK API key
+ *
+ * Supports both cookie-based auth (web) and Bearer token auth (Excel add-in)
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser, getSupabaseClient } from '@/lib/supabase/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { decryptApiKey } from '@/lib/encryption';
 
@@ -19,11 +21,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Support both cookie auth (web) and Bearer token (Excel add-in)
+    const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabase = await getSupabaseClient(request);
+    if (!supabase) {
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     // Try to get user's CoinGecko API key
