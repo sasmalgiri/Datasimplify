@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -16,7 +16,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity } from 'lucide-react';
+import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity, Filter, SortAsc, SortDesc, ChevronDown, X } from 'lucide-react';
 
 interface CoinData {
   symbol: string;
@@ -48,6 +48,9 @@ const CHART_COLORS = [
 ];
 
 type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard';
+type SortField = 'symbol' | 'price' | 'change24h' | 'marketCap' | 'volume';
+type SortOrder = 'asc' | 'desc';
+type ChangeFilter = 'all' | 'gainers' | 'losers';
 
 export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPreviewProps) {
   const [data, setData] = useState<CoinData[]>([]);
@@ -55,6 +58,15 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Filter and sort state
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('marketCap');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [changeFilter, setChangeFilter] = useState<ChangeFilter>('all');
+  const [minPrice, setMinPrice] = useState<string>('');
+  const [maxPrice, setMaxPrice] = useState<string>('');
+  const [showTopN, setShowTopN] = useState<number>(0); // 0 means show all
 
   const fetchPreviewData = useCallback(async () => {
     if (selectedCoins.length === 0) {
@@ -148,6 +160,258 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
     return change >= 0 ? `+${formatted}%` : `${formatted}%`;
   };
 
+  // Filter and sort the data
+  const filteredData = useMemo(() => {
+    let result = [...data];
+
+    // Apply change filter
+    if (changeFilter === 'gainers') {
+      result = result.filter(coin => coin.change24h > 0);
+    } else if (changeFilter === 'losers') {
+      result = result.filter(coin => coin.change24h < 0);
+    }
+
+    // Apply price range filter
+    const minP = parseFloat(minPrice);
+    const maxP = parseFloat(maxPrice);
+    if (!isNaN(minP) && minP > 0) {
+      result = result.filter(coin => coin.price >= minP);
+    }
+    if (!isNaN(maxP) && maxP > 0) {
+      result = result.filter(coin => coin.price <= maxP);
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      let aVal: number, bVal: number;
+      switch (sortField) {
+        case 'symbol':
+          return sortOrder === 'asc'
+            ? a.symbol.localeCompare(b.symbol)
+            : b.symbol.localeCompare(a.symbol);
+        case 'price':
+          aVal = a.price; bVal = b.price;
+          break;
+        case 'change24h':
+          aVal = a.change24h; bVal = b.change24h;
+          break;
+        case 'marketCap':
+          aVal = a.marketCap; bVal = b.marketCap;
+          break;
+        case 'volume':
+          aVal = a.volume; bVal = b.volume;
+          break;
+        default:
+          aVal = a.marketCap; bVal = b.marketCap;
+      }
+      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+
+    // Apply top N limit
+    if (showTopN > 0 && showTopN < result.length) {
+      result = result.slice(0, showTopN);
+    }
+
+    return result;
+  }, [data, sortField, sortOrder, changeFilter, minPrice, maxPrice, showTopN]);
+
+  // Reset filters
+  const resetFilters = () => {
+    setSortField('marketCap');
+    setSortOrder('desc');
+    setChangeFilter('all');
+    setMinPrice('');
+    setMaxPrice('');
+    setShowTopN(0);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = sortField !== 'marketCap' || sortOrder !== 'desc' || changeFilter !== 'all' || minPrice || maxPrice || showTopN > 0;
+
+  // Filter Panel Component
+  const FilterPanel = () => (
+    <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-medium text-white flex items-center gap-2">
+          <Filter className="w-4 h-4" />
+          Filters & Sorting
+        </h3>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+          >
+            <X className="w-3 h-3" />
+            Reset
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Sort By */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Sort By</label>
+          <select
+            value={sortField}
+            onChange={(e) => setSortField(e.target.value as SortField)}
+            aria-label="Sort by field"
+            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="marketCap">Market Cap</option>
+            <option value="price">Price</option>
+            <option value="change24h">24h Change</option>
+            <option value="volume">Volume</option>
+            <option value="symbol">Name (A-Z)</option>
+          </select>
+        </div>
+
+        {/* Sort Order */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Order</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSortOrder('desc')}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-1 transition ${
+                sortOrder === 'desc'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-700 text-gray-400 hover:text-white'
+              }`}
+            >
+              <SortDesc className="w-4 h-4" />
+              High→Low
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortOrder('asc')}
+              className={`flex-1 px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-1 transition ${
+                sortOrder === 'asc'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-700 text-gray-400 hover:text-white'
+              }`}
+            >
+              <SortAsc className="w-4 h-4" />
+              Low→High
+            </button>
+          </div>
+        </div>
+
+        {/* Change Filter */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Show</label>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setChangeFilter('all')}
+              className={`flex-1 px-2 py-2 rounded-lg text-xs transition ${
+                changeFilter === 'all'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-700 text-gray-400 hover:text-white'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setChangeFilter('gainers')}
+              className={`flex-1 px-2 py-2 rounded-lg text-xs transition ${
+                changeFilter === 'gainers'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-700 text-gray-400 hover:text-white'
+              }`}
+            >
+              📈 Gainers
+            </button>
+            <button
+              type="button"
+              onClick={() => setChangeFilter('losers')}
+              className={`flex-1 px-2 py-2 rounded-lg text-xs transition ${
+                changeFilter === 'losers'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-gray-700 text-gray-400 hover:text-white'
+              }`}
+            >
+              📉 Losers
+            </button>
+          </div>
+        </div>
+
+        {/* Top N */}
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Limit Results</label>
+          <select
+            value={showTopN}
+            onChange={(e) => setShowTopN(Number(e.target.value))}
+            aria-label="Limit number of results"
+            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value={0}>Show All</option>
+            <option value={3}>Top 3</option>
+            <option value={5}>Top 5</option>
+            <option value={10}>Top 10</option>
+            <option value={20}>Top 20</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div className="mt-4 pt-4 border-t border-gray-700">
+        <label className="block text-xs text-gray-400 mb-2">Price Range (USD)</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            placeholder="Min"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+          />
+          <span className="text-gray-500">to</span>
+          <input
+            type="number"
+            placeholder="Max"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+      </div>
+
+      {/* Active Filters Summary */}
+      {hasActiveFilters && (
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="flex flex-wrap gap-2">
+            {sortField !== 'marketCap' && (
+              <span className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs">
+                Sorted by {sortField}
+              </span>
+            )}
+            {changeFilter !== 'all' && (
+              <span className={`px-2 py-1 rounded text-xs ${
+                changeFilter === 'gainers' ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'
+              }`}>
+                {changeFilter === 'gainers' ? 'Gainers only' : 'Losers only'}
+              </span>
+            )}
+            {(minPrice || maxPrice) && (
+              <span className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">
+                Price: ${minPrice || '0'} - ${maxPrice || '∞'}
+              </span>
+            )}
+            {showTopN > 0 && (
+              <span className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">
+                Top {showTopN}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Showing {filteredData.length} of {data.length} coins
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
   // Table View
   const TableView = () => (
     <div className="overflow-x-auto">
@@ -162,7 +426,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
           </tr>
         </thead>
         <tbody>
-          {data.map((coin, index) => (
+          {filteredData.map((coin, index) => (
             <tr key={coin.symbol} className="border-b border-gray-800 hover:bg-gray-800/50">
               <td className="py-3 px-4">
                 <div className="flex items-center gap-2">
@@ -202,7 +466,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
   // Bar Chart View - Price Comparison
   const BarChartView = () => {
-    const chartData = data.map((coin, i) => ({
+    const chartData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       price: coin.price,
       fill: CHART_COLORS[i % CHART_COLORS.length],
@@ -242,7 +506,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
   // Pie Chart View - Market Cap Distribution
   const PieChartView = () => {
-    const chartData = data.map((coin, i) => ({
+    const chartData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       value: coin.marketCap,
       fill: CHART_COLORS[i % CHART_COLORS.length],
@@ -288,7 +552,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
   // Line Chart View - 24h Change Comparison
   const LineChartView = () => {
-    const chartData = data.map((coin, i) => ({
+    const chartData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       change: coin.change24h,
       fill: coin.change24h >= 0 ? '#10B981' : '#EF4444',
@@ -330,7 +594,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
   // Volume Chart View - Trading Volume Comparison
   const VolumeChartView = () => {
-    const chartData = data.map((coin, i) => ({
+    const chartData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       volume: coin.volume,
       fill: CHART_COLORS[i % CHART_COLORS.length],
@@ -370,25 +634,25 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
   // Dashboard View - All Charts Together
   const DashboardView = () => {
-    const priceData = data.map((coin, i) => ({
+    const priceData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       price: coin.price,
       fill: CHART_COLORS[i % CHART_COLORS.length],
     }));
 
-    const marketCapData = data.map((coin, i) => ({
+    const marketCapData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       value: coin.marketCap,
       fill: CHART_COLORS[i % CHART_COLORS.length],
     }));
 
-    const changeData = data.map((coin) => ({
+    const changeData = filteredData.map((coin) => ({
       name: coin.symbol,
       change: coin.change24h,
       fill: coin.change24h >= 0 ? '#10B981' : '#EF4444',
     }));
 
-    const volumeData = data.map((coin, i) => ({
+    const volumeData = filteredData.map((coin, i) => ({
       name: coin.symbol,
       volume: coin.volume,
       fill: CHART_COLORS[i % CHART_COLORS.length],
@@ -398,7 +662,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {data.slice(0, 4).map((coin, i) => (
+          {filteredData.slice(0, 4).map((coin, i) => (
             <div key={coin.symbol} className="bg-gray-800 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span
@@ -536,7 +800,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                 </tr>
               </thead>
               <tbody>
-                {data.map((coin, index) => (
+                {filteredData.map((coin, index) => (
                   <tr key={coin.symbol} className="border-b border-gray-700/50">
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-2">
@@ -670,6 +934,25 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             </button>
           </div>
 
+          {/* Filter Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-2 rounded-lg transition flex items-center gap-1 ${
+              showFilters || hasActiveFilters
+                ? 'bg-emerald-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:text-white'
+            }`}
+            title="Toggle Filters"
+          >
+            <Filter className="w-4 h-4" />
+            {hasActiveFilters && (
+              <span className="text-xs bg-white/20 px-1.5 py-0.5 rounded">
+                {filteredData.length}
+              </span>
+            )}
+          </button>
+
           {/* Refresh Button */}
           <button
             type="button"
@@ -685,6 +968,9 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
       {/* Content */}
       <div className="p-4">
+        {/* Filter Panel */}
+        {showFilters && <FilterPanel />}
+
         {loading && data.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <RefreshCw className="w-6 h-6 text-emerald-500 animate-spin mr-3" />
