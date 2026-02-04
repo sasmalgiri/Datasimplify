@@ -1,7 +1,7 @@
 /**
  * Template Download API Route
  *
- * Generates and returns Excel templates with CryptoSheets formulas.
+ * Generates and returns Excel templates with CRK formulas.
  * No data redistribution - templates contain formulas only.
  *
  * Security features:
@@ -251,7 +251,7 @@ export async function POST(request: Request) {
       timeframe,
       currency,
       contentType,
-      formulaMode: 'crk', // BYOK: Use CRK formulas by default (not CryptoSheets)
+      formulaMode: 'crk', // BYOK: Use CRK formulas by default
       customizations: {
         // For formulas_only, override includeCharts to false
         includeCharts: contentType === 'formulas_only' ? false : body.customizations?.includeCharts !== false,
@@ -340,12 +340,12 @@ export async function GET() {
       success: true,
       templates,
       info: {
-        requiresAddons: ['CryptoSheets'],
+        requiresAddons: ['CRK Add-in'],
         supportedFormats: ['xlsx', 'xlsm'],
         supportedContentTypes: [
           { id: 'addin', name: 'Interactive Charts', description: 'Animated ChartJS charts via Office.js Add-in (requires M365)' },
           { id: 'native_charts', name: 'Native Excel Charts', description: 'Chart-ready data layout with instructions (works everywhere)' },
-          { id: 'formulas_only', name: 'Formulas Only', description: 'Just CryptoSheets formulas, no charts' },
+          { id: 'formulas_only', name: 'Formulas Only', description: 'Just CRK formulas, no charts' },
         ],
         dataIncluded: false,
         formulasOnly: true,

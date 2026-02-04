@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import type { ContentType } from '@/lib/templates/generator';
 import { useAuth } from '@/lib/auth';
 import { Turnstile } from '@/components/security/Turnstile';
+import { SetupWizard } from '@/components/wizard';
+import { Sparkles, Download, ChevronRight } from 'lucide-react';
+
+type DownloadMode = 'select' | 'quick' | 'wizard';
 
 interface TemplateDownloadModalProps {
   isOpen: boolean;
@@ -72,6 +76,7 @@ export function TemplateDownloadModal({
   userConfig,
 }: TemplateDownloadModalProps) {
   const { user } = useAuth();
+  const [mode, setMode] = useState<DownloadMode>('select');
   const [understood, setUnderstood] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<'xlsx' | 'xlsm'>('xlsx');
@@ -87,6 +92,13 @@ export function TemplateDownloadModal({
 
   // Turnstile CAPTCHA state
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  // Reset mode when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setMode('select');
+    }
+  }, [isOpen]);
 
   // Use logged-in user's email if available
   useEffect(() => {
@@ -231,6 +243,119 @@ export function TemplateDownloadModal({
 
   if (!isOpen) return null;
 
+  // Show Setup Wizard
+  if (mode === 'wizard') {
+    return (
+      <SetupWizard
+        templateId={templateType}
+        templateName={templateName}
+        onClose={onClose}
+      />
+    );
+  }
+
+  // Show Mode Selection
+  if (mode === 'select') {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-900 rounded-xl max-w-lg w-full p-6 shadow-2xl border border-gray-800">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white">
+              Download {templateName}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <p className="text-gray-400 mb-6">
+            Choose how you&apos;d like to get your template:
+          </p>
+
+          {/* Mode Options */}
+          <div className="space-y-4">
+            {/* Setup Wizard - Recommended */}
+            <button
+              type="button"
+              onClick={() => setMode('wizard')}
+              className="w-full p-4 bg-emerald-500/10 border-2 border-emerald-500/50 hover:border-emerald-500 rounded-xl text-left transition-all group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-white">Setup Wizard</h3>
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500 text-white rounded-full">
+                      RECOMMENDED
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Guided setup to get everything working perfectly
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs text-emerald-400">
+                    <li className="flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> Get your free API key
+                    </li>
+                    <li className="flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> Install the CRK Add-in
+                    </li>
+                    <li className="flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> Configure your report
+                    </li>
+                  </ul>
+                </div>
+                <ChevronRight className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
+
+            {/* Quick Download */}
+            <button
+              type="button"
+              onClick={() => setMode('quick')}
+              className="w-full p-4 bg-gray-800 border-2 border-gray-700 hover:border-gray-600 rounded-xl text-left transition-all group"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center">
+                  <Download className="w-6 h-6 text-gray-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">Quick Download</h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Download the template directly (you&apos;ll need to set up manually)
+                  </p>
+                  <p className="mt-2 text-xs text-gray-500">
+                    For users who already have CRK Add-in and API key configured
+                  </p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </button>
+          </div>
+
+          {/* Cancel */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full mt-4 py-2 text-gray-400 hover:text-white text-sm transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Quick Download Mode (existing modal content)
   const selectedOption = CONTENT_OPTIONS.find(opt => opt.id === contentType);
 
   return (
@@ -238,9 +363,18 @@ export function TemplateDownloadModal({
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full p-6 max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Download Template
-          </h2>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Quick Download
+            </h2>
+            <button
+              type="button"
+              onClick={() => setMode('select')}
+              className="text-sm text-emerald-500 hover:text-emerald-400 mt-1"
+            >
+              &larr; Back to options
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
