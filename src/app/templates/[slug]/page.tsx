@@ -7,8 +7,8 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 import { TemplateDownloadModal } from '@/components/TemplateDownloadModal';
+import { DataPreview } from '@/components/DataPreview';
 import {
-  REPORT_KITS,
   getReportKitBySlug,
   getRelatedKits,
   type ReportKit,
@@ -24,6 +24,8 @@ import {
   Clock,
   FileSpreadsheet,
   Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { ReportKitProductJsonLd } from '@/components/JsonLd';
 
@@ -67,6 +69,9 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
   );
 }
 
+// Default coins for preview based on kit type
+const DEFAULT_PREVIEW_COINS = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX'];
+
 export default function ReportKitPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -75,11 +80,20 @@ export default function ReportKitPage() {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [selectedTemplateIndex, setSelectedTemplateIndex] = useState(0);
 
+  // Live Preview state
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewCoins, setPreviewCoins] = useState<string[]>(DEFAULT_PREVIEW_COINS.slice(0, 5));
+  const [previewTimeframe, setPreviewTimeframe] = useState('1d');
+
   useEffect(() => {
     const foundKit = getReportKitBySlug(slug);
     if (foundKit) {
       setKit(foundKit);
       setRelatedKits(getRelatedKits(foundKit.id));
+      // Set preview coins based on kit's preset
+      const coinCount = Math.min(foundKit.presets.coins, 8);
+      setPreviewCoins(DEFAULT_PREVIEW_COINS.slice(0, coinCount));
+      setPreviewTimeframe(foundKit.presets.timeframe || '1d');
     }
   }, [slug]);
 
@@ -176,6 +190,57 @@ export default function ReportKitPage() {
                 <span className="text-gray-700">{feature}</span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Live Preview Section */}
+        <div className="mb-8">
+          <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+            {/* Preview Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
+                <h2 className="text-lg font-bold text-white">Live Data Preview</h2>
+                <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
+                  Sample of what you&apos;ll get
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreview(!showPreview)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors"
+              >
+                {showPreview ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Hide Preview
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Show Preview
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Preview Content */}
+            {showPreview && (
+              <div className="p-4">
+                <DataPreview
+                  selectedCoins={previewCoins}
+                  timeframe={previewTimeframe}
+                  onDataLoad={() => {}}
+                />
+              </div>
+            )}
+
+            {/* Preview Footer */}
+            <div className="px-4 py-3 bg-emerald-900/20 border-t border-emerald-500/30">
+              <p className="text-xs text-emerald-400 text-center">
+                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, CRK formulas will fetch the latest data using your own API key (BYOK).
+              </p>
+            </div>
           </div>
         </div>
 

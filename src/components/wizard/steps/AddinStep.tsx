@@ -1,29 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useWizard } from '../WizardContext';
 import { WizardNav } from '../shared/WizardNav';
 import { Download, CheckCircle, Monitor, Globe, Apple, ExternalLink } from 'lucide-react';
 
 type Platform = 'windows' | 'mac' | 'web';
 
+// Detect platform using lazy initialization
+function detectPlatform(): Platform {
+  if (typeof window === 'undefined') return 'windows';
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('mac')) return 'mac';
+  if (ua.includes('win')) return 'windows';
+  return 'web';
+}
+
 export function AddinStep() {
   const { state, dispatch } = useWizard();
-  const [platform, setPlatform] = useState<Platform>('windows');
-
-  // Detect platform
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const ua = navigator.userAgent.toLowerCase();
-      if (ua.includes('mac')) {
-        setPlatform('mac');
-      } else if (ua.includes('win')) {
-        setPlatform('windows');
-      } else {
-        setPlatform('web');
-      }
-    }
-  }, []);
+  const [platform, setPlatform] = useState<Platform>(detectPlatform);
 
   const handleConfirmInstalled = () => {
     dispatch({ type: 'SET_ADDIN_INSTALLED', installed: true });

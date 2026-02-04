@@ -35,23 +35,13 @@ function HelpIcon({ text }: { text: string }) {
 
 // "What If Market Cap" Calculator Component
 function WhatIfMarketCapCalculator({ coins }: { coins: Coin[] }) {
-  const [coinA, setCoinA] = useState<string>(coins[0]?.id || '');
-  const [coinB, setCoinB] = useState<string>(coins[1]?.id || '');
+  const [coinA, setCoinA] = useState<string>(() => coins[0]?.id || '');
+  const [coinB, setCoinB] = useState<string>(() => coins[1]?.id || '');
 
-  // Update defaults when coins change
-  useEffect(() => {
-    if (coins.length >= 2) {
-      if (!coinA || !coins.find(c => c.id === coinA)) {
-        setCoinA(coins[0].id);
-      }
-      if (!coinB || !coins.find(c => c.id === coinB)) {
-        setCoinB(coins[1].id);
-      }
-    }
-  }, [coins, coinA, coinB]);
-
-  const selectedCoinA = coins.find(c => c.id === coinA);
-  const selectedCoinB = coins.find(c => c.id === coinB);
+  // Derive the effective coin selections - if current selection is invalid, fall back to first available coins
+  // No need to sync state - just use the effective values
+  const selectedCoinA = coins.find(c => c.id === coinA) || coins[0];
+  const selectedCoinB = coins.find(c => c.id === coinB) || coins[1];
 
   // Calculate hypothetical price
   // Formula: (Coin B Market Cap / Coin A Circulating Supply) = Hypothetical Price

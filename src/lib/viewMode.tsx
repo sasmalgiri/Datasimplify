@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useSyncExternalStore, ReactNode } from 'react';
 
 export type ViewMode = 'simple' | 'pro';
 
@@ -16,35 +16,48 @@ const ViewModeContext = createContext<ViewModeContextType | undefined>(undefined
 
 const STORAGE_KEY = 'crk_view_mode';
 
-export function ViewModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ViewMode>('simple');
-  const [mounted, setMounted] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'pro' || stored === 'simple') {
-      setModeState(stored);
-    }
+// Custom hook to sync with localStorage using useSyncExternalStore
+function useLocalStorageMode(): ViewMode {
+  const subscribe = useCallback((callback: () => void) => {
+    window.addEventListener('storage', callback);
+    return () => window.removeEventListener('storage', callback);
   }, []);
 
-  const setMode = (newMode: ViewMode) => {
+  const getSnapshot = useCallback((): ViewMode => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'pro' || stored === 'simple') {
+      return stored;
+    }
+    return 'simple';
+  }, []);
+
+  const getServerSnapshot = useCallback((): ViewMode => 'simple', []);
+
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
+export function ViewModeProvider({ children }: { children: ReactNode }) {
+  // Use useSyncExternalStore for hydration-safe localStorage access
+  const storedMode = useLocalStorageMode();
+  const [mode, setModeState] = useState<ViewMode>(storedMode);
+
+  const setMode = useCallback((newMode: ViewMode) => {
     setModeState(newMode);
     localStorage.setItem(STORAGE_KEY, newMode);
-  };
+    // Dispatch storage event for other tabs
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY, newValue: newMode }));
+  }, []);
 
-  const toggleMode = () => {
+  const toggleMode = useCallback(() => {
     const newMode = mode === 'simple' ? 'pro' : 'simple';
     setMode(newMode);
-  };
+  }, [mode, setMode]);
 
-  // Prevent hydration mismatch by not rendering mode-dependent content until mounted
   const value: ViewModeContextType = {
-    mode: mounted ? mode : 'simple',
+    mode,
     setMode,
-    isSimple: mounted ? mode === 'simple' : true,
-    isPro: mounted ? mode === 'pro' : false,
+    isSimple: mode === 'simple',
+    isPro: mode === 'pro',
     toggleMode,
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -16,13 +16,20 @@ import { ProductDisclaimer } from '@/components/ProductDisclaimer';
 
 export default function DownloadPage() {
   // Gate state - user must confirm requirements before seeing templates
-  const [hasConfirmedRequirements, setHasConfirmedRequirements] = useState(false);
+  // Use lazy initialization to check sessionStorage on mount
+  const [hasConfirmedRequirements, setHasConfirmedRequirements] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('crk_requirements_confirmed') === 'true';
+    }
+    return false;
+  });
 
   // Template modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [selectedTemplateName, setSelectedTemplateName] = useState<string>('');
-  const [templates, setTemplates] = useState<Array<{id: string; name: string; description: string; icon: string}>>([]);
+  // Use lazy initialization for templates
+  const [templates] = useState(() => getTemplateList());
 
   // Configuration state for templates (with quota-aware defaults)
   const [selectedCoins, setSelectedCoins] = useState<string[]>(['BTC', 'ETH', 'SOL', 'BNB', 'XRP']); // 5 coins default (Low-Quota Mode)
@@ -30,20 +37,6 @@ export default function DownloadPage() {
   const [refreshFrequency, setRefreshFrequency] = useState<RefreshFrequency>('manual'); // Manual by default
   const [includeCharts, setIncludeCharts] = useState(true);
   // Formula mode is always 'crk' - no other options
-
-  // Load templates on mount
-  useEffect(() => {
-    const templateList = getTemplateList();
-    setTemplates(templateList);
-  }, []);
-
-  // Check if user previously confirmed (persist for session)
-  useEffect(() => {
-    const confirmed = sessionStorage.getItem('crk_requirements_confirmed');
-    if (confirmed === 'true') {
-      setHasConfirmedRequirements(true);
-    }
-  }, []);
 
   // Handler for requirements confirmation
   const handleRequirementsConfirmed = () => {

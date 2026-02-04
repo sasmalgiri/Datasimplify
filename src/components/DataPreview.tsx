@@ -26,8 +26,15 @@ import {
   AreaChart,
   Area,
   ZAxis,
+  Sankey,
+  FunnelChart,
+  Funnel,
+  LabelList,
+  RadialBarChart,
+  RadialBar,
+  ComposedChart,
 } from 'recharts';
-import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity, Filter, SortAsc, SortDesc, ChevronDown, X, Target, ScatterChart as ScatterIcon, Grid3X3, Layers, Flame, MoreHorizontal } from 'lucide-react';
+import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity, Filter, SortAsc, SortDesc, ChevronDown, X, Target, ScatterChart as ScatterIcon, Grid3X3, Layers, Flame, MoreHorizontal, GitBranch, Triangle, CircleDot, Combine, Users } from 'lucide-react';
 
 interface CoinData {
   symbol: string;
@@ -58,7 +65,7 @@ const CHART_COLORS = [
   '#6366F1', // Indigo
 ];
 
-type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard' | 'radar' | 'scatter' | 'treemap' | 'area' | 'bubble' | 'heatmap';
+type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard' | 'radar' | 'scatter' | 'treemap' | 'area' | 'bubble' | 'heatmap' | 'sankey' | 'funnel' | 'radialbar' | 'composed' | 'distribution';
 type SortField = 'symbol' | 'price' | 'change24h' | 'marketCap' | 'volume';
 type SortOrder = 'asc' | 'desc';
 type ChangeFilter = 'all' | 'gainers' | 'losers';
@@ -78,6 +85,9 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
   const [showTopN, setShowTopN] = useState<number>(0); // 0 means show all
+
+  // Distribution chart state
+  const [distributionCoin, setDistributionCoin] = useState<string>(selectedCoins[0] || 'BTC');
 
   const fetchPreviewData = useCallback(async () => {
     if (selectedCoins.length === 0) {
@@ -1223,6 +1233,581 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
     );
   };
 
+  // Sankey Chart View - Flow visualization of market cap distribution
+  const SankeyChartView = () => {
+    // Create sankey data: shows flow from "Market" to each tier, then to individual coins
+    const sortedByMarketCap = [...filteredData].sort((a, b) => b.marketCap - a.marketCap);
+    const totalMarketCap = filteredData.reduce((sum, c) => sum + c.marketCap, 0);
+
+    // Group coins by tier based on market cap
+    const largeCap = sortedByMarketCap.filter(c => c.marketCap > totalMarketCap * 0.15);
+    const midCap = sortedByMarketCap.filter(c => c.marketCap <= totalMarketCap * 0.15 && c.marketCap > totalMarketCap * 0.05);
+    const smallCap = sortedByMarketCap.filter(c => c.marketCap <= totalMarketCap * 0.05);
+
+    const nodes = [
+      { name: 'Total Market' },
+      { name: 'Large Cap' },
+      { name: 'Mid Cap' },
+      { name: 'Small Cap' },
+      ...filteredData.map(c => ({ name: c.symbol }))
+    ];
+
+    const links: { source: number; target: number; value: number }[] = [];
+
+    // Market to tiers
+    const largeCapTotal = largeCap.reduce((s, c) => s + c.marketCap, 0);
+    const midCapTotal = midCap.reduce((s, c) => s + c.marketCap, 0);
+    const smallCapTotal = smallCap.reduce((s, c) => s + c.marketCap, 0);
+
+    if (largeCapTotal > 0) links.push({ source: 0, target: 1, value: largeCapTotal / 1e9 });
+    if (midCapTotal > 0) links.push({ source: 0, target: 2, value: midCapTotal / 1e9 });
+    if (smallCapTotal > 0) links.push({ source: 0, target: 3, value: smallCapTotal / 1e9 });
+
+    // Tiers to coins
+    largeCap.forEach(c => {
+      const coinIndex = nodes.findIndex(n => n.name === c.symbol);
+      if (coinIndex > 0) links.push({ source: 1, target: coinIndex, value: c.marketCap / 1e9 });
+    });
+    midCap.forEach(c => {
+      const coinIndex = nodes.findIndex(n => n.name === c.symbol);
+      if (coinIndex > 0) links.push({ source: 2, target: coinIndex, value: c.marketCap / 1e9 });
+    });
+    smallCap.forEach(c => {
+      const coinIndex = nodes.findIndex(n => n.name === c.symbol);
+      if (coinIndex > 0) links.push({ source: 3, target: coinIndex, value: c.marketCap / 1e9 });
+    });
+
+    const sankeyData = { nodes, links };
+
+    return (
+      <div className="h-96">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Market Cap Flow: Total → Tier → Individual Coins (in $B)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <Sankey
+            data={sankeyData}
+            nodePadding={30}
+            nodeWidth={10}
+            linkCurvature={0.5}
+            node={{
+              fill: '#10B981',
+              stroke: '#059669',
+            }}
+            link={{
+              stroke: '#374151',
+              strokeOpacity: 0.5,
+            }}
+          >
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value) => [`$${(Number(value) || 0).toFixed(2)}B`, 'Market Cap']}
+            />
+          </Sankey>
+        </ResponsiveContainer>
+        <div className="flex justify-center gap-6 mt-2 text-xs text-gray-400">
+          <span>Large Cap: &gt;15% share</span>
+          <span>Mid Cap: 5-15% share</span>
+          <span>Small Cap: &lt;5% share</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Funnel Chart View - Market cap ranking funnel
+  const FunnelChartView = () => {
+    const sortedByMarketCap = [...filteredData].sort((a, b) => b.marketCap - a.marketCap);
+    const funnelData = sortedByMarketCap.slice(0, 8).map((coin, i) => ({
+      name: coin.symbol,
+      value: coin.marketCap / 1e9,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+      price: coin.price,
+      change: coin.change24h,
+    }));
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Market Cap Ranking Funnel (Top 8 by Market Cap)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <FunnelChart>
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, name, props) => {
+                const item = props.payload;
+                return [
+                  <div key="tooltip" className="text-sm">
+                    <div className="font-bold">{item.name}</div>
+                    <div>Market Cap: ${(Number(value) || 0).toFixed(2)}B</div>
+                    <div>Price: {formatPrice(item.price)}</div>
+                    <div className={item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      24h: {formatChange(item.change)}
+                    </div>
+                  </div>,
+                  ''
+                ];
+              }}
+            />
+            <Funnel
+              dataKey="value"
+              data={funnelData}
+              isAnimationActive
+            >
+              <LabelList position="right" fill="#fff" stroke="none" dataKey="name" fontSize={12} />
+              <LabelList position="center" fill="#fff" stroke="none" dataKey="value" fontSize={10} formatter={(v) => `$${(Number(v) || 0).toFixed(1)}B`} />
+            </Funnel>
+          </FunnelChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Radial Bar Chart View - Circular comparison
+  const RadialBarChartView = () => {
+    const maxMarketCap = Math.max(...filteredData.map(c => c.marketCap));
+    const radialData = filteredData.slice(0, 8).map((coin, i) => ({
+      name: coin.symbol,
+      value: maxMarketCap > 0 ? (coin.marketCap / maxMarketCap) * 100 : 0,
+      marketCap: coin.marketCap,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    return (
+      <div className="h-96">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Market Cap Comparison (% of largest)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <RadialBarChart
+            cx="50%"
+            cy="50%"
+            innerRadius="20%"
+            outerRadius="90%"
+            data={radialData}
+            startAngle={90}
+            endAngle={-270}
+          >
+            <RadialBar
+              background={{ fill: '#374151' }}
+              dataKey="value"
+              cornerRadius={5}
+              label={{ position: 'insideStart', fill: '#fff', fontSize: 10 }}
+            />
+            <Legend
+              iconSize={10}
+              layout="vertical"
+              verticalAlign="middle"
+              align="right"
+              wrapperStyle={{ paddingLeft: '10px' }}
+              formatter={(value, entry) => {
+                const item = radialData.find(d => d.name === value);
+                return <span className="text-xs text-gray-300">{value} ({item?.value.toFixed(0)}%)</span>;
+              }}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, name, props) => {
+                const item = props.payload;
+                return [`${formatMarketCap(item.marketCap)} (${(Number(value) || 0).toFixed(1)}%)`, item.name];
+              }}
+            />
+          </RadialBarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Composed Chart View - Combined bar + line + area
+  const ComposedChartView = () => {
+    const composedData = filteredData.map((coin, i) => ({
+      name: coin.symbol,
+      price: coin.price,
+      marketCap: coin.marketCap / 1e9, // In billions
+      volume: coin.volume / 1e9, // In billions
+      change: coin.change24h,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Combined View: Market Cap (bars) + Volume (area) + Change % (line)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={composedData} margin={{ top: 20, right: 60, left: 20, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              yAxisId="left"
+              tick={{ fill: '#9CA3AF', fontSize: 10 }}
+              tickFormatter={(v) => `$${v}B`}
+              label={{ value: 'MCap/Vol ($B)', angle: -90, position: 'insideLeft', fill: '#6B7280', fontSize: 10 }}
+            />
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fill: '#9CA3AF', fontSize: 10 }}
+              tickFormatter={(v) => `${v}%`}
+              label={{ value: 'Change %', angle: 90, position: 'insideRight', fill: '#6B7280', fontSize: 10 }}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, name) => {
+                const v = Number(value) || 0;
+                if (name === 'Market Cap') return [`$${v.toFixed(2)}B`, name];
+                if (name === 'Volume') return [`$${v.toFixed(2)}B`, name];
+                if (name === '24h Change') return [`${v.toFixed(2)}%`, name];
+                return [v, name];
+              }}
+            />
+            <Legend wrapperStyle={{ paddingTop: '10px' }} />
+            <Bar yAxisId="left" dataKey="marketCap" name="Market Cap" fill="#10B981" opacity={0.8} />
+            <Area yAxisId="left" type="monotone" dataKey="volume" name="Volume" fill="#3B82F6" stroke="#3B82F6" fillOpacity={0.3} />
+            <Line yAxisId="right" type="monotone" dataKey="change" name="24h Change" stroke="#F59E0B" strokeWidth={2} dot={{ fill: '#F59E0B', strokeWidth: 2 }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Coin Distribution Chart View - Wallet holder distribution
+  const DistributionChartView = () => {
+    // Get the selected coin for distribution analysis
+    const selectedCoinData = data.find(c => c.symbol === distributionCoin) || data[0];
+    const coinSymbol = selectedCoinData?.symbol || 'BTC';
+    const coinPrice = selectedCoinData?.price || 0;
+    const coinMarketCap = selectedCoinData?.marketCap || 0;
+
+    // Holder categories with realistic distribution patterns
+    // These are simulated based on typical crypto holder distributions
+    const holderCategories = [
+      {
+        category: 'Humpback',
+        range: '>10K',
+        emoji: '🐋',
+        color: '#10B981',
+        // Humpbacks hold most of supply but are few addresses
+        coinPercent: 42.5,
+        addressPercent: 0.01,
+        avgHolding: 15000,
+        dayChange: 0.12,
+        weekChange: -0.34,
+        monthChange: 1.23,
+      },
+      {
+        category: 'Whale',
+        range: '1K-10K',
+        emoji: '🐳',
+        color: '#3B82F6',
+        coinPercent: 28.3,
+        addressPercent: 0.08,
+        avgHolding: 3500,
+        dayChange: -0.05,
+        weekChange: 0.21,
+        monthChange: -0.89,
+      },
+      {
+        category: 'Shark',
+        range: '100-1K',
+        emoji: '🦈',
+        color: '#8B5CF6',
+        coinPercent: 15.7,
+        addressPercent: 0.42,
+        avgHolding: 350,
+        dayChange: 0.08,
+        weekChange: 0.15,
+        monthChange: 2.34,
+      },
+      {
+        category: 'Fish',
+        range: '10-100',
+        emoji: '🐟',
+        color: '#F59E0B',
+        coinPercent: 8.9,
+        addressPercent: 2.85,
+        avgHolding: 42,
+        dayChange: 0.23,
+        weekChange: 0.67,
+        monthChange: 3.12,
+      },
+      {
+        category: 'Crab',
+        range: '1-10',
+        emoji: '🦀',
+        color: '#EC4899',
+        coinPercent: 3.4,
+        addressPercent: 12.64,
+        avgHolding: 4.2,
+        dayChange: 0.45,
+        weekChange: 1.23,
+        monthChange: 5.67,
+      },
+      {
+        category: 'Shrimp',
+        range: '<1',
+        emoji: '🦐',
+        color: '#EF4444',
+        coinPercent: 1.2,
+        addressPercent: 84.0,
+        avgHolding: 0.15,
+        dayChange: 0.67,
+        weekChange: 2.34,
+        monthChange: 8.91,
+      },
+    ];
+
+    // Calculate estimated values based on coin data
+    const totalSupply = coinMarketCap > 0 && coinPrice > 0 ? coinMarketCap / coinPrice : 21000000; // Default to BTC supply
+    const estimatedAddresses = Math.floor(totalSupply * 0.1); // Rough estimate
+
+    const distributionData = holderCategories.map(cat => ({
+      ...cat,
+      coinAmount: (totalSupply * cat.coinPercent / 100),
+      coinValue: (totalSupply * cat.coinPercent / 100) * coinPrice,
+      addressCount: Math.floor(estimatedAddresses * cat.addressPercent / 100),
+    }));
+
+    // Pie chart data for coin distribution
+    const coinDistributionData = distributionData.map(d => ({
+      name: d.category,
+      value: d.coinPercent,
+      fill: d.color,
+    }));
+
+    // Pie chart data for address distribution
+    const addressDistributionData = distributionData.map(d => ({
+      name: d.category,
+      value: d.addressPercent,
+      fill: d.color,
+    }));
+
+    return (
+      <div className="space-y-6">
+        {/* Coin Selector */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-emerald-500" />
+              {coinSymbol} Coin Distribution
+            </h3>
+            <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
+              Wallet Holder Analysis
+            </span>
+          </div>
+          <select
+            value={distributionCoin}
+            onChange={(e) => setDistributionCoin(e.target.value)}
+            aria-label="Select coin for distribution analysis"
+            className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm text-white focus:outline-none focus:border-emerald-500"
+          >
+            {selectedCoins.map(coin => (
+              <option key={coin} value={coin}>{coin}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Distribution Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {distributionData.map((cat) => (
+            <div key={cat.category} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">{cat.emoji}</span>
+                <div>
+                  <div className="text-sm font-medium text-white">{cat.category}</div>
+                  <div className="text-xs text-gray-500">{cat.range} {coinSymbol}</div>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Coins:</span>
+                  <span className="text-white font-mono">{cat.coinPercent.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Addresses:</span>
+                  <span className="text-white font-mono">{cat.addressPercent.toFixed(2)}%</span>
+                </div>
+                <div className={`text-xs text-right ${cat.dayChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {cat.dayChange >= 0 ? '+' : ''}{cat.dayChange.toFixed(2)}% (24h)
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Coin Distribution Pie */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+              <span>💰</span> Coin Distribution
+            </h4>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={coinDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    labelLine={{ stroke: '#6B7280' }}
+                  >
+                    {coinDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, 'Share of Supply']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Address Distribution Pie */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+              <span>👛</span> Address Distribution
+            </h4>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={addressDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    labelLine={{ stroke: '#6B7280' }}
+                  >
+                    {addressDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, 'Share of Addresses']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Bar Chart - Comparison */}
+        <div className="bg-gray-800 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-400 mb-3">Coin vs Address Distribution</h4>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={distributionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis dataKey="category" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
+                <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  formatter={(value, name) => [`${(Number(value) || 0).toFixed(2)}%`, name]}
+                />
+                <Legend />
+                <Bar dataKey="coinPercent" name="Coin %" fill="#10B981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="addressPercent" name="Address %" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Detailed Table */}
+        <div className="bg-gray-800 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-400 mb-3">{coinSymbol} Distribution Details</h4>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-2 px-3 text-gray-400 font-medium">Category</th>
+                  <th className="text-left py-2 px-3 text-gray-400 font-medium">Range</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Coin %</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Address %</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Avg Holding</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Day</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Week</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {distributionData.map((cat, index) => (
+                  <tr key={cat.category} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{cat.emoji}</span>
+                        <span className="text-white font-medium">{cat.category}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-gray-300 font-mono text-xs">{cat.range} {coinSymbol}</td>
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 bg-gray-700 rounded-full h-2">
+                          <div
+                            className="h-2 rounded-full"
+                            style={{ width: `${Math.min(cat.coinPercent * 2, 100)}%`, backgroundColor: cat.color }}
+                          />
+                        </div>
+                        <span className="text-white font-mono text-xs w-12 text-right">{cat.coinPercent.toFixed(1)}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-16 bg-gray-700 rounded-full h-2">
+                          <div
+                            className="h-2 rounded-full bg-blue-500"
+                            style={{ width: `${Math.min(cat.addressPercent, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-white font-mono text-xs w-14 text-right">{cat.addressPercent.toFixed(2)}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-300 font-mono text-xs">
+                      {cat.avgHolding >= 1000 ? `${(cat.avgHolding / 1000).toFixed(1)}K` : cat.avgHolding.toFixed(2)} {coinSymbol}
+                    </td>
+                    <td className={`py-2 px-3 text-right font-mono text-xs ${cat.dayChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {cat.dayChange >= 0 ? '+' : ''}{cat.dayChange.toFixed(2)}%
+                    </td>
+                    <td className={`py-2 px-3 text-right font-mono text-xs ${cat.weekChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {cat.weekChange >= 0 ? '+' : ''}{cat.weekChange.toFixed(2)}%
+                    </td>
+                    <td className={`py-2 px-3 text-right font-mono text-xs ${cat.monthChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {cat.monthChange >= 0 ? '+' : ''}{cat.monthChange.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Info Note */}
+        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+          <p className="text-xs text-blue-400">
+            <strong>Note:</strong> Distribution data is simulated for preview purposes. In production, real on-chain data
+            from providers like Glassnode, IntoTheBlock, or Santiment would be used via your BYOK API keys.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   if (selectedCoins.length === 0) {
     return (
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
@@ -1333,7 +1918,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             <button
               type="button"
               className={`p-2 rounded-lg transition flex items-center gap-1 ${
-                ['radar', 'scatter', 'treemap', 'area', 'bubble', 'heatmap'].includes(viewMode)
+                ['radar', 'scatter', 'treemap', 'area', 'bubble', 'heatmap', 'sankey', 'funnel', 'radialbar', 'composed', 'distribution'].includes(viewMode)
                   ? 'bg-emerald-600 text-white'
                   : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
@@ -1341,7 +1926,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
-            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <div className="absolute right-0 top-full mt-1 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 max-h-96 overflow-y-auto">
               <div className="p-2 space-y-1">
                 <p className="text-xs text-gray-500 px-2 py-1 font-medium">Advanced Charts</p>
                 <button
@@ -1403,6 +1988,60 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                 >
                   <Grid3X3 className="w-4 h-4" />
                   Heatmap
+                </button>
+
+                <div className="border-t border-gray-700 my-1"></div>
+                <p className="text-xs text-gray-500 px-2 py-1 font-medium">Pro Charts</p>
+
+                <button
+                  type="button"
+                  onClick={() => setViewMode('sankey')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'sankey' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <GitBranch className="w-4 h-4" />
+                  Sankey Flow
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('funnel')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'funnel' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Triangle className="w-4 h-4" />
+                  Funnel Chart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('radialbar')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'radialbar' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <CircleDot className="w-4 h-4" />
+                  Radial Bar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('composed')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'composed' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Combine className="w-4 h-4" />
+                  Composed Chart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('distribution')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'distribution' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  Coin Distribution
                 </button>
               </div>
             </div>
@@ -1469,6 +2108,11 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             {viewMode === 'area' && <AreaChartView />}
             {viewMode === 'bubble' && <BubbleChartView />}
             {viewMode === 'heatmap' && <HeatmapView />}
+            {viewMode === 'sankey' && <SankeyChartView />}
+            {viewMode === 'funnel' && <FunnelChartView />}
+            {viewMode === 'radialbar' && <RadialBarChartView />}
+            {viewMode === 'composed' && <ComposedChartView />}
+            {viewMode === 'distribution' && <DistributionChartView />}
           </>
         )}
       </div>

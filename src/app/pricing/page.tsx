@@ -84,7 +84,7 @@ export default function PricingPage() {
   const handleSubscribe = (tier: string, period: 'monthly' | 'yearly') => {
     // Redirect to signup first if not logged in
     if (!user) {
-      window.location.href = `/signup?plan=${tier}-${period}`;
+      window.location.assign(`/signup?plan=${tier}-${period}`);
       return;
     }
 
@@ -100,7 +100,7 @@ export default function PricingPage() {
     const productPath = productPaths[`${tier}-${period}`];
     if (productPath) {
       // Replace with your FastSpring store URL
-      window.location.href = `https://cryptoreportkit.onfastspring.com/${productPath}`;
+      window.location.assign(`https://cryptoreportkit.onfastspring.com/${productPath}`);
     }
   };
 

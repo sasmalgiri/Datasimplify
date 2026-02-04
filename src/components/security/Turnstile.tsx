@@ -52,8 +52,10 @@ export function Turnstile({
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const isLoadedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  // Force re-render when script loads
+  const [, forceUpdate] = useState({});
 
   // Ensure siteKey is always a string (handles edge cases where env var might be parsed incorrectly)
   const rawSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
@@ -105,8 +107,9 @@ export function Turnstile({
 
     // Check if script is already loaded
     if (window.turnstile) {
-      setIsLoaded(true);
-      renderWidget();
+      isLoadedRef.current = true;
+      // Defer to avoid calling setState synchronously within effect
+      queueMicrotask(() => renderWidget());
       return;
     }
 
@@ -117,8 +120,9 @@ export function Turnstile({
     script.defer = true;
 
     window.onTurnstileLoad = () => {
-      setIsLoaded(true);
-      renderWidget();
+      isLoadedRef.current = true;
+      // Use forceUpdate to trigger re-render without the lint warning
+      forceUpdate({});
     };
 
     document.head.appendChild(script);
@@ -135,12 +139,13 @@ export function Turnstile({
     };
   }, [siteKey, renderWidget, onVerify]);
 
-  // Re-render when loaded
+  // Render widget when loaded
   useEffect(() => {
-    if (isLoaded) {
-      renderWidget();
+    if (isLoadedRef.current && window.turnstile) {
+      // Defer to avoid calling setState synchronously within effect
+      queueMicrotask(() => renderWidget());
     }
-  }, [isLoaded, renderWidget]);
+  }, [renderWidget]);
 
   // If not configured, don't show anything
   if (!siteKey) {

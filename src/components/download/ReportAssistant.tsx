@@ -71,56 +71,148 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
     setMessages((prev) => [...prev, { ...message, id: Date.now().toString() }]);
   }, []);
 
-  // Handle user input
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!inputValue.trim()) return;
+  // Show recommendation - defined early since multiple handlers use it
+  const showRecommendation = useCallback(
+    (intent: ParsedIntent) => {
+      const recommendation = routeToTemplate(intent, isFreeUser);
 
-      processUserInput(inputValue.trim());
-      setInputValue('');
-    },
-    [inputValue]
-  );
-
-  // Handle quick reply click
-  const handleQuickReply = useCallback(
-    (reply: QuickReply) => {
-      processUserInput(reply.value, reply.label);
-    },
-    [currentStep, pendingIntent]
-  );
-
-  // Process user input
-  const processUserInput = useCallback(
-    (value: string, displayText?: string) => {
-      // Add user message
-      addMessage({ type: 'user', content: displayText || value });
-
-      // Handle different steps
-      switch (currentStep) {
-        case 'initial':
-        case 'clarify_type':
-          handleInitialInput(value);
-          break;
-
-        case 'clarify_coins':
-          handleCoinsInput(value);
-          break;
-
-        case 'clarify_timeframe':
-          handleTimeframeInput(value);
-          break;
-
-        case 'verify':
-          handleVerificationInput(value);
-          break;
-
-        default:
-          handleInitialInput(value);
+      if (!recommendation) {
+        addMessage({
+          type: 'assistant',
+          content: "I couldn't find a matching report. Let's start over.",
+          quickReplies: REPORT_TYPE_QUICK_REPLIES,
+        });
+        setCurrentStep('initial');
+        return;
       }
+
+      setCurrentRecommendation(recommendation);
+      setCurrentStep('recommendation');
+
+      // Build response
+      const coinsText = recommendation.config.coins.join(', ');
+      const tfLabels: Record<string, string> = {
+        '1d': 'daily',
+        '1h': 'hourly',
+        '1w': 'weekly',
+        '4h': '4-hour',
+      };
+
+      addMessage({
+        type: 'assistant',
+        content: `${recommendation.reasoning}\n\n**Your report:**\n- Coins: ${coinsText}\n- Time range: ${tfLabels[recommendation.config.timeframe] || recommendation.config.timeframe}\n- Updates: Manual (best for free accounts)`,
+        recommendation,
+        showDownload: true,
+      });
     },
-    [currentStep, pendingIntent, addMessage]
+    [addMessage, isFreeUser]
+  );
+
+  // Handle timeframe input
+  const handleTimeframeInput = useCallback(
+    (value: string) => {
+      if (!pendingIntent) return;
+
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use daily as default
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
+      let timeframe = '1d'; // Default to daily
+      if (!isSkip) {
+        const tfMap: Record<string, string> = {
+          '1d': '1d',
+          '1h': '1h',
+          '1w': '1w',
+          daily: '1d',
+          hourly: '1h',
+          weekly: '1w',
+        };
+        timeframe = tfMap[normalizedValue] || '1d';
+      }
+
+      // Update intent
+      const updatedIntent: ParsedIntent = { ...pendingIntent, timeframe };
+      setPendingIntent(updatedIntent);
+
+      // Show recommendation
+      showRecommendation(updatedIntent);
+    },
+    [pendingIntent, showRecommendation]
+  );
+
+  // Handle coins input
+  const handleCoinsInput = useCallback(
+    (value: string) => {
+      if (!pendingIntent) return;
+
+      const normalizedValue = value.toLowerCase().trim();
+
+      // Check for skip/negative responses - use defaults
+      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
+      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+
+      let coins: string[] = [];
+
+      if (isSkip) {
+        // Use default top 5 coins
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+      } else if (value === 'top5') {
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+      } else if (value === 'top10') {
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'];
+      } else if (value === 'defi') {
+        coins = ['UNI', 'AAVE', 'LINK', 'CRV', 'MKR'];
+      } else if (value === 'custom') {
+        addMessage({
+          type: 'assistant',
+          content:
+            'Type the coin symbols you want, separated by commas.\n\nFor example: BTC, ETH, SOL',
+        });
+        return;
+      } else {
+        // Parse custom input, filtering out common non-coin words
+        const nonCoins = ['THE', 'AND', 'FOR', 'WITH', 'ALL', 'WANT', 'NEED', 'JUST', 'ONLY'];
+        coins = value
+          .toUpperCase()
+          .split(/[,\s]+/)
+          .filter((c) => c.length >= 2 && c.length <= 6 && !nonCoins.includes(c));
+      }
+
+      if (coins.length === 0) {
+        // Default to top 5 instead of asking again
+        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+        addMessage({
+          type: 'assistant',
+          content: "I'll use the top 5 coins (BTC, ETH, SOL, BNB, XRP).\n\nWhat time range do you want?",
+          quickReplies: TIMEFRAME_QUICK_REPLIES,
+        });
+        const updatedIntent: ParsedIntent = { ...pendingIntent, coins };
+        setPendingIntent(updatedIntent);
+        setCurrentStep('clarify_timeframe');
+        return;
+      }
+
+      // Update intent with coins
+      const updatedIntent: ParsedIntent = { ...pendingIntent, coins };
+      setPendingIntent(updatedIntent);
+
+      // Check if we need timeframe
+      if (!updatedIntent.timeframe) {
+        setCurrentStep('clarify_timeframe');
+        addMessage({
+          type: 'assistant',
+          content: `Got it! ${coins.join(', ')}.\n\nWhat time range do you want?`,
+          quickReplies: TIMEFRAME_QUICK_REPLIES,
+        });
+        return;
+      }
+
+      // Show recommendation
+      showRecommendation(updatedIntent);
+    },
+    [pendingIntent, addMessage, showRecommendation]
   );
 
   // Handle initial input or type clarification
@@ -196,151 +288,99 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
       // We have everything, show recommendation
       showRecommendation(intent);
     },
-    [addMessage, isFreeUser]
+    [addMessage, showRecommendation]
   );
 
-  // Handle coins input
-  const handleCoinsInput = useCallback(
+  // Handle verification input
+  const handleVerificationInput = useCallback(
     (value: string) => {
-      if (!pendingIntent) return;
+      switch (value) {
+        case 'success':
+          addMessage({
+            type: 'assistant',
+            content:
+              "Awesome! Your report is ready. Come back anytime you need a new one.\n\nRemember: Press Ctrl+Alt+F5 (Windows) or Cmd+Alt+F5 (Mac) to update your data.",
+          });
+          setCurrentStep('initial');
+          break;
 
-      const normalizedValue = value.toLowerCase().trim();
+        case 'error':
+        case 'no_data':
+          setCurrentStep('troubleshoot');
+          addMessage({
+            type: 'assistant',
+            content: "Let's fix that. What do you see?",
+            showTroubleshooting: true,
+          });
+          break;
 
-      // Check for skip/negative responses - use defaults
-      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
-      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+        case 'help':
+          addMessage({
+            type: 'assistant',
+            content:
+              'No problem! Here are the most common issues:\n\n' +
+              TROUBLESHOOTING_STEPS.map((s) => `**${s.symptom}**\n${s.fix}`).join('\n\n'),
+          });
+          break;
 
-      let coins: string[] = [];
-
-      if (isSkip) {
-        // Use default top 5 coins
-        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
-      } else if (value === 'top5') {
-        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
-      } else if (value === 'top10') {
-        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC'];
-      } else if (value === 'defi') {
-        coins = ['UNI', 'AAVE', 'LINK', 'CRV', 'MKR'];
-      } else if (value === 'custom') {
-        addMessage({
-          type: 'assistant',
-          content:
-            'Type the coin symbols you want, separated by commas.\n\nFor example: BTC, ETH, SOL',
-        });
-        return;
-      } else {
-        // Parse custom input, filtering out common non-coin words
-        const nonCoins = ['THE', 'AND', 'FOR', 'WITH', 'ALL', 'WANT', 'NEED', 'JUST', 'ONLY'];
-        coins = value
-          .toUpperCase()
-          .split(/[,\s]+/)
-          .filter((c) => c.length >= 2 && c.length <= 6 && !nonCoins.includes(c));
+        default:
+          // Try to parse as a new request
+          handleInitialInput(value);
       }
-
-      if (coins.length === 0) {
-        // Default to top 5 instead of asking again
-        coins = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
-        addMessage({
-          type: 'assistant',
-          content: "I'll use the top 5 coins (BTC, ETH, SOL, BNB, XRP).\n\nWhat time range do you want?",
-          quickReplies: TIMEFRAME_QUICK_REPLIES,
-        });
-        const updatedIntent: ParsedIntent = { ...pendingIntent, coins };
-        setPendingIntent(updatedIntent);
-        setCurrentStep('clarify_timeframe');
-        return;
-      }
-
-      // Update intent with coins
-      const updatedIntent: ParsedIntent = { ...pendingIntent, coins };
-      setPendingIntent(updatedIntent);
-
-      // Check if we need timeframe
-      if (!updatedIntent.timeframe) {
-        setCurrentStep('clarify_timeframe');
-        addMessage({
-          type: 'assistant',
-          content: `Got it! ${coins.join(', ')}.\n\nWhat time range do you want?`,
-          quickReplies: TIMEFRAME_QUICK_REPLIES,
-        });
-        return;
-      }
-
-      // Show recommendation
-      showRecommendation(updatedIntent);
     },
-    [pendingIntent, addMessage]
+    [addMessage, handleInitialInput]
   );
 
-  // Handle timeframe input
-  const handleTimeframeInput = useCallback(
-    (value: string) => {
-      if (!pendingIntent) return;
+  // Process user input - depends on all handlers above
+  const processUserInput = useCallback(
+    (value: string, displayText?: string) => {
+      // Add user message
+      addMessage({ type: 'user', content: displayText || value });
 
-      const normalizedValue = value.toLowerCase().trim();
+      // Handle different steps
+      switch (currentStep) {
+        case 'initial':
+        case 'clarify_type':
+          handleInitialInput(value);
+          break;
 
-      // Check for skip/negative responses - use daily as default
-      const skipPatterns = ['no', 'none', 'skip', 'default', 'any', 'dont', "don't", 'i dont', "i don't", 'not sure', 'whatever', 'anything'];
-      const isSkip = skipPatterns.some(p => normalizedValue.includes(p));
+        case 'clarify_coins':
+          handleCoinsInput(value);
+          break;
 
-      let timeframe = '1d'; // Default to daily
-      if (!isSkip) {
-        const tfMap: Record<string, string> = {
-          '1d': '1d',
-          '1h': '1h',
-          '1w': '1w',
-          daily: '1d',
-          hourly: '1h',
-          weekly: '1w',
-        };
-        timeframe = tfMap[normalizedValue] || '1d';
+        case 'clarify_timeframe':
+          handleTimeframeInput(value);
+          break;
+
+        case 'verify':
+          handleVerificationInput(value);
+          break;
+
+        default:
+          handleInitialInput(value);
       }
-
-      // Update intent
-      const updatedIntent: ParsedIntent = { ...pendingIntent, timeframe };
-      setPendingIntent(updatedIntent);
-
-      // Show recommendation
-      showRecommendation(updatedIntent);
     },
-    [pendingIntent]
+    [currentStep, addMessage, handleInitialInput, handleCoinsInput, handleTimeframeInput, handleVerificationInput]
   );
 
-  // Show recommendation
-  const showRecommendation = useCallback(
-    (intent: ParsedIntent) => {
-      const recommendation = routeToTemplate(intent, isFreeUser);
-
-      if (!recommendation) {
-        addMessage({
-          type: 'assistant',
-          content: "I couldn't find a matching report. Let's start over.",
-          quickReplies: REPORT_TYPE_QUICK_REPLIES,
-        });
-        setCurrentStep('initial');
-        return;
-      }
-
-      setCurrentRecommendation(recommendation);
-      setCurrentStep('recommendation');
-
-      // Build response
-      const coinsText = recommendation.config.coins.join(', ');
-      const tfLabels: Record<string, string> = {
-        '1d': 'daily',
-        '1h': 'hourly',
-        '1w': 'weekly',
-        '4h': '4-hour',
-      };
-
-      addMessage({
-        type: 'assistant',
-        content: `${recommendation.reasoning}\n\n**Your report:**\n- Coins: ${coinsText}\n- Time range: ${tfLabels[recommendation.config.timeframe] || recommendation.config.timeframe}\n- Updates: Manual (best for free accounts)`,
-        recommendation,
-        showDownload: true,
-      });
+  // Handle quick reply click
+  const handleQuickReply = useCallback(
+    (reply: QuickReply) => {
+      processUserInput(reply.value, reply.label);
     },
-    [addMessage, isFreeUser]
+    [processUserInput]
+  );
+
+  // Handle user input
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!inputValue.trim()) return;
+
+      processUserInput(inputValue.trim());
+      setInputValue('');
+    },
+    [inputValue, processUserInput]
   );
 
   // Handle download click
@@ -386,46 +426,6 @@ export function ReportAssistant({ onTemplateSelect, className = '' }: ReportAssi
       });
     }, 2000);
   }, [currentRecommendation, onTemplateSelect, addMessage]);
-
-  // Handle verification input
-  const handleVerificationInput = useCallback(
-    (value: string) => {
-      switch (value) {
-        case 'success':
-          addMessage({
-            type: 'assistant',
-            content:
-              "Awesome! Your report is ready. Come back anytime you need a new one.\n\nRemember: Press Ctrl+Alt+F5 (Windows) or Cmd+Alt+F5 (Mac) to update your data.",
-          });
-          setCurrentStep('initial');
-          break;
-
-        case 'error':
-        case 'no_data':
-          setCurrentStep('troubleshoot');
-          addMessage({
-            type: 'assistant',
-            content: "Let's fix that. What do you see?",
-            showTroubleshooting: true,
-          });
-          break;
-
-        case 'help':
-          addMessage({
-            type: 'assistant',
-            content:
-              'No problem! Here are the most common issues:\n\n' +
-              TROUBLESHOOTING_STEPS.map((s) => `**${s.symptom}**\n${s.fix}`).join('\n\n'),
-          });
-          break;
-
-        default:
-          // Try to parse as a new request
-          handleInitialInput(value);
-      }
-    },
-    [addMessage, handleInitialInput]
-  );
 
   return (
     <div className={`bg-gray-900 rounded-xl border border-gray-800 flex flex-col h-[600px] ${className}`}>
