@@ -1638,18 +1638,20 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
       addressCount: Math.floor(estimatedAddresses * cat.addressPercent / 100),
     }));
 
-    // Pie chart data for coin distribution
+    // Treemap data for coin distribution (includes emoji for visual appeal)
     const coinDistributionData = distributionData.map(d => ({
       name: d.category,
       value: d.coinPercent,
       fill: d.color,
+      emoji: d.emoji,
     }));
 
-    // Pie chart data for address distribution
+    // Treemap data for address distribution (includes emoji for visual appeal)
     const addressDistributionData = distributionData.map(d => ({
       name: d.category,
       value: d.addressPercent,
       fill: d.color,
+      emoji: d.emoji,
     }));
 
     return (
@@ -1719,10 +1721,15 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   dataKey="value"
                   aspectRatio={4/3}
                   stroke="#1F2937"
-                  content={({ x, y, width, height, name, value, fill }) => {
+                  content={(props) => {
+                    const { x, y, width, height, name, value, fill } = props;
+                    // Find emoji from data
+                    const item = coinDistributionData.find(d => d.name === name);
+                    const emoji = item?.emoji || '';
                     const displayName = String(name || '');
                     const displayValue = Number(value) || 0;
-                    const showLabel = width > 40 && height > 30;
+                    const showFullLabel = width > 60 && height > 50;
+                    const showCompactLabel = width > 35 && height > 25;
                     return (
                       <g>
                         <rect
@@ -1733,31 +1740,68 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                           fill={String(fill)}
                           stroke="#1F2937"
                           strokeWidth={2}
-                          rx={4}
+                          rx={6}
                         />
-                        {showLabel && (
+                        {showFullLabel ? (
                           <>
+                            {/* Emoji */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 8}
+                              y={y + height / 2 - 14}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={12}
-                              fontWeight="bold"
+                              fontSize={20}
                             >
-                              {displayName}
+                              {emoji}
                             </text>
+                            {/* Category Name */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 10}
+                              y={y + height / 2 + 6}
                               textAnchor="middle"
                               fill="#FFFFFF"
                               fontSize={11}
+                              fontWeight="600"
+                              fontFamily="Inter, system-ui, sans-serif"
+                            >
+                              {displayName}
+                            </text>
+                            {/* Percentage */}
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 22}
+                              textAnchor="middle"
+                              fill="rgba(255,255,255,0.85)"
+                              fontSize={12}
+                              fontWeight="700"
+                              fontFamily="Inter, system-ui, sans-serif"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
                           </>
-                        )}
+                        ) : showCompactLabel ? (
+                          <>
+                            {/* Just emoji and percentage for smaller blocks */}
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 - 4}
+                              textAnchor="middle"
+                              fontSize={14}
+                            >
+                              {emoji}
+                            </text>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 12}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={9}
+                              fontWeight="600"
+                              fontFamily="Inter, system-ui, sans-serif"
+                            >
+                              {displayValue.toFixed(1)}%
+                            </text>
+                          </>
+                        ) : null}
                       </g>
                     );
                   }}
@@ -1786,10 +1830,15 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   dataKey="value"
                   aspectRatio={4/3}
                   stroke="#1F2937"
-                  content={({ x, y, width, height, name, value, fill }) => {
+                  content={(props) => {
+                    const { x, y, width, height, name, value, fill } = props;
+                    // Find emoji from data
+                    const item = addressDistributionData.find(d => d.name === name);
+                    const emoji = item?.emoji || '';
                     const displayName = String(name || '');
                     const displayValue = Number(value) || 0;
-                    const showLabel = width > 40 && height > 30;
+                    const showFullLabel = width > 60 && height > 50;
+                    const showCompactLabel = width > 35 && height > 25;
                     return (
                       <g>
                         <rect
@@ -1800,31 +1849,68 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                           fill={String(fill)}
                           stroke="#1F2937"
                           strokeWidth={2}
-                          rx={4}
+                          rx={6}
                         />
-                        {showLabel && (
+                        {showFullLabel ? (
                           <>
+                            {/* Emoji */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 8}
+                              y={y + height / 2 - 14}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={12}
-                              fontWeight="bold"
+                              fontSize={20}
                             >
-                              {displayName}
+                              {emoji}
                             </text>
+                            {/* Category Name */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 10}
+                              y={y + height / 2 + 6}
                               textAnchor="middle"
                               fill="#FFFFFF"
                               fontSize={11}
+                              fontWeight="600"
+                              fontFamily="Inter, system-ui, sans-serif"
+                            >
+                              {displayName}
+                            </text>
+                            {/* Percentage */}
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 22}
+                              textAnchor="middle"
+                              fill="rgba(255,255,255,0.85)"
+                              fontSize={12}
+                              fontWeight="700"
+                              fontFamily="Inter, system-ui, sans-serif"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
                           </>
-                        )}
+                        ) : showCompactLabel ? (
+                          <>
+                            {/* Just emoji and percentage for smaller blocks */}
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 - 4}
+                              textAnchor="middle"
+                              fontSize={14}
+                            >
+                              {emoji}
+                            </text>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 12}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={9}
+                              fontWeight="600"
+                              fontFamily="Inter, system-ui, sans-serif"
+                            >
+                              {displayValue.toFixed(1)}%
+                            </text>
+                          </>
+                        ) : null}
                       </g>
                     );
                   }}
