@@ -196,6 +196,7 @@
     .last-refresh { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
 
     .hidden { display: none !important; }
+    .byok-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -227,7 +228,7 @@
       <button id="loginBtn" class="btn btn-primary" onclick="handleLogin()">Sign In</button>
 
       <p class="signup-link">
-        Don't have an account? <a href="https://cryptoreportkit.com/signup" target="_blank">Sign up</a>
+        Don't have an account? <a href="https://cryptoreportkit.com/signup" target="_blank" rel="noopener">Sign up</a>
       </p>
     </div>
   </div>
@@ -272,11 +273,11 @@
             <button class="key-btn key-btn-cancel" onclick="toggleKeyInput()">Cancel</button>
           </div>
           <p class="key-help">
-            <a href="https://www.coingecko.com/en/api/pricing" target="_blank">Get free API key →</a>
+            <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener">Get free API key →</a>
           </p>
         </div>
       </div>
-      <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+      <p class="byok-hint">
         Optional: Connect your own API key for higher rate limits
       </p>
     </div>
@@ -319,7 +320,7 @@
 
     <!-- Footer -->
     <div class="footer">
-      <a href="https://cryptoreportkit.com/addin/docs" target="_blank">View all 30+ functions →</a>
+      <a href="https://cryptoreportkit.com/addin/docs" target="_blank" rel="noopener">View all 30+ functions →</a>
     </div>
   </div>
 
