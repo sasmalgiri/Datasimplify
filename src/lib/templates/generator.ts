@@ -179,7 +179,29 @@ export async function generateTemplate(
     addVBAProject(workbook, baseTemplate);
   }
 
-  // 11. Write to buffer
+  // 11. Set the first data sheet as the active sheet (not START_HERE)
+  // This ensures users see their data immediately when opening the file
+  if (dataSheets.length > 0) {
+    const firstDataSheetName = dataSheets[0].name;
+    const firstDataSheet = workbook.getWorksheet(firstDataSheetName);
+    if (firstDataSheet) {
+      // Set this sheet as active by updating its view
+      firstDataSheet.views = [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }];
+      // Set workbook to open with this sheet selected
+      const activeTabIndex = workbook.worksheets.findIndex(ws => ws.name === firstDataSheetName);
+      workbook.views = [{
+        x: 0,
+        y: 0,
+        width: 10000,
+        height: 10000,
+        firstSheet: 0,
+        activeTab: activeTabIndex >= 0 ? activeTabIndex : 0,
+        visibility: 'visible'
+      }];
+    }
+  }
+
+  // 12. Write to buffer
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);
 }
