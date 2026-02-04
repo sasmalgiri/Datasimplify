@@ -112,10 +112,32 @@ export default function DownloadPage() {
               </div>
             </div>
 
+            {/* Primary Download CTA */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-emerald-900/30 to-emerald-800/20 rounded-xl border border-emerald-500/30">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">Ready to Download?</h3>
+                  <p className="text-sm text-gray-400">
+                    Your customized template with {selectedCoins.length} coins, {selectedTimeframe} timeframe
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTemplateSelect('market-overview')}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download to Excel
+                </button>
+              </div>
+            </div>
+
             {/* Templates Grid - Compact */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-bold text-white">Available Templates</h2>
+                <h2 className="text-xl font-bold text-white">Or Choose a Specific Template</h2>
                 <span className="text-xs text-gray-500">Pre-configured with your settings</span>
               </div>
               <TemplateGrid templates={templates} onSelect={handleTemplateSelect} />
