@@ -18,8 +18,8 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
     },
     {
       icon: RefreshCw,
-      title: 'Refresh Data',
-      description: 'Click the CRK button in Excel to refresh all formulas with live data',
+      title: 'Data Updates',
+      description: 'Your template includes the latest crypto data at time of download',
     },
     {
       icon: BookOpen,
@@ -85,18 +85,6 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
               <ExternalLink className="w-4 h-4" />
             </a>
 
-            {!state.addinInstalled && (
-              <a
-                href="/addin/setup"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors text-sm border border-amber-500/30"
-              >
-                Install the CRK Add-in (Recommended)
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
-
             {!state.isApiKeyValid && (
               <a
                 href="/byok"
@@ -104,7 +92,7 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors text-sm border border-blue-500/30"
               >
-                Get Your API Key for Higher Limits
+                Get Your API Key for Higher Rate Limits
                 <ExternalLink className="w-4 h-4" />
               </a>
             )}

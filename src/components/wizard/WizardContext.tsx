@@ -53,7 +53,7 @@ export type WizardAction =
   | { type: 'SET_DOWNLOAD_COMPLETE'; complete: boolean }
   | { type: 'RESET' };
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 
 const initialState: WizardState = {
   currentStep: 1,
@@ -159,20 +159,18 @@ export function WizardProvider({
         return state.isAuthenticated && state.email.includes('@');
       case 3: // API Key
         return state.isApiKeyValid || state.apiKeySkipped;
-      case 4: // Add-in
-        return state.addinInstalled || state.addinSkipped;
-      case 5: // Configure
+      case 4: // Configure
         return state.selectedCoins.length > 0 && state.selectedMetrics.length > 0;
-      case 6: // Download
+      case 5: // Download
         return !state.isDownloading;
-      case 7: // Success
+      case 6: // Success
         return false;
       default:
         return true;
     }
   })();
 
-  const canGoPrev = state.currentStep > 1 && state.currentStep < 7;
+  const canGoPrev = state.currentStep > 1 && state.currentStep < 6;
 
   return (
     <WizardContext.Provider value={{ state, dispatch, canGoNext, canGoPrev, totalSteps: TOTAL_STEPS }}>
@@ -193,7 +191,6 @@ export const STEP_TITLES = [
   'Welcome',
   'Account',
   'API Key',
-  'Add-in',
   'Configure',
   'Download',
   'Success',

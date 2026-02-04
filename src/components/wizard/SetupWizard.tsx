@@ -5,7 +5,6 @@ import { StepIndicator } from './shared/StepIndicator';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { EmailStep } from './steps/EmailStep';
 import { ApiKeyStep } from './steps/ApiKeyStep';
-import { AddinStep } from './steps/AddinStep';
 import { ConfigureStep } from './steps/ConfigureStep';
 import { DownloadStep } from './steps/DownloadStep';
 import { SuccessStep } from './steps/SuccessStep';
@@ -30,12 +29,10 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     case 3:
       return <ApiKeyStep />;
     case 4:
-      return <AddinStep />;
-    case 5:
       return <ConfigureStep />;
-    case 6:
+    case 5:
       return <DownloadStep />;
-    case 7:
+    case 6:
       return <SuccessStep onClose={onClose} />;
     default:
       return <WelcomeStep />;

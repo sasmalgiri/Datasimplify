@@ -10,18 +10,18 @@ export function WelcomeStep() {
   const features = [
     {
       icon: Key,
-      title: 'Get Your API Key',
-      description: 'Free CoinGecko API key for live crypto data',
-    },
-    {
-      icon: Download,
-      title: 'Install CRK Add-in',
-      description: 'Power your Excel with live crypto formulas',
+      title: 'Connect API Key (Optional)',
+      description: 'Free CoinGecko API key for higher rate limits',
     },
     {
       icon: BarChart3,
       title: 'Configure Your Report',
       description: 'Choose coins, metrics, and layout',
+    },
+    {
+      icon: Download,
+      title: 'Download & Use',
+      description: 'Get your ready-to-use Excel template with live data',
     },
   ];
 
@@ -72,7 +72,7 @@ export function WelcomeStep() {
         {/* Time estimate */}
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
-            Takes about 3-5 minutes to complete
+            Takes about 2 minutes to complete
           </p>
         </div>
       </div>
