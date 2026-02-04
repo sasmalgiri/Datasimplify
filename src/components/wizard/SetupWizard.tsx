@@ -6,6 +6,7 @@ import { WelcomeStep } from './steps/WelcomeStep';
 import { EmailStep } from './steps/EmailStep';
 import { ApiKeyStep } from './steps/ApiKeyStep';
 import { ConfigureStep } from './steps/ConfigureStep';
+import { AddinStep } from './steps/AddinStep';
 import { DownloadStep } from './steps/DownloadStep';
 import { SuccessStep } from './steps/SuccessStep';
 import { useAuth } from '@/lib/auth';
@@ -31,8 +32,10 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     case 4:
       return <ConfigureStep />;
     case 5:
-      return <DownloadStep />;
+      return <AddinStep />;
     case 6:
+      return <DownloadStep />;
+    case 7:
       return <SuccessStep onClose={onClose} />;
     default:
       return <WelcomeStep />;
