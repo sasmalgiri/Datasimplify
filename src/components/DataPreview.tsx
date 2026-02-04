@@ -1722,7 +1722,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   aspectRatio={4/3}
                   stroke="#1F2937"
                   content={(props) => {
-                    const { x, y, width, height, name, value, fill } = props;
+                    const { x, y, width, height, name, value, fill, index } = props;
                     // Find emoji from data
                     const item = coinDistributionData.find(d => d.name === name);
                     const emoji = item?.emoji || '';
@@ -1730,8 +1730,15 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                     const displayValue = Number(value) || 0;
                     const showFullLabel = width > 60 && height > 50;
                     const showCompactLabel = width > 35 && height > 25;
+                    const filterId = `shadow-coin-${index}`;
                     return (
                       <g>
+                        {/* Drop shadow filter for text */}
+                        <defs>
+                          <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.5"/>
+                          </filter>
+                        </defs>
                         <rect
                           x={x}
                           y={y}
@@ -1740,63 +1747,68 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                           fill={String(fill)}
                           stroke="#1F2937"
                           strokeWidth={2}
-                          rx={6}
+                          rx={8}
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji */}
+                            {/* Emoji - larger and centered */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 14}
+                              y={y + height / 2 - 16}
                               textAnchor="middle"
-                              fontSize={20}
+                              fontSize={24}
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name */}
+                            {/* Category Name - bold and clear */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 6}
+                              y={y + height / 2 + 8}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={11}
-                              fontWeight="600"
-                              fontFamily="Inter, system-ui, sans-serif"
+                              fontSize={13}
+                              fontWeight="700"
+                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                              letterSpacing="0.02em"
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {displayName}
                             </text>
-                            {/* Percentage */}
+                            {/* Percentage - prominent */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 22}
+                              y={y + height / 2 + 26}
                               textAnchor="middle"
-                              fill="rgba(255,255,255,0.85)"
-                              fontSize={12}
-                              fontWeight="700"
-                              fontFamily="Inter, system-ui, sans-serif"
+                              fill="#FFFFFF"
+                              fontSize={14}
+                              fontWeight="800"
+                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {displayValue.toFixed(1)}%
                             </text>
                           </>
                         ) : showCompactLabel ? (
                           <>
-                            {/* Just emoji and percentage for smaller blocks */}
+                            {/* Emoji for smaller blocks */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 4}
+                              y={y + height / 2 - 2}
                               textAnchor="middle"
-                              fontSize={14}
+                              fontSize={16}
                             >
                               {emoji}
                             </text>
+                            {/* Percentage only */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 12}
+                              y={y + height / 2 + 14}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={9}
-                              fontWeight="600"
-                              fontFamily="Inter, system-ui, sans-serif"
+                              fontSize={10}
+                              fontWeight="700"
+                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1831,7 +1843,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   aspectRatio={4/3}
                   stroke="#1F2937"
                   content={(props) => {
-                    const { x, y, width, height, name, value, fill } = props;
+                    const { x, y, width, height, name, value, fill, index } = props;
                     // Find emoji from data
                     const item = addressDistributionData.find(d => d.name === name);
                     const emoji = item?.emoji || '';
@@ -1849,61 +1861,66 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                           fill={String(fill)}
                           stroke="#1F2937"
                           strokeWidth={2}
-                          rx={6}
+                          rx={8}
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji */}
+                            {/* Emoji - larger and centered */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 14}
+                              y={y + height / 2 - 16}
                               textAnchor="middle"
-                              fontSize={20}
+                              fontSize={24}
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name */}
+                            {/* Category Name - bold and clear */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 6}
+                              y={y + height / 2 + 8}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={11}
-                              fontWeight="600"
-                              fontFamily="Inter, system-ui, sans-serif"
+                              fontSize={13}
+                              fontWeight="700"
+                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                              letterSpacing="0.02em"
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {displayName}
                             </text>
-                            {/* Percentage */}
+                            {/* Percentage - prominent */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 22}
+                              y={y + height / 2 + 26}
                               textAnchor="middle"
-                              fill="rgba(255,255,255,0.85)"
-                              fontSize={12}
-                              fontWeight="700"
-                              fontFamily="Inter, system-ui, sans-serif"
+                              fill="#FFFFFF"
+                              fontSize={14}
+                              fontWeight="800"
+                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
                             >
                               {displayValue.toFixed(1)}%
                             </text>
                           </>
                         ) : showCompactLabel ? (
                           <>
-                            {/* Just emoji and percentage for smaller blocks */}
+                            {/* Emoji for smaller blocks */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 4}
+                              y={y + height / 2 - 2}
                               textAnchor="middle"
-                              fontSize={14}
+                              fontSize={16}
                             >
                               {emoji}
                             </text>
+                            {/* Percentage only */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 12}
+                              y={y + height / 2 + 14}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={9}
+                              fontSize={10}
                               fontWeight="600"
                               fontFamily="Inter, system-ui, sans-serif"
                             >
