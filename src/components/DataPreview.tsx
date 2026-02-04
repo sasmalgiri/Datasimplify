@@ -16,7 +16,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown } from 'lucide-react';
+import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity } from 'lucide-react';
 
 interface CoinData {
   symbol: string;
@@ -47,7 +47,7 @@ const CHART_COLORS = [
   '#6366F1', // Indigo
 ];
 
-type ViewMode = 'table' | 'bar' | 'pie' | 'line';
+type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard';
 
 export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPreviewProps) {
   const [data, setData] = useState<CoinData[]>([]);
@@ -328,6 +328,243 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
     );
   };
 
+  // Volume Chart View - Trading Volume Comparison
+  const VolumeChartView = () => {
+    const chartData = data.map((coin, i) => ({
+      name: coin.symbol,
+      volume: coin.volume,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    return (
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              tickFormatter={(value) => formatMarketCap(value)}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#F3F4F6' }}
+              formatter={(value) => [formatMarketCap(Number(value) || 0), '24h Volume']}
+            />
+            <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Dashboard View - All Charts Together
+  const DashboardView = () => {
+    const priceData = data.map((coin, i) => ({
+      name: coin.symbol,
+      price: coin.price,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    const marketCapData = data.map((coin, i) => ({
+      name: coin.symbol,
+      value: coin.marketCap,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    const changeData = data.map((coin) => ({
+      name: coin.symbol,
+      change: coin.change24h,
+      fill: coin.change24h >= 0 ? '#10B981' : '#EF4444',
+    }));
+
+    const volumeData = data.map((coin, i) => ({
+      name: coin.symbol,
+      volume: coin.volume,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    return (
+      <div className="space-y-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {data.slice(0, 4).map((coin, i) => (
+            <div key={coin.symbol} className="bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                  style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                >
+                  {coin.symbol.charAt(0)}
+                </span>
+                <span className="text-white font-medium">{coin.symbol}</span>
+              </div>
+              <div className="text-xl font-bold text-white">{formatPrice(coin.price)}</div>
+              <div className={`text-sm flex items-center gap-1 ${
+                coin.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`}>
+                {coin.change24h >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {formatChange(coin.change24h)}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Price Chart */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Price Comparison</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={priceData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [formatPrice(Number(value) || 0), 'Price']}
+                  />
+                  <Bar dataKey="price" radius={[4, 4, 0, 0]}>
+                    {priceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Market Cap Pie */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">Market Cap Distribution</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={marketCapData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={70}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {marketCapData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [formatMarketCap(Number(value) || 0), 'Market Cap']}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '10px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* 24h Change */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">24h Price Change</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={changeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(0)}%`} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, '24h Change']}
+                  />
+                  <Bar dataKey="change" radius={[4, 4, 0, 0]}>
+                    {changeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Volume */}
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-400 mb-3">24h Trading Volume</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={volumeData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="name" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                  <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `$${(v/1e9).toFixed(0)}B`} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    formatter={(value) => [formatMarketCap(Number(value) || 0), 'Volume']}
+                  />
+                  <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
+                    {volumeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-gray-800 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-400 mb-3">Complete Data Table</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-2 px-3 text-gray-400 font-medium">Coin</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Price</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">24h</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Market Cap</th>
+                  <th className="text-right py-2 px-3 text-gray-400 font-medium">Volume</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((coin, index) => (
+                  <tr key={coin.symbol} className="border-b border-gray-700/50">
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                          style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                        >
+                          {coin.symbol.charAt(0)}
+                        </span>
+                        <span className="text-white font-medium">{coin.symbol}</span>
+                      </div>
+                    </td>
+                    <td className="text-right py-2 px-3 text-white font-mono text-xs">{formatPrice(coin.price)}</td>
+                    <td className={`text-right py-2 px-3 font-mono text-xs ${
+                      coin.change24h >= 0 ? 'text-emerald-400' : 'text-red-400'
+                    }`}>{formatChange(coin.change24h)}</td>
+                    <td className="text-right py-2 px-3 text-gray-300 font-mono text-xs">{formatMarketCap(coin.marketCap)}</td>
+                    <td className="text-right py-2 px-3 text-gray-300 font-mono text-xs">{formatMarketCap(coin.volume)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (selectedCoins.length === 0) {
     return (
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
@@ -407,6 +644,30 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             >
               <TrendingUp className="w-4 h-4" />
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('volume')}
+              className={`p-2 rounded transition ${
+                viewMode === 'volume'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Trading Volume"
+            >
+              <Activity className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('dashboard')}
+              className={`p-2 rounded transition ${
+                viewMode === 'dashboard'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+              title="Dashboard (All Charts)"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Refresh Button */}
@@ -440,6 +701,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             {viewMode === 'bar' && <BarChartView />}
             {viewMode === 'pie' && <PieChartView />}
             {viewMode === 'line' && <LineChartView />}
+            {viewMode === 'volume' && <VolumeChartView />}
+            {viewMode === 'dashboard' && <DashboardView />}
           </>
         )}
       </div>
