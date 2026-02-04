@@ -157,8 +157,9 @@ export default function DateRangePicker({
             {showCustom && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Start Date</label>
+                  <label htmlFor="date-range-start" className="block text-xs text-gray-400 mb-1">Start Date</label>
                   <input
+                    id="date-range-start"
                     type="date"
                     value={customStart}
                     onChange={(e) => setCustomStart(e.target.value)}
@@ -168,8 +169,9 @@ export default function DateRangePicker({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">End Date</label>
+                  <label htmlFor="date-range-end" className="block text-xs text-gray-400 mb-1">End Date</label>
                   <input
+                    id="date-range-end"
                     type="date"
                     value={customEnd}
                     onChange={(e) => setCustomEnd(e.target.value)}
@@ -179,6 +181,7 @@ export default function DateRangePicker({
                   />
                 </div>
                 <button
+                  type="button"
                   onClick={handleCustomSubmit}
                   disabled={!customStart || !customEnd}
                   className="w-full py-2 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
