@@ -34,6 +34,27 @@ export default function AddinSetupPage() {
           </p>
         </div>
 
+        {/* Important Notice - NOT from Microsoft Store */}
+        <div className="bg-amber-50 border-2 border-amber-400 rounded-xl p-6 mb-12">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">⚠️</div>
+            <div>
+              <h2 className="text-xl font-bold text-amber-900 mb-2">
+                Important: Manual Installation Required
+              </h2>
+              <p className="text-amber-800 mb-3">
+                The CRK Excel Add-in is <strong>NOT available from the Microsoft Store</strong>.
+                You must download it directly from our website and install it manually (sideload).
+              </p>
+              <ul className="text-sm text-amber-700 space-y-1 ml-4 list-disc">
+                <li>Download the manifest file from this page</li>
+                <li>Install it in Excel using the &quot;Upload My Add-in&quot; option</li>
+                <li>This is a one-time setup - the add-in will persist across sessions</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* What You'll Get */}
         <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-xl p-8 mb-12 border border-emerald-200">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">What You'll Get</h2>

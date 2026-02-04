@@ -38,42 +38,45 @@ export function AddinStep() {
   const instructions: Record<Platform, { steps: string[]; notes: string[] }> = {
     windows: {
       steps: [
+        'Download the CRK manifest file from our website (button below)',
         'Open Microsoft Excel',
-        'Go to Insert tab → Get Add-ins (or Office Add-ins)',
-        'Search for "CryptoReportKit" in the store',
-        'Click Add to install the add-in',
-        'Sign in with your CryptoReportKit account',
+        'Go to Insert tab → Office Add-ins → My Add-ins',
+        'Click "Manage My Add-ins" dropdown → "Upload My Add-in"',
+        'Browse and select the downloaded manifest.xml file',
+        'Click Upload, then sign in with your CRK account',
       ],
       notes: [
+        'The add-in is NOT on Microsoft Store - manual install required',
         'Works with Microsoft 365, Office 2021, and Office 2019',
-        'The add-in will appear in the Home tab ribbon',
+        'One-time setup - add-in persists across sessions',
       ],
     },
     mac: {
       steps: [
+        'Download the CRK manifest file from our website (button below)',
         'Open Microsoft Excel for Mac',
-        'Go to Insert menu → Get Add-ins',
-        'Search for "CryptoReportKit" in the store',
-        'Click Add to install',
-        'Sign in with your CryptoReportKit account',
+        'Go to Insert menu → Office Add-ins → My Add-ins',
+        'Click "Upload My Add-in" and select the manifest file',
+        'Sign in with your CRK account',
       ],
       notes: [
+        'The add-in is NOT on Microsoft Store - manual install required',
         'Requires Microsoft 365 or Office 2021 for Mac',
         'Some features may differ from Windows version',
       ],
     },
     web: {
       steps: [
+        'Download the CRK manifest file from our website',
         'Go to excel.office.com and open a workbook',
-        'Click Insert tab → Office Add-ins',
-        'Search for "CryptoReportKit"',
-        'Click Add to install',
-        'Sign in when prompted',
+        'Click Insert tab → Office Add-ins → My Add-ins',
+        'Click "Upload My Add-in" tab',
+        'Select the manifest file and upload',
       ],
       notes: [
+        'The add-in is NOT on Microsoft Store - manual upload required',
         'Works in any modern browser',
         'Requires a Microsoft account (free)',
-        'Full functionality available in Excel Online',
       ],
     },
   };
@@ -158,6 +161,16 @@ export function AddinStep() {
                   </ul>
                 </div>
               </div>
+
+              {/* Download Manifest Button */}
+              <a
+                href="/addin/manifest.xml"
+                download="crk-addin-manifest.xml"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm mb-3"
+              >
+                <Download className="w-4 h-4" />
+                Download CRK Manifest File
+              </a>
 
               {/* Quick Link */}
               <a

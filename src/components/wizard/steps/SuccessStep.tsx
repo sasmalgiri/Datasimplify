@@ -32,9 +32,21 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
           <h2 className="text-2xl font-bold text-white mb-2">
             {addinReady ? 'All Set!' : 'Your Template is Ready!'}
           </h2>
-          <p className="text-gray-400 mb-6">
+          <p className="text-gray-400 mb-3">
             <span className="text-emerald-400 font-medium">{state.templateName}</span> has been downloaded.
           </p>
+
+          {/* What the Excel Contains */}
+          <div className="p-3 bg-gray-800/70 rounded-lg mb-6 text-left">
+            <p className="text-xs text-gray-400 mb-2">
+              <strong className="text-gray-300">What&apos;s in the file:</strong>
+            </p>
+            <ul className="text-xs text-gray-400 space-y-1">
+              <li>• Excel formulas like <code className="bg-gray-700 px-1 rounded">=CRK.PRICE(&quot;bitcoin&quot;)</code></li>
+              <li>• Pre-configured layout and formatting</li>
+              <li>• <strong className="text-amber-400">No data or charts yet</strong> - formulas fetch data via the CRK add-in</li>
+            </ul>
+          </div>
 
           {addinReady ? (
             /* Add-in Already Installed - Simple Success */

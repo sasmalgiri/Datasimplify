@@ -1705,74 +1705,140 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
           ))}
         </div>
 
-        {/* Charts Grid */}
+        {/* Treemap Charts Grid - Tree-like Visualization */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Coin Distribution Pie */}
+          {/* Coin Distribution Treemap */}
           <div className="bg-gray-800 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
-              <span>💰</span> Coin Distribution
+              <span>💰</span> Coin Distribution (Treemap)
             </h4>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={coinDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    labelLine={{ stroke: '#6B7280' }}
-                  >
-                    {coinDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
+                <Treemap
+                  data={coinDistributionData}
+                  dataKey="value"
+                  aspectRatio={4/3}
+                  stroke="#1F2937"
+                  content={({ x, y, width, height, name, value, fill }) => {
+                    const displayName = String(name || '');
+                    const displayValue = Number(value) || 0;
+                    const showLabel = width > 40 && height > 30;
+                    return (
+                      <g>
+                        <rect
+                          x={x}
+                          y={y}
+                          width={width}
+                          height={height}
+                          fill={String(fill)}
+                          stroke="#1F2937"
+                          strokeWidth={2}
+                          rx={4}
+                        />
+                        {showLabel && (
+                          <>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 - 8}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={12}
+                              fontWeight="bold"
+                            >
+                              {displayName}
+                            </text>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 10}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={11}
+                            >
+                              {displayValue.toFixed(1)}%
+                            </text>
+                          </>
+                        )}
+                      </g>
+                    );
+                  }}
+                >
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                     labelStyle={{ color: '#FFFFFF' }}
                     itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, 'Share of Supply']}
                   />
-                </PieChart>
+                </Treemap>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">Block size = proportion of total coin supply held</p>
           </div>
 
-          {/* Address Distribution Pie */}
+          {/* Address Distribution Treemap */}
           <div className="bg-gray-800 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
-              <span>👛</span> Address Distribution
+              <span>👛</span> Address Distribution (Treemap)
             </h4>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={addressDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                    labelLine={{ stroke: '#6B7280' }}
-                  >
-                    {addressDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
+                <Treemap
+                  data={addressDistributionData}
+                  dataKey="value"
+                  aspectRatio={4/3}
+                  stroke="#1F2937"
+                  content={({ x, y, width, height, name, value, fill }) => {
+                    const displayName = String(name || '');
+                    const displayValue = Number(value) || 0;
+                    const showLabel = width > 40 && height > 30;
+                    return (
+                      <g>
+                        <rect
+                          x={x}
+                          y={y}
+                          width={width}
+                          height={height}
+                          fill={String(fill)}
+                          stroke="#1F2937"
+                          strokeWidth={2}
+                          rx={4}
+                        />
+                        {showLabel && (
+                          <>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 - 8}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={12}
+                              fontWeight="bold"
+                            >
+                              {displayName}
+                            </text>
+                            <text
+                              x={x + width / 2}
+                              y={y + height / 2 + 10}
+                              textAnchor="middle"
+                              fill="#FFFFFF"
+                              fontSize={11}
+                            >
+                              {displayValue.toFixed(1)}%
+                            </text>
+                          </>
+                        )}
+                      </g>
+                    );
+                  }}
+                >
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                     labelStyle={{ color: '#FFFFFF' }}
                     itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, 'Share of Addresses']}
                   />
-                </PieChart>
+                </Treemap>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">Block size = proportion of total addresses</p>
           </div>
         </div>
 
