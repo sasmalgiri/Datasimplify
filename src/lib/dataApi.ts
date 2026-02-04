@@ -23,6 +23,7 @@ const DEFAULT_COIN_IMAGE = '/globe.svg';
 export interface MarketData {
   symbol: string;
   name: string;
+  geckoId: string;  // CoinGecko ID (e.g., "bitcoin", "ethereum")
   image: string;
   category: string;
   price: number;
@@ -96,6 +97,7 @@ function mapDiscoveredCoinToMarketData(coin: DiscoveredCoin): MarketData {
   return {
     symbol: coin.symbol,
     name: coin.name,
+    geckoId: coin.geckoId,  // CoinGecko ID for matching by ID
     image: FEATURES.coingecko ? coin.image : DEFAULT_COIN_IMAGE,
     category: coin.category,
     price: coin.currentPrice,
@@ -546,6 +548,7 @@ export async function fetchCoinDetails(symbol: string): Promise<{
       marketData: {
         symbol: data.symbol.toUpperCase(),
         name: data.name,
+        geckoId: data.id,  // CoinGecko ID for matching
         image: data.image?.large || DEFAULT_COIN_IMAGE,
         category: coin.category,
         price: md?.current_price?.usd || 0,

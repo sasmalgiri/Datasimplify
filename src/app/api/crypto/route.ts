@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getBulkMarketDataFromCache, saveBulkMarketDataToCache, getMarketDataFromCache } from '@/lib/supabaseData';
 import { fetchMarketOverview } from '@/lib/dataApi';
-import { getGeckoId } from '@/lib/coinDiscovery';
+// getGeckoId no longer needed - using geckoId from MarketData directly
 import { assertRedistributionAllowed } from '@/lib/redistributionPolicy';
 import { enforceDisplayOnly } from '@/lib/apiSecurity';
 import {
@@ -60,10 +60,11 @@ export async function GET(request: NextRequest) {
       if (isSupabaseConfigured) {
         const cached = await getMarketDataFromCache({ limit: MAX_LIMIT });
         if (cached && cached.length > 0) {
-          // Filter cached data for requested IDs (match by id or symbol)
-          const matchedCoins = cached.filter((coin: { id: string; symbol: string }) =>
-            idList.includes(coin.id.toLowerCase()) ||
-            idList.some(reqId => reqId.toLowerCase().includes(coin.symbol.toLowerCase()))
+          // Filter cached data for requested IDs (match by id, symbol, or name)
+          const matchedCoins = cached.filter((coin: { id: string; symbol: string; name?: string }) =>
+            idList.includes(coin.id?.toLowerCase() || '') ||
+            idList.includes(coin.symbol?.toLowerCase() || '') ||
+            idList.includes((coin.name?.toLowerCase() || '').replace(/\s+/g, '-'))
           );
 
           // If we have all requested coins in cache, return them
@@ -82,17 +83,17 @@ export async function GET(request: NextRequest) {
       // 2. Fetch from CoinGecko via dataApi
       assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/crypto' });
 
-      // Convert IDs to symbols for our market overview
+      // Fetch market overview and match by geckoId, symbol, or name
       const market = await fetchMarketOverview();
       const matchedMarket = market.filter(coin =>
-        idList.includes(coin.symbol.toLowerCase()) ||
-        idList.some(reqId => reqId.toLowerCase() === coin.symbol.toLowerCase())
+        idList.includes(coin.geckoId?.toLowerCase()) ||  // Match by CoinGecko ID (e.g., "bitcoin")
+        idList.includes(coin.symbol.toLowerCase()) ||    // Match by symbol (e.g., "btc")
+        idList.includes(coin.name.toLowerCase().replace(/\s+/g, '-'))  // Match by name slug
       );
 
-      const coins = await Promise.all(matchedMarket.map(async (coin, idx) => {
-        const geckoId = await getGeckoId(coin.symbol);
+      const coins = matchedMarket.map((coin, idx) => {
         return {
-          id: geckoId || coin.symbol.toLowerCase(),
+          id: coin.geckoId || coin.symbol.toLowerCase(),
           symbol: coin.symbol.toLowerCase(),
           name: coin.name,
           image: coin.image,
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
           ath: coin.ath,
           ath_change_percentage: coin.price > 0 && coin.ath > 0 ? ((coin.price - coin.ath) / coin.ath) * 100 : 0,
         };
-      }));
+      });
 
       // 3. Save to cache
       if (isSupabaseConfigured && coins.length > 0) {
@@ -145,10 +146,9 @@ export async function GET(request: NextRequest) {
     const market = await fetchMarketOverview();
     const limited = market.slice(0, limit);
 
-    const coins = await Promise.all(limited.map(async (coin, idx) => {
-      const geckoId = await getGeckoId(coin.symbol);
+    const coins = limited.map((coin, idx) => {
       return {
-        id: geckoId || coin.symbol.toLowerCase(),
+        id: coin.geckoId || coin.symbol.toLowerCase(),
         symbol: coin.symbol.toLowerCase(),
         name: coin.name,
         image: coin.image,
@@ -165,7 +165,7 @@ export async function GET(request: NextRequest) {
         ath: coin.ath,
         ath_change_percentage: coin.price > 0 && coin.ath > 0 ? ((coin.price - coin.ath) / coin.ath) * 100 : 0,
       };
-    }));
+    });
 
     // 3. Save to cache
     if (isSupabaseConfigured && coins.length > 0) {
