@@ -7,6 +7,21 @@
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
+// Static fallback data for when CoinGecko API is unavailable
+// Prices are approximate and serve as placeholders until live data loads
+const STATIC_FALLBACK_COINS: DiscoveredCoin[] = [
+  { symbol: 'BTC', geckoId: 'bitcoin', name: 'Bitcoin', image: 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png', category: 'layer1', currentPrice: 95000, marketCap: 1900000000000, marketCapRank: 1, priceChangePercent24h: 0, volume24h: 50000000000, circulatingSupply: 19800000, totalSupply: 21000000, maxSupply: 21000000, ath: 108000, athDate: '2024-12-17', atl: 67.81, atlDate: '2013-07-06' },
+  { symbol: 'ETH', geckoId: 'ethereum', name: 'Ethereum', image: 'https://assets.coingecko.com/coins/images/279/large/ethereum.png', category: 'layer1', currentPrice: 3400, marketCap: 400000000000, marketCapRank: 2, priceChangePercent24h: 0, volume24h: 20000000000, circulatingSupply: 120000000, totalSupply: null, maxSupply: null, ath: 4878, athDate: '2021-11-10', atl: 0.43, atlDate: '2015-10-20' },
+  { symbol: 'BNB', geckoId: 'binancecoin', name: 'BNB', image: 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png', category: 'exchange', currentPrice: 600, marketCap: 90000000000, marketCapRank: 4, priceChangePercent24h: 0, volume24h: 2000000000, circulatingSupply: 150000000, totalSupply: 150000000, maxSupply: 200000000, ath: 788, athDate: '2024-12-04', atl: 0.03, atlDate: '2017-10-19' },
+  { symbol: 'SOL', geckoId: 'solana', name: 'Solana', image: 'https://assets.coingecko.com/coins/images/4128/large/solana.png', category: 'layer1', currentPrice: 200, marketCap: 100000000000, marketCapRank: 5, priceChangePercent24h: 0, volume24h: 5000000000, circulatingSupply: 500000000, totalSupply: null, maxSupply: null, ath: 263, athDate: '2024-11-23', atl: 0.50, atlDate: '2020-05-11' },
+  { symbol: 'XRP', geckoId: 'ripple', name: 'XRP', image: 'https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png', category: 'layer1', currentPrice: 2.5, marketCap: 140000000000, marketCapRank: 3, priceChangePercent24h: 0, volume24h: 10000000000, circulatingSupply: 55000000000, totalSupply: 100000000000, maxSupply: 100000000000, ath: 3.40, athDate: '2018-01-07', atl: 0.002, atlDate: '2014-05-22' },
+  { symbol: 'ADA', geckoId: 'cardano', name: 'Cardano', image: 'https://assets.coingecko.com/coins/images/975/large/cardano.png', category: 'layer1', currentPrice: 1.0, marketCap: 35000000000, marketCapRank: 9, priceChangePercent24h: 0, volume24h: 1500000000, circulatingSupply: 35000000000, totalSupply: 45000000000, maxSupply: 45000000000, ath: 3.10, athDate: '2021-09-02', atl: 0.01, atlDate: '2020-03-13' },
+  { symbol: 'DOGE', geckoId: 'dogecoin', name: 'Dogecoin', image: 'https://assets.coingecko.com/coins/images/5/large/dogecoin.png', category: 'meme', currentPrice: 0.35, marketCap: 50000000000, marketCapRank: 7, priceChangePercent24h: 0, volume24h: 3000000000, circulatingSupply: 140000000000, totalSupply: null, maxSupply: null, ath: 0.73, athDate: '2021-05-08', atl: 0.00008, atlDate: '2015-05-06' },
+  { symbol: 'DOT', geckoId: 'polkadot', name: 'Polkadot', image: 'https://assets.coingecko.com/coins/images/12171/large/polkadot.png', category: 'layer1', currentPrice: 7.5, marketCap: 11000000000, marketCapRank: 12, priceChangePercent24h: 0, volume24h: 500000000, circulatingSupply: 1500000000, totalSupply: null, maxSupply: null, ath: 55, athDate: '2021-11-04', atl: 2.69, atlDate: '2020-08-20' },
+  { symbol: 'AVAX', geckoId: 'avalanche-2', name: 'Avalanche', image: 'https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png', category: 'layer1', currentPrice: 40, marketCap: 16000000000, marketCapRank: 11, priceChangePercent24h: 0, volume24h: 800000000, circulatingSupply: 400000000, totalSupply: 715000000, maxSupply: 720000000, ath: 146, athDate: '2021-11-21', atl: 2.79, atlDate: '2020-12-31' },
+  { symbol: 'LINK', geckoId: 'chainlink', name: 'Chainlink', image: 'https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png', category: 'defi', currentPrice: 22, marketCap: 14000000000, marketCapRank: 13, priceChangePercent24h: 0, volume24h: 1000000000, circulatingSupply: 630000000, totalSupply: 1000000000, maxSupply: 1000000000, ath: 52, athDate: '2021-05-10', atl: 0.15, atlDate: '2017-09-23' },
+];
+
 // Cache for discovered coins
 let discoveredCoins: DiscoveredCoin[] | null = null;
 let coinMap: Map<string, DiscoveredCoin> | null = null;
@@ -182,9 +197,14 @@ export async function discoverCoins(): Promise<DiscoveredCoin[]> {
 
   const allCoins = [...page1, ...page2];
 
-  if (allCoins.length === 0 && discoveredCoins) {
-    console.warn('[CoinDiscovery] No new data, returning cached coins');
-    return discoveredCoins;
+  if (allCoins.length === 0) {
+    if (discoveredCoins) {
+      console.warn('[CoinDiscovery] No new data, returning cached coins');
+      return discoveredCoins;
+    }
+    // Return static fallback data for essential coins when API fails
+    console.warn('[CoinDiscovery] API failed, using static fallback');
+    return STATIC_FALLBACK_COINS;
   }
 
   console.log(`[CoinDiscovery] Found ${allCoins.length} coins from CoinGecko`);
