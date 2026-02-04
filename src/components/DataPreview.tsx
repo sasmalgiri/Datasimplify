@@ -15,8 +15,19 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ScatterChart,
+  Scatter,
+  Treemap,
+  AreaChart,
+  Area,
+  ZAxis,
 } from 'recharts';
-import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity, Filter, SortAsc, SortDesc, ChevronDown, X } from 'lucide-react';
+import { RefreshCw, Table2, BarChart3, PieChartIcon, TrendingUp, TrendingDown, LayoutDashboard, Activity, Filter, SortAsc, SortDesc, ChevronDown, X, Target, ScatterChart as ScatterIcon, Grid3X3, Layers, Flame, MoreHorizontal } from 'lucide-react';
 
 interface CoinData {
   symbol: string;
@@ -47,7 +58,7 @@ const CHART_COLORS = [
   '#6366F1', // Indigo
 ];
 
-type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard';
+type ViewMode = 'table' | 'bar' | 'pie' | 'line' | 'volume' | 'dashboard' | 'radar' | 'scatter' | 'treemap' | 'area' | 'bubble' | 'heatmap';
 type SortField = 'symbol' | 'price' | 'change24h' | 'marketCap' | 'volume';
 type SortOrder = 'asc' | 'desc';
 type ChangeFilter = 'all' | 'gainers' | 'losers';
@@ -829,6 +840,389 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
     );
   };
 
+  // Radar Chart View - Multi-metric comparison
+  const RadarChartView = () => {
+    // Normalize data for radar chart (0-100 scale)
+    const maxPrice = Math.max(...filteredData.map(c => c.price));
+    const maxMarketCap = Math.max(...filteredData.map(c => c.marketCap));
+    const maxVolume = Math.max(...filteredData.map(c => c.volume));
+    const maxChange = Math.max(...filteredData.map(c => Math.abs(c.change24h)));
+
+    const radarData = [
+      { metric: 'Price', fullMark: 100, ...Object.fromEntries(filteredData.map(c => [c.symbol, maxPrice > 0 ? (c.price / maxPrice) * 100 : 0])) },
+      { metric: 'Market Cap', fullMark: 100, ...Object.fromEntries(filteredData.map(c => [c.symbol, maxMarketCap > 0 ? (c.marketCap / maxMarketCap) * 100 : 0])) },
+      { metric: 'Volume', fullMark: 100, ...Object.fromEntries(filteredData.map(c => [c.symbol, maxVolume > 0 ? (c.volume / maxVolume) * 100 : 0])) },
+      { metric: '24h Change', fullMark: 100, ...Object.fromEntries(filteredData.map(c => [c.symbol, maxChange > 0 ? (Math.abs(c.change24h) / maxChange) * 100 : 0])) },
+      { metric: 'Vol/MCap Ratio', fullMark: 100, ...Object.fromEntries(filteredData.map(c => [c.symbol, c.marketCap > 0 ? Math.min((c.volume / c.marketCap) * 1000, 100) : 0])) },
+    ];
+
+    return (
+      <div className="h-96">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Normalized comparison (0-100 scale)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+            <PolarGrid stroke="#374151" />
+            <PolarAngleAxis dataKey="metric" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
+            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: '#6B7280', fontSize: 10 }} />
+            {filteredData.slice(0, 6).map((coin, i) => (
+              <Radar
+                key={coin.symbol}
+                name={coin.symbol}
+                dataKey={coin.symbol}
+                stroke={CHART_COLORS[i % CHART_COLORS.length]}
+                fill={CHART_COLORS[i % CHART_COLORS.length]}
+                fillOpacity={0.2}
+              />
+            ))}
+            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, '']}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Scatter Plot View - Price vs Volume correlation
+  const ScatterPlotView = () => {
+    const scatterData = filteredData.map((coin, i) => ({
+      name: coin.symbol,
+      x: coin.marketCap / 1e9, // Market cap in billions
+      y: coin.volume / 1e9, // Volume in billions
+      z: Math.abs(coin.change24h), // Bubble size based on change
+      change: coin.change24h,
+      fill: coin.change24h >= 0 ? '#10B981' : '#EF4444',
+    }));
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Market Cap vs 24h Volume (bubble size = volatility)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="x"
+              name="Market Cap"
+              unit="B"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              label={{ value: 'Market Cap ($B)', position: 'bottom', fill: '#6B7280', fontSize: 11 }}
+            />
+            <YAxis
+              dataKey="y"
+              name="Volume"
+              unit="B"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              label={{ value: 'Volume ($B)', angle: -90, position: 'left', fill: '#6B7280', fontSize: 11 }}
+            />
+            <ZAxis dataKey="z" range={[100, 1000]} />
+            <Tooltip
+              cursor={{ strokeDasharray: '3 3' }}
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, name) => {
+                const v = Number(value) || 0;
+                if (name === 'Market Cap') return [`$${v.toFixed(2)}B`, name];
+                if (name === 'Volume') return [`$${v.toFixed(2)}B`, name];
+                return [v, name];
+              }}
+              labelFormatter={(label) => scatterData.find(d => d.x === label)?.name || ''}
+            />
+            <Scatter name="Coins" data={scatterData}>
+              {scatterData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+        <div className="flex justify-center gap-4 mt-2 text-xs">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-500"></span> Gainers</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> Losers</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Treemap View - Market Cap Dominance
+  const TreemapView = () => {
+    const totalMarketCap = filteredData.reduce((sum, c) => sum + c.marketCap, 0);
+    const treemapData = filteredData.map((coin, i) => ({
+      name: coin.symbol,
+      size: coin.marketCap,
+      percentage: totalMarketCap > 0 ? ((coin.marketCap / totalMarketCap) * 100).toFixed(1) : '0',
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+      price: coin.price,
+      change: coin.change24h,
+    }));
+
+    const CustomTreemapContent = (props: { x: number; y: number; width: number; height: number; name: string; percentage: string; fill: string }) => {
+      const { x, y, width, height, name, percentage, fill } = props;
+      if (width < 40 || height < 30) return null;
+
+      return (
+        <g>
+          <rect x={x} y={y} width={width} height={height} fill={fill} stroke="#1F2937" strokeWidth={2} rx={4} />
+          <text x={x + width / 2} y={y + height / 2 - 6} textAnchor="middle" fill="#fff" fontSize={width > 80 ? 14 : 11} fontWeight="bold">
+            {name}
+          </text>
+          <text x={x + width / 2} y={y + height / 2 + 10} textAnchor="middle" fill="#D1D5DB" fontSize={width > 80 ? 12 : 10}>
+            {percentage}%
+          </text>
+        </g>
+      );
+    };
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Market Cap Dominance - Total: {formatMarketCap(totalMarketCap)}</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <Treemap
+            data={treemapData}
+            dataKey="size"
+            aspectRatio={4 / 3}
+            stroke="#1F2937"
+            content={<CustomTreemapContent x={0} y={0} width={0} height={0} name="" percentage="" fill="" />}
+          >
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, _name, props) => {
+                const item = (props as { payload?: { name?: string; percentage?: string; price?: number; change?: number } }).payload;
+                const v = Number(value) || 0;
+                return [
+                  <div key="tooltip" className="text-sm">
+                    <div className="font-bold">{item?.name}</div>
+                    <div>Market Cap: {formatMarketCap(v)}</div>
+                    <div>Share: {item?.percentage}%</div>
+                    <div>Price: {formatPrice(item?.price || 0)}</div>
+                    <div className={item?.change && item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      24h: {formatChange(item?.change || 0)}
+                    </div>
+                  </div>,
+                  ''
+                ];
+              }}
+            />
+          </Treemap>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Area Chart View - Cumulative Market Cap
+  const AreaChartView = () => {
+    // Sort by market cap for cumulative view
+    const sortedByMarketCap = [...filteredData].sort((a, b) => b.marketCap - a.marketCap);
+    let cumulative = 0;
+    const areaData = sortedByMarketCap.map((coin, i) => {
+      cumulative += coin.marketCap;
+      return {
+        name: coin.symbol,
+        marketCap: coin.marketCap,
+        cumulative: cumulative,
+        volume: coin.volume,
+        fill: CHART_COLORS[i % CHART_COLORS.length],
+      };
+    });
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Cumulative Market Cap Distribution</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={areaData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <defs>
+              <linearGradient id="colorMarketCap" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="name"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
+            <YAxis
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              tickFormatter={(v) => formatMarketCap(v)}
+            />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              formatter={(value, name) => [formatMarketCap(Number(value) || 0), name === 'cumulative' ? 'Cumulative' : 'Individual']}
+            />
+            <Legend />
+            <Area type="monotone" dataKey="cumulative" name="Cumulative" stroke="#10B981" fillOpacity={1} fill="url(#colorMarketCap)" />
+            <Area type="monotone" dataKey="marketCap" name="Individual" stroke="#3B82F6" fillOpacity={1} fill="url(#colorVolume)" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Bubble Chart View - Price vs Change with Volume as size
+  const BubbleChartView = () => {
+    const maxVolume = Math.max(...filteredData.map(c => c.volume));
+    const bubbleData = filteredData.map((coin, i) => ({
+      name: coin.symbol,
+      price: coin.price,
+      change: coin.change24h,
+      volume: coin.volume,
+      // Normalize volume to reasonable bubble size (50-500)
+      bubbleSize: maxVolume > 0 ? 50 + (coin.volume / maxVolume) * 450 : 100,
+      fill: CHART_COLORS[i % CHART_COLORS.length],
+    }));
+
+    return (
+      <div className="h-80">
+        <div className="text-center mb-2">
+          <p className="text-xs text-gray-400">Price vs 24h Change (bubble size = volume)</p>
+        </div>
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis
+              dataKey="price"
+              name="Price"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              tickFormatter={(v) => formatPrice(v)}
+              label={{ value: 'Price (USD)', position: 'bottom', fill: '#6B7280', fontSize: 11 }}
+            />
+            <YAxis
+              dataKey="change"
+              name="24h Change"
+              unit="%"
+              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+              label={{ value: '24h Change (%)', angle: -90, position: 'left', fill: '#6B7280', fontSize: 11 }}
+            />
+            <ZAxis dataKey="bubbleSize" range={[50, 500]} />
+            <Tooltip
+              cursor={{ strokeDasharray: '3 3' }}
+              contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              content={({ payload }) => {
+                if (!payload || payload.length === 0) return null;
+                const data = payload[0].payload;
+                return (
+                  <div className="bg-gray-800 p-3 rounded-lg border border-gray-700">
+                    <p className="font-bold text-white">{data.name}</p>
+                    <p className="text-gray-300">Price: {formatPrice(data.price)}</p>
+                    <p className={data.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                      24h: {formatChange(data.change)}
+                    </p>
+                    <p className="text-gray-300">Volume: {formatMarketCap(data.volume)}</p>
+                  </div>
+                );
+              }}
+            />
+            <Scatter name="Coins" data={bubbleData}>
+              {bubbleData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Heatmap View - Performance Grid
+  const HeatmapView = () => {
+    const metrics = ['Price', 'Change 24h', 'Market Cap', 'Volume'];
+
+    // Calculate percentile ranks for each metric
+    const priceRanks = [...filteredData].sort((a, b) => b.price - a.price).map((c, i) => ({ symbol: c.symbol, rank: i + 1 }));
+    const changeRanks = [...filteredData].sort((a, b) => b.change24h - a.change24h).map((c, i) => ({ symbol: c.symbol, rank: i + 1 }));
+    const mcapRanks = [...filteredData].sort((a, b) => b.marketCap - a.marketCap).map((c, i) => ({ symbol: c.symbol, rank: i + 1 }));
+    const volumeRanks = [...filteredData].sort((a, b) => b.volume - a.volume).map((c, i) => ({ symbol: c.symbol, rank: i + 1 }));
+
+    const getHeatColor = (rank: number, total: number) => {
+      const percentile = ((total - rank) / total) * 100;
+      if (percentile >= 80) return 'bg-emerald-600';
+      if (percentile >= 60) return 'bg-emerald-700';
+      if (percentile >= 40) return 'bg-gray-600';
+      if (percentile >= 20) return 'bg-orange-700';
+      return 'bg-red-700';
+    };
+
+    const getMetricValue = (coin: CoinData, metric: string) => {
+      switch (metric) {
+        case 'Price': return formatPrice(coin.price);
+        case 'Change 24h': return formatChange(coin.change24h);
+        case 'Market Cap': return formatMarketCap(coin.marketCap);
+        case 'Volume': return formatMarketCap(coin.volume);
+        default: return '-';
+      }
+    };
+
+    const getRank = (symbol: string, metric: string) => {
+      const ranks = metric === 'Price' ? priceRanks :
+                    metric === 'Change 24h' ? changeRanks :
+                    metric === 'Market Cap' ? mcapRanks : volumeRanks;
+      return ranks.find(r => r.symbol === symbol)?.rank || filteredData.length;
+    };
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="text-center mb-3">
+          <p className="text-xs text-gray-400">Performance Heatmap (greener = higher percentile)</p>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-700">
+              <th className="text-left py-2 px-3 text-gray-400 font-medium sticky left-0 bg-gray-900">Coin</th>
+              {metrics.map(m => (
+                <th key={m} className="text-center py-2 px-3 text-gray-400 font-medium">{m}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((coin, index) => (
+              <tr key={coin.symbol} className="border-b border-gray-800">
+                <td className="py-2 px-3 sticky left-0 bg-gray-900">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                      style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                    >
+                      {coin.symbol.charAt(0)}
+                    </span>
+                    <span className="text-white font-medium">{coin.symbol}</span>
+                  </div>
+                </td>
+                {metrics.map(metric => (
+                  <td key={metric} className="py-2 px-3 text-center">
+                    <div className={`py-1.5 px-2 rounded ${getHeatColor(getRank(coin.symbol, metric), filteredData.length)}`}>
+                      <span className="text-white text-xs font-mono">{getMetricValue(coin, metric)}</span>
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="flex justify-center items-center gap-4 mt-4 text-xs text-gray-400">
+          <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-emerald-600"></span> Top 20%</span>
+          <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-emerald-700"></span> 60-80%</span>
+          <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-gray-600"></span> 40-60%</span>
+          <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-orange-700"></span> 20-40%</span>
+          <span className="flex items-center gap-1"><span className="w-4 h-4 rounded bg-red-700"></span> Bottom 20%</span>
+        </div>
+      </div>
+    );
+  };
+
   if (selectedCoins.length === 0) {
     return (
       <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
@@ -934,6 +1328,86 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             </button>
           </div>
 
+          {/* Advanced Charts Dropdown */}
+          <div className="relative group">
+            <button
+              type="button"
+              className={`p-2 rounded-lg transition flex items-center gap-1 ${
+                ['radar', 'scatter', 'treemap', 'area', 'bubble', 'heatmap'].includes(viewMode)
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:text-white'
+              }`}
+              title="Advanced Charts"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+            <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="p-2 space-y-1">
+                <p className="text-xs text-gray-500 px-2 py-1 font-medium">Advanced Charts</p>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('radar')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'radar' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Target className="w-4 h-4" />
+                  Radar Chart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('scatter')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'scatter' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <ScatterIcon className="w-4 h-4" />
+                  Scatter Plot
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('treemap')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'treemap' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                  Treemap
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('area')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'area' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  Area Chart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('bubble')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'bubble' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Flame className="w-4 h-4" />
+                  Bubble Chart
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('heatmap')}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition ${
+                    viewMode === 'heatmap' ? 'bg-emerald-600 text-white' : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                  Heatmap
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Filter Toggle Button */}
           <button
             type="button"
@@ -989,6 +1463,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             {viewMode === 'line' && <LineChartView />}
             {viewMode === 'volume' && <VolumeChartView />}
             {viewMode === 'dashboard' && <DashboardView />}
+            {viewMode === 'radar' && <RadarChartView />}
+            {viewMode === 'scatter' && <ScatterPlotView />}
+            {viewMode === 'treemap' && <TreemapView />}
+            {viewMode === 'area' && <AreaChartView />}
+            {viewMode === 'bubble' && <BubbleChartView />}
+            {viewMode === 'heatmap' && <HeatmapView />}
           </>
         )}
       </div>
