@@ -511,10 +511,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-              labelStyle={{ color: '#F3F4F6' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [formatPrice(Number(value) || 0), 'Price']}
             />
             <Bar dataKey="price" radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="name" position="top" fill="#FFFFFF" fontSize={10} />
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
@@ -556,11 +558,13 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             </Pie>
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [formatMarketCap(Number(value) || 0), 'Market Cap']}
             />
             <Legend
               wrapperStyle={{ paddingTop: '20px' }}
-              formatter={(value) => <span className="text-gray-300">{value}</span>}
+              formatter={(value) => <span className="text-white">{value}</span>}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -597,12 +601,14 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-              labelStyle={{ color: '#F3F4F6' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, '24h Change']}
             />
             {/* Reference line at 0 */}
             <CartesianGrid horizontal={false} />
             <Bar dataKey="change" radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="change" position="top" fill="#FFFFFF" fontSize={10} formatter={(v) => { const num = Number(v) || 0; return `${num >= 0 ? '+' : ''}${num.toFixed(1)}%`; }} />
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
@@ -639,10 +645,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
-              labelStyle={{ color: '#F3F4F6' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [formatMarketCap(Number(value) || 0), '24h Volume']}
             />
             <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
+              <LabelList dataKey="name" position="top" fill="#FFFFFF" fontSize={10} />
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
@@ -718,9 +726,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [formatPrice(Number(value) || 0), 'Price']}
                   />
                   <Bar dataKey="price" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="name" position="top" fill="#FFFFFF" fontSize={8} />
                     {priceData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -751,9 +762,11 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   </Pie>
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [formatMarketCap(Number(value) || 0), 'Market Cap']}
                   />
-                  <Legend wrapperStyle={{ fontSize: '10px' }} />
+                  <Legend wrapperStyle={{ fontSize: '10px' }} formatter={(value) => <span style={{ color: '#FFFFFF' }}>{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -770,9 +783,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `${v.toFixed(0)}%`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, '24h Change']}
                   />
                   <Bar dataKey="change" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="change" position="top" fill="#FFFFFF" fontSize={8} formatter={(v) => { const num = Number(v) || 0; return `${num >= 0 ? '+' : ''}${num.toFixed(0)}%`; }} />
                     {changeData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -793,9 +809,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   <YAxis tick={{ fill: '#9CA3AF', fontSize: 10 }} tickFormatter={(v) => `$${(v/1e9).toFixed(0)}B`} />
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [formatMarketCap(Number(value) || 0), 'Volume']}
                   />
                   <Bar dataKey="volume" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="name" position="top" fill="#FFFFFF" fontSize={8} />
                     {volumeData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -886,9 +905,11 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                 fillOpacity={0.2}
               />
             ))}
-            <Legend wrapperStyle={{ paddingTop: '20px' }} />
+            <Legend wrapperStyle={{ paddingTop: '20px' }} formatter={(value) => <span style={{ color: '#FFFFFF' }}>{value}</span>} />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, '']}
             />
           </RadarChart>
@@ -934,6 +955,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             <Tooltip
               cursor={{ strokeDasharray: '3 3' }}
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, name) => {
                 const v = Number(value) || 0;
                 if (name === 'Market Cap') return [`$${v.toFixed(2)}B`, name];
@@ -1001,15 +1024,17 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
           >
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, _name, props) => {
                 const item = (props as { payload?: { name?: string; percentage?: string; price?: number; change?: number } }).payload;
                 const v = Number(value) || 0;
                 return [
-                  <div key="tooltip" className="text-sm">
-                    <div className="font-bold">{item?.name}</div>
-                    <div>Market Cap: {formatMarketCap(v)}</div>
-                    <div>Share: {item?.percentage}%</div>
-                    <div>Price: {formatPrice(item?.price || 0)}</div>
+                  <div key="tooltip" className="text-sm text-white">
+                    <div className="font-bold text-white">{item?.name}</div>
+                    <div className="text-white">Market Cap: {formatMarketCap(v)}</div>
+                    <div className="text-white">Share: {item?.percentage}%</div>
+                    <div className="text-white">Price: {formatPrice(item?.price || 0)}</div>
                     <div className={item?.change && item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                       24h: {formatChange(item?.change || 0)}
                     </div>
@@ -1071,9 +1096,11 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, name) => [formatMarketCap(Number(value) || 0), name === 'cumulative' ? 'Cumulative' : 'Individual']}
             />
-            <Legend />
+            <Legend formatter={(value) => <span style={{ color: '#FFFFFF' }}>{value}</span>} />
             <Area type="monotone" dataKey="cumulative" name="Cumulative" stroke="#10B981" fillOpacity={1} fill="url(#colorMarketCap)" />
             <Area type="monotone" dataKey="marketCap" name="Individual" stroke="#3B82F6" fillOpacity={1} fill="url(#colorVolume)" />
           </AreaChart>
@@ -1301,6 +1328,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
           >
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value) => [`$${(Number(value) || 0).toFixed(2)}B`, 'Market Cap']}
             />
           </Sankey>
@@ -1334,13 +1363,15 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
           <FunnelChart>
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, name, props) => {
                 const item = props.payload;
                 return [
-                  <div key="tooltip" className="text-sm">
-                    <div className="font-bold">{item.name}</div>
-                    <div>Market Cap: ${(Number(value) || 0).toFixed(2)}B</div>
-                    <div>Price: {formatPrice(item.price)}</div>
+                  <div key="tooltip" className="text-sm text-white">
+                    <div className="font-bold text-white">{item.name}</div>
+                    <div className="text-white">Market Cap: ${(Number(value) || 0).toFixed(2)}B</div>
+                    <div className="text-white">Price: {formatPrice(item.price)}</div>
                     <div className={item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}>
                       24h: {formatChange(item.change)}
                     </div>
@@ -1402,11 +1433,13 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
               wrapperStyle={{ paddingLeft: '10px' }}
               formatter={(value, entry) => {
                 const item = radialData.find(d => d.name === value);
-                return <span className="text-xs text-gray-300">{value} ({item?.value.toFixed(0)}%)</span>;
+                return <span className="text-xs text-white">{value} ({item?.value.toFixed(0)}%)</span>;
               }}
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, name, props) => {
                 const item = props.payload;
                 return [`${formatMarketCap(item.marketCap)} (${(Number(value) || 0).toFixed(1)}%)`, item.name];
@@ -1459,6 +1492,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             />
             <Tooltip
               contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value, name) => {
                 const v = Number(value) || 0;
                 if (name === 'Market Cap') return [`$${v.toFixed(2)}B`, name];
@@ -1467,8 +1502,10 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                 return [v, name];
               }}
             />
-            <Legend wrapperStyle={{ paddingTop: '10px' }} />
-            <Bar yAxisId="left" dataKey="marketCap" name="Market Cap" fill="#10B981" opacity={0.8} />
+            <Legend wrapperStyle={{ paddingTop: '10px' }} formatter={(value) => <span style={{ color: '#FFFFFF' }}>{value}</span>} />
+            <Bar yAxisId="left" dataKey="marketCap" name="Market Cap" fill="#10B981" opacity={0.8}>
+              <LabelList dataKey="name" position="top" fill="#FFFFFF" fontSize={9} />
+            </Bar>
             <Area yAxisId="left" type="monotone" dataKey="volume" name="Volume" fill="#3B82F6" stroke="#3B82F6" fillOpacity={0.3} />
             <Line yAxisId="right" type="monotone" dataKey="change" name="24h Change" stroke="#F59E0B" strokeWidth={2} dot={{ fill: '#F59E0B', strokeWidth: 2 }} />
           </ComposedChart>
@@ -1668,6 +1705,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   </Pie>
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [`${(Number(value) || 0).toFixed(1)}%`, 'Share of Supply']}
                   />
                 </PieChart>
@@ -1700,6 +1739,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                   </Pie>
                   <Tooltip
                     contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                    labelStyle={{ color: '#FFFFFF' }}
+                    itemStyle={{ color: '#FFFFFF' }}
                     formatter={(value) => [`${(Number(value) || 0).toFixed(2)}%`, 'Share of Addresses']}
                   />
                 </PieChart>
@@ -1719,9 +1760,11 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                 <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickFormatter={(v) => `${v}%`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
+                  labelStyle={{ color: '#FFFFFF' }}
+                  itemStyle={{ color: '#FFFFFF' }}
                   formatter={(value, name) => [`${(Number(value) || 0).toFixed(2)}%`, name]}
                 />
-                <Legend />
+                <Legend formatter={(value) => <span style={{ color: '#FFFFFF' }}>{value}</span>} />
                 <Bar dataKey="coinPercent" name="Coin %" fill="#10B981" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="addressPercent" name="Address %" fill="#3B82F6" radius={[4, 4, 0, 0]} />
               </BarChart>
