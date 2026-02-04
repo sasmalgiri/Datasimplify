@@ -123,7 +123,7 @@ export default function DownloadPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleTemplateSelect('market-overview')}
+                  onClick={() => handleTemplateSelect('market_overview')}
                   className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-colors shadow-lg shadow-emerald-500/20"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
