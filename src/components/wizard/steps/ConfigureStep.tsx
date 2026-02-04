@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useWizard } from '../WizardContext';
 import { WizardNav } from '../shared/WizardNav';
+import { TemplatePreview } from '../shared/TemplatePreview';
 import { Settings, Search, Check, X, LayoutGrid, LayoutList, BarChart3 } from 'lucide-react';
 
 const POPULAR_COINS = [
@@ -211,7 +212,7 @@ export function ConfigureStep() {
           </div>
 
           {/* Layout Section */}
-          <div>
+          <div className="mb-6">
             <h3 className="font-medium text-white mb-3">Dashboard Layout</h3>
             <div className="grid grid-cols-3 gap-3">
               {LAYOUTS.map(layout => {
@@ -238,6 +239,21 @@ export function ConfigureStep() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Live Preview */}
+          <div>
+            <h3 className="font-medium text-white mb-3">
+              Preview
+              <span className="text-gray-400 font-normal text-sm ml-2">
+                (What your Excel will look like)
+              </span>
+            </h3>
+            <TemplatePreview
+              selectedCoins={state.selectedCoins}
+              selectedMetrics={state.selectedMetrics}
+              dashboardLayout={state.dashboardLayout}
+            />
           </div>
         </div>
       </div>
