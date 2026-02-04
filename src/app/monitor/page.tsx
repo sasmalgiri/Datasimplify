@@ -226,7 +226,7 @@ export default function MonitorPage() {
   const [sentiment, setSentiment] = useState<SentimentData | null>(null);
   const [unlocks, setUnlocks] = useState<TokenUnlock[]>([]);
   const [loading, setLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   // Fetch all data
   const fetchAllData = async () => {
@@ -408,7 +408,7 @@ export default function MonitorPage() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">
-              Last updated: {lastRefresh.toLocaleTimeString()}
+              Last updated: {lastRefresh ? lastRefresh.toLocaleTimeString() : '...'}
             </span>
             <button
               onClick={fetchAllData}

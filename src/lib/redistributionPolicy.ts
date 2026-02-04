@@ -134,6 +134,17 @@ export function assertRedistributionAllowed(sources: string | string[], context:
     }
   }
 
+  // For 'chart' display purpose, display-only sources are allowed without allowlist check
+  // This enables Live Preview and internal dashboard displays
+  if (context.purpose === 'chart') {
+    const allDisplayOnly = normalized.every(source =>
+      DISPLAY_ONLY_SOURCES.has(source) || isDisplayOnly(source)
+    );
+    if (allDisplayOnly) {
+      return; // Allow chart display of display-only sources
+    }
+  }
+
   // If redistribution policy is disabled, allow everything except display-only
   if (!isRedistributionPolicyEnabled()) return;
 

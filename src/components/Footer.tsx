@@ -99,7 +99,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-            <p>© {new Date().getFullYear()} CryptoReportKit. All rights reserved.</p>
+            <p>© 2026 CryptoReportKit. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
               <span>🔒 We do not sell your data</span>
               <span>|</span>
