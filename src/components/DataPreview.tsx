@@ -1306,6 +1306,35 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
 
     const sankeyData = { nodes, links };
 
+    // Custom node component with labels
+    const SankeyNode = ({ x, y, width, height, index, payload }: { x: number; y: number; width: number; height: number; index: number; payload: { name: string } }) => {
+      const isCategory = index < 4; // First 4 are categories
+      return (
+        <g>
+          <rect
+            x={x}
+            y={y}
+            width={width}
+            height={height}
+            fill={isCategory ? '#10B981' : CHART_COLORS[index % CHART_COLORS.length]}
+            stroke="#059669"
+            strokeWidth={1}
+          />
+          <text
+            x={isCategory ? x - 5 : x + width + 5}
+            y={y + height / 2}
+            textAnchor={isCategory ? 'end' : 'start'}
+            dominantBaseline="middle"
+            fill="#FFFFFF"
+            fontSize={11}
+            fontWeight={isCategory ? 'bold' : 'normal'}
+          >
+            {payload.name}
+          </text>
+        </g>
+      );
+    };
+
     return (
       <div className="h-96">
         <div className="text-center mb-2">
@@ -1317,10 +1346,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
             nodePadding={30}
             nodeWidth={10}
             linkCurvature={0.5}
-            node={{
-              fill: '#10B981',
-              stroke: '#059669',
-            }}
+            margin={{ left: 100, right: 100, top: 20, bottom: 20 }}
+            node={<SankeyNode x={0} y={0} width={0} height={0} index={0} payload={{ name: '' }} />}
             link={{
               stroke: '#374151',
               strokeOpacity: 0.5,
