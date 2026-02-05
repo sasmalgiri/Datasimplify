@@ -10,6 +10,7 @@ import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { RequestTemplate } from '@/components/RequestTemplate';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
+import { SectorHeatmap } from '@/components/features/SectorHeatmap';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
 
 // Tooltip Component for hover explanations - improved visibility
@@ -475,6 +476,11 @@ export default function MarketPage() {
           <TrendingCoins limit={5} showTitle={true} compact={true} />
           <GainersLosers type="gainers" limit={5} showTitle={true} compact={true} />
           <GainersLosers type="losers" limit={5} showTitle={true} compact={true} />
+        </div>
+
+        {/* Sector Heatmap - TradingView Style */}
+        <div className="mb-8">
+          <SectorHeatmap maxSectors={25} height="400px" />
         </div>
 
         {/* Search and Filters */}

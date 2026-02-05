@@ -124,23 +124,45 @@ async function VOLUME(coin, currency = 'usd') {
 
 /**
  * Get OHLCV data as a spilled array
+ * Daily data is free. Sub-hourly (5m, 15m, 30m, 1h) requires CoinGecko Pro API key.
  * @customfunction
  * @param {string} coin Coin ID
  * @param {number} [days=30] Number of days
- * @returns {number[][]} OHLCV matrix [Date, Open, High, Low, Close]
+ * @param {string} [interval="1d"] Interval: "5m", "15m", "30m", "1h", "4h", "1d" (Pro key required for sub-hourly)
+ * @returns {number[][]} OHLCV matrix [DateTime, Open, High, Low, Close, Volume]
  */
-async function OHLCV(coin, days = 30) {
-  const data = await fetchWithAuth('/ohlcv', { coin, days });
+async function OHLCV(coin, days = 30, interval = '1d') {
+  const result = await fetchWithAuth('/ohlcv', { coin, days, interval });
 
-  // CoinGecko returns [[timestamp, open, high, low, close], ...]
-  const header = ['Date', 'Open', 'High', 'Low', 'Close'];
-  const rows = data.map(row => [
-    new Date(row[0]).toLocaleDateString(),
-    row[1],
-    row[2],
-    row[3],
-    row[4],
-  ]);
+  // Handle new response format with data array
+  const data = result.data || result;
+
+  if (!Array.isArray(data)) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      result.error || 'Invalid OHLCV data received'
+    );
+  }
+
+  // Format based on interval - use datetime for sub-hourly, date only for daily
+  const isSubHourly = ['5m', '15m', '30m', '1h', '4h'].includes(interval.toLowerCase());
+  const header = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Volume'];
+
+  const rows = data.map(row => {
+    const timestamp = row[0];
+    const dateStr = isSubHourly
+      ? new Date(timestamp).toLocaleString()
+      : new Date(timestamp).toLocaleDateString();
+
+    return [
+      dateStr,
+      row[1], // Open
+      row[2], // High
+      row[3], // Low
+      row[4], // Close
+      row[5] || 0, // Volume (may not be present in all responses)
+    ];
+  });
 
   return [header, ...rows];
 }
@@ -828,6 +850,95 @@ async function STABLECOINS(limit = 20) {
 }
 
 // ============================================
+// ON-CHAIN / HOLDER DATA (via GeckoTerminal)
+// ============================================
+
+/**
+ * Get total holder count for a token
+ * @customfunction
+ * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
+ * @param {string} address Token contract address
+ * @returns {number} Total number of holders
+ */
+async function HOLDERS(network, address) {
+  const data = await fetchWithAuth('/holders', { network, address });
+  return data.holders ?? '#N/A';
+}
+
+/**
+ * Get holder distribution percentage
+ * @customfunction
+ * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
+ * @param {string} address Token contract address
+ * @param {string} [metric="top10"] Metric: "top10", "top25", "top50", "rest"
+ * @returns {number} Distribution percentage
+ */
+async function DISTRIBUTION(network, address, metric = 'top10') {
+  const data = await fetchWithAuth('/holders', { network, address });
+
+  const metricMap = {
+    'top10': 'top_10_percentage',
+    'top25': 'top_25_percentage',
+    'top50': 'top_50_percentage',
+    'rest': 'rest_percentage',
+  };
+
+  const mappedMetric = metricMap[metric.toLowerCase()] || 'top_10_percentage';
+  return data.distribution?.[mappedMetric] ?? '#N/A';
+}
+
+/**
+ * Get GeckoTerminal security/trust score for a token
+ * @customfunction
+ * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
+ * @param {string} address Token contract address
+ * @param {string} [scoreType="total"] Score type: "total", "pool", "transaction", "holders"
+ * @returns {number} Security/trust score (0-100)
+ */
+async function SCORE(network, address, scoreType = 'total') {
+  const data = await fetchWithAuth('/holders', { network, address });
+
+  const scoreMap = {
+    'total': 'total_score',
+    'pool': 'pool_score',
+    'transaction': 'transaction_score',
+    'holders': 'holders_score',
+  };
+
+  const mappedScore = scoreMap[scoreType.toLowerCase()] || 'total_score';
+  return data.scores?.[mappedScore] ?? '#N/A';
+}
+
+/**
+ * Get full token info including holders, distribution, and scores
+ * @customfunction
+ * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
+ * @param {string} address Token contract address
+ * @returns {any[][]} Token info matrix [Metric, Value]
+ */
+async function TOKENINFO(network, address) {
+  const data = await fetchWithAuth('/holders', { network, address });
+
+  const header = ['Metric', 'Value'];
+  const rows = [
+    ['Token Name', data.name ?? 'N/A'],
+    ['Token Symbol', data.symbol ?? 'N/A'],
+    ['Network', network.toUpperCase()],
+    ['Total Holders', data.holders ?? 'N/A'],
+    ['Top 10% Holdings', data.distribution?.top_10_percentage ? `${data.distribution.top_10_percentage}%` : 'N/A'],
+    ['Top 25% Holdings', data.distribution?.top_25_percentage ? `${data.distribution.top_25_percentage}%` : 'N/A'],
+    ['Top 50% Holdings', data.distribution?.top_50_percentage ? `${data.distribution.top_50_percentage}%` : 'N/A'],
+    ['Rest Holdings', data.distribution?.rest_percentage ? `${data.distribution.rest_percentage}%` : 'N/A'],
+    ['Total Trust Score', data.scores?.total_score ?? 'N/A'],
+    ['Pool Score', data.scores?.pool_score ?? 'N/A'],
+    ['Transaction Score', data.scores?.transaction_score ?? 'N/A'],
+    ['Holders Score', data.scores?.holders_score ?? 'N/A'],
+  ];
+
+  return [header, ...rows];
+}
+
+// ============================================
 // REGISTER ALL FUNCTIONS
 // ============================================
 
@@ -889,3 +1000,9 @@ CustomFunctions.associate('PRICEHISTORY', PRICEHISTORY);
 
 // Stablecoins
 CustomFunctions.associate('STABLECOINS', STABLECOINS);
+
+// On-Chain / Holder Data
+CustomFunctions.associate('HOLDERS', HOLDERS);
+CustomFunctions.associate('DISTRIBUTION', DISTRIBUTION);
+CustomFunctions.associate('SCORE', SCORE);
+CustomFunctions.associate('TOKENINFO', TOKENINFO);

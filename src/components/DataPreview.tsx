@@ -52,6 +52,53 @@ interface DataPreviewProps {
   defaultViewMode?: ViewMode;
 }
 
+// Holder distribution data from GeckoTerminal API
+interface HolderDistributionData {
+  name: string | null;
+  symbol: string | null;
+  holders: number | null;
+  distribution: {
+    top_10_percentage: number | null;
+    top_25_percentage: number | null;
+    top_50_percentage: number | null;
+    rest_percentage: number | null;
+  };
+  scores: {
+    total_score: number | null;
+    pool_score: number | null;
+    transaction_score: number | null;
+    holders_score: number | null;
+  };
+}
+
+// Token contract address mapping for GeckoTerminal API
+// Format: symbol -> { network, address }
+const TOKEN_CONTRACT_MAP: Record<string, { network: string; address: string }> = {
+  // Ethereum ERC20 tokens
+  'ETH': { network: 'eth', address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2' }, // WETH
+  'USDT': { network: 'eth', address: '0xdac17f958d2ee523a2206206994597c13d831ec7' },
+  'USDC': { network: 'eth', address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' },
+  'LINK': { network: 'eth', address: '0x514910771af9ca656af840dff83e8264ecf986ca' },
+  'UNI': { network: 'eth', address: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984' },
+  'AAVE': { network: 'eth', address: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9' },
+  'MKR': { network: 'eth', address: '0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2' },
+  'COMP': { network: 'eth', address: '0xc00e94cb662c3520282e6f5717214004a7f26888' },
+  'SHIB': { network: 'eth', address: '0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce' },
+  'MATIC': { network: 'eth', address: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0' },
+  'LDO': { network: 'eth', address: '0x5a98fcbea516cf06857215779fd812ca3bef1b32' },
+  'APE': { network: 'eth', address: '0x4d224452801aced8b2f0aebe155379bb5d594381' },
+  'CRV': { network: 'eth', address: '0xd533a949740bb3306d119cc777fa900ba034cd52' },
+  'SNX': { network: 'eth', address: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f' },
+  'PEPE': { network: 'eth', address: '0x6982508145454ce325ddbe47a25d4ec3d2311933' },
+  // BNB Chain tokens
+  'BNB': { network: 'bsc', address: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c' }, // WBNB
+  'CAKE': { network: 'bsc', address: '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82' },
+  // Polygon tokens
+  'POL': { network: 'polygon', address: '0x0000000000000000000000000000000000001010' },
+  // Solana tokens (using symbol as fallback - actual fetching may need SPL addresses)
+  'SOL': { network: 'solana', address: 'So11111111111111111111111111111111111111112' }, // WSOL
+};
+
 // Chart colors matching CryptoReportKit dark theme
 const CHART_COLORS = [
   '#10B981', // Emerald
@@ -89,6 +136,9 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
 
   // Distribution chart state
   const [distributionCoin, setDistributionCoin] = useState<string>(selectedCoins[0] || 'BTC');
+  const [holderData, setHolderData] = useState<HolderDistributionData | null>(null);
+  const [holderLoading, setHolderLoading] = useState(false);
+  const [holderError, setHolderError] = useState<string | null>(null);
 
   const fetchPreviewData = useCallback(async () => {
     if (selectedCoins.length === 0) {
@@ -160,6 +210,48 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
   useEffect(() => {
     fetchPreviewData();
   }, [fetchPreviewData]);
+
+  // Fetch holder distribution data for the selected token
+  const fetchHolderData = useCallback(async (symbol: string) => {
+    const tokenInfo = TOKEN_CONTRACT_MAP[symbol.toUpperCase()];
+
+    // If no contract address mapping, we can't fetch holder data
+    if (!tokenInfo) {
+      setHolderData(null);
+      setHolderError('Holder data not available for this coin (no contract address)');
+      return;
+    }
+
+    setHolderLoading(true);
+    setHolderError(null);
+
+    try {
+      const response = await fetch(
+        `/api/v1/holders?network=${tokenInfo.network}&address=${tokenInfo.address}`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to fetch holder data');
+      }
+
+      const result = await response.json();
+      setHolderData(result);
+    } catch (err) {
+      console.error('Holder data fetch error:', err);
+      setHolderError(err instanceof Error ? err.message : 'Failed to load holder data');
+      setHolderData(null);
+    } finally {
+      setHolderLoading(false);
+    }
+  }, []);
+
+  // Fetch holder data when distribution coin changes
+  useEffect(() => {
+    if (viewMode === 'distribution' && distributionCoin) {
+      fetchHolderData(distributionCoin);
+    }
+  }, [distributionCoin, viewMode, fetchHolderData]);
 
   const formatPrice = (price: number) => {
     if (price === 0) return '—';
@@ -1550,9 +1642,79 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
     const coinPrice = selectedCoinData?.price || 0;
     const coinMarketCap = selectedCoinData?.marketCap || 0;
 
-    // Holder categories with realistic distribution patterns
+    // Check if we have real holder data
+    const hasRealData = holderData && holderData.distribution.top_10_percentage !== null;
+
+    // Transform real holder data into our display format
+    const getRealHolderCategories = () => {
+      if (!holderData || !hasRealData) return null;
+
+      const top10 = holderData.distribution.top_10_percentage || 0;
+      const top25 = holderData.distribution.top_25_percentage || 0;
+      const top50 = holderData.distribution.top_50_percentage || 0;
+      const rest = holderData.distribution.rest_percentage || (100 - top50);
+
+      // Calculate tier breakdowns from the cumulative percentages
+      const tier10 = top10;
+      const tier25 = top25 - top10;
+      const tier50 = top50 - top25;
+      const tierRest = rest;
+
+      return [
+        {
+          category: 'Top 10%',
+          range: 'Largest',
+          emoji: '🐋',
+          color: '#10B981',
+          coinPercent: tier10,
+          addressPercent: 10,
+          avgHolding: 0,
+          dayChange: 0,
+          weekChange: 0,
+          monthChange: 0,
+        },
+        {
+          category: 'Top 11-25%',
+          range: 'Large',
+          emoji: '🐳',
+          color: '#3B82F6',
+          coinPercent: tier25 > 0 ? tier25 : 0,
+          addressPercent: 15,
+          avgHolding: 0,
+          dayChange: 0,
+          weekChange: 0,
+          monthChange: 0,
+        },
+        {
+          category: 'Top 26-50%',
+          range: 'Medium',
+          emoji: '🦈',
+          color: '#8B5CF6',
+          coinPercent: tier50 > 0 ? tier50 : 0,
+          addressPercent: 25,
+          avgHolding: 0,
+          dayChange: 0,
+          weekChange: 0,
+          monthChange: 0,
+        },
+        {
+          category: 'Bottom 50%',
+          range: 'Small',
+          emoji: '🦐',
+          color: '#EF4444',
+          coinPercent: tierRest > 0 ? tierRest : 0,
+          addressPercent: 50,
+          avgHolding: 0,
+          dayChange: 0,
+          weekChange: 0,
+          monthChange: 0,
+        },
+      ].filter(cat => cat.coinPercent > 0); // Only show categories with data
+    };
+
+    // Holder categories with realistic distribution patterns (sample data fallback)
     // These are simulated based on typical crypto holder distributions
-    const holderCategories = [
+    const sampleHolderCategories = [
       {
         category: 'Humpback',
         range: '>10K',
@@ -1628,9 +1790,12 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
       },
     ];
 
+    // Use real data if available, otherwise fall back to sample data
+    const holderCategories = getRealHolderCategories() || sampleHolderCategories;
+
     // Calculate estimated values based on coin data
     const totalSupply = coinMarketCap > 0 && coinPrice > 0 ? coinMarketCap / coinPrice : 21000000; // Default to BTC supply
-    const estimatedAddresses = Math.floor(totalSupply * 0.1); // Rough estimate
+    const estimatedAddresses = holderData?.holders || Math.floor(totalSupply * 0.1); // Use real holder count if available
 
     const distributionData = holderCategories.map(cat => ({
       ...cat,
@@ -1664,8 +1829,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
               <Users className="w-5 h-5 text-emerald-500" />
               {coinSymbol} Coin Distribution
             </h3>
-            <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">
-              Wallet Holder Analysis
+            <span className={`text-xs px-2 py-1 rounded ${hasRealData ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-800 text-gray-500'}`}>
+              {holderLoading ? 'Loading...' : hasRealData ? '✓ Live Data' : 'Sample Data'}
             </span>
           </div>
           <select
@@ -2047,13 +2212,32 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
           </div>
         </div>
 
-        {/* Info Note */}
-        <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
-          <p className="text-xs text-blue-400">
-            <strong>Note:</strong> Distribution data shown above is sample data for layout preview only.
-            Wallet holder distribution data is not available from CoinGecko. Market data (prices, volume, etc.) comes from CoinGecko via your API key.
-          </p>
-        </div>
+        {/* Loading indicator */}
+        {holderLoading && (
+          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex items-center gap-3">
+            <RefreshCw className="w-4 h-4 text-emerald-500 animate-spin" />
+            <p className="text-xs text-gray-400">Loading holder distribution data from GeckoTerminal...</p>
+          </div>
+        )}
+
+        {/* Info Note - Dynamic based on data availability */}
+        {hasRealData ? (
+          <div className="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-4">
+            <p className="text-xs text-emerald-400">
+              <strong>✓ Live Data:</strong> Holder distribution data is from GeckoTerminal (CoinGecko on-chain data).
+              {holderData?.holders && ` Total holders: ${holderData.holders.toLocaleString()}.`}
+              {holderData?.scores?.total_score && ` Trust score: ${holderData.scores.total_score}/100.`}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+            <p className="text-xs text-blue-400">
+              <strong>Note:</strong> {holderError || 'Distribution data shown above is sample data for layout preview.'}
+              {!TOKEN_CONTRACT_MAP[coinSymbol.toUpperCase()] && ' This coin does not have an ERC20/token contract address for on-chain holder data.'}
+              {' '}In Excel, use <code className="bg-gray-800 px-1 rounded">=CRK.HOLDERS(network, address)</code> and <code className="bg-gray-800 px-1 rounded">=CRK.DISTRIBUTION(network, address)</code> with your token's contract address for real data.
+            </p>
+          </div>
+        )}
       </div>
     );
   };
