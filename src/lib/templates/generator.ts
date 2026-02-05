@@ -168,6 +168,11 @@ export async function generateTemplate(
   }
   // formulas_only mode: Skip charts entirely
 
+  // 7.5. Add EMBEDDED CHARTS sheet if charts are enabled
+  if (userConfig.customizations.includeCharts) {
+    await createEmbeddedChartsSheet(workbook, baseTemplate, userConfig);
+  }
+
   // 8. Add INSTRUCTIONS sheet
   await createInstructionsSheet(workbook, baseTemplate, userConfig);
 
@@ -1498,6 +1503,272 @@ function getChartRecommendations(templateType: TemplateType): Array<{ chartType:
   };
 
   return recommendations[templateType] || recommendations.default;
+}
+
+/**
+ * Create a dedicated Dashboard sheet with visual data bars and summary tables
+ * These visual elements work in all Excel versions without add-ins
+ */
+async function createEmbeddedChartsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Dashboard', {
+    properties: { tabColor: { argb: COLORS.primary } },
+    views: [{ showGridLines: false }],
+  });
+
+  // Set column widths
+  sheet.getColumn(1).width = 3; // Margin
+  sheet.getColumn(2).width = 12; // Coin
+  sheet.getColumn(3).width = 14; // Price
+  sheet.getColumn(4).width = 35; // Price Bar
+  sheet.getColumn(5).width = 3; // Spacer
+  sheet.getColumn(6).width = 12; // Coin
+  sheet.getColumn(7).width = 10; // Change %
+  sheet.getColumn(8).width = 25; // Change Bar
+  sheet.getColumn(9).width = 3; // Spacer
+  sheet.getColumn(10).width = 12; // Coin
+  sheet.getColumn(11).width = 16; // Market Cap
+  sheet.getColumn(12).width = 30; // Market Cap Bar
+
+  // Apply dark background
+  for (let r = 1; r <= 45; r++) {
+    for (let c = 1; c <= 12; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  const coinsToUse = userConfig.coins.length > 0 ? userConfig.coins : ['BTC', 'ETH', 'SOL', 'BNB', 'XRP'];
+  const coinsCount = Math.min(coinsToUse.length, 10); // Limit to 10 for dashboard
+
+  let row = 1;
+
+  // ===== TITLE =====
+  sheet.mergeCells(`B${row}:L${row}`);
+  const titleCell = sheet.getCell(`B${row}`);
+  titleCell.value = '📊 Crypto Dashboard';
+  titleCell.font = { bold: true, size: 22, color: { argb: COLORS.primary } };
+  titleCell.alignment = { horizontal: 'center' };
+  row += 1;
+
+  // Subtitle
+  sheet.mergeCells(`B${row}:L${row}`);
+  const subtitleCell = sheet.getCell(`B${row}`);
+  subtitleCell.value = `Live data for ${coinsCount} cryptocurrencies • Refresh with Ctrl+Alt+F5`;
+  subtitleCell.font = { size: 11, color: { argb: COLORS.textSecondary }, italic: true };
+  subtitleCell.alignment = { horizontal: 'center' };
+  row += 2;
+
+  // ===== SECTION 1: PRICE COMPARISON =====
+  sheet.getCell(`B${row}`).value = '💰 Price Comparison';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  sheet.mergeCells(`B${row}:D${row}`);
+
+  // Section 2 header
+  sheet.getCell(`F${row}`).value = '📈 24h Change';
+  sheet.getCell(`F${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  sheet.mergeCells(`F${row}:H${row}`);
+
+  // Section 3 header
+  sheet.getCell(`J${row}`).value = '🏦 Market Cap';
+  sheet.getCell(`J${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  sheet.mergeCells(`J${row}:L${row}`);
+  row += 1;
+
+  // Column headers for each section
+  const headerStyle = { bold: true, size: 10, color: { argb: COLORS.textSecondary } };
+  const headerFill: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+
+  // Price section headers
+  sheet.getCell(`B${row}`).value = 'Coin';
+  sheet.getCell(`B${row}`).font = headerStyle;
+  sheet.getCell(`B${row}`).fill = headerFill;
+  sheet.getCell(`C${row}`).value = 'Price (USD)';
+  sheet.getCell(`C${row}`).font = headerStyle;
+  sheet.getCell(`C${row}`).fill = headerFill;
+  sheet.getCell(`D${row}`).value = 'Visual';
+  sheet.getCell(`D${row}`).font = headerStyle;
+  sheet.getCell(`D${row}`).fill = headerFill;
+
+  // Change section headers
+  sheet.getCell(`F${row}`).value = 'Coin';
+  sheet.getCell(`F${row}`).font = headerStyle;
+  sheet.getCell(`F${row}`).fill = headerFill;
+  sheet.getCell(`G${row}`).value = '24h %';
+  sheet.getCell(`G${row}`).font = headerStyle;
+  sheet.getCell(`G${row}`).fill = headerFill;
+  sheet.getCell(`H${row}`).value = 'Visual';
+  sheet.getCell(`H${row}`).font = headerStyle;
+  sheet.getCell(`H${row}`).fill = headerFill;
+
+  // Market cap section headers
+  sheet.getCell(`J${row}`).value = 'Coin';
+  sheet.getCell(`J${row}`).font = headerStyle;
+  sheet.getCell(`J${row}`).fill = headerFill;
+  sheet.getCell(`K${row}`).value = 'Market Cap';
+  sheet.getCell(`K${row}`).font = headerStyle;
+  sheet.getCell(`K${row}`).fill = headerFill;
+  sheet.getCell(`L${row}`).value = 'Visual';
+  sheet.getCell(`L${row}`).font = headerStyle;
+  sheet.getCell(`L${row}`).fill = headerFill;
+  row += 1;
+
+  const dataStartRow = row;
+
+  // Add data rows with formulas referencing the Data sheet
+  for (let i = 0; i < coinsCount; i++) {
+    const dataRow = i + 2; // Data sheet starts at row 2
+    const currentRow = row + i;
+    const rowFill = i % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
+
+    // Price section
+    sheet.getCell(`B${currentRow}`).value = { formula: `Data!A${dataRow}` };
+    sheet.getCell(`B${currentRow}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`B${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`C${currentRow}`).value = { formula: `Data!B${dataRow}` };
+    sheet.getCell(`C${currentRow}`).numFmt = '$#,##0.00';
+    sheet.getCell(`C${currentRow}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`C${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Visual bar for price (using REPT function for visual bar)
+    sheet.getCell(`D${currentRow}`).value = { formula: `REPT("█", MIN(30, IFERROR(C${currentRow}/MAX($C$${dataStartRow}:$C$${dataStartRow + coinsCount - 1})*30, 0)))` };
+    sheet.getCell(`D${currentRow}`).font = { color: { argb: COLORS.primary }, size: 10 };
+    sheet.getCell(`D${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Change section
+    sheet.getCell(`F${currentRow}`).value = { formula: `Data!A${dataRow}` };
+    sheet.getCell(`F${currentRow}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`F${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`G${currentRow}`).value = { formula: `Data!C${dataRow}` };
+    sheet.getCell(`G${currentRow}`).numFmt = '0.00%';
+    sheet.getCell(`G${currentRow}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`G${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Visual bar for change (green/red based on sign)
+    sheet.getCell(`H${currentRow}`).value = { formula: `IF(G${currentRow}>=0, REPT("▓", MIN(20, ABS(G${currentRow})*100)), REPT("▒", MIN(20, ABS(G${currentRow})*100)))` };
+    sheet.getCell(`H${currentRow}`).font = { size: 10 };
+    sheet.getCell(`H${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Market cap section
+    sheet.getCell(`J${currentRow}`).value = { formula: `Data!A${dataRow}` };
+    sheet.getCell(`J${currentRow}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`J${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`K${currentRow}`).value = { formula: `Data!D${dataRow}` };
+    sheet.getCell(`K${currentRow}`).numFmt = '$#,##0,,"M"';
+    sheet.getCell(`K${currentRow}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`K${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Visual bar for market cap
+    sheet.getCell(`L${currentRow}`).value = { formula: `REPT("█", MIN(25, IFERROR(K${currentRow}/MAX($K$${dataStartRow}:$K$${dataStartRow + coinsCount - 1})*25, 0)))` };
+    sheet.getCell(`L${currentRow}`).font = { color: { argb: COLORS.secondary }, size: 10 };
+    sheet.getCell(`L${currentRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+  }
+
+  row = dataStartRow + coinsCount + 2;
+
+  // ===== SUMMARY STATS =====
+  sheet.mergeCells(`B${row}:D${row}`);
+  sheet.getCell(`B${row}`).value = '📊 Quick Stats';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  row += 1;
+
+  // Stats in a clean layout
+  const statsData = [
+    ['Total Market Cap', `=SUM(Data!D2:D${coinsCount + 1})`, '$#,##0,,"B"'],
+    ['Avg 24h Change', `=AVERAGE(Data!C2:C${coinsCount + 1})`, '0.00%'],
+    ['Highest Price', `=MAX(Data!B2:B${coinsCount + 1})`, '$#,##0.00'],
+    ['Lowest Price', `=MIN(Data!B2:B${coinsCount + 1})`, '$#,##0.00'],
+  ];
+
+  for (const [label, formula, numFmt] of statsData) {
+    sheet.getCell(`B${row}`).value = label;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+
+    sheet.getCell(`C${row}`).value = { formula: formula as string };
+    sheet.getCell(`C${row}`).numFmt = numFmt;
+    sheet.getCell(`C${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+    row++;
+  }
+
+  row += 2;
+
+  // ===== INSTRUCTIONS FOR CREATING CHARTS =====
+  sheet.mergeCells(`B${row}:L${row}`);
+  sheet.getCell(`B${row}`).value = '📈 Create Native Excel Charts';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.accent } };
+  row += 1;
+
+  const chartInstructions = [
+    '1. Go to the "Data" sheet and select the data range you want to chart',
+    '2. Click Insert → Chart (or press Alt+F1 for a quick chart)',
+    '3. Choose your chart type: Pie, Bar, Column, or Line',
+    '4. Charts will automatically update when you refresh the data (Ctrl+Alt+F5)',
+  ];
+
+  for (const instruction of chartInstructions) {
+    sheet.getCell(`B${row}`).value = instruction;
+    sheet.getCell(`B${row}`).font = { size: 10, color: { argb: COLORS.textSecondary } };
+    row++;
+  }
+
+  row += 2;
+
+  // Footer
+  sheet.mergeCells(`B${row}:L${row}`);
+  sheet.getCell(`B${row}`).value = `Generated by CryptoReportKit • ${new Date().toLocaleDateString()} • Refresh: Ctrl+Alt+F5`;
+  sheet.getCell(`B${row}`).font = { size: 10, color: { argb: COLORS.textMuted }, italic: true };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
+
+  // Add conditional formatting for the 24h change column to color green/red
+  sheet.addConditionalFormatting({
+    ref: `G${dataStartRow}:G${dataStartRow + coinsCount - 1}`,
+    rules: [
+      {
+        type: 'cellIs',
+        operator: 'greaterThan',
+        priority: 1,
+        formulae: ['0'],
+        style: { font: { color: { argb: COLORS.positive } } },
+      },
+      {
+        type: 'cellIs',
+        operator: 'lessThan',
+        priority: 2,
+        formulae: ['0'],
+        style: { font: { color: { argb: COLORS.negative } } },
+      },
+    ],
+  });
+
+  // Add conditional formatting for the change visual bar column
+  sheet.addConditionalFormatting({
+    ref: `H${dataStartRow}:H${dataStartRow + coinsCount - 1}`,
+    rules: [
+      {
+        type: 'expression',
+        priority: 3,
+        formulae: [`$G${dataStartRow}>=0`],
+        style: { font: { color: { argb: COLORS.positive } } },
+      },
+      {
+        type: 'expression',
+        priority: 4,
+        formulae: [`$G${dataStartRow}<0`],
+        style: { font: { color: { argb: COLORS.negative } } },
+      },
+    ],
+  });
 }
 
 /**

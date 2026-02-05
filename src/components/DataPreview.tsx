@@ -1751,40 +1751,34 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji - larger and centered */}
+                            {/* Emoji */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 16}
+                              y={y + height / 2 - 14}
                               textAnchor="middle"
-                              fontSize={24}
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={22}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name - bold and clear */}
+                            {/* Category Name */}
                             <text
                               x={x + width / 2}
                               y={y + height / 2 + 8}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={13}
-                              fontWeight="700"
-                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                              letterSpacing="0.02em"
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={12}
+                              fontWeight="600"
                             >
                               {displayName}
                             </text>
-                            {/* Percentage - prominent */}
+                            {/* Percentage */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 26}
+                              y={y + height / 2 + 24}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={14}
-                              fontWeight="800"
-                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={13}
+                              fontWeight="700"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1796,19 +1790,18 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                               x={x + width / 2}
                               y={y + height / 2 - 2}
                               textAnchor="middle"
-                              fontSize={16}
+                              fontSize={14}
                             >
                               {emoji}
                             </text>
                             {/* Percentage only */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 14}
+                              y={y + height / 2 + 12}
                               textAnchor="middle"
                               fill="#FFFFFF"
                               fontSize={10}
-                              fontWeight="700"
-                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                              fontWeight="600"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1865,40 +1858,34 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji - larger and centered */}
+                            {/* Emoji */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 16}
+                              y={y + height / 2 - 14}
                               textAnchor="middle"
-                              fontSize={24}
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={22}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name - bold and clear */}
+                            {/* Category Name */}
                             <text
                               x={x + width / 2}
                               y={y + height / 2 + 8}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={13}
-                              fontWeight="700"
-                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                              letterSpacing="0.02em"
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={12}
+                              fontWeight="600"
                             >
                               {displayName}
                             </text>
-                            {/* Percentage - prominent */}
+                            {/* Percentage */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 26}
+                              y={y + height / 2 + 24}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={14}
-                              fontWeight="800"
-                              fontFamily="'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-                              style={{ filter: `drop-shadow(0 1px 2px rgba(0,0,0,0.5))` }}
+                              fontSize={13}
+                              fontWeight="700"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1910,19 +1897,18 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                               x={x + width / 2}
                               y={y + height / 2 - 2}
                               textAnchor="middle"
-                              fontSize={16}
+                              fontSize={14}
                             >
                               {emoji}
                             </text>
                             {/* Percentage only */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 14}
+                              y={y + height / 2 + 12}
                               textAnchor="middle"
                               fill="#FFFFFF"
                               fontSize={10}
                               fontWeight="600"
-                              fontFamily="Inter, system-ui, sans-serif"
                             >
                               {displayValue.toFixed(1)}%
                             </text>

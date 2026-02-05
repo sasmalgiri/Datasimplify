@@ -198,13 +198,15 @@ export default function DateRangePicker({
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <span>{formatDate(value.startDate)} - {formatDate(value.endDate)}</span>
                 <button
+                  type="button"
+                  aria-label="Clear date range"
                   onClick={() => {
                     onChange({ startDate: null, endDate: null, preset: '' });
                     setIsOpen(false);
                   }}
                   className="p-1 hover:bg-gray-700 rounded"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3" aria-hidden="true" />
                 </button>
               </div>
             </div>
