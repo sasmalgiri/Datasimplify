@@ -22,6 +22,7 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const { state } = useWizard();
 
   // Render the appropriate step component
+  // Order: Welcome → Email → API Key → Add-in → Configure → Download → Success
   switch (state.currentStep) {
     case 1:
       return <WelcomeStep />;
@@ -30,9 +31,9 @@ function WizardContent({ onClose }: { onClose: () => void }) {
     case 3:
       return <ApiKeyStep />;
     case 4:
-      return <ConfigureStep />;
+      return <AddinStep />;      // Moved before Configure
     case 5:
-      return <AddinStep />;
+      return <ConfigureStep />;
     case 6:
       return <DownloadStep />;
     case 7:

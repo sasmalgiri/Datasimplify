@@ -42,11 +42,6 @@ export function ApiKeyStep() {
     }
   };
 
-  const handleSkip = () => {
-    dispatch({ type: 'SKIP_API_KEY' });
-    dispatch({ type: 'NEXT_STEP' });
-  };
-
   return (
     <div className="flex flex-col min-h-0">
       <div className="flex-1 px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto">
@@ -163,11 +158,7 @@ export function ApiKeyStep() {
         </div>
       </div>
 
-      <WizardNav
-        showSkip={!state.isApiKeyValid}
-        skipLabel="Skip for now"
-        onSkip={handleSkip}
-      />
+      <WizardNav />
     </div>
   );
 }

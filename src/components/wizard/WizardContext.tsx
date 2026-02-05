@@ -15,11 +15,10 @@ export interface WizardState {
   // Step 3: API Key
   apiKey: string;
   isApiKeyValid: boolean;
-  apiKeySkipped: boolean;
 
-  // Step 4: Add-in
+  // Step 4: Add-in (moved before Configure)
   addinInstalled: boolean;
-  addinSkipped: boolean;
+  addinConnectionTested: boolean;
 
   // Step 5: Configuration
   selectedCoins: string[];
@@ -41,9 +40,8 @@ export type WizardAction =
   | { type: 'SET_AUTHENTICATED'; authenticated: boolean }
   | { type: 'SET_TURNSTILE_TOKEN'; token: string | null }
   | { type: 'SET_API_KEY'; key: string; valid: boolean }
-  | { type: 'SKIP_API_KEY' }
   | { type: 'SET_ADDIN_INSTALLED'; installed: boolean }
-  | { type: 'SKIP_ADDIN' }
+  | { type: 'SET_ADDIN_CONNECTION_TESTED'; tested: boolean }
   | { type: 'SET_COINS'; coins: string[] }
   | { type: 'SET_METRICS'; metrics: string[] }
   | { type: 'SET_LAYOUT'; layout: 'compact' | 'detailed' | 'charts' }
@@ -64,9 +62,8 @@ const initialState: WizardState = {
   turnstileToken: null,
   apiKey: '',
   isApiKeyValid: false,
-  apiKeySkipped: false,
   addinInstalled: false,
-  addinSkipped: false,
+  addinConnectionTested: false,
   selectedCoins: ['bitcoin', 'ethereum'],
   selectedMetrics: ['price', 'market_cap', 'volume_24h', 'change_24h'],
   dashboardLayout: 'detailed',
@@ -91,13 +88,11 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_TURNSTILE_TOKEN':
       return { ...state, turnstileToken: action.token };
     case 'SET_API_KEY':
-      return { ...state, apiKey: action.key, isApiKeyValid: action.valid, apiKeySkipped: false };
-    case 'SKIP_API_KEY':
-      return { ...state, apiKeySkipped: true, isApiKeyValid: false };
+      return { ...state, apiKey: action.key, isApiKeyValid: action.valid };
     case 'SET_ADDIN_INSTALLED':
-      return { ...state, addinInstalled: action.installed, addinSkipped: false };
-    case 'SKIP_ADDIN':
-      return { ...state, addinSkipped: true, addinInstalled: false };
+      return { ...state, addinInstalled: action.installed };
+    case 'SET_ADDIN_CONNECTION_TESTED':
+      return { ...state, addinConnectionTested: action.tested };
     case 'SET_COINS':
       return { ...state, selectedCoins: action.coins };
     case 'SET_METRICS':
@@ -151,18 +146,19 @@ export function WizardProvider({
   });
 
   // Determine if user can proceed to next step
+  // Step order: Welcome → Email → API Key → Add-in → Configure → Download → Success
   const canGoNext = (() => {
     switch (state.currentStep) {
       case 1: // Welcome
         return true;
       case 2: // Email
         return state.isAuthenticated && state.email.includes('@');
-      case 3: // API Key
-        return state.isApiKeyValid || state.apiKeySkipped;
-      case 4: // Configure
+      case 3: // API Key (required - no skip)
+        return state.isApiKeyValid;
+      case 4: // Add-in Installation (required - no skip)
+        return state.addinInstalled;
+      case 5: // Configure
         return state.selectedCoins.length > 0 && state.selectedMetrics.length > 0;
-      case 5: // Add-in Installation
-        return state.addinInstalled || state.addinSkipped;
       case 6: // Download
         return !state.isDownloading;
       case 7: // Success
@@ -193,8 +189,8 @@ export const STEP_TITLES = [
   'Welcome',
   'Account',
   'API Key',
+  'Add-in',      // Moved before Configure
   'Configure',
-  'Add-in',
   'Download',
   'Success',
 ];
