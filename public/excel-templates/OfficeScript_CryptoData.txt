@@ -1,0 +1,185 @@
+/**
+ * CryptoReportKit - Office Script for Excel
+ * ==========================================
+ * 
+ * HOW TO USE:
+ * 1. Open Excel Online (office.com/excel)
+ * 2. Go to Automate → New Script
+ * 3. Paste this code
+ * 4. Click Run
+ * 
+ * This script fetches live crypto data and writes it to your spreadsheet.
+ */
+
+// ============================================
+// SCRIPT 1: Get Top Crypto Prices
+// ============================================
+async function main(workbook: ExcelScript.Workbook) {
+  // Configuration
+  const coins = ["bitcoin", "ethereum", "solana", "cardano", "ripple", "dogecoin", "polkadot", "avalanche-2", "chainlink", "polygon"];
+  const currency = "usd";
+
+  // Get or create the sheet
+  let sheet = workbook.getWorksheet("CryptoData");
+  if (!sheet) {
+    sheet = workbook.addWorksheet("CryptoData");
+  }
+
+  // Clear existing data
+  sheet.getUsedRange()?.clear();
+
+  // Add headers
+  const headers = ["Coin", "Price (USD)", "24h Change %", "Market Cap", "Volume 24h", "Last Updated"];
+  sheet.getRangeByIndexes(0, 0, 1, headers.length).setValues([headers]);
+
+  // Style headers
+  const headerRange = sheet.getRangeByIndexes(0, 0, 1, headers.length);
+  headerRange.getFormat().getFill().setColor("#10B981");
+  headerRange.getFormat().getFont().setColor("#FFFFFF");
+  headerRange.getFormat().getFont().setBold(true);
+
+  try {
+    // Fetch data from CoinGecko API
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=${currency}&ids=${coins.join(",")}&order=market_cap_desc&sparkline=false`
+    );
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data: CoinData[] = await response.json();
+
+    // Write data to sheet
+    const rows: (string | number)[][] = data.map((coin) => [
+      coin.name,
+      coin.current_price,
+      coin.price_change_percentage_24h?.toFixed(2) || 0,
+      coin.market_cap,
+      coin.total_volume,
+      new Date().toLocaleString()
+    ]);
+
+    if (rows.length > 0) {
+      sheet.getRangeByIndexes(1, 0, rows.length, headers.length).setValues(rows);
+    }
+
+    // Format currency columns
+    sheet.getRangeByIndexes(1, 1, rows.length, 1).setNumberFormat("$#,##0.00");
+    sheet.getRangeByIndexes(1, 3, rows.length, 2).setNumberFormat("#,##0");
+
+    // Auto-fit columns
+    sheet.getUsedRange()?.getFormat().autofitColumns();
+
+    console.log(`✅ Successfully fetched ${rows.length} coins!`);
+
+  } catch (error) {
+    console.log(`❌ Error: ${error}`);
+    sheet.getRange("A2").setValue(`Error fetching data: ${error}`);
+  }
+}
+
+// Type definition for API response
+interface CoinData {
+  id: string;
+  name: string;
+  symbol: string;
+  current_price: number;
+  market_cap: number;
+  total_volume: number;
+  price_change_percentage_24h: number;
+}
+
+
+// ============================================
+// SCRIPT 2: Get Historical Data for Charts
+// ============================================
+/*
+async function getHistoricalData(workbook: ExcelScript.Workbook) {
+  const coin = "bitcoin";
+  const days = 30;
+  
+  let sheet = workbook.getWorksheet("BitcoinHistory");
+  if (!sheet) {
+    sheet = workbook.addWorksheet("BitcoinHistory");
+  }
+  sheet.getUsedRange()?.clear();
+
+  // Headers
+  sheet.getRange("A1:B1").setValues([["Date", "Price (USD)"]]);
+  sheet.getRange("A1:B1").getFormat().getFill().setColor("#10B981");
+  sheet.getRange("A1:B1").getFormat().getFont().setColor("#FFFFFF");
+  sheet.getRange("A1:B1").getFormat().getFont().setBold(true);
+
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/${coin}/market_chart?vs_currency=usd&days=${days}`
+    );
+    
+    const data = await response.json();
+    const prices: [number, number][] = data.prices;
+
+    // Convert to rows (every 24 hours to reduce data points)
+    const dailyPrices = prices.filter((_, i) => i % 24 === 0);
+    
+    const rows = dailyPrices.map(([timestamp, price]) => {
+      const date = new Date(timestamp);
+      return [date.toLocaleDateString(), price];
+    });
+
+    if (rows.length > 0) {
+      sheet.getRangeByIndexes(1, 0, rows.length, 2).setValues(rows);
+    }
+
+    // Format price column
+    sheet.getRangeByIndexes(1, 1, rows.length, 1).setNumberFormat("$#,##0.00");
+    sheet.getUsedRange()?.getFormat().autofitColumns();
+
+    console.log(`✅ Fetched ${rows.length} days of ${coin} history!`);
+
+  } catch (error) {
+    console.log(`❌ Error: ${error}`);
+  }
+}
+*/
+
+
+// ============================================
+// SCRIPT 3: With API Key (BYOK Mode)
+// ============================================
+/*
+async function mainWithApiKey(workbook: ExcelScript.Workbook) {
+  // Get API key from a cell (B1 on Settings sheet)
+  const settingsSheet = workbook.getWorksheet("Settings");
+  const apiKey = settingsSheet?.getRange("B1").getValue()?.toString() || "";
+  
+  if (!apiKey) {
+    console.log("❌ Please enter your CoinGecko API key in Settings!B1");
+    return;
+  }
+
+  // Use Pro API with key
+  const response = await fetch(
+    "https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100",
+    {
+      headers: {
+        "x-cg-pro-api-key": apiKey
+      }
+    }
+  );
+
+  // ... rest of the processing
+}
+*/
+
+
+// ============================================
+// SCRIPT 4: Auto-Refresh (Run on Schedule)
+// ============================================
+/*
+// To set up auto-refresh:
+// 1. Save this script
+// 2. Go to Automate → Automate a Task
+// 3. Create a Power Automate flow that runs this script on a schedule
+// 4. Choose your refresh interval (e.g., every hour)
+*/

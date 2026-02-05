@@ -165,13 +165,13 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                {isSimple ? 'Crypto Data in Excel' : 'Refreshable Crypto Reports in Excel'}
+                {isSimple ? 'Live Crypto Data in Excel' : 'Power Query Templates for Crypto'}
               </span>
               {isPro && (
                 <>
                   {' '}
                   <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                    (Templates + Report Wizard)
+                    (BYOK - No Add-in Required)
                   </span>
                 </>
               )}
@@ -179,9 +179,9 @@ export default function LandingPage() {
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
               {isSimple
-                ? 'Download a template, add your API key, and get live crypto prices in Excel.'
-                : 'Download Excel templates with CRK formulas. Customize coins & timeframes, connect your API key (BYOK), refresh.'}
-              <span className="text-white font-semibold"> {isSimple ? 'Start in 60 seconds.' : 'Live crypto data at your fingertips.'}</span>
+                ? 'Download a Power Query template, add your API key, and get live crypto prices in Excel.'
+                : 'Power Query templates that fetch data directly from CoinGecko. Your API key stays in Excel (BYOK).'}
+              <span className="text-white font-semibold"> {isSimple ? 'No add-in needed.' : 'Works in Excel Desktop.'}</span>
             </p>
 
             {/* Simple Mode: 3-Step Strip */}
@@ -189,15 +189,15 @@ export default function LandingPage() {
               <div className="mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto mb-4">
                   <Link
-                    href="/templates"
+                    href="/downloads"
                     className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-xl hover:border-emerald-400 transition group"
                   >
                     <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">1</div>
                     <div className="text-left">
                       <div className="font-semibold text-white flex items-center gap-1">
-                        Download Kit <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
+                        Download <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
                       </div>
-                      <div className="text-xs text-gray-400">Pick a template pack</div>
+                      <div className="text-xs text-gray-400">Get Power Query code</div>
                     </div>
                   </Link>
                   <Link
@@ -223,11 +223,11 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Link
-                  href="/templates"
+                  href="/downloads"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
                 >
                   <Download className="w-4 h-4" />
-                  Start Here - Download a Kit
+                  Get Power Query Template
                 </Link>
               </div>
             )}
@@ -237,10 +237,10 @@ export default function LandingPage() {
               <>
                 <div className="flex flex-row gap-3 justify-center mb-3">
                   <Link
-                    href="/templates"
+                    href="/downloads"
                     className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
                   >
-                    Download Excel Templates
+                    Download Power Query Templates
                   </Link>
                   <Link
                     href="/compare"
@@ -253,15 +253,15 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
                   <div className="flex items-center gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>CRK formulas + BYOK</span>
+                    <span>Power Query + BYOK</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Customizable templates</span>
+                    <span>No add-in required</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-blue-400">✓</span>
-                    <span>Free to start</span>
+                    <span>Free tier available</span>
                   </div>
                 </div>
               </>
@@ -271,10 +271,10 @@ export default function LandingPage() {
           {/* Simple Mode: 3 Feature Tiles */}
           {isSimple && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              <Link href="/templates" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
-                <div className="text-3xl mb-2">📋</div>
-                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Excel Templates</h3>
-                <p className="text-gray-400 text-sm">8 ready-to-use report kits</p>
+              <Link href="/downloads" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
+                <div className="text-3xl mb-2">📊</div>
+                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Power Query Templates</h3>
+                <p className="text-gray-400 text-sm">Live crypto data in Excel</p>
               </Link>
               <Link href="/compare" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
                 <div className="text-3xl mb-2">⚖️</div>
@@ -308,16 +308,16 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto px-4">
             <div className="grid grid-cols-4 gap-4 text-center">
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-emerald-400">8</div>
-                <div className="text-gray-400 text-xs">Report Kits</div>
+                <div className="text-2xl md:text-3xl font-bold text-emerald-400">⚡</div>
+                <div className="text-gray-400 text-xs">Power Query</div>
               </div>
               <div>
-                <div className="text-2xl md:text-3xl font-bold text-purple-400">36</div>
-                <div className="text-gray-400 text-xs">CRK Functions</div>
+                <div className="text-2xl md:text-3xl font-bold text-purple-400">100+</div>
+                <div className="text-gray-400 text-xs">Coins Supported</div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-green-400">✓</div>
-                <div className="text-gray-400 text-xs">Contract Verify</div>
+                <div className="text-gray-400 text-xs">No Add-in</div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-yellow-400">BYOK</div>
@@ -360,15 +360,15 @@ export default function LandingPage() {
                 <ul className="space-y-1 text-gray-300 text-xs">
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Excel templates with BYOK formulas</span>
+                    <span>Power Query – no add-in needed</span>
                   </li>
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Coin comparison + What If calculator</span>
+                    <span>Your API key stays in Excel</span>
                   </li>
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Smart Contract verification</span>
+                    <span>Auto-refresh + charts</span>
                   </li>
                 </ul>
               </div>
@@ -389,9 +389,9 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { icon: '📋', title: 'Excel Templates', desc: '8 report kits with CRK formulas + BYOK', href: '/templates' },
-                { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side + What If calculator', href: '/compare' },
-                { icon: '🔐', title: 'Contract Verify', desc: 'Sourcify + Z3 formal checks', href: '/smart-contract-verifier' },
+                { icon: '�', title: 'Power Query', desc: 'Live crypto data in Excel', href: '/downloads' },
+                { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side + What If calc', href: '/compare' },
+                { icon: '🔐', title: 'Contract Verify', desc: 'Sourcify verification', href: '/smart-contract-verifier' },
                 { icon: '📚', title: 'Learn', desc: 'Academy guides + glossary', href: '/learn' },
               ].map((f, i) => (
                 <a key={i} href={f.href} className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 hover:border-emerald-500/50 transition group">
@@ -461,17 +461,17 @@ export default function LandingPage() {
       <section className="py-6 px-4 bg-gradient-to-r from-emerald-600/20 to-blue-600/20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-bold mb-2">
-            {isSimple ? 'Ready to Start?' : 'Ready to Build Better Reports?'}
+            {isSimple ? 'Ready to Start?' : 'Ready to Get Live Crypto Data?'}
           </h2>
           <p className="text-sm text-gray-400 mb-3">
-            {isSimple ? 'Pick a template and get live crypto data in Excel.' : 'Download Excel templates with BYOK formulas.'}
+            {isSimple ? 'Get Power Query templates for Excel – no add-in required.' : 'Download Power Query templates with BYOK. Your API key stays in Excel.'}
           </p>
           <Link
-            href="/templates"
+            href="/downloads"
             className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm shadow-lg"
           >
             {isSimple && <Download className="w-4 h-4" />}
-            {isSimple ? 'Download a Kit' : 'Browse Report Kits'}
+            {isSimple ? 'Get Templates' : 'Download Power Query Templates'}
           </Link>
         </div>
       </section>

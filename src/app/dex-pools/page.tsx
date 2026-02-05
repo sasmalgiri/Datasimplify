@@ -300,13 +300,13 @@ export default function DexPoolsPage() {
             <h2 className="text-xl font-semibold text-white">Export DEX Data</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download DEX pool data as Excel templates with live CRK formulas (BYOK).
+            Download DEX pool data as Power Query templates (BYOK). Your API key stays in Excel.
           </p>
           <Link
-            href="/templates"
+            href="/downloads"
             className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition"
           >
-            Get Excel Templates
+            Get Power Query Templates
             <ExternalLink className="w-4 h-4" />
           </Link>
         </div>

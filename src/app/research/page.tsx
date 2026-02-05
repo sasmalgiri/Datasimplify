@@ -214,10 +214,10 @@ export default function ResearchPage() {
         <div className="mt-12 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <p className="text-sm text-blue-300 text-center">
             All data displayed is for informational purposes only.
-            <Link href="/templates" className="underline ml-1 hover:text-blue-200">
-              Download Excel templates
+            <Link href="/downloads" className="underline ml-1 hover:text-blue-200">
+              Download Power Query templates
             </Link>
-            {' '}with CRK formulas to work with live data (BYOK).
+            {' '}to work with live data in Excel (BYOK).
           </p>
         </div>
       </div>

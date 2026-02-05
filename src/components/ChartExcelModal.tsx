@@ -376,17 +376,17 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
             </Link>
           </div>
 
-          {/* CRK Add-in Link */}
+          {/* CRK Power Query Link */}
           <div className="text-center pt-2 border-t border-gray-700">
             <p className="text-xs text-gray-500">
               Powered by{' '}
               <Link
-                href="/addin/setup"
+                href="/downloads"
                 className="text-blue-400 hover:underline"
               >
                 CryptoReportKit
               </Link>
-              {' '}Excel Add-in (BYOK)
+              {' '}Power Query Templates (BYOK)
             </p>
           </div>
         </div>

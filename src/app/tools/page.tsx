@@ -10,13 +10,13 @@ export default function ToolsPage() {
   const tools = [
     {
       id: 'templates',
-      name: 'Excel Templates',
-      emoji: '📋',
-      description: 'CRK formula templates for live data visualization (BYOK)',
-      href: '/templates',
+      name: 'Power Query Templates',
+      emoji: '📊',
+      description: 'Power Query templates for live crypto data (BYOK)',
+      href: '/downloads',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,
-      features: ['CRK formulas', 'Live data', 'No embedded data']
+      features: ['Power Query', 'Live data', 'No add-in required']
     },
     {
       id: 'research',

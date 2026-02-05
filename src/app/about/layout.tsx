@@ -3,18 +3,18 @@ import type { Metadata } from 'next';
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
 export const metadata: Metadata = {
-  title: 'About CryptoReportKit - Crypto Excel Templates & BYOK',
-  description: 'CryptoReportKit provides Excel templates with CRK formulas for live cryptocurrency data. BYOK architecture means you use your own API keys. Educational tool for crypto analysis.',
+  title: 'About CryptoReportKit - Power Query Templates for Crypto',
+  description: 'CryptoReportKit provides Power Query templates for live cryptocurrency data in Excel. BYOK architecture means your API key stays in Excel. No add-in required.',
   keywords: [
     'about cryptoreportkit',
     'crypto report kit',
-    'excel crypto templates company',
+    'power query crypto templates',
     'byok crypto service',
     'cryptocurrency analysis tool'
   ],
   openGraph: {
     title: 'About CryptoReportKit',
-    description: 'Excel templates with CRK formulas for live crypto data. BYOK architecture for privacy.',
+    description: 'Power Query templates for live crypto data. BYOK architecture - your key stays in Excel.',
     url: `${siteUrl}/about`,
     type: 'website',
     images: [

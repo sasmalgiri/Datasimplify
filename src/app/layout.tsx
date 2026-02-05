@@ -14,11 +14,11 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'CryptoReportKit - Crypto Analytics & Excel Templates',
+    default: 'CryptoReportKit - Power Query Templates for Crypto',
     template: '%s | CryptoReportKit'
   },
-  description: 'Excel templates with CRK formulas for live crypto data visualization. BYOK - bring your own API key. Educational analytics tools and indicators. No coding required.',
-  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'ethereum analytics', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
+  description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required. Educational analytics tools.',
+  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'power query crypto', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
 
   // Favicon & Icons
   icons: {
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: 'CryptoReportKit',
-    title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
-    description: 'Excel templates with CRK formulas for live crypto data visualization. BYOK - bring your own API key. Educational analytics tools for crypto enthusiasts.',
+    title: 'CryptoReportKit - Power Query Templates for Crypto',
+    description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -48,8 +48,8 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'CryptoReportKit - Crypto Analytics & Excel Templates',
-    description: 'Excel templates with CRK formulas for live crypto data. BYOK - bring your own API key. Educational analytics tools and indicators.',
+    title: 'CryptoReportKit - Power Query Templates for Crypto',
+    description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required.',
     images: [`${siteUrl}/og-image.png`],
     creator: '@cryptoreportkit',
   },

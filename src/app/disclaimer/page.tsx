@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li><strong>No Trading Execution:</strong> We do not execute trades, route orders, or provide brokerage services.</li>
                 <li><strong>No Market-Data Redistribution:</strong> We do not sell, license, or redistribute raw market data.</li>
-                <li><strong>Templates Contain Formulas Only:</strong> Our Excel templates contain CRK formulas - no embedded data. Data is fetched via the CRK add-in using your own API keys (BYOK architecture).</li>
+                <li><strong>Templates Use Power Query:</strong> Our Excel templates use Power Query code - no embedded data. Data is fetched using your own API keys (BYOK architecture). No add-in required.</li>
                 <li><strong>Display-Only Dashboards:</strong> Website displays are for educational visualization purposes only, showing publicly available information.</li>
                 <li><strong>Software Tools:</strong> We provide software tools for analytics and visualization - the underlying data comes from third-party providers via your own API keys.</li>
               </ul>
@@ -109,25 +109,25 @@ export default function DisclaimerPage() {
 
           {/* Template Requirements */}
           <section className="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-6">
-            <h2 className="text-2xl font-semibold text-emerald-400 mb-4">Excel Template Requirements (BYOK)</h2>
+            <h2 className="text-2xl font-semibold text-emerald-400 mb-4">Power Query Template Requirements (BYOK)</h2>
             <div className="space-y-4">
-              <p>Our Excel templates use a <strong>BYOK (Bring Your Own Key)</strong> architecture:</p>
+              <p>Our Excel templates use a <strong>BYOK (Bring Your Own Key)</strong> architecture with Power Query:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li><strong>Microsoft Excel Desktop</strong> (Windows or Mac)</li>
-                <li><strong>CRK Excel Add-in</strong> installed and signed in</li>
-                <li><strong>Your own data provider API key</strong> (e.g., CoinGecko)</li>
+                <li><strong>Microsoft Excel Desktop</strong> (Windows or Mac) or Excel Online</li>
+                <li><strong>Power Query</strong> (built into Excel - no add-in needed)</li>
+                <li><strong>Your own CoinGecko API key</strong></li>
                 <li><strong>Active internet connection</strong> for data retrieval</li>
               </ul>
               <p className="mt-4">
-                Templates contain <strong>formulas only</strong> - no market data is embedded.
-                When you open a template, the CRK add-in fetches live data using your own API key.
-                Your keys are encrypted and never shared.
+                Templates contain <strong>Power Query code only</strong> - no market data is embedded.
+                When you refresh, Power Query fetches live data using your API key stored in Excel.
+                Your key never leaves your workbook.
               </p>
               <Link
                 href="/template-requirements"
                 className="inline-block mt-4 text-emerald-400 hover:text-emerald-300 underline"
               >
-                View full template requirements →
+                View setup guide →
               </Link>
             </div>
           </section>

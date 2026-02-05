@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:https": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -42,6 +43,7 @@
     "canvas": "^3.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "office-addin-dev-certs": "^2.0.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

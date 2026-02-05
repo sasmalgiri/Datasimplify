@@ -165,8 +165,8 @@ export default function DownloadPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">3</div>
                   <div>
-                    <p className="text-white text-sm font-medium">Sign In</p>
-                    <p className="text-gray-500 text-xs">CRK Add-in</p>
+                    <p className="text-white text-sm font-medium">Paste Key</p>
+                    <p className="text-gray-500 text-xs">API Cell</p>
                   </div>
                 </div>
                 <div className="text-gray-600">→</div>
@@ -183,7 +183,7 @@ export default function DownloadPage() {
             {/* Compact Disclaimer */}
             <div className="text-center">
               <p className="text-gray-500 text-xs">
-                Templates use CRK formulas (BYOK). Data from your own API key.
+                Templates use Power Query (BYOK). Your API key stays in Excel.
                 <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">Disclaimer</Link>
               </p>
             </div>
@@ -201,7 +201,7 @@ export default function DownloadPage() {
           coins: selectedCoins,
           timeframe: selectedTimeframe,
           currency: 'USD',
-          formulaMode: 'crk', // CRK Add-in only
+          formulaMode: 'crk', // Power Query templates
           customizations: {
             includeCharts,
             refreshFrequency,

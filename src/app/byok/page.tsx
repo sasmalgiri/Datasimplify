@@ -18,12 +18,12 @@ export default function BYOKPage() {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Connect Your CoinGecko API Key
+            Your API Key, Your Control
           </h1>
 
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            CryptoReportKit uses a BYOK model: you connect your own CoinGecko API key.
-            We do not provide, sell, or redistribute API keys, credentials, or entitlements.
+            CryptoReportKit Power Query templates use a BYOK model: your CoinGecko API key stays in Excel.
+            We never see, store, or proxy your API key.
           </p>
         </div>
 
@@ -31,12 +31,16 @@ export default function BYOKPage() {
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-blue-400" />
-            Why BYOK?
+            Why BYOK with Power Query?
           </h2>
           <ul className="space-y-2 text-gray-300">
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>You control your data:</strong> Your API key, your rate limits, your usage</span>
+              <span><strong>True privacy:</strong> Your API key is stored only in Excel - it never leaves your computer</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span><strong>No middleman:</strong> Power Query fetches data directly from CoinGecko, not through our servers</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -44,16 +48,12 @@ export default function BYOKPage() {
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>Security:</strong> Your keys are encrypted at rest (AES-256-GCM) and never shared</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>Compliance:</strong> You comply directly with CoinGecko&apos;s terms of service</span>
+              <span><strong>No add-in required:</strong> Uses Excel&apos;s built-in Power Query feature</span>
             </li>
           </ul>
           <p className="mt-4 text-sm text-gray-400 border-t border-gray-600 pt-4">
-            <strong>Important:</strong> Your key is used only to fetch data for your account.
-            We do not provide or resell API access. You maintain a direct relationship with CoinGecko.
+            <strong>How it works:</strong> You paste your API key into a named Excel cell or directly in the Power Query M code.
+            The query runs entirely in Excel and fetches data from CoinGecko using your key.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function BYOKPage() {
                 <h3 className="font-semibold text-lg mb-2">Generate an API Key</h3>
                 <p className="text-gray-300 mb-2">
                   In the Developer Dashboard, click <strong>&quot;+ Add New Key&quot;</strong> to generate your API key.
-                  Give it a descriptive name (e.g., &quot;CryptoReportKit Excel Add-in&quot;).
+                  Give it a descriptive name (e.g., &quot;CryptoReportKit Excel&quot;).
                 </p>
                 <p className="text-gray-400 text-sm">
                   Your key will look like: <code className="bg-gray-900 px-2 py-1 rounded text-emerald-400">CG-xxxxxxxxxxxxxxxxxxxx</code>
@@ -149,15 +149,15 @@ export default function BYOKPage() {
                 5
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Copy and Paste into CRK Add-in</h3>
+                <h3 className="font-semibold text-lg mb-2">Add Key to Power Query</h3>
                 <p className="text-gray-300 mb-3">
-                  Copy your API key and paste it into the CryptoReportKit Excel Add-in:
+                  Add your API key to Excel for use with Power Query:
                 </p>
                 <ol className="list-decimal list-inside text-gray-400 text-sm space-y-1 ml-4">
-                  <li>Open Excel and launch the CRK add-in (Insert → My Add-ins → CryptoReportKit)</li>
-                  <li>Go to the &quot;API Keys&quot; section in the add-in taskpane</li>
-                  <li>Paste your CoinGecko API key</li>
-                  <li>Click &quot;Verify Key&quot; to test the connection</li>
+                  <li>Create a named cell (e.g., &quot;ApiKey&quot;) on a Settings sheet</li>
+                  <li>Paste your CoinGecko API key in that cell</li>
+                  <li>Our Pro templates reference this cell automatically</li>
+                  <li>Or paste the key directly in the M code (less secure for shared files)</li>
                 </ol>
               </div>
             </div>
@@ -172,16 +172,13 @@ export default function BYOKPage() {
               <h3 className="text-lg font-semibold text-amber-400 mb-2">Security Best Practices</h3>
               <ul className="space-y-2 text-gray-300 text-sm">
                 <li>
-                  <strong>Treat your API key like a password.</strong> Never share it publicly or paste it directly into spreadsheet cells.
+                  <strong>Treat your API key like a password.</strong> Don&apos;t share workbooks that contain your key in plain text.
                 </li>
                 <li>
-                  <strong>Store it only in the add-in settings.</strong> The CRK add-in encrypts your key at rest (AES-256-GCM).
+                  <strong>Use a named cell for your key.</strong> Store it on a hidden &quot;Settings&quot; sheet that you exclude when sharing.
                 </li>
                 <li>
-                  <strong>Don&apos;t share workbooks containing your key.</strong> If you share templates, the formulas are safe—but never share your API key.
-                </li>
-                <li>
-                  <strong>Rotate your key if exposed.</strong> If you accidentally expose your key, delete it in the CoinGecko dashboard and generate a new one.
+                  <strong>Rotate your key if exposed.</strong> If you accidentally share your key, delete it in CoinGecko and generate a new one.
                 </li>
                 <li>
                   <strong>Monitor your usage.</strong> Check your{' '}
@@ -231,20 +228,20 @@ export default function BYOKPage() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-4 h-4 text-emerald-400" />
-                <h3 className="font-semibold">CRK Template Requirements</h3>
+                <h3 className="font-semibold">Power Query Setup Guide</h3>
               </div>
-              <p className="text-sm text-gray-400">Setup instructions for Excel templates</p>
+              <p className="text-sm text-gray-400">How to use our templates in Excel</p>
             </Link>
 
             <Link
-              href="/addin/setup"
+              href="/downloads"
               className="p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition border border-gray-600"
             >
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-4 h-4 text-emerald-400" />
-                <h3 className="font-semibold">CRK Add-in Setup</h3>
+                <h3 className="font-semibold">Download Templates</h3>
               </div>
-              <p className="text-sm text-gray-400">Install the CryptoReportKit Excel Add-in</p>
+              <p className="text-sm text-gray-400">Get free and Pro Power Query templates</p>
             </Link>
           </div>
         </div>
@@ -257,47 +254,38 @@ export default function BYOKPage() {
               <h3 className="font-medium text-white mb-1">Is the Demo plan really free?</h3>
               <p className="text-sm text-gray-400">
                 Yes! CoinGecko offers a free Demo plan that doesn&apos;t require a credit card.
-                Limits depend on your CoinGecko plan—check{' '}
-                <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                  CoinGecko pricing
-                </a>{' '}
-                for current details.
+                It has rate limits suitable for personal use with our Free templates.
               </p>
             </div>
 
             <div>
-              <h3 className="font-medium text-white mb-1">Where does CRK store my API key?</h3>
+              <h3 className="font-medium text-white mb-1">Does CryptoReportKit store my API key?</h3>
               <p className="text-sm text-gray-400">
-                Your API key is encrypted using AES-256-GCM and stored securely in the CRK database. It is decrypted only in memory
-                when making API calls to CoinGecko on your behalf. We never log or share your plaintext key.
+                No! With Power Query, your API key stays entirely in your Excel file. We never see, transmit, or store it.
+                This is the core benefit of our BYOK approach.
               </p>
             </div>
 
             <div>
-              <h3 className="font-medium text-white mb-1">Can I delete my API key from CRK?</h3>
+              <h3 className="font-medium text-white mb-1">Can I share templates with my key in them?</h3>
               <p className="text-sm text-gray-400">
-                Yes! You can delete your API key anytime from the CRK add-in or from your CRK account settings.
-                Deleting your account also permanently deletes your encrypted keys.
+                You can, but we recommend using a named cell on a hidden Settings sheet. Remove or clear that sheet before sharing.
+                Better yet, share the template without your key and let recipients add their own.
               </p>
             </div>
 
             <div>
               <h3 className="font-medium text-white mb-1">What if I exceed my CoinGecko rate limit?</h3>
               <p className="text-sm text-gray-400">
-                If you exceed your plan&apos;s rate limits, CoinGecko will return an error. You can upgrade to a higher CoinGecko plan
-                (Analyst or Pro) for higher limits. See{' '}
-                <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
-                  CoinGecko pricing
-                </a>
-                .
+                Power Query will show an error. Reduce refresh frequency or upgrade to CoinGecko Pro for higher limits.
               </p>
             </div>
 
             <div>
-              <h3 className="font-medium text-white mb-1">Does CRK charge me for BYOK?</h3>
+              <h3 className="font-medium text-white mb-1">Do I need a CoinGecko Pro key for paid templates?</h3>
               <p className="text-sm text-gray-400">
-                No! BYOK is included in all CRK plans (Free, Pro, Premium). You only pay CoinGecko directly for your API plan.
-                CRK charges for features like scheduled exports, advanced templates, and premium support.
+                Not necessarily. Paid templates work with free API keys but may hit rate limits faster due to more data.
+                For 100+ coins, we recommend CoinGecko Pro for reliable performance.
               </p>
             </div>
           </div>
@@ -306,11 +294,11 @@ export default function BYOKPage() {
         {/* CTA */}
         <div className="mt-12 text-center">
           <Link
-            href="/addin/setup"
+            href="/downloads"
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition"
           >
             <Key className="w-5 h-5" />
-            Install CRK Add-in
+            Get Power Query Templates
           </Link>
         </div>
 

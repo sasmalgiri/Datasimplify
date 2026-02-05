@@ -380,6 +380,89 @@ CREATE INDEX idx_download_history_user ON download_history(user_id);
 CREATE INDEX idx_download_history_time ON download_history(created_at DESC);
 
 -- ============================================
+-- 7B. PRODUCT ENTITLEMENTS (Monetization)
+-- ============================================
+
+-- What products a user has access to (one-time purchases, subscriptions, etc.)
+CREATE TABLE IF NOT EXISTS product_entitlements (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE NOT NULL,
+
+    -- e.g. power_query_pro, power_query_enterprise, templates_subscription_pro
+    product_key VARCHAR(100) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked', 'expired')),
+
+    -- purchase metadata
+    source VARCHAR(30) NOT NULL DEFAULT 'manual' CHECK (source IN ('fastspring', 'manual', 'admin')),
+    external_order_id TEXT,
+    external_customer_email TEXT,
+
+    granted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    expires_at TIMESTAMP WITH TIME ZONE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    UNIQUE(user_id, product_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_entitlements_user ON product_entitlements(user_id);
+CREATE INDEX IF NOT EXISTS idx_entitlements_product ON product_entitlements(product_key);
+
+-- Versioned releases (what can be downloaded)
+CREATE TABLE IF NOT EXISTS template_releases (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+
+    -- download slug used in API: /api/downloads/{slug}
+    slug VARCHAR(120) NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT,
+
+    -- null means free/public
+    required_product_key VARCHAR(100),
+
+    -- where the file lives
+    -- storage = Supabase Storage bucket path (recommended for paid assets)
+    storage_bucket VARCHAR(80) NOT NULL DEFAULT 'crk-downloads',
+    storage_path TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    content_type VARCHAR(120) NOT NULL DEFAULT 'application/zip',
+
+    version VARCHAR(30) NOT NULL,
+    is_latest BOOLEAN NOT NULL DEFAULT FALSE,
+    published_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_template_releases_product ON template_releases(required_product_key);
+CREATE INDEX IF NOT EXISTS idx_template_releases_latest ON template_releases(is_latest);
+
+-- Webhook / purchase events log
+CREATE TABLE IF NOT EXISTS purchase_events (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    provider VARCHAR(30) NOT NULL DEFAULT 'fastspring',
+    event_type VARCHAR(120),
+    external_order_id TEXT,
+    external_customer_email TEXT,
+    product_key VARCHAR(100),
+    raw_payload JSONB,
+    received_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Pending entitlements keyed by purchaser email (webhook writes here; user claims after login)
+CREATE TABLE IF NOT EXISTS pending_entitlements (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    purchaser_email TEXT NOT NULL,
+    product_key VARCHAR(100) NOT NULL,
+    external_order_id TEXT,
+    provider VARCHAR(30) NOT NULL DEFAULT 'fastspring',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'claimed', 'revoked')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    claimed_at TIMESTAMP WITH TIME ZONE,
+    claimed_by_user_id UUID
+);
+
+CREATE INDEX IF NOT EXISTS idx_pending_entitlements_email ON pending_entitlements(purchaser_email);
+CREATE INDEX IF NOT EXISTS idx_pending_entitlements_status ON pending_entitlements(status);
+
+-- ============================================
 -- 8. SYNC MANAGEMENT
 -- ============================================
 
@@ -407,6 +490,7 @@ CREATE INDEX idx_sync_log_time ON sync_log(started_at DESC);
 -- Enable RLS on user tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE download_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_entitlements ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own data
 CREATE POLICY "Users can view own profile"
@@ -420,6 +504,17 @@ CREATE POLICY "Users can update own profile"
 CREATE POLICY "Users can view own downloads"
     ON download_history FOR SELECT
     USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own downloads"
+    ON download_history FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+-- Entitlements policies
+CREATE POLICY "Users can view own entitlements"
+    ON product_entitlements FOR SELECT
+    USING (auth.uid() = user_id);
+
+-- Purchases/events are server-written only; no user access by default
 
 -- Public data is readable by everyone
 -- (market_data, klines, sentiment, etc. don't need RLS)

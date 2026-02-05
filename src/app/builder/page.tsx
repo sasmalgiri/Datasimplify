@@ -588,7 +588,7 @@ export default function BuilderPage() {
                 </li>
                 <li className="flex gap-2">
                   <span className="font-bold">4.</span>
-                  Open in Excel, install the CRK Add-in, and click Refresh
+                  Open in Excel, paste your API key, and click Refresh
                 </li>
               </ol>
             </div>

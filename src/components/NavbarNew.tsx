@@ -47,8 +47,8 @@ export function Navbar() {
       href: '/tools',
       icon: '🛠️',
       children: [
-        { name: 'Excel Downloads', href: '/templates', icon: '📋', desc: 'CRK + BYOK Templates' },
-        { name: 'Technical Indicators', href: '/technical', icon: '📊', desc: 'Educational indicator analysis' },
+        { name: 'Power Query Templates', href: '/downloads', icon: '📊', desc: 'Excel templates with BYOK' },
+        { name: 'Technical Indicators', href: '/technical', icon: '📈', desc: 'Educational indicator analysis' },
         { name: 'Portfolio Tracker', href: '/portfolio', icon: '💼', desc: 'Track your holdings' },
       ]
     },

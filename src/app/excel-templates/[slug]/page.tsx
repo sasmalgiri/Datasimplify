@@ -142,29 +142,23 @@ export default async function TemplateDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* CRK Add-in Notice */}
-        <div className="bg-blue-900/30 border-2 border-blue-500/50 rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-bold text-blue-400 mb-2">
-            Requires CryptoReportKit Excel Add-in
+        {/* Power Query Notice */}
+        <div className="bg-emerald-900/30 border-2 border-emerald-500/50 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-bold text-emerald-400 mb-2">
+            Power Query Templates - No Add-in Required
           </h2>
           <p className="text-gray-300 text-sm mb-3">
-            This template contains CRK formulas that fetch live cryptocurrency data. You need the{' '}
-            <Link
-              href="/addin/setup"
-              className="text-blue-400 hover:text-blue-300 underline"
-            >
-              CryptoReportKit (CRK) Excel Add-in
-            </Link>{' '}
-            installed in Excel Desktop to refresh data.
+            This template uses Excel&apos;s built-in Power Query to fetch live cryptocurrency data.
+            Just paste your API key and refresh - no add-in installation needed.
           </p>
           <p className="text-gray-400 text-xs">
-            <strong>BYOK (Bring Your Own Keys):</strong> Live data is fetched using your own API key(s)
-            from providers like CoinGecko. The template contains formulas only - no embedded data.
+            <strong>BYOK (Bring Your Own Keys):</strong> Your CoinGecko API key stays in Excel - 
+            it never touches our servers. The template contains Power Query code only - no embedded data.
             See{' '}
-            <Link href="/template-requirements" className="text-blue-400 hover:underline">
-              Template Requirements
+            <Link href="/template-requirements" className="text-emerald-400 hover:underline">
+              Setup Guide
             </Link>{' '}
-            for setup instructions.
+            for instructions.
           </p>
         </div>
 

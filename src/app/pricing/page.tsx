@@ -7,6 +7,59 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
+// One-time Power Query template tiers
+const POWER_QUERY_TIERS = [
+  {
+    name: 'Free',
+    key: 'free',
+    price: 0,
+    description: 'Get started with basics',
+    features: [
+      'Top 10 coins only',
+      'Basic price table',
+      'Manual refresh',
+      'Community support',
+    ],
+    downloadUrl: '/excel-templates/free/PowerQuery_Free.pq',
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    key: 'pro',
+    price: 29,
+    description: 'Most popular choice',
+    features: [
+      'Top 100 cryptocurrencies',
+      'Auto-refresh every 5 min',
+      'Portfolio tracker',
+      'Historical charts',
+      'DCA calculator',
+      'BYOK with Pro API support',
+      'Email support',
+      'Lifetime updates',
+    ],
+    checkoutUrl: 'https://cryptoreportkit.onfastspring.com/power-query-pro',
+    popular: true,
+  },
+  {
+    name: 'Enterprise',
+    key: 'enterprise',
+    price: 99,
+    description: 'For professionals',
+    features: [
+      'All 10,000+ cryptocurrencies',
+      'Multi-portfolio support',
+      'Risk analytics (Sharpe, Sortino)',
+      'Correlation matrix',
+      '5 years historical data',
+      'Custom modifications',
+      'Priority support',
+    ],
+    checkoutUrl: 'https://cryptoreportkit.onfastspring.com/power-query-enterprise',
+    popular: false,
+  },
+];
+
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
   const [isVisible, setIsVisible] = useState(false);
@@ -53,6 +106,7 @@ export default function PricingPage() {
   const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [pricingType, setPricingType] = useState<'subscription' | 'onetime'>('onetime');
 
   if (!pricingEnabled) {
     return (
@@ -65,15 +119,15 @@ export default function PricingPage() {
             CryptoReportKit is currently running in free mode. All features are available without payment.
           </p>
           <p className="text-gray-400 text-sm mb-6">
-            We provide software analytics tools and Excel templates for educational data visualization.
-            Templates contain formulas only - data is fetched via the CRK add-in using your own API keys (BYOK).
+            We provide Power Query templates for crypto data in Excel.
+            Templates use BYOK - your API key stays in Excel, no add-in required.
           </p>
           <div className="mt-6 flex gap-4">
-            <Link href="/templates" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
-              Browse Templates →
+            <Link href="/downloads" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
+              Get Templates →
             </Link>
             <Link href="/template-requirements" className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium">
-              Setup Requirements
+              Setup Guide
             </Link>
           </div>
         </div>
@@ -149,17 +203,159 @@ export default function PricingPage() {
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
           <p className="text-gray-400 text-lg mb-2">
-            Excel templates with live crypto data. Cancel anytime.
+            Excel templates with live crypto data. Choose your preferred option.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm text-emerald-400">
             <span>🔑</span>
             <span>
-              <strong>BYOK:</strong> Templates use your own CoinGecko API key. Your keys are encrypted and never shared.
+              <strong>BYOK:</strong> You use your own API key. Power Query keeps it in Excel; if you store keys in CRK, they’re encrypted.
             </span>
           </div>
         </div>
 
-        {/* Billing Toggle */}
+        {/* Pricing Type Toggle - Subscription vs One-time */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-800 p-1 rounded-lg inline-flex items-center">
+            <button
+              onClick={() => setPricingType('onetime')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition ${
+                pricingType === 'onetime'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              💾 One-Time Purchase
+            </button>
+            <button
+              onClick={() => setPricingType('subscription')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition ${
+                pricingType === 'subscription'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              🔄 Subscription
+            </button>
+          </div>
+        </div>
+
+        {/* One-Time Power Query Templates */}
+        {pricingType === 'onetime' && (
+          <>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold mb-2">Power Query Templates</h2>
+              <p className="text-gray-400">
+                Download once, use forever. Works in Excel Desktop with Power Query.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                Already purchased? <Link href="/downloads" className="text-emerald-400 underline hover:text-emerald-300">Go to Downloads</Link>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12">
+              {POWER_QUERY_TIERS.map((tier) => (
+                <div
+                  key={tier.key}
+                  className={`bg-gray-800 rounded-2xl border-2 ${
+                    tier.popular ? 'border-emerald-500' : 'border-gray-700'
+                  } p-6 relative`}
+                >
+                  {tier.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full">
+                        BEST VALUE
+                      </span>
+                    </div>
+                  )}
+
+                  <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
+                  <p className="text-gray-400 text-sm mb-4">{tier.description}</p>
+
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold">
+                        {tier.price === 0 ? 'Free' : `$${tier.price}`}
+                      </span>
+                      {tier.price > 0 && <span className="text-gray-400">one-time</span>}
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2 mb-6 text-sm">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-emerald-400 mt-0.5">✓</span>
+                        <span className="text-gray-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {tier.price === 0 ? (
+                    <a
+                      href={tier.downloadUrl}
+                      download
+                      className="block w-full py-2.5 rounded-lg font-medium text-center bg-gray-700 hover:bg-gray-600 text-white transition"
+                    >
+                      Download Free
+                    </a>
+                  ) : (
+                    <a
+                      href={tier.checkoutUrl}
+                      className={`block w-full py-2.5 rounded-lg font-medium text-center transition ${
+                        tier.popular
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-gray-700 hover:bg-gray-600 text-white'
+                      }`}
+                    >
+                      Buy {tier.name}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Power Query Benefits */}
+            <div className="max-w-3xl mx-auto mb-12">
+              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-6">
+                <h3 className="font-bold text-lg mb-4 text-center">Why Power Query Templates?</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <span className="text-blue-400 text-lg">🔌</span>
+                    <div>
+                      <strong className="text-white">No Add-in Required</strong>
+                      <p className="text-gray-400">Works directly in Excel Desktop with built-in Power Query</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-blue-400 text-lg">🔑</span>
+                    <div>
+                      <strong className="text-white">True BYOK</strong>
+                      <p className="text-gray-400">Your API key, your data, no middleman</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-blue-400 text-lg">⚡</span>
+                    <div>
+                      <strong className="text-white">Auto-Refresh</strong>
+                      <p className="text-gray-400">Set up scheduled refresh every 5+ minutes</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-blue-400 text-lg">♾️</span>
+                    <div>
+                      <strong className="text-white">Lifetime License</strong>
+                      <p className="text-gray-400">Pay once, use forever, free updates</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Subscription Pricing */}
+        {pricingType === 'subscription' && (
+          <>
+            {/* Billing Toggle */}
         <div className="flex justify-center mb-10">
           <div className="bg-gray-800 p-1 rounded-lg inline-flex items-center">
             <button
@@ -254,6 +450,8 @@ export default function PricingPage() {
             );
           })}
         </div>
+          </>
+        )}
 
         {/* Renewal Notice */}
         <p className="text-center text-gray-500 text-sm mt-6">
@@ -286,7 +484,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What is BYOK?</h3>
-              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. Get one free at <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>. Your keys are encrypted and never shared.</p>
+              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. In Power Query, your key stays in Excel. In the CRK app (if you choose to save a key), it’s stored encrypted. Get a key at <a href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">Can I cancel anytime?</h3>
@@ -294,12 +492,35 @@ export default function PricingPage() {
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What&apos;s included in templates?</h3>
-              <p className="text-gray-400 text-sm">Templates contain CRK formulas (not data). When you open them in Excel with our add-in, formulas fetch live data using your API key.</p>
+              <p className="text-gray-400 text-sm">Templates contain Power Query code that fetches live data using your API key. No data is stored - it&apos;s fetched fresh on each refresh.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="font-bold mb-2 text-white">What if I need more coins?</h3>
-              <p className="text-gray-400 text-sm">Upgrade to Pro for up to 100 coins per template. For larger templates, you may also need to upgrade your CoinGecko API tier.</p>
+              <h3 className="font-bold mb-2 text-white">Do I need an add-in?</h3>
+              <p className="text-gray-400 text-sm">No! Power Query is built into Excel. Just paste your API key and refresh - no add-in installation required.</p>
             </div>
+          </div>
+        </div>
+
+        {/* Need Higher API Limits? - Affiliate Revenue */}
+        <div className="mt-16">
+          <div className="max-w-3xl mx-auto bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-6">
+            <h3 className="font-bold text-lg mb-2 text-center">🔑 Need Higher API Limits?</h3>
+            <p className="text-gray-400 text-sm text-center mb-4">
+              Free CoinGecko API has rate limits. Upgrade to Pro for 500+ calls/minute.
+            </p>
+            <div className="flex justify-center gap-4">
+              <a
+                href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black font-medium rounded-lg transition"
+              >
+                Get CoinGecko Pro →
+              </a>
+            </div>
+            <p className="text-gray-500 text-xs text-center mt-3">
+              Affiliate link - helps support CryptoReportKit at no extra cost to you
+            </p>
           </div>
         </div>
 

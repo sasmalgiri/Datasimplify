@@ -238,7 +238,7 @@ export default function ReportKitPage() {
             {/* Preview Footer */}
             <div className="px-4 py-3 bg-emerald-900/20 border-t border-emerald-500/30">
               <p className="text-xs text-emerald-400 text-center">
-                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, CRK formulas will fetch the latest data using your own API key (BYOK).
+                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, Power Query will fetch the latest data using your own API key (BYOK).
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function ReportKitPage() {
                   <h3 className="font-medium text-gray-900 capitalize">
                     {templateId.replace(/_/g, ' ')}
                   </h3>
-                  <p className="text-sm text-gray-500">Excel template with CRK formulas (BYOK)</p>
+                  <p className="text-sm text-gray-500">Power Query template (BYOK)</p>
                 </div>
                 <button
                   type="button"
@@ -325,7 +325,7 @@ export default function ReportKitPage() {
               <div>
                 <h3 className="font-medium text-gray-900">Open and refresh</h3>
                 <p className="text-sm text-gray-600">
-                  Open the template in Excel Desktop, sign in to the CRK add-in, and hit refresh to see live
+                  Open the template in Excel Desktop, paste your API key in the designated cell, and hit Data → Refresh All to see live
                   data.
                 </p>
               </div>

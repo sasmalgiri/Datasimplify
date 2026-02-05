@@ -226,13 +226,13 @@ export default function CategoriesPage() {
             <h2 className="text-xl font-semibold text-white">Export Category Data</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download category data as Excel templates with live CRK formulas (BYOK).
+            Download category data as Power Query templates (BYOK). Your API key stays in Excel.
           </p>
           <Link
-            href="/templates"
+            href="/downloads"
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition"
           >
-            Get Excel Templates
+            Get Power Query Templates
             <ExternalLink className="w-4 h-4" />
           </Link>
         </div>

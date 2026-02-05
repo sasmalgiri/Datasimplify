@@ -58,15 +58,15 @@ const faqSchema = {
       name: 'Where does CRK store my API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Your API key is encrypted using AES-256-GCM and stored securely in the CRK database. It is decrypted only in memory when making API calls to CoinGecko on your behalf. We never log or share your plaintext key.',
+        text: 'With Power Query templates, your API key stays in Excel - it never leaves your workbook or touches our servers. This is the most private approach possible.',
       },
     },
     {
       '@type': 'Question',
-      name: 'Can I delete my API key from CRK?',
+      name: 'Can I delete my API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! You can delete your API key anytime from the CRK add-in or from your CRK account settings. Deleting your account also permanently deletes your encrypted keys.',
+        text: 'Yes! Since your key is stored in your Excel workbook, simply delete it from the designated cell. You can also revoke and regenerate keys in your CoinGecko dashboard.',
       },
     },
     {

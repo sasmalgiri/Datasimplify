@@ -123,8 +123,8 @@ export default function RefundPage() {
               <li className="flex items-start gap-3">
                 <span className="text-blue-600 mt-1">ℹ️</span>
                 <span>
-                  <strong>CRK Add-in + API Key required:</strong> Templates require the CryptoReportKit Excel add-in
-                  and your own data provider API key (e.g., CoinGecko) to fetch live data. Ensure you meet the{' '}
+                  <strong>Power Query + API Key required:</strong> Templates use Power Query (built into Excel)
+                  and require your own CoinGecko API key to fetch live data. Ensure you meet the{' '}
                   <Link href="/template-requirements" className="text-emerald-600 underline">requirements</Link>
                   {' '}before purchasing.
                 </span>

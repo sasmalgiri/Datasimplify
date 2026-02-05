@@ -106,20 +106,20 @@ export default function TrendingPage() {
             <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download trending coins and market movers data as Excel templates with live CRK formulas (BYOK).
+            Download trending coins and market movers data as Power Query templates (BYOK). Your API key stays in Excel.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/download"
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition"
             >
-              Download Templates
+              Customize Templates
             </Link>
             <Link
-              href="/templates"
+              href="/downloads"
               className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
             >
-              View All Templates
+              Power Query Templates
             </Link>
           </div>
         </div>

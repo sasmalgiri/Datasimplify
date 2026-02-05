@@ -33,16 +33,16 @@ export default function AboutPage() {
           <h2 className="text-2xl font-semibold text-white mb-4">What We Provide</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">
-              <h3 className="font-semibold text-emerald-400 mb-2">Excel Templates</h3>
+              <h3 className="font-semibold text-emerald-400 mb-2">Power Query Templates</h3>
               <p className="text-gray-400 text-sm">
-                Pre-built Excel template packs with CRK formulas. Templates contain formulas only -
-                no embedded market data. Data is fetched using your own API keys.
+                Pre-built Excel template packs with Power Query code. Templates contain code only -
+                no embedded market data. Data is fetched using your own API key stored in Excel.
               </p>
             </div>
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">
-              <h3 className="font-semibold text-emerald-400 mb-2">CRK Excel Add-in</h3>
+              <h3 className="font-semibold text-emerald-400 mb-2">No Add-in Required</h3>
               <p className="text-gray-400 text-sm">
-                Our Excel add-in powers the CRK formulas. Sign in, connect your API keys,
+                Uses Excel&apos;s built-in Power Query feature. Just paste your CoinGecko API key
                 and refresh to pull live data directly into your spreadsheets.
               </p>
             </div>

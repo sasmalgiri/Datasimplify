@@ -7,6 +7,7 @@ import {
   ChevronDown,
   BarChart3,
   BookOpen,
+  Download,
   Menu,
   X,
   Scale,
@@ -90,14 +91,14 @@ export function FreeNavbar() {
   // C) Verify - Smart contract verification (Sourcify + Z3)
   const navSections = {
     reports: {
-      label: 'Reports',
+      label: 'Templates',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/download', '/template-requirements', '/byok'],
+      paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok'],
       items: [
-        { href: '/templates', label: 'Report Kits', description: '8 curated Excel template packs', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/downloads', label: 'Power Query Templates', description: 'BYOK templates for Excel', icon: <Download className="w-4 h-4" /> },
         { href: '/download', label: 'Customize Templates', description: 'Configure coins, timeframe & download', icon: <FileSpreadsheet className="w-4 h-4" /> },
-        { href: '/template-requirements', label: 'Setup Guide', description: 'How to use BYOK templates', icon: <HelpCircle className="w-4 h-4" /> },
-        { href: '/byok', label: 'BYOK Explained', description: 'Bring Your Own Key architecture', icon: <Shield className="w-4 h-4" /> },
+        { href: '/template-requirements', label: 'Setup Guide', description: 'How to use Power Query templates', icon: <HelpCircle className="w-4 h-4" /> },
+        { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
       ],
     },
     compare: {
@@ -140,7 +141,7 @@ export function FreeNavbar() {
 
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
-    { href: '/templates', label: 'Report Kits', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
     { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')

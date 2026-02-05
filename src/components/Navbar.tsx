@@ -29,10 +29,10 @@ export function Navbar() {
               Market
             </Link>
             <Link
-              href="/templates"
+              href="/downloads"
               className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
             >
-              📊 Download
+              📊 Templates
             </Link>
             <Link 
               href="/compare" 
