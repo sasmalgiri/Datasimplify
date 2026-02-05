@@ -49,6 +49,7 @@ interface DataPreviewProps {
   selectedCoins: string[];
   timeframe: string;
   onDataLoad?: (data: CoinData[]) => void;
+  defaultViewMode?: ViewMode;
 }
 
 // Chart colors matching CryptoReportKit dark theme
@@ -70,11 +71,11 @@ type SortField = 'symbol' | 'price' | 'change24h' | 'marketCap' | 'volume';
 type SortOrder = 'asc' | 'desc';
 type ChangeFilter = 'all' | 'gainers' | 'losers';
 
-export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPreviewProps) {
+export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewMode = 'table' }: DataPreviewProps) {
   const [data, setData] = useState<CoinData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Filter and sort state

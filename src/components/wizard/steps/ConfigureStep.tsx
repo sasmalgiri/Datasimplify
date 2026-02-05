@@ -278,6 +278,7 @@ export function ConfigureStep() {
                 selectedCoins={previewCoins}
                 timeframe="1d"
                 onDataLoad={() => {}}
+                defaultViewMode="dashboard"
               />
             ) : (
               <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 text-center">
