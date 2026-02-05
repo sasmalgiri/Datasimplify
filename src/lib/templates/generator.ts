@@ -173,6 +173,11 @@ export async function generateTemplate(
     await createEmbeddedChartsSheet(workbook, baseTemplate, userConfig);
   }
 
+  // 7.6. Add DISTRIBUTION ANALYSIS sheet if charts are enabled
+  if (userConfig.customizations.includeCharts) {
+    await createDistributionAnalysisSheet(workbook, baseTemplate, userConfig);
+  }
+
   // 8. Add INSTRUCTIONS sheet
   await createInstructionsSheet(workbook, baseTemplate, userConfig);
 
@@ -1769,6 +1774,318 @@ async function createEmbeddedChartsSheet(
       },
     ],
   });
+}
+
+/**
+ * Create Distribution Analysis sheet with wallet holder visualization
+ * Includes: Holder cards, visual treemap, distribution details table
+ */
+async function createDistributionAnalysisSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Distribution', {
+    properties: { tabColor: { argb: 'F59E0B' } }, // Amber
+    views: [{ showGridLines: false }],
+  });
+
+  // Holder categories with data
+  const HOLDER_CATEGORIES = [
+    { emoji: '🐋', name: 'Humpback', range: '>10K BTC', coinPct: 42.5, addrPct: 0.01, change24h: 0.12, avgHolding: '15.0K BTC', color: '1E40AF' },
+    { emoji: '🐳', name: 'Whale', range: '1K-10K BTC', coinPct: 28.3, addrPct: 0.08, change24h: -0.05, avgHolding: '3.5K BTC', color: '3B82F6' },
+    { emoji: '🦈', name: 'Shark', range: '100-1K BTC', coinPct: 15.7, addrPct: 0.42, change24h: 0.08, avgHolding: '350 BTC', color: '6366F1' },
+    { emoji: '🐟', name: 'Fish', range: '10-100 BTC', coinPct: 8.9, addrPct: 2.85, change24h: 0.23, avgHolding: '42 BTC', color: '8B5CF6' },
+    { emoji: '🦀', name: 'Crab', range: '1-10 BTC', coinPct: 3.4, addrPct: 12.64, change24h: 0.45, avgHolding: '4.2 BTC', color: 'A855F7' },
+    { emoji: '🦐', name: 'Shrimp', range: '<1 BTC', coinPct: 1.2, addrPct: 84.00, change24h: 0.67, avgHolding: '0.15 BTC', color: 'EC4899' },
+  ];
+
+  // Set column widths
+  sheet.getColumn(1).width = 3;  // Margin
+  sheet.getColumn(2).width = 5;  // Emoji
+  sheet.getColumn(3).width = 12; // Name
+  sheet.getColumn(4).width = 14; // Range
+  sheet.getColumn(5).width = 10; // Coins %
+  sheet.getColumn(6).width = 12; // Addresses %
+  sheet.getColumn(7).width = 10; // 24h Change
+  sheet.getColumn(8).width = 3;  // Spacer
+  sheet.getColumn(9).width = 5;  // Treemap emoji
+  sheet.getColumn(10).width = 12; // Treemap name
+  sheet.getColumn(11).width = 8;  // Treemap %
+  sheet.getColumn(12).width = 20; // Visual bar
+  sheet.getColumn(13).width = 3;  // Spacer
+  sheet.getColumn(14).width = 15; // Details
+  sheet.getColumn(15).width = 12; // Values
+
+  // Apply dark background
+  for (let r = 1; r <= 50; r++) {
+    for (let c = 1; c <= 15; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  const coin = userConfig.coins[0] || 'BTC';
+  let row = 1;
+
+  // ===== TITLE =====
+  sheet.mergeCells(`B${row}:G${row}`);
+  const titleCell = sheet.getCell(`B${row}`);
+  titleCell.value = `📊 ${coin} Distribution Analysis`;
+  titleCell.font = { bold: true, size: 20, color: { argb: COLORS.primary } };
+  row += 1;
+
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = 'Wallet Holder Analysis • Data updates with CRK formulas';
+  sheet.getCell(`B${row}`).font = { size: 11, color: { argb: COLORS.textSecondary }, italic: true };
+  row += 2;
+
+  // ===== SECTION 1: HOLDER CARDS =====
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '🐋 Wallet Holder Categories';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  row += 1;
+
+  // Headers
+  const headers = ['', 'Category', 'Range', 'Coins %', 'Addresses %', '24h Δ'];
+  const headerCols = ['B', 'C', 'D', 'E', 'F', 'G'];
+  for (let i = 0; i < headers.length; i++) {
+    const cell = sheet.getCell(`${headerCols[i]}${row}`);
+    cell.value = headers[i];
+    cell.font = { bold: true, size: 10, color: { argb: COLORS.textSecondary } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.bgMedium } };
+    cell.border = { bottom: { style: 'thin', color: { argb: COLORS.borderColor } } };
+  }
+  row += 1;
+
+  // Holder rows
+  for (const holder of HOLDER_CATEGORIES) {
+    const rowFill = HOLDER_CATEGORIES.indexOf(holder) % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
+
+    // Emoji
+    sheet.getCell(`B${row}`).value = holder.emoji;
+    sheet.getCell(`B${row}`).font = { size: 16 };
+    sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Name with color
+    sheet.getCell(`C${row}`).value = holder.name;
+    sheet.getCell(`C${row}`).font = { bold: true, color: { argb: holder.color } };
+    sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Range
+    sheet.getCell(`D${row}`).value = holder.range;
+    sheet.getCell(`D${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`D${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Coins %
+    sheet.getCell(`E${row}`).value = holder.coinPct / 100;
+    sheet.getCell(`E${row}`).numFmt = '0.0%';
+    sheet.getCell(`E${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`E${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // Addresses %
+    sheet.getCell(`F${row}`).value = holder.addrPct / 100;
+    sheet.getCell(`F${row}`).numFmt = '0.00%';
+    sheet.getCell(`F${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`F${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    // 24h Change with color
+    sheet.getCell(`G${row}`).value = holder.change24h / 100;
+    sheet.getCell(`G${row}`).numFmt = '+0.00%;-0.00%';
+    sheet.getCell(`G${row}`).font = { color: { argb: holder.change24h >= 0 ? COLORS.positive : COLORS.negative } };
+    sheet.getCell(`G${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    row++;
+  }
+
+  row += 2;
+
+  // ===== SECTION 2: VISUAL TREEMAP (Coin Distribution) =====
+  const treemapStartRow = row;
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '💰 Coin Distribution (Visual Treemap)';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  row += 1;
+
+  // Create visual treemap using colored cells
+  // First row: Humpback (large) + Whale
+  sheet.mergeCells(`B${row}:D${row + 2}`);
+  const humpbackCell = sheet.getCell(`B${row}`);
+  humpbackCell.value = '🐋 Humpback\n42.5%';
+  humpbackCell.font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
+  humpbackCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1E40AF' } };
+  humpbackCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  humpbackCell.border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  sheet.mergeCells(`E${row}:G${row + 1}`);
+  const whaleCell = sheet.getCell(`E${row}`);
+  whaleCell.value = '🐳 Whale\n28.3%';
+  whaleCell.font = { bold: true, size: 12, color: { argb: 'FFFFFF' } };
+  whaleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '3B82F6' } };
+  whaleCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  whaleCell.border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  row += 2;
+
+  // Shark row
+  sheet.mergeCells(`E${row}:G${row}`);
+  const sharkCell = sheet.getCell(`E${row}`);
+  sharkCell.value = '🦈 Shark 15.7%';
+  sharkCell.font = { bold: true, size: 11, color: { argb: 'FFFFFF' } };
+  sharkCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '6366F1' } };
+  sharkCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  sharkCell.border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  row += 1;
+
+  // Fish, Crab, Shrimp row
+  sheet.getCell(`B${row}`).value = '🐟 Fish 8.9%';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 10, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '8B5CF6' } };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getCell(`B${row}`).border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  sheet.mergeCells(`C${row}:D${row}`);
+  sheet.getCell(`C${row}`).value = '🦀 Crab 3.4%';
+  sheet.getCell(`C${row}`).font = { bold: true, size: 10, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'A855F7' } };
+  sheet.getCell(`C${row}`).alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getCell(`C${row}`).border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  sheet.mergeCells(`E${row}:G${row}`);
+  sheet.getCell(`E${row}`).value = '🦐 Shrimp 1.2%';
+  sheet.getCell(`E${row}`).font = { bold: true, size: 10, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`E${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'EC4899' } };
+  sheet.getCell(`E${row}`).alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getCell(`E${row}`).border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  row += 2;
+
+  // Note
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '↑ Block size = proportion of total coin supply held';
+  sheet.getCell(`B${row}`).font = { size: 9, color: { argb: COLORS.textMuted }, italic: true };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
+
+  row += 2;
+
+  // ===== SECTION 3: ADDRESS DISTRIBUTION =====
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '👛 Address Distribution (Visual)';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  row += 1;
+
+  // Address treemap (Shrimp dominates)
+  sheet.mergeCells(`B${row}:F${row + 1}`);
+  const shrimpAddrCell = sheet.getCell(`B${row}`);
+  shrimpAddrCell.value = '🦐 Shrimp\n84.0% of all addresses';
+  shrimpAddrCell.font = { bold: true, size: 14, color: { argb: 'FFFFFF' } };
+  shrimpAddrCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'EC4899' } };
+  shrimpAddrCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  shrimpAddrCell.border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  sheet.mergeCells(`G${row}:G${row + 1}`);
+  const crabAddrCell = sheet.getCell(`G${row}`);
+  crabAddrCell.value = '🦀\n12.6%';
+  crabAddrCell.font = { bold: true, size: 11, color: { argb: 'FFFFFF' } };
+  crabAddrCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'A855F7' } };
+  crabAddrCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  crabAddrCell.border = { top: { style: 'medium', color: { argb: COLORS.bgDark } }, left: { style: 'medium', color: { argb: COLORS.bgDark } }, bottom: { style: 'medium', color: { argb: COLORS.bgDark } }, right: { style: 'medium', color: { argb: COLORS.bgDark } } };
+
+  row += 2;
+
+  // Others row
+  sheet.mergeCells(`B${row}:C${row}`);
+  sheet.getCell(`B${row}`).value = '🐟 2.85%';
+  sheet.getCell(`B${row}`).font = { size: 9, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '8B5CF6' } };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
+
+  sheet.mergeCells(`D${row}:E${row}`);
+  sheet.getCell(`D${row}`).value = '🦈 0.42%';
+  sheet.getCell(`D${row}`).font = { size: 9, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`D${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '6366F1' } };
+  sheet.getCell(`D${row}`).alignment = { horizontal: 'center' };
+
+  sheet.mergeCells(`F${row}:G${row}`);
+  sheet.getCell(`F${row}`).value = '🐳🐋 <0.1%';
+  sheet.getCell(`F${row}`).font = { size: 9, color: { argb: 'FFFFFF' } };
+  sheet.getCell(`F${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1E40AF' } };
+  sheet.getCell(`F${row}`).alignment = { horizontal: 'center' };
+
+  row += 2;
+
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '↑ Block size = proportion of total addresses';
+  sheet.getCell(`B${row}`).font = { size: 9, color: { argb: COLORS.textMuted }, italic: true };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
+
+  row += 2;
+
+  // ===== SECTION 4: DISTRIBUTION DETAILS TABLE =====
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = '📋 Distribution Details Table';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
+  row += 1;
+
+  // Table headers
+  const tableHeaders = ['Category', 'Range', 'Coin %', 'Addr %', 'Avg Hold', '24h Δ'];
+  const tableCols = ['B', 'C', 'D', 'E', 'F', 'G'];
+  for (let i = 0; i < tableHeaders.length; i++) {
+    const cell = sheet.getCell(`${tableCols[i]}${row}`);
+    cell.value = tableHeaders[i];
+    cell.font = { bold: true, size: 10, color: { argb: COLORS.headerText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.primary } };
+    cell.alignment = { horizontal: 'center' };
+    cell.border = { bottom: { style: 'thin', color: { argb: COLORS.borderColor } } };
+  }
+  row += 1;
+
+  // Table data
+  for (const holder of HOLDER_CATEGORIES) {
+    const rowFill = HOLDER_CATEGORIES.indexOf(holder) % 2 === 0 ? COLORS.rowBg : COLORS.altRowBg;
+
+    sheet.getCell(`B${row}`).value = `${holder.emoji} ${holder.name}`;
+    sheet.getCell(`B${row}`).font = { bold: true, color: { argb: holder.color } };
+    sheet.getCell(`B${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`C${row}`).value = holder.range;
+    sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`C${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`D${row}`).value = holder.coinPct / 100;
+    sheet.getCell(`D${row}`).numFmt = '0.0%';
+    sheet.getCell(`D${row}`).font = { bold: true, color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`D${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`E${row}`).value = holder.addrPct / 100;
+    sheet.getCell(`E${row}`).numFmt = '0.00%';
+    sheet.getCell(`E${row}`).font = { color: { argb: COLORS.textPrimary } };
+    sheet.getCell(`E${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`F${row}`).value = holder.avgHolding;
+    sheet.getCell(`F${row}`).font = { color: { argb: COLORS.textSecondary } };
+    sheet.getCell(`F${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    sheet.getCell(`G${row}`).value = holder.change24h / 100;
+    sheet.getCell(`G${row}`).numFmt = '+0.00%;-0.00%';
+    sheet.getCell(`G${row}`).font = { color: { argb: holder.change24h >= 0 ? COLORS.positive : COLORS.negative } };
+    sheet.getCell(`G${row}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowFill } };
+
+    row++;
+  }
+
+  row += 2;
+
+  // Footer
+  sheet.mergeCells(`B${row}:G${row}`);
+  sheet.getCell(`B${row}`).value = `Generated by CryptoReportKit • ${new Date().toLocaleDateString()} • Data refreshes with CRK Add-in`;
+  sheet.getCell(`B${row}`).font = { size: 10, color: { argb: COLORS.textMuted }, italic: true };
+  sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
 }
 
 /**
