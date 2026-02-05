@@ -197,6 +197,7 @@
 
     .hidden { display: none !important; }
     .byok-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+    .chart-btn { margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -280,6 +281,21 @@
       <p class="byok-hint">
         Optional: Connect your own API key for higher rate limits
       </p>
+    </div>
+
+    <!-- Create Charts -->
+    <div class="section">
+      <div class="section-title">📊 Create Charts</div>
+      <button type="button" id="createChartsBtn" class="btn btn-primary chart-btn" onclick="createAllCharts()">
+        🎨 Auto-Create Dashboard Charts
+      </button>
+      <div class="quick-grid">
+        <button class="quick-btn" onclick="createChart('pie', 'marketcap')">🥧 Market Cap Pie</button>
+        <button class="quick-btn" onclick="createChart('bar', 'price')">📊 Price Bar</button>
+        <button class="quick-btn" onclick="createChart('bar', 'change')">📈 24h Change</button>
+        <button class="quick-btn" onclick="createChart('line', 'price')">📉 Price Line</button>
+      </div>
+      <p class="byok-hint">Creates native Excel charts from your Data sheet</p>
     </div>
 
     <!-- Quick Insert -->
@@ -567,6 +583,277 @@
         });
       });
     });
+
+    // ============================================
+    // CHART CREATION FUNCTIONS (Office.js)
+    // ============================================
+
+    /**
+     * Create all charts automatically (Dashboard)
+     */
+    async function createAllCharts() {
+      const btn = document.getElementById('createChartsBtn');
+      btn.disabled = true;
+      btn.textContent = 'Creating charts...';
+
+      try {
+        if (!isOfficeReady || typeof Excel === 'undefined') {
+          alert('Excel is not available. Please open this in Excel.');
+          return;
+        }
+
+        await Excel.run(async (context) => {
+          // Check if Data sheet exists
+          const sheets = context.workbook.worksheets;
+          sheets.load('items/name');
+          await context.sync();
+
+          const dataSheet = sheets.items.find(s => s.name === 'Data');
+          if (!dataSheet) {
+            alert('No "Data" sheet found. Please ensure your workbook has a Data sheet with coin data.');
+            return;
+          }
+
+          // Get data range
+          const usedRange = dataSheet.getUsedRange();
+          usedRange.load(['rowCount', 'columnCount', 'address']);
+          await context.sync();
+
+          const rowCount = usedRange.rowCount;
+          if (rowCount < 2) {
+            alert('Data sheet appears empty. Please refresh data first.');
+            return;
+          }
+
+          // Create or get Charts sheet
+          let chartsSheet;
+          const existingChartsSheet = sheets.items.find(s => s.name === 'Charts');
+          if (existingChartsSheet) {
+            chartsSheet = existingChartsSheet;
+            chartsSheet.activate();
+          } else {
+            chartsSheet = sheets.add('Charts');
+          }
+          await context.sync();
+
+          // Clear existing content
+          chartsSheet.getRange().clear();
+          await context.sync();
+
+          // Add title
+          const titleCell = chartsSheet.getRange('B2');
+          titleCell.values = [['📊 CryptoReportKit Dashboard']];
+          titleCell.format.font.size = 18;
+          titleCell.format.font.bold = true;
+          titleCell.format.font.color = '#10B981';
+
+          const subtitleCell = chartsSheet.getRange('B3');
+          subtitleCell.values = [['Auto-generated charts from your crypto data']];
+          subtitleCell.format.font.size = 11;
+          subtitleCell.format.font.color = '#9CA3AF';
+          await context.sync();
+
+          // Create Market Cap Pie Chart
+          const pieChart = chartsSheet.charts.add(
+            Excel.ChartType.pie,
+            dataSheet.getRange('A1:A' + rowCount + ',D1:D' + rowCount), // Coin names + Market Cap
+            Excel.ChartSeriesBy.columns
+          );
+          pieChart.setPosition('B5');
+          pieChart.height = 250;
+          pieChart.width = 350;
+          pieChart.title.text = 'Market Cap Distribution';
+          pieChart.title.format.font.size = 14;
+          pieChart.title.format.font.color = '#FFFFFF';
+          pieChart.format.fill.setSolidColor('#1F2937');
+          pieChart.legend.position = Excel.ChartLegendPosition.right;
+          pieChart.legend.format.font.color = '#9CA3AF';
+          await context.sync();
+
+          // Create Price Bar Chart
+          const barChart = chartsSheet.charts.add(
+            Excel.ChartType.columnClustered,
+            dataSheet.getRange('A1:B' + rowCount), // Coin names + Price
+            Excel.ChartSeriesBy.columns
+          );
+          barChart.setPosition('I5');
+          barChart.height = 250;
+          barChart.width = 350;
+          barChart.title.text = 'Price Comparison (USD)';
+          barChart.title.format.font.size = 14;
+          barChart.title.format.font.color = '#FFFFFF';
+          barChart.format.fill.setSolidColor('#1F2937');
+          barChart.legend.visible = false;
+
+          // Style axes
+          const barXAxis = barChart.axes.getItem(Excel.ChartAxisType.category);
+          barXAxis.format.font.color = '#9CA3AF';
+          const barYAxis = barChart.axes.getItem(Excel.ChartAxisType.value);
+          barYAxis.format.font.color = '#9CA3AF';
+          await context.sync();
+
+          // Create 24h Change Bar Chart
+          const changeChart = chartsSheet.charts.add(
+            Excel.ChartType.columnClustered,
+            dataSheet.getRange('A1:A' + rowCount + ',C1:C' + rowCount), // Coin names + Change
+            Excel.ChartSeriesBy.columns
+          );
+          changeChart.setPosition('B20');
+          changeChart.height = 250;
+          changeChart.width = 350;
+          changeChart.title.text = '24h Price Change (%)';
+          changeChart.title.format.font.size = 14;
+          changeChart.title.format.font.color = '#FFFFFF';
+          changeChart.format.fill.setSolidColor('#1F2937');
+          changeChart.legend.visible = false;
+
+          const changeXAxis = changeChart.axes.getItem(Excel.ChartAxisType.category);
+          changeXAxis.format.font.color = '#9CA3AF';
+          const changeYAxis = changeChart.axes.getItem(Excel.ChartAxisType.value);
+          changeYAxis.format.font.color = '#9CA3AF';
+          await context.sync();
+
+          // Create Volume Bar Chart
+          const volumeChart = chartsSheet.charts.add(
+            Excel.ChartType.columnClustered,
+            dataSheet.getRange('A1:A' + rowCount + ',E1:E' + rowCount), // Coin names + Volume
+            Excel.ChartSeriesBy.columns
+          );
+          volumeChart.setPosition('I20');
+          volumeChart.height = 250;
+          volumeChart.width = 350;
+          volumeChart.title.text = '24h Trading Volume';
+          volumeChart.title.format.font.size = 14;
+          volumeChart.title.format.font.color = '#FFFFFF';
+          volumeChart.format.fill.setSolidColor('#1F2937');
+          volumeChart.legend.visible = false;
+
+          const volXAxis = volumeChart.axes.getItem(Excel.ChartAxisType.category);
+          volXAxis.format.font.color = '#9CA3AF';
+          const volYAxis = volumeChart.axes.getItem(Excel.ChartAxisType.value);
+          volYAxis.format.font.color = '#9CA3AF';
+          await context.sync();
+
+          // Set dark background for the sheet
+          chartsSheet.getRange('A1:P50').format.fill.color = '#111827';
+
+          // Add footer note
+          const footerCell = chartsSheet.getRange('B36');
+          footerCell.values = [['Charts auto-update when you refresh data (Ctrl+Alt+F5)']];
+          footerCell.format.font.size = 10;
+          footerCell.format.font.color = '#6B7280';
+          footerCell.format.font.italic = true;
+          await context.sync();
+
+          alert('Dashboard created! Check the "Charts" sheet.');
+        });
+
+      } catch (error) {
+        console.error('[CRK] Chart creation error:', error);
+        alert('Error creating charts: ' + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🎨 Auto-Create Dashboard Charts';
+      }
+    }
+
+    /**
+     * Create a single chart of specified type
+     */
+    async function createChart(chartType, dataType) {
+      try {
+        if (!isOfficeReady || typeof Excel === 'undefined') {
+          alert('Excel is not available. Please open this in Excel.');
+          return;
+        }
+
+        await Excel.run(async (context) => {
+          const sheets = context.workbook.worksheets;
+          sheets.load('items/name');
+          await context.sync();
+
+          const dataSheet = sheets.items.find(s => s.name === 'Data');
+          if (!dataSheet) {
+            alert('No "Data" sheet found.');
+            return;
+          }
+
+          const usedRange = dataSheet.getUsedRange();
+          usedRange.load('rowCount');
+          await context.sync();
+
+          const rowCount = usedRange.rowCount;
+          if (rowCount < 2) {
+            alert('Data sheet appears empty.');
+            return;
+          }
+
+          // Determine data columns based on dataType
+          let dataRange;
+          let chartTitle;
+          switch (dataType) {
+            case 'marketcap':
+              dataRange = 'A1:A' + rowCount + ',D1:D' + rowCount;
+              chartTitle = 'Market Cap Distribution';
+              break;
+            case 'price':
+              dataRange = 'A1:B' + rowCount;
+              chartTitle = 'Price Comparison (USD)';
+              break;
+            case 'change':
+              dataRange = 'A1:A' + rowCount + ',C1:C' + rowCount;
+              chartTitle = '24h Price Change (%)';
+              break;
+            default:
+              dataRange = 'A1:B' + rowCount;
+              chartTitle = 'Crypto Data';
+          }
+
+          // Map chart type
+          let excelChartType;
+          switch (chartType) {
+            case 'pie':
+              excelChartType = Excel.ChartType.pie;
+              break;
+            case 'bar':
+              excelChartType = Excel.ChartType.columnClustered;
+              break;
+            case 'line':
+              excelChartType = Excel.ChartType.line;
+              break;
+            default:
+              excelChartType = Excel.ChartType.columnClustered;
+          }
+
+          // Create chart on active sheet
+          const activeSheet = context.workbook.worksheets.getActiveWorksheet();
+          const chart = activeSheet.charts.add(
+            excelChartType,
+            dataSheet.getRange(dataRange),
+            Excel.ChartSeriesBy.columns
+          );
+
+          // Position at selection or default
+          const selection = context.workbook.getSelectedRange();
+          selection.load('address');
+          await context.sync();
+
+          chart.setPosition(selection);
+          chart.height = 250;
+          chart.width = 350;
+          chart.title.text = chartTitle;
+          chart.title.format.font.size = 14;
+          chart.format.fill.setSolidColor('#1F2937');
+          await context.sync();
+
+          alert('Chart created: ' + chartTitle);
+        });
+
+      } catch (error) {
+        console.error('[CRK] Chart error:', error);
+        alert('Error: ' + error.message);
+      }
+    }
   </script>
 </body>
 </html>

@@ -270,7 +270,7 @@ export function ConfigureStep() {
             <h3 className="font-medium text-white mb-3">
               Preview
               <span className="text-gray-400 font-normal text-sm ml-2">
-                (What your Excel will look like)
+                (Data view • Charts created via add-in)
               </span>
             </h3>
             {previewCoins.length > 0 ? (

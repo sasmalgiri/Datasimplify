@@ -43,9 +43,15 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
             </p>
             <ul className="text-xs text-gray-400 space-y-1">
               <li>• Excel formulas like <code className="bg-gray-700 px-1 rounded">=CRK.PRICE(&quot;bitcoin&quot;)</code></li>
-              <li>• Pre-configured layout and formatting</li>
-              <li>• <strong className="text-amber-400">No data or charts yet</strong> - formulas fetch data via the CRK add-in</li>
+              <li>• Pre-configured layout, formatting, and dashboard</li>
+              <li>• Data loads automatically when you open with the CRK add-in</li>
             </ul>
+            <div className="mt-3 pt-3 border-t border-gray-700">
+              <p className="text-xs text-emerald-400 font-medium mb-1">📊 Want Native Excel Charts?</p>
+              <p className="text-xs text-gray-500">
+                Open the CRK panel in Excel → Click &quot;Auto-Create Dashboard Charts&quot; to generate pie, bar, and line charts from your data.
+              </p>
+            </div>
           </div>
 
           {addinReady ? (
