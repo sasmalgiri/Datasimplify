@@ -2049,8 +2049,8 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
         {/* Info Note */}
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
           <p className="text-xs text-blue-400">
-            <strong>Note:</strong> Distribution data is simulated for preview purposes. In production, real on-chain data
-            from providers like Glassnode, IntoTheBlock, or Santiment would be used via your BYOK API keys.
+            <strong>Note:</strong> Distribution data shown above is sample data for layout preview only.
+            Wallet holder distribution data is not available from CoinGecko. Market data (prices, volume, etc.) comes from CoinGecko via your API key.
           </p>
         </div>
       </div>
