@@ -530,7 +530,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
   const TableView = () => (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead>
+        <thead className="select-none">
           <tr className="border-b border-gray-700">
             <th className="text-left py-3 px-4 text-gray-400 font-medium">Coin</th>
             <th className="text-right py-3 px-4 text-gray-400 font-medium">Price</th>
