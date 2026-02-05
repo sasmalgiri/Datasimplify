@@ -68,28 +68,36 @@ export function AddinStep() {
     { id: 'web' as Platform, label: 'Excel Online', icon: Globe },
   ];
 
-  const instructions: Record<Platform, { steps: string[]; notes: string[] }> = {
+  const instructions: Record<Platform, { steps: string[]; notes: string[]; alternative?: string[] }> = {
     windows: {
       steps: [
         'Download the CRK manifest file (button below)',
         'Open Microsoft Excel on your computer',
-        'Go to Insert tab → Office Add-ins → My Add-ins',
-        'Click "Manage My Add-ins" dropdown → "Upload My Add-in"',
-        'Select the downloaded manifest.xml file',
+        'On the Insert tab, look for "Get Add-ins" or "Office Add-ins" button (puzzle piece icon)',
+        'Click it → Go to "My Add-ins" tab → Click "Upload My Add-in"',
+        'Select the downloaded crk-addin-manifest.xml file',
         'Click Upload - the CRK add-in will appear in your ribbon',
       ],
+      alternative: [
+        'Can\'t find the button? Try: File → Options → Customize Ribbon → Check "Developer" → OK',
+        'Then go to Developer tab → Add-ins → My Add-ins → Upload My Add-in',
+        'Or try Excel Online at excel.office.com (easiest method)',
+      ],
       notes: [
-        'Works with Microsoft 365, Office 2021, and Office 2019',
-        'The add-in persists across Excel sessions once installed',
+        'Requires Microsoft 365, Office 2021, or Office 2019',
+        'If your organization manages Excel, add-in uploads may be restricted',
       ],
     },
     mac: {
       steps: [
         'Download the CRK manifest file (button below)',
         'Open Microsoft Excel for Mac',
-        'Go to Insert menu → Office Add-ins → My Add-ins',
-        'Click "Upload My Add-in" and select the manifest file',
-        'The CRK add-in will appear in your ribbon',
+        'Go to Insert menu → Look for "Get Add-ins" or "Add-ins" button',
+        'Click "My Add-ins" tab → "Upload My Add-in"',
+        'Select the manifest file and upload',
+      ],
+      alternative: [
+        'If you don\'t see Add-ins, try using Excel Online at excel.office.com',
       ],
       notes: [
         'Requires Microsoft 365 or Office 2021 for Mac',
@@ -99,14 +107,16 @@ export function AddinStep() {
     web: {
       steps: [
         'Download the CRK manifest file (button below)',
-        'Go to excel.office.com and open a workbook',
-        'Click Insert tab → Office Add-ins → My Add-ins',
-        'Click "Upload My Add-in" tab',
-        'Select the manifest file and upload',
+        'Go to excel.office.com in your browser',
+        'Create a new workbook or open an existing one',
+        'Click Insert tab → "Add-ins" or "Office Add-ins" button',
+        'Click "Upload My Add-in" or "My Add-ins" → "Upload"',
+        'Select the manifest file and click Upload',
       ],
       notes: [
-        'Works in any modern browser (Chrome, Edge, Firefox, Safari)',
-        'Requires a Microsoft account (free or paid)',
+        'This is the EASIEST method - works in any modern browser',
+        'Requires a free Microsoft account (outlook.com, hotmail.com, etc.)',
+        'The add-in will sync to your desktop Excel too',
       ],
     },
   };
@@ -194,6 +204,21 @@ export function AddinStep() {
                   ))}
                 </ol>
 
+                {/* Alternative Instructions */}
+                {instructions[platform].alternative && (
+                  <div className="mt-4 pt-4 border-t border-gray-700">
+                    <p className="text-xs text-amber-400 font-medium mb-2">🔧 Troubleshooting:</p>
+                    <ul className="space-y-1">
+                      {instructions[platform].alternative.map((alt, index) => (
+                        <li key={index} className="text-xs text-amber-300/80 flex items-start gap-2">
+                          <span className="text-amber-500 mt-0.5">→</span>
+                          {alt}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Notes */}
                 <div className="mt-4 pt-4 border-t border-gray-700">
                   <p className="text-xs text-gray-500 mb-2">Notes:</p>
@@ -217,6 +242,25 @@ export function AddinStep() {
                 <Download className="w-4 h-4" />
                 Download CRK Manifest File
               </a>
+
+              {/* Excel Online Option - Easiest Method */}
+              {platform !== 'web' && (
+                <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg mb-3">
+                  <p className="text-xs text-blue-300 mb-2">
+                    <strong>💡 Easiest method:</strong> Use Excel Online - no installation issues!
+                  </p>
+                  <a
+                    href="https://www.office.com/launch/excel"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm"
+                  >
+                    <Globe className="w-4 h-4" />
+                    Open Excel Online
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
 
               {/* Quick Link to detailed guide */}
               <a
