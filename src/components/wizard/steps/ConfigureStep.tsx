@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useWizard } from '../WizardContext';
 import { WizardNav } from '../shared/WizardNav';
-import { TemplatePreview } from '../shared/TemplatePreview';
+import { DataPreview } from '@/components/DataPreview';
 import { Settings, Search, Check, X, LayoutGrid, LayoutList, BarChart3 } from 'lucide-react';
 
 const POPULAR_COINS = [
@@ -44,9 +44,33 @@ const LAYOUTS = [
   { id: 'charts' as const, name: 'With Charts', description: 'Data plus chart sheets', icon: BarChart3 },
 ];
 
+// Map coin IDs to symbols for DataPreview
+const COIN_ID_TO_SYMBOL: Record<string, string> = {
+  bitcoin: 'BTC',
+  ethereum: 'ETH',
+  binancecoin: 'BNB',
+  solana: 'SOL',
+  ripple: 'XRP',
+  cardano: 'ADA',
+  dogecoin: 'DOGE',
+  polkadot: 'DOT',
+  'avalanche-2': 'AVAX',
+  chainlink: 'LINK',
+  tron: 'TRX',
+  uniswap: 'UNI',
+  aave: 'AAVE',
+  maker: 'MKR',
+  'compound-governance-token': 'COMP',
+};
+
 export function ConfigureStep() {
   const { state, dispatch } = useWizard();
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Convert coin IDs to symbols for DataPreview
+  const previewCoins = useMemo(() => {
+    return state.selectedCoins.map(id => COIN_ID_TO_SYMBOL[id] || id.toUpperCase());
+  }, [state.selectedCoins]);
 
   const toggleCoin = (coinId: string) => {
     const current = state.selectedCoins;
@@ -241,7 +265,7 @@ export function ConfigureStep() {
             </div>
           </div>
 
-          {/* Live Preview */}
+          {/* Live Preview - Full DataPreview with charts */}
           <div>
             <h3 className="font-medium text-white mb-3">
               Preview
@@ -249,11 +273,19 @@ export function ConfigureStep() {
                 (What your Excel will look like)
               </span>
             </h3>
-            <TemplatePreview
-              selectedCoins={state.selectedCoins}
-              selectedMetrics={state.selectedMetrics}
-              dashboardLayout={state.dashboardLayout}
-            />
+            {previewCoins.length > 0 ? (
+              <DataPreview
+                selectedCoins={previewCoins}
+                timeframe="1d"
+                onDataLoad={() => {}}
+              />
+            ) : (
+              <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 text-center">
+                <p className="text-gray-400 text-sm">
+                  Select coins to see a preview
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

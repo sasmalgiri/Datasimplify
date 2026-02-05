@@ -1,12 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useWizard } from '../WizardContext';
 import { FileSpreadsheet, Download, Check, Loader2, AlertCircle } from 'lucide-react';
+
+// Map coin IDs to symbols for the API
+const COIN_ID_TO_SYMBOL: Record<string, string> = {
+  bitcoin: 'BTC',
+  ethereum: 'ETH',
+  binancecoin: 'BNB',
+  solana: 'SOL',
+  ripple: 'XRP',
+  cardano: 'ADA',
+  dogecoin: 'DOGE',
+  polkadot: 'DOT',
+  'avalanche-2': 'AVAX',
+  chainlink: 'LINK',
+  tron: 'TRX',
+  uniswap: 'UNI',
+  aave: 'AAVE',
+  maker: 'MKR',
+  'compound-governance-token': 'COMP',
+};
 
 export function DownloadStep() {
   const { state, dispatch } = useWizard();
   const [error, setError] = useState<string | null>(null);
+
+  // Convert coin IDs to symbols for the API
+  const coinSymbols = useMemo(() => {
+    return state.selectedCoins.map(id => COIN_ID_TO_SYMBOL[id] || id.toUpperCase());
+  }, [state.selectedCoins]);
 
   const handleDownload = async () => {
     dispatch({ type: 'SET_DOWNLOADING', downloading: true });
@@ -18,7 +42,7 @@ export function DownloadStep() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: state.templateId,
-          coins: state.selectedCoins,
+          coins: coinSymbols, // Use converted symbols like BTC, ETH
           timeframe: '30d',
           currency: 'usd',
           contentType: state.contentType,
@@ -27,6 +51,8 @@ export function DownloadStep() {
           customizations: {
             metrics: state.selectedMetrics,
             layout: state.dashboardLayout,
+            // Include charts/dashboard when layout is 'charts' or 'detailed'
+            includeCharts: state.dashboardLayout === 'charts' || state.dashboardLayout === 'detailed',
           },
         }),
       });
