@@ -1751,34 +1751,42 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji */}
+                            {/* Emoji with subtle glow */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 14}
+                              y={y + height / 2 - 16}
                               textAnchor="middle"
-                              fontSize={22}
+                              fontSize={26}
+                              style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' }}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name */}
+                            {/* Category Name - Bold with stroke for contrast */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 8}
+                              y={y + height / 2 + 10}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={12}
-                              fontWeight="600"
+                              stroke="rgba(0,0,0,0.6)"
+                              strokeWidth={3}
+                              paintOrder="stroke"
+                              fontSize={13}
+                              fontWeight="700"
+                              style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}
                             >
                               {displayName}
                             </text>
-                            {/* Percentage */}
+                            {/* Percentage - Large emerald green */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 24}
+                              y={y + height / 2 + 28}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={13}
-                              fontWeight="700"
+                              fill="#10B981"
+                              stroke="rgba(0,0,0,0.7)"
+                              strokeWidth={4}
+                              paintOrder="stroke"
+                              fontSize={16}
+                              fontWeight="800"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1788,20 +1796,24 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                             {/* Emoji for smaller blocks */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 2}
+                              y={y + height / 2 - 4}
                               textAnchor="middle"
-                              fontSize={14}
+                              fontSize={16}
+                              style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }}
                             >
                               {emoji}
                             </text>
-                            {/* Percentage only */}
+                            {/* Percentage - compact but readable */}
                             <text
                               x={x + width / 2}
                               y={y + height / 2 + 12}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={10}
-                              fontWeight="600"
+                              fill="#10B981"
+                              stroke="rgba(0,0,0,0.6)"
+                              strokeWidth={2}
+                              paintOrder="stroke"
+                              fontSize={11}
+                              fontWeight="700"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1858,34 +1870,42 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                         />
                         {showFullLabel ? (
                           <>
-                            {/* Emoji */}
+                            {/* Emoji with subtle glow */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 14}
+                              y={y + height / 2 - 16}
                               textAnchor="middle"
-                              fontSize={22}
+                              fontSize={26}
+                              style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.3))' }}
                             >
                               {emoji}
                             </text>
-                            {/* Category Name */}
+                            {/* Category Name - Bold with stroke for contrast */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 8}
+                              y={y + height / 2 + 10}
                               textAnchor="middle"
                               fill="#FFFFFF"
-                              fontSize={12}
-                              fontWeight="600"
+                              stroke="rgba(0,0,0,0.6)"
+                              strokeWidth={3}
+                              paintOrder="stroke"
+                              fontSize={13}
+                              fontWeight="700"
+                              style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}
                             >
                               {displayName}
                             </text>
-                            {/* Percentage */}
+                            {/* Percentage - Large emerald green */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 + 24}
+                              y={y + height / 2 + 28}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={13}
-                              fontWeight="700"
+                              fill="#10B981"
+                              stroke="rgba(0,0,0,0.7)"
+                              strokeWidth={4}
+                              paintOrder="stroke"
+                              fontSize={16}
+                              fontWeight="800"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
@@ -1895,20 +1915,24 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad }: DataPrevie
                             {/* Emoji for smaller blocks */}
                             <text
                               x={x + width / 2}
-                              y={y + height / 2 - 2}
+                              y={y + height / 2 - 4}
                               textAnchor="middle"
-                              fontSize={14}
+                              fontSize={16}
+                              style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }}
                             >
                               {emoji}
                             </text>
-                            {/* Percentage only */}
+                            {/* Percentage - compact but readable */}
                             <text
                               x={x + width / 2}
                               y={y + height / 2 + 12}
                               textAnchor="middle"
-                              fill="#FFFFFF"
-                              fontSize={10}
-                              fontWeight="600"
+                              fill="#10B981"
+                              stroke="rgba(0,0,0,0.6)"
+                              strokeWidth={2}
+                              paintOrder="stroke"
+                              fontSize={11}
+                              fontWeight="700"
                             >
                               {displayValue.toFixed(1)}%
                             </text>
