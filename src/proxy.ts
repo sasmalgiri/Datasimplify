@@ -114,7 +114,7 @@ function addSecurityHeaders(response: NextResponse, pathname: string): NextRespo
   return response;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
   const userAgent = request.headers.get('user-agent');
