@@ -142,73 +142,39 @@ export async function generateTemplate(
   workbook.description = `${baseTemplate.description} - Data via ${addinBranding}`;
   workbook.company = 'CryptoReportKit';
 
-  // 3. Add hidden __CRK__ metadata sheet (for refresh support)
-  await createCRKMetadataSheet(workbook, baseTemplate, userConfig, contentType);
+  // 3. Add SETTINGS sheet FIRST (where user enters API key)
+  // This is the most important sheet - shown first when file opens
+  await createSettingsSheet(workbook, baseTemplate, userConfig);
 
-  // 4. Add START_HERE sheet (always first visible sheet)
-  await createSetupSheet(workbook, baseTemplate, userConfig);
-
-  // 5. Add CONFIGURATION sheet for user settings
-  await createConfigSheet(workbook, userConfig);
-
-  // 6. Add DATA sheet(s) with CRK formulas
+  // 4. Add DATA sheet(s) with Power Query formulas
   const dataSheets = baseTemplate.sheets.filter((s) => s.type === 'data');
   for (const sheetDef of dataSheets) {
     await createDataSheet(workbook, baseTemplate, userConfig, sheetDef);
   }
 
-  // 7. Add CHART sheet based on content type
-  if (contentType === 'addin') {
-    // Add-in mode: Add instructions for installing Office.js Add-in
-    await createAddinInstructionsSheet(workbook, baseTemplate, userConfig);
-  } else if (contentType === 'native_charts') {
-    // Native charts mode: Create chart-ready data layout with instructions
-    // No add-in needed - user creates charts manually using Excel's built-in chart tools
-    await createNativeChartsSheet(workbook, baseTemplate, userConfig);
-  }
-  // formulas_only mode: Skip charts entirely
-
-  // 7.5. Add EMBEDDED CHARTS sheet if charts are enabled
-  if (userConfig.customizations.includeCharts) {
-    await createEmbeddedChartsSheet(workbook, baseTemplate, userConfig);
+  // 5. Add CHARTS sheet only if requested (native_charts mode)
+  if (contentType === 'native_charts' && userConfig.customizations.includeCharts) {
+    await createSimpleChartsSheet(workbook, baseTemplate, userConfig);
   }
 
-  // 7.6. Add DISTRIBUTION ANALYSIS sheet if charts are enabled
-  if (userConfig.customizations.includeCharts) {
-    await createDistributionAnalysisSheet(workbook, baseTemplate, userConfig);
-  }
-
-  // 8. Add INSTRUCTIONS sheet
-  await createInstructionsSheet(workbook, baseTemplate, userConfig);
-
-  // 9. Add SUPPORTED_COINS reference sheet
-  await createCoinsReferenceSheet(workbook);
-
-  // 10. For .xlsm: Add VBA project (if supported)
+  // 6. For .xlsm: Add VBA for auto-refresh on open
   if (format === 'xlsm') {
     addVBAProject(workbook, baseTemplate);
   }
 
-  // 11. Set the first data sheet as the active sheet (not START_HERE)
-  // This ensures users see their data immediately when opening the file
-  if (dataSheets.length > 0) {
-    const firstDataSheetName = dataSheets[0].name;
-    const firstDataSheet = workbook.getWorksheet(firstDataSheetName);
-    if (firstDataSheet) {
-      // Set this sheet as active by updating its view
-      firstDataSheet.views = [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }];
-      // Set workbook to open with this sheet selected
-      const activeTabIndex = workbook.worksheets.findIndex(ws => ws.name === firstDataSheetName);
-      workbook.views = [{
-        x: 0,
-        y: 0,
-        width: 10000,
-        height: 10000,
-        firstSheet: 0,
-        activeTab: activeTabIndex >= 0 ? activeTabIndex : 0,
-        visibility: 'visible'
-      }];
-    }
+  // 7. Set SETTINGS sheet as the active sheet (first thing user sees)
+  const settingsSheet = workbook.getWorksheet('Settings');
+  if (settingsSheet) {
+    settingsSheet.views = [{ showGridLines: false, activeCell: 'B2' }];
+    workbook.views = [{
+      x: 0,
+      y: 0,
+      width: 10000,
+      height: 10000,
+      firstSheet: 0,
+      activeTab: 0, // Settings is first sheet
+      visibility: 'visible'
+    }];
   }
 
   // 12. Write to buffer
@@ -342,8 +308,182 @@ async function createCRKMetadataSheet(
 }
 
 /**
- * Create the START_HERE setup sheet with dark theme styling matching website
- * Includes quota-aware messaging and failure state detection
+ * Create the SETTINGS sheet - FIRST sheet user sees
+ * Simple, clean design with API key input prominently displayed
+ * BYOK: User enters their CoinGecko API key in cell B2
+ */
+async function createSettingsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Settings', {
+    properties: { tabColor: { argb: COLORS.primary } },
+    views: [{ showGridLines: false, activeCell: 'B2' }],
+  });
+
+  // Set column widths
+  sheet.columns = [
+    { width: 3 },   // A - margin
+    { width: 50 },  // B - main content
+    { width: 50 },  // C - values/notes
+    { width: 3 },   // D - margin
+  ];
+
+  // Apply dark background
+  for (let r = 1; r <= 30; r++) {
+    for (let c = 1; c <= 4; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.bgDark },
+      };
+    }
+  }
+
+  let row = 2;
+
+  // ============ API KEY INPUT (Most Important!) ============
+  sheet.getCell(`B${row}`).value = '🔑 YOUR COINGECKO API KEY';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 16, color: { argb: COLORS.warning } };
+  row++;
+
+  // API Key input cell (B2 is actually B3 now, but we'll use a named range)
+  const apiKeyCell = sheet.getCell(`B${row}`);
+  apiKeyCell.value = 'PASTE_YOUR_API_KEY_HERE';
+  apiKeyCell.font = { size: 14, color: { argb: COLORS.textMuted } };
+  apiKeyCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: COLORS.bgMedium },
+  };
+  apiKeyCell.border = {
+    top: { style: 'medium', color: { argb: COLORS.warning } },
+    bottom: { style: 'medium', color: { argb: COLORS.warning } },
+    left: { style: 'medium', color: { argb: COLORS.warning } },
+    right: { style: 'medium', color: { argb: COLORS.warning } },
+  };
+
+  // Note next to API key
+  sheet.getCell(`C${row}`).value = '← Paste your key here, then refresh data';
+  sheet.getCell(`C${row}`).font = { italic: true, size: 11, color: { argb: COLORS.textSecondary } };
+  row += 2;
+
+  // ============ GET API KEY INSTRUCTIONS ============
+  sheet.getCell(`B${row}`).value = '📋 How to get your FREE API key:';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 12, color: { argb: COLORS.primary } };
+  row++;
+
+  const steps = [
+    '1. Go to coingecko.com/en/api/pricing',
+    '2. Click "Get Started" (Demo API is free)',
+    '3. Create account (no credit card needed)',
+    '4. Copy your API key',
+    '5. Paste it in cell B3 above',
+    '6. Go to Data tab → Refresh All',
+  ];
+
+  for (const step of steps) {
+    sheet.getCell(`B${row}`).value = step;
+    sheet.getCell(`B${row}`).font = { size: 11, color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+  row++;
+
+  // ============ IMPORTANT NOTES ============
+  sheet.getCell(`B${row}`).value = '⚠️ Important:';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 12, color: { argb: COLORS.warning } };
+  row++;
+
+  const notes = [
+    '• Your API key stays in this file - we never see it',
+    '• Free tier: 10,000 API calls/month (plenty for most users)',
+    '• Requires Excel Desktop with Power Query (2016 or later)',
+    '• Excel Online does NOT support Power Query',
+  ];
+
+  for (const note of notes) {
+    sheet.getCell(`B${row}`).value = note;
+    sheet.getCell(`B${row}`).font = { size: 11, color: { argb: COLORS.textSecondary } };
+    row++;
+  }
+  row += 2;
+
+  // ============ TEMPLATE INFO ============
+  sheet.getCell(`B${row}`).value = '📊 Template Info';
+  sheet.getCell(`B${row}`).font = { bold: true, size: 12, color: { argb: COLORS.primary } };
+  row++;
+
+  sheet.getCell(`B${row}`).value = 'Template:';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`C${row}`).value = template.name;
+  sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+  row++;
+
+  sheet.getCell(`B${row}`).value = 'Coins:';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`C${row}`).value = userConfig.coins.join(', ');
+  sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+  row++;
+
+  sheet.getCell(`B${row}`).value = 'Generated:';
+  sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textSecondary } };
+  sheet.getCell(`C${row}`).value = new Date().toLocaleDateString();
+  sheet.getCell(`C${row}`).font = { color: { argb: COLORS.textPrimary } };
+  row += 2;
+
+  // Footer
+  sheet.getCell(`B${row}`).value = '© 2026 CryptoReportKit - cryptoreportkit.com';
+  sheet.getCell(`B${row}`).font = { italic: true, size: 10, color: { argb: COLORS.textMuted } };
+}
+
+/**
+ * Create simple charts sheet (optional, only if user selected charts)
+ */
+async function createSimpleChartsSheet(
+  workbook: ExcelJS.Workbook,
+  template: TemplateConfig,
+  userConfig: UserTemplateConfig
+): Promise<void> {
+  const sheet = workbook.addWorksheet('Charts', {
+    properties: { tabColor: { argb: COLORS.secondary } },
+  });
+
+  sheet.columns = [
+    { width: 3 },
+    { width: 40 },
+    { width: 40 },
+    { width: 3 },
+  ];
+
+  // Header
+  sheet.getCell('B2').value = '📊 Charts';
+  sheet.getCell('B2').font = { bold: true, size: 16, color: { argb: COLORS.primary } };
+
+  sheet.getCell('B4').value = 'Charts will be created from your data.';
+  sheet.getCell('B4').font = { color: { argb: COLORS.textSecondary } };
+
+  sheet.getCell('B6').value = 'To create charts:';
+  sheet.getCell('B6').font = { bold: true, color: { argb: COLORS.textPrimary } };
+
+  const chartSteps = [
+    '1. Go to your Data sheet',
+    '2. Select the data range you want to chart',
+    '3. Insert tab → Charts → Select chart type',
+    '4. Customize as needed',
+  ];
+
+  let row = 7;
+  for (const step of chartSteps) {
+    sheet.getCell(`B${row}`).value = step;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.textPrimary } };
+    row++;
+  }
+}
+
+/**
+ * DEPRECATED: Old START_HERE setup sheet
+ * Keeping for backwards compatibility but not used in new templates
  */
 async function createSetupSheet(
   workbook: ExcelJS.Workbook,
