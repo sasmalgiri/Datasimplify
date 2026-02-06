@@ -2,11 +2,16 @@
 // CryptoReportKit - PRO TEMPLATE ($29)
 // Power Query for Excel (BYOK)
 // ==============================================
-// 
+//
 // 🚀 PRO TIER - 100 Coins, Auto-Refresh, Portfolio, Charts
-// 
+//
 // License: Single user, lifetime updates
 // Support: support@cryptoreportkit.com
+//
+// DATA SOURCE:
+// Data provided by CoinGecko (https://www.coingecko.com/en/api)
+// CoinGecko API is used under their free tier with attribution.
+//
 // ==============================================
 
 // ---------------------------------------------

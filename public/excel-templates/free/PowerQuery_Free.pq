@@ -2,10 +2,15 @@
 // CryptoReportKit - FREE STARTER TEMPLATE
 // Power Query for Excel (BYOK)
 // ==============================================
-// 
+//
 // ⭐ FREE TIER - 10 Coins, Basic Features
-// 
+//
 // To upgrade: https://cryptoreportkit.com/pricing
+//
+// DATA SOURCE:
+// Data provided by CoinGecko (https://www.coingecko.com/en/api)
+// CoinGecko API is used under their free tier with attribution.
+//
 // ==============================================
 
 // HOW TO USE:
