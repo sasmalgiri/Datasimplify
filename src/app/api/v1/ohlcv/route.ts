@@ -251,7 +251,6 @@ function convertPricesToOHLC(
   let high = prices[0][1];
   let low = prices[0][1];
   let close = prices[0][1];
-  let volume = 0;
 
   // Create volume lookup for faster access
   const volumeMap = new Map<number, number>();

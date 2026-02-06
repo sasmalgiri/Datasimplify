@@ -32,7 +32,7 @@ export function Navbar() {
               href="/downloads"
               className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
             >
-              📊 Templates
+              📥 Downloads
             </Link>
             <Link 
               href="/compare" 

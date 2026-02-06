@@ -95,8 +95,9 @@ export function FreeNavbar() {
       icon: <FileSpreadsheet className="w-4 h-4" />,
       paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok'],
       items: [
-        { href: '/downloads', label: 'Power Query Templates', description: 'BYOK templates for Excel', icon: <Download className="w-4 h-4" /> },
-        { href: '/download', label: 'Customize Templates', description: 'Configure coins, timeframe & download', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/downloads', label: 'Downloads', description: 'Power Query templates + Excel add-in', icon: <Download className="w-4 h-4" /> },
+        { href: '/download', label: 'Power Query Templates', description: 'Customize coins/timeframe and download .xlsx', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/addin/setup', label: 'Excel Add-in Setup', description: 'Install CRK add-in for formula mode (manual)', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/template-requirements', label: 'Setup Guide', description: 'How to use Power Query templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
       ],
@@ -143,6 +144,7 @@ export function FreeNavbar() {
   const mobileLinks = [
     { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
     { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/addin/setup', label: 'Add-in Setup', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]
