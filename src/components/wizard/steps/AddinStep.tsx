@@ -264,7 +264,7 @@ export function AddinStep() {
 
               {/* Quick Link to detailed guide */}
               <a
-                href="/addin/setup"
+                href="/coming-soon?feature=excel_addin"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors text-sm mb-4"

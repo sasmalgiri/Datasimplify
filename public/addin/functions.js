@@ -3,42 +3,58 @@
 /**
  * CRK Custom Functions for Excel
  *
- * Complete set of crypto data functions using BYOK API keys
- * Keys are managed in the taskpane and stored in OfficeRuntime.storage
+ * BYOK (Bring Your Own Key) Architecture:
+ * - API keys are stored locally in the browser (OfficeRuntime.storage or localStorage)
+ * - All API calls go DIRECTLY to CoinGecko - never through CRK servers
+ * - Your keys never leave your computer
+ *
+ * Complete set of crypto data functions
  */
 
-const API_BASE = 'https://cryptoreportkit.com/api/v1';
+// CoinGecko API endpoints
+const COINGECKO_API = {
+  pro: 'https://pro-api.coingecko.com/api/v3',
+  free: 'https://api.coingecko.com/api/v3',
+};
+
 const CACHE_TTL = 30000; // 30 seconds
 const requestCache = new Map();
 
+// Storage key for API key
+const API_KEY_STORAGE = 'crk_coingecko_key';
+
 /**
- * Get authentication token from storage
+ * Get CoinGecko API key from local storage
  */
-async function getAuthToken() {
+async function getApiKey() {
   try {
-    return await OfficeRuntime.storage.getItem('crk_auth_token');
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      return await OfficeRuntime.storage.getItem(API_KEY_STORAGE);
+    }
   } catch (error) {
-    console.error('[CRK] Error getting auth token:', error);
+    console.log('[CRK] OfficeRuntime not available, using localStorage');
+  }
+
+  // Fallback to localStorage
+  try {
+    return localStorage.getItem(API_KEY_STORAGE);
+  } catch (error) {
+    console.error('[CRK] Error getting API key:', error);
     return null;
   }
 }
 
 /**
- * Fetch data from CRK API with auth and caching
+ * Fetch data directly from CoinGecko API
+ * Uses user's own API key if available, falls back to free tier
  */
-async function fetchWithAuth(endpoint, params = {}) {
-  const token = await getAuthToken();
+async function fetchFromCoinGecko(endpoint, params = {}) {
+  const apiKey = await getApiKey();
+  const baseUrl = apiKey ? COINGECKO_API.pro : COINGECKO_API.free;
 
-  if (!token) {
-    throw new CustomFunctions.Error(
-      CustomFunctions.ErrorCode.invalidValue,
-      'Not logged in. Open CRK panel to sign in.'
-    );
-  }
-
-  const url = new URL(`${API_BASE}${endpoint}`);
+  const url = new URL(`${baseUrl}${endpoint}`);
   Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined) url.searchParams.set(k, String(v));
+    if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
   });
 
   // Check cache
@@ -48,27 +64,46 @@ async function fetchWithAuth(endpoint, params = {}) {
     return cached.data;
   }
 
-  const response = await fetch(url.toString(), {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new CustomFunctions.Error(
-      CustomFunctions.ErrorCode.invalidValue,
-      error.error || `API error: ${response.status}`
-    );
+  const headers = {};
+  if (apiKey) {
+    headers['x-cg-pro-api-key'] = apiKey;
   }
 
-  const data = await response.json();
+  try {
+    const response = await fetch(url.toString(), { headers });
 
-  // Cache result
-  requestCache.set(cacheKey, { data, timestamp: Date.now() });
+    if (!response.ok) {
+      // If Pro API fails, try free API
+      if (apiKey && response.status === 401) {
+        console.warn('[CRK] Pro API key invalid, falling back to free tier');
+        const freeUrl = new URL(`${COINGECKO_API.free}${endpoint}`);
+        Object.entries(params).forEach(([k, v]) => {
+          if (v !== undefined && v !== null) freeUrl.searchParams.set(k, String(v));
+        });
+        const freeResponse = await fetch(freeUrl.toString());
+        if (freeResponse.ok) {
+          const data = await freeResponse.json();
+          requestCache.set(cacheKey, { data, timestamp: Date.now() });
+          return data;
+        }
+      }
 
-  return data;
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        `API error: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    requestCache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      error.message || 'Network error'
+    );
+  }
 }
 
 // ============================================
@@ -83,8 +118,14 @@ async function fetchWithAuth(endpoint, params = {}) {
  * @returns {number} Current price
  */
 async function PRICE(coin, currency = 'usd') {
-  const data = await fetchWithAuth('/price', { coin, currency });
-  return data[coin]?.[currency] ?? '#N/A';
+  const data = await fetchFromCoinGecko('/simple/price', {
+    ids: coin.toLowerCase(),
+    vs_currencies: currency.toLowerCase(),
+    include_24hr_change: 'true',
+    include_market_cap: 'true',
+    include_24hr_vol: 'true',
+  });
+  return data[coin.toLowerCase()]?.[currency.toLowerCase()] ?? '#N/A';
 }
 
 /**
@@ -94,8 +135,12 @@ async function PRICE(coin, currency = 'usd') {
  * @returns {number} 24h change percentage
  */
 async function CHANGE24H(coin) {
-  const data = await fetchWithAuth('/price', { coin, currency: 'usd' });
-  return data[coin]?.usd_24h_change ?? '#N/A';
+  const data = await fetchFromCoinGecko('/simple/price', {
+    ids: coin.toLowerCase(),
+    vs_currencies: 'usd',
+    include_24hr_change: 'true',
+  });
+  return data[coin.toLowerCase()]?.usd_24h_change ?? '#N/A';
 }
 
 /**
@@ -106,8 +151,12 @@ async function CHANGE24H(coin) {
  * @returns {number} Market cap
  */
 async function MARKETCAP(coin, currency = 'usd') {
-  const data = await fetchWithAuth('/price', { coin, currency });
-  return data[coin]?.[`${currency}_market_cap`] ?? '#N/A';
+  const data = await fetchFromCoinGecko('/simple/price', {
+    ids: coin.toLowerCase(),
+    vs_currencies: currency.toLowerCase(),
+    include_market_cap: 'true',
+  });
+  return data[coin.toLowerCase()]?.[`${currency.toLowerCase()}_market_cap`] ?? '#N/A';
 }
 
 /**
@@ -118,51 +167,42 @@ async function MARKETCAP(coin, currency = 'usd') {
  * @returns {number} 24h volume
  */
 async function VOLUME(coin, currency = 'usd') {
-  const data = await fetchWithAuth('/price', { coin, currency });
-  return data[coin]?.[`${currency}_24h_vol`] ?? '#N/A';
+  const data = await fetchFromCoinGecko('/simple/price', {
+    ids: coin.toLowerCase(),
+    vs_currencies: currency.toLowerCase(),
+    include_24hr_vol: 'true',
+  });
+  return data[coin.toLowerCase()]?.[`${currency.toLowerCase()}_24h_vol`] ?? '#N/A';
 }
 
 /**
  * Get OHLCV data as a spilled array
- * Daily data is free. Sub-hourly (5m, 15m, 30m, 1h) requires CoinGecko Pro API key.
  * @customfunction
  * @param {string} coin Coin ID
- * @param {number} [days=30] Number of days
- * @param {string} [interval="1d"] Interval: "5m", "15m", "30m", "1h", "4h", "1d" (Pro key required for sub-hourly)
- * @returns {number[][]} OHLCV matrix [DateTime, Open, High, Low, Close, Volume]
+ * @param {number} [days=30] Number of days (1, 7, 14, 30, 90, 180, 365, max)
+ * @returns {number[][]} OHLCV matrix [DateTime, Open, High, Low, Close]
  */
-async function OHLCV(coin, days = 30, interval = '1d') {
-  const result = await fetchWithAuth('/ohlcv', { coin, days, interval });
-
-  // Handle new response format with data array
-  const data = result.data || result;
+async function OHLCV(coin, days = 30) {
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/ohlc`, {
+    vs_currency: 'usd',
+    days: days.toString(),
+  });
 
   if (!Array.isArray(data)) {
     throw new CustomFunctions.Error(
       CustomFunctions.ErrorCode.invalidValue,
-      result.error || 'Invalid OHLCV data received'
+      'Invalid OHLCV data received'
     );
   }
 
-  // Format based on interval - use datetime for sub-hourly, date only for daily
-  const isSubHourly = ['5m', '15m', '30m', '1h', '4h'].includes(interval.toLowerCase());
-  const header = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Volume'];
-
-  const rows = data.map(row => {
-    const timestamp = row[0];
-    const dateStr = isSubHourly
-      ? new Date(timestamp).toLocaleString()
-      : new Date(timestamp).toLocaleDateString();
-
-    return [
-      dateStr,
-      row[1], // Open
-      row[2], // High
-      row[3], // Low
-      row[4], // Close
-      row[5] || 0, // Volume (may not be present in all responses)
-    ];
-  });
+  const header = ['DateTime', 'Open', 'High', 'Low', 'Close'];
+  const rows = data.map(row => [
+    new Date(row[0]).toLocaleString(),
+    row[1], // Open
+    row[2], // High
+    row[3], // Low
+    row[4], // Close
+  ]);
 
   return [header, ...rows];
 }
@@ -179,36 +219,46 @@ async function OHLCV(coin, days = 30, interval = '1d') {
  * @returns {any} Field value
  */
 async function INFO(coin, field) {
-  const data = await fetchWithAuth('/coin', { coin });
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}`, {
+    localization: 'false',
+    tickers: 'false',
+    community_data: 'false',
+    developer_data: 'false',
+  });
 
   // Map common field names
+  const fieldLower = field.toLowerCase();
   const fieldMap = {
-    'rank': 'rank',
-    'market_cap_rank': 'rank',
-    'ath': 'ath',
-    'all_time_high': 'ath',
-    'atl': 'atl',
-    'all_time_low': 'atl',
-    'supply': 'circulating_supply',
-    'circulating_supply': 'circulating_supply',
-    'total_supply': 'total_supply',
-    'max_supply': 'max_supply',
-    'high_24h': 'high_24h',
-    'low_24h': 'low_24h',
-    'name': 'name',
-    'symbol': 'symbol',
-    'description': 'description',
-    'price_change_24h': 'price_change_24h',
-    'price_change_7d': 'price_change_7d',
-    'price_change_30d': 'price_change_30d',
-    'price_change_1y': 'price_change_1y',
-    'ath_date': 'ath_date',
-    'atl_date': 'atl_date',
-    'genesis_date': 'genesis_date',
+    'rank': () => data.market_cap_rank,
+    'market_cap_rank': () => data.market_cap_rank,
+    'ath': () => data.market_data?.ath?.usd,
+    'all_time_high': () => data.market_data?.ath?.usd,
+    'atl': () => data.market_data?.atl?.usd,
+    'all_time_low': () => data.market_data?.atl?.usd,
+    'supply': () => data.market_data?.circulating_supply,
+    'circulating_supply': () => data.market_data?.circulating_supply,
+    'total_supply': () => data.market_data?.total_supply,
+    'max_supply': () => data.market_data?.max_supply,
+    'high_24h': () => data.market_data?.high_24h?.usd,
+    'low_24h': () => data.market_data?.low_24h?.usd,
+    'name': () => data.name,
+    'symbol': () => data.symbol?.toUpperCase(),
+    'price_change_24h': () => data.market_data?.price_change_percentage_24h,
+    'price_change_7d': () => data.market_data?.price_change_percentage_7d,
+    'price_change_30d': () => data.market_data?.price_change_percentage_30d,
+    'price_change_1y': () => data.market_data?.price_change_percentage_1y,
+    'ath_date': () => data.market_data?.ath_date?.usd,
+    'atl_date': () => data.market_data?.atl_date?.usd,
+    'genesis_date': () => data.genesis_date,
   };
 
-  const mappedField = fieldMap[field.toLowerCase()] || field;
-  return data[mappedField] ?? '#N/A';
+  const getter = fieldMap[fieldLower];
+  if (getter) {
+    const value = getter();
+    return value ?? '#N/A';
+  }
+
+  return '#N/A';
 }
 
 /**
@@ -218,8 +268,7 @@ async function INFO(coin, field) {
  * @returns {number} All-time high price in USD
  */
 async function ATH(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.ath ?? '#N/A';
+  return INFO(coin, 'ath');
 }
 
 /**
@@ -229,8 +278,7 @@ async function ATH(coin) {
  * @returns {number} All-time low price in USD
  */
 async function ATL(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.atl ?? '#N/A';
+  return INFO(coin, 'atl');
 }
 
 /**
@@ -240,8 +288,7 @@ async function ATL(coin) {
  * @returns {number} Circulating supply
  */
 async function SUPPLY(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.circulating_supply ?? '#N/A';
+  return INFO(coin, 'supply');
 }
 
 /**
@@ -251,8 +298,7 @@ async function SUPPLY(coin) {
  * @returns {number} Market cap rank
  */
 async function RANK(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.rank ?? '#N/A';
+  return INFO(coin, 'rank');
 }
 
 /**
@@ -262,8 +308,7 @@ async function RANK(coin) {
  * @returns {number} 24h high price
  */
 async function HIGH24H(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.high_24h ?? '#N/A';
+  return INFO(coin, 'high_24h');
 }
 
 /**
@@ -273,8 +318,7 @@ async function HIGH24H(coin) {
  * @returns {number} 24h low price
  */
 async function LOW24H(coin) {
-  const data = await fetchWithAuth('/coin', { coin });
-  return data.low_24h ?? '#N/A';
+  return INFO(coin, 'low_24h');
 }
 
 // ============================================
@@ -288,40 +332,35 @@ async function LOW24H(coin) {
  * @returns {any} Global market value
  */
 async function GLOBAL(field = 'total_market_cap') {
-  const data = await fetchWithAuth('/global');
+  const response = await fetchFromCoinGecko('/global');
+  const data = response.data || response;
 
-  // Map common field names
-  const fieldMap = {
-    'total_market_cap': 'total_market_cap',
-    'market_cap': 'total_market_cap',
-    'total_volume': 'total_volume',
-    'volume': 'total_volume',
-    'btc_dominance': 'market_cap_percentage',
-    'btc_dom': 'market_cap_percentage',
-    'eth_dominance': 'market_cap_percentage',
-    'eth_dom': 'market_cap_percentage',
-    'active_cryptocurrencies': 'active_cryptocurrencies',
-    'markets': 'markets',
-    'market_cap_change_24h': 'market_cap_change_percentage_24h_usd',
-  };
-
-  const mappedField = fieldMap[field.toLowerCase()] || field;
+  const fieldLower = field.toLowerCase();
 
   // Handle nested fields
-  if (mappedField === 'total_market_cap') {
+  if (fieldLower === 'total_market_cap' || fieldLower === 'market_cap') {
     return data.total_market_cap?.usd ?? '#N/A';
   }
-  if (mappedField === 'total_volume') {
+  if (fieldLower === 'total_volume' || fieldLower === 'volume') {
     return data.total_volume?.usd ?? '#N/A';
   }
-  if (mappedField === 'market_cap_percentage' && field.toLowerCase().startsWith('btc')) {
+  if (fieldLower === 'btc_dominance' || fieldLower === 'btc_dom') {
     return data.market_cap_percentage?.btc ?? '#N/A';
   }
-  if (mappedField === 'market_cap_percentage' && field.toLowerCase().startsWith('eth')) {
+  if (fieldLower === 'eth_dominance' || fieldLower === 'eth_dom') {
     return data.market_cap_percentage?.eth ?? '#N/A';
   }
+  if (fieldLower === 'active_cryptocurrencies') {
+    return data.active_cryptocurrencies ?? '#N/A';
+  }
+  if (fieldLower === 'markets') {
+    return data.markets ?? '#N/A';
+  }
+  if (fieldLower === 'market_cap_change_24h') {
+    return data.market_cap_change_percentage_24h_usd ?? '#N/A';
+  }
 
-  return data[mappedField] ?? '#N/A';
+  return data[fieldLower] ?? '#N/A';
 }
 
 /**
@@ -330,8 +369,7 @@ async function GLOBAL(field = 'total_market_cap') {
  * @returns {number} BTC market dominance percentage
  */
 async function BTCDOM() {
-  const data = await fetchWithAuth('/global');
-  return data.market_cap_percentage?.btc ?? '#N/A';
+  return GLOBAL('btc_dominance');
 }
 
 /**
@@ -340,8 +378,7 @@ async function BTCDOM() {
  * @returns {number} ETH market dominance percentage
  */
 async function ETHDOM() {
-  const data = await fetchWithAuth('/global');
-  return data.market_cap_percentage?.eth ?? '#N/A';
+  return GLOBAL('eth_dominance');
 }
 
 // ============================================
@@ -349,19 +386,30 @@ async function ETHDOM() {
 // ============================================
 
 /**
- * Get Fear & Greed Index
+ * Get Fear & Greed Index (from alternative.me API - free)
  * @customfunction
  * @param {string} [field="value"] Field: "value" (0-100) or "class" (classification)
  * @returns {any} Fear & Greed value or classification
  */
 async function FEARGREED(field = 'value') {
-  const data = await fetchWithAuth('/feargreed');
+  try {
+    const response = await fetch('https://api.alternative.me/fng/?limit=1');
+    const data = await response.json();
 
-  if (field.toLowerCase() === 'class' || field.toLowerCase() === 'classification') {
-    return data.classification ?? '#N/A';
+    if (!data.data || !data.data[0]) {
+      return '#N/A';
+    }
+
+    const fng = data.data[0];
+
+    if (field.toLowerCase() === 'class' || field.toLowerCase() === 'classification') {
+      return fng.value_classification ?? '#N/A';
+    }
+
+    return parseInt(fng.value) ?? '#N/A';
+  } catch (error) {
+    return '#N/A';
   }
-
-  return data.value ?? '#N/A';
 }
 
 /**
@@ -371,14 +419,15 @@ async function FEARGREED(field = 'value') {
  * @returns {string[][]} Trending coins matrix [Rank, Name, Symbol]
  */
 async function TRENDING(limit = 7) {
-  const data = await fetchWithAuth('/trending');
+  const data = await fetchFromCoinGecko('/search/trending');
 
   const header = ['Rank', 'Name', 'Symbol', 'Market Cap Rank'];
-  const rows = data.coins.slice(0, limit).map((coin, i) => [
+  const coins = data.coins || [];
+  const rows = coins.slice(0, limit).map((item, i) => [
     i + 1,
-    coin.name,
-    coin.symbol.toUpperCase(),
-    coin.rank || 'N/A',
+    item.item?.name || 'Unknown',
+    item.item?.symbol?.toUpperCase() || 'N/A',
+    item.item?.market_cap_rank || 'N/A',
   ]);
 
   return [header, ...rows];
@@ -396,16 +445,19 @@ async function TRENDING(limit = 7) {
  * @returns {number} Current SMA value
  */
 async function SMA(coin, period = 20) {
-  const data = await fetchWithAuth('/ohlcv', { coin, days: period + 10 });
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/ohlc`, {
+    vs_currency: 'usd',
+    days: Math.min(period + 10, 90).toString(),
+  });
 
-  if (!data || data.length < period) {
+  if (!Array.isArray(data) || data.length < period) {
     return '#N/A';
   }
 
   // Use closing prices (index 4)
   const closes = data.slice(-period).map(row => row[4]);
   const sum = closes.reduce((a, b) => a + b, 0);
-  return sum / period;
+  return Math.round((sum / period) * 100) / 100;
 }
 
 /**
@@ -416,9 +468,12 @@ async function SMA(coin, period = 20) {
  * @returns {number} Current EMA value
  */
 async function EMA(coin, period = 20) {
-  const data = await fetchWithAuth('/ohlcv', { coin, days: period * 2 });
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/ohlc`, {
+    vs_currency: 'usd',
+    days: Math.min(period * 2, 90).toString(),
+  });
 
-  if (!data || data.length < period) {
+  if (!Array.isArray(data) || data.length < period) {
     return '#N/A';
   }
 
@@ -433,7 +488,7 @@ async function EMA(coin, period = 20) {
     ema = (closes[i] - ema) * multiplier + ema;
   }
 
-  return ema;
+  return Math.round(ema * 100) / 100;
 }
 
 /**
@@ -444,9 +499,12 @@ async function EMA(coin, period = 20) {
  * @returns {number} RSI value (0-100)
  */
 async function RSI(coin, period = 14) {
-  const data = await fetchWithAuth('/ohlcv', { coin, days: period * 2 + 10 });
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/ohlc`, {
+    vs_currency: 'usd',
+    days: Math.min(period * 2 + 10, 90).toString(),
+  });
 
-  if (!data || data.length < period + 1) {
+  if (!Array.isArray(data) || data.length < period + 1) {
     return '#N/A';
   }
 
@@ -486,9 +544,12 @@ async function RSI(coin, period = 14) {
  * @returns {number} MACD component value
  */
 async function MACD(coin, component = 'macd') {
-  const data = await fetchWithAuth('/ohlcv', { coin, days: 60 });
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/ohlc`, {
+    vs_currency: 'usd',
+    days: '60',
+  });
 
-  if (!data || data.length < 26) {
+  if (!Array.isArray(data) || data.length < 26) {
     return '#N/A';
   }
 
@@ -512,11 +573,11 @@ async function MACD(coin, component = 'macd') {
   // Simplified: return MACD line
   if (component.toLowerCase() === 'signal') {
     // Approximate signal (9-day EMA of MACD) - simplified
-    return macdLine * 0.9; // Approximation
+    return Math.round(macdLine * 0.9 * 100) / 100;
   }
 
   if (component.toLowerCase() === 'histogram') {
-    return macdLine * 0.1; // Approximation
+    return Math.round(macdLine * 0.1 * 100) / 100;
   }
 
   return Math.round(macdLine * 100) / 100;
@@ -534,14 +595,15 @@ async function MACD(coin, component = 'macd') {
  * @returns {string[][]} Search results [ID, Name, Symbol, Rank]
  */
 async function SEARCH(query, limit = 10) {
-  const data = await fetchWithAuth('/search', { query });
+  const data = await fetchFromCoinGecko('/search', { query });
 
   const header = ['Coin ID', 'Name', 'Symbol', 'Market Cap Rank'];
-  const rows = data.coins.slice(0, limit).map(coin => [
+  const coins = data.coins || [];
+  const rows = coins.slice(0, limit).map(coin => [
     coin.id,
     coin.name,
     coin.symbol?.toUpperCase(),
-    coin.rank || 'N/A',
+    coin.market_cap_rank || 'N/A',
   ]);
 
   return [header, ...rows];
@@ -555,18 +617,24 @@ async function SEARCH(query, limit = 10) {
  * @returns {any[][]} Top coins [Rank, ID, Name, Symbol, Price, MarketCap, Change24h]
  */
 async function TOP(limit = 100, page = 1) {
-  const data = await fetchWithAuth('/top', { limit, page });
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: Math.min(limit, 250).toString(),
+    page: page.toString(),
+    sparkline: 'false',
+  });
 
   const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', 'Market Cap', '24h %', '7d %'];
-  const rows = data.coins.map(coin => [
-    coin.rank,
+  const rows = data.map(coin => [
+    coin.market_cap_rank,
     coin.id,
     coin.name,
-    coin.symbol,
-    coin.price,
+    coin.symbol?.toUpperCase(),
+    coin.current_price,
     coin.market_cap,
-    coin.change_24h,
-    coin.change_7d,
+    coin.price_change_percentage_24h,
+    coin.price_change_percentage_7d_in_currency || 'N/A',
   ]);
 
   return [header, ...rows];
@@ -580,16 +648,23 @@ async function TOP(limit = 100, page = 1) {
  * @returns {any[][]} Coins in category [Rank, ID, Name, Symbol, Price, Change24h]
  */
 async function CATEGORY(category, limit = 50) {
-  const data = await fetchWithAuth('/categories', { category });
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    category: category.toLowerCase(),
+    order: 'market_cap_desc',
+    per_page: Math.min(limit, 250).toString(),
+    page: '1',
+    sparkline: 'false',
+  });
 
   const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
-  const rows = data.coins.slice(0, limit).map(coin => [
-    coin.rank,
+  const rows = data.map(coin => [
+    coin.market_cap_rank,
     coin.id,
     coin.name,
-    coin.symbol,
-    coin.price,
-    coin.change_24h,
+    coin.symbol?.toUpperCase(),
+    coin.current_price,
+    coin.price_change_percentage_24h,
   ]);
 
   return [header, ...rows];
@@ -602,10 +677,10 @@ async function CATEGORY(category, limit = 50) {
  * @returns {any[][]} Categories [ID, Name, MarketCap, Change24h]
  */
 async function CATEGORIES(limit = 50) {
-  const data = await fetchWithAuth('/categories');
+  const data = await fetchFromCoinGecko('/coins/categories');
 
   const header = ['Category ID', 'Name', 'Market Cap', '24h %'];
-  const rows = data.categories.slice(0, limit).map(cat => [
+  const rows = data.slice(0, limit).map(cat => [
     cat.id,
     cat.name,
     cat.market_cap,
@@ -623,32 +698,37 @@ async function CATEGORIES(limit = 50) {
  * @returns {any[][]} Coin data matrix
  */
 async function BATCH(coins, field = 'price') {
-  const coinList = coins.split(',').map(c => c.trim());
-  const data = await fetchWithAuth('/top', { limit: 250 });
+  const coinList = coins.split(',').map(c => c.trim().toLowerCase());
+
+  const data = await fetchFromCoinGecko('/simple/price', {
+    ids: coinList.join(','),
+    vs_currencies: 'usd',
+    include_24hr_change: 'true',
+    include_market_cap: 'true',
+    include_24hr_vol: 'true',
+  });
 
   const fieldMap = {
-    'price': 'price',
-    'change_24h': 'change_24h',
-    'change_7d': 'change_7d',
-    'market_cap': 'market_cap',
-    'volume': 'volume_24h',
-    'rank': 'rank',
+    'price': 'usd',
+    'change_24h': 'usd_24h_change',
+    'market_cap': 'usd_market_cap',
+    'volume': 'usd_24h_vol',
   };
 
-  const mappedField = fieldMap[field.toLowerCase()] || 'price';
+  const mappedField = fieldMap[field.toLowerCase()] || 'usd';
   const header = ['Coin', field.toUpperCase()];
   const rows = [];
 
   for (const coinId of coinList) {
-    const coin = data.coins.find(c => c.id === coinId.toLowerCase());
-    rows.push([coinId, coin ? coin[mappedField] : '#N/A']);
+    const value = data[coinId]?.[mappedField];
+    rows.push([coinId, value ?? '#N/A']);
   }
 
   return [header, ...rows];
 }
 
 // ============================================
-// EXCHANGES & TRADING
+// EXCHANGES
 // ============================================
 
 /**
@@ -658,10 +738,13 @@ async function BATCH(coins, field = 'price') {
  * @returns {any[][]} Exchanges [Rank, Name, Country, TrustScore, Volume24hBTC]
  */
 async function EXCHANGES(limit = 50) {
-  const data = await fetchWithAuth('/exchanges', { limit });
+  const data = await fetchFromCoinGecko('/exchanges', {
+    per_page: Math.min(limit, 250).toString(),
+    page: '1',
+  });
 
   const header = ['Rank', 'ID', 'Name', 'Country', 'Trust Score', 'Volume 24h (BTC)'];
-  const rows = data.exchanges.map((ex, i) => [
+  const rows = data.map((ex, i) => [
     ex.trust_score_rank || i + 1,
     ex.id,
     ex.name,
@@ -680,16 +763,29 @@ async function EXCHANGES(limit = 50) {
  * @returns {any[][]} Gainers [Rank, Name, Symbol, Price, Change24h]
  */
 async function GAINERS(limit = 20) {
-  const data = await fetchWithAuth('/gainers', { type: 'gainers', limit });
+  // CoinGecko doesn't have a direct gainers endpoint on free tier
+  // Get top coins and sort by 24h change
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: '250',
+    page: '1',
+    sparkline: 'false',
+  });
+
+  const sorted = data
+    .filter(c => c.price_change_percentage_24h != null)
+    .sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)
+    .slice(0, limit);
 
   const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
-  const rows = data.coins.map(coin => [
-    coin.rank,
+  const rows = sorted.map((coin, i) => [
+    i + 1,
     coin.id,
     coin.name,
-    coin.symbol,
-    coin.price,
-    coin.change_24h,
+    coin.symbol?.toUpperCase(),
+    coin.current_price,
+    coin.price_change_percentage_24h,
   ]);
 
   return [header, ...rows];
@@ -702,58 +798,64 @@ async function GAINERS(limit = 20) {
  * @returns {any[][]} Losers [Rank, Name, Symbol, Price, Change24h]
  */
 async function LOSERS(limit = 20) {
-  const data = await fetchWithAuth('/gainers', { type: 'losers', limit });
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    order: 'market_cap_desc',
+    per_page: '250',
+    page: '1',
+    sparkline: 'false',
+  });
+
+  const sorted = data
+    .filter(c => c.price_change_percentage_24h != null)
+    .sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h)
+    .slice(0, limit);
 
   const header = ['Rank', 'Coin ID', 'Name', 'Symbol', 'Price', '24h %'];
-  const rows = data.coins.map(coin => [
-    coin.rank,
+  const rows = sorted.map((coin, i) => [
+    i + 1,
     coin.id,
     coin.name,
-    coin.symbol,
-    coin.price,
-    coin.change_24h,
+    coin.symbol?.toUpperCase(),
+    coin.current_price,
+    coin.price_change_percentage_24h,
   ]);
 
   return [header, ...rows];
 }
 
 // ============================================
-// DEFI & TVL
+// DEFI (using CoinGecko's DeFi category)
 // ============================================
 
 /**
- * Get DeFi protocols by TVL
+ * Get DeFi protocols by market cap
  * @customfunction
  * @param {number} [limit=50] Number of protocols
- * @returns {any[][]} Protocols [Rank, Name, Symbol, TVL, Change1d]
+ * @returns {any[][]} Protocols [Rank, Name, Symbol, Price, MarketCap, Change24h]
  */
 async function DEFI(limit = 50) {
-  const data = await fetchWithAuth('/defi', { limit });
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    category: 'decentralized-finance-defi',
+    order: 'market_cap_desc',
+    per_page: Math.min(limit, 250).toString(),
+    page: '1',
+    sparkline: 'false',
+  });
 
-  const header = ['Rank', 'ID', 'Name', 'Symbol', 'TVL ($)', '1d %', '7d %', 'Category'];
-  const rows = data.protocols.map(p => [
-    p.rank,
-    p.id,
-    p.name,
-    p.symbol || 'N/A',
-    p.tvl,
-    p.change_1d,
-    p.change_7d,
-    p.category || 'N/A',
+  const header = ['Rank', 'ID', 'Name', 'Symbol', 'Price', 'Market Cap', '24h %'];
+  const rows = data.map((coin, i) => [
+    i + 1,
+    coin.id,
+    coin.name,
+    coin.symbol?.toUpperCase() || 'N/A',
+    coin.current_price,
+    coin.market_cap,
+    coin.price_change_percentage_24h,
   ]);
 
   return [header, ...rows];
-}
-
-/**
- * Get TVL for a specific protocol
- * @customfunction
- * @param {string} protocol Protocol ID (e.g., "aave", "uniswap")
- * @returns {number} Total Value Locked in USD
- */
-async function TVL(protocol) {
-  const data = await fetchWithAuth('/defi', { protocol });
-  return data.tvl ?? '#N/A';
 }
 
 // ============================================
@@ -767,10 +869,13 @@ async function TVL(protocol) {
  * @returns {any[][]} NFT collections [ID, Name, Symbol, Platform]
  */
 async function NFTS(limit = 50) {
-  const data = await fetchWithAuth('/nfts', { limit });
+  const data = await fetchFromCoinGecko('/nfts/list', {
+    per_page: Math.min(limit, 250).toString(),
+    page: '1',
+  });
 
   const header = ['ID', 'Name', 'Symbol', 'Platform'];
-  const rows = data.nfts.map(nft => [
+  const rows = data.map(nft => [
     nft.id,
     nft.name,
     nft.symbol || 'N/A',
@@ -788,18 +893,19 @@ async function NFTS(limit = 50) {
  * Get derivatives/futures data
  * @customfunction
  * @param {number} [limit=50] Number of contracts
- * @returns {any[][]} Derivatives [Market, Symbol, Price, Change24h, FundingRate, OpenInterest]
+ * @returns {any[][]} Derivatives [Market, Symbol, Price, Change24h, OpenInterest]
  */
 async function DERIVATIVES(limit = 50) {
-  const data = await fetchWithAuth('/derivatives', { limit });
+  const data = await fetchFromCoinGecko('/derivatives', {
+    per_page: Math.min(limit, 100).toString(),
+  });
 
-  const header = ['Market', 'Symbol', 'Price', '24h %', 'Funding Rate', 'Open Interest', 'Volume 24h'];
-  const rows = data.derivatives.map(d => [
+  const header = ['Market', 'Symbol', 'Price', '24h %', 'Open Interest', 'Volume 24h'];
+  const rows = data.slice(0, limit).map(d => [
     d.market,
     d.symbol,
     d.price,
     d.price_percentage_change_24h,
-    d.funding_rate,
     d.open_interest,
     d.volume_24h,
   ]);
@@ -819,8 +925,12 @@ async function DERIVATIVES(limit = 50) {
  * @returns {number} Price on that date
  */
 async function PRICEHISTORY(coin, date) {
-  const data = await fetchWithAuth('/history', { coin, date });
-  return data.price ?? '#N/A';
+  const data = await fetchFromCoinGecko(`/coins/${coin.toLowerCase()}/history`, {
+    date: date,
+    localization: 'false',
+  });
+
+  return data.market_data?.current_price?.usd ?? '#N/A';
 }
 
 // ============================================
@@ -831,109 +941,26 @@ async function PRICEHISTORY(coin, date) {
  * Get stablecoin market caps
  * @customfunction
  * @param {number} [limit=20] Number of stablecoins
- * @returns {any[][]} Stablecoins [Rank, Name, Symbol, Circulating, Price, PegType]
+ * @returns {any[][]} Stablecoins [Rank, Name, Symbol, MarketCap, Price]
  */
 async function STABLECOINS(limit = 20) {
-  const data = await fetchWithAuth('/stablecoins', { limit });
+  const data = await fetchFromCoinGecko('/coins/markets', {
+    vs_currency: 'usd',
+    category: 'stablecoins',
+    order: 'market_cap_desc',
+    per_page: Math.min(limit, 250).toString(),
+    page: '1',
+    sparkline: 'false',
+  });
 
-  const header = ['Rank', 'Name', 'Symbol', 'Circulating ($)', 'Price', 'Peg Type'];
-  const rows = data.stablecoins.map(s => [
-    s.rank,
-    s.name,
-    s.symbol,
-    s.circulating,
-    s.price,
-    s.peg_type || 'USD',
+  const header = ['Rank', 'Name', 'Symbol', 'Market Cap', 'Price'];
+  const rows = data.map((coin, i) => [
+    i + 1,
+    coin.name,
+    coin.symbol?.toUpperCase(),
+    coin.market_cap,
+    coin.current_price,
   ]);
-
-  return [header, ...rows];
-}
-
-// ============================================
-// ON-CHAIN / HOLDER DATA (via GeckoTerminal)
-// ============================================
-
-/**
- * Get total holder count for a token
- * @customfunction
- * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
- * @param {string} address Token contract address
- * @returns {number} Total number of holders
- */
-async function HOLDERS(network, address) {
-  const data = await fetchWithAuth('/holders', { network, address });
-  return data.holders ?? '#N/A';
-}
-
-/**
- * Get holder distribution percentage
- * @customfunction
- * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
- * @param {string} address Token contract address
- * @param {string} [metric="top10"] Metric: "top10", "top25", "top50", "rest"
- * @returns {number} Distribution percentage
- */
-async function DISTRIBUTION(network, address, metric = 'top10') {
-  const data = await fetchWithAuth('/holders', { network, address });
-
-  const metricMap = {
-    'top10': 'top_10_percentage',
-    'top25': 'top_25_percentage',
-    'top50': 'top_50_percentage',
-    'rest': 'rest_percentage',
-  };
-
-  const mappedMetric = metricMap[metric.toLowerCase()] || 'top_10_percentage';
-  return data.distribution?.[mappedMetric] ?? '#N/A';
-}
-
-/**
- * Get GeckoTerminal security/trust score for a token
- * @customfunction
- * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
- * @param {string} address Token contract address
- * @param {string} [scoreType="total"] Score type: "total", "pool", "transaction", "holders"
- * @returns {number} Security/trust score (0-100)
- */
-async function SCORE(network, address, scoreType = 'total') {
-  const data = await fetchWithAuth('/holders', { network, address });
-
-  const scoreMap = {
-    'total': 'total_score',
-    'pool': 'pool_score',
-    'transaction': 'transaction_score',
-    'holders': 'holders_score',
-  };
-
-  const mappedScore = scoreMap[scoreType.toLowerCase()] || 'total_score';
-  return data.scores?.[mappedScore] ?? '#N/A';
-}
-
-/**
- * Get full token info including holders, distribution, and scores
- * @customfunction
- * @param {string} network Network ID (e.g., "eth", "bsc", "polygon", "solana")
- * @param {string} address Token contract address
- * @returns {any[][]} Token info matrix [Metric, Value]
- */
-async function TOKENINFO(network, address) {
-  const data = await fetchWithAuth('/holders', { network, address });
-
-  const header = ['Metric', 'Value'];
-  const rows = [
-    ['Token Name', data.name ?? 'N/A'],
-    ['Token Symbol', data.symbol ?? 'N/A'],
-    ['Network', network.toUpperCase()],
-    ['Total Holders', data.holders ?? 'N/A'],
-    ['Top 10% Holdings', data.distribution?.top_10_percentage ? `${data.distribution.top_10_percentage}%` : 'N/A'],
-    ['Top 25% Holdings', data.distribution?.top_25_percentage ? `${data.distribution.top_25_percentage}%` : 'N/A'],
-    ['Top 50% Holdings', data.distribution?.top_50_percentage ? `${data.distribution.top_50_percentage}%` : 'N/A'],
-    ['Rest Holdings', data.distribution?.rest_percentage ? `${data.distribution.rest_percentage}%` : 'N/A'],
-    ['Total Trust Score', data.scores?.total_score ?? 'N/A'],
-    ['Pool Score', data.scores?.pool_score ?? 'N/A'],
-    ['Transaction Score', data.scores?.transaction_score ?? 'N/A'],
-    ['Holders Score', data.scores?.holders_score ?? 'N/A'],
-  ];
 
   return [header, ...rows];
 }
@@ -980,14 +1007,13 @@ CustomFunctions.associate('CATEGORY', CATEGORY);
 CustomFunctions.associate('CATEGORIES', CATEGORIES);
 CustomFunctions.associate('BATCH', BATCH);
 
-// Exchanges & Trading
+// Exchanges
 CustomFunctions.associate('EXCHANGES', EXCHANGES);
 CustomFunctions.associate('GAINERS', GAINERS);
 CustomFunctions.associate('LOSERS', LOSERS);
 
-// DeFi & TVL
+// DeFi
 CustomFunctions.associate('DEFI', DEFI);
-CustomFunctions.associate('TVL', TVL);
 
 // NFTs
 CustomFunctions.associate('NFTS', NFTS);
@@ -1000,9 +1026,3 @@ CustomFunctions.associate('PRICEHISTORY', PRICEHISTORY);
 
 // Stablecoins
 CustomFunctions.associate('STABLECOINS', STABLECOINS);
-
-// On-Chain / Holder Data
-CustomFunctions.associate('HOLDERS', HOLDERS);
-CustomFunctions.associate('DISTRIBUTION', DISTRIBUTION);
-CustomFunctions.associate('SCORE', SCORE);
-CustomFunctions.associate('TOKENINFO', TOKENINFO);

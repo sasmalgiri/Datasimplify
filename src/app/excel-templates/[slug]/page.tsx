@@ -235,23 +235,31 @@ export default async function TemplateDetailPage({ params }: PageProps) {
               <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold shrink-0">
                 2
               </span>
-              <span className="text-gray-300">
-                Install the{' '}
-                <Link
-                  href="/addin/setup"
-                  className="text-emerald-400 hover:underline"
-                >
-                  CryptoReportKit Excel Add-in
-                </Link>{' '}
-                in Excel Desktop (Insert &gt; Get Add-ins)
-              </span>
+              <div className="text-gray-300">
+                Choose your setup:
+                <div className="mt-2 space-y-2 text-sm text-gray-400">
+                  <div>
+                    <span className="text-gray-200 font-medium">Option A (Power Query, no add-in):</span>{' '}
+                    Open the file in Excel Desktop, paste your API key in the template's API cell, then use{' '}
+                    <span className="text-gray-200">Data &gt; Refresh All</span>.
+                  </div>
+                  <div>
+                    <span className="text-gray-200 font-medium">Option B (Excel add-in, formula mode):</span>{' '}
+                    The{' '}
+                    <Link href="/coming-soon?feature=excel_addin" className="text-emerald-400 hover:underline">
+                      CryptoReportKit Excel Add-in
+                    </Link>{' '}
+                    is coming soon via Microsoft for in-Excel installation.
+                  </div>
+                </div>
+              </div>
             </li>
             <li className="flex items-start gap-3">
               <span className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-sm font-bold shrink-0">
                 3
               </span>
               <span className="text-gray-300">
-                Open the template in Excel, sign in to CRK, and connect your API key(s) (BYOK)
+                If prompted, connect your API key(s) (BYOK)
               </span>
             </li>
             <li className="flex items-start gap-3">

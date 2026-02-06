@@ -312,29 +312,28 @@
     <span>Loading...</span>
   </div>
 
-  <!-- Login Screen -->
-  <div id="loginScreen" class="login-screen hidden">
+  <!-- Welcome Screen (No Login Required) -->
+  <div id="welcomeScreen" class="login-screen hidden">
     <div class="login-logo">📊</div>
     <h1 class="login-title">CryptoReportKit</h1>
-    <p class="login-subtitle">Sign in to use CRK functions in Excel</p>
+    <p class="login-subtitle">Add your CoinGecko API key to get started</p>
 
     <div class="login-form">
-      <div id="loginError" class="error-msg hidden"></div>
+      <div id="welcomeError" class="error-msg hidden"></div>
 
       <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" id="emailInput" class="form-input" placeholder="you@example.com">
+        <label class="form-label">CoinGecko API Key (Optional)</label>
+        <input type="password" id="welcomeApiKey" class="form-input" placeholder="CG-xxxxxxxxxxxx">
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" id="passwordInput" class="form-input" placeholder="Enter your password">
-      </div>
+      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+        Free tier works without a key. Add your own key for higher rate limits.
+      </p>
 
-      <button id="loginBtn" class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+      <button id="welcomeBtn" class="btn btn-primary" onclick="handleWelcome()">Get Started</button>
 
       <p class="signup-link">
-        Don't have an account? <a href="https://cryptoreportkit.com/signup" target="_blank" rel="noopener">Sign up</a>
+        <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener">Get free API key from CoinGecko →</a>
       </p>
     </div>
   </div>
@@ -347,10 +346,10 @@
         <div class="logo-icon">📊</div>
         <div class="logo-text">
           <h1>CryptoReportKit</h1>
-          <p id="userEmail">user@example.com</p>
+          <p id="userEmail">Free Tier</p>
         </div>
       </div>
-      <button class="sign-out-btn" onclick="handleSignOut()">Sign out</button>
+      <button type="button" class="sign-out-btn" onclick="handleSignOut()">Reset</button>
     </div>
 
     <!-- Refresh Button -->
@@ -384,7 +383,7 @@
         </div>
       </div>
       <p class="byok-hint">
-        Optional: Connect your own API key for higher rate limits
+        Your key stays in Excel - never sent to our servers. Direct API calls to CoinGecko.
       </p>
     </div>
 
@@ -492,10 +491,11 @@
   </div>
 
   <script>
-    const API_BASE = 'https://cryptoreportkit.com';
-    let currentUser = null;
-    let authToken = null;
+    // BYOK Architecture: Keys stored locally, API calls go directly to CoinGecko
+    const API_KEY_STORAGE = 'crk_coingecko_key';
+    const SETUP_COMPLETE = 'crk_setup_complete';
     let isOfficeReady = false;
+    let hasApiKey = false;
 
     // Initialize Office.js
     Office.onReady(function(info) {
@@ -513,135 +513,156 @@
     }, 2000);
 
     async function init() {
-      // Check for stored token
-      try {
-        if (typeof OfficeRuntime !== 'undefined') {
-          authToken = await OfficeRuntime.storage.getItem('crk_auth_token');
-          const email = await OfficeRuntime.storage.getItem('crk_user_email');
-          if (authToken && email) currentUser = { email };
-        }
-      } catch (e) {
-        authToken = localStorage.getItem('crk_auth_token');
-        const email = localStorage.getItem('crk_user_email');
-        if (authToken && email) currentUser = { email };
-      }
+      // Check for stored API key
+      const apiKey = await getStoredApiKey();
+      const setupComplete = await getStorageItem(SETUP_COMPLETE);
+      hasApiKey = !!apiKey;
 
       document.getElementById('loadingScreen').classList.add('hidden');
-      if (currentUser) {
+
+      if (setupComplete || hasApiKey) {
         showMainApp();
         loadProviderStatus();
       } else {
-        showLoginScreen();
+        showWelcomeScreen();
       }
     }
 
-    function showLoginScreen() {
-      document.getElementById('loginScreen').classList.remove('hidden');
+    // Storage helpers that work with both OfficeRuntime and localStorage
+    async function getStorageItem(key) {
+      try {
+        if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+          return await OfficeRuntime.storage.getItem(key);
+        }
+      } catch (e) {}
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function setStorageItem(key, value) {
+      try {
+        if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+          await OfficeRuntime.storage.setItem(key, value);
+        }
+      } catch (e) {}
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {}
+    }
+
+    async function removeStorageItem(key) {
+      try {
+        if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+          await OfficeRuntime.storage.removeItem(key);
+        }
+      } catch (e) {}
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {}
+    }
+
+    async function getStoredApiKey() {
+      return await getStorageItem(API_KEY_STORAGE);
+    }
+
+    function showWelcomeScreen() {
+      document.getElementById('welcomeScreen').classList.remove('hidden');
       document.getElementById('mainApp').classList.add('hidden');
     }
 
     function showMainApp() {
-      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('welcomeScreen').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
-      document.getElementById('userEmail').textContent = currentUser.email;
+
+      // Update user display
+      const apiKey = hasApiKey;
+      document.getElementById('userEmail').textContent = apiKey ? 'Pro API Key Connected' : 'Free Tier (No Key)';
 
       // Initialize advanced Chart.js visualization
       setTimeout(() => renderAdvancedChart('radar'), 500);
     }
 
-    async function handleLogin() {
-      const email = document.getElementById('emailInput').value;
-      const password = document.getElementById('passwordInput').value;
-      const errorDiv = document.getElementById('loginError');
-      const btn = document.getElementById('loginBtn');
-
-      if (!email || !password) {
-        errorDiv.textContent = 'Please enter email and password';
-        errorDiv.classList.remove('hidden');
-        return;
-      }
+    async function handleWelcome() {
+      const apiKey = document.getElementById('welcomeApiKey').value.trim();
+      const errorDiv = document.getElementById('welcomeError');
+      const btn = document.getElementById('welcomeBtn');
 
       btn.disabled = true;
-      btn.textContent = 'Signing in...';
+      btn.textContent = 'Setting up...';
       errorDiv.classList.add('hidden');
 
       try {
-        const response = await fetch(API_BASE + '/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
+        // If API key provided, validate it
+        if (apiKey) {
+          const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+            headers: { 'x-cg-pro-api-key': apiKey }
+          });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Login failed');
-
-        authToken = data.access_token;
-        currentUser = { email: data.email || email };
-
-        try {
-          if (typeof OfficeRuntime !== 'undefined') {
-            await OfficeRuntime.storage.setItem('crk_auth_token', authToken);
-            await OfficeRuntime.storage.setItem('crk_user_email', currentUser.email);
+          if (!response.ok) {
+            // Try as demo key
+            console.log('[CRK] Pro API validation failed, may be demo tier key');
           }
-        } catch (e) {
-          localStorage.setItem('crk_auth_token', authToken);
-          localStorage.setItem('crk_user_email', currentUser.email);
+
+          // Store the key locally
+          await setStorageItem(API_KEY_STORAGE, apiKey);
+          hasApiKey = true;
         }
+
+        // Mark setup as complete
+        await setStorageItem(SETUP_COMPLETE, 'true');
 
         showMainApp();
         loadProviderStatus();
       } catch (error) {
-        errorDiv.textContent = error.message;
-        errorDiv.classList.remove('hidden');
+        // Network error - still proceed (key will work when online)
+        if (apiKey) {
+          await setStorageItem(API_KEY_STORAGE, apiKey);
+          hasApiKey = true;
+        }
+        await setStorageItem(SETUP_COMPLETE, 'true');
+        showMainApp();
+        loadProviderStatus();
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Sign In';
+        btn.textContent = 'Get Started';
       }
     }
 
     async function handleSignOut() {
-      try {
-        if (typeof OfficeRuntime !== 'undefined') {
-          await OfficeRuntime.storage.removeItem('crk_auth_token');
-          await OfficeRuntime.storage.removeItem('crk_user_email');
-        }
-      } catch (e) {}
-      localStorage.removeItem('crk_auth_token');
-      localStorage.removeItem('crk_user_email');
-      currentUser = null;
-      authToken = null;
-      showLoginScreen();
+      // Clear stored data
+      await removeStorageItem(API_KEY_STORAGE);
+      await removeStorageItem(SETUP_COMPLETE);
+      hasApiKey = false;
+      showWelcomeScreen();
     }
 
     async function loadProviderStatus() {
-      try {
-        const response = await fetch(API_BASE + '/api/v1/keys/coingecko', {
-          headers: { 'Authorization': 'Bearer ' + authToken }
-        });
+      const apiKey = await getStoredApiKey();
+      const statusDot = document.getElementById('cgStatus');
+      const hint = document.getElementById('cgHint');
+      const action = document.getElementById('cgAction');
 
-        if (response.ok) {
-          const data = await response.json();
-          const statusDot = document.getElementById('cgStatus');
-          const hint = document.getElementById('cgHint');
-          const action = document.getElementById('cgAction');
-
-          if (data.connected) {
-            statusDot.classList.add('connected');
-            hint.textContent = '••••' + (data.hint || '');
-            action.textContent = 'Remove';
-            action.className = 'provider-action remove';
-            action.onclick = removeApiKey;
-          } else {
-            statusDot.classList.remove('connected');
-            hint.textContent = '';
-            action.textContent = 'Connect';
-            action.className = 'provider-action connect';
-            action.onclick = toggleKeyInput;
-          }
-        }
-      } catch (error) {
-        console.error('[CRK] Error loading provider status:', error);
+      if (apiKey) {
+        statusDot.classList.add('connected');
+        hint.textContent = '••••' + apiKey.slice(-4);
+        action.textContent = 'Remove';
+        action.className = 'provider-action remove';
+        action.onclick = removeApiKey;
+        hasApiKey = true;
+      } else {
+        statusDot.classList.remove('connected');
+        hint.textContent = 'Free tier';
+        action.textContent = 'Connect';
+        action.className = 'provider-action connect';
+        action.onclick = toggleKeyInput;
+        hasApiKey = false;
       }
+
+      // Update header display
+      document.getElementById('userEmail').textContent = hasApiKey ? 'Pro API Key Connected' : 'Free Tier (No Key)';
     }
 
     function toggleKeyInput() {
@@ -655,37 +676,35 @@
       if (!apiKey) { alert('Please enter an API key'); return; }
 
       try {
-        const response = await fetch(API_BASE + '/api/v1/keys/coingecko', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + authToken
-          },
-          body: JSON.stringify({ apiKey })
+        // Validate key
+        const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+          headers: { 'x-cg-pro-api-key': apiKey }
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to save key');
+          console.log('[CRK] Pro API validation returned ' + response.status + ', storing anyway');
         }
+
+        // Store locally
+        await setStorageItem(API_KEY_STORAGE, apiKey);
+        hasApiKey = true;
+
         toggleKeyInput();
         loadProviderStatus();
       } catch (error) {
-        alert(error.message);
+        // Network error - store anyway
+        await setStorageItem(API_KEY_STORAGE, apiKey);
+        hasApiKey = true;
+        toggleKeyInput();
+        loadProviderStatus();
       }
     }
 
     async function removeApiKey() {
-      if (!confirm('Remove your CoinGecko API key?')) return;
-      try {
-        await fetch(API_BASE + '/api/v1/keys/coingecko', {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + authToken }
-        });
-        loadProviderStatus();
-      } catch (error) {
-        console.error('[CRK] Error removing key:', error);
-      }
+      if (!confirm('Remove your CoinGecko API key? You can add it again later.')) return;
+      await removeStorageItem(API_KEY_STORAGE);
+      hasApiKey = false;
+      loadProviderStatus();
     }
 
     async function handleRefresh() {

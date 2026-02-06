@@ -63,10 +63,27 @@ export default function DownloadPage() {
       <main className="container mx-auto px-4 py-6">
         {/* Compact Header */}
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-white">CRK Excel Templates</h1>
+          <h1 className="text-2xl font-bold text-white">Excel Templates</h1>
           <p className="text-gray-400 text-sm">
-            BYOK templates - data fetched using your own API key
+            Choose Power Query (no add-in) or the CRK Excel add-in (formula mode).
           </p>
+        </div>
+
+        <div className="mb-4 bg-gray-900 border border-gray-800 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="text-sm text-gray-300">
+              <span className="font-semibold text-white">Power Query templates</span> are generated here.
+              <span className="text-gray-400"> Prefer formulas like </span>
+              <span className="text-gray-200">=CRK.PRICE(...)</span>
+              <span className="text-gray-400">? The add-in is coming soon via Microsoft.</span>
+            </div>
+            <Link
+              href="/coming-soon?feature=excel_addin"
+              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition text-sm font-medium text-white"
+            >
+              Add-in (Coming Soon)
+            </Link>
+          </div>
         </div>
 
         {/* Product Disclaimer - Compact */}
@@ -183,7 +200,7 @@ export default function DownloadPage() {
             {/* Compact Disclaimer */}
             <div className="text-center">
               <p className="text-gray-500 text-xs">
-                Templates use Power Query (BYOK). Your API key stays in Excel.
+                Templates generated on this page use Power Query (BYOK). Your API key stays in Excel.
                 <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">Disclaimer</Link>
               </p>
             </div>

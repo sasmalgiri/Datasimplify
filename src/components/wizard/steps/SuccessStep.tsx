@@ -132,7 +132,7 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
                       <h4 className="font-medium text-white">Install CRK Add-in</h4>
                       <p className="text-sm text-gray-400">Required to enable CRK formulas in Excel</p>
                       <a
-                        href="/addin/setup"
+                        href="/coming-soon?feature=excel_addin"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 mt-2 text-sm text-emerald-400 hover:text-emerald-300"
@@ -169,7 +169,7 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
 
               {/* Primary Action - Install Add-in */}
               <a
-                href="/addin/setup"
+                href="/coming-soon?feature=excel_addin"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors mb-4"

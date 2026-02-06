@@ -24,27 +24,27 @@ export default function AddinSetupPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
             <FileSpreadsheet className="w-4 h-4" />
-            Excel Add-in Setup
+            Excel Add-in (Private Preview)
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            CRK Excel Add-in Setup Guide
+            CRK Excel Add-in Manual Setup (Preview)
           </h1>
           <p className="text-lg text-gray-600">
-            Get live crypto data directly in Excel using your own API keys (BYOK)
+            Manual sideload instructions for early access. Public release is coming soon via Microsoft.
           </p>
         </div>
 
-        {/* Important Notice - NOT from Microsoft Store */}
+        {/* Important Notice - Not yet in Microsoft Store */}
         <div className="bg-amber-50 border-2 border-amber-400 rounded-xl p-6 mb-12">
           <div className="flex items-start gap-4">
             <div className="text-3xl">⚠️</div>
             <div>
               <h2 className="text-xl font-bold text-amber-900 mb-2">
-                Important: Manual Installation Required
+                Important: Not Yet Available via Microsoft
               </h2>
               <p className="text-amber-800 mb-3">
-                The CRK Excel Add-in is <strong>NOT available from the Microsoft Store</strong>.
-                You must download it directly from our website and install it manually (sideload).
+                The CRK Excel Add-in is <strong>not yet available from the Microsoft Store/AppSource</strong>.
+                While we wait for review, this page provides a manual sideload option for private preview use.
               </p>
               <ul className="text-sm text-amber-700 space-y-1 ml-4 list-disc">
                 <li>Download the manifest file from this page</li>

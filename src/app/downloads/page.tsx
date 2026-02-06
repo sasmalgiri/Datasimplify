@@ -69,7 +69,6 @@ export default function DownloadsPage() {
 
   useEffect(() => {
     void fetchReleases();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const claimPurchases = async () => {
@@ -167,6 +166,44 @@ export default function DownloadsPage() {
             <div className="text-red-400">{error}</div>
           ) : (
             <>
+              <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
+                  <div className="text-lg font-semibold">Power Query Templates</div>
+                  <div className="text-gray-400 text-sm mt-1">
+                    No add-in required. Paste your API key in Excel and refresh.
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      href="/download"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
+                    >
+                      Customize & Download
+                    </Link>
+                    <Link
+                      href="/template-requirements"
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
+                    >
+                      Setup Guide
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
+                  <div className="text-lg font-semibold">Excel Add-in (Coming Soon)</div>
+                  <div className="text-gray-400 text-sm mt-1">
+                    We’re submitting the add-in to Microsoft so you can install it directly from Excel.
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      href="/coming-soon?feature=excel_addin"
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
+                    >
+                      Notify me
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Free downloads</h2>
                 <button

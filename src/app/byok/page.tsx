@@ -22,8 +22,8 @@ export default function BYOKPage() {
           </h1>
 
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            CryptoReportKit Power Query templates use a BYOK model: your CoinGecko API key stays in Excel.
-            We never see, store, or proxy your API key.
+            CryptoReportKit uses a true BYOK model: your CoinGecko API key stays on your computer.
+            We never see, store, or proxy your API key. All API calls go directly to CoinGecko.
           </p>
         </div>
 
@@ -31,16 +31,16 @@ export default function BYOKPage() {
         <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-blue-400" />
-            Why BYOK with Power Query?
+            Why BYOK?
           </h2>
           <ul className="space-y-2 text-gray-300">
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>True privacy:</strong> Your API key is stored only in Excel - it never leaves your computer</span>
+              <span><strong>True privacy:</strong> Your API key is stored locally - it never leaves your computer</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>No middleman:</strong> Power Query fetches data directly from CoinGecko, not through our servers</span>
+              <span><strong>No middleman:</strong> API calls go directly to CoinGecko, not through our servers</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -48,12 +48,12 @@ export default function BYOKPage() {
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>No add-in required:</strong> Uses Excel&apos;s built-in Power Query feature</span>
+              <span><strong>Zero server storage:</strong> We never see, store, or have access to your API keys</span>
             </li>
           </ul>
           <p className="mt-4 text-sm text-gray-400 border-t border-gray-600 pt-4">
-            <strong>How it works:</strong> You paste your API key into a named Excel cell or directly in the Power Query M code.
-            The query runs entirely in Excel and fetches data from CoinGecko using your key.
+            <strong>Two options:</strong> Use our <strong>Power Query templates</strong> (key in Excel cells) or the
+            <strong> CRK Excel Add-in</strong> (key in browser LocalStorage). Both methods keep your key 100% local.
           </p>
         </div>
 
@@ -261,8 +261,8 @@ export default function BYOKPage() {
             <div>
               <h3 className="font-medium text-white mb-1">Does CryptoReportKit store my API key?</h3>
               <p className="text-sm text-gray-400">
-                No! With Power Query, your API key stays entirely in your Excel file. We never see, transmit, or store it.
-                This is the core benefit of our BYOK approach.
+                No! Your API key is stored only on your computer. With Power Query, it stays in your Excel file.
+                With the CRK Add-in, it stays in your browser&apos;s LocalStorage. We never see, transmit, or store your keys on our servers.
               </p>
             </div>
 

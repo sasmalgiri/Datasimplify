@@ -8,6 +8,11 @@ import { useState, Suspense } from 'react';
 
 // Feature descriptions for coming soon pages
 const FEATURE_INFO: Record<string, { title: string; description: string; icon: string }> = {
+  excel_addin: {
+    title: 'Excel Add-in (Microsoft Store)',
+    description: 'We’re submitting the CRK Excel add-in to Microsoft for review. Once approved, you’ll be able to install it directly from Excel (no manual sideload).',
+    icon: '🧩',
+  },
   exchanges: {
     title: 'Exchange Rankings',
     description: 'Compare cryptocurrency exchanges by trust score, trading volume, and supported pairs. Get detailed insights into exchange reliability and liquidity.',
@@ -140,7 +145,7 @@ function ComingSoonContent() {
                 <div className="text-white group-hover:text-blue-400 transition-colors">Market Data</div>
               </Link>
               <Link
-                href="/templates"
+                href="/downloads"
                 className="p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
               >
                 <div className="text-2xl mb-2">📊</div>
