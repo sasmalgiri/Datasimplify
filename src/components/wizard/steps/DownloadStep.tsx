@@ -90,9 +90,8 @@ export function DownloadStep() {
   };
 
   const contentTypes = [
-    { id: 'native_charts' as const, name: 'Native Excel Charts', description: 'Works everywhere, no add-in needed for charts', badge: 'Recommended' },
-    { id: 'addin' as const, name: 'Interactive Charts', description: 'Animated ChartJS via Office.js add-in', badge: null },
-    { id: 'formulas_only' as const, name: 'Formulas Only', description: 'Smallest file, data only', badge: null },
+    { id: 'native_charts' as const, name: 'With Charts', description: 'Includes pre-built Excel charts that update with your data', badge: 'Recommended' },
+    { id: 'formulas_only' as const, name: 'Data Only', description: 'Just Power Query data tables, no charts (smallest file)', badge: null },
   ];
 
   return (

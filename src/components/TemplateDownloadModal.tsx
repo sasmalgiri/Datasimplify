@@ -39,25 +39,17 @@ type ContentOption = {
 
 const CONTENT_OPTIONS: ContentOption[] = [
   {
-    id: 'addin',
-    name: 'Interactive Charts',
-    description: 'Animated ChartJS charts inside Excel via Office.js Add-in. Requires Microsoft 365.',
-    icon: '✨',
-    badge: 'Best Experience',
+    id: 'native_charts',
+    name: 'With Charts',
+    description: 'Includes pre-built Excel charts that auto-update when you refresh data. Works everywhere.',
+    icon: '📊',
+    badge: 'Recommended',
     badgeColor: 'bg-emerald-500',
   },
   {
-    id: 'native_charts',
-    name: 'Native Excel Charts',
-    description: 'Create beautiful Excel charts manually. No add-in needed for charts! Works everywhere.',
-    icon: '📊',
-    badge: 'No Add-in',
-    badgeColor: 'bg-blue-500',
-  },
-  {
     id: 'formulas_only',
-    name: 'Formulas Only',
-    description: 'Just CRK formulas, no charts. Smallest file size, fastest loading.',
+    name: 'Data Only',
+    description: 'Just Power Query data tables, no charts. Smallest file size.',
     icon: '📝',
   },
 ];
@@ -66,7 +58,7 @@ const CONTENT_OPTIONS: ContentOption[] = [
  * Template Download Modal
  *
  * Gates template downloads with clear requirements and warnings.
- * Offers 3 content types: Interactive Charts (Add-in), Native Excel Charts, Formulas Only
+ * Offers 2 content types: With Charts (native Excel), Data Only (Power Query tables)
  */
 export function TemplateDownloadModal({
   isOpen,
@@ -519,55 +511,28 @@ export function TemplateDownloadModal({
         </div>
 
         {/* Content Type Specific Info */}
-        {contentType === 'addin' && (
+        {contentType === 'native_charts' && (
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-300 dark:border-emerald-700 rounded-lg p-4 mb-4">
             <h3 className="font-bold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center gap-2">
-              <span>✨</span>
-              Interactive Charts with Office.js Add-in
+              <span>📊</span>
+              With Charts - Ready to Use
             </h3>
             <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Beautiful animated ChartJS charts inside Excel</span>
+                <span>Pre-built Excel charts that auto-update when you refresh data</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Requires <strong>Microsoft 365</strong> (Desktop, Web, or Mobile)</span>
+                <span>Works in <strong>Excel 2016+</strong> and Microsoft 365</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Also works with Office 2021/2019 (Desktop only)</span>
+                <span>No add-ins required - uses Power Query for live data</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Install CryptoReportKit Charts add-in after opening the file</span>
-              </li>
-            </ul>
-          </div>
-        )}
-
-        {contentType === 'native_charts' && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-4 mb-4">
-            <h3 className="font-bold text-blue-800 dark:text-blue-400 mb-2 flex items-center gap-2">
-              <span>📊</span>
-              Native Excel Charts - No Add-in Required
-            </h3>
-            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1.5">
-              <li className="flex items-start gap-2">
-                <span className="mt-0.5">•</span>
-                <span>Works in <strong>all Excel versions</strong> - no Microsoft 365 needed</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-0.5">•</span>
-                <span>Includes a &quot;Chart Guide&quot; sheet with step-by-step instructions</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-0.5">•</span>
-                <span>Pre-formatted data ranges optimized for Excel&apos;s chart wizard</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-0.5">•</span>
-                <span>Dark theme color guide to match CryptoReportKit styling</span>
+                <span>Professional styling ready for presentations</span>
               </li>
             </ul>
           </div>
@@ -577,7 +542,7 @@ export function TemplateDownloadModal({
           <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-lg p-4 mb-4">
             <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2">
               <span>📝</span>
-              Formulas Only Mode
+              Data Only - Lightweight
             </h3>
             <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1.5">
               <li className="flex items-start gap-2">
@@ -586,15 +551,15 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Only CRK formulas, no charts included</span>
+                <span>Just Power Query data tables, no charts</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Create your own charts manually if needed</span>
+                <span>Create your own charts from the data</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Best for advanced users or large datasets</span>
+                <span>Best for custom analysis or large datasets</span>
               </li>
             </ul>
           </div>
