@@ -4,9 +4,7 @@ import { WizardProvider, useWizard } from './WizardContext';
 import { StepIndicator } from './shared/StepIndicator';
 import { WelcomeStep } from './steps/WelcomeStep';
 import { EmailStep } from './steps/EmailStep';
-import { ApiKeyStep } from './steps/ApiKeyStep';
 import { ConfigureStep } from './steps/ConfigureStep';
-import { AddinStep } from './steps/AddinStep';
 import { DownloadStep } from './steps/DownloadStep';
 import { SuccessStep } from './steps/SuccessStep';
 import { useAuth } from '@/lib/auth';
@@ -22,21 +20,17 @@ function WizardContent({ onClose }: { onClose: () => void }) {
   const { state } = useWizard();
 
   // Render the appropriate step component
-  // Order: Welcome → Email → API Key → Add-in → Configure → Download → Success
+  // Order: Welcome → Email → Configure → Download → Success
   switch (state.currentStep) {
     case 1:
       return <WelcomeStep />;
     case 2:
       return <EmailStep />;
     case 3:
-      return <ApiKeyStep />;
-    case 4:
-      return <AddinStep />;      // Moved before Configure
-    case 5:
       return <ConfigureStep />;
-    case 6:
+    case 4:
       return <DownloadStep />;
-    case 7:
+    case 5:
       return <SuccessStep onClose={onClose} />;
     default:
       return <WelcomeStep />;

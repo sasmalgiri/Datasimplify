@@ -89,9 +89,9 @@ export default function AddinSetupPage() {
             <div className="flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
               <div>
-                <p className="font-medium text-gray-900">Secure Encryption</p>
+                <p className="font-medium text-gray-900">True BYOK Privacy</p>
                 <p className="text-sm text-gray-600">
-                  API keys encrypted with AES-256-GCM at rest
+                  Your API key stays in Excel - we never see or store it
                 </p>
               </div>
             </div>
@@ -246,11 +246,10 @@ export default function AddinSetupPage() {
                       </a>
                     </li>
                   </ul>
-                  <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <p className="text-sm text-orange-900">
-                      <strong>Note:</strong> Your API keys are encrypted with AES-256-GCM before storage.
-                      Keys are decrypted only in memory to make requests on your behalf. They are never
-                      logged or stored in plaintext.
+                  <div className="mt-4 p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <p className="text-sm text-emerald-900">
+                      <strong>BYOK Privacy:</strong> Your CoinGecko API key stays in your Excel file.
+                      We never see, store, or transmit your key - you maintain full control.
                     </p>
                   </div>
                 </div>

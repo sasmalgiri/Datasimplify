@@ -215,10 +215,10 @@ export default function DataSourcesPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
                 <li><strong>You provide:</strong> Your own API keys from data providers (e.g., CoinGecko)</li>
-                <li><strong>We encrypt:</strong> Your keys are encrypted with AES-256-GCM before storage</li>
-                <li><strong>We proxy:</strong> Our server calls providers on your behalf using your encrypted keys</li>
-                <li><strong>You control:</strong> You can update or delete your keys anytime from{' '}
-                  <Link href="/account/keys" className="text-emerald-600 hover:underline">Account Settings</Link></li>
+                <li><strong>You store:</strong> Your keys stay in your Excel file - we never see or store them</li>
+                <li><strong>Direct calls:</strong> Excel connects directly to CoinGecko using your key</li>
+                <li><strong>You control:</strong> Full control over your keys - add, update, or remove anytime. See the{' '}
+                  <Link href="/byok" className="text-emerald-600 hover:underline">BYOK Setup Guide</Link></li>
                 <li><strong>You comply:</strong> You are responsible for respecting provider rate limits and terms</li>
               </ul>
               <p className="text-sm text-gray-600">

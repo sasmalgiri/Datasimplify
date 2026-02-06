@@ -66,12 +66,15 @@ export const PRO_MODE: TemplateMode = {
 /**
  * Template Requirements Checklist
  *
- * Hard requirements that must be met before template will work
+ * Hard requirements that must be met before template will work.
+ *
+ * BYOK Architecture: Templates use Power Query to call CoinGecko API directly.
+ * Users enter their own API key in the Excel Settings sheet - we never see or store it.
  */
 export interface TemplateRequirements {
   excelDesktop: boolean;
-  crkAddin: boolean;
-  apiKeyConnected: boolean;
+  powerQuery: boolean;
+  apiKey: boolean;
 }
 
 export const TEMPLATE_REQUIREMENTS: {
@@ -84,66 +87,67 @@ export const TEMPLATE_REQUIREMENTS: {
   {
     id: 'excel_desktop',
     name: 'Microsoft Excel Desktop',
-    description: 'Excel Desktop (Windows or Mac) is required. Excel Online does NOT support CRK add-in.',
+    description: 'Excel Desktop (Windows or Mac) with Power Query is required. Excel Online does not support Power Query.',
     howToCheck: 'Open in Excel Desktop, not browser',
-    howToFix: 'Download and install Microsoft Office or Microsoft 365',
+    howToFix: 'Download and install Microsoft Office 2016+ or Microsoft 365',
   },
   {
-    id: 'crk_addin',
-    name: 'CRK Excel Add-in',
-    description: 'The CryptoReportKit Excel add-in must be installed for formulas to work.',
-    howToCheck: 'Insert > Get Add-ins > Search "CryptoReportKit"',
-    howToFix: 'Visit the CRK setup guide to install the add-in',
+    id: 'power_query',
+    name: 'Power Query Support',
+    description: 'Templates use Power Query to fetch live data. Included in Excel 2016+ and Microsoft 365.',
+    howToCheck: 'Go to Data tab > look for "Get Data" or "Queries & Connections"',
+    howToFix: 'Upgrade to Excel 2016 or later, or Microsoft 365',
   },
   {
     id: 'api_key',
-    name: 'Data Provider API Key (BYOK)',
-    description: 'You must connect your own API key (e.g., CoinGecko) to fetch data.',
-    howToCheck: 'Account > API Keys > Check if CoinGecko is connected',
-    howToFix: 'Get a free CoinGecko API key and connect it in your CRK account',
+    name: 'CoinGecko API Key (Free)',
+    description: 'Get your free API key from CoinGecko and paste it in the Settings sheet (cell B2).',
+    howToCheck: 'Open the Settings sheet and check if your API key is entered',
+    howToFix: 'Sign up at coingecko.com/en/api/pricing (free, no credit card) and paste your key in Excel',
   },
 ];
 
 /**
  * Quota Status Messages
  *
- * User-friendly messages for different quota/error states
+ * User-friendly messages for different quota/error states.
+ * Templates use Power Query with user's own CoinGecko API key.
  */
 export const QUOTA_STATUS_MESSAGES = {
-  missing_addin: {
-    title: 'CRK Add-in Not Installed',
-    message: 'You will see #NAME? errors because the CRK add-in is not installed.',
-    action: 'Install CRK: Insert > Get Add-ins > Search "CryptoReportKit"',
+  missing_api_key: {
+    title: 'API Key Not Configured',
+    message: 'Your CoinGecko API key is missing. Data cannot be fetched.',
+    action: 'Open the Settings sheet and paste your CoinGecko API key in cell B2',
     severity: 'error' as const,
   },
-  not_signed_in: {
-    title: 'Not Signed In to CRK',
-    message: 'Data cannot be fetched because you are not signed in to the CRK add-in.',
-    action: 'Click the CRK tab in Excel and sign in to your account',
-    severity: 'warning' as const,
+  invalid_api_key: {
+    title: 'Invalid API Key',
+    message: 'Your CoinGecko API key appears to be invalid or expired.',
+    action: 'Check your API key at coingecko.com/en/developers/dashboard and update cell B2 in Settings',
+    severity: 'error' as const,
   },
-  no_api_key: {
-    title: 'No API Key Connected',
-    message: 'No data provider API key is connected. Data cannot be fetched.',
-    action: 'Go to Account > API Keys and connect your CoinGecko API key',
-    severity: 'warning' as const,
+  no_power_query: {
+    title: 'Power Query Not Available',
+    message: 'This Excel version does not support Power Query. Data formulas will not work.',
+    action: 'Upgrade to Excel 2016 or later, or use Microsoft 365',
+    severity: 'error' as const,
   },
   quota_exceeded: {
     title: 'API Rate Limit Reached',
-    message: 'Your data provider API limit was reached. Data may be stale or missing.',
-    action: 'Reduce watchlist size, lower refresh frequency, or upgrade your data provider plan',
+    message: 'Your CoinGecko API limit was reached. Data may be stale or missing.',
+    action: 'Reduce watchlist size, lower refresh frequency, or upgrade your CoinGecko plan',
     severity: 'warning' as const,
   },
   rate_limited: {
     title: 'Rate Limited',
-    message: 'Too many requests. Your data provider is temporarily blocking new data.',
+    message: 'Too many requests. CoinGecko is temporarily blocking new data.',
     action: 'Wait a few minutes and try refreshing again. Consider enabling Low-Quota Mode.',
     severity: 'warning' as const,
   },
   ok: {
-    title: 'CRK Connected',
-    message: 'CRK add-in is working correctly.',
-    action: 'Press Ctrl+Alt+F5 to refresh all data',
+    title: 'Data Ready',
+    message: 'Power Query is configured and ready to fetch data.',
+    action: 'Go to Data > Refresh All to update all data',
     severity: 'success' as const,
   },
 };

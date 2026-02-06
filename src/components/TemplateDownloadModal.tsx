@@ -304,13 +304,13 @@ export function TemplateDownloadModal({
                   </p>
                   <ul className="mt-2 space-y-1 text-xs text-emerald-400">
                     <li className="flex items-center gap-1">
-                      <ChevronRight className="w-3 h-3" /> Get your free API key
-                    </li>
-                    <li className="flex items-center gap-1">
-                      <ChevronRight className="w-3 h-3" /> Install the CRK Add-in
-                    </li>
-                    <li className="flex items-center gap-1">
                       <ChevronRight className="w-3 h-3" /> Configure your report
+                    </li>
+                    <li className="flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> Download your Excel template
+                    </li>
+                    <li className="flex items-center gap-1">
+                      <ChevronRight className="w-3 h-3" /> Add your CoinGecko API key in Excel
                     </li>
                   </ul>
                 </div>
@@ -334,7 +334,7 @@ export function TemplateDownloadModal({
                     Download the template directly (you&apos;ll need to set up manually)
                   </p>
                   <p className="mt-2 text-xs text-gray-500">
-                    For users who already have CRK Add-in and API key configured
+                    For users who already have a CoinGecko API key
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -615,19 +615,19 @@ export function TemplateDownloadModal({
           <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Microsoft Excel (Desktop, Online, or Mobile) - <strong>works everywhere!</strong></span>
+              <span>Microsoft Excel Desktop (2016 or later) with <strong>Power Query</strong></span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>CRK Add-in with <strong>active CRK account</strong></span>
+              <span>Free CoinGecko API key (paste in Excel&apos;s Settings sheet)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Internet connection (live data from CRK)</span>
+              <span>Internet connection (Power Query fetches live data)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Charts included with formulas - auto-update when data refreshes</span>
+              <span>Your API key stays in your Excel file - we never see it</span>
             </li>
           </ul>
         </div>
@@ -718,8 +718,8 @@ export function TemplateDownloadModal({
             className="mt-1 w-4 h-4 text-emerald-600 rounded focus:ring-2 focus:ring-emerald-500"
           />
           <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
-            I understand this template <strong>requires an active CRK account</strong> to fetch live data.
-            The template includes formulas and charts that auto-update when CRK refreshes.
+            I understand this template requires a <strong>free CoinGecko API key</strong> (pasted in Excel&apos;s Settings sheet)
+            and <strong>Excel Desktop with Power Query</strong> to fetch live data.
           </span>
         </label>
 
@@ -751,12 +751,12 @@ export function TemplateDownloadModal({
             Cancel
           </button>
           <a
-            href="/template-requirements"
+            href="https://www.coingecko.com/en/api/pricing"
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-white transition-colors inline-flex items-center gap-2 font-medium"
           >
-            Install CRK
+            Get Free API Key
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"

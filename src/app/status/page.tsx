@@ -288,15 +288,15 @@ export default function StatusPage() {
                 CryptoReportKit Add-in
               </h3>
               <p className="text-emerald-800 text-sm mb-3">
-                CRK templates use our native Excel Add-in with BYOK (Bring Your Own Key) architecture.
-                Your data requests are proxied securely through our API using your encrypted provider keys.
+                CRK templates use BYOK (Bring Your Own Key) architecture.
+                Your CoinGecko API key stays in your Excel file - we never see or store your keys.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/account/keys"
+                  href="/byok"
                   className="text-emerald-600 hover:text-emerald-800 text-sm font-medium"
                 >
-                  Manage API Keys
+                  BYOK Setup Guide
                 </Link>
                 <Link
                   href="/pricing"

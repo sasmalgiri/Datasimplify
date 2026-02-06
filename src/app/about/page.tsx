@@ -128,8 +128,8 @@ export default function AboutPage() {
               <div>
                 <h3 className="font-medium text-white">BYOK Architecture</h3>
                 <p className="text-gray-400 text-sm">
-                  Keys are encrypted at rest with AES-256-GCM and decrypted only in memory to make
-                  API calls on your behalf. Keys are never logged or stored in plaintext.
+                  True Bring Your Own Key model: your CoinGecko API key stays in your Excel file.
+                  We never see, store, or transmit your keys - you maintain full control.
                 </p>
               </div>
             </div>

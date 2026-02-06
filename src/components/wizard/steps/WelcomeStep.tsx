@@ -10,8 +10,8 @@ export function WelcomeStep() {
   const features = [
     {
       icon: Key,
-      title: 'Connect API Key (Optional)',
-      description: 'Free CoinGecko API key for higher rate limits',
+      title: 'Sign In',
+      description: 'Quick email verification to access templates',
     },
     {
       icon: BarChart3,
@@ -21,7 +21,7 @@ export function WelcomeStep() {
     {
       icon: Download,
       title: 'Download & Use',
-      description: 'Get your ready-to-use Excel template with live data',
+      description: 'Get your Excel template - add your own CoinGecko API key',
     },
   ];
 

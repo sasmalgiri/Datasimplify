@@ -50,9 +50,9 @@ export default function AccountPage() {
 
   const accountLinks = [
     {
-      href: '/account/keys',
-      title: 'API Keys',
-      description: 'Manage your API keys for data providers (CoinGecko)',
+      href: '/byok',
+      title: 'API Key Guide',
+      description: 'Learn how to get and use your CoinGecko API key (BYOK)',
       icon: Key,
       color: 'emerald',
     },
@@ -181,15 +181,15 @@ export default function AccountPage() {
                 BYOK (Bring Your Own Key) Architecture
               </h3>
               <p className="text-emerald-800 text-sm mb-3">
-                CryptoReportKit uses a BYOK architecture. Your API keys are encrypted at rest with
-                AES-256-GCM and decrypted only in memory to make API calls on your behalf. Keys are
-                never logged or stored in plaintext.
+                CryptoReportKit uses a true BYOK architecture. Your CoinGecko API key stays in your
+                Excel file - we never see, store, or transmit your keys. You maintain full control
+                and privacy over your data access.
               </p>
               <Link
-                href="/account/keys"
+                href="/byok"
                 className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
               >
-                Manage Your API Keys →
+                View BYOK Setup Guide →
               </Link>
             </div>
           </div>

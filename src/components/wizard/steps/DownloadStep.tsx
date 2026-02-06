@@ -132,19 +132,10 @@ export function DownloadStep() {
                 <span className="text-gray-400">Layout:</span>
                 <span className="text-white capitalize">{state.dashboardLayout}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">API Key:</span>
-                <span className={state.isApiKeyValid ? 'text-emerald-400' : 'text-yellow-400'}>
-                  {state.isApiKeyValid ? 'Connected' : 'Using free tier'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Add-in:</span>
-                <span className={state.addinInstalled ? 'text-emerald-400' : 'text-yellow-400'}>
-                  {state.addinInstalled ? 'Installed' : 'Not installed yet'}
-                </span>
-              </div>
             </div>
+            <p className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-500">
+              Your CoinGecko API key stays in your Excel file. See the Success page for setup instructions.
+            </p>
           </div>
 
           {/* Content Type Selection */}

@@ -316,24 +316,17 @@
   <div id="welcomeScreen" class="login-screen hidden">
     <div class="login-logo">📊</div>
     <h1 class="login-title">CryptoReportKit</h1>
-    <p class="login-subtitle">Add your CoinGecko API key to get started</p>
+    <p class="login-subtitle">Excel charting tools for your crypto data</p>
 
     <div class="login-form">
-      <div id="welcomeError" class="error-msg hidden"></div>
-
-      <div class="form-group">
-        <label class="form-label">CoinGecko API Key (Optional)</label>
-        <input type="password" id="welcomeApiKey" class="form-input" placeholder="CG-xxxxxxxxxxxx">
-      </div>
-
-      <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-        Free tier works without a key. Add your own key for higher rate limits.
+      <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; text-align: center;">
+        Create beautiful charts from your Excel data. Your CoinGecko API key stays in your Excel file.
       </p>
 
-      <button id="welcomeBtn" class="btn btn-primary" onclick="handleWelcome()">Get Started</button>
+      <button id="welcomeBtn" class="btn btn-primary" onclick="handleWelcome()">Open Chart Tools</button>
 
-      <p class="signup-link">
-        <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener">Get free API key from CoinGecko →</a>
+      <p class="signup-link" style="margin-top: 12px;">
+        <a href="https://cryptoreportkit.com/byok" target="_blank" rel="noopener">BYOK Setup Guide →</a>
       </p>
     </div>
   </div>
@@ -358,33 +351,16 @@
       <p id="lastRefresh" class="last-refresh hidden">Last refresh: --</p>
     </div>
 
-    <!-- API Keys -->
+    <!-- BYOK Info -->
     <div class="section">
-      <div class="section-title">API Keys (BYOK)</div>
-      <div class="card">
-        <div class="provider-row">
-          <div class="provider-info">
-            <div id="cgStatus" class="status-dot"></div>
-            <span class="provider-name">CoinGecko</span>
-            <span id="cgHint" class="provider-hint"></span>
-          </div>
-          <button id="cgAction" class="provider-action connect" onclick="toggleKeyInput()">Connect</button>
-        </div>
-
-        <div id="keyInputSection" class="key-input-section hidden">
-          <div class="key-input-row">
-            <input type="password" id="apiKeyInput" class="key-input" placeholder="CG-xxxxxxxxxxxxxxxxxxxx">
-            <button class="key-btn key-btn-save" onclick="saveApiKey()">Save</button>
-            <button class="key-btn key-btn-cancel" onclick="toggleKeyInput()">Cancel</button>
-          </div>
-          <p class="key-help">
-            <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener">Get free API key →</a>
-          </p>
-        </div>
+      <div class="card" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);">
+        <p style="font-size: 12px; color: #9CA3AF; margin-bottom: 8px;">
+          <strong style="color: #10B981;">BYOK Model:</strong> Your CoinGecko API key stays in your Excel file.
+        </p>
+        <a href="https://cryptoreportkit.com/byok" target="_blank" rel="noopener" style="font-size: 11px; color: #10B981; text-decoration: none;">
+          View setup guide →
+        </a>
       </div>
-      <p class="byok-hint">
-        Your key stays in Excel - never sent to our servers. Direct API calls to CoinGecko.
-      </p>
     </div>
 
     <!-- Create Charts -->
@@ -491,11 +467,9 @@
   </div>
 
   <script>
-    // BYOK Architecture: Keys stored locally, API calls go directly to CoinGecko
-    const API_KEY_STORAGE = 'crk_coingecko_key';
+    // CRK Taskpane - Chart tools for Excel
     const SETUP_COMPLETE = 'crk_setup_complete';
     let isOfficeReady = false;
-    let hasApiKey = false;
 
     // Initialize Office.js
     Office.onReady(function(info) {
@@ -513,16 +487,12 @@
     }, 2000);
 
     async function init() {
-      // Check for stored API key
-      const apiKey = await getStoredApiKey();
       const setupComplete = await getStorageItem(SETUP_COMPLETE);
-      hasApiKey = !!apiKey;
 
       document.getElementById('loadingScreen').classList.add('hidden');
 
-      if (setupComplete || hasApiKey) {
+      if (setupComplete) {
         showMainApp();
-        loadProviderStatus();
       } else {
         showWelcomeScreen();
       }
@@ -564,10 +534,6 @@
       } catch (e) {}
     }
 
-    async function getStoredApiKey() {
-      return await getStorageItem(API_KEY_STORAGE);
-    }
-
     function showWelcomeScreen() {
       document.getElementById('welcomeScreen').classList.remove('hidden');
       document.getElementById('mainApp').classList.add('hidden');
@@ -577,134 +543,30 @@
       document.getElementById('welcomeScreen').classList.add('hidden');
       document.getElementById('mainApp').classList.remove('hidden');
 
-      // Update user display
-      const apiKey = hasApiKey;
-      document.getElementById('userEmail').textContent = apiKey ? 'Pro API Key Connected' : 'Free Tier (No Key)';
+      // Update display
+      document.getElementById('userEmail').textContent = 'Chart Tools Ready';
 
       // Initialize advanced Chart.js visualization
       setTimeout(() => renderAdvancedChart('radar'), 500);
     }
 
     async function handleWelcome() {
-      const apiKey = document.getElementById('welcomeApiKey').value.trim();
-      const errorDiv = document.getElementById('welcomeError');
       const btn = document.getElementById('welcomeBtn');
-
       btn.disabled = true;
-      btn.textContent = 'Setting up...';
-      errorDiv.classList.add('hidden');
+      btn.textContent = 'Loading...';
 
-      try {
-        // If API key provided, validate it
-        if (apiKey) {
-          const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
-            headers: { 'x-cg-pro-api-key': apiKey }
-          });
+      // Mark setup as complete
+      await setStorageItem(SETUP_COMPLETE, 'true');
+      showMainApp();
 
-          if (!response.ok) {
-            // Try as demo key
-            console.log('[CRK] Pro API validation failed, may be demo tier key');
-          }
-
-          // Store the key locally
-          await setStorageItem(API_KEY_STORAGE, apiKey);
-          hasApiKey = true;
-        }
-
-        // Mark setup as complete
-        await setStorageItem(SETUP_COMPLETE, 'true');
-
-        showMainApp();
-        loadProviderStatus();
-      } catch (error) {
-        // Network error - still proceed (key will work when online)
-        if (apiKey) {
-          await setStorageItem(API_KEY_STORAGE, apiKey);
-          hasApiKey = true;
-        }
-        await setStorageItem(SETUP_COMPLETE, 'true');
-        showMainApp();
-        loadProviderStatus();
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Get Started';
-      }
+      btn.disabled = false;
+      btn.textContent = 'Open Chart Tools';
     }
 
     async function handleSignOut() {
-      // Clear stored data
-      await removeStorageItem(API_KEY_STORAGE);
+      // Clear stored data and return to welcome screen
       await removeStorageItem(SETUP_COMPLETE);
-      hasApiKey = false;
       showWelcomeScreen();
-    }
-
-    async function loadProviderStatus() {
-      const apiKey = await getStoredApiKey();
-      const statusDot = document.getElementById('cgStatus');
-      const hint = document.getElementById('cgHint');
-      const action = document.getElementById('cgAction');
-
-      if (apiKey) {
-        statusDot.classList.add('connected');
-        hint.textContent = '••••' + apiKey.slice(-4);
-        action.textContent = 'Remove';
-        action.className = 'provider-action remove';
-        action.onclick = removeApiKey;
-        hasApiKey = true;
-      } else {
-        statusDot.classList.remove('connected');
-        hint.textContent = 'Free tier';
-        action.textContent = 'Connect';
-        action.className = 'provider-action connect';
-        action.onclick = toggleKeyInput;
-        hasApiKey = false;
-      }
-
-      // Update header display
-      document.getElementById('userEmail').textContent = hasApiKey ? 'Pro API Key Connected' : 'Free Tier (No Key)';
-    }
-
-    function toggleKeyInput() {
-      const section = document.getElementById('keyInputSection');
-      section.classList.toggle('hidden');
-      document.getElementById('apiKeyInput').value = '';
-    }
-
-    async function saveApiKey() {
-      const apiKey = document.getElementById('apiKeyInput').value.trim();
-      if (!apiKey) { alert('Please enter an API key'); return; }
-
-      try {
-        // Validate key
-        const response = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
-          headers: { 'x-cg-pro-api-key': apiKey }
-        });
-
-        if (!response.ok) {
-          console.log('[CRK] Pro API validation returned ' + response.status + ', storing anyway');
-        }
-
-        // Store locally
-        await setStorageItem(API_KEY_STORAGE, apiKey);
-        hasApiKey = true;
-
-        toggleKeyInput();
-        loadProviderStatus();
-      } catch (error) {
-        // Network error - store anyway
-        await setStorageItem(API_KEY_STORAGE, apiKey);
-        hasApiKey = true;
-        toggleKeyInput();
-        loadProviderStatus();
-      }
-    }
-
-    async function removeApiKey() {
-      if (!confirm('Remove your CoinGecko API key? You can add it again later.')) return;
-      await removeStorageItem(API_KEY_STORAGE);
-      hasApiKey = false;
-      loadProviderStatus();
     }
 
     async function handleRefresh() {

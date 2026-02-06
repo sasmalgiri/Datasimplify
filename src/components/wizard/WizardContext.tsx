@@ -12,20 +12,12 @@ export interface WizardState {
   isAuthenticated: boolean;
   turnstileToken: string | null;
 
-  // Step 3: API Key
-  apiKey: string;
-  isApiKeyValid: boolean;
-
-  // Step 4: Add-in (moved before Configure)
-  addinInstalled: boolean;
-  addinConnectionTested: boolean;
-
-  // Step 5: Configuration
+  // Step 3: Configuration
   selectedCoins: string[];
   selectedMetrics: string[];
   dashboardLayout: 'compact' | 'detailed' | 'charts';
 
-  // Step 6: Download
+  // Step 4: Download
   downloadFormat: 'xlsx' | 'xlsm';
   contentType: 'addin' | 'native_charts' | 'formulas_only';
   isDownloading: boolean;
@@ -39,9 +31,6 @@ export type WizardAction =
   | { type: 'SET_EMAIL'; email: string }
   | { type: 'SET_AUTHENTICATED'; authenticated: boolean }
   | { type: 'SET_TURNSTILE_TOKEN'; token: string | null }
-  | { type: 'SET_API_KEY'; key: string; valid: boolean }
-  | { type: 'SET_ADDIN_INSTALLED'; installed: boolean }
-  | { type: 'SET_ADDIN_CONNECTION_TESTED'; tested: boolean }
   | { type: 'SET_COINS'; coins: string[] }
   | { type: 'SET_METRICS'; metrics: string[] }
   | { type: 'SET_LAYOUT'; layout: 'compact' | 'detailed' | 'charts' }
@@ -51,7 +40,7 @@ export type WizardAction =
   | { type: 'SET_DOWNLOAD_COMPLETE'; complete: boolean }
   | { type: 'RESET' };
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 5;
 
 const initialState: WizardState = {
   currentStep: 1,
@@ -60,10 +49,6 @@ const initialState: WizardState = {
   email: '',
   isAuthenticated: false,
   turnstileToken: null,
-  apiKey: '',
-  isApiKeyValid: false,
-  addinInstalled: false,
-  addinConnectionTested: false,
   selectedCoins: ['bitcoin', 'ethereum'],
   selectedMetrics: ['price', 'market_cap', 'volume_24h', 'change_24h'],
   dashboardLayout: 'detailed',
@@ -87,12 +72,6 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, isAuthenticated: action.authenticated };
     case 'SET_TURNSTILE_TOKEN':
       return { ...state, turnstileToken: action.token };
-    case 'SET_API_KEY':
-      return { ...state, apiKey: action.key, isApiKeyValid: action.valid };
-    case 'SET_ADDIN_INSTALLED':
-      return { ...state, addinInstalled: action.installed };
-    case 'SET_ADDIN_CONNECTION_TESTED':
-      return { ...state, addinConnectionTested: action.tested };
     case 'SET_COINS':
       return { ...state, selectedCoins: action.coins };
     case 'SET_METRICS':
@@ -146,29 +125,25 @@ export function WizardProvider({
   });
 
   // Determine if user can proceed to next step
-  // Step order: Welcome → Email → API Key → Add-in → Configure → Download → Success
+  // Step order: Welcome → Email → Configure → Download → Success
   const canGoNext = (() => {
     switch (state.currentStep) {
       case 1: // Welcome
         return true;
       case 2: // Email
         return state.isAuthenticated && state.email.includes('@');
-      case 3: // API Key (required - no skip)
-        return state.isApiKeyValid;
-      case 4: // Add-in Installation (required - no skip)
-        return state.addinInstalled;
-      case 5: // Configure
+      case 3: // Configure
         return state.selectedCoins.length > 0 && state.selectedMetrics.length > 0;
-      case 6: // Download
+      case 4: // Download
         return !state.isDownloading;
-      case 7: // Success
+      case 5: // Success
         return false;
       default:
         return true;
     }
   })();
 
-  const canGoPrev = state.currentStep > 1 && state.currentStep < 7;
+  const canGoPrev = state.currentStep > 1 && state.currentStep < 5;
 
   return (
     <WizardContext.Provider value={{ state, dispatch, canGoNext, canGoPrev, totalSteps: TOTAL_STEPS }}>
@@ -188,8 +163,6 @@ export function useWizard() {
 export const STEP_TITLES = [
   'Welcome',
   'Account',
-  'API Key',
-  'Add-in',      // Moved before Configure
   'Configure',
   'Download',
   'Success',

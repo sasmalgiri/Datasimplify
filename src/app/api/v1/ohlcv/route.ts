@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
         error: 'Sub-hourly OHLCV data requires CoinGecko Pro API key',
         interval: interval,
         requiresPro: true,
-        message: 'Add your CoinGecko Pro API key in account settings to access 5m, 15m, 30m, 1h intervals',
-        upgradeUrl: '/account/keys',
+        message: 'Get a CoinGecko Pro API key to access 5m, 15m, 30m, 1h intervals',
+        upgradeUrl: '/byok',
         availableWithFreeKey: ['1d', 'daily']
       }, { status: 403 });
     }

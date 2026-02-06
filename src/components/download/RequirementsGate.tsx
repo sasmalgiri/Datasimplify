@@ -14,9 +14,8 @@ interface RequirementsGateProps {
  *
  * Hard gate that users must acknowledge before downloading templates.
  * Ensures they understand the BYOK requirements:
- * - Excel Desktop (not Excel Online)
- * - CRK add-in installed
- * - Own API key connected (BYOK)
+ * - Excel Desktop with Power Query (not Excel Online)
+ * - CoinGecko API key (free, entered directly in Excel)
  */
 export function RequirementsGate({ onConfirm, className = '' }: RequirementsGateProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
@@ -104,9 +103,9 @@ export function RequirementsGate({ onConfirm, className = '' }: RequirementsGate
           Important: BYOK Architecture
         </h4>
         <p className="text-sm text-gray-300">
-          Templates run on <strong>your own API key</strong> (Bring Your Own Key). Data usage depends on
-          your data provider&apos;s plan (e.g., CoinGecko Demo API has 10,000 calls/month).
-          Your keys are encrypted and never shared.
+          Templates use <strong>your own CoinGecko API key</strong> (Bring Your Own Key).
+          Your key stays in your Excel file - we never see or store it.
+          Data usage depends on your CoinGecko plan (Demo API has 10,000 calls/month free).
         </p>
       </div>
 
