@@ -11,7 +11,7 @@ export type ReportType = 'market' | 'watchlist' | 'screener' | 'portfolio' | 'co
 export type AssetScope = 'top_coins' | 'my_list' | 'single_coin';
 export type TimeframeOption = 'daily' | 'hourly' | '5min';
 export type OutputFormat = 'dashboard' | 'table' | 'charts';
-export type CryptoSheetsPlan = 'free' | 'paid' | 'unknown';
+export type PlanTier = 'free' | 'paid' | 'unknown';
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 export type QuotaCost = 'low' | 'medium' | 'high';
 
@@ -29,7 +29,7 @@ export interface TemplateCatalogEntry {
   };
   quota_cost_estimate: QuotaCost;
   calls_per_refresh: number; // Base calls for typical config
-  free_safe: boolean; // Can work within Free CryptoSheets tier
+  free_safe: boolean; // Can work within Free tier API limits
   features: {
     charts: boolean;
     screener: boolean;
@@ -377,7 +377,7 @@ export const OUTPUT_FORMAT_OPTIONS = [
   { id: 'charts', label: 'Charts Only', description: 'Focus on visualizations', icon: '📊' },
 ] as const;
 
-export const CRYPTOSHEETS_PLAN_OPTIONS = [
+export const PLAN_OPTIONS = [
   { id: 'free', label: 'Free', description: '100 calls/day limit', icon: '🆓' },
   { id: 'paid', label: 'Paid', description: 'Higher limits', icon: '💎' },
   { id: 'unknown', label: "Don't Know", description: "We'll assume free tier", icon: '❓' },

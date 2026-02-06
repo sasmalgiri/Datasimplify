@@ -6,12 +6,12 @@ import {
   ASSET_SCOPE_OPTIONS,
   TIMEFRAME_OPTIONS,
   OUTPUT_FORMAT_OPTIONS,
-  CRYPTOSHEETS_PLAN_OPTIONS,
+  PLAN_OPTIONS,
   type ReportType,
   type AssetScope,
   type TimeframeOption,
   type OutputFormat,
-  type CryptoSheetsPlan,
+  type PlanTier,
 } from '@/lib/templates/reportBuilderCatalog';
 import {
   selectTemplate,
@@ -21,7 +21,7 @@ import {
 
 // ============ TYPES ============
 
-type WizardStep = 'report_type' | 'asset_scope' | 'timeframe' | 'output_format' | 'cryptosheets_plan' | 'result';
+type WizardStep = 'report_type' | 'asset_scope' | 'timeframe' | 'output_format' | 'plan_tier' | 'result';
 
 interface ReportBuilderProps {
   onTemplateSelect: (templateId: string, config: TemplateRecommendation['config']) => void;
@@ -90,12 +90,12 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
     assetScope: null as AssetScope | null,
     timeframe: null as TimeframeOption | null,
     outputFormat: null as OutputFormat | null,
-    cryptoSheetsPlan: null as CryptoSheetsPlan | null,
+    planTier: null as PlanTier | null,
   });
   const [recommendation, setRecommendation] = useState<TemplateRecommendation | null>(null);
 
   // Step progression
-  const steps: WizardStep[] = ['report_type', 'asset_scope', 'timeframe', 'output_format', 'cryptosheets_plan', 'result'];
+  const steps: WizardStep[] = ['report_type', 'asset_scope', 'timeframe', 'output_format', 'plan_tier', 'result'];
   const currentStepIndex = steps.indexOf(currentStep);
 
   // Handle selection
@@ -114,14 +114,14 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
         updatedSelections.assetScope &&
         updatedSelections.timeframe &&
         updatedSelections.outputFormat &&
-        updatedSelections.cryptoSheetsPlan
+        updatedSelections.planTier
       ) {
         const result = selectTemplate({
           reportType: updatedSelections.reportType,
           assetScope: updatedSelections.assetScope,
           timeframe: updatedSelections.timeframe,
           outputFormat: updatedSelections.outputFormat,
-          cryptoSheetsPlan: updatedSelections.cryptoSheetsPlan,
+          planTier: updatedSelections.planTier,
         });
         setRecommendation(result);
         setCurrentStep('result');
@@ -146,7 +146,7 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
       assetScope: null,
       timeframe: null,
       outputFormat: null,
-      cryptoSheetsPlan: null,
+      planTier: null,
     });
     setRecommendation(null);
   }, []);
@@ -158,7 +158,7 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
       case 'asset_scope': return 'How many assets?';
       case 'timeframe': return 'What timeframe?';
       case 'output_format': return 'What output format?';
-      case 'cryptosheets_plan': return 'What Excel add-in plan do you have?';
+      case 'plan_tier': return 'What is your API rate limit tier?';
       case 'result': return 'Your Template Recommendation';
       default: return '';
     }
@@ -236,18 +236,18 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
           </div>
         );
 
-      case 'cryptosheets_plan':
+      case 'plan_tier':
         return (
           <div className="grid grid-cols-1 gap-3">
-            {CRYPTOSHEETS_PLAN_OPTIONS.map(option => (
+            {PLAN_OPTIONS.map(option => (
               <StepOption
                 key={option.id}
                 id={option.id}
                 label={option.label}
                 description={option.description}
                 icon={option.icon}
-                selected={selections.cryptoSheetsPlan === option.id}
-                onClick={() => handleSelect('cryptoSheetsPlan', option.id)}
+                selected={selections.planTier === option.id}
+                onClick={() => handleSelect('planTier', option.id)}
               />
             ))}
           </div>
@@ -345,7 +345,7 @@ export function ReportBuilder({ onTemplateSelect, className = '' }: ReportBuilde
                     assetScope: selections.assetScope!,
                     timeframe: selections.timeframe!,
                     outputFormat: selections.outputFormat!,
-                    cryptoSheetsPlan: selections.cryptoSheetsPlan!,
+                    planTier: selections.planTier!,
                   });
                   // Override primary with this alternative
                   onTemplateSelect(alt.template_id, altRec.config);

@@ -12,7 +12,7 @@ import {
   type AssetScope,
   type TimeframeOption,
   type OutputFormat,
-  type CryptoSheetsPlan,
+  type PlanTier,
   type QuotaCost,
   getTemplateById,
 } from './reportBuilderCatalog';
@@ -24,7 +24,7 @@ export interface UserRequirements {
   assetScope: AssetScope;
   timeframe: TimeframeOption;
   outputFormat: OutputFormat;
-  cryptoSheetsPlan: CryptoSheetsPlan;
+  planTier: PlanTier;
   coinCount?: number; // Optional: specific number of coins
 }
 
@@ -50,10 +50,10 @@ export interface TemplateRecommendation {
  * Rule-based template selection - deterministic, not AI
  */
 export function selectTemplate(requirements: UserRequirements): TemplateRecommendation {
-  const { reportType, assetScope, timeframe, outputFormat, cryptoSheetsPlan } = requirements;
+  const { reportType, assetScope, timeframe, outputFormat, planTier } = requirements;
 
   // Determine if user is on free tier
-  const isFreeUser = cryptoSheetsPlan === 'free' || cryptoSheetsPlan === 'unknown';
+  const isFreeUser = planTier === 'free' || planTier === 'unknown';
 
   // Get candidate templates by report type
   let candidates = TEMPLATE_CATALOG.filter((t) => t.report_type === reportType);

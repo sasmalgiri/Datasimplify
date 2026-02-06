@@ -921,7 +921,7 @@ async function createDataSheet(
 
 /**
  * Build formula from template with advanced substitutions
- * Supports both CryptoSheets and CRK formula formats
+ * Supports CRK formula formats with dynamic placeholders
  */
 function buildFormula(
   formulaTpl: FormulaTemplate,
@@ -929,7 +929,7 @@ function buildFormula(
   userConfig: UserTemplateConfig,
   rowIndex: number = 0
 ): string {
-  // Start with the CryptoSheets formula pattern (source of truth)
+  // Start with the formula pattern and apply substitutions
   let formula = formulaTpl.formulaPattern
     // Coin placeholders
     .replace(/{COIN}/g, coin)
