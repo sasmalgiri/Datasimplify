@@ -27,6 +27,7 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
   canDownload: () => boolean;
   remainingDownloads: () => number;
 }
@@ -315,6 +316,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Reset password (send reset email)
+  const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
+    }
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), 15000);
+      });
+
+      const resetPromise = supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
+
+      const { error } = await Promise.race([resetPromise, timeoutPromise]);
+
+      if (error) {
+        return { error: new Error(error.message) };
+      }
+      return { error: null };
+    } catch (error) {
+      const err = error as Error;
+      if (err.message.includes('timed out')) {
+        return { error: err };
+      }
+      return { error: new Error('Failed to send reset email. Please try again.') };
+    }
+  };
+
   // Sign out
   const signOut = async () => {
     if (!supabase) return;
@@ -362,6 +392,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         resendVerificationEmail,
+        resetPassword,
         canDownload,
         remainingDownloads,
       }}
