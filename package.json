@@ -32,7 +32,6 @@
     "react-dom": "19.2.1",
     "recharts": "^3.6.0",
     "resend": "^6.8.0",
-    "xlsx": "^0.18.5",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
@@ -40,6 +39,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "baseline-browser-mapping": "^2.9.19",
     "canvas": "^3.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",

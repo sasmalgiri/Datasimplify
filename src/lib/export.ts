@@ -1,5 +1,5 @@
-// Excel and CSV export utilities using SheetJS
-import * as XLSX from 'xlsx';
+// Excel and CSV export utilities using ExcelJS
+import ExcelJS from 'exceljs';
 import { CoinMarketData } from '@/types/crypto';
 
 // Format helpers
@@ -46,15 +46,15 @@ const COLUMN_CONFIG = [
 function coinsToRows(coins: CoinMarketData[], columns: typeof COLUMN_CONFIG): Record<string, string | number>[] {
   return coins.map(coin => {
     const row: Record<string, string | number> = {};
-    
+
     for (const col of columns) {
       const value = coin[col.key as keyof CoinMarketData];
-      
+
       if (value === null || value === undefined) {
         row[col.header] = 'Unavailable';
         continue;
       }
-      
+
       switch (col.format) {
         case 'currency':
           row[col.header] = typeof value === 'number' ? formatCurrency(value) : value;
@@ -75,13 +75,13 @@ function coinsToRows(coins: CoinMarketData[], columns: typeof COLUMN_CONFIG): Re
           row[col.header] = value?.toString().toUpperCase() || 'Unavailable';
       }
     }
-    
+
     return row;
   });
 }
 
 // Generate Excel file
-export function generateExcel(
+export async function generateExcel(
   coins: CoinMarketData[],
   options?: {
     filename?: string;
@@ -89,42 +89,63 @@ export function generateExcel(
     includeAllColumns?: boolean;
     columns?: (keyof CoinMarketData)[];
   }
-): Uint8Array {
+): Promise<Uint8Array> {
   // Filter columns if specified
   let columns = COLUMN_CONFIG;
   if (options?.columns && !options?.includeAllColumns) {
-    columns = COLUMN_CONFIG.filter(c => 
+    columns = COLUMN_CONFIG.filter(c =>
       options.columns!.includes(c.key as keyof CoinMarketData)
     );
   }
-  
+
   // Convert data
   const rows = coinsToRows(coins, columns);
-  
+
   // Create workbook
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'CryptoReportKit';
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet(options?.sheetName || 'Crypto Data');
+
+  // Add headers
+  const headers = columns.map(c => c.header);
+  const headerRow = sheet.addRow(headers);
+  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF059669' }
+  };
+
   // Set column widths
-  ws['!cols'] = columns.map(c => ({ wch: c.width }));
-  
-  // Add sheet
-  XLSX.utils.book_append_sheet(wb, ws, options?.sheetName || 'Crypto Data');
-  
+  columns.forEach((col, index) => {
+    sheet.getColumn(index + 1).width = col.width;
+  });
+
+  // Add data rows
+  rows.forEach(row => {
+    const values = headers.map(h => row[h]);
+    sheet.addRow(values);
+  });
+
   // Add metadata sheet
-  const metaWs = XLSX.utils.aoa_to_sheet([
-    ['CryptoReportKit Export'],
-    [''],
-    ['Generated', new Date().toISOString()],
-    ['Total Coins', coins.length],
-    ['Data Source', 'CoinGecko'],
-    [''],
-    ['Visit cryptoreportkit.com for more data and analysis'],
-  ]);
-  XLSX.utils.book_append_sheet(wb, metaWs, 'Info');
-  
+  const metaSheet = workbook.addWorksheet('Info');
+  metaSheet.addRow(['CryptoReportKit Export']);
+  metaSheet.addRow([]);
+  metaSheet.addRow(['Generated', new Date().toISOString()]);
+  metaSheet.addRow(['Total Coins', coins.length]);
+  metaSheet.addRow(['Data Source', 'CoinGecko']);
+  metaSheet.addRow([]);
+  metaSheet.addRow(['Visit cryptoreportkit.com for more data and analysis']);
+
+  metaSheet.getRow(1).font = { bold: true, size: 14 };
+  metaSheet.getColumn(1).width = 20;
+  metaSheet.getColumn(2).width = 40;
+
   // Generate buffer
-  return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Uint8Array(buffer as ArrayBuffer);
 }
 
 // Generate CSV file
@@ -136,14 +157,30 @@ export function generateCSV(
 ): string {
   let columns = COLUMN_CONFIG;
   if (options?.columns) {
-    columns = COLUMN_CONFIG.filter(c => 
+    columns = COLUMN_CONFIG.filter(c =>
       options.columns!.includes(c.key as keyof CoinMarketData)
     );
   }
-  
+
   const rows = coinsToRows(coins, columns);
-  const ws = XLSX.utils.json_to_sheet(rows);
-  return XLSX.utils.sheet_to_csv(ws);
+  const headers = columns.map(c => c.header);
+
+  // Build CSV string
+  const csvRows = [
+    headers.join(','),
+    ...rows.map(row =>
+      headers.map(h => {
+        const value = row[h];
+        // Escape values containing commas or quotes
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      }).join(',')
+    )
+  ];
+
+  return csvRows.join('\n');
 }
 
 // Download file in browser
@@ -152,7 +189,7 @@ export function downloadFile(
   filename: string,
   mimeType: string
 ): void {
-  const blobData = data instanceof Uint8Array ? new Uint8Array(data) : data;
+  const blobData = data instanceof Uint8Array ? (data.buffer as ArrayBuffer) : data;
   const blob = new Blob([blobData], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -165,8 +202,8 @@ export function downloadFile(
 }
 
 // Convenience functions
-export function downloadExcel(coins: CoinMarketData[], filename?: string): void {
-  const data = generateExcel(coins);
+export async function downloadExcel(coins: CoinMarketData[], filename?: string): Promise<void> {
+  const data = await generateExcel(coins);
   const name = filename || `crypto_data_${new Date().toISOString().split('T')[0]}.xlsx`;
   downloadFile(data, name, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 }
@@ -178,16 +215,16 @@ export function downloadCSV(coins: CoinMarketData[], filename?: string): void {
 }
 
 // Template exports
-export function generateTemplateExport(
+export async function generateTemplateExport(
   templateId: string,
   coins: CoinMarketData[]
-): Uint8Array {
+): Promise<Uint8Array> {
   const templateNames: Record<string, string> = {
     'market-overview': 'Market Overview',
     'defi-dashboard': 'DeFi Dashboard',
     'portfolio-tracker': 'Portfolio Tracker',
   };
-  
+
   return generateExcel(coins, {
     sheetName: templateNames[templateId] || 'Crypto Data',
   });

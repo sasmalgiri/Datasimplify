@@ -4,14 +4,18 @@
 // CryptoReportKit ships Excel templates that rely on the CRK Add-in with BYOK
 // (Bring Your Own Key) to fetch data directly within the user's spreadsheet.
 
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 
 /**
  * Generate a lightweight Excel template containing setup instructions.
  * This is a template file (not a data export).
  */
-export function generateLiveDataTemplate(): Uint8Array {
-  const wb = XLSX.utils.book_new();
+export async function generateLiveDataTemplate(): Promise<Uint8Array> {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'CryptoReportKit';
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet('Instructions');
 
   const instructionsData = [
     ['CryptoReportKit Template Setup'],
@@ -26,23 +30,30 @@ export function generateLiveDataTemplate(): Uint8Array {
     ['4) Use the template sheets as a starting point for your dashboard/report.'],
     [''],
     ['NOTES'],
-    ['• Avoid sharing or redistributing third-party market data; follow your data provider’s terms.'],
+    ['• Avoid sharing or redistributing third-party market data; follow your data provider\'s terms.'],
   ];
 
-  const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData);
-  wsInstructions['!cols'] = [{ wch: 90 }];
-  XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions');
+  instructionsData.forEach((row) => {
+    sheet.addRow(row);
+  });
 
-  return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as Uint8Array;
+  // Set column width
+  sheet.getColumn(1).width = 90;
+
+  // Style the header
+  const headerRow = sheet.getRow(1);
+  headerRow.font = { bold: true, size: 14 };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Uint8Array(buffer as ArrayBuffer);
 }
 
 /**
  * Trigger download of the template in-browser.
  */
-export function downloadLiveDataTemplate(): void {
-  const data = generateLiveDataTemplate();
-  const buffer = new Uint8Array(data);
-  const blob = new Blob([buffer], {
+export async function downloadLiveDataTemplate(): Promise<void> {
+  const data = await generateLiveDataTemplate();
+  const blob = new Blob([data.buffer as ArrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
   const url = URL.createObjectURL(blob);
