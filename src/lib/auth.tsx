@@ -236,10 +236,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<{ error: Error }>((_, reject) => {
+        setTimeout(() => reject(new Error('Login timed out. Please check your connection and try again.')), 15000);
+      });
+
+      const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      const result = await Promise.race([signInPromise, timeoutPromise]);
+
+      // Check if it was the timeout
+      if ('error' in result && result.error instanceof Error && result.error.message.includes('timed out')) {
+        return { error: result.error };
+      }
+
+      const { error } = result as Awaited<typeof signInPromise>;
+
       if (error) {
         // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
@@ -255,7 +270,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      const err = error as Error;
+      if (err.message.includes('timed out')) {
+        return { error: err };
+      }
+      return { error: new Error('Login failed. Please try again.') };
     }
   };
 
