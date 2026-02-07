@@ -1,9 +1,9 @@
 -- ============================================
--- CRYPTOREPORTKIT - USER PROFILES TABLE
--- Run this in Supabase SQL Editor
+-- FIX: User Profiles Trigger
+-- Run this in Supabase SQL Editor to fix "Database error saving new user"
 -- ============================================
 
--- Create user_profiles table
+-- 1. First, ensure the user_profiles table exists with correct schema
 CREATE TABLE IF NOT EXISTS public.user_profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT,
@@ -16,13 +16,16 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security
+-- 2. Enable Row Level Security
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
+-- 3. Drop existing policies if they exist and recreate them
 DROP POLICY IF EXISTS "Users can view their own profile" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 DROP POLICY IF EXISTS "Users can update their own profile" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
 DROP POLICY IF EXISTS "Users can insert their own profile" ON public.user_profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
 DROP POLICY IF EXISTS "Service role can manage all profiles" ON public.user_profiles;
 
 -- Create policies
@@ -39,15 +42,15 @@ CREATE POLICY "Users can insert their own profile" ON public.user_profiles
 CREATE POLICY "Service role can manage all profiles" ON public.user_profiles
     FOR ALL USING (auth.role() = 'service_role');
 
--- Create index for faster lookups
+-- 4. Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 
--- Grant permissions
+-- 5. Grant necessary permissions
 GRANT ALL ON public.user_profiles TO authenticated;
 GRANT ALL ON public.user_profiles TO service_role;
 GRANT ALL ON public.user_profiles TO anon;
 
--- Function to automatically create profile on signup (ROBUST version)
+-- 6. Create a ROBUST trigger function that won't fail
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 SECURITY DEFINER
@@ -85,11 +88,25 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to call function on new user signup
+-- 7. Drop and recreate the trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+    FOR EACH ROW
+    EXECUTE FUNCTION public.handle_new_user();
+
+-- 8. Also create profiles for any existing users who might not have one
+INSERT INTO public.user_profiles (id, email, subscription_tier, downloads_this_month, downloads_limit)
+SELECT
+    id,
+    email,
+    'free',
+    0,
+    5
+FROM auth.users
+WHERE id NOT IN (SELECT id FROM public.user_profiles)
+ON CONFLICT (id) DO NOTHING;
 
 -- Success message
-SELECT 'User profiles table created successfully!' as status;
+SELECT 'User profiles trigger fixed successfully!' as status;

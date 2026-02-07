@@ -171,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -179,12 +179,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       if (error) {
-        // Make error message more user-friendly
+        // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
           return { error: new Error('Server configuration error. Please contact support.') };
         }
+        // Handle database trigger errors gracefully
+        if (error.message.includes('Database error saving new user') ||
+            error.message.includes('Database error')) {
+          // The auth user was likely created, but the profile trigger failed
+          // This is often a temporary issue or missing table
+          console.error('Profile creation trigger failed:', error.message);
+          return { error: new Error('Account creation is temporarily unavailable. Please try again in a few minutes or contact support.') };
+        }
+        if (error.message.includes('User already registered')) {
+          return { error: new Error('This email is already registered. Please sign in instead.') };
+        }
         return { error: new Error(error.message) };
       }
+
+      // If signup succeeded but we need to ensure profile exists
+      if (data?.user) {
+        // Try to create profile if trigger didn't work
+        try {
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .upsert({
+              id: data.user.id,
+              email: email,
+              subscription_tier: 'free',
+              downloads_this_month: 0,
+              downloads_limit: 5,
+            }, {
+              onConflict: 'id',
+              ignoreDuplicates: true
+            });
+
+          if (profileError) {
+            console.warn('Could not create user profile:', profileError.message);
+            // Don't fail signup if profile creation fails - it can be created later
+          }
+        } catch (profileErr) {
+          console.warn('Profile upsert error:', profileErr);
+          // Continue anyway - the trigger might have worked
+        }
+      }
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
