@@ -171,13 +171,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000);
+      });
+
+      const signUpPromise = supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
+
+      const { data, error } = await Promise.race([signUpPromise, timeoutPromise]);
+
       if (error) {
         // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
@@ -187,7 +195,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error.message.includes('Database error saving new user') ||
             error.message.includes('Database error')) {
           // The auth user was likely created, but the profile trigger failed
-          // This is often a temporary issue or missing table
           console.error('Profile creation trigger failed:', error.message);
           return { error: new Error('Account creation is temporarily unavailable. Please try again in a few minutes or contact support.') };
         }
@@ -199,9 +206,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // If signup succeeded but we need to ensure profile exists
       if (data?.user) {
-        // Try to create profile if trigger didn't work
+        // Try to create profile if trigger didn't work (with short timeout)
         try {
-          const { error: profileError } = await supabase
+          const profilePromise = supabase
             .from('user_profiles')
             .upsert({
               id: data.user.id,
@@ -214,19 +221,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               ignoreDuplicates: true
             });
 
+          const profileTimeout = new Promise<{ error: { message: string } }>((resolve) => {
+            setTimeout(() => resolve({ error: { message: 'Profile creation timed out' } }), 5000);
+          });
+
+          const { error: profileError } = await Promise.race([profilePromise, profileTimeout]);
+
           if (profileError) {
             console.warn('Could not create user profile:', profileError.message);
-            // Don't fail signup if profile creation fails - it can be created later
           }
         } catch (profileErr) {
           console.warn('Profile upsert error:', profileErr);
-          // Continue anyway - the trigger might have worked
         }
       }
 
       return { error: null };
     } catch (error) {
-      return { error: error as Error };
+      const err = error as Error;
+      if (err.message.includes('timed out')) {
+        return { error: err };
+      }
+      return { error: new Error('Signup failed. Please try again.') };
     }
   };
 
