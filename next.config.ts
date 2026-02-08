@@ -22,6 +22,30 @@ const nextConfig: NextConfig = {
   // Transpile ECharts for Next.js compatibility
   transpilePackages: ['echarts', 'zrender', 'echarts-gl'],
 
+  // Headers for Office Add-in iframe embedding
+  async headers() {
+    return [
+      {
+        // Allow Office/Excel to embed the add-in taskpane
+        source: '/addin/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://*.office.com https://*.office365.com https://*.officeapps.live.com https://*.microsoft.com https://localhost:*",
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'ALLOWALL',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+    ];
+  },
+
   // Redirects for broken/moved URLs
   async redirects() {
     return [
