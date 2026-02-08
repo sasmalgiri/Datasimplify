@@ -1,22 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  CryptoReportKit Excel Add-in Manifest
+  For Microsoft Office Add-in Store Submission
+
+  Features:
+  - Custom Functions (CRK.PRICE, CRK.CHANGE24H, CRK.MARKETCAP, CRK.OHLCV, CRK.INFO, etc.)
+  - Taskpane for authentication and API key management
+  - Ribbon buttons for quick access and data refresh
+  - BYOK (Bring Your Own Keys) support
+-->
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
            xsi:type="TaskPaneApp">
+
+  <!-- Unique Add-in ID - DO NOT CHANGE after store submission -->
   <Id>b3a4dd10-6e51-46c8-9f22-b8e8b8d2c5a7</Id>
-  <Version>1.0.0</Version>
+
+  <!-- Version - increment with each update -->
+  <Version>2.0.0</Version>
+
+  <!-- Publisher -->
   <ProviderName>CryptoReportKit</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
+
+  <!-- Display Information -->
   <DisplayName DefaultValue="CryptoReportKit"/>
-  <Description DefaultValue="Live crypto data for Excel with BYOK (Bring Your Own Keys)"/>
+  <Description DefaultValue="Professional cryptocurrency data for Excel. Get live prices, historical OHLCV data, Fear &amp; Greed Index, market metrics, and 40+ dashboard templates. Supports BYOK (Bring Your Own Keys) for unlimited API calls."/>
+
+  <!-- Icons -->
   <IconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-64.png"/>
+
+  <!-- Support -->
   <SupportUrl DefaultValue="https://cryptoreportkit.com/support"/>
 
+  <!-- Allowed domains for API calls -->
+  <AppDomains>
+    <AppDomain>https://cryptoreportkit.com</AppDomain>
+    <AppDomain>https://api.coingecko.com</AppDomain>
+    <AppDomain>https://pro-api.coingecko.com</AppDomain>
+    <AppDomain>https://api.geckoterminal.com</AppDomain>
+    <AppDomain>https://api.alternative.me</AppDomain>
+    <AppDomain>https://api.llama.fi</AppDomain>
+  </AppDomains>
+
+  <!-- Host applications -->
   <Hosts>
     <Host Name="Workbook"/>
   </Hosts>
 
+  <!-- API requirements -->
   <Requirements>
     <Sets>
       <Set Name="ExcelApi" MinVersion="1.1"/>
@@ -24,53 +58,178 @@
     </Sets>
   </Requirements>
 
+  <!-- Default taskpane location -->
   <DefaultSettings>
     <SourceLocation DefaultValue="https://cryptoreportkit.com/addin/taskpane.html"/>
   </DefaultSettings>
 
+  <!-- Permissions -->
   <Permissions>ReadWriteDocument</Permissions>
 
+  <!-- Modern features via VersionOverrides -->
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
     <Hosts>
       <Host xsi:type="Workbook">
+
+        <!-- Desktop (Windows/Mac) form factor -->
         <DesktopFormFactor>
+
+          <!-- Getting Started callout -->
           <GetStarted>
             <Title resid="GetStarted.Title"/>
             <Description resid="GetStarted.Description"/>
             <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
           </GetStarted>
 
-          <FunctionFile resid="Functions.Page.Url"/>
+          <!-- Commands file for ribbon button functions -->
+          <FunctionFile resid="Commands.Url"/>
 
+          <!-- Ribbon Extension - Add buttons to Home tab -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
-              <Group id="CRKGroup">
-                <Label resid="CRKGroup.Label"/>
+              <Group id="CRK.CommandGroup">
+                <Label resid="CommandGroup.Label"/>
                 <Icon>
-                  <bt:Image size="16" resid="Icon.16x16"/>
-                  <bt:Image size="32" resid="Icon.32x32"/>
-                  <bt:Image size="80" resid="Icon.80x80"/>
+                  <bt:Image size="16" resid="Icon.16"/>
+                  <bt:Image size="32" resid="Icon.32"/>
+                  <bt:Image size="80" resid="Icon.80"/>
                 </Icon>
-                <Control xsi:type="Button" id="TaskpaneButton">
-                  <Label resid="TaskpaneButton.Label"/>
+
+                <!-- Open Taskpane Button -->
+                <Control xsi:type="Button" id="CRK.ShowTaskpane">
+                  <Label resid="Taskpane.Label"/>
                   <Supertip>
-                    <Title resid="TaskpaneButton.Label"/>
-                    <Description resid="TaskpaneButton.Tooltip"/>
+                    <Title resid="Taskpane.Label"/>
+                    <Description resid="Taskpane.Tooltip"/>
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="Icon.16x16"/>
-                    <bt:Image size="32" resid="Icon.32x32"/>
-                    <bt:Image size="80" resid="Icon.80x80"/>
+                    <bt:Image size="16" resid="Icon.16"/>
+                    <bt:Image size="32" resid="Icon.32"/>
+                    <bt:Image size="80" resid="Icon.80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>CRKTaskpane</TaskpaneId>
+                    <TaskpaneId>CRK.MainTaskpane</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
+                </Control>
+
+                <!-- Refresh All Button -->
+                <Control xsi:type="Button" id="CRK.RefreshAll">
+                  <Label resid="Refresh.Label"/>
+                  <Supertip>
+                    <Title resid="Refresh.Label"/>
+                    <Description resid="Refresh.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="RefreshIcon.16"/>
+                    <bt:Image size="32" resid="RefreshIcon.32"/>
+                    <bt:Image size="80" resid="RefreshIcon.80"/>
+                  </Icon>
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>refreshAllCRKData</FunctionName>
+                  </Action>
+                </Control>
+
+                <!-- Insert Formula Dropdown Menu -->
+                <Control xsi:type="Menu" id="CRK.InsertMenu">
+                  <Label resid="Insert.Label"/>
+                  <Supertip>
+                    <Title resid="Insert.Label"/>
+                    <Description resid="Insert.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="InsertIcon.16"/>
+                    <bt:Image size="32" resid="InsertIcon.32"/>
+                    <bt:Image size="80" resid="InsertIcon.80"/>
+                  </Icon>
+                  <Items>
+                    <!-- Insert Price Formula -->
+                    <Item id="CRK.InsertPrice">
+                      <Label resid="InsertPrice.Label"/>
+                      <Supertip>
+                        <Title resid="InsertPrice.Label"/>
+                        <Description resid="InsertPrice.Tooltip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16"/>
+                        <bt:Image size="32" resid="Icon.32"/>
+                        <bt:Image size="80" resid="Icon.80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>insertPriceFormula</FunctionName>
+                      </Action>
+                    </Item>
+                    <!-- Insert Change24h Formula -->
+                    <Item id="CRK.InsertChange">
+                      <Label resid="InsertChange.Label"/>
+                      <Supertip>
+                        <Title resid="InsertChange.Label"/>
+                        <Description resid="InsertChange.Tooltip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16"/>
+                        <bt:Image size="32" resid="Icon.32"/>
+                        <bt:Image size="80" resid="Icon.80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>insertChangeFormula</FunctionName>
+                      </Action>
+                    </Item>
+                    <!-- Insert Market Cap Formula -->
+                    <Item id="CRK.InsertMarketCap">
+                      <Label resid="InsertMarketCap.Label"/>
+                      <Supertip>
+                        <Title resid="InsertMarketCap.Label"/>
+                        <Description resid="InsertMarketCap.Tooltip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16"/>
+                        <bt:Image size="32" resid="Icon.32"/>
+                        <bt:Image size="80" resid="Icon.80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>insertMarketCapFormula</FunctionName>
+                      </Action>
+                    </Item>
+                    <!-- Insert OHLCV Data -->
+                    <Item id="CRK.InsertOHLCV">
+                      <Label resid="InsertOHLCV.Label"/>
+                      <Supertip>
+                        <Title resid="InsertOHLCV.Label"/>
+                        <Description resid="InsertOHLCV.Tooltip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16"/>
+                        <bt:Image size="32" resid="Icon.32"/>
+                        <bt:Image size="80" resid="Icon.80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>insertOHLCVFormula</FunctionName>
+                      </Action>
+                    </Item>
+                    <!-- Insert Fear & Greed -->
+                    <Item id="CRK.InsertFearGreed">
+                      <Label resid="InsertFearGreed.Label"/>
+                      <Supertip>
+                        <Title resid="InsertFearGreed.Label"/>
+                        <Description resid="InsertFearGreed.Tooltip"/>
+                      </Supertip>
+                      <Icon>
+                        <bt:Image size="16" resid="Icon.16"/>
+                        <bt:Image size="32" resid="Icon.32"/>
+                        <bt:Image size="80" resid="Icon.80"/>
+                      </Icon>
+                      <Action xsi:type="ExecuteFunction">
+                        <FunctionName>insertFearGreedFormula</FunctionName>
+                      </Action>
+                    </Item>
+                  </Items>
                 </Control>
               </Group>
             </OfficeTab>
           </ExtensionPoint>
 
+          <!-- Custom Functions Extension Point -->
           <ExtensionPoint xsi:type="CustomFunctions">
             <Script>
               <SourceLocation resid="Functions.Script.Url"/>
@@ -83,32 +242,62 @@
             </Metadata>
             <Namespace resid="Functions.Namespace"/>
           </ExtensionPoint>
+
         </DesktopFormFactor>
       </Host>
     </Hosts>
 
+    <!-- Resources -->
     <Resources>
+      <!-- Images -->
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="Icon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="RefreshIcon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="RefreshIcon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="RefreshIcon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="InsertIcon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="InsertIcon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="InsertIcon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
       </bt:Images>
+
+      <!-- URLs -->
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cryptoreportkit.com/byok"/>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cryptoreportkit.com/addin/setup"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://cryptoreportkit.com/addin/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://cryptoreportkit.com/addin/commands.html"/>
         <bt:Url id="Functions.Script.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.js"/>
         <bt:Url id="Functions.Page.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.html"/>
         <bt:Url id="Functions.Metadata.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.json"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://cryptoreportkit.com/addin/taskpane.html"/>
       </bt:Urls>
+
+      <!-- Short Strings (max 125 characters) -->
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with CRK (BYOK)"/>
-        <bt:String id="CRKGroup.Label" DefaultValue="CryptoReportKit"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="CRK Panel"/>
         <bt:String id="Functions.Namespace" DefaultValue="CRK"/>
+        <bt:String id="CommandGroup.Label" DefaultValue="CryptoReportKit"/>
+        <bt:String id="Taskpane.Label" DefaultValue="CRK Panel"/>
+        <bt:String id="Refresh.Label" DefaultValue="Refresh All"/>
+        <bt:String id="Insert.Label" DefaultValue="Insert Formula"/>
+        <bt:String id="InsertPrice.Label" DefaultValue="Price"/>
+        <bt:String id="InsertChange.Label" DefaultValue="24h Change"/>
+        <bt:String id="InsertMarketCap.Label" DefaultValue="Market Cap"/>
+        <bt:String id="InsertOHLCV.Label" DefaultValue="OHLCV Data"/>
+        <bt:String id="InsertFearGreed.Label" DefaultValue="Fear &amp; Greed"/>
+        <bt:String id="GetStarted.Title" DefaultValue="Get Crypto Data in Excel"/>
       </bt:ShortStrings>
+
+      <!-- Long Strings (max 250 characters) -->
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Use CRK functions to get live crypto prices and data. Connect your own API keys (BYOK) for higher rate limits."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open CRK panel to connect your API keys and manage data"/>
+        <bt:String id="GetStarted.Description" DefaultValue="Use CRK functions like =CRK.PRICE(&quot;bitcoin&quot;) to get live crypto data. Connect your own API keys (BYOK) for unlimited calls. Sign in to unlock all features."/>
+        <bt:String id="Taskpane.Tooltip" DefaultValue="Open CryptoReportKit panel to sign in, manage API keys, view documentation, and configure your crypto data settings."/>
+        <bt:String id="Refresh.Tooltip" DefaultValue="Recalculate all CRK formulas in the workbook to fetch the latest cryptocurrency data from the API."/>
+        <bt:String id="Insert.Tooltip" DefaultValue="Insert CRK formulas for cryptocurrency data. Select a coin and metric to automatically create the formula."/>
+        <bt:String id="InsertPrice.Tooltip" DefaultValue="Insert =CRK.PRICE() to get the current USD price of a cryptocurrency."/>
+        <bt:String id="InsertChange.Tooltip" DefaultValue="Insert =CRK.CHANGE24H() to get the 24-hour price change percentage."/>
+        <bt:String id="InsertMarketCap.Tooltip" DefaultValue="Insert =CRK.MARKETCAP() to get the total market capitalization."/>
+        <bt:String id="InsertOHLCV.Tooltip" DefaultValue="Insert =CRK.OHLCV() to get historical Open, High, Low, Close, Volume data as a table."/>
+        <bt:String id="InsertFearGreed.Tooltip" DefaultValue="Insert =CRK.FEARGREED() to get the current Crypto Fear &amp; Greed Index value."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

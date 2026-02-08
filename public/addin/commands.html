@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CRK Commands</title>
+
+    <!-- Office JavaScript API -->
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <script type="text/javascript">
+        /**
+         * CryptoReportKit Ribbon Commands
+         * These functions are called when users click ribbon buttons
+         */
+
+        Office.onReady(function(info) {
+            console.log('[CRK Commands] Ready. Host:', info.host);
+        });
+
+        /**
+         * Refresh all CRK formulas in the workbook
+         * Called when user clicks "Refresh All" button
+         */
+        async function refreshAllCRKData(event) {
+            try {
+                await Excel.run(async (context) => {
+                    // Force full recalculation of the workbook
+                    context.workbook.application.calculate('Full');
+                    await context.sync();
+
+                    // Show success notification
+                    Office.context.ui.displayDialogAsync(
+                        'data:text/html,<html><body style="font-family:Segoe UI,sans-serif;padding:20px;text-align:center;"><h3 style="color:#059669;">Data Refreshed!</h3><p>All CRK formulas have been recalculated.</p><button onclick="Office.context.ui.close()" style="padding:10px 20px;background:#059669;color:white;border:none;border-radius:5px;cursor:pointer;">OK</button></body></html>',
+                        { width: 30, height: 20 },
+                        function() {}
+                    );
+                });
+            } catch (error) {
+                console.error('[CRK] Refresh error:', error);
+            }
+
+            // Signal that the function is complete
+            event.completed();
+        }
+
+        /**
+         * Insert a price formula at the current cell
+         */
+        async function insertPriceFormula(event) {
+            try {
+                await Excel.run(async (context) => {
+                    const range = context.workbook.getSelectedRange();
+                    range.formulas = [['=CRK.PRICE("bitcoin")']];
+                    await context.sync();
+                });
+            } catch (error) {
+                console.error('[CRK] Insert error:', error);
+            }
+            event.completed();
+        }
+
+        /**
+         * Insert a 24h change formula at the current cell
+         */
+        async function insertChangeFormula(event) {
+            try {
+                await Excel.run(async (context) => {
+                    const range = context.workbook.getSelectedRange();
+                    range.formulas = [['=CRK.CHANGE24H("bitcoin")']];
+                    await context.sync();
+                });
+            } catch (error) {
+                console.error('[CRK] Insert error:', error);
+            }
+            event.completed();
+        }
+
+        /**
+         * Insert a market cap formula at the current cell
+         */
+        async function insertMarketCapFormula(event) {
+            try {
+                await Excel.run(async (context) => {
+                    const range = context.workbook.getSelectedRange();
+                    range.formulas = [['=CRK.MARKETCAP("bitcoin")']];
+                    await context.sync();
+                });
+            } catch (error) {
+                console.error('[CRK] Insert error:', error);
+            }
+            event.completed();
+        }
+
+        /**
+         * Insert OHLCV data formula at the current cell
+         */
+        async function insertOHLCVFormula(event) {
+            try {
+                await Excel.run(async (context) => {
+                    const range = context.workbook.getSelectedRange();
+                    range.formulas = [['=CRK.OHLCV("bitcoin", 30)']];
+                    await context.sync();
+                });
+            } catch (error) {
+                console.error('[CRK] Insert error:', error);
+            }
+            event.completed();
+        }
+
+        /**
+         * Insert Fear & Greed formula at the current cell
+         */
+        async function insertFearGreedFormula(event) {
+            try {
+                await Excel.run(async (context) => {
+                    const range = context.workbook.getSelectedRange();
+                    range.formulas = [['=CRK.FEARGREED()']];
+                    await context.sync();
+                });
+            } catch (error) {
+                console.error('[CRK] Insert error:', error);
+            }
+            event.completed();
+        }
+
+        // Register command functions with Office
+        Office.actions.associate('refreshAllCRKData', refreshAllCRKData);
+        Office.actions.associate('insertPriceFormula', insertPriceFormula);
+        Office.actions.associate('insertChangeFormula', insertChangeFormula);
+        Office.actions.associate('insertMarketCapFormula', insertMarketCapFormula);
+        Office.actions.associate('insertOHLCVFormula', insertOHLCVFormula);
+        Office.actions.associate('insertFearGreedFormula', insertFearGreedFormula);
+    </script>
+</head>
+<body>
+    <!-- This page runs command functions - no visible UI -->
+    <div style="display:none;">CRK Commands Runtime</div>
+</body>
+</html>
