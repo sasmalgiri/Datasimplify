@@ -1,601 +1,214 @@
 /**
- * Power Query Excel Template Generator
+ * Power Query Excel Template Generator API
  *
- * Generates Excel files with Power Query connections using user's API key.
- * Supports multiple dashboard templates.
+ * Generates comprehensive styled Excel files with charts, formatting,
+ * and all popular cryptocurrency dashboards.
+ *
+ * Usage:
+ * POST /api/powerquery/generate
+ * Body: { dashboard: "complete-suite", apiKey: "...", coins: [...], limit: 100 }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import ExcelJS from 'exceljs';
+import {
+  generateMasterExcel,
+  DashboardType,
+  OutputMode,
+  RefreshInterval,
+  ChartStyle,
+} from '@/lib/excel/masterGenerator';
 
-// Dashboard template types
-type DashboardType =
-  | 'market-overview'
-  | 'portfolio-tracker'
-  | 'technical-analysis'
-  | 'defi-dashboard'
-  | 'fear-greed'
-  | 'gainers-losers'
-  | 'trending'
-  | 'custom';
+// Valid output modes
+const VALID_OUTPUT_MODES: OutputMode[] = ['static', 'live', 'interactive'];
+const VALID_REFRESH_INTERVALS: RefreshInterval[] = ['realtime', 'frequent', 'hourly', 'daily', 'manual'];
+const VALID_CHART_STYLES: ChartStyle[] = ['minimal', 'professional', 'colorful'];
 
-interface GenerateRequest {
-  dashboard: DashboardType;
-  apiKey?: string;
-  keyType?: 'demo' | 'pro';
-  coins?: string[];
-  limit?: number;
-}
+// All available dashboard types
+const VALID_DASHBOARDS: DashboardType[] = [
+  'complete-suite',
+  'market-overview',
+  'portfolio-tracker',
+  'technical-analysis',
+  'fear-greed',
+  'gainers-losers',
+  'trending',
+  'defi-dashboard',
+  'nft-tracker',
+  'derivatives',
+  'whale-tracker',
+  'on-chain',
+  'correlation',
+  'heatmap',
+  'screener',
+  'etf-tracker',
+  'stablecoins',
+  'exchanges',
+  'categories',
+  'bitcoin-dashboard',
+  'ethereum-dashboard',
+  'layer1-compare',
+  'layer2-compare',
+  'meme-coins',
+  'ai-gaming',
+  'calculator',
+  'volatility',
+  'rwa',
+  'liquidations',
+  'funding-rates',
+  'altcoin-season',
+  'token-unlocks',
+  'staking-yields',
+  'social-sentiment',
+  'dev-activity',
+  'exchange-reserves',
+  'defi-yields',
+  'metaverse',
+  'privacy-coins',
+  'mining-calc',
+  'custom',
+];
 
 export async function POST(request: NextRequest) {
   try {
-    const body: GenerateRequest = await request.json();
-    const { dashboard, apiKey, keyType = 'demo', coins, limit = 100 } = body;
+    const body = await request.json();
+    const {
+      dashboard = 'complete-suite',
+      apiKey,
+      coins,
+      limit = 100,
+      days = 30,
+      includeCharts = true,
+      outputMode = 'live',
+      refreshInterval = 'hourly',
+      chartStyle = 'professional',
+    } = body;
 
-    if (!dashboard) {
-      return NextResponse.json({ error: 'dashboard type required' }, { status: 400 });
+    // Validate dashboard type
+    if (!VALID_DASHBOARDS.includes(dashboard)) {
+      return NextResponse.json({
+        error: `Invalid dashboard type. Valid options: ${VALID_DASHBOARDS.join(', ')}`,
+      }, { status: 400 });
     }
 
-    // Generate the Excel template
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'CryptoReportKit';
-    workbook.created = new Date();
+    // Validate output mode
+    const validatedOutputMode = VALID_OUTPUT_MODES.includes(outputMode) ? outputMode : 'live';
+    const validatedRefreshInterval = VALID_REFRESH_INTERVALS.includes(refreshInterval) ? refreshInterval : 'hourly';
+    const validatedChartStyle = VALID_CHART_STYLES.includes(chartStyle) ? chartStyle : 'professional';
 
-    // Add dashboard-specific sheets
-    switch (dashboard) {
-      case 'market-overview':
-        await addMarketOverviewSheets(workbook, apiKey, keyType, limit);
-        break;
-      case 'portfolio-tracker':
-        await addPortfolioTrackerSheets(workbook, apiKey, keyType, coins || ['bitcoin', 'ethereum', 'solana']);
-        break;
-      case 'technical-analysis':
-        await addTechnicalAnalysisSheets(workbook, apiKey, keyType, coins?.[0] || 'bitcoin');
-        break;
-      case 'defi-dashboard':
-        await addDeFiDashboardSheets(workbook, apiKey, keyType);
-        break;
-      case 'fear-greed':
-        await addFearGreedSheets(workbook, apiKey, keyType);
-        break;
-      case 'gainers-losers':
-        await addGainersLosersSheets(workbook, apiKey, keyType);
-        break;
-      case 'trending':
-        await addTrendingSheets(workbook, apiKey, keyType);
-        break;
-      case 'custom':
-        await addCustomSheets(workbook, apiKey, keyType, coins || [], limit);
-        break;
-      default:
-        return NextResponse.json({ error: 'Invalid dashboard type' }, { status: 400 });
-    }
+    // Generate the Excel file
+    const buffer = await generateMasterExcel({
+      dashboard,
+      apiKey,
+      coins,
+      limit: Math.min(limit, 250), // Cap at 250
+      days: Math.min(days, 365),   // Cap at 1 year
+      includeCharts,
+      outputMode: validatedOutputMode,
+      refreshInterval: validatedRefreshInterval,
+      chartStyle: validatedChartStyle,
+    });
 
-    // Add instructions sheet
-    addInstructionsSheet(workbook, dashboard, apiKey);
+    // Create filename
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `CryptoReportKit_${dashboard}_${timestamp}.xlsx`;
 
-    // Generate buffer
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="CRK_${dashboard}_${new Date().toISOString().split('T')[0]}.xlsx"`,
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Cache-Control': 'no-cache',
       },
     });
   } catch (error) {
-    console.error('[Generate] Error:', error);
-    return NextResponse.json({ error: 'Failed to generate template' }, { status: 500 });
+    console.error('[Generate API] Error:', error);
+    return NextResponse.json({
+      error: 'Failed to generate Excel template',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    }, { status: 500 });
   }
 }
 
-// ============================================
-// MARKET OVERVIEW DASHBOARD
-// ============================================
-async function addMarketOverviewSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string,
-  limit: number
-) {
-  // Global Stats Sheet
-  const globalSheet = workbook.addWorksheet('Global Stats');
-  globalSheet.columns = [
-    { header: 'Metric', key: 'metric', width: 30 },
-    { header: 'Value', key: 'value', width: 25 },
-  ];
-
-  const globalData = [
-    { metric: 'Total Market Cap', value: '=PowerQuery_Global[TotalMarketCapUSD]' },
-    { metric: 'Total Volume 24h', value: '=PowerQuery_Global[TotalVolumeUSD]' },
-    { metric: 'Market Cap Change 24h', value: '=PowerQuery_Global[MarketCapChange24h]' },
-    { metric: 'BTC Dominance', value: '=PowerQuery_Global[BTCDominance]' },
-    { metric: 'ETH Dominance', value: '=PowerQuery_Global[ETHDominance]' },
-    { metric: 'Active Cryptocurrencies', value: '=PowerQuery_Global[ActiveCryptocurrencies]' },
-  ];
-
-  globalData.forEach(row => globalSheet.addRow(row));
-  styleHeaderRow(globalSheet);
-
-  // Top Coins Sheet
-  const marketSheet = workbook.addWorksheet('Top Coins');
-  marketSheet.columns = [
-    { header: 'Rank', key: 'rank', width: 8 },
-    { header: 'Name', key: 'name', width: 20 },
-    { header: 'Symbol', key: 'symbol', width: 10 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Market Cap', key: 'marketCap', width: 18 },
-    { header: 'Volume 24h', key: 'volume', width: 18 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-    { header: 'Change 7d', key: 'change7d', width: 12 },
-  ];
-
-  // Add placeholder rows - Power Query will populate
-  for (let i = 1; i <= Math.min(limit, 100); i++) {
-    marketSheet.addRow({
-      rank: i,
-      name: `=INDEX(PowerQuery_Market[Name],${i})`,
-      symbol: `=INDEX(PowerQuery_Market[Symbol],${i})`,
-      price: `=INDEX(PowerQuery_Market[Price],${i})`,
-      marketCap: `=INDEX(PowerQuery_Market[MarketCap],${i})`,
-      volume: `=INDEX(PowerQuery_Market[Volume24h],${i})`,
-      change24h: `=INDEX(PowerQuery_Market[Change24h],${i})`,
-      change7d: `=INDEX(PowerQuery_Market[Change7d],${i})`,
-    });
-  }
-
-  styleHeaderRow(marketSheet);
-
-  // Power Query Setup Sheet
-  addPowerQuerySetupSheet(workbook, 'market', apiKey, keyType, limit);
-}
-
-// ============================================
-// PORTFOLIO TRACKER
-// ============================================
-async function addPortfolioTrackerSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string,
-  coins: string[]
-) {
-  const sheet = workbook.addWorksheet('Portfolio');
-  sheet.columns = [
-    { header: 'Coin', key: 'coin', width: 15 },
-    { header: 'Holdings', key: 'holdings', width: 12 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Value', key: 'value', width: 15 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-    { header: 'Change 7d', key: 'change7d', width: 12 },
-    { header: 'P/L 24h', key: 'pl24h', width: 15 },
-    { header: 'ATH', key: 'ath', width: 15 },
-    { header: 'From ATH %', key: 'fromAth', width: 12 },
-  ];
-
-  // Default portfolio coins
-  const defaultCoins = coins.length > 0 ? coins : ['bitcoin', 'ethereum', 'solana', 'cardano', 'polkadot'];
-
-  defaultCoins.forEach((coin, i) => {
-    const row = i + 2;
-    sheet.addRow({
-      coin: coin.charAt(0).toUpperCase() + coin.slice(1),
-      holdings: 1, // User edits this
-      price: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Price],1),"Loading...")`,
-      value: `=B${row}*C${row}`,
-      change24h: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Change24h],1),"")`,
-      change7d: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Change7d],1),"")`,
-      pl24h: `=D${row}*(E${row}/100)`,
-      ath: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[ATH],1),"")`,
-      fromAth: `=IFERROR((C${row}-H${row})/H${row}*100,"")`,
-    });
+// GET endpoint for info
+export async function GET() {
+  return NextResponse.json({
+    name: 'CryptoReportKit Excel Generator',
+    version: '2.0.0',
+    dashboards: VALID_DASHBOARDS.map(d => ({
+      id: d,
+      name: d.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      description: getDashboardDescription(d),
+    })),
+    usage: {
+      method: 'POST',
+      body: {
+        dashboard: 'complete-suite | market-overview | portfolio-tracker | ...',
+        apiKey: '(optional) Your CoinGecko API key',
+        coins: '(optional) ["bitcoin", "ethereum", ...] for custom selections',
+        limit: '(optional) Number of coins (default: 100, max: 250)',
+        days: '(optional) Days of historical data (default: 30, max: 365)',
+        outputMode: '(optional) static | live | interactive (default: live)',
+        refreshInterval: '(optional) realtime | frequent | hourly | daily | manual (default: hourly)',
+        chartStyle: '(optional) minimal | professional | colorful (default: professional)',
+      },
+    },
+    outputModes: {
+      static: 'Beautiful snapshot with embedded charts - for sharing and presentations',
+      live: 'Auto-refreshing data with Power Query - for daily analysis',
+      interactive: 'Full CRK Add-in experience with real-time charts - for trading',
+    },
+    refreshIntervals: {
+      realtime: '5 minutes',
+      frequent: '15 minutes',
+      hourly: '60 minutes',
+      daily: '24 hours',
+      manual: 'Only when you click Refresh',
+    },
   });
-
-  // Summary row
-  const lastRow = defaultCoins.length + 2;
-  sheet.addRow({});
-  sheet.addRow({
-    coin: 'TOTAL',
-    holdings: '',
-    price: '',
-    value: `=SUM(D2:D${lastRow - 1})`,
-    change24h: '',
-    change7d: '',
-    pl24h: `=SUM(G2:G${lastRow - 1})`,
-    ath: '',
-    fromAth: '',
-  });
-
-  styleHeaderRow(sheet);
-
-  // Add Power Query connections for each coin
-  addPortfolioPowerQuerySheet(workbook, defaultCoins, apiKey, keyType);
 }
 
-// ============================================
-// TECHNICAL ANALYSIS
-// ============================================
-async function addTechnicalAnalysisSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string,
-  coin: string
-) {
-  // OHLC Data Sheet
-  const ohlcSheet = workbook.addWorksheet('OHLC Data');
-  ohlcSheet.columns = [
-    { header: 'Date', key: 'date', width: 20 },
-    { header: 'Open', key: 'open', width: 12 },
-    { header: 'High', key: 'high', width: 12 },
-    { header: 'Low', key: 'low', width: 12 },
-    { header: 'Close', key: 'close', width: 12 },
-    { header: 'SMA 20', key: 'sma20', width: 12 },
-    { header: 'EMA 12', key: 'ema12', width: 12 },
-    { header: 'RSI 14', key: 'rsi14', width: 12 },
-  ];
-
-  // Placeholder - Power Query fills this
-  for (let i = 1; i <= 30; i++) {
-    ohlcSheet.addRow({
-      date: `=IFERROR(INDEX(PowerQuery_OHLC[Date],${i}),"")`,
-      open: `=IFERROR(INDEX(PowerQuery_OHLC[Open],${i}),"")`,
-      high: `=IFERROR(INDEX(PowerQuery_OHLC[High],${i}),"")`,
-      low: `=IFERROR(INDEX(PowerQuery_OHLC[Low],${i}),"")`,
-      close: `=IFERROR(INDEX(PowerQuery_OHLC[Close],${i}),"")`,
-      sma20: i >= 20 ? `=AVERAGE(E${i - 18}:E${i + 1})` : '',
-      ema12: '',
-      rsi14: '',
-    });
-  }
-
-  styleHeaderRow(ohlcSheet);
-
-  // Summary Sheet
-  const summarySheet = workbook.addWorksheet('Technical Summary');
-  summarySheet.columns = [
-    { header: 'Indicator', key: 'indicator', width: 25 },
-    { header: 'Value', key: 'value', width: 20 },
-    { header: 'Signal', key: 'signal', width: 15 },
-  ];
-
-  const technicalData = [
-    { indicator: `${coin.toUpperCase()} Current Price`, value: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Price],1),"")`, signal: '' },
-    { indicator: 'SMA 20', value: `=AVERAGE('OHLC Data'!E2:E21)`, signal: `=IF(E2>E3,"Bullish","Bearish")` },
-    { indicator: 'Highest in 30 days', value: `=MAX('OHLC Data'!C2:C31)`, signal: '' },
-    { indicator: 'Lowest in 30 days', value: `=MIN('OHLC Data'!D2:D31)`, signal: '' },
-    { indicator: 'ATH', value: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[ATH],1),"")`, signal: '' },
-    { indicator: 'Distance from ATH', value: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[ATHChange],1),"")`, signal: '' },
-  ];
-
-  technicalData.forEach(row => summarySheet.addRow(row));
-  styleHeaderRow(summarySheet);
-
-  // Add Power Query setup
-  addTechnicalPowerQuerySheet(workbook, coin, apiKey, keyType);
-}
-
-// ============================================
-// DEFI DASHBOARD
-// ============================================
-async function addDeFiDashboardSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string
-) {
-  const sheet = workbook.addWorksheet('DeFi Protocols');
-  sheet.columns = [
-    { header: 'Rank', key: 'rank', width: 8 },
-    { header: 'Protocol', key: 'name', width: 25 },
-    { header: 'Symbol', key: 'symbol', width: 10 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Market Cap', key: 'marketCap', width: 18 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-  ];
-
-  // DeFi coins - Power Query populates
-  for (let i = 1; i <= 50; i++) {
-    sheet.addRow({
-      rank: i,
-      name: `=IFERROR(INDEX(PowerQuery_DeFi[Name],${i}),"")`,
-      symbol: `=IFERROR(INDEX(PowerQuery_DeFi[Symbol],${i}),"")`,
-      price: `=IFERROR(INDEX(PowerQuery_DeFi[Price],${i}),"")`,
-      marketCap: `=IFERROR(INDEX(PowerQuery_DeFi[MarketCap],${i}),"")`,
-      change24h: `=IFERROR(INDEX(PowerQuery_DeFi[Change24h],${i}),"")`,
-    });
-  }
-
-  styleHeaderRow(sheet);
-  addDeFiPowerQuerySheet(workbook, apiKey, keyType);
-}
-
-// ============================================
-// FEAR & GREED
-// ============================================
-async function addFearGreedSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string
-) {
-  const sheet = workbook.addWorksheet('Fear & Greed Index');
-  sheet.columns = [
-    { header: 'Date', key: 'date', width: 15 },
-    { header: 'Value', key: 'value', width: 10 },
-    { header: 'Classification', key: 'classification', width: 20 },
-  ];
-
-  // 30 days of Fear & Greed data
-  for (let i = 1; i <= 30; i++) {
-    sheet.addRow({
-      date: `=IFERROR(INDEX(PowerQuery_FearGreed[Date],${i}),"")`,
-      value: `=IFERROR(INDEX(PowerQuery_FearGreed[Value],${i}),"")`,
-      classification: `=IFERROR(INDEX(PowerQuery_FearGreed[Classification],${i}),"")`,
-    });
-  }
-
-  styleHeaderRow(sheet);
-
-  // Summary sheet
-  const summarySheet = workbook.addWorksheet('FG Summary');
-  summarySheet.columns = [
-    { header: 'Metric', key: 'metric', width: 25 },
-    { header: 'Value', key: 'value', width: 20 },
-  ];
-
-  summarySheet.addRow({ metric: 'Current Index', value: `='Fear & Greed Index'!B2` });
-  summarySheet.addRow({ metric: 'Current Classification', value: `='Fear & Greed Index'!C2` });
-  summarySheet.addRow({ metric: 'Average (30 days)', value: `=AVERAGE('Fear & Greed Index'!B2:B31)` });
-  summarySheet.addRow({ metric: 'High (30 days)', value: `=MAX('Fear & Greed Index'!B2:B31)` });
-  summarySheet.addRow({ metric: 'Low (30 days)', value: `=MIN('Fear & Greed Index'!B2:B31)` });
-
-  styleHeaderRow(summarySheet);
-  addFearGreedPowerQuerySheet(workbook, apiKey, keyType);
-}
-
-// ============================================
-// GAINERS & LOSERS
-// ============================================
-async function addGainersLosersSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string
-) {
-  // Top Gainers Sheet
-  const gainersSheet = workbook.addWorksheet('Top Gainers');
-  gainersSheet.columns = [
-    { header: '#', key: 'rank', width: 5 },
-    { header: 'Name', key: 'name', width: 20 },
-    { header: 'Symbol', key: 'symbol', width: 10 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-  ];
-
-  for (let i = 1; i <= 20; i++) {
-    gainersSheet.addRow({
-      rank: i,
-      name: `=IFERROR(INDEX(PowerQuery_Gainers[Name],${i}),"")`,
-      symbol: `=IFERROR(INDEX(PowerQuery_Gainers[Symbol],${i}),"")`,
-      price: `=IFERROR(INDEX(PowerQuery_Gainers[Price],${i}),"")`,
-      change24h: `=IFERROR(INDEX(PowerQuery_Gainers[Change24h],${i}),"")`,
-    });
-  }
-
-  styleHeaderRow(gainersSheet);
-
-  // Top Losers Sheet
-  const losersSheet = workbook.addWorksheet('Top Losers');
-  losersSheet.columns = [
-    { header: '#', key: 'rank', width: 5 },
-    { header: 'Name', key: 'name', width: 20 },
-    { header: 'Symbol', key: 'symbol', width: 10 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-  ];
-
-  for (let i = 1; i <= 20; i++) {
-    losersSheet.addRow({
-      rank: i,
-      name: `=IFERROR(INDEX(PowerQuery_Losers[Name],${i}),"")`,
-      symbol: `=IFERROR(INDEX(PowerQuery_Losers[Symbol],${i}),"")`,
-      price: `=IFERROR(INDEX(PowerQuery_Losers[Price],${i}),"")`,
-      change24h: `=IFERROR(INDEX(PowerQuery_Losers[Change24h],${i}),"")`,
-    });
-  }
-
-  styleHeaderRow(losersSheet);
-  addGainersLosersPowerQuerySheet(workbook, apiKey, keyType);
-}
-
-// ============================================
-// TRENDING
-// ============================================
-async function addTrendingSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string
-) {
-  const sheet = workbook.addWorksheet('Trending Coins');
-  sheet.columns = [
-    { header: 'Trend Rank', key: 'rank', width: 12 },
-    { header: 'Name', key: 'name', width: 25 },
-    { header: 'Symbol', key: 'symbol', width: 10 },
-    { header: 'Market Cap Rank', key: 'mcRank', width: 15 },
-  ];
-
-  for (let i = 1; i <= 15; i++) {
-    sheet.addRow({
-      rank: i,
-      name: `=IFERROR(INDEX(PowerQuery_Trending[Name],${i}),"")`,
-      symbol: `=IFERROR(INDEX(PowerQuery_Trending[Symbol],${i}),"")`,
-      mcRank: `=IFERROR(INDEX(PowerQuery_Trending[MarketCapRank],${i}),"")`,
-    });
-  }
-
-  styleHeaderRow(sheet);
-  addTrendingPowerQuerySheet(workbook, apiKey, keyType);
-}
-
-// ============================================
-// CUSTOM DASHBOARD
-// ============================================
-async function addCustomSheets(
-  workbook: ExcelJS.Workbook,
-  apiKey: string | undefined,
-  keyType: string,
-  coins: string[],
-  limit: number
-) {
-  // Market data for selected coins
-  const sheet = workbook.addWorksheet('Custom Watchlist');
-  sheet.columns = [
-    { header: 'Coin', key: 'coin', width: 15 },
-    { header: 'Price', key: 'price', width: 15 },
-    { header: 'Market Cap', key: 'marketCap', width: 18 },
-    { header: 'Volume 24h', key: 'volume', width: 18 },
-    { header: 'Change 24h', key: 'change24h', width: 12 },
-    { header: 'Change 7d', key: 'change7d', width: 12 },
-    { header: 'ATH', key: 'ath', width: 15 },
-  ];
-
-  const selectedCoins = coins.length > 0 ? coins : ['bitcoin', 'ethereum'];
-
-  selectedCoins.forEach(coin => {
-    sheet.addRow({
-      coin: coin.charAt(0).toUpperCase() + coin.slice(1),
-      price: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Price],1),"")`,
-      marketCap: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[MarketCap],1),"")`,
-      volume: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Volume24h],1),"")`,
-      change24h: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Change24h],1),"")`,
-      change7d: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[Change7d],1),"")`,
-      ath: `=IFERROR(INDEX(PowerQuery_Coin_${coin}[ATH],1),"")`,
-    });
-  });
-
-  styleHeaderRow(sheet);
-  addCustomPowerQuerySheet(workbook, selectedCoins, apiKey, keyType);
-}
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-function styleHeaderRow(sheet: ExcelJS.Worksheet) {
-  const headerRow = sheet.getRow(1);
-  headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  headerRow.fill = {
-    type: 'pattern',
-    pattern: 'solid',
-    fgColor: { argb: 'FF059669' },
+function getDashboardDescription(dashboard: DashboardType): string {
+  const descriptions: Record<DashboardType, string> = {
+    'complete-suite': 'Everything in one file - all 40 dashboards included',
+    'market-overview': 'Global stats, top coins, and market charts',
+    'portfolio-tracker': 'Track your holdings with P/L calculations',
+    'technical-analysis': 'OHLC data and price indicators',
+    'fear-greed': 'Crypto Fear & Greed Index history',
+    'gainers-losers': 'Top 25 gainers and losers (24h)',
+    'trending': 'Currently trending cryptocurrencies',
+    'defi-dashboard': 'DeFi protocols and TVL metrics',
+    'nft-tracker': 'NFT collections overview',
+    'derivatives': 'Futures and derivatives market data',
+    'whale-tracker': 'Large transaction monitoring',
+    'on-chain': 'Blockchain analytics and metrics',
+    'correlation': 'Asset correlation matrix',
+    'heatmap': 'Visual market heatmap by 24h change',
+    'screener': 'Full coin screener with filters',
+    'etf-tracker': 'Bitcoin and crypto ETF tracking',
+    'stablecoins': 'Stablecoin market and peg monitoring',
+    'exchanges': 'Exchange volumes and trust scores',
+    'categories': 'Crypto sectors and categories',
+    'bitcoin-dashboard': 'Complete BTC analysis with halving and dominance',
+    'ethereum-dashboard': 'ETH ecosystem with DeFi stats and gas tracker',
+    'layer1-compare': 'Compare top L1 blockchains side-by-side',
+    'layer2-compare': 'L2 scaling solutions comparison',
+    'meme-coins': 'Popular meme token tracker',
+    'ai-gaming': 'AI and gaming crypto tokens analysis',
+    'calculator': 'DCA, profit, and price target calculators',
+    'volatility': 'Price volatility and risk analysis',
+    'rwa': 'Real World Assets tokenization tracker',
+    'liquidations': 'Liquidation zones and leverage risk tracker',
+    'funding-rates': 'Perpetual futures funding rates analysis',
+    'altcoin-season': 'Altcoin vs Bitcoin season index',
+    'token-unlocks': 'Upcoming token unlock schedules',
+    'staking-yields': 'PoS staking yields comparison',
+    'social-sentiment': 'Social media sentiment analysis',
+    'dev-activity': 'Developer and GitHub activity metrics',
+    'exchange-reserves': 'Crypto held on exchanges tracker',
+    'defi-yields': 'DeFi yield farming opportunities',
+    'metaverse': 'Metaverse and virtual world tokens',
+    'privacy-coins': 'Privacy-focused cryptocurrencies',
+    'mining-calc': 'Mining profitability calculator',
+    'custom': 'Custom watchlist with your selected coins',
   };
-  headerRow.alignment = { horizontal: 'center' };
-}
-
-function addInstructionsSheet(workbook: ExcelJS.Workbook, dashboard: string, apiKey: string | undefined) {
-  const sheet = workbook.addWorksheet('Instructions');
-  sheet.getColumn(1).width = 80;
-
-  const instructions = [
-    ['CryptoReportKit - Power Query Dashboard'],
-    [''],
-    [`Dashboard Type: ${dashboard.toUpperCase()}`],
-    [`Generated: ${new Date().toISOString()}`],
-    [`API Key: ${apiKey ? 'Configured ✓' : 'Using free tier (rate limited)'}`],
-    [''],
-    ['HOW TO REFRESH DATA:'],
-    ['1. Go to Data tab → Refresh All'],
-    ['2. Or right-click any table → Refresh'],
-    ['3. Data refreshes from CoinGecko API'],
-    [''],
-    ['POWER QUERY CONNECTIONS:'],
-    ['This workbook uses Power Query to fetch live crypto data.'],
-    ['Go to Data → Queries & Connections to see all connections.'],
-    [''],
-    ['TROUBLESHOOTING:'],
-    ['- If #N/A errors appear, refresh the data (Data → Refresh All)'],
-    ['- Rate limit errors: Wait 1 minute, then refresh'],
-    ['- For higher limits: Use a CoinGecko Pro API key'],
-    [''],
-    ['MORE TEMPLATES: https://cryptoreportkit.com/templates'],
-    ['DOCUMENTATION: https://cryptoreportkit.com/docs'],
-  ];
-
-  instructions.forEach(row => sheet.addRow(row));
-  sheet.getRow(1).font = { bold: true, size: 16 };
-}
-
-function addPowerQuerySetupSheet(workbook: ExcelJS.Workbook, type: string, apiKey: string | undefined, keyType: string, limit: number) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden'; // Hide config sheet
-
-  const baseUrl = 'https://cryptoreportkit.com/api/powerquery';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow(['Market Data', `${baseUrl}/market?limit=${limit}`, 'PowerQuery_Market']);
-  sheet.addRow(['Global Stats', `${baseUrl}/global`, 'PowerQuery_Global']);
-}
-
-function addPortfolioPowerQuerySheet(workbook: ExcelJS.Workbook, coins: string[], apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  const baseUrl = 'https://cryptoreportkit.com/api/powerquery';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  coins.forEach(coin => {
-    sheet.addRow([`Coin: ${coin}`, `${baseUrl}/coin?id=${coin}`, `PowerQuery_Coin_${coin}`]);
-  });
-}
-
-function addTechnicalPowerQuerySheet(workbook: ExcelJS.Workbook, coin: string, apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  const baseUrl = 'https://cryptoreportkit.com/api/powerquery';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow([`Coin: ${coin}`, `${baseUrl}/coin?id=${coin}`, `PowerQuery_Coin_${coin}`]);
-  sheet.addRow(['OHLC Data', `${baseUrl}/ohlc?coin=${coin}&days=30`, 'PowerQuery_OHLC']);
-}
-
-function addDeFiPowerQuerySheet(workbook: ExcelJS.Workbook, apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow(['DeFi Protocols', 'https://cryptoreportkit.com/api/powerquery/market?limit=100', 'PowerQuery_DeFi']);
-}
-
-function addFearGreedPowerQuerySheet(workbook: ExcelJS.Workbook, apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow(['Fear & Greed', 'https://cryptoreportkit.com/api/powerquery/feargreed?limit=30', 'PowerQuery_FearGreed']);
-}
-
-function addGainersLosersPowerQuerySheet(workbook: ExcelJS.Workbook, apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow(['Gainers', 'https://cryptoreportkit.com/api/powerquery/market?limit=250', 'PowerQuery_Gainers']);
-  sheet.addRow(['Losers', 'https://cryptoreportkit.com/api/powerquery/market?limit=250', 'PowerQuery_Losers']);
-}
-
-function addTrendingPowerQuerySheet(workbook: ExcelJS.Workbook, apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  sheet.addRow(['Trending', 'https://cryptoreportkit.com/api/powerquery/trending', 'PowerQuery_Trending']);
-}
-
-function addCustomPowerQuerySheet(workbook: ExcelJS.Workbook, coins: string[], apiKey: string | undefined, keyType: string) {
-  const sheet = workbook.addWorksheet('_PowerQuery_Config');
-  sheet.state = 'hidden';
-
-  const baseUrl = 'https://cryptoreportkit.com/api/powerquery';
-
-  sheet.addRow(['Query Name', 'URL', 'Table Name']);
-  coins.forEach(coin => {
-    sheet.addRow([`Coin: ${coin}`, `${baseUrl}/coin?id=${coin}`, `PowerQuery_Coin_${coin}`]);
-  });
+  return descriptions[dashboard] || 'Custom dashboard';
 }
