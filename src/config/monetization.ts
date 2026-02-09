@@ -174,3 +174,85 @@ export const TEMPLATE_DOWNLOADS = {
   pro: "/api/downloads/pro-template",
   enterprise: "/api/downloads/enterprise-template"
 };
+
+// ============================================
+// CRK EXCEL ADD-IN - STANDALONE PRICING
+// ============================================
+
+export const ADDIN_PRICING_TIERS = {
+  free: {
+    name: 'Free',
+    price: 0,
+    interval: null,
+    dailyApiCalls: 100,
+    maxCoinsPerRequest: 10,
+    maxOhlcvDays: 7,
+    functionsAccess: 'basic',
+    features: [
+      '100 API calls/day',
+      '10 basic functions',
+      '10 coins per request',
+      '7 days OHLCV history',
+      'Community support',
+    ],
+    cta: 'Get Started Free',
+    coingeckoRateNote: 'CoinGecko free tier: 30 calls/min',
+  },
+  pro: {
+    name: 'Pro',
+    price: 49,
+    yearlyPrice: 490,
+    interval: 'month',
+    dailyApiCalls: 5000,
+    maxCoinsPerRequest: 100,
+    maxOhlcvDays: 365,
+    functionsAccess: 'all',
+    features: [
+      '5,000 API calls/day',
+      'All 70+ functions',
+      '100 coins per request',
+      '1 year OHLCV history',
+      'Technical indicators (RSI, MACD, BB)',
+      'Batch & compare functions',
+      'Email support',
+      'Priority data refresh',
+    ],
+    cta: 'Start Pro Trial',
+    popular: true,
+    fastspringProductId: 'crk-addin-pro-monthly',
+    fastspringYearlyProductId: 'crk-addin-pro-yearly',
+  },
+  premium: {
+    name: 'Premium',
+    price: 199,
+    yearlyPrice: 1990,
+    interval: 'month',
+    dailyApiCalls: 50000,
+    maxCoinsPerRequest: 500,
+    maxOhlcvDays: 730,
+    functionsAccess: 'all',
+    features: [
+      '50,000 API calls/day',
+      'All 70+ functions',
+      '500 coins per request',
+      '2 years OHLCV history',
+      'DEX pools & GeckoTerminal data',
+      'DCA & ROI calculators',
+      'Dedicated support',
+      'Custom function requests',
+    ],
+    cta: 'Get Premium',
+    fastspringProductId: 'crk-addin-premium-monthly',
+    fastspringYearlyProductId: 'crk-addin-premium-yearly',
+  },
+};
+
+/** Functions available on the free tier (all others require Pro+) */
+export const FUNCTION_TIERS = {
+  free: [
+    'PRICE', 'CHANGE24H', 'MARKETCAP', 'VOLUME', 'OHLCV',
+    'INFO', 'RANK', 'GLOBAL', 'FEARGREED', 'SEARCH',
+  ],
+  pro: 'all' as const,
+  premium: 'all' as const,
+};

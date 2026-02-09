@@ -18,7 +18,7 @@
   <Id>b3a4dd10-6e51-46c8-9f22-b8e8b8d2c5a7</Id>
 
   <!-- Version - increment with each update -->
-  <Version>2.0.0</Version>
+  <Version>3.0.0</Version>
 
   <!-- Publisher -->
   <ProviderName>CryptoReportKit</ProviderName>
@@ -26,7 +26,7 @@
 
   <!-- Display Information -->
   <DisplayName DefaultValue="CryptoReportKit"/>
-  <Description DefaultValue="Professional cryptocurrency data for Excel. Get live prices, historical OHLCV data, Fear &amp; Greed Index, market metrics, and 40+ dashboard templates. Supports BYOK (Bring Your Own Keys) for unlimited API calls."/>
+  <Description DefaultValue="85+ crypto functions for Excel: live prices, portfolio tracking, AI analysis, technical indicators, DeFi data, wallet balances, tax formulas, and alerts. BYOK (Bring Your Own Keys) for unlimited API calls."/>
 
   <!-- Icons -->
   <IconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
@@ -43,6 +43,9 @@
     <AppDomain>https://api.geckoterminal.com</AppDomain>
     <AppDomain>https://api.alternative.me</AppDomain>
     <AppDomain>https://api.llama.fi</AppDomain>
+    <AppDomain>https://api.etherscan.io</AppDomain>
+    <AppDomain>https://api.bscscan.com</AppDomain>
+    <AppDomain>https://api.polygonscan.com</AppDomain>
   </AppDomains>
 
   <!-- Host applications -->

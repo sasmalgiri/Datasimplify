@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+      margin: 0;
+      background: #111827;
+      color: #F9FAFB;
+    }
+    h2 {
+      color: #10B981;
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .description {
+      color: #9CA3AF;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 13px;
+      color: #D1D5DB;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      background: #1F2937;
+      color: #F9FAFB;
+      font-size: 14px;
+      box-sizing: border-box;
+      margin-bottom: 12px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #10B981;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .btn-primary {
+      background: #10B981;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #059669;
+    }
+    .btn-danger {
+      background: transparent;
+      color: #EF4444;
+      border: 1px solid #374151;
+    }
+    .btn-danger:hover {
+      background: #1F2937;
+    }
+    .status {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+    .status.success {
+      display: block;
+      background: #064E3B;
+      color: #6EE7B7;
+    }
+    .status.error {
+      display: block;
+      background: #7F1D1D;
+      color: #FCA5A5;
+    }
+    .byok-note {
+      margin-top: 20px;
+      padding: 12px;
+      background: #1F2937;
+      border-radius: 8px;
+      border-left: 3px solid #10B981;
+    }
+    .byok-note h4 {
+      margin: 0 0 4px;
+      color: #10B981;
+      font-size: 13px;
+    }
+    .byok-note p {
+      margin: 0;
+      color: #9CA3AF;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <h2>CRK API Key</h2>
+  <p class="description">
+    Enter your CoinGecko API key for higher rate limits. Without a key, you'll use the free tier (30 calls/min).
+  </p>
+
+  <label for="apiKey">CoinGecko API Key</label>
+  <input type="text" id="apiKey" placeholder="CG-xxxxxxxxxxxx">
+
+  <button class="btn btn-primary" onclick="saveKey()">Save API Key</button>
+  <button class="btn btn-danger" onclick="removeKey()">Remove Key</button>
+
+  <div id="status" class="status"></div>
+
+  <div class="byok-note">
+    <h4>BYOK Architecture</h4>
+    <p>Your API key is stored only in your Google account properties. It never passes through CRK servers. All API calls go directly from Google Sheets to CoinGecko.</p>
+  </div>
+
+  <script>
+    function saveKey() {
+      var key = document.getElementById('apiKey').value.trim();
+      if (!key) {
+        showStatus('Please enter an API key', 'error');
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showStatus(result, 'success');
+          document.getElementById('apiKey').value = '';
+        })
+        .withFailureHandler(function(error) {
+          showStatus('Error: ' + error.message, 'error');
+        })
+        .setApiKey(key);
+    }
+
+    function removeKey() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          showStatus(result, 'success');
+        })
+        .withFailureHandler(function(error) {
+          showStatus('Error: ' + error.message, 'error');
+        })
+        .clearApiKey();
+    }
+
+    function showStatus(message, type) {
+      var el = document.getElementById('status');
+      el.textContent = message;
+      el.className = 'status ' + type;
+    }
+  </script>
+</body>
+</html>

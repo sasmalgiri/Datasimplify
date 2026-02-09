@@ -31,6 +31,10 @@ export interface UserEntitlement {
   scheduledExportsLimit: number;
   maxCoinsPerRequest: number;
   maxOhlcvDays: number;
+  dailyApiCalls: number;
+  dailyApiCallsUsed: number;
+  dailyApiCallsRemaining: number;
+  allowedFunctions: 'basic' | 'all';
   canAccessPremiumFeatures: boolean;
   canDownload: boolean;
   canScheduleExports: boolean;
@@ -51,30 +55,48 @@ export interface EntitlementCheckResult {
  */
 export const PLAN_LIMITS = {
   free: {
+    dailyApiCalls: 100,
+    dailyAiQueries: 5,
+    maxAlerts: 0,
     downloads: 5,
     scheduledExports: 0,
     maxCoinsPerRequest: 10,
     maxOhlcvDays: 7,
     canAccessPremiumFeatures: false,
     canScheduleExports: false,
+    allowedFunctions: 'basic' as const,
   },
   pro: {
+    dailyApiCalls: 5000,
+    dailyAiQueries: 50,
+    maxAlerts: 20,
     downloads: 100,
     scheduledExports: 5,
     maxCoinsPerRequest: 100,
     maxOhlcvDays: 365,
     canAccessPremiumFeatures: true,
     canScheduleExports: true,
+    allowedFunctions: 'all' as const,
   },
   premium: {
+    dailyApiCalls: 50000,
+    dailyAiQueries: 200,
+    maxAlerts: 100,
     downloads: 999999, // Unlimited
     scheduledExports: 25,
     maxCoinsPerRequest: 500,
     maxOhlcvDays: 730, // 2 years
     canAccessPremiumFeatures: true,
     canScheduleExports: true,
+    allowedFunctions: 'all' as const,
   },
 };
+
+/** Functions available on the free tier */
+export const FREE_TIER_FUNCTIONS = [
+  'PRICE', 'CHANGE24H', 'MARKETCAP', 'VOLUME', 'OHLCV',
+  'INFO', 'RANK', 'GLOBAL', 'FEARGREED', 'SEARCH',
+];
 
 /**
  * Check if subscription status allows access
@@ -120,6 +142,10 @@ export async function getUserEntitlement(
     scheduledExportsLimit: limits.scheduledExports,
     maxCoinsPerRequest: limits.maxCoinsPerRequest,
     maxOhlcvDays: limits.maxOhlcvDays,
+    dailyApiCalls: limits.dailyApiCalls,
+    dailyApiCallsUsed: 0, // Populated by caller if needed
+    dailyApiCallsRemaining: limits.dailyApiCalls,
+    allowedFunctions: limits.allowedFunctions,
     canAccessPremiumFeatures: isActive && limits.canAccessPremiumFeatures,
     canDownload:
       isActive &&

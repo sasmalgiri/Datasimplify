@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { encryptApiKey, getKeyHint } from '@/lib/encryption';
 
-const VALID_PROVIDERS = ['coingecko'] as const;
+const VALID_PROVIDERS = ['coingecko', 'binance', 'coinbase'] as const;
 type Provider = typeof VALID_PROVIDERS[number];
 
 // GET - Check if key exists
@@ -185,39 +185,67 @@ async function validateProviderKey(
   apiKey: string
 ): Promise<ValidationResult> {
   try {
-    if (provider !== 'coingecko') {
-      return { isValid: false, error: 'Only CoinGecko is supported' };
+    if (provider === 'coingecko') {
+      // Try Pro API first
+      const proResponse = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
+        headers: { 'x-cg-pro-api-key': apiKey },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (proResponse.ok) {
+        return { isValid: true, keyType: 'pro' };
+      }
+
+      // Try Demo API (free tier)
+      const demoResponse = await fetch('https://api.coingecko.com/api/v3/ping', {
+        headers: { 'x-cg-demo-api-key': apiKey },
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (demoResponse.ok) {
+        return { isValid: true, keyType: 'demo' };
+      }
+
+      if (proResponse.status === 401 || proResponse.status === 403 ||
+          demoResponse.status === 401 || demoResponse.status === 403) {
+        return { isValid: false, error: 'Invalid API key. Make sure you have a valid CoinGecko Demo or Pro key.' };
+      }
+
+      return { isValid: false, error: 'Validation failed. Please try again.' };
     }
 
-    // Try Pro API first
-    const proResponse = await fetch('https://pro-api.coingecko.com/api/v3/ping', {
-      headers: { 'x-cg-pro-api-key': apiKey },
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (proResponse.ok) {
-      return { isValid: true, keyType: 'pro' };
+    if (provider === 'binance') {
+      // For Binance, we store apiKey + secret as JSON: { key, secret }
+      // Basic format validation (keys are typically 64 chars)
+      try {
+        const parsed = JSON.parse(apiKey);
+        if (!parsed.key || !parsed.secret) {
+          return { isValid: false, error: 'Binance requires JSON: {"key":"...","secret":"..."}' };
+        }
+        if (parsed.key.length < 20 || parsed.secret.length < 20) {
+          return { isValid: false, error: 'Invalid Binance API key format' };
+        }
+        return { isValid: true, keyType: 'pro' };
+      } catch {
+        return { isValid: false, error: 'Binance key must be JSON: {"key":"YOUR_KEY","secret":"YOUR_SECRET"}' };
+      }
     }
 
-    // Try Demo API (free tier)
-    const demoResponse = await fetch('https://api.coingecko.com/api/v3/ping', {
-      headers: { 'x-cg-demo-api-key': apiKey },
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (demoResponse.ok) {
-      return { isValid: true, keyType: 'demo' };
+    if (provider === 'coinbase') {
+      try {
+        const parsed = JSON.parse(apiKey);
+        if (!parsed.key || !parsed.secret) {
+          return { isValid: false, error: 'Coinbase requires JSON: {"key":"...","secret":"..."}' };
+        }
+        return { isValid: true, keyType: 'pro' };
+      } catch {
+        return { isValid: false, error: 'Coinbase key must be JSON: {"key":"YOUR_KEY","secret":"YOUR_SECRET"}' };
+      }
     }
 
-    // Both failed
-    if (proResponse.status === 401 || proResponse.status === 403 ||
-        demoResponse.status === 401 || demoResponse.status === 403) {
-      return { isValid: false, error: 'Invalid API key. Make sure you have a valid CoinGecko Demo or Pro key.' };
-    }
-
-    return { isValid: false, error: 'Validation failed. Please try again.' };
+    return { isValid: false, error: 'Unsupported provider' };
   } catch (error) {
-    console.error('Validation error for CoinGecko:', error);
+    console.error('Validation error for ' + provider + ':', error);
     if (error instanceof Error && error.name === 'AbortError') {
       return { isValid: false, error: 'Validation timeout' };
     }

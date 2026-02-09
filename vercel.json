@@ -78,6 +78,10 @@
     {
       "path": "/api/cron/export",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/v1/alerts/check",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

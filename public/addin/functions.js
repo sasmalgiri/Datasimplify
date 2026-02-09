@@ -23,6 +23,318 @@ const requestCache = new Map();
 // Storage key for API key
 const API_KEY_STORAGE = 'crk_coingecko_key';
 
+// ============================================
+// USAGE TRACKING & PLAN ENFORCEMENT
+// ============================================
+
+const USAGE_STORAGE_KEY = 'crk_usage_today';
+const USAGE_DATE_KEY = 'crk_usage_date';
+const PLAN_CACHE_TTL = 300000; // 5 minutes
+
+// In-memory state
+let usageToday = 0;
+let usageDate = '';
+let planCache = null;
+let planCacheTimestamp = 0;
+
+// Free tier functions (all other functions require Pro+)
+const FREE_TIER_FUNCTIONS = [
+  'PRICE', 'CHANGE24H', 'MARKETCAP', 'VOLUME', 'OHLCV',
+  'INFO', 'RANK', 'GLOBAL', 'FEARGREED', 'SEARCH',
+  'CACHE_STATUS', 'PORTFOLIO_ADD', 'PORTFOLIO_LIST', 'PORTFOLIO_VALUE', 'PORTFOLIO_PNL', 'PORTFOLIO_REMOVE',
+  'ASK',
+];
+
+// ============================================
+// PERSISTENT CACHE (Offline Resilience)
+// ============================================
+
+const PERSISTENT_CACHE_PREFIX = 'crk_pc_';
+const PERSISTENT_CACHE_INDEX_KEY = 'crk_pc_index';
+const PERSISTENT_CACHE_TTL = 600000; // 10 minutes
+const PERSISTENT_CACHE_MAX = 50;
+
+// Track stale usage for CACHE_STATUS
+let staleCacheHits = 0;
+let oldestStaleAge = 0;
+
+function hashKey(str) {
+  // Simple hash to keep storage keys short
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h).toString(36);
+}
+
+async function getStorageItem(key) {
+  if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+    return await OfficeRuntime.storage.getItem(key);
+  }
+  return localStorage.getItem(key);
+}
+
+async function setStorageItem(key, value) {
+  if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+    await OfficeRuntime.storage.setItem(key, value);
+  } else {
+    localStorage.setItem(key, value);
+  }
+}
+
+async function persistentCacheGet(url) {
+  try {
+    var key = PERSISTENT_CACHE_PREFIX + hashKey(url);
+    var raw = await getStorageItem(key);
+    if (!raw) return null;
+    var entry = JSON.parse(raw);
+    if (Date.now() - entry.ts < PERSISTENT_CACHE_TTL) {
+      return entry.data;
+    }
+    // Expired but still usable as stale fallback
+    return { _stale: true, _age: Date.now() - entry.ts, data: entry.data };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function persistentCacheSet(url, data) {
+  try {
+    var key = PERSISTENT_CACHE_PREFIX + hashKey(url);
+    await setStorageItem(key, JSON.stringify({ data: data, ts: Date.now() }));
+
+    // Update index for pruning
+    var indexRaw = await getStorageItem(PERSISTENT_CACHE_INDEX_KEY);
+    var index = indexRaw ? JSON.parse(indexRaw) : [];
+    index = index.filter(function(e) { return e.k !== key; });
+    index.push({ k: key, ts: Date.now() });
+
+    // Prune oldest if over limit
+    if (index.length > PERSISTENT_CACHE_MAX) {
+      var removed = index.splice(0, index.length - PERSISTENT_CACHE_MAX);
+      for (var i = 0; i < removed.length; i++) {
+        try {
+          if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+            await OfficeRuntime.storage.removeItem(removed[i].k);
+          } else {
+            localStorage.removeItem(removed[i].k);
+          }
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    await setStorageItem(PERSISTENT_CACHE_INDEX_KEY, JSON.stringify(index));
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+// ============================================
+// PORTFOLIO STORAGE
+// ============================================
+
+const PORTFOLIO_STORAGE_KEY = 'crk_portfolio';
+const PORTFOLIO_MAX_HOLDINGS = 100;
+
+async function getPortfolio() {
+  try {
+    var raw = await getStorageItem(PORTFOLIO_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+async function setPortfolio(portfolio) {
+  if (portfolio.length > PORTFOLIO_MAX_HOLDINGS) {
+    portfolio = portfolio.slice(-PORTFOLIO_MAX_HOLDINGS);
+  }
+  await setStorageItem(PORTFOLIO_STORAGE_KEY, JSON.stringify(portfolio));
+}
+
+/**
+ * Initialize usage tracking from storage
+ */
+async function initUsageTracking() {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    let storedDate, storedCount;
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      storedDate = await OfficeRuntime.storage.getItem(USAGE_DATE_KEY);
+      storedCount = await OfficeRuntime.storage.getItem(USAGE_STORAGE_KEY);
+    } else {
+      storedDate = localStorage.getItem(USAGE_DATE_KEY);
+      storedCount = localStorage.getItem(USAGE_STORAGE_KEY);
+    }
+
+    if (storedDate === today && storedCount) {
+      usageToday = parseInt(storedCount, 10) || 0;
+      usageDate = today;
+    } else {
+      usageToday = 0;
+      usageDate = today;
+      await persistUsage();
+    }
+  } catch (err) {
+    console.log('[CRK] Usage tracking init error:', err);
+    usageToday = 0;
+    usageDate = today;
+  }
+}
+
+/**
+ * Persist current usage count to storage
+ */
+async function persistUsage() {
+  try {
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      await OfficeRuntime.storage.setItem(USAGE_DATE_KEY, usageDate);
+      await OfficeRuntime.storage.setItem(USAGE_STORAGE_KEY, String(usageToday));
+    } else {
+      localStorage.setItem(USAGE_DATE_KEY, usageDate);
+      localStorage.setItem(USAGE_STORAGE_KEY, String(usageToday));
+    }
+  } catch (err) {
+    // Non-critical
+  }
+}
+
+/**
+ * Get user's plan info (cached for 5 minutes)
+ */
+async function getPlanInfo() {
+  if (planCache && (Date.now() - planCacheTimestamp) < PLAN_CACHE_TTL) {
+    return planCache;
+  }
+
+  try {
+    let token = null;
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      token = await OfficeRuntime.storage.getItem('crk_auth_token');
+    }
+    if (!token) {
+      try { token = localStorage.getItem('crk_auth_token'); } catch (e) { /* ignore */ }
+    }
+
+    if (!token) {
+      return { plan: 'free', dailyLimit: 100, allowedFunctions: 'basic' };
+    }
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://cryptoreportkit.com';
+    const res = await fetch(origin + '/api/v1/me/plan', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      planCache = {
+        plan: data.subscription.plan,
+        dailyLimit: data.subscription.limits.dailyApiCalls,
+        allowedFunctions: data.subscription.plan === 'free' ? 'basic' : 'all',
+        serverUsed: data.quotas.apiCalls.used,
+      };
+      planCacheTimestamp = Date.now();
+
+      // Sync with server count (server is authoritative)
+      if (planCache.serverUsed > usageToday) {
+        usageToday = planCache.serverUsed;
+        await persistUsage();
+      }
+
+      return planCache;
+    }
+  } catch (err) {
+    console.log('[CRK] Plan fetch error:', err);
+  }
+
+  return { plan: 'free', dailyLimit: 100, allowedFunctions: 'basic' };
+}
+
+/**
+ * Check daily API call limit. Called automatically by fetchFromCoinGecko.
+ * Throws CustomFunctions.Error if daily limit exceeded.
+ */
+async function checkDailyLimit() {
+  const today = new Date().toISOString().split('T')[0];
+  if (usageDate !== today) {
+    usageToday = 0;
+    usageDate = today;
+  }
+
+  const plan = await getPlanInfo();
+
+  // Check daily limit
+  if (usageToday >= plan.dailyLimit) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Daily limit reached (' + plan.dailyLimit + '). Resets at midnight. Upgrade for more.'
+    );
+  }
+
+  // Increment and persist
+  usageToday++;
+  await persistUsage();
+
+  // Report to server every 10 calls (batched, non-blocking)
+  if (usageToday % 10 === 0) {
+    reportUsageToServer().catch(function() {});
+  }
+}
+
+/**
+ * Wrap a function with plan tier check.
+ * Free tier users can only use FREE_TIER_FUNCTIONS.
+ * Pro/Premium users can use all functions.
+ */
+function withTierCheck(functionName, fn) {
+  return async function() {
+    const plan = await getPlanInfo();
+    if (plan.allowedFunctions === 'basic' && !FREE_TIER_FUNCTIONS.includes(functionName)) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        'CRK.' + functionName + ' requires Pro plan. Upgrade at cryptoreportkit.com/pricing'
+      );
+    }
+    return fn.apply(this, arguments);
+  };
+}
+
+/**
+ * Report usage to server (fire-and-forget)
+ */
+async function reportUsageToServer() {
+  try {
+    let token = null;
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      token = await OfficeRuntime.storage.getItem('crk_auth_token');
+    }
+    if (!token) {
+      try { token = localStorage.getItem('crk_auth_token'); } catch (e) { /* ignore */ }
+    }
+    if (!token) return;
+
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://cryptoreportkit.com';
+    await fetch(origin + '/api/v1/usage/report', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        date: usageDate,
+        clientCount: usageToday,
+        source: 'excel_addin',
+      }),
+    });
+  } catch (err) {
+    // Non-critical
+  }
+}
+
+// Initialize usage tracking on load
+initUsageTracking();
+
 /**
  * Get CoinGecko API key from local storage
  */
@@ -47,8 +359,11 @@ async function getApiKey() {
 /**
  * Fetch data directly from CoinGecko API
  * Uses user's own API key if available, falls back to free tier
+ * Automatically tracks usage for daily limit enforcement.
  */
 async function fetchFromCoinGecko(endpoint, params = {}) {
+  // Check daily usage limit (increments counter)
+  await checkDailyLimit();
   const apiKey = await getApiKey();
   const baseUrl = apiKey ? COINGECKO_API.pro : COINGECKO_API.free;
 
@@ -84,6 +399,7 @@ async function fetchFromCoinGecko(endpoint, params = {}) {
         if (freeResponse.ok) {
           const data = await freeResponse.json();
           requestCache.set(cacheKey, { data, timestamp: Date.now() });
+          persistentCacheSet(cacheKey, data).catch(function() {});
           return data;
         }
       }
@@ -96,9 +412,25 @@ async function fetchFromCoinGecko(endpoint, params = {}) {
 
     const data = await response.json();
     requestCache.set(cacheKey, { data, timestamp: Date.now() });
+    persistentCacheSet(cacheKey, data).catch(function() {});
     return data;
   } catch (error) {
     if (error instanceof CustomFunctions.Error) throw error;
+
+    // Offline resilience: try persistent cache before failing
+    try {
+      var staleResult = await persistentCacheGet(cacheKey);
+      if (staleResult) {
+        var returnData = staleResult._stale ? staleResult.data : staleResult;
+        if (staleResult._stale) {
+          staleCacheHits++;
+          var ageMin = Math.round(staleResult._age / 60000);
+          if (ageMin > oldestStaleAge) oldestStaleAge = ageMin;
+        }
+        return returnData;
+      }
+    } catch (cacheErr) { /* ignore */ }
+
     throw new CustomFunctions.Error(
       CustomFunctions.ErrorCode.invalidValue,
       error.message || 'Network error'
@@ -392,6 +724,7 @@ async function ETHDOM() {
  * @returns {any} Fear & Greed value or classification
  */
 async function FEARGREED(field = 'value') {
+  await checkDailyLimit();
   try {
     const response = await fetch('https://api.alternative.me/fng/?limit=1');
     const data = await response.json();
@@ -969,63 +1302,63 @@ async function STABLECOINS(limit = 20) {
 // REGISTER ALL FUNCTIONS
 // ============================================
 
-// Price & Market
-CustomFunctions.associate('PRICE', PRICE);
-CustomFunctions.associate('CHANGE24H', CHANGE24H);
-CustomFunctions.associate('MARKETCAP', MARKETCAP);
-CustomFunctions.associate('VOLUME', VOLUME);
-CustomFunctions.associate('OHLCV', OHLCV);
+// Price & Market (Free tier)
+CustomFunctions.associate('PRICE', withTierCheck('PRICE', PRICE));
+CustomFunctions.associate('CHANGE24H', withTierCheck('CHANGE24H', CHANGE24H));
+CustomFunctions.associate('MARKETCAP', withTierCheck('MARKETCAP', MARKETCAP));
+CustomFunctions.associate('VOLUME', withTierCheck('VOLUME', VOLUME));
+CustomFunctions.associate('OHLCV', withTierCheck('OHLCV', OHLCV));
 
-// Coin Details
-CustomFunctions.associate('INFO', INFO);
-CustomFunctions.associate('ATH', ATH);
-CustomFunctions.associate('ATL', ATL);
-CustomFunctions.associate('SUPPLY', SUPPLY);
-CustomFunctions.associate('RANK', RANK);
-CustomFunctions.associate('HIGH24H', HIGH24H);
-CustomFunctions.associate('LOW24H', LOW24H);
+// Coin Details (Free: INFO, RANK only)
+CustomFunctions.associate('INFO', withTierCheck('INFO', INFO));
+CustomFunctions.associate('ATH', withTierCheck('ATH', ATH));
+CustomFunctions.associate('ATL', withTierCheck('ATL', ATL));
+CustomFunctions.associate('SUPPLY', withTierCheck('SUPPLY', SUPPLY));
+CustomFunctions.associate('RANK', withTierCheck('RANK', RANK));
+CustomFunctions.associate('HIGH24H', withTierCheck('HIGH24H', HIGH24H));
+CustomFunctions.associate('LOW24H', withTierCheck('LOW24H', LOW24H));
 
-// Global Market
-CustomFunctions.associate('GLOBAL', GLOBAL);
-CustomFunctions.associate('BTCDOM', BTCDOM);
-CustomFunctions.associate('ETHDOM', ETHDOM);
+// Global Market (Free: GLOBAL only)
+CustomFunctions.associate('GLOBAL', withTierCheck('GLOBAL', GLOBAL));
+CustomFunctions.associate('BTCDOM', withTierCheck('BTCDOM', BTCDOM));
+CustomFunctions.associate('ETHDOM', withTierCheck('ETHDOM', ETHDOM));
 
-// Sentiment & Trending
-CustomFunctions.associate('FEARGREED', FEARGREED);
-CustomFunctions.associate('TRENDING', TRENDING);
+// Sentiment & Trending (Free: FEARGREED only)
+CustomFunctions.associate('FEARGREED', withTierCheck('FEARGREED', FEARGREED));
+CustomFunctions.associate('TRENDING', withTierCheck('TRENDING', TRENDING));
 
-// Technical Indicators
-CustomFunctions.associate('SMA', SMA);
-CustomFunctions.associate('EMA', EMA);
-CustomFunctions.associate('RSI', RSI);
-CustomFunctions.associate('MACD', MACD);
+// Technical Indicators (Pro+ only)
+CustomFunctions.associate('SMA', withTierCheck('SMA', SMA));
+CustomFunctions.associate('EMA', withTierCheck('EMA', EMA));
+CustomFunctions.associate('RSI', withTierCheck('RSI', RSI));
+CustomFunctions.associate('MACD', withTierCheck('MACD', MACD));
 
-// Coin Discovery
-CustomFunctions.associate('SEARCH', SEARCH);
-CustomFunctions.associate('TOP', TOP);
-CustomFunctions.associate('CATEGORY', CATEGORY);
-CustomFunctions.associate('CATEGORIES', CATEGORIES);
-CustomFunctions.associate('BATCH', BATCH);
+// Coin Discovery (Free: SEARCH only)
+CustomFunctions.associate('SEARCH', withTierCheck('SEARCH', SEARCH));
+CustomFunctions.associate('TOP', withTierCheck('TOP', TOP));
+CustomFunctions.associate('CATEGORY', withTierCheck('CATEGORY', CATEGORY));
+CustomFunctions.associate('CATEGORIES', withTierCheck('CATEGORIES', CATEGORIES));
+CustomFunctions.associate('BATCH', withTierCheck('BATCH', BATCH));
 
-// Exchanges
-CustomFunctions.associate('EXCHANGES', EXCHANGES);
-CustomFunctions.associate('GAINERS', GAINERS);
-CustomFunctions.associate('LOSERS', LOSERS);
+// Exchanges (Pro+ only)
+CustomFunctions.associate('EXCHANGES', withTierCheck('EXCHANGES', EXCHANGES));
+CustomFunctions.associate('GAINERS', withTierCheck('GAINERS', GAINERS));
+CustomFunctions.associate('LOSERS', withTierCheck('LOSERS', LOSERS));
 
-// DeFi
-CustomFunctions.associate('DEFI', DEFI);
+// DeFi (Pro+ only)
+CustomFunctions.associate('DEFI', withTierCheck('DEFI', DEFI));
 
-// NFTs
-CustomFunctions.associate('NFTS', NFTS);
+// NFTs (Pro+ only)
+CustomFunctions.associate('NFTS', withTierCheck('NFTS', NFTS));
 
-// Derivatives
-CustomFunctions.associate('DERIVATIVES', DERIVATIVES);
+// Derivatives (Pro+ only)
+CustomFunctions.associate('DERIVATIVES', withTierCheck('DERIVATIVES', DERIVATIVES));
 
-// Historical
-CustomFunctions.associate('PRICEHISTORY', PRICEHISTORY);
+// Historical (Pro+ only)
+CustomFunctions.associate('PRICEHISTORY', withTierCheck('PRICEHISTORY', PRICEHISTORY));
 
-// Stablecoins
-CustomFunctions.associate('STABLECOINS', STABLECOINS);
+// Stablecoins (Pro+ only)
+CustomFunctions.associate('STABLECOINS', withTierCheck('STABLECOINS', STABLECOINS));
 
 // ============================================
 // CHART & SPARKLINE DATA
@@ -1471,6 +1804,7 @@ async function DEFI_GLOBAL(field) {
  * @returns {any[][]} Pools list
  */
 async function POOLS(network, limit = 50) {
+  await checkDailyLimit();
   try {
     const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/${network}/pools?page=1`);
     const json = await response.json();
@@ -1504,6 +1838,7 @@ async function POOLS(network, limit = 50) {
  * @returns {any[][]} Pool info
  */
 async function POOL_INFO(network, poolAddress) {
+  await checkDailyLimit();
   try {
     const response = await fetch(`https://api.geckoterminal.com/api/v2/networks/${network}/pools/${poolAddress}`);
     const json = await response.json();
@@ -1783,6 +2118,7 @@ async function RWA(limit = 20) {
  * @returns {number} TVL in USD
  */
 async function TVL(protocol) {
+  await checkDailyLimit();
   try {
     const response = await fetch(`https://api.llama.fi/tvl/${protocol.toLowerCase()}`);
     const tvl = await response.json();
@@ -1867,66 +2203,940 @@ async function VWAP(coin, days = 1) {
 }
 
 // ============================================
+// CACHE STATUS & PORTFOLIO FUNCTIONS
+// ============================================
+
+/**
+ * Show persistent cache status
+ * @customfunction
+ * @returns {string} Cache status message
+ */
+async function CACHE_STATUS() {
+  if (staleCacheHits === 0) {
+    return 'All data fresh';
+  }
+  return staleCacheHits + ' values from cache (oldest: ' + oldestStaleAge + ' min ago)';
+}
+
+/**
+ * Add a buy/sell entry to portfolio
+ * @customfunction
+ * @param {string} coin Coin ID (e.g., "bitcoin")
+ * @param {number} qty Quantity bought/sold
+ * @param {number} price Price per unit at purchase/sale
+ * @param {string} [date] Date of transaction (YYYY-MM-DD, default: today)
+ * @param {string} [type] Transaction type: "buy" or "sell" (default: "buy")
+ * @returns {string} Confirmation message
+ */
+async function PORTFOLIO_ADD(coin, qty, price, date, type) {
+  if (!coin || !qty || !price) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Usage: PORTFOLIO_ADD(coin, qty, price, [date], [type])'
+    );
+  }
+
+  var txType = (type && type.toLowerCase() === 'sell') ? 'sell' : 'buy';
+  var txDate = date || new Date().toISOString().split('T')[0];
+  var portfolio = await getPortfolio();
+
+  if (portfolio.length >= PORTFOLIO_MAX_HOLDINGS) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Portfolio limit reached (' + PORTFOLIO_MAX_HOLDINGS + '). Remove entries first.'
+    );
+  }
+
+  portfolio.push({
+    coin: coin.toLowerCase(),
+    qty: Number(qty),
+    costBasis: Number(price),
+    date: txDate,
+    type: txType,
+  });
+
+  await setPortfolio(portfolio);
+  return txType.toUpperCase() + ': ' + qty + ' ' + coin + ' @ $' + price;
+}
+
+/**
+ * List all portfolio holdings with current values and PNL
+ * @customfunction
+ * @returns {any[][]} Portfolio matrix
+ */
+async function PORTFOLIO_LIST() {
+  var portfolio = await getPortfolio();
+  if (portfolio.length === 0) {
+    return [['No holdings. Use PORTFOLIO_ADD to start.']];
+  }
+
+  // Get unique coins
+  var coinSet = {};
+  for (var i = 0; i < portfolio.length; i++) {
+    coinSet[portfolio[i].coin] = true;
+  }
+  var uniqueCoins = Object.keys(coinSet);
+
+  // Batch fetch current prices
+  var prices = {};
+  try {
+    var data = await fetchFromCoinGecko('/simple/price', {
+      ids: uniqueCoins.join(','),
+      vs_currencies: 'usd',
+    });
+    for (var c = 0; c < uniqueCoins.length; c++) {
+      var coinId = uniqueCoins[c];
+      if (data[coinId] && data[coinId].usd) {
+        prices[coinId] = data[coinId].usd;
+      }
+    }
+  } catch (e) {
+    // Use 0 for unknown prices
+  }
+
+  // Aggregate by coin
+  var aggregated = {};
+  for (var j = 0; j < portfolio.length; j++) {
+    var entry = portfolio[j];
+    if (!aggregated[entry.coin]) {
+      aggregated[entry.coin] = { totalQty: 0, totalCost: 0, sells: 0, sellProceeds: 0 };
+    }
+    if (entry.type === 'sell') {
+      aggregated[entry.coin].sells += entry.qty;
+      aggregated[entry.coin].sellProceeds += entry.qty * entry.costBasis;
+    } else {
+      aggregated[entry.coin].totalQty += entry.qty;
+      aggregated[entry.coin].totalCost += entry.qty * entry.costBasis;
+    }
+  }
+
+  var rows = [['Coin', 'Qty Held', 'Avg Cost', 'Current Price', 'Value (USD)', 'PNL ($)', 'PNL (%)']];
+  var coins = Object.keys(aggregated);
+  for (var k = 0; k < coins.length; k++) {
+    var coinName = coins[k];
+    var agg = aggregated[coinName];
+    var netQty = agg.totalQty - agg.sells;
+    if (netQty <= 0) continue;
+    var avgCost = agg.totalCost / agg.totalQty;
+    var currentPrice = prices[coinName] || 0;
+    var currentValue = netQty * currentPrice;
+    var costValue = netQty * avgCost;
+    var pnl = currentValue - costValue;
+    var pnlPct = costValue > 0 ? ((pnl / costValue) * 100) : 0;
+    rows.push([
+      coinName,
+      Math.round(netQty * 1e8) / 1e8,
+      Math.round(avgCost * 100) / 100,
+      Math.round(currentPrice * 100) / 100,
+      Math.round(currentValue * 100) / 100,
+      Math.round(pnl * 100) / 100,
+      Math.round(pnlPct * 100) / 100,
+    ]);
+  }
+
+  return rows;
+}
+
+/**
+ * Get total portfolio value in USD
+ * @customfunction
+ * @returns {number} Total portfolio value
+ */
+async function PORTFOLIO_VALUE() {
+  var portfolio = await getPortfolio();
+  if (portfolio.length === 0) return 0;
+
+  var coinSet = {};
+  for (var i = 0; i < portfolio.length; i++) {
+    coinSet[portfolio[i].coin] = true;
+  }
+
+  // Aggregate net quantities
+  var netQtys = {};
+  for (var j = 0; j < portfolio.length; j++) {
+    var e = portfolio[j];
+    if (!netQtys[e.coin]) netQtys[e.coin] = 0;
+    netQtys[e.coin] += (e.type === 'sell' ? -e.qty : e.qty);
+  }
+
+  var uniqueCoins = Object.keys(coinSet);
+  var data = await fetchFromCoinGecko('/simple/price', {
+    ids: uniqueCoins.join(','),
+    vs_currencies: 'usd',
+  });
+
+  var total = 0;
+  for (var k = 0; k < uniqueCoins.length; k++) {
+    var coin = uniqueCoins[k];
+    var qty = netQtys[coin] || 0;
+    if (qty > 0 && data[coin] && data[coin].usd) {
+      total += qty * data[coin].usd;
+    }
+  }
+
+  return Math.round(total * 100) / 100;
+}
+
+/**
+ * Get total unrealized PNL
+ * @customfunction
+ * @returns {number} Unrealized profit/loss
+ */
+async function PORTFOLIO_PNL() {
+  var portfolio = await getPortfolio();
+  if (portfolio.length === 0) return 0;
+
+  // Aggregate by coin: track buy qty, buy cost, sell qty separately
+  var positions = {};
+  for (var i = 0; i < portfolio.length; i++) {
+    var e = portfolio[i];
+    if (!positions[e.coin]) positions[e.coin] = { buyQty: 0, buyCost: 0, sellQty: 0 };
+    if (e.type === 'sell') {
+      positions[e.coin].sellQty += e.qty;
+    } else {
+      positions[e.coin].buyQty += e.qty;
+      positions[e.coin].buyCost += e.qty * e.costBasis;
+    }
+  }
+
+  var coins = Object.keys(positions);
+  var data = await fetchFromCoinGecko('/simple/price', {
+    ids: coins.join(','),
+    vs_currencies: 'usd',
+  });
+
+  var totalPnl = 0;
+  for (var j = 0; j < coins.length; j++) {
+    var coin = coins[j];
+    var pos = positions[coin];
+    var netQty = pos.buyQty - pos.sellQty;
+    if (netQty > 0 && data[coin] && data[coin].usd) {
+      var avgCost = pos.buyCost / pos.buyQty;
+      var currentValue = netQty * data[coin].usd;
+      var costOfRemaining = netQty * avgCost;
+      totalPnl += currentValue - costOfRemaining;
+    }
+  }
+
+  return Math.round(totalPnl * 100) / 100;
+}
+
+/**
+ * Remove a holding from portfolio
+ * @customfunction
+ * @param {string} coin Coin ID to remove
+ * @param {number} [index] Specific entry index (1-based, removes all if omitted)
+ * @returns {string} Confirmation
+ */
+async function PORTFOLIO_REMOVE(coin, index) {
+  var portfolio = await getPortfolio();
+  if (portfolio.length === 0) {
+    return 'Portfolio is empty';
+  }
+
+  var coinLower = coin.toLowerCase();
+  if (index !== undefined && index !== null && index > 0) {
+    // Remove specific entry by index
+    var coinEntries = [];
+    for (var i = 0; i < portfolio.length; i++) {
+      if (portfolio[i].coin === coinLower) coinEntries.push(i);
+    }
+    if (index > coinEntries.length) {
+      return 'Only ' + coinEntries.length + ' entries for ' + coin;
+    }
+    portfolio.splice(coinEntries[index - 1], 1);
+    await setPortfolio(portfolio);
+    return 'Removed entry #' + index + ' for ' + coin;
+  }
+
+  // Remove all entries for this coin
+  var before = portfolio.length;
+  portfolio = portfolio.filter(function(e) { return e.coin !== coinLower; });
+  var removed = before - portfolio.length;
+  await setPortfolio(portfolio);
+  return removed > 0 ? 'Removed ' + removed + ' entries for ' + coin : coin + ' not found in portfolio';
+}
+
+// ============================================
 // REGISTER NEW FUNCTIONS
 // ============================================
 
-// Chart & Sparkline
-CustomFunctions.associate('CHART', CHART);
-CustomFunctions.associate('SPARKLINE', SPARKLINE);
+// Chart & Sparkline (Pro+ only)
+CustomFunctions.associate('CHART', withTierCheck('CHART', CHART));
+CustomFunctions.associate('SPARKLINE', withTierCheck('SPARKLINE', SPARKLINE));
 
-// Change Periods
-CustomFunctions.associate('CHANGE7D', CHANGE7D);
-CustomFunctions.associate('CHANGE30D', CHANGE30D);
-CustomFunctions.associate('CHANGE1Y', CHANGE1Y);
+// Change Periods (Pro+ only)
+CustomFunctions.associate('CHANGE7D', withTierCheck('CHANGE7D', CHANGE7D));
+CustomFunctions.associate('CHANGE30D', withTierCheck('CHANGE30D', CHANGE30D));
+CustomFunctions.associate('CHANGE1Y', withTierCheck('CHANGE1Y', CHANGE1Y));
 
-// Tickers
-CustomFunctions.associate('TICKERS', TICKERS);
-CustomFunctions.associate('EXCHANGE_TICKERS', EXCHANGE_TICKERS);
-CustomFunctions.associate('EXCHANGE_INFO', EXCHANGE_INFO);
+// Tickers (Pro+ only)
+CustomFunctions.associate('TICKERS', withTierCheck('TICKERS', TICKERS));
+CustomFunctions.associate('EXCHANGE_TICKERS', withTierCheck('EXCHANGE_TICKERS', EXCHANGE_TICKERS));
+CustomFunctions.associate('EXCHANGE_INFO', withTierCheck('EXCHANGE_INFO', EXCHANGE_INFO));
 
-// Compare & Convert
-CustomFunctions.associate('COMPARE', COMPARE);
-CustomFunctions.associate('CONVERT', CONVERT);
+// Compare & Convert (Pro+ only)
+CustomFunctions.associate('COMPARE', withTierCheck('COMPARE', COMPARE));
+CustomFunctions.associate('CONVERT', withTierCheck('CONVERT', CONVERT));
 
-// Analytics
-CustomFunctions.associate('VOLATILITY', VOLATILITY);
-CustomFunctions.associate('ATH_CHANGE', ATH_CHANGE);
-CustomFunctions.associate('FDV', FDV);
-CustomFunctions.associate('MCAP_FDV_RATIO', MCAP_FDV_RATIO);
+// Analytics (Pro+ only)
+CustomFunctions.associate('VOLATILITY', withTierCheck('VOLATILITY', VOLATILITY));
+CustomFunctions.associate('ATH_CHANGE', withTierCheck('ATH_CHANGE', ATH_CHANGE));
+CustomFunctions.associate('FDV', withTierCheck('FDV', FDV));
+CustomFunctions.associate('MCAP_FDV_RATIO', withTierCheck('MCAP_FDV_RATIO', MCAP_FDV_RATIO));
 
-// Institutional
-CustomFunctions.associate('COMPANIES', COMPANIES);
+// Institutional (Pro+ only)
+CustomFunctions.associate('COMPANIES', withTierCheck('COMPANIES', COMPANIES));
 
-// DeFi
-CustomFunctions.associate('DEFI_GLOBAL', DEFI_GLOBAL);
-CustomFunctions.associate('TVL', TVL);
+// DeFi (Pro+ only)
+CustomFunctions.associate('DEFI_GLOBAL', withTierCheck('DEFI_GLOBAL', DEFI_GLOBAL));
+CustomFunctions.associate('TVL', withTierCheck('TVL', TVL));
 
-// DEX Pools
-CustomFunctions.associate('POOLS', POOLS);
-CustomFunctions.associate('POOL_INFO', POOL_INFO);
+// DEX Pools (Pro+ only)
+CustomFunctions.associate('POOLS', withTierCheck('POOLS', POOLS));
+CustomFunctions.associate('POOL_INFO', withTierCheck('POOL_INFO', POOL_INFO));
 
-// Utility
-CustomFunctions.associate('CURRENCIES', CURRENCIES);
-CustomFunctions.associate('COINS_LIST', COINS_LIST);
-CustomFunctions.associate('DERIVATIVES_EXCHANGES', DERIVATIVES_EXCHANGES);
+// Utility (Pro+ only)
+CustomFunctions.associate('CURRENCIES', withTierCheck('CURRENCIES', CURRENCIES));
+CustomFunctions.associate('COINS_LIST', withTierCheck('COINS_LIST', COINS_LIST));
+CustomFunctions.associate('DERIVATIVES_EXCHANGES', withTierCheck('DERIVATIVES_EXCHANGES', DERIVATIVES_EXCHANGES));
 
-// Funding
-CustomFunctions.associate('FUNDING', FUNDING);
+// Funding (Pro+ only)
+CustomFunctions.associate('FUNDING', withTierCheck('FUNDING', FUNDING));
 
-// Calculators
-CustomFunctions.associate('ROI', ROI);
-CustomFunctions.associate('DCA', DCA);
+// Calculators (Pro+ only)
+CustomFunctions.associate('ROI', withTierCheck('ROI', ROI));
+CustomFunctions.associate('DCA', withTierCheck('DCA', DCA));
 
-// Categories
-CustomFunctions.associate('LAYER1', LAYER1);
-CustomFunctions.associate('LAYER2', LAYER2);
-CustomFunctions.associate('MEMECOINS', MEMECOINS);
-CustomFunctions.associate('AI_TOKENS', AI_TOKENS);
-CustomFunctions.associate('GAMING', GAMING);
-CustomFunctions.associate('RWA', RWA);
+// Categories (Pro+ only)
+CustomFunctions.associate('LAYER1', withTierCheck('LAYER1', LAYER1));
+CustomFunctions.associate('LAYER2', withTierCheck('LAYER2', LAYER2));
+CustomFunctions.associate('MEMECOINS', withTierCheck('MEMECOINS', MEMECOINS));
+CustomFunctions.associate('AI_TOKENS', withTierCheck('AI_TOKENS', AI_TOKENS));
+CustomFunctions.associate('GAMING', withTierCheck('GAMING', GAMING));
+CustomFunctions.associate('RWA', withTierCheck('RWA', RWA));
 
-// Technical Indicators
-CustomFunctions.associate('BB', BB);
-CustomFunctions.associate('VWAP', VWAP);
+// Technical Indicators (Pro+ only)
+CustomFunctions.associate('BB', withTierCheck('BB', BB));
+CustomFunctions.associate('VWAP', withTierCheck('VWAP', VWAP));
 
-console.log('[CRK] All 70+ custom functions registered successfully');
+// ============================================
+// AI & ALERTS FUNCTIONS
+// ============================================
+
+/**
+ * Get auth token from storage
+ */
+async function getAuthToken() {
+  try {
+    if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+      return await OfficeRuntime.storage.getItem('crk_auth_token');
+    }
+  } catch (e) { /* ignore */ }
+  try {
+    return localStorage.getItem('crk_auth_token');
+  } catch (e) { return null; }
+}
+
+/**
+ * Get CRK server origin
+ */
+function getServerOrigin() {
+  return (typeof window !== 'undefined' && window.location.origin) || 'https://cryptoreportkit.com';
+}
+
+/**
+ * Ask CRK AI a question about crypto markets
+ * @customfunction
+ * @param {string} question Your question
+ * @returns {string} AI-generated answer
+ */
+async function ASK(question) {
+  if (!question || !question.trim()) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Please provide a question'
+    );
+  }
+
+  var token = await getAuthToken();
+  if (!token) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Sign in to use CRK.ASK. Open taskpane to log in.'
+    );
+  }
+
+  try {
+    var res = await fetch(getServerOrigin() + '/api/v1/ai/ask', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({ question: question.trim() }),
+    });
+
+    var data = await res.json();
+    if (!res.ok) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        data.error || 'AI request failed'
+      );
+    }
+
+    return data.answer;
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'AI service unavailable'
+    );
+  }
+}
+
+/**
+ * Create a price alert
+ * @customfunction
+ * @param {string} coin Coin ID (e.g., "bitcoin")
+ * @param {string} condition Direction: ">" or "above", "<" or "below"
+ * @param {number} threshold Price threshold
+ * @returns {string} Alert confirmation
+ */
+async function ALERT(coin, condition, threshold) {
+  if (!coin || !condition || !threshold) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Usage: ALERT(coin, ">"/"<", threshold)'
+    );
+  }
+
+  var alertType;
+  if (condition === '>' || condition.toLowerCase() === 'above') {
+    alertType = 'above';
+  } else if (condition === '<' || condition.toLowerCase() === 'below') {
+    alertType = 'below';
+  } else {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Condition must be ">" or "<"'
+    );
+  }
+
+  var token = await getAuthToken();
+  if (!token) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Sign in to use alerts. Open taskpane to log in.'
+    );
+  }
+
+  try {
+    var res = await fetch(getServerOrigin() + '/api/v1/alerts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify({
+        coin_id: coin.toLowerCase(),
+        alert_type: alertType,
+        threshold: Number(threshold),
+      }),
+    });
+
+    var data = await res.json();
+    if (!res.ok) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        data.error || 'Failed to create alert'
+      );
+    }
+
+    return 'Alert set: ' + coin + ' ' + alertType + ' $' + threshold;
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Alert service unavailable'
+    );
+  }
+}
+
+/**
+ * List all active price alerts
+ * @customfunction
+ * @returns {any[][]} Active alerts matrix
+ */
+async function ALERTS() {
+  var token = await getAuthToken();
+  if (!token) {
+    return [['Sign in to view alerts']];
+  }
+
+  try {
+    var res = await fetch(getServerOrigin() + '/api/v1/alerts', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+
+    var data = await res.json();
+    if (!res.ok) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        data.error || 'Failed to fetch alerts'
+      );
+    }
+
+    var alerts = data.alerts;
+    if (!alerts || alerts.length === 0) {
+      return [['No active alerts. Use CRK.ALERT to create one.']];
+    }
+
+    var rows = [['Coin', 'Condition', 'Threshold', 'Created', 'ID']];
+    for (var i = 0; i < alerts.length; i++) {
+      var a = alerts[i];
+      rows.push([
+        a.coin_id,
+        a.alert_type,
+        a.threshold,
+        a.created_at ? a.created_at.split('T')[0] : '',
+        a.id,
+      ]);
+    }
+    return rows;
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Alert service unavailable'
+    );
+  }
+}
+
+/**
+ * Remove a specific alert by ID
+ * @customfunction
+ * @param {string} alertId Alert ID (from ALERTS() output)
+ * @returns {string} Confirmation
+ */
+async function ALERT_REMOVE(alertId) {
+  if (!alertId) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Provide alert ID (use CRK.ALERTS to see IDs)'
+    );
+  }
+
+  var token = await getAuthToken();
+  if (!token) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Sign in to manage alerts.'
+    );
+  }
+
+  try {
+    var res = await fetch(getServerOrigin() + '/api/v1/alerts/' + alertId, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+
+    var data = await res.json();
+    if (!res.ok) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        data.error || 'Failed to delete alert'
+      );
+    }
+
+    return 'Alert removed';
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Alert service unavailable'
+    );
+  }
+}
+
+// ============================================
+// WALLET & EXCHANGE BALANCE FUNCTIONS
+// ============================================
+
+var BLOCK_EXPLORERS = {
+  ethereum: { url: 'https://api.etherscan.io/api', symbol: 'ETH', decimals: 18, coinId: 'ethereum' },
+  eth: { url: 'https://api.etherscan.io/api', symbol: 'ETH', decimals: 18, coinId: 'ethereum' },
+  bsc: { url: 'https://api.bscscan.com/api', symbol: 'BNB', decimals: 18, coinId: 'binancecoin' },
+  polygon: { url: 'https://api.polygonscan.com/api', symbol: 'MATIC', decimals: 18, coinId: 'matic-network' },
+};
+
+/**
+ * Get wallet balance for a blockchain address
+ * @customfunction
+ * @param {string} address Wallet address
+ * @param {string} [chain] Chain: ethereum, bsc, polygon (default: ethereum)
+ * @returns {any[][]} Balance matrix with token, balance, and USD value
+ */
+async function WALLET(address, chain) {
+  if (!address || address.length < 10) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Provide a valid wallet address'
+    );
+  }
+
+  var chainKey = (chain || 'ethereum').toLowerCase();
+  var explorer = BLOCK_EXPLORERS[chainKey];
+  if (!explorer) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Supported chains: ethereum, bsc, polygon'
+    );
+  }
+
+  try {
+    var balanceUrl = explorer.url + '?module=account&action=balance&address=' + address + '&tag=latest';
+    var res = await fetch(balanceUrl);
+    var data = await res.json();
+
+    if (data.status !== '1' && data.message !== 'OK') {
+      throw new Error(data.result || 'Explorer API error');
+    }
+
+    var rawBalance = parseFloat(data.result);
+    var balance = rawBalance / Math.pow(10, explorer.decimals);
+
+    var priceData = await fetchFromCoinGecko('/simple/price', {
+      ids: explorer.coinId,
+      vs_currencies: 'usd',
+    });
+
+    var usdPrice = priceData[explorer.coinId]?.usd || 0;
+    var usdValue = balance * usdPrice;
+
+    return [
+      ['Token', 'Balance', 'Price (USD)', 'Value (USD)'],
+      [explorer.symbol, Math.round(balance * 1e8) / 1e8, Math.round(usdPrice * 100) / 100, Math.round(usdValue * 100) / 100],
+    ];
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Wallet fetch failed: ' + (error.message || 'unknown error')
+    );
+  }
+}
+
+/**
+ * Get exchange balance from connected exchange account
+ * @customfunction
+ * @param {string} exchange Exchange name: binance, coinbase
+ * @param {string} [asset] Specific asset to filter (e.g., "BTC"), or omit for all
+ * @returns {any[][]} Balance matrix
+ */
+async function EXCHANGE_BALANCE(exchange, asset) {
+  if (!exchange) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Provide exchange name: binance, coinbase'
+    );
+  }
+
+  var token = await getAuthToken();
+  if (!token) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Sign in to use exchange balance. Open taskpane to log in.'
+    );
+  }
+
+  try {
+    var url = getServerOrigin() + '/api/v1/exchange/' + exchange.toLowerCase() + '/balance';
+    if (asset) url += '?asset=' + encodeURIComponent(asset);
+
+    var res = await fetch(url, {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+
+    var data = await res.json();
+    if (!res.ok) {
+      throw new CustomFunctions.Error(
+        CustomFunctions.ErrorCode.invalidValue,
+        data.error || 'Exchange request failed'
+      );
+    }
+
+    if (!data.balances || data.balances.length === 0) {
+      return [['No balances found' + (asset ? ' for ' + asset : '')]];
+    }
+
+    var rows = [['Asset', 'Free', 'Locked', 'Total']];
+    for (var i = 0; i < data.balances.length; i++) {
+      var b = data.balances[i];
+      rows.push([b.asset, b.free, b.locked, b.total]);
+    }
+    return rows;
+  } catch (error) {
+    if (error instanceof CustomFunctions.Error) throw error;
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'Exchange service unavailable'
+    );
+  }
+}
+
+// ============================================
+// TAX-AWARE FORMULAS
+// ============================================
+
+/**
+ * Calculate cost basis for a coin using FIFO, LIFO, or AVG method
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} [method] Cost basis method: FIFO, LIFO, AVG (default: AVG)
+ * @returns {number} Average cost per unit
+ */
+async function COST_BASIS(coin, method) {
+  var portfolio = await getPortfolio();
+  var coinLower = coin.toLowerCase();
+  var costMethod = (method || 'AVG').toUpperCase();
+
+  // Get buy entries for this coin
+  var buys = [];
+  var sells = [];
+  for (var i = 0; i < portfolio.length; i++) {
+    if (portfolio[i].coin === coinLower) {
+      if (portfolio[i].type === 'sell') {
+        sells.push({ qty: portfolio[i].qty, price: portfolio[i].costBasis });
+      } else {
+        buys.push({ qty: portfolio[i].qty, price: portfolio[i].costBasis, date: portfolio[i].date });
+      }
+    }
+  }
+
+  if (buys.length === 0) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'No buy entries for ' + coin + '. Use PORTFOLIO_ADD first.'
+    );
+  }
+
+  if (costMethod === 'AVG') {
+    var totalCost = 0;
+    var totalQty = 0;
+    for (var j = 0; j < buys.length; j++) {
+      totalCost += buys[j].qty * buys[j].price;
+      totalQty += buys[j].qty;
+    }
+    return Math.round((totalCost / totalQty) * 100) / 100;
+  }
+
+  // FIFO or LIFO: sort buys, then match sells against them
+  var sortedBuys = buys.slice();
+  if (costMethod === 'FIFO') {
+    sortedBuys.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+  } else if (costMethod === 'LIFO') {
+    sortedBuys.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+  }
+
+  // Process sells to consume buy lots
+  var totalSellQty = 0;
+  for (var s = 0; s < sells.length; s++) totalSellQty += sells[s].qty;
+
+  var remaining = [];
+  var consumed = 0;
+  for (var k = 0; k < sortedBuys.length; k++) {
+    var buy = sortedBuys[k];
+    if (consumed < totalSellQty) {
+      var toConsume = Math.min(buy.qty, totalSellQty - consumed);
+      consumed += toConsume;
+      if (buy.qty > toConsume) {
+        remaining.push({ qty: buy.qty - toConsume, price: buy.price });
+      }
+    } else {
+      remaining.push({ qty: buy.qty, price: buy.price });
+    }
+  }
+
+  if (remaining.length === 0) return 0;
+  var remCost = 0;
+  var remQty = 0;
+  for (var r = 0; r < remaining.length; r++) {
+    remCost += remaining[r].qty * remaining[r].price;
+    remQty += remaining[r].qty;
+  }
+  return Math.round((remCost / remQty) * 100) / 100;
+}
+
+/**
+ * Calculate realized gains for a specific coin/year
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {number} [year] Tax year (default: current year)
+ * @returns {any[][]} Realized gains matrix
+ */
+async function REALIZED_GAIN(coin, year) {
+  var portfolio = await getPortfolio();
+  var coinLower = coin.toLowerCase();
+  var taxYear = year || new Date().getFullYear();
+
+  var buys = [];
+  var sells = [];
+  for (var i = 0; i < portfolio.length; i++) {
+    var entry = portfolio[i];
+    if (entry.coin !== coinLower) continue;
+    var entryYear = entry.date ? parseInt(entry.date.split('-')[0], 10) : new Date().getFullYear();
+    if (entry.type === 'sell') {
+      if (entryYear === taxYear) {
+        sells.push({ qty: entry.qty, price: entry.costBasis, date: entry.date });
+      }
+    } else {
+      buys.push({ qty: entry.qty, price: entry.costBasis, date: entry.date });
+    }
+  }
+
+  if (sells.length === 0) {
+    return [['No sells recorded for ' + coin + ' in ' + taxYear]];
+  }
+
+  // FIFO matching
+  buys.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+  var buyIndex = 0;
+  var buyRemaining = buys.length > 0 ? buys[0].qty : 0;
+
+  var rows = [['Date', 'Qty Sold', 'Sale Price', 'Cost Basis', 'Gain/Loss', 'Type']];
+  for (var s = 0; s < sells.length; s++) {
+    var sell = sells[s];
+    var sellRemaining = sell.qty;
+    var totalGain = 0;
+    var totalCost = 0;
+
+    while (sellRemaining > 0 && buyIndex < buys.length) {
+      var matchQty = Math.min(sellRemaining, buyRemaining);
+      totalCost += matchQty * buys[buyIndex].price;
+      totalGain += matchQty * (sell.price - buys[buyIndex].price);
+      sellRemaining -= matchQty;
+      buyRemaining -= matchQty;
+      if (buyRemaining <= 0) {
+        buyIndex++;
+        buyRemaining = buyIndex < buys.length ? buys[buyIndex].qty : 0;
+      }
+    }
+
+    var holdPeriod = 'short-term';
+    if (buys.length > 0 && sell.date && buys[0].date) {
+      var buyDate = new Date(buys[0].date);
+      var sellDate = new Date(sell.date);
+      if ((sellDate - buyDate) > 365 * 24 * 60 * 60 * 1000) {
+        holdPeriod = 'long-term';
+      }
+    }
+
+    rows.push([
+      sell.date || '',
+      sell.qty,
+      Math.round(sell.price * 100) / 100,
+      Math.round(totalCost * 100) / 100,
+      Math.round(totalGain * 100) / 100,
+      holdPeriod,
+    ]);
+  }
+
+  return rows;
+}
+
+/**
+ * Get tax summary for all portfolio holdings
+ * @customfunction
+ * @returns {any[][]} Tax summary matrix
+ */
+async function TAX_SUMMARY() {
+  var portfolio = await getPortfolio();
+  if (portfolio.length === 0) {
+    return [['No portfolio entries. Use PORTFOLIO_ADD first.']];
+  }
+
+  // Aggregate by coin
+  var coins = {};
+  for (var i = 0; i < portfolio.length; i++) {
+    var e = portfolio[i];
+    if (!coins[e.coin]) coins[e.coin] = { buys: 0, buyQty: 0, buyCost: 0, sells: 0, sellQty: 0, sellProceeds: 0 };
+    if (e.type === 'sell') {
+      coins[e.coin].sells++;
+      coins[e.coin].sellQty += e.qty;
+      coins[e.coin].sellProceeds += e.qty * e.costBasis;
+    } else {
+      coins[e.coin].buys++;
+      coins[e.coin].buyQty += e.qty;
+      coins[e.coin].buyCost += e.qty * e.costBasis;
+    }
+  }
+
+  // Fetch current prices
+  var coinIds = Object.keys(coins);
+  var priceData = {};
+  try {
+    var data = await fetchFromCoinGecko('/simple/price', {
+      ids: coinIds.join(','),
+      vs_currencies: 'usd',
+    });
+    for (var c = 0; c < coinIds.length; c++) {
+      if (data[coinIds[c]]) priceData[coinIds[c]] = data[coinIds[c]].usd || 0;
+    }
+  } catch (err) { /* continue with 0 */ }
+
+  var rows = [['Coin', 'Buys', 'Sells', 'Net Qty', 'Cost Basis', 'Current Value', 'Unrealized G/L', 'Realized G/L']];
+  for (var j = 0; j < coinIds.length; j++) {
+    var coinId = coinIds[j];
+    var info = coins[coinId];
+    var netQty = info.buyQty - info.sellQty;
+    var avgCost = info.buyQty > 0 ? info.buyCost / info.buyQty : 0;
+    var costOfRemaining = netQty * avgCost;
+    var currentPrice = priceData[coinId] || 0;
+    var currentValue = netQty * currentPrice;
+    var unrealizedGL = currentValue - costOfRemaining;
+    var realizedGL = info.sellProceeds - (info.sellQty * avgCost);
+
+    rows.push([
+      coinId,
+      info.buys,
+      info.sells,
+      Math.round(netQty * 1e8) / 1e8,
+      Math.round(costOfRemaining * 100) / 100,
+      Math.round(currentValue * 100) / 100,
+      Math.round(unrealizedGL * 100) / 100,
+      Math.round(realizedGL * 100) / 100,
+    ]);
+  }
+
+  return rows;
+}
+
+// ============================================
+// REGISTER ALL FUNCTIONS
+// ============================================
+
+// Cache & Portfolio (Free tier)
+CustomFunctions.associate('CACHE_STATUS', withTierCheck('CACHE_STATUS', CACHE_STATUS));
+CustomFunctions.associate('PORTFOLIO_ADD', withTierCheck('PORTFOLIO_ADD', PORTFOLIO_ADD));
+CustomFunctions.associate('PORTFOLIO_LIST', withTierCheck('PORTFOLIO_LIST', PORTFOLIO_LIST));
+CustomFunctions.associate('PORTFOLIO_VALUE', withTierCheck('PORTFOLIO_VALUE', PORTFOLIO_VALUE));
+CustomFunctions.associate('PORTFOLIO_PNL', withTierCheck('PORTFOLIO_PNL', PORTFOLIO_PNL));
+CustomFunctions.associate('PORTFOLIO_REMOVE', withTierCheck('PORTFOLIO_REMOVE', PORTFOLIO_REMOVE));
+
+// AI & Alerts
+CustomFunctions.associate('ASK', withTierCheck('ASK', ASK));
+CustomFunctions.associate('ALERT', withTierCheck('ALERT', ALERT));
+CustomFunctions.associate('ALERTS', withTierCheck('ALERTS', ALERTS));
+CustomFunctions.associate('ALERT_REMOVE', withTierCheck('ALERT_REMOVE', ALERT_REMOVE));
+
+// Wallet & Exchange (Pro+ only)
+CustomFunctions.associate('WALLET', withTierCheck('WALLET', WALLET));
+CustomFunctions.associate('EXCHANGE_BALANCE', withTierCheck('EXCHANGE_BALANCE', EXCHANGE_BALANCE));
+
+// Tax (Pro+ only)
+CustomFunctions.associate('COST_BASIS', withTierCheck('COST_BASIS', COST_BASIS));
+CustomFunctions.associate('REALIZED_GAIN', withTierCheck('REALIZED_GAIN', REALIZED_GAIN));
+CustomFunctions.associate('TAX_SUMMARY', withTierCheck('TAX_SUMMARY', TAX_SUMMARY));
+
+console.log('[CRK] All 85+ custom functions registered with usage tracking');

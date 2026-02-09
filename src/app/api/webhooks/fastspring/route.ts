@@ -128,6 +128,11 @@ function mapProductToKey(productRef: string | null, payload: any): string | null
   const PRODUCT_MAP: Record<string, string> = {
     'power-query-pro': 'power_query_pro',
     'power-query-enterprise': 'power_query_enterprise',
+    // CRK Add-in subscriptions
+    'crk-addin-pro-monthly': 'crk_addin_pro',
+    'crk-addin-pro-yearly': 'crk_addin_pro',
+    'crk-addin-premium-monthly': 'crk_addin_premium',
+    'crk-addin-premium-yearly': 'crk_addin_premium',
   };
 
   const normalized = productRef.toLowerCase();
@@ -237,6 +242,36 @@ export async function POST(request: NextRequest) {
       const { error } = await supabaseAdmin.from('pending_entitlements').insert(inserts);
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    }
+
+    // Handle CRK add-in subscription lifecycle (activate/cancel)
+    for (const p of purchases) {
+      if (!p.productKey?.startsWith('crk_addin_')) continue;
+
+      const tier = p.productKey === 'crk_addin_premium' ? 'premium' : 'pro';
+      const eventType = (p.eventType || '').toLowerCase();
+
+      // Find user by email
+      const { data: userRecord } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('email', p.email)
+        .limit(1)
+        .single();
+
+      if (!userRecord) continue;
+
+      if (eventType.includes('activated') || eventType.includes('renewed') || eventType.includes('completed')) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ plan: tier })
+          .eq('id', userRecord.id);
+      } else if (eventType.includes('deactivated') || eventType.includes('cancelled')) {
+        await supabaseAdmin
+          .from('profiles')
+          .update({ plan: 'free' })
+          .eq('id', userRecord.id);
       }
     }
 

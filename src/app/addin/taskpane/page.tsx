@@ -109,6 +109,21 @@ export default function TaskpanePage() {
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [planData, setPlanData] = useState<{
+    plan: string;
+    displayName: string;
+    limits: { dailyApiCalls: number; maxCoinsPerRequest: number };
+    quotas: {
+      apiCalls: { used: number; limit: number; remaining: number; resetAt: string };
+    };
+    coingeckoLimits?: {
+      free: { callsPerMinute: number };
+      pro: { callsPerMinute: number };
+      hasProKey: boolean;
+    };
+  } | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const [localUsageCount, setLocalUsageCount] = useState<number | null>(null);
 
   // Initialize Office.js and check for existing token
   useEffect(() => {
@@ -283,11 +298,88 @@ export default function TaskpanePage() {
     setProviders(status);
   }, [user]);
 
+  // Load plan data (quotas, limits, usage)
+  const loadPlanData = useCallback(async () => {
+    if (!user) return;
+
+    setUsageLoading(true);
+    try {
+      let token: string | null = null;
+      try {
+        if (typeof OfficeRuntime !== 'undefined') {
+          token = await OfficeRuntime.storage.getItem('crk_auth_token');
+        }
+        if (!token) token = localStorage.getItem('crk_auth_token');
+      } catch {
+        token = localStorage.getItem('crk_auth_token');
+      }
+
+      if (!token) return;
+
+      const res = await fetch('/api/v1/me/plan', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlanData({
+          plan: data.subscription?.plan || 'free',
+          displayName: data.subscription?.displayName || 'Free',
+          limits: data.subscription?.limits || { dailyApiCalls: 100, maxCoinsPerRequest: 10 },
+          quotas: data.quotas || { apiCalls: { used: 0, limit: 100, remaining: 100, resetAt: '' } },
+          coingeckoLimits: data.coingeckoLimits,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load plan data:', err);
+    } finally {
+      setUsageLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       loadProviderStatus();
+      loadPlanData();
+
+      // Refresh plan data every 60 seconds
+      const interval = setInterval(loadPlanData, 60000);
+      return () => clearInterval(interval);
     }
-  }, [user, loadProviderStatus]);
+  }, [user, loadProviderStatus, loadPlanData]);
+
+  // Poll local usage counter from OfficeRuntime.storage every 5 seconds
+  // This provides near-real-time updates without waiting for server round-trip
+  useEffect(() => {
+    if (!user) return;
+
+    const pollLocalUsage = async () => {
+      try {
+        let count: string | null = null;
+        let date: string | null = null;
+        const today = new Date().toISOString().split('T')[0];
+
+        if (typeof OfficeRuntime !== 'undefined' && OfficeRuntime.storage) {
+          count = await OfficeRuntime.storage.getItem('crk_usage_today');
+          date = await OfficeRuntime.storage.getItem('crk_usage_date');
+        } else {
+          count = localStorage.getItem('crk_usage_today');
+          date = localStorage.getItem('crk_usage_date');
+        }
+
+        if (date === today && count) {
+          setLocalUsageCount(parseInt(count, 10) || 0);
+        } else {
+          setLocalUsageCount(0);
+        }
+      } catch {
+        // Non-critical - fall back to server data
+      }
+    };
+
+    pollLocalUsage();
+    const interval = setInterval(pollLocalUsage, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Detect workbook mode (pack vs formula)
   const detectWorkbookMode = useCallback(async () => {
@@ -567,6 +659,9 @@ export default function TaskpanePage() {
         </button>
       </div>
 
+      {/* Usage Dashboard */}
+      <UsageDashboard planData={planData} loading={usageLoading} localUsageCount={localUsageCount} />
+
       {/* Workbook Mode Indicator */}
       {workbookMode === 'pack' && packRecipe && (
         <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
@@ -636,26 +731,84 @@ export default function TaskpanePage() {
         </div>
       </div>
 
-      {/* Quick Functions */}
+      {/* Quick Insert - Categorized */}
       <div className="mb-6">
         <h2 className="text-sm font-semibold mb-3">Quick Insert</h2>
-        <div className="grid grid-cols-2 gap-2">
+
+        <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Price & Market</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
           <QuickInsertButton formula='=CRK.PRICE("bitcoin")' label="BTC Price" officeReady={officeReady} />
           <QuickInsertButton formula='=CRK.PRICE("ethereum")' label="ETH Price" officeReady={officeReady} />
           <QuickInsertButton formula='=CRK.CHANGE24H("bitcoin")' label="BTC 24h%" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.MARKETCAP("bitcoin")' label="BTC MCap" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.VOLUME("bitcoin")' label="BTC Volume" officeReady={officeReady} />
           <QuickInsertButton formula='=CRK.OHLCV("bitcoin",30)' label="BTC OHLCV" officeReady={officeReady} />
+        </div>
+
+        <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Technical</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <QuickInsertButton formula='=CRK.RSI("bitcoin",14)' label="BTC RSI" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.SMA("bitcoin",20)' label="BTC SMA20" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.EMA("bitcoin",20)' label="BTC EMA20" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.BB("bitcoin",20)' label="BTC Bollinger" officeReady={officeReady} />
+        </div>
+
+        <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Market</p>
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          <QuickInsertButton formula='=CRK.GLOBAL("total_market_cap")' label="Total MCap" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.GLOBAL("btc_dominance")' label="BTC Dominance" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.FEARGREED()' label="Fear & Greed" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.TRENDING()' label="Trending" officeReady={officeReady} />
+        </div>
+
+        <p className="text-[10px] text-gray-500 mb-2 uppercase tracking-wider">Discovery</p>
+        <div className="grid grid-cols-2 gap-2">
+          <QuickInsertButton formula='=CRK.TOP(20)' label="Top 20" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.GAINERS(10)' label="Top Gainers" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.LOSERS(10)' label="Top Losers" officeReady={officeReady} />
+          <QuickInsertButton formula='=CRK.DEFI_TOP(10)' label="DeFi Top 10" officeReady={officeReady} />
         </div>
       </div>
 
-      {/* Function Reference */}
+      {/* Function Reference - Collapsible Categories */}
       <div className="mb-6">
-        <h2 className="text-sm font-semibold mb-3">Available Functions</h2>
-        <div className="space-y-2 text-xs">
-          <FunctionHelp name="CRK.PRICE" args='coin, [currency]' example='=CRK.PRICE("bitcoin")' />
-          <FunctionHelp name="CRK.CHANGE24H" args='coin' example='=CRK.CHANGE24H("ethereum")' />
-          <FunctionHelp name="CRK.MARKETCAP" args='coin, [currency]' example='=CRK.MARKETCAP("bitcoin")' />
-          <FunctionHelp name="CRK.OHLCV" args='coin, [days]' example='=CRK.OHLCV("bitcoin",30)' />
-          <FunctionHelp name="CRK.INFO" args='coin, field' example='=CRK.INFO("bitcoin","rank")' />
+        <h2 className="text-sm font-semibold mb-3">Function Reference</h2>
+        <div className="space-y-1">
+          <FunctionCategory title="Price & Market" tier="free" functions={[
+            { name: 'CRK.PRICE', args: 'coin, [currency]', example: '=CRK.PRICE("bitcoin")' },
+            { name: 'CRK.CHANGE24H', args: 'coin', example: '=CRK.CHANGE24H("ethereum")' },
+            { name: 'CRK.MARKETCAP', args: 'coin, [currency]', example: '=CRK.MARKETCAP("bitcoin")' },
+            { name: 'CRK.VOLUME', args: 'coin, [currency]', example: '=CRK.VOLUME("bitcoin")' },
+            { name: 'CRK.OHLCV', args: 'coin, [days], [currency]', example: '=CRK.OHLCV("bitcoin",30)' },
+          ]} />
+          <FunctionCategory title="Coin Details" tier="free" functions={[
+            { name: 'CRK.INFO', args: 'coin, field', example: '=CRK.INFO("bitcoin","rank")' },
+            { name: 'CRK.RANK', args: 'coin', example: '=CRK.RANK("bitcoin")' },
+            { name: 'CRK.SEARCH', args: 'query', example: '=CRK.SEARCH("btc")' },
+            { name: 'CRK.ATH', args: 'coin, [currency]', example: '=CRK.ATH("bitcoin")' },
+            { name: 'CRK.ATL', args: 'coin, [currency]', example: '=CRK.ATL("bitcoin")' },
+          ]} />
+          <FunctionCategory title="Technical Indicators" tier="pro" functions={[
+            { name: 'CRK.RSI', args: 'coin, [period]', example: '=CRK.RSI("bitcoin",14)' },
+            { name: 'CRK.SMA', args: 'coin, [period]', example: '=CRK.SMA("bitcoin",20)' },
+            { name: 'CRK.EMA', args: 'coin, [period]', example: '=CRK.EMA("bitcoin",20)' },
+            { name: 'CRK.BB', args: 'coin, [period]', example: '=CRK.BB("bitcoin",20)' },
+            { name: 'CRK.MACD', args: 'coin', example: '=CRK.MACD("bitcoin")' },
+            { name: 'CRK.VWAP', args: 'coin, [days]', example: '=CRK.VWAP("bitcoin",7)' },
+          ]} />
+          <FunctionCategory title="Global & Sentiment" tier="free" functions={[
+            { name: 'CRK.GLOBAL', args: 'metric', example: '=CRK.GLOBAL("total_market_cap")' },
+            { name: 'CRK.FEARGREED', args: '', example: '=CRK.FEARGREED()' },
+            { name: 'CRK.TRENDING', args: '', example: '=CRK.TRENDING()' },
+            { name: 'CRK.DOMINANCE', args: '[coin]', example: '=CRK.DOMINANCE("bitcoin")' },
+          ]} />
+          <FunctionCategory title="Discovery & Compare" tier="pro" functions={[
+            { name: 'CRK.TOP', args: '[count]', example: '=CRK.TOP(20)' },
+            { name: 'CRK.GAINERS', args: '[count]', example: '=CRK.GAINERS(10)' },
+            { name: 'CRK.LOSERS', args: '[count]', example: '=CRK.LOSERS(10)' },
+            { name: 'CRK.DEFI_TOP', args: '[count]', example: '=CRK.DEFI_TOP(10)' },
+            { name: 'CRK.COMPARE', args: 'coins, metric', example: '=CRK.COMPARE("bitcoin,ethereum","price")' },
+          ]} />
         </div>
       </div>
 
@@ -892,6 +1045,187 @@ function FunctionHelp({
     <div className="p-2 bg-gray-800 rounded">
       <div className="font-mono text-emerald-400">{name}({args})</div>
       <div className="text-gray-500 font-mono mt-1">{example}</div>
+    </div>
+  );
+}
+
+// Usage Dashboard Component
+function UsageDashboard({
+  planData,
+  loading,
+  localUsageCount,
+}: {
+  planData: {
+    plan: string;
+    displayName: string;
+    limits: { dailyApiCalls: number; maxCoinsPerRequest: number };
+    quotas: {
+      apiCalls: { used: number; limit: number; remaining: number; resetAt: string };
+    };
+    coingeckoLimits?: {
+      free: { callsPerMinute: number };
+      pro: { callsPerMinute: number };
+      hasProKey: boolean;
+    };
+  } | null;
+  loading: boolean;
+  localUsageCount: number | null;
+}) {
+  if (loading && !planData) {
+    return (
+      <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg animate-pulse">
+        <div className="h-4 bg-gray-700 rounded w-1/3 mb-2" />
+        <div className="h-3 bg-gray-700 rounded w-2/3" />
+      </div>
+    );
+  }
+
+  if (!planData) return null;
+
+  const { plan, displayName, quotas, coingeckoLimits } = planData;
+  const serverUsed = quotas.apiCalls.used;
+  const limit = quotas.apiCalls.limit;
+  const resetAt = quotas.apiCalls.resetAt;
+
+  // Use the higher of local count vs server count for real-time accuracy
+  // Local counter updates instantly on each call, server syncs every 10 calls
+  const used = localUsageCount !== null ? Math.max(localUsageCount, serverUsed) : serverUsed;
+  const remaining = Math.max(0, limit - used);
+  const pct = limit > 0 ? (used / limit) * 100 : 0;
+
+  // Progress bar color
+  const barColor = pct < 60 ? 'bg-emerald-500' : pct < 85 ? 'bg-yellow-500' : 'bg-red-500';
+
+  // Plan badge color
+  const badgeColor =
+    plan === 'premium' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' :
+    plan === 'pro' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+    'bg-gray-700 text-gray-400 border-gray-600';
+
+  // Countdown to reset
+  const resetTime = resetAt ? new Date(resetAt) : null;
+  const now = new Date();
+  const msLeft = resetTime ? resetTime.getTime() - now.getTime() : 0;
+  const hoursLeft = Math.max(0, Math.floor(msLeft / 3600000));
+  const minsLeft = Math.max(0, Math.floor((msLeft % 3600000) / 60000));
+
+  const cgRate = coingeckoLimits?.hasProKey
+    ? `${coingeckoLimits.pro.callsPerMinute}/min (Pro key)`
+    : `${coingeckoLimits?.free.callsPerMinute || 30}/min (free key)`;
+
+  return (
+    <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+      {/* Plan badge + upgrade link */}
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${badgeColor}`}>
+          {displayName}
+        </span>
+        {plan === 'free' && (
+          <a
+            href="https://cryptoreportkit.com/pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-emerald-400 hover:text-emerald-300"
+          >
+            Upgrade
+          </a>
+        )}
+      </div>
+
+      {/* API Calls Today */}
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[11px] text-gray-400">API Calls Today</span>
+        <span className="text-[11px] text-gray-300 font-mono">{used} / {limit.toLocaleString()}</span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full h-1.5 bg-gray-700 rounded-full mb-1.5">
+        <div
+          className={`h-full rounded-full transition-all ${barColor}`}
+          style={{ width: `${Math.min(pct, 100)}%` }}
+        />
+      </div>
+
+      {/* Remaining + reset countdown */}
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] text-gray-500">{remaining.toLocaleString()} remaining</span>
+        {resetTime && msLeft > 0 && (
+          <span className="text-[10px] text-gray-500">Resets in {hoursLeft}h {minsLeft}m</span>
+        )}
+      </div>
+
+      {/* CoinGecko rate limit */}
+      <div className="text-[10px] text-gray-500 border-t border-gray-700 pt-2">
+        CoinGecko rate: {cgRate}
+      </div>
+
+      {/* Upgrade CTA when >80% used on free tier */}
+      {plan === 'free' && pct > 80 && (
+        <div className="mt-2 p-2 bg-amber-900/20 border border-amber-500/30 rounded">
+          <p className="text-[10px] text-amber-400 font-medium mb-1">Running low on API calls</p>
+          <p className="text-[10px] text-amber-400/70">
+            Upgrade to Pro for 5,000 daily calls + all 70+ functions.
+          </p>
+          <a
+            href="https://cryptoreportkit.com/pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-1 text-[10px] text-emerald-400 hover:text-emerald-300 font-medium"
+          >
+            View plans &rarr;
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Collapsible Function Category Component
+function FunctionCategory({
+  title,
+  tier,
+  functions,
+}: {
+  title: string;
+  tier: 'free' | 'pro';
+  functions: Array<{ name: string; args: string; example: string }>;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const tierBadge = tier === 'pro' ? (
+    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+      Pro
+    </span>
+  ) : (
+    <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-gray-700 text-gray-400 border border-gray-600">
+      Free
+    </span>
+  );
+
+  return (
+    <div className="border border-gray-700 rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-2 bg-gray-800 hover:bg-gray-750 transition-colors text-left"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-300">{title}</span>
+          {tierBadge}
+          <span className="text-[10px] text-gray-500">({functions.length})</span>
+        </div>
+        <span className="text-gray-500 text-xs">{isOpen ? '▾' : '▸'}</span>
+      </button>
+      {isOpen && (
+        <div className="p-2 space-y-1.5 bg-gray-800/50">
+          {functions.map((fn) => (
+            <div key={fn.name} className="p-1.5 rounded bg-gray-800">
+              <div className="font-mono text-[11px] text-emerald-400">{fn.name}({fn.args})</div>
+              <div className="text-gray-500 font-mono text-[10px] mt-0.5">{fn.example}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

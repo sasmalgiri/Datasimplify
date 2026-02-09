@@ -680,6 +680,140 @@
         { "name": "days", "description": "Number of days (default: 1)", "type": "number", "optional": true }
       ],
       "result": { "type": "number" }
+    },
+    {
+      "id": "CACHE_STATUS",
+      "name": "CACHE_STATUS",
+      "description": "Show persistent cache status (how many values served from cache)",
+      "parameters": [],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "PORTFOLIO_ADD",
+      "name": "PORTFOLIO_ADD",
+      "description": "Add a buy/sell entry to your portfolio tracker",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., 'bitcoin')", "type": "string" },
+        { "name": "qty", "description": "Quantity bought or sold", "type": "number" },
+        { "name": "price", "description": "Price per unit at purchase/sale", "type": "number" },
+        { "name": "date", "description": "Transaction date YYYY-MM-DD (default: today)", "type": "string", "optional": true },
+        { "name": "type", "description": "Transaction type: 'buy' or 'sell' (default: buy)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "PORTFOLIO_LIST",
+      "name": "PORTFOLIO_LIST",
+      "description": "List all portfolio holdings with current values and PNL",
+      "parameters": [],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "PORTFOLIO_VALUE",
+      "name": "PORTFOLIO_VALUE",
+      "description": "Get total portfolio value in USD",
+      "parameters": [],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "PORTFOLIO_PNL",
+      "name": "PORTFOLIO_PNL",
+      "description": "Get total unrealized profit/loss across portfolio",
+      "parameters": [],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "PORTFOLIO_REMOVE",
+      "name": "PORTFOLIO_REMOVE",
+      "description": "Remove a coin from portfolio (all entries or specific index)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID to remove", "type": "string" },
+        { "name": "index", "description": "Specific entry index (1-based, removes all if omitted)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "ASK",
+      "name": "ASK",
+      "description": "Ask CRK AI a question about crypto markets (5/day free, 50/day pro)",
+      "parameters": [
+        { "name": "question", "description": "Your question about crypto markets", "type": "string" }
+      ],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "ALERT",
+      "name": "ALERT",
+      "description": "Create a price alert (Pro+). Get notified when price crosses threshold.",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., 'bitcoin')", "type": "string" },
+        { "name": "condition", "description": "Direction: '>' or 'above', '<' or 'below'", "type": "string" },
+        { "name": "threshold", "description": "Price threshold in USD", "type": "number" }
+      ],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "ALERTS",
+      "name": "ALERTS",
+      "description": "List all active price alerts (Pro+)",
+      "parameters": [],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "ALERT_REMOVE",
+      "name": "ALERT_REMOVE",
+      "description": "Remove a price alert by ID (Pro+)",
+      "parameters": [
+        { "name": "alertId", "description": "Alert ID from ALERTS() output", "type": "string" }
+      ],
+      "result": { "type": "string" }
+    },
+    {
+      "id": "WALLET",
+      "name": "WALLET",
+      "description": "Get wallet balance for a blockchain address (Pro+). Returns native token balance and USD value.",
+      "parameters": [
+        { "name": "address", "description": "Wallet address (0x...)", "type": "string" },
+        { "name": "chain", "description": "Chain: ethereum, bsc, polygon (default: ethereum)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "EXCHANGE_BALANCE",
+      "name": "EXCHANGE_BALANCE",
+      "description": "Get exchange balance from connected Binance/Coinbase account (Pro+)",
+      "parameters": [
+        { "name": "exchange", "description": "Exchange: binance, coinbase", "type": "string" },
+        { "name": "asset", "description": "Specific asset (e.g., 'BTC'), omit for all", "type": "string", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "COST_BASIS",
+      "name": "COST_BASIS",
+      "description": "Calculate cost basis per unit using FIFO, LIFO, or AVG method (Pro+)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "method", "description": "Method: FIFO, LIFO, AVG (default: AVG)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "REALIZED_GAIN",
+      "name": "REALIZED_GAIN",
+      "description": "Calculate realized gains/losses for a coin in a given tax year (Pro+)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID", "type": "string" },
+        { "name": "year", "description": "Tax year (default: current year)", "type": "number", "optional": true }
+      ],
+      "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "TAX_SUMMARY",
+      "name": "TAX_SUMMARY",
+      "description": "Get full tax summary for all portfolio holdings with unrealized and realized gains (Pro+)",
+      "parameters": [],
+      "result": { "type": "array", "dimensionality": "matrix" }
     }
   ]
 }

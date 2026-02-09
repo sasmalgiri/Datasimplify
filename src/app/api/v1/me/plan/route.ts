@@ -9,20 +9,17 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { PLAN_LIMITS as ENTITLEMENT_LIMITS } from '@/lib/entitlements';
 
-// Plan limits configuration
+// Plan limits - extends entitlement limits with additional fields
 const PLAN_LIMITS = {
   free: {
-    dailyApiCalls: 100,
-    scheduledExports: 0,
-    maxCoinsPerRequest: 25,
+    ...ENTITLEMENT_LIMITS.free,
     maxReportRecipes: 3,
     features: ['basic_templates', 'manual_refresh'],
   },
   pro: {
-    dailyApiCalls: 5000,
-    scheduledExports: 5,
-    maxCoinsPerRequest: 100,
+    ...ENTITLEMENT_LIMITS.pro,
     maxReportRecipes: 25,
     features: [
       'basic_templates',
@@ -33,9 +30,7 @@ const PLAN_LIMITS = {
     ],
   },
   premium: {
-    dailyApiCalls: 50000,
-    scheduledExports: 25,
-    maxCoinsPerRequest: 500,
+    ...ENTITLEMENT_LIMITS.premium,
     maxReportRecipes: 100,
     features: [
       'basic_templates',
@@ -185,6 +180,19 @@ export async function GET() {
         connected: !!connectedProviders['messari']?.connected,
         isValid: connectedProviders['messari']?.isValid ?? false,
       },
+    },
+    coingeckoLimits: {
+      free: {
+        callsPerMinute: 30,
+        monthlyCredits: null,
+        note: 'CoinGecko Demo API: ~30 calls/min, no monthly cap',
+      },
+      pro: {
+        callsPerMinute: 500,
+        monthlyCredits: 500000,
+        note: 'CoinGecko Pro/Analyst: 500 calls/min, 500k/month',
+      },
+      hasProKey: !!connectedProviders['coingecko']?.connected && (connectedProviders['coingecko']?.isValid ?? false),
     },
   });
 }
