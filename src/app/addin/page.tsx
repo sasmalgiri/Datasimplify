@@ -37,7 +37,7 @@ export default function AddinPage() {
                 Live Crypto Data in Excel
               </h1>
               <p className="text-xl text-gray-300 mb-8">
-                70+ custom functions for cryptocurrency data. Get real-time prices,
+                85+ custom functions for cryptocurrency data. Get real-time prices,
                 historical OHLCV, market metrics, technical indicators, and more -
                 directly in your Excel spreadsheets.
               </p>
@@ -107,7 +107,7 @@ export default function AddinPage() {
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             The CRK Add-in brings professional cryptocurrency data directly into Excel
-            with 70+ custom functions.
+            with 85+ custom functions.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ export default function AddinPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              70+ Custom Functions
+              85+ Custom Functions
             </h2>
             <p className="text-lg text-gray-600">
               Comprehensive cryptocurrency data at your fingertips

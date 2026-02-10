@@ -105,17 +105,23 @@ export default function DownloadsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
-                  <div className="text-lg font-semibold">Excel Add-in (Coming Soon)</div>
+                <div className="bg-gray-800/40 border border-emerald-500/30 rounded-xl p-5">
+                  <div className="text-lg font-semibold">Excel Add-in</div>
                   <div className="text-gray-400 text-sm mt-1">
-                    We're submitting the add-in to Microsoft so you can install it directly from Excel.
+                    Install the CRK add-in for 85+ live crypto formulas directly in Excel. Use =CRK.PRICE(&quot;bitcoin&quot;) and more.
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
-                      href="/coming-soon?feature=excel_addin"
+                      href="/addin/setup"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition text-white"
+                    >
+                      Install Add-in
+                    </Link>
+                    <Link
+                      href="/addin"
                       className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
                     >
-                      Notify me
+                      Learn More
                     </Link>
                   </div>
                 </div>

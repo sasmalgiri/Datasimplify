@@ -24,32 +24,54 @@ export default function AddinSetupPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
             <FileSpreadsheet className="w-4 h-4" />
-            Excel Add-in (Private Preview)
+            Excel Add-in
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            CRK Excel Add-in Manual Setup (Preview)
+            Install CRK Excel Add-in
           </h1>
           <p className="text-lg text-gray-600">
-            Manual sideload instructions for early access. Public release is coming soon via Microsoft.
+            Get 85+ live crypto formulas directly in Excel. Download the manifest and install in under 2 minutes.
           </p>
         </div>
 
-        {/* Important Notice - Not yet in Microsoft Store */}
-        <div className="bg-amber-50 border-2 border-amber-400 rounded-xl p-6 mb-12">
+        {/* Install Note */}
+        <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-6 mb-12">
           <div className="flex items-start gap-4">
-            <div className="text-3xl">⚠️</div>
+            <div className="text-3xl">&#x1F4E6;</div>
             <div>
-              <h2 className="text-xl font-bold text-amber-900 mb-2">
-                Important: Not Yet Available via Microsoft
+              <h2 className="text-xl font-bold text-emerald-900 mb-2">
+                Quick Install via Sideload
               </h2>
-              <p className="text-amber-800 mb-3">
-                The CRK Excel Add-in is <strong>not yet available from the Microsoft Store/AppSource</strong>.
-                While we wait for review, this page provides a manual sideload option for private preview use.
+              <p className="text-emerald-800 mb-3">
+                Install the CRK add-in by uploading a small manifest file to Excel. It&apos;s a <strong>one-time setup</strong> that takes under 2 minutes.
               </p>
-              <ul className="text-sm text-amber-700 space-y-1 ml-4 list-disc">
-                <li>Download the manifest file from this page</li>
-                <li>Install it in Excel using the &quot;Upload My Add-in&quot; option</li>
-                <li>This is a one-time setup - the add-in will persist across sessions</li>
+              <ul className="text-sm text-emerald-700 space-y-1 ml-4 list-disc">
+                <li>Download the manifest file below</li>
+                <li>Upload it in Excel via <strong>Insert &rarr; My Add-ins &rarr; Upload My Add-in</strong></li>
+                <li>The add-in persists across sessions - no need to re-install</li>
+              </ul>
+              <p className="text-xs text-emerald-600 mt-3">
+                Microsoft AppSource listing coming soon for one-click install.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dual-Mode Note */}
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-12">
+          <div className="flex items-start gap-4">
+            <div className="text-3xl">&#x1F504;</div>
+            <div>
+              <h2 className="text-xl font-bold text-blue-900 mb-2">
+                Dual-Mode: Add-in is Optional
+              </h2>
+              <p className="text-blue-800 mb-3">
+                Our <Link href="/templates" className="underline font-semibold hover:text-blue-900">Excel templates</Link> work <strong>with or without</strong> this add-in:
+              </p>
+              <ul className="text-sm text-blue-700 space-y-1 ml-4 list-disc">
+                <li><strong>Without add-in:</strong> Templates use Power Query to fetch live data from CoinGecko. Just click &quot;Refresh All&quot; in Excel.</li>
+                <li><strong>With add-in:</strong> Templates also include CRK formulas (=CRK.PRICE, =CRK.TOP, etc.) that resolve instantly for a richer experience.</li>
+                <li>Both modes use <strong>BYOK</strong> - your API key stays in your Excel file, never on our servers.</li>
               </ul>
             </div>
           </div>

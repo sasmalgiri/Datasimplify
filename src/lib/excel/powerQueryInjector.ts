@@ -138,8 +138,16 @@ function buildPackageZip(queries: PowerQueryDefinition[]): Uint8Array {
   // Build Section1.m content (all queries in one section file)
   const sectionM = buildSectionM(queries);
 
+  // OPC [Content_Types].xml - required for the inner package to be valid
+  const contentTypesXml = `<?xml version="1.0" encoding="utf-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="text/xml" />
+  <Default Extension="m" ContentType="application/x-ms-m" />
+</Types>`;
+
   // We need a synchronous ZIP. Build a minimal one manually.
   return createMinimalZip({
+    '[Content_Types].xml': new TextEncoder().encode(contentTypesXml),
     'Config/Package.xml': new TextEncoder().encode(packageXml),
     'Formulas/Section1.m': new TextEncoder().encode(sectionM),
   });
@@ -376,7 +384,7 @@ function buildCustomXmlItemProps(): string {
 function buildConnectionsXml(queries: PowerQueryDefinition[]): string {
   const connections = queries.map((q, i) => {
     const connId = i + 1;
-    return `  <connection id="${connId}" name="Query - ${q.name}" description="${escapeXml(q.description)}" type="5" refreshedVersion="6" background="1" saveData="1">
+    return `  <connection id="${connId}" keepAlive="1" name="Query - ${q.name}" description="${escapeXml(q.description)}" type="5" refreshedVersion="0" background="1">
     <dbPr connection="Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=${q.name};Extended Properties=&quot;&quot;" command="SELECT * FROM [${q.name}]" />
   </connection>`;
   }).join('\n');

@@ -75,13 +75,13 @@ export default function DownloadPage() {
               <span className="font-semibold text-white">Power Query templates</span> are generated here.
               <span className="text-gray-400"> Prefer formulas like </span>
               <span className="text-gray-200">=CRK.PRICE(...)</span>
-              <span className="text-gray-400">? The add-in is coming soon via Microsoft.</span>
+              <span className="text-gray-400">? Install the CRK Excel Add-in.</span>
             </div>
             <Link
-              href="/coming-soon?feature=excel_addin"
-              className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg hover:bg-gray-700 transition text-sm font-medium text-white"
+              href="/addin/setup"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition text-sm font-medium text-white"
             >
-              Add-in (Coming Soon)
+              Install Add-in
             </Link>
           </div>
         </div>
