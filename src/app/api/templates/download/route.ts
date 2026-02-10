@@ -1,8 +1,9 @@
 /**
  * Template Download API Route
  *
- * Generates and returns Excel templates with CRK formulas.
- * No data redistribution - templates contain formulas only.
+ * Generates Excel templates with LIVE DATA via Power Query.
+ * Fetches real-time data from CoinGecko during generation,
+ * and includes Power Query M code for auto-refresh.
  *
  * Security features:
  * - IP-based rate limiting (10 downloads/15min per IP)
@@ -13,12 +14,10 @@
 
 import { NextResponse } from 'next/server';
 import {
-  generateTemplate,
-  validateUserConfig,
-  type UserTemplateConfig,
-  type ContentType,
-} from '@/lib/templates/generator';
-import type { TemplateType } from '@/lib/templates/templateConfig';
+  generateMasterExcel,
+  type DashboardType,
+} from '@/lib/excel/masterGenerator';
+import type { ContentType } from '@/lib/templates/generator';
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/security/apiRateLimit';
 import { isValidEmail, sanitizeEmail, validateCoinSymbols, detectBotBehavior } from '@/lib/security/validation';
@@ -168,147 +167,135 @@ export async function POST(request: Request) {
     const validContentTypes: ContentType[] = ['formulas_only', 'addin', 'native_charts'];
     const contentType: ContentType = validContentTypes.includes(body.contentType)
       ? body.contentType
-      : 'addin';
+      : 'native_charts';
 
     // Sanitize coin symbols (alphanumeric only, max 100)
     const sanitizedCoins = validateCoinSymbols(body.coins);
 
-    // Validate timeframe
-    const validTimeframes = ['1h', '4h', '24h', '1d', '7d', '30d', '1m', '3m', '1y'];
-    const timeframe = validTimeframes.includes(body.timeframe) ? body.timeframe : '24h';
+    // Validate timeframe → days for master generator
+    const TIMEFRAME_TO_DAYS: Record<string, number> = {
+      '1h': 1, '4h': 1, '24h': 1, '1d': 1, '7d': 7, '30d': 30, '1m': 30, '3m': 90, '1y': 365,
+    };
+    const days = TIMEFRAME_TO_DAYS[body.timeframe] || 30;
 
-    // Validate currency
-    const validCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'BTC', 'ETH'];
-    const currency = validCurrencies.includes(body.currency?.toUpperCase()) ? body.currency.toUpperCase() : 'USD';
+    // Map coin symbols to CoinGecko IDs
+    const SYMBOL_TO_ID: Record<string, string> = {
+      'BTC': 'bitcoin', 'ETH': 'ethereum', 'SOL': 'solana', 'BNB': 'binancecoin',
+      'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'DOT': 'polkadot',
+      'AVAX': 'avalanche-2', 'MATIC': 'matic-network', 'LINK': 'chainlink',
+      'UNI': 'uniswap', 'ATOM': 'cosmos', 'LTC': 'litecoin', 'FIL': 'filecoin',
+      'NEAR': 'near', 'APT': 'aptos', 'ARB': 'arbitrum', 'OP': 'optimism',
+      'SUI': 'sui', 'SEI': 'sei-network', 'TIA': 'celestia', 'INJ': 'injective-protocol',
+      'SHIB': 'shiba-inu', 'PEPE': 'pepe', 'TRX': 'tron', 'TON': 'the-open-network',
+    };
+    const coinIds = sanitizedCoins.map(s => SYMBOL_TO_ID[s.toUpperCase()] || s.toLowerCase());
 
-    // Map kit template names to valid TemplateTypes
-    const TEMPLATE_TYPE_MAP: Record<string, string> = {
-      // Portfolio Starter Kit templates
-      'holdings': 'portfolio_tracker',
-      'prices': 'watchlist',
-      'allocation': 'portfolio_tracker',
-      'performance': 'portfolio_tracker',
-      'settings': 'watchlist',
-
-      // Market Overview templates
-      'global': 'market_overview',
-      'top_coins': 'screener',
-      'trending': 'gainers_losers',
-      'dominance': 'market_overview',
-      'heatmap': 'market_overview',
-      'movers': 'gainers_losers',
-      'sentiment': 'social_sentiment',
-
-      // Trader Chart templates
-      'candles': 'ohlcv_history',
-      'indicators': 'technical_indicators',
-      'signals': 'technical_indicators',
-
-      // Screener Watchlist templates
+    // Map template type → master generator dashboard type
+    const TEMPLATE_TO_DASHBOARD: Record<string, DashboardType> = {
+      // Direct mappings
       'screener': 'screener',
-      'watchlist': 'watchlist',
-      'filters': 'screener',
-      'results': 'screener',
-      'alerts': 'alerts_summary',
-
-      // Coin Research templates
-      'snapshot': 'compare',
-      'fundamentals': 'compare',
-      'history': 'ohlcv_history',
-      'comparison': 'compare',
-
-      // Correlation & Risk templates
-      'matrix': 'correlation_matrix',
-      'correlation_matrix': 'correlation_matrix',
-      'rolling_corr': 'correlation_matrix',
-      'volatility': 'risk_dashboard',
-      'drawdown': 'risk_dashboard',
-      'risk_score': 'risk_dashboard',
-      'trend': 'ohlcv_history',
-
-      // DeFi templates
-      'protocols_list': 'defi_tvl',
-      'tvl_trend': 'defi_tvl',
-      'top_chains': 'defi_tvl',
-
-      // Stablecoin Monitor templates
-      'stablecoin_table': 'market_overview',
-      'dominance_view': 'market_overview',
-      'changes': 'gainers_losers',
-      'marketcap': 'market_overview',
-
-      // Fear & Greed
-      'fear_greed': 'fear_greed',
-      'fear_greed_index': 'fear_greed',
+      'market_overview': 'market-overview',
+      'gainers_losers': 'gainers-losers',
+      'fear_greed': 'fear-greed',
+      'defi_tvl': 'defi-dashboard',
+      'defi_yields': 'defi-yields',
+      'technical_indicators': 'technical-analysis',
+      'ohlcv_history': 'technical-analysis',
+      'portfolio_tracker': 'portfolio-tracker',
+      'correlation_matrix': 'correlation',
+      'risk_dashboard': 'correlation',
+      'watchlist': 'custom',
+      'compare': 'custom',
+      'onchain_btc': 'bitcoin-dashboard',
+      'eth_gas_tracker': 'ethereum-dashboard',
+      'social_sentiment': 'social-sentiment',
+      'funding_rates': 'funding-rates',
+      'open_interest': 'derivatives',
+      'token_unlocks': 'token-unlocks',
+      'staking_rewards': 'staking-yields',
+      'nft_collections': 'nft-tracker',
+      'etf_tracker': 'etf-tracker',
+      'whale_tracker': 'whale-tracker',
+      'backtest_results': 'technical-analysis',
+      'macro_indicators': 'market-overview',
+      'exchange_flows': 'exchange-reserves',
+      'mining_stats': 'mining-calc',
+      'liquidations': 'liquidations',
+      'alerts_summary': 'market-overview',
+      // Kit sub-template mappings
+      'holdings': 'portfolio-tracker',
+      'prices': 'custom',
+      'allocation': 'portfolio-tracker',
+      'performance': 'portfolio-tracker',
+      'global': 'market-overview',
+      'top_coins': 'screener',
+      'trending': 'trending',
+      'dominance': 'market-overview',
+      'heatmap': 'heatmap',
+      'movers': 'gainers-losers',
+      'sentiment': 'social-sentiment',
+      'candles': 'technical-analysis',
+      'indicators': 'technical-analysis',
+      'signals': 'technical-analysis',
+      'protocols_list': 'defi-dashboard',
+      'tvl_trend': 'defi-dashboard',
+      'top_chains': 'defi-dashboard',
+      'stablecoin_table': 'stablecoins',
+      'dominance_view': 'market-overview',
+      'changes': 'gainers-losers',
+      'marketcap': 'market-overview',
     };
 
-    const mappedTemplateType = TEMPLATE_TYPE_MAP[body.templateType] || body.templateType || 'screener';
+    const dashboard: DashboardType = TEMPLATE_TO_DASHBOARD[body.templateType] || 'market-overview';
 
-    // Build user configuration with sanitized inputs
-    const userConfig: UserTemplateConfig = {
-      templateType: (mappedTemplateType as TemplateType) || 'screener',
-      coins: sanitizedCoins,
-      timeframe,
-      currency,
-      contentType,
-      formulaMode: 'crk', // BYOK: Use CRK formulas by default
-      customizations: {
-        // For formulas_only, override includeCharts to false
-        includeCharts: contentType === 'formulas_only' ? false : body.customizations?.includeCharts !== false,
-        metricsList: Array.isArray(body.customizations?.metricsList)
-          ? body.customizations.metricsList.filter((m: unknown): m is string => typeof m === 'string').slice(0, 50)
-          : [],
-        ...body.customizations,
-      },
+    // Map content type to output mode
+    const includeCharts = contentType !== 'formulas_only' && body.customizations?.includeCharts !== false;
+
+    // Map refresh frequency
+    const refreshMap: Record<string, 'realtime' | 'frequent' | 'hourly' | 'daily' | 'manual'> = {
+      'realtime': 'realtime', '5m': 'realtime',
+      'frequent': 'frequent', '15m': 'frequent',
+      'hourly': 'hourly', '1h': 'hourly',
+      'daily': 'daily', '24h': 'daily',
+      'manual': 'manual',
     };
+    const refreshInterval = refreshMap[body.customizations?.refreshFrequency] || 'hourly';
 
-    // Validate configuration
-    const validation = validateUserConfig(userConfig);
-    if (!validation.valid) {
-      return NextResponse.json(
-        {
-          error: 'Invalid configuration',
-          details: validation.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Determine format (.xlsx or .xlsm)
-    const format = body.format === 'xlsm' ? 'xlsm' : 'xlsx';
-
-    // Generate template
-    console.log('[Templates] Generating template:', {
-      type: userConfig.templateType,
-      contentType: userConfig.contentType,
-      coins: userConfig.coins.length,
-      format,
+    // Generate template using master generator (real data + Power Query)
+    console.log('[Templates] Generating live template:', {
+      dashboard,
+      coins: coinIds.length,
+      days,
+      includeCharts,
       email,
       ip: clientIp,
     });
 
-    const buffer = await generateTemplate(userConfig, format);
+    const buffer = await generateMasterExcel({
+      dashboard,
+      coins: coinIds.length > 0 ? coinIds : undefined,
+      limit: 100,
+      days,
+      includeCharts,
+      outputMode: 'live',
+      refreshInterval,
+      chartStyle: 'professional',
+    });
 
-    // Generate filename with content type label
+    // Generate filename
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const contentLabel = contentType === 'formulas_only' ? '_formulas' :
-                        contentType === 'addin' ? '_interactive' : '_native';
-    const filename = `cryptoreportkit_${userConfig.templateType}${contentLabel}_${timestamp}.${format}`;
+    const filename = `cryptoreportkit_${dashboard}_${timestamp}.xlsx`;
 
     // Track the successful download
-    await trackDownload(email, userConfig.templateType, filename);
+    await trackDownload(email, dashboard, filename);
 
-    // Return file (convert Buffer to Uint8Array for NextResponse compatibility)
+    // Return file
     return new NextResponse(new Uint8Array(buffer), {
       headers: {
-        'Content-Type':
-          format === 'xlsm'
-            ? 'application/vnd.ms-excel.sheet.macroEnabled.12'
-            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Template-Type': userConfig.templateType,
-        'X-Template-Format': format,
+        'X-Template-Type': dashboard,
         'X-Downloads-Remaining': String(Math.max(0, limitCheck.remaining - 1)),
       },
     });
@@ -340,15 +327,15 @@ export async function GET() {
       success: true,
       templates,
       info: {
-        requiresAddons: ['CRK Add-in'],
-        supportedFormats: ['xlsx', 'xlsm'],
+        requiresAddons: [],
+        supportedFormats: ['xlsx'],
         supportedContentTypes: [
-          { id: 'addin', name: 'Interactive Charts', description: 'Animated ChartJS charts via Office.js Add-in (requires M365)' },
-          { id: 'native_charts', name: 'Native Excel Charts', description: 'Chart-ready data layout with instructions (works everywhere)' },
-          { id: 'formulas_only', name: 'Formulas Only', description: 'Just CRK formulas, no charts' },
+          { id: 'native_charts', name: 'With Charts', description: 'Live data with Power Query + native Excel charts (recommended)' },
+          { id: 'formulas_only', name: 'Data Only', description: 'Power Query data tables without charts' },
         ],
-        dataIncluded: false,
-        formulasOnly: true,
+        dataIncluded: true,
+        powerQuery: true,
+        noAddinRequired: true,
       },
     });
   } catch (error) {
