@@ -29,15 +29,15 @@
   <Description DefaultValue="85+ crypto functions for Excel: live prices, portfolio tracking, AI analysis, technical indicators, DeFi data, wallet balances, tax formulas, and alerts. BYOK (Bring Your Own Keys) for unlimited API calls."/>
 
   <!-- Icons -->
-  <IconUrl DefaultValue="https://datasimplify.vercel.app/addin/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://datasimplify.vercel.app/addin/icon-64.png"/>
+  <IconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://cryptoreportkit.com/addin/icon-64.png"/>
 
   <!-- Support -->
-  <SupportUrl DefaultValue="https://datasimplify.vercel.app/support"/>
+  <SupportUrl DefaultValue="https://cryptoreportkit.com/support"/>
 
   <!-- Allowed domains for API calls -->
   <AppDomains>
-    <AppDomain>https://datasimplify.vercel.app</AppDomain>
+    <AppDomain>https://cryptoreportkit.com</AppDomain>
     <AppDomain>https://api.coingecko.com</AppDomain>
     <AppDomain>https://pro-api.coingecko.com</AppDomain>
     <AppDomain>https://api.geckoterminal.com</AppDomain>
@@ -63,7 +63,7 @@
 
   <!-- Default taskpane location -->
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://datasimplify.vercel.app/addin/taskpane.html"/>
+    <SourceLocation DefaultValue="https://cryptoreportkit.com/addin/taskpane.html"/>
   </DefaultSettings>
 
   <!-- Permissions -->
@@ -254,25 +254,25 @@
     <Resources>
       <!-- Images -->
       <bt:Images>
-        <bt:Image id="Icon.16" DefaultValue="https://datasimplify.vercel.app/addin/icon-16.png"/>
-        <bt:Image id="Icon.32" DefaultValue="https://datasimplify.vercel.app/addin/icon-32.png"/>
-        <bt:Image id="Icon.80" DefaultValue="https://datasimplify.vercel.app/addin/icon-80.png"/>
-        <bt:Image id="RefreshIcon.16" DefaultValue="https://datasimplify.vercel.app/addin/icon-16.png"/>
-        <bt:Image id="RefreshIcon.32" DefaultValue="https://datasimplify.vercel.app/addin/icon-32.png"/>
-        <bt:Image id="RefreshIcon.80" DefaultValue="https://datasimplify.vercel.app/addin/icon-80.png"/>
-        <bt:Image id="InsertIcon.16" DefaultValue="https://datasimplify.vercel.app/addin/icon-16.png"/>
-        <bt:Image id="InsertIcon.32" DefaultValue="https://datasimplify.vercel.app/addin/icon-32.png"/>
-        <bt:Image id="InsertIcon.80" DefaultValue="https://datasimplify.vercel.app/addin/icon-80.png"/>
+        <bt:Image id="Icon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="RefreshIcon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="RefreshIcon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="RefreshIcon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
+        <bt:Image id="InsertIcon.16" DefaultValue="https://cryptoreportkit.com/addin/icon-16.png"/>
+        <bt:Image id="InsertIcon.32" DefaultValue="https://cryptoreportkit.com/addin/icon-32.png"/>
+        <bt:Image id="InsertIcon.80" DefaultValue="https://cryptoreportkit.com/addin/icon-80.png"/>
       </bt:Images>
 
       <!-- URLs -->
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://datasimplify.vercel.app/addin/setup"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://datasimplify.vercel.app/addin/taskpane.html"/>
-        <bt:Url id="Commands.Url" DefaultValue="https://datasimplify.vercel.app/addin/commands.html"/>
-        <bt:Url id="Functions.Script.Url" DefaultValue="https://datasimplify.vercel.app/addin/functions.js"/>
-        <bt:Url id="Functions.Page.Url" DefaultValue="https://datasimplify.vercel.app/addin/functions.html"/>
-        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://datasimplify.vercel.app/addin/functions.json"/>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cryptoreportkit.com/addin/setup"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://cryptoreportkit.com/addin/taskpane.html"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://cryptoreportkit.com/addin/commands.html"/>
+        <bt:Url id="Functions.Script.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.js"/>
+        <bt:Url id="Functions.Page.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.html"/>
+        <bt:Url id="Functions.Metadata.Url" DefaultValue="https://cryptoreportkit.com/addin/functions.json"/>
       </bt:Urls>
 
       <!-- Short Strings (max 125 characters) -->
