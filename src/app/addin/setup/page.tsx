@@ -150,7 +150,7 @@ export default function AddinSetupPage() {
                     <strong>Alternative:</strong> Copy this URL for direct installation:
                   </p>
                   <code className="text-xs bg-white px-2 py-1 rounded border border-gray-200 break-all">
-                    https://cryptoreportkit.com/addin/manifest.xml
+                    https://datasimplify.vercel.app/addin/manifest.xml
                   </code>
                 </div>
               </div>
