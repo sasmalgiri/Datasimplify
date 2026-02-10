@@ -653,6 +653,48 @@ export async function generateMasterExcel(options: GenerateOptions): Promise<Buf
 }
 
 // ============================================
+// BYOK TEMPLATE GENERATOR (No server-side data fetch)
+// ============================================
+
+/**
+ * Generates a BYOK Excel template with Power Query setup.
+ * NO data is fetched by the server - the template contains:
+ * - Settings sheet with API key cell + named range
+ * - Power Query Setup sheet with M code calling CoinGecko DIRECTLY
+ * - Documentation sheet
+ *
+ * The user pastes their own CoinGecko API key and sets up Power Query.
+ * All data flows directly from CoinGecko to Excel. Server never touches data.
+ */
+export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'CryptoReportKit';
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.properties.date1904 = false;
+
+  // Add Settings sheet with API key cell
+  addSettingsSheet(workbook, { ...options, outputMode: 'live' });
+
+  // Create named range for API key cell (used by Power Query M code)
+  workbook.definedNames.add("'Settings'!$B$6", 'CRK_ApiKey');
+
+  // Add Power Query setup sheet with direct CoinGecko M code
+  const queries = generateQueriesForDashboard(
+    options.dashboard,
+    options.coins || ['bitcoin', 'ethereum', 'solana']
+  );
+  const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
+  addPowerQuerySetupSheet(workbook, queries, refreshConfig);
+
+  // Add documentation
+  addDocumentationSheet(workbook);
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
+// ============================================
 // ADD ALL SHEETS (Complete Suite)
 // ============================================
 

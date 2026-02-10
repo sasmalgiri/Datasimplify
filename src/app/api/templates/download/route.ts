@@ -1,9 +1,14 @@
 /**
  * Template Download API Route
  *
- * Generates Excel templates with LIVE DATA via Power Query.
- * Fetches real-time data from CoinGecko during generation,
- * and includes Power Query M code for auto-refresh.
+ * Generates BYOK Excel templates with Power Query setup.
+ * NO data is fetched by the server - templates contain:
+ * - Settings sheet with API key cell + named range
+ * - Power Query M code calling CoinGecko DIRECTLY with user's key
+ * - Documentation
+ *
+ * BYOK: We provide software only. User's API key stays in their file.
+ * Server never calls CoinGecko. All data flows directly user → CoinGecko.
  *
  * Security features:
  * - IP-based rate limiting (10 downloads/15min per IP)
@@ -14,7 +19,7 @@
 
 import { NextResponse } from 'next/server';
 import {
-  generateMasterExcel,
+  generateBYOKExcel,
   type DashboardType,
 } from '@/lib/excel/masterGenerator';
 import type { ContentType } from '@/lib/templates/generator';
@@ -261,17 +266,17 @@ export async function POST(request: Request) {
     };
     const refreshInterval = refreshMap[body.customizations?.refreshFrequency] || 'hourly';
 
-    // Generate template using master generator (real data + Power Query)
-    console.log('[Templates] Generating live template:', {
+    // Generate BYOK template (no server-side data fetch)
+    // Template has Power Query M code calling CoinGecko directly with user's key
+    console.log('[Templates] Generating BYOK template:', {
       dashboard,
       coins: coinIds.length,
       days,
-      includeCharts,
       email,
       ip: clientIp,
     });
 
-    const buffer = await generateMasterExcel({
+    const buffer = await generateBYOKExcel({
       dashboard,
       coins: coinIds.length > 0 ? coinIds : undefined,
       limit: 100,
@@ -330,12 +335,14 @@ export async function GET() {
         requiresAddons: [],
         supportedFormats: ['xlsx'],
         supportedContentTypes: [
-          { id: 'native_charts', name: 'With Charts', description: 'Live data with Power Query + native Excel charts (recommended)' },
-          { id: 'formulas_only', name: 'Data Only', description: 'Power Query data tables without charts' },
+          { id: 'native_charts', name: 'Power Query Template', description: 'BYOK template with Power Query M code - connects directly to CoinGecko with your API key (recommended)' },
+          { id: 'formulas_only', name: 'Data Only Template', description: 'BYOK template with Power Query data queries only, no charts' },
         ],
-        dataIncluded: true,
+        dataIncluded: false,
+        byok: true,
         powerQuery: true,
         noAddinRequired: true,
+        serverNeverTouchesData: true,
       },
     });
   } catch (error) {
