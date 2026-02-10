@@ -23,6 +23,7 @@ import {
   type DashboardType,
 } from '@/lib/excel/masterGenerator';
 import type { ContentType } from '@/lib/templates/generator';
+import { TEMPLATES, type TemplateType } from '@/lib/templates/templateConfig';
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/security/apiRateLimit';
 import { isValidEmail, sanitizeEmail, validateCoinSymbols, detectBotBehavior } from '@/lib/security/validation';
@@ -168,7 +169,35 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Validate and sanitize inputs
+    // 5. Tier check - gate pro templates
+    const templateType = body.templateType as string;
+    const templateConfig = TEMPLATES[templateType as TemplateType];
+    if (templateConfig && templateConfig.tier === 'pro') {
+      // Check if user has pro plan
+      let isPro = false;
+      if (isSupabaseConfigured && supabaseAdmin) {
+        const { data: profile } = await supabaseAdmin
+          .from('user_profiles')
+          .select('plan')
+          .eq('email', email.toLowerCase())
+          .single() as { data: { plan?: string } | null; error: unknown };
+        isPro = profile?.plan === 'pro' || profile?.plan === 'premium';
+      }
+
+      if (!isPro) {
+        return NextResponse.json(
+          {
+            error: 'Pro template',
+            message: `"${templateConfig.name}" is a Pro template. Upgrade to access all ${Object.values(TEMPLATES).filter(t => t.tier === 'pro').length}+ advanced templates.`,
+            upgradeRequired: true,
+            templateTier: 'pro',
+          },
+          { status: 402, headers: getRateLimitHeaders(rateLimit.remaining, rateLimit.resetIn) }
+        );
+      }
+    }
+
+    // 6. Validate and sanitize inputs
     const validContentTypes: ContentType[] = ['formulas_only', 'addin', 'native_charts'];
     const contentType: ContentType = validContentTypes.includes(body.contentType)
       ? body.contentType
@@ -327,6 +356,8 @@ export async function GET() {
 
   try {
     const templates = getTemplateList();
+    const freeCount = templates.filter(t => t.tier === 'free').length;
+    const proCount = templates.filter(t => t.tier === 'pro').length;
 
     return NextResponse.json({
       success: true,
@@ -343,6 +374,8 @@ export async function GET() {
         powerQuery: true,
         noAddinRequired: true,
         serverNeverTouchesData: true,
+        dualMode: true,
+        tiers: { free: freeCount, pro: proCount },
       },
     });
   } catch (error) {

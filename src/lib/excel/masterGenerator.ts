@@ -33,6 +33,8 @@ import {
   generateQueriesForDashboard,
   REFRESH_PRESETS,
 } from './powerQueryTemplates';
+import { injectPowerQueries } from './powerQueryInjector';
+import { addCrkDashboardSheets } from './crkDashboardSheets';
 import {
   createAdvancedSparkline,
   createDashboardCard,
@@ -679,19 +681,32 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   // Create named range for API key cell (used by Power Query M code)
   workbook.definedNames.add("'Settings'!$B$6", 'CRK_ApiKey');
 
-  // Add Power Query setup sheet with direct CoinGecko M code
+  // Generate Power Query definitions
   const queries = generateQueriesForDashboard(
     options.dashboard,
     options.coins || ['bitcoin', 'ethereum', 'solana']
   );
+
+  // Add CRK formula dashboard sheets (dual-mode: works with add-in installed)
+  // Without add-in, these show #NAME! but Power Query still populates data
+  addCrkDashboardSheets(workbook, options.dashboard, options.coins || ['bitcoin', 'ethereum', 'solana']);
+
+  // Add a lightweight instructions sheet (replaces verbose M code copy-paste sheet)
   const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
   addPowerQuerySetupSheet(workbook, queries, refreshConfig);
 
   // Add documentation
   addDocumentationSheet(workbook);
 
-  const buffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(buffer);
+  // Generate base xlsx from ExcelJS
+  const baseBuffer = Buffer.from(await workbook.xlsx.writeBuffer());
+
+  // Post-process: inject real Power Query connections into the xlsx ZIP
+  // After injection, Excel shows queries in Data > Queries & Connections
+  // User just pastes API key in B6 and clicks Refresh All
+  const injected = await injectPowerQueries(baseBuffer, queries);
+
+  return Buffer.from(injected);
 }
 
 // ============================================

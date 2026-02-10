@@ -418,8 +418,9 @@ export const REFRESH_PRESETS: Record<string, RefreshConfig> = {
 import ExcelJS from 'exceljs';
 
 /**
- * Adds a Power Query setup sheet with instructions and query code.
- * All queries connect DIRECTLY to CoinGecko using the user's own API key.
+ * Adds a Power Query setup sheet with instructions.
+ * Power Query connections are now embedded directly in the xlsx file
+ * via powerQueryInjector.ts, so this sheet just explains how to use them.
  */
 export function addPowerQuerySetupSheet(
   workbook: ExcelJS.Workbook,
@@ -432,13 +433,13 @@ export function addPowerQuerySetupSheet(
 
   // Column widths
   sheet.getColumn('A').width = 3;
-  sheet.getColumn('B').width = 30;
-  sheet.getColumn('C').width = 80;
+  sheet.getColumn('B').width = 40;
+  sheet.getColumn('C').width = 60;
 
   // Header
   sheet.mergeCells('B2:C2');
   const header = sheet.getCell('B2');
-  header.value = 'POWER QUERY LIVE DATA SETUP';
+  header.value = 'POWER QUERY LIVE DATA — READY TO USE';
   header.font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' } };
   header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } };
   header.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -451,32 +452,28 @@ export function addPowerQuerySetupSheet(
   byokNotice.font = { bold: true, size: 10, color: { argb: 'FF059669' } };
   byokNotice.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
 
-  // Instructions
+  // Instructions - much simpler now that queries are embedded
   const instructions = [
-    'HOW TO SET UP LIVE DATA:',
+    'HOW TO GET LIVE DATA (3 steps):',
     '',
-    '1. Go to the Settings sheet and paste your CoinGecko API key in cell B6',
-    '2. Go to Data tab in Excel ribbon',
-    '3. Click "Get Data" > "From Other Sources" > "Blank Query"',
-    '4. In the Query Editor, click "Advanced Editor"',
-    '5. Copy and paste the M code from below',
-    '6. Click "Done" then "Close & Load"',
-    '7. Repeat steps 3-6 for each query you want',
+    '1. Go to the Settings sheet → paste your CoinGecko API key in cell B6',
+    '2. Go to the Data tab in the Excel ribbon',
+    '3. Click "Refresh All" (or press Ctrl+Alt+F5)',
     '',
-    'PRIVACY LEVELS (important):',
-    '   When prompted, set Privacy Level to "Public" for both sources',
+    'That\'s it! Data will populate automatically.',
+    '',
+    'FIRST TIME PRIVACY PROMPT:',
+    '   Excel may ask about Privacy Levels. Choose "Public" for all sources.',
     '   OR: File > Options > Query Options > Privacy > "Always ignore Privacy Level settings"',
     '',
     'REFRESH SETTINGS:',
-    `   Refresh every: ${refreshConfig.intervalMinutes} minutes`,
+    `   Refresh interval: ${refreshConfig.intervalMinutes > 0 ? refreshConfig.intervalMinutes + ' minutes' : 'Manual only'}`,
     `   Refresh on file open: ${refreshConfig.refreshOnOpen ? 'Yes' : 'No'}`,
-    `   Background refresh: ${refreshConfig.backgroundRefresh ? 'Yes' : 'No'}`,
-    '   Set via: Right-click query table > Table > External Data Properties',
+    '   To change: Right-click any data table > Table > External Data Properties',
     '',
-    'DIRECT COINGECKO CONNECTION:',
-    '   Queries call CoinGecko API directly using YOUR API key',
+    'GET A FREE API KEY:',
+    '   Visit coingecko.com/en/api/pricing',
     '   Free tier: 10,000 calls/month (plenty for personal use)',
-    '   Get a free key: coingecko.com/en/api/pricing',
   ];
 
   instructions.forEach((text, i) => {
@@ -489,32 +486,26 @@ export function addPowerQuerySetupSheet(
     }
   });
 
-  // Query codes
+  // List embedded queries
   let currentRow = 5 + instructions.length + 2;
+  sheet.getCell(`B${currentRow}`).value = 'EMBEDDED QUERIES (Data > Queries & Connections):';
+  sheet.getCell(`B${currentRow}`).font = { bold: true, color: { argb: 'FF8B5CF6' } };
+  currentRow += 1;
 
   queries.forEach((query, index) => {
-    // Query header
-    sheet.getCell(`B${currentRow}`).value = `Query ${index + 1}: ${query.name}`;
-    sheet.getCell(`B${currentRow}`).font = { bold: true, size: 12, color: { argb: 'FF059669' } };
+    const nameCell = sheet.getCell(`B${currentRow}`);
+    nameCell.value = `  ${index + 1}. ${query.name}`;
+    nameCell.font = { bold: true, size: 11, color: { argb: 'FF059669' } };
 
-    sheet.getCell(`B${currentRow + 1}`).value = query.description;
-    sheet.getCell(`B${currentRow + 1}`).font = { italic: true, color: { argb: 'FF9CA3AF' } };
+    const descCell = sheet.getCell(`C${currentRow}`);
+    descCell.value = query.description;
+    descCell.font = { italic: true, color: { argb: 'FF9CA3AF' } };
 
-    // Code box
-    const codeStartRow = currentRow + 2;
-    const codeLines = query.code.trim().split('\n');
-
-    codeLines.forEach((line, i) => {
-      const cell = sheet.getCell(`C${codeStartRow + i}`);
-      cell.value = line;
-      cell.font = { name: 'Consolas', size: 10, color: { argb: 'FFD1D5DB' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F2937' } };
-    });
-
-    currentRow = codeStartRow + codeLines.length + 3;
+    currentRow += 1;
   });
 
   // Footer
+  currentRow += 1;
   sheet.getCell(`B${currentRow}`).value = 'NEED HELP?';
   sheet.getCell(`B${currentRow}`).font = { bold: true };
   sheet.getCell(`C${currentRow}`).value = 'https://cryptoreportkit.com/learn';
@@ -757,8 +748,294 @@ export function generateQueriesForDashboard(
       });
       break;
 
+    case 'whale-tracker':
+      queries.push({
+        name: 'CRK_WhaleCoins',
+        code: POWER_QUERY_TEMPLATES.market(50),
+        description: 'Top 50 coins by market cap (whale-watched assets)',
+      });
+      queries.push({
+        name: 'CRK_Companies',
+        code: POWER_QUERY_TEMPLATES.companies('bitcoin'),
+        description: 'Public companies holding Bitcoin (whale tracker)',
+      });
+      break;
+
+    case 'on-chain':
+      queries.push({
+        name: 'CRK_Bitcoin_OnChain',
+        code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
+        description: 'Bitcoin on-chain metrics (supply, ATH, market data)',
+      });
+      queries.push({
+        name: 'CRK_Ethereum_OnChain',
+        code: POWER_QUERY_TEMPLATES.coin('ethereum'),
+        description: 'Ethereum on-chain metrics',
+      });
+      queries.push({
+        name: 'CRK_Global',
+        code: POWER_QUERY_TEMPLATES.global(),
+        description: 'Global crypto market statistics',
+      });
+      break;
+
+    case 'etf-tracker':
+      queries.push({
+        name: 'CRK_BTC_Companies',
+        code: POWER_QUERY_TEMPLATES.companies('bitcoin'),
+        description: 'Public companies/ETFs holding Bitcoin',
+      });
+      queries.push({
+        name: 'CRK_ETH_Companies',
+        code: POWER_QUERY_TEMPLATES.companies('ethereum'),
+        description: 'Public companies/ETFs holding Ethereum',
+      });
+      queries.push({
+        name: 'CRK_BTC_Price',
+        code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
+        description: 'Bitcoin price and market data',
+      });
+      break;
+
+    case 'layer1-compare':
+      queries.push({
+        name: 'CRK_L1_Coins',
+        code: POWER_QUERY_TEMPLATES.watchlist([
+          'bitcoin', 'ethereum', 'solana', 'cardano', 'avalanche-2',
+          'polkadot', 'near', 'cosmos', 'aptos', 'sui',
+          'the-open-network', 'tron', 'algorand', 'fantom', 'hedera-hashgraph',
+        ]),
+        description: 'Top Layer 1 blockchains side-by-side comparison',
+      });
+      break;
+
+    case 'layer2-compare':
+      queries.push({
+        name: 'CRK_L2_Coins',
+        code: POWER_QUERY_TEMPLATES.categories('layer-2', 50),
+        description: 'Layer 2 scaling solutions (Arbitrum, Optimism, Polygon, etc.)',
+      });
+      break;
+
+    case 'meme-coins':
+      queries.push({
+        name: 'CRK_MemeCoins',
+        code: POWER_QUERY_TEMPLATES.categories('meme-token', 50),
+        description: 'Top 50 meme coins by market cap',
+      });
+      queries.push({
+        name: 'CRK_Trending',
+        code: POWER_QUERY_TEMPLATES.trending(),
+        description: 'Currently trending coins (often memes)',
+      });
+      break;
+
+    case 'ai-gaming':
+      queries.push({
+        name: 'CRK_AI_Tokens',
+        code: POWER_QUERY_TEMPLATES.categories('artificial-intelligence', 30),
+        description: 'Top AI tokens by market cap',
+      });
+      queries.push({
+        name: 'CRK_Gaming_Tokens',
+        code: POWER_QUERY_TEMPLATES.categories('gaming', 30),
+        description: 'Top gaming/GameFi tokens by market cap',
+      });
+      break;
+
+    case 'calculator':
+      queries.push({
+        name: 'CRK_BTC_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 365),
+        description: 'Bitcoin 1-year OHLC data for DCA/profit calculations',
+      });
+      queries.push({
+        name: 'CRK_TopCoins',
+        code: POWER_QUERY_TEMPLATES.batch('bitcoin,ethereum,solana,cardano,polkadot'),
+        description: 'Current prices for investment calculators',
+      });
+      break;
+
+    case 'volatility':
+      queries.push({
+        name: 'CRK_BTC_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 90),
+        description: 'Bitcoin 90-day OHLC for volatility analysis',
+      });
+      queries.push({
+        name: 'CRK_ETH_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('ethereum', 90),
+        description: 'Ethereum 90-day OHLC for volatility analysis',
+      });
+      queries.push({
+        name: 'CRK_SOL_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('solana', 90),
+        description: 'Solana 90-day OHLC for volatility analysis',
+      });
+      break;
+
+    case 'rwa':
+      queries.push({
+        name: 'CRK_RWA_Tokens',
+        code: POWER_QUERY_TEMPLATES.categories('real-world-assets-rwa', 50),
+        description: 'Real World Asset tokens by market cap',
+      });
+      break;
+
+    case 'liquidations':
+      queries.push({
+        name: 'CRK_Derivatives',
+        code: POWER_QUERY_TEMPLATES.derivatives(50),
+        description: 'Derivatives data with open interest and funding rates',
+      });
+      queries.push({
+        name: 'CRK_BTC_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 30),
+        description: 'Bitcoin 30-day OHLC for liquidation zone analysis',
+      });
+      break;
+
+    case 'funding-rates':
+      queries.push({
+        name: 'CRK_Derivatives',
+        code: POWER_QUERY_TEMPLATES.derivatives(100),
+        description: 'Perpetual futures with funding rates and open interest',
+      });
+      break;
+
+    case 'altcoin-season':
+      queries.push({
+        name: 'CRK_AltSeason',
+        code: POWER_QUERY_TEMPLATES.market(100),
+        description: 'Top 100 coins — compare altcoin vs BTC performance',
+      });
+      queries.push({
+        name: 'CRK_Global',
+        code: POWER_QUERY_TEMPLATES.global(),
+        description: 'Global stats with BTC dominance for alt season index',
+      });
+      break;
+
+    case 'token-unlocks':
+      queries.push({
+        name: 'CRK_UnlockCoins',
+        code: POWER_QUERY_TEMPLATES.watchlist([
+          'arbitrum', 'optimism', 'aptos', 'sui', 'celestia',
+          'sei-network', 'worldcoin-wld', 'starknet', 'layerzero', 'jito-governance-token',
+        ]),
+        description: 'Tokens with upcoming unlock events',
+      });
+      queries.push({
+        name: 'CRK_Global',
+        code: POWER_QUERY_TEMPLATES.global(),
+        description: 'Global market context for unlock impact',
+      });
+      break;
+
+    case 'staking-yields':
+      queries.push({
+        name: 'CRK_StakingCoins',
+        code: POWER_QUERY_TEMPLATES.categories('proof-of-stake', 50),
+        description: 'Proof-of-Stake coins for staking yield comparison',
+      });
+      break;
+
+    case 'social-sentiment':
+      queries.push({
+        name: 'CRK_Trending',
+        code: POWER_QUERY_TEMPLATES.trending(),
+        description: 'Currently trending coins (social signal)',
+      });
+      queries.push({
+        name: 'CRK_FearGreed',
+        code: POWER_QUERY_TEMPLATES.fearGreed(30),
+        description: 'Fear & Greed sentiment index (30-day)',
+      });
+      queries.push({
+        name: 'CRK_TopMovers',
+        code: POWER_QUERY_TEMPLATES.gainers(20),
+        description: 'Top gainers (social momentum indicator)',
+      });
+      break;
+
+    case 'dev-activity':
+      queries.push({
+        name: 'CRK_DevCoins',
+        code: POWER_QUERY_TEMPLATES.watchlist([
+          'ethereum', 'polkadot', 'cardano', 'solana', 'cosmos',
+          'near', 'internet-computer', 'chainlink', 'filecoin', 'aptos',
+        ]),
+        description: 'Top developer-active projects by market data',
+      });
+      queries.push({
+        name: 'CRK_ETH_Detail',
+        code: POWER_QUERY_TEMPLATES.coin('ethereum'),
+        description: 'Ethereum detailed info (developer data reference)',
+      });
+      break;
+
+    case 'exchange-reserves':
+      queries.push({
+        name: 'CRK_Exchanges',
+        code: POWER_QUERY_TEMPLATES.exchanges(),
+        description: 'Exchange volumes and trust scores',
+      });
+      queries.push({
+        name: 'CRK_BTC_Detail',
+        code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
+        description: 'Bitcoin supply data (circulating vs total)',
+      });
+      break;
+
+    case 'defi-yields':
+      queries.push({
+        name: 'CRK_DeFi',
+        code: POWER_QUERY_TEMPLATES.defi(50),
+        description: 'Top 50 DeFi protocols for yield analysis',
+      });
+      queries.push({
+        name: 'CRK_Stablecoins',
+        code: POWER_QUERY_TEMPLATES.stablecoins(10),
+        description: 'Top stablecoins (yield farming base pairs)',
+      });
+      break;
+
+    case 'metaverse':
+      queries.push({
+        name: 'CRK_MetaverseTokens',
+        code: POWER_QUERY_TEMPLATES.categories('metaverse', 50),
+        description: 'Metaverse and virtual world tokens',
+      });
+      break;
+
+    case 'privacy-coins':
+      queries.push({
+        name: 'CRK_PrivacyCoins',
+        code: POWER_QUERY_TEMPLATES.categories('privacy-coins', 30),
+        description: 'Privacy-focused cryptocurrencies',
+      });
+      break;
+
+    case 'mining-calc':
+      queries.push({
+        name: 'CRK_BTC_Detail',
+        code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
+        description: 'Bitcoin details (hash rate, supply, difficulty reference)',
+      });
+      queries.push({
+        name: 'CRK_BTC_OHLC',
+        code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 90),
+        description: 'Bitcoin 90-day OHLC for profitability analysis',
+      });
+      queries.push({
+        name: 'CRK_PoW_Coins',
+        code: POWER_QUERY_TEMPLATES.categories('proof-of-work', 20),
+        description: 'Proof-of-Work mineable coins',
+      });
+      break;
+
     default:
-      // For all other dashboards, add global stats
+      // Catch-all: add global stats for any unrecognized dashboard type
       queries.push({
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),

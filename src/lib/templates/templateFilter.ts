@@ -36,6 +36,7 @@ export interface FilteredTemplate {
   description: string;
   icon: string;
   category: TemplateCategoryId;
+  tier: 'free' | 'pro';
   relevanceScore: number;
   matchReasons: string[];
   isBestMatch: boolean;
@@ -295,6 +296,7 @@ export function filterAndScoreTemplates(
       description: template.description,
       icon: template.icon,
       category: template.category,
+      tier: template.tier || 'free',
       relevanceScore: score,
       matchReasons: reasons,
       isBestMatch: score >= SCORE_THRESHOLDS.BEST_MATCH,

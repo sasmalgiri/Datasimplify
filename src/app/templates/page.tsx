@@ -56,6 +56,11 @@ function TemplateCard({
           : 'border-gray-700'
       }`}
     >
+      {template.tier === 'pro' && (
+        <div className="absolute -top-1.5 -left-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+          PRO
+        </div>
+      )}
       {template.isBestMatch && (
         <div className="absolute -top-1.5 -right-1.5 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
           <Star className="w-2.5 h-2.5" />
