@@ -351,7 +351,7 @@
     {
       "id": "SCORE",
       "name": "SCORE",
-      "description": "Get GeckoTerminal security/trust score for a token",
+      "description": "Get GeckoTerminal trust score for a token pool",
       "parameters": [
         { "name": "network", "description": "Network ID (e.g., 'eth', 'bsc', 'polygon', 'solana')", "type": "string" },
         { "name": "address", "description": "Token contract address", "type": "string" },
@@ -362,7 +362,7 @@
     {
       "id": "TOKENINFO",
       "name": "TOKENINFO",
-      "description": "Get full token info including holders, distribution, and security scores (spills to range)",
+      "description": "Get full token info including price, volume, and pool data (spills to range)",
       "parameters": [
         { "name": "network", "description": "Network ID (e.g., 'eth', 'bsc', 'polygon', 'solana')", "type": "string" },
         { "name": "address", "description": "Token contract address", "type": "string" }
@@ -652,15 +652,6 @@
       "result": { "type": "number" }
     },
     {
-      "id": "TVL",
-      "name": "TVL",
-      "description": "Get Total Value Locked for a DeFi protocol (via DefiLlama)",
-      "parameters": [
-        { "name": "protocol", "description": "Protocol ID (e.g., 'aave', 'uniswap', 'lido')", "type": "string" }
-      ],
-      "result": { "type": "number" }
-    },
-    {
       "id": "BB",
       "name": "BB",
       "description": "Calculate Bollinger Bands (upper, middle, lower)",
@@ -814,6 +805,36 @@
       "description": "Get full tax summary for all portfolio holdings with unrealized and realized gains (Pro+)",
       "parameters": [],
       "result": { "type": "array", "dimensionality": "matrix" }
+    },
+    {
+      "id": "CHANGE",
+      "name": "CHANGE",
+      "description": "Get price change percentage for any period (24h, 7d, 30d, 1y)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., bitcoin, ethereum)", "type": "string" },
+        { "name": "period", "description": "Period: 24h, 7d, 30d, 1y (default: 24h)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "MCAP",
+      "name": "MCAP",
+      "description": "Get market capitalization (alias for MARKETCAP)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., bitcoin, ethereum)", "type": "string" },
+        { "name": "currency", "description": "Currency (default: usd)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "number" }
+    },
+    {
+      "id": "VOL",
+      "name": "VOL",
+      "description": "Get 24h trading volume (alias for VOLUME)",
+      "parameters": [
+        { "name": "coin", "description": "Coin ID (e.g., bitcoin, ethereum)", "type": "string" },
+        { "name": "currency", "description": "Currency (default: usd)", "type": "string", "optional": true }
+      ],
+      "result": { "type": "number" }
     }
   ]
 }

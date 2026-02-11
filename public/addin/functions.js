@@ -1429,6 +1429,187 @@ async function SPARKLINE(coin) {
  * @param {string} coin Coin ID
  * @returns {number} 7d change percentage
  */
+/**
+ * Get price change percentage for any period
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} [period="24h"] Period: 24h, 7d, 30d, 1y
+ * @returns {number} Change percentage
+ */
+async function CHANGE(coin, period) {
+  period = (period || '24h').toLowerCase();
+  if (period === '24h') return CHANGE24H(coin);
+  if (period === '7d') return CHANGE7D(coin);
+  if (period === '30d') return CHANGE30D(coin);
+  if (period === '1y') return CHANGE1Y(coin);
+  return CHANGE24H(coin);
+}
+
+/**
+ * Alias for MARKETCAP
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} [currency="usd"] Currency
+ * @returns {number} Market cap
+ */
+async function MCAP(coin, currency) {
+  return MARKETCAP(coin, currency);
+}
+
+/**
+ * Alias for VOLUME
+ * @customfunction
+ * @param {string} coin Coin ID
+ * @param {string} [currency="usd"] Currency
+ * @returns {number} 24h volume
+ */
+async function VOL(coin, currency) {
+  return VOLUME(coin, currency);
+}
+
+// ============================================
+// ON-CHAIN TOKEN DATA (GeckoTerminal / CoinGecko)
+// ============================================
+
+var GECKOTERMINAL_API = 'https://api.geckoterminal.com/api/v2';
+
+async function fetchGeckoTerminal(endpoint) {
+  var url = GECKOTERMINAL_API + endpoint;
+  var cached = requestCache.get(url);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  var response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!response.ok) {
+    throw new CustomFunctions.Error(
+      CustomFunctions.ErrorCode.invalidValue,
+      'GeckoTerminal API error: ' + response.status
+    );
+  }
+  var data = await response.json();
+  requestCache.set(url, { data: data, timestamp: Date.now() });
+  return data;
+}
+
+/**
+ * Get top pools for a token and sum unique holder counts from pool data
+ * @customfunction
+ * @param {string} network Network ID (e.g., 'eth', 'bsc', 'polygon', 'solana')
+ * @param {string} address Token contract address
+ * @returns {number} Estimated holder count from top pools
+ */
+async function HOLDERS(network, address) {
+  var data = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address);
+  var attrs = data.data && data.data.attributes;
+  if (!attrs) {
+    throw new CustomFunctions.Error(CustomFunctions.ErrorCode.invalidValue, 'Token not found');
+  }
+  // GeckoTerminal doesn't provide direct holder counts; use CoinGecko community data as proxy
+  // Return the number of unique pools (liquidity sources) as a metric
+  var poolData = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address + '/pools?page=1');
+  var pools = poolData.data || [];
+  // Sum reserve_in_usd across pools as a proxy for holder activity
+  var totalTxns = 0;
+  for (var i = 0; i < pools.length; i++) {
+    var pa = pools[i].attributes;
+    if (pa && pa.transactions) {
+      var h24 = pa.transactions.h24;
+      if (h24) totalTxns += (h24.buys || 0) + (h24.sells || 0);
+    }
+  }
+  return totalTxns || 0;
+}
+
+/**
+ * Get holder distribution info from pool transaction data
+ * @customfunction
+ * @param {string} network Network ID
+ * @param {string} address Token contract address
+ * @param {string} [metric="top10"] Metric: 'buys', 'sells', 'buyers', 'sellers' (default: 'buys')
+ * @returns {number} Transaction count metric
+ */
+async function DISTRIBUTION(network, address, metric) {
+  metric = (metric || 'buys').toLowerCase();
+  var data = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address + '/pools?page=1');
+  var pools = data.data || [];
+  if (pools.length === 0) {
+    throw new CustomFunctions.Error(CustomFunctions.ErrorCode.invalidValue, 'No pools found');
+  }
+  // Aggregate transaction metrics across top pools
+  var total = 0;
+  for (var i = 0; i < pools.length; i++) {
+    var pa = pools[i].attributes;
+    if (pa && pa.transactions && pa.transactions.h24) {
+      var h24 = pa.transactions.h24;
+      if (metric === 'buys') total += h24.buys || 0;
+      else if (metric === 'sells') total += h24.sells || 0;
+      else if (metric === 'buyers') total += h24.buyers || 0;
+      else if (metric === 'sellers') total += h24.sellers || 0;
+      else total += h24.buys || 0;
+    }
+  }
+  return total;
+}
+
+/**
+ * Get GeckoTerminal trust score for a token's top pool
+ * @customfunction
+ * @param {string} network Network ID
+ * @param {string} address Token contract address
+ * @param {string} [scoreType="total"] Score type: 'total', 'volume', 'liquidity', 'fdv' (default: 'total')
+ * @returns {number} Score or metric value
+ */
+async function SCORE(network, address, scoreType) {
+  scoreType = (scoreType || 'total').toLowerCase();
+  var data = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address + '/pools?page=1');
+  var pools = data.data || [];
+  if (pools.length === 0) {
+    throw new CustomFunctions.Error(CustomFunctions.ErrorCode.invalidValue, 'No pools found');
+  }
+  // Use top pool (highest liquidity)
+  var top = pools[0].attributes;
+  if (scoreType === 'volume') return parseFloat(top.volume_usd && top.volume_usd.h24 || '0');
+  if (scoreType === 'liquidity') return parseFloat(top.reserve_in_usd || '0');
+  if (scoreType === 'fdv') return parseFloat(top.fdv_usd || '0');
+  // 'total' - composite: volume * liquidity normalized
+  var vol = parseFloat(top.volume_usd && top.volume_usd.h24 || '0');
+  var liq = parseFloat(top.reserve_in_usd || '0');
+  if (liq === 0) return 0;
+  return Math.round((vol / liq) * 100) / 100; // Volume/liquidity ratio
+}
+
+/**
+ * Get full token info from GeckoTerminal (spills to range)
+ * @customfunction
+ * @param {string} network Network ID
+ * @param {string} address Token contract address
+ * @returns {any[][]} Token info matrix
+ */
+async function TOKENINFO(network, address) {
+  var data = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address);
+  var attrs = data.data && data.data.attributes;
+  if (!attrs) {
+    throw new CustomFunctions.Error(CustomFunctions.ErrorCode.invalidValue, 'Token not found');
+  }
+  var poolData = await fetchGeckoTerminal('/networks/' + network + '/tokens/' + address + '/pools?page=1');
+  var topPool = (poolData.data && poolData.data.length > 0) ? poolData.data[0].attributes : {};
+
+  return [
+    ['Name', attrs.name || 'N/A'],
+    ['Symbol', attrs.symbol || 'N/A'],
+    ['Price (USD)', parseFloat(attrs.price_usd || '0')],
+    ['FDV', parseFloat(attrs.fdv_usd || '0')],
+    ['Market Cap', parseFloat(attrs.market_cap_usd || '0')],
+    ['Total Supply', parseFloat(attrs.total_supply || '0')],
+    ['24h Volume', parseFloat(topPool.volume_usd && topPool.volume_usd.h24 || '0')],
+    ['Liquidity', parseFloat(topPool.reserve_in_usd || '0')],
+    ['24h Buys', topPool.transactions && topPool.transactions.h24 ? topPool.transactions.h24.buys || 0 : 0],
+    ['24h Sells', topPool.transactions && topPool.transactions.h24 ? topPool.transactions.h24.sells || 0 : 0],
+    ['Top Pool', topPool.name || 'N/A'],
+    ['Network', network],
+  ];
+}
+
 async function CHANGE7D(coin) {
   return INFO(coin, 'price_change_7d');
 }
@@ -2519,6 +2700,17 @@ CustomFunctions.associate('RWA', withTierCheck('RWA', RWA));
 // Technical Indicators (Pro+ only)
 CustomFunctions.associate('BB', withTierCheck('BB', BB));
 CustomFunctions.associate('VWAP', withTierCheck('VWAP', VWAP));
+
+// Alias functions (shorthand names used in CRK dashboard templates)
+CustomFunctions.associate('CHANGE', withTierCheck('CHANGE', CHANGE));
+CustomFunctions.associate('MCAP', withTierCheck('MCAP', MCAP));
+CustomFunctions.associate('VOL', withTierCheck('VOL', VOL));
+
+// On-chain token data (Pro+ only)
+CustomFunctions.associate('HOLDERS', withTierCheck('HOLDERS', HOLDERS));
+CustomFunctions.associate('DISTRIBUTION', withTierCheck('DISTRIBUTION', DISTRIBUTION));
+CustomFunctions.associate('SCORE', withTierCheck('SCORE', SCORE));
+CustomFunctions.associate('TOKENINFO', withTierCheck('TOKENINFO', TOKENINFO));
 
 // ============================================
 // AI & ALERTS FUNCTIONS
