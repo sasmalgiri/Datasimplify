@@ -40,6 +40,7 @@ import { injectIconSets, type IconSetDef } from './iconSetInjector';
 import { injectCharts } from './chartInjector';
 import { getChartsForDashboard } from './dashboardCharts';
 import { addCrkDashboardSheets, addNavigationSheet, VISUAL_SHEET_NAMES } from './crkDashboardSheets';
+import { BYOK_EXCEL_NOTE } from '@/lib/constants/byokMessages';
 import {
   createAdvancedSparkline,
   createDashboardCard,
@@ -1196,6 +1197,32 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
     console.warn('[BYOK] Data prefetch failed, falling back to formulas-only:', e);
   }
 
+  // For technical dashboards, also fetch OHLC data for indicator computation
+  const ohlcDashboards = ['technical-analysis', 'bitcoin-dashboard', 'ethereum-dashboard', 'volatility'];
+  if (ohlcDashboards.includes(options.dashboard) && prefetchedData) {
+    try {
+      const ohlcCoins = options.dashboard === 'ethereum-dashboard'
+        ? ['ethereum'] : ['bitcoin'];
+      if (options.dashboard === 'technical-analysis') ohlcCoins.push('ethereum');
+      const ohlcResults = await Promise.all(
+        ohlcCoins.map(coin =>
+          fetchWithTimeout(`https://api.coingecko.com/api/v3/coins/${coin}/ohlc?vs_currency=usd&days=${options.days || 30}`)
+        )
+      );
+      prefetchedData.ohlc = {};
+      ohlcCoins.forEach((coin, i) => {
+        const raw = ohlcResults[i];
+        if (Array.isArray(raw)) {
+          prefetchedData.ohlc[coin] = raw.map((r: number[]) => ({
+            timestamp: r[0], open: r[1], high: r[2], low: r[3], close: r[4],
+          }));
+        }
+      });
+    } catch (e) {
+      console.warn('[BYOK] OHLC prefetch failed:', e);
+    }
+  }
+
   // Add navigation index sheet (first dashboard sheet — app-like hub)
   const navButtons = addNavigationSheet(workbook, options.dashboard);
 
@@ -1471,7 +1498,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   sheet.getCell(`B${notesStartRow}`).font = { bold: true, size: 12, color: { argb: COLORS.warning } };
 
   const notes = [
-    '• Your API key stays in this file - we never see it',
+    BYOK_EXCEL_NOTE,
     '• Requires Excel Desktop (2016+) with Power Query',
     '• Excel Online does NOT support Power Query refresh',
     '• Data refreshes when you click Refresh All',
@@ -2361,7 +2388,7 @@ function addFearGreedSheet(workbook: ExcelJS.Workbook, fearGreedData: any[]) {
     sheet.mergeCells('B7:E7');
     const gaugeWidth = 50;
     const position = Math.round((value / 100) * gaugeWidth);
-    let gauge = '░'.repeat(position) + '█' + '░'.repeat(gaugeWidth - position - 1);
+    const gauge = '░'.repeat(position) + '█' + '░'.repeat(gaugeWidth - position - 1);
     sheet.getCell('B7').value = gauge;
     sheet.getCell('B7').font = { size: 12, color: { argb: getGaugeColor(value) } };
 

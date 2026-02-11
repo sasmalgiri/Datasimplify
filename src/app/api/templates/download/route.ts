@@ -317,8 +317,8 @@ export async function POST(request: Request) {
     });
 
     // Generate filename
-    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const filename = `cryptoreportkit_${dashboard}_${timestamp}.xlsx`;
+    const { generateServerFilename } = await import('@/lib/constants/contentOptions');
+    const filename = generateServerFilename(dashboard);
 
     // Track the successful download
     await trackDownload(email, dashboard, filename);

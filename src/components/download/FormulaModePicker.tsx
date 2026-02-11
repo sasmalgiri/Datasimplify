@@ -1,6 +1,7 @@
 'use client';
 
 import { Info, Key, Zap, FileCode } from 'lucide-react';
+import { BYOK_ARCHITECTURE_HEADING, BYOK_DESCRIPTION_COMPACT } from '@/lib/constants/byokMessages';
 
 /**
  * PowerQueryInfo - Information card about Power Query templates
@@ -35,8 +36,8 @@ export function PowerQueryInfo({ className = '' }: { className?: string }) {
           <div className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-lg">
             <Key className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-medium text-white mb-1">BYOK Architecture</h4>
-              <p className="text-xs text-gray-400">Your API key stays in Excel - complete privacy</p>
+              <h4 className="text-sm font-medium text-white mb-1">{BYOK_ARCHITECTURE_HEADING}</h4>
+              <p className="text-xs text-gray-400">{BYOK_DESCRIPTION_COMPACT}</p>
             </div>
           </div>
 

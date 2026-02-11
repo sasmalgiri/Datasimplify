@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useWizard } from '../WizardContext';
 import { FileSpreadsheet, Download, Check, Loader2, AlertCircle } from 'lucide-react';
+import { CONTENT_OPTIONS, generateDownloadFilename } from '@/lib/constants/contentOptions';
 
 // Map coin IDs to symbols for the API
 const COIN_ID_TO_SYMBOL: Record<string, string> = {
@@ -68,12 +69,7 @@ export function DownloadStep() {
       const a = document.createElement('a');
       a.href = url;
 
-      const contentLabel =
-        state.contentType === 'formulas_only' ? '_formulas' :
-        state.contentType === 'addin' ? '_interactive' :
-        state.contentType === 'native_charts' ? '_native' : '';
-
-      a.download = `cryptoreportkit_${state.templateId}${contentLabel}.${state.downloadFormat}`;
+      a.download = generateDownloadFilename(state.templateId, state.contentType, state.downloadFormat);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -89,10 +85,12 @@ export function DownloadStep() {
     }
   };
 
-  const contentTypes = [
-    { id: 'native_charts' as const, name: 'With Charts', description: 'Includes pre-built Excel charts that update with your data', badge: 'Recommended' },
-    { id: 'formulas_only' as const, name: 'Data Only', description: 'Just Power Query data tables, no charts (smallest file)', badge: null },
-  ];
+  const contentTypes = CONTENT_OPTIONS.map(opt => ({
+    id: opt.id as 'native_charts' | 'formulas_only',
+    name: opt.name,
+    description: opt.description,
+    badge: opt.badge ?? null,
+  }));
 
   return (
     <div className="flex flex-col min-h-0">

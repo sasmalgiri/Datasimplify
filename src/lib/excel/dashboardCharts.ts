@@ -1,6 +1,10 @@
 /**
  * dashboardCharts.ts — Chart definitions per dashboard type (Premium 2x2 Grid)
  *
+ * Charts now use structured table references (TableName[ColumnName]) that
+ * auto-update when Power Query refreshes data. This replaces the old
+ * hardcoded cell ranges ('Sheet'!$A$1:$A$10) that broke on data resize.
+ *
  * OTHER-LEVELS DESIGN PRINCIPLES applied:
  * - Chart types matched to data purpose (not one-size-fits-all)
  * - Bar charts → Rankings, discrete comparisons, indicator values
@@ -14,11 +18,9 @@
  *   TR: fromCol=8, fromRow=12, toCol=13, toRow=23   (H12:M23)
  *   BL: fromCol=2, fromRow=25, toCol=7, toRow=36    (B25:G36)
  *   BR: fromCol=8, fromRow=25, toCol=13, toRow=36    (H25:M36)
- *
- * Data on data sheets starts at row 6 (after header + section + table headers).
  */
 
-import type { ChartDefinition, ChartType } from './chartInjector';
+import type { ChartDefinition, ChartType, StructuredRef, StructuredSeriesRef } from './chartInjector';
 import type { DashboardType } from './masterGenerator';
 import { getDashboardTheme } from './masterGenerator';
 
@@ -32,15 +34,28 @@ const BL = { fromCol: 2, fromRow: 25, toCol: 7, toRow: 36 };
 const BR = { fromCol: 8, fromRow: 25, toCol: 13, toRow: 36 };
 
 // ============================================
+// Helper: structured series ref shorthand
+// ============================================
+
+function sRef(name: string, table: string, column: string, color?: string): StructuredSeriesRef {
+  return { name, table, column, color };
+}
+
+function tRef(table: string, column: string): StructuredRef {
+  return { table, column };
+}
+
+// ============================================
 // Helper: Generate 4 charts in 2x2 grid
+// Uses structured table references for PQ auto-refresh.
 // ============================================
 
 interface GridChart {
   title: string;
   type: ChartType;
-  valCol: string;
+  column: string;       // PQ column name for value data
   /** Optional second series (multi-series line/bar) */
-  series2?: { name: string; valCol: string; colorIdx?: number };
+  series2?: { name: string; column: string; colorIdx?: number };
   colorIdx?: number;
   showLegend?: boolean;
 }
@@ -48,34 +63,28 @@ interface GridChart {
 function makeGridCharts(opts: {
   prefix: string;
   visualSheet: string;
-  dataSheet: string;
-  catCol: string;
-  rows?: number;
+  tableName: string;      // PQ table name (e.g., 'CRK_Market')
+  catColumn: string;      // PQ column name for categories (e.g., 'Name')
   tl: GridChart;
   tr: GridChart;
   bl: GridChart;
   br: GridChart;
   palette: string[];
 }): ChartDefinition[] {
-  const d = `'${opts.dataSheet}'`;
-  const n = opts.rows || 10;
-  const r1 = 6;
-  const r2 = r1 + n - 1;
-  const cat = opts.catCol;
   const p = opts.palette;
+  const t = opts.tableName;
+  const cat = opts.catColumn;
 
   const make = (pos: string, gc: GridChart, position: typeof TL, idx: number): ChartDefinition => {
-    const values: Array<{ name: string; ref: string; color?: string }> = [
-      { name: gc.title, ref: `${d}!$${gc.valCol}$${r1}:$${gc.valCol}$${r2}`, color: p[gc.colorIdx ?? idx] },
+    const values: StructuredSeriesRef[] = [
+      sRef(gc.title, t, gc.column, p[gc.colorIdx ?? idx]),
     ];
 
     // Multi-series support
     if (gc.series2) {
-      values.push({
-        name: gc.series2.name,
-        ref: `${d}!$${gc.series2.valCol}$${r1}:$${gc.series2.valCol}$${r2}`,
-        color: p[gc.series2.colorIdx ?? ((gc.colorIdx ?? idx) + 1)],
-      });
+      values.push(
+        sRef(gc.series2.name, t, gc.series2.column, p[gc.series2.colorIdx ?? ((gc.colorIdx ?? idx) + 1)]),
+      );
     }
 
     const isMultiSeries = !!gc.series2;
@@ -87,7 +96,7 @@ function makeGridCharts(opts: {
       title: gc.title,
       sheetName: opts.visualSheet,
       dataRange: {
-        categories: `${d}!$${cat}$${r1}:$${cat}$${r2}`,
+        categories: tRef(t, cat),
         values,
       },
       position,
@@ -210,43 +219,43 @@ export function getChartsForDashboard(dashboard: DashboardType): ChartDefinition
 
 /** Market Overview: Bar(MCap) → Doughnut(Share) → Bar(24h%) → Line(Price trend) */
 function getMarketOverviewCharts(palette: string[]): ChartDefinition[] {
-  const d = "'CRK Data'";
+  const t = 'CRK_Market';
   return [
     { id: 'mkt-tl', type: 'bar', title: 'Top 10 by Market Cap', sheetName: 'CRK Dashboard',
-      dataRange: { categories: `${d}!$B$6:$B$15`, values: [{ name: 'Market Cap', ref: `${d}!$E$6:$E$15`, color: palette[0] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
       position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
     { id: 'mkt-tr', type: 'doughnut', title: 'Market Cap Distribution', sheetName: 'CRK Dashboard',
-      dataRange: { categories: `${d}!$B$6:$B$15`, values: [{ name: 'Market Cap', ref: `${d}!$E$6:$E$15` }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
       position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
     { id: 'mkt-bl', type: 'bar', title: '24h Price Change %', sheetName: 'CRK Dashboard',
-      dataRange: { categories: `${d}!$B$6:$B$15`, values: [{ name: '24h Change', ref: `${d}!$F$6:$F$15`, color: palette[1] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('24h Change', t, 'Change24h', palette[1])] },
       position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
     { id: 'mkt-br', type: 'line', title: 'Price Comparison', sheetName: 'CRK Dashboard',
-      dataRange: { categories: `${d}!$B$6:$B$15`, values: [{ name: 'Price', ref: `${d}!$D$6:$D$15`, color: palette[2] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Price', t, 'Price', palette[2])] },
       position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
   ];
 }
 
 /** Screener: Bar(MCap Top 20) → Doughnut(Share) → Bar(24h%) → Bar(7d%) */
 function getScreenerCharts(palette: string[]): ChartDefinition[] {
-  const d = "'CRK Screener Data'";
+  const t = 'CRK_Market';
   return [
     { id: 'scr-tl', type: 'bar', title: 'Top 20 by Market Cap', sheetName: 'CRK Screener',
-      dataRange: { categories: `${d}!$B$6:$B$25`, values: [{ name: 'Market Cap', ref: `${d}!$E$6:$E$25`, color: palette[0] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
       position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
     { id: 'scr-tr', type: 'doughnut', title: 'Market Share (Top 10)', sheetName: 'CRK Screener',
-      dataRange: { categories: `${d}!$B$6:$B$15`, values: [{ name: 'Market Cap', ref: `${d}!$E$6:$E$15` }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
       position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
     { id: 'scr-bl', type: 'bar', title: '24h Change — Top 20', sheetName: 'CRK Screener',
-      dataRange: { categories: `${d}!$B$6:$B$25`, values: [{ name: '24h Change', ref: `${d}!$F$6:$F$25`, color: palette[1] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('24h Change', t, 'Change24h', palette[1])] },
       position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
     { id: 'scr-br', type: 'bar', title: '7d Change — Top 20', sheetName: 'CRK Screener',
-      dataRange: { categories: `${d}!$B$6:$B$25`, values: [{ name: '7d Change', ref: `${d}!$G$6:$G$25`, color: palette[3] }] },
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('7d Change', t, 'Change7d', palette[3])] },
       position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
   ];
 }
 
-/** Portfolio: Doughnut(Allocation hero) → Bar(Holdings) → Bar(Top MCap) → Doughnut(Market) */
+/** Portfolio: Legacy cell-range refs (dual row ranges can't be structured refs) */
 function getPortfolioCharts(palette: string[]): ChartDefinition[] {
   const d = "'CRK Portfolio Data'";
   return [
@@ -270,41 +279,95 @@ function getPortfolioCharts(palette: string[]): ChartDefinition[] {
 // ║  Deep dive: technicals + dominance + comparison           ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/** Bitcoin: Bar(Technicals) → Doughnut(BTC vs Market) → Line(Moving Avg) → Bar(Comparison) */
+/** Bitcoin: Area(Price+BB) → Line(Moving Averages) → Line(RSI) → Combo(MACD) */
 function getBitcoinCharts(palette: string[]): ChartDefinition[] {
-  const d = "'CRK Bitcoin Data'";
+  const t = 'CRK_BTC_Technical';
   return [
-    { id: 'btc-tl', type: 'bar', title: 'Technical Indicators', sheetName: 'CRK Bitcoin',
-      dataRange: { categories: `${d}!$B$6:$B$12`, values: [{ name: 'Value', ref: `${d}!$C$6:$C$12`, color: palette[0] }] },
-      position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'btc-tr', type: 'doughnut', title: 'BTC vs Market', sheetName: 'CRK Bitcoin',
-      dataRange: { categories: `${d}!$B$16:$B$25`, values: [{ name: 'Market Cap', ref: `${d}!$E$16:$E$25` }] },
-      position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
-    { id: 'btc-bl', type: 'line', title: 'Moving Averages', sheetName: 'CRK Bitcoin',
-      dataRange: { categories: `${d}!$B$7:$B$10`, values: [{ name: 'Value', ref: `${d}!$C$7:$C$10`, color: palette[1] }] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'btc-br', type: 'bar', title: 'Top Coins Comparison', sheetName: 'CRK Bitcoin',
-      dataRange: { categories: `${d}!$B$16:$B$25`, values: [{ name: 'Price', ref: `${d}!$D$16:$D$25`, color: palette[2] }] },
-      position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
+    // TL: Price + Bollinger Bands (area chart)
+    { id: 'btc-tl', type: 'area', title: 'Price + Bollinger Bands', sheetName: 'CRK Bitcoin',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('Close', t, 'Close', palette[0]),
+          sRef('BB Upper', t, 'BB_Upper', palette[1]),
+          sRef('BB Lower', t, 'BB_Lower', palette[2]),
+        ],
+      },
+      position: TL, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+    // TR: Moving Averages (line)
+    { id: 'btc-tr', type: 'line', title: 'Moving Averages', sheetName: 'CRK Bitcoin',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('Close', t, 'Close', palette[0]),
+          sRef('SMA(20)', t, 'SMA20', palette[1]),
+          sRef('SMA(50)', t, 'SMA50', palette[3]),
+          sRef('EMA(12)', t, 'EMA12', palette[4]),
+        ],
+      },
+      position: TR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+    // BL: RSI(14)
+    { id: 'btc-bl', type: 'line', title: 'RSI(14)', sheetName: 'CRK Bitcoin',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [sRef('RSI', t, 'RSI14', palette[0])],
+      },
+      position: BL, style: { darkTheme: true, showLegend: false, transparent: true, colors: palette } },
+    // BR: MACD + Signal (combo)
+    { id: 'btc-br', type: 'combo', title: 'MACD', sheetName: 'CRK Bitcoin',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('MACD Hist', t, 'MACD_Hist', palette[2]),
+          sRef('MACD', t, 'MACD', palette[0]),
+          sRef('Signal', t, 'Signal', palette[1]),
+        ],
+      },
+      position: BR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
   ];
 }
 
-/** Ethereum: Bar(Technicals) → Doughnut(DeFi Ecosystem) → Line(Moving Avg) → Bar(DeFi TVL) */
+/** Ethereum: Area(Price+BB) → Line(Moving Averages) → Line(RSI) → Combo(MACD) */
 function getEthereumCharts(palette: string[]): ChartDefinition[] {
-  const d = "'CRK Ethereum Data'";
+  const t = 'CRK_ETH_Technical';
   return [
-    { id: 'eth-tl', type: 'bar', title: 'ETH Technical Indicators', sheetName: 'CRK Ethereum',
-      dataRange: { categories: `${d}!$B$6:$B$12`, values: [{ name: 'Value', ref: `${d}!$C$6:$C$12`, color: palette[0] }] },
-      position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'eth-tr', type: 'doughnut', title: 'ETH vs DeFi Ecosystem', sheetName: 'CRK Ethereum',
-      dataRange: { categories: `${d}!$A$16:$A$25`, values: [{ name: 'TVL', ref: `${d}!$B$16:$B$25` }] },
-      position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
-    { id: 'eth-bl', type: 'line', title: 'Moving Averages', sheetName: 'CRK Ethereum',
-      dataRange: { categories: `${d}!$B$7:$B$10`, values: [{ name: 'Value', ref: `${d}!$C$7:$C$10`, color: palette[1] }] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'eth-br', type: 'bar', title: 'DeFi Protocol TVL', sheetName: 'CRK Ethereum',
-      dataRange: { categories: `${d}!$A$16:$A$25`, values: [{ name: 'TVL', ref: `${d}!$B$16:$B$25`, color: palette[2] }] },
-      position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
+    { id: 'eth-tl', type: 'area', title: 'Price + Bollinger Bands', sheetName: 'CRK Ethereum',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('Close', t, 'Close', palette[0]),
+          sRef('BB Upper', t, 'BB_Upper', palette[1]),
+          sRef('BB Lower', t, 'BB_Lower', palette[2]),
+        ],
+      },
+      position: TL, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+    { id: 'eth-tr', type: 'line', title: 'Moving Averages', sheetName: 'CRK Ethereum',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('Close', t, 'Close', palette[0]),
+          sRef('SMA(20)', t, 'SMA20', palette[1]),
+          sRef('SMA(50)', t, 'SMA50', palette[3]),
+          sRef('EMA(12)', t, 'EMA12', palette[4]),
+        ],
+      },
+      position: TR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+    { id: 'eth-bl', type: 'line', title: 'RSI(14)', sheetName: 'CRK Ethereum',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [sRef('RSI', t, 'RSI14', palette[0])],
+      },
+      position: BL, style: { darkTheme: true, showLegend: false, transparent: true, colors: palette } },
+    { id: 'eth-br', type: 'combo', title: 'MACD', sheetName: 'CRK Ethereum',
+      dataRange: {
+        categories: tRef(t, 'Date'),
+        values: [
+          sRef('MACD Hist', t, 'MACD_Hist', palette[2]),
+          sRef('MACD', t, 'MACD', palette[0]),
+          sRef('Signal', t, 'Signal', palette[1]),
+        ],
+      },
+      position: BR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
   ];
 }
 
@@ -313,33 +376,33 @@ function getEthereumCharts(palette: string[]): ChartDefinition[] {
 // ║  Show composition, distribution, ecosystem health         ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/** DeFi: Bar(TVL ranking) → Doughnut(Protocol share) → Bar(Volume) → Line(TVL vs Volume multi-series) */
+/** DeFi: Bar(MCap ranking) → Doughnut(Protocol share) → Bar(Volume) → Line(MCap vs Volume) */
 function getDefiCharts(palette: string[]): ChartDefinition[] {
-  const d = "'CRK DeFi Data'";
+  const t = 'CRK_DeFi';
   return [
-    { id: 'defi-tl', type: 'bar', title: 'Top 10 Protocols by TVL', sheetName: 'CRK DeFi',
-      dataRange: { categories: `${d}!$A$6:$A$15`, values: [{ name: 'TVL', ref: `${d}!$C$6:$C$15`, color: palette[0] }] },
+    { id: 'defi-tl', type: 'bar', title: 'Top DeFi by Market Cap', sheetName: 'CRK DeFi',
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
       position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'defi-tr', type: 'doughnut', title: 'Protocol Distribution', sheetName: 'CRK DeFi',
-      dataRange: { categories: `${d}!$A$6:$A$15`, values: [{ name: 'TVL', ref: `${d}!$C$6:$C$15` }] },
+    { id: 'defi-tr', type: 'doughnut', title: 'DeFi Protocol Share', sheetName: 'CRK DeFi',
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
       position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
-    { id: 'defi-bl', type: 'bar', title: 'DeFi 24h Volume', sheetName: 'CRK DeFi',
-      dataRange: { categories: `${d}!$A$6:$A$15`, values: [{ name: 'Volume', ref: `${d}!$D$6:$D$15`, color: palette[1] }] },
+    { id: 'defi-bl', type: 'bar', title: '24h Trading Volume', sheetName: 'CRK DeFi',
+      dataRange: { categories: tRef(t, 'Name'), values: [sRef('Volume', t, 'Volume24h', palette[1])] },
       position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
-    { id: 'defi-br', type: 'line', title: 'TVL vs Volume', sheetName: 'CRK DeFi',
-      dataRange: { categories: `${d}!$A$6:$A$15`, values: [
-        { name: 'TVL', ref: `${d}!$C$6:$C$15`, color: palette[0] },
-        { name: 'Volume', ref: `${d}!$D$6:$D$15`, color: palette[2] },
+    { id: 'defi-br', type: 'line', title: 'MCap vs Volume', sheetName: 'CRK DeFi',
+      dataRange: { categories: tRef(t, 'Name'), values: [
+        sRef('Market Cap', t, 'MarketCap', palette[0]),
+        sRef('Volume', t, 'Volume24h', palette[1]),
       ] },
       position: BR, style: { darkTheme: true, showLegend: true, colors: palette } },
   ];
 }
 
-/** NFT: Bar(Volume ranking) → Doughnut(Volume share) → Bar(Floor price) → Line(24h trend) */
+/** NFT: Legacy cell-range refs (PQ has metadata only, no numeric chart data) */
 function getNftCharts(palette: string[]): ChartDefinition[] {
-  // Collection(A) Floor(B) Volume(C) Owners(D) 24h%(E) — data row 6+
-  return makeGridCharts({
-    prefix: 'nft', visualSheet: 'CRK NFTs', dataSheet: 'CRK NFTs Data',
+  const d = "'CRK NFTs Data'";
+  return makeGridChartsLegacy({
+    prefix: 'nft', visualSheet: 'CRK NFTs', dataSheet: d,
     catCol: 'A', palette,
     tl: { title: 'Top 10 by Volume', type: 'bar', valCol: 'C' },
     tr: { title: 'Volume Distribution', type: 'doughnut', valCol: 'C' },
@@ -350,40 +413,37 @@ function getNftCharts(palette: string[]): ChartDefinition[] {
 
 /** Stablecoins: Bar(MCap) → Doughnut(Market share) → Bar(Volume) → Line(Price stability) */
 function getStablecoinCharts(palette: string[]): ChartDefinition[] {
-  // Name(A) Price(B) MCap(C) Volume(D) 24h%(E)
   return makeGridCharts({
-    prefix: 'stable', visualSheet: 'CRK Stablecoins', dataSheet: 'CRK Stablecoins Data',
-    catCol: 'A', palette,
-    tl: { title: 'Market Cap Ranking', type: 'bar', valCol: 'C' },
-    tr: { title: 'Stablecoin Market Share', type: 'doughnut', valCol: 'C' },
-    bl: { title: '24h Trading Volume', type: 'bar', valCol: 'D' },
-    br: { title: 'Price Stability (Peg)', type: 'line', valCol: 'B' },  // Line shows peg deviation
+    prefix: 'stable', visualSheet: 'CRK Stablecoins',
+    tableName: 'CRK_Stablecoins', catColumn: 'Name', palette,
+    tl: { title: 'Market Cap Ranking', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Stablecoin Market Share', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Trading Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: 'Price Stability (Peg)', type: 'line', column: 'Price' },
   });
 }
 
 /** Categories: Bar(MCap) → Pie(Category share) → Bar(Volume) → Bar(24h%) */
 function getCategoriesCharts(palette: string[]): ChartDefinition[] {
-  // Category(A) MCap(B) Volume(C) 24h%(D) Coins(E)
   return makeGridCharts({
-    prefix: 'cats', visualSheet: 'CRK Categories', dataSheet: 'CRK Categories Data',
-    catCol: 'A', palette,
-    tl: { title: 'Top Categories by Market Cap', type: 'bar', valCol: 'B' },
-    tr: { title: 'Sector Distribution', type: 'pie', valCol: 'B' },
-    bl: { title: '24h Trading Volume', type: 'bar', valCol: 'C' },
-    br: { title: '24h Change by Category', type: 'bar', valCol: 'D' },
+    prefix: 'cats', visualSheet: 'CRK Categories',
+    tableName: 'CRK_Categories', catColumn: 'Name', palette,
+    tl: { title: 'Top Categories by Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Sector Distribution', type: 'pie', column: 'MarketCap' },
+    bl: { title: '24h Trading Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: '24h Change by Category', type: 'bar', column: 'MarketCapChange24h' },
   });
 }
 
 /** Category tokens (RWA, Metaverse, Privacy): Bar(MCap) → Doughnut(Share) → Bar(24h%) → Line(Price) */
 function getCategoryTokenCharts(palette: string[]): ChartDefinition[] {
-  // Uses TOP() → #(A) Name(B) Symbol(C) Price(D) MCap(E) 24h%(F) 7d%(G)
   return makeGridCharts({
-    prefix: 'cattoken', visualSheet: 'CRK Tokens', dataSheet: 'CRK Tokens Data',
-    catCol: 'B', palette,
-    tl: { title: 'Market Cap Ranking', type: 'bar', valCol: 'E' },
-    tr: { title: 'Market Cap Distribution', type: 'doughnut', valCol: 'E' },
-    bl: { title: '24h Price Change', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },
+    prefix: 'cattoken', visualSheet: 'CRK Tokens',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Market Cap Ranking', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Price Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
@@ -392,59 +452,53 @@ function getCategoryTokenCharts(palette: string[]): ChartDefinition[] {
 // ║  Decision support: indicators, OI, volatility             ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/**
- * Technical Analysis: Bar(RSI) → Bar(Price) → Line(SMA vs EMA multi-series) → Line(MACD)
- * Key: Moving averages use LINE charts, not bars — per other-levels design principles.
- */
+/** Technical Analysis: Bar(Price) → Doughnut(MCap) → Bar(24h%) → Bar(Volume) */
 function getTechnicalCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) RSI(C) SMA(D) EMA(E) BBU(F) BBL(G) MACD(H)
   return makeGridCharts({
-    prefix: 'tech', visualSheet: 'CRK Technical', dataSheet: 'CRK Technical Data',
-    catCol: 'A', palette,
-    tl: { title: 'RSI Comparison', type: 'bar', valCol: 'C' },
-    tr: { title: 'Price Comparison', type: 'bar', valCol: 'B' },
-    bl: { title: 'SMA vs EMA', type: 'line', valCol: 'D',             // LINE for moving averages
-          series2: { name: 'EMA(20)', valCol: 'E', colorIdx: 3 } },   // Multi-series: SMA + EMA
-    br: { title: 'MACD Signal', type: 'line', valCol: 'H' },          // LINE for oscillator
+    prefix: 'tech', visualSheet: 'CRK Technical',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Price Comparison', type: 'bar', column: 'Price' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Change', type: 'bar', column: 'Change24h',
+          series2: { name: '7d Change', column: 'Change7d', colorIdx: 3 } },
+    br: { title: 'Trading Volume', type: 'bar', column: 'Volume24h' },
   });
 }
 
-/** Derivatives: Bar(OI ranking) → Doughnut(OI share) → Bar(Volume) → Bar(Trust) */
+/** Derivatives: Bar(OI ranking) → Doughnut(OI share) → Bar(Volume) → Bar(Funding Rate) */
 function getDerivativesCharts(palette: string[]): ChartDefinition[] {
-  // Exchange(A) OI(B) 24hVol(C) Pairs(D) Trust(E)
   return makeGridCharts({
-    prefix: 'deriv', visualSheet: 'CRK Derivatives', dataSheet: 'CRK Derivatives Data',
-    catCol: 'A', palette,
-    tl: { title: 'Open Interest Ranking', type: 'bar', valCol: 'B' },
-    tr: { title: 'OI Market Share', type: 'doughnut', valCol: 'B' },
-    bl: { title: '24h Trading Volume', type: 'bar', valCol: 'C' },
-    br: { title: 'Trust Score', type: 'bar', valCol: 'E' },
+    prefix: 'deriv', visualSheet: 'CRK Derivatives',
+    tableName: 'CRK_Derivatives', catColumn: 'Market', palette,
+    tl: { title: 'Open Interest Ranking', type: 'bar', column: 'OpenInterest' },
+    tr: { title: 'OI Market Share', type: 'doughnut', column: 'OpenInterest' },
+    bl: { title: '24h Trading Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: 'Funding Rate', type: 'bar', column: 'FundingRate' },
   });
 }
 
 /** Liquidations: Bar(OI) → Doughnut(OI share) → Bar(Volume) → Pie(Market share) */
 function getLiquidationsCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'liq', visualSheet: 'CRK Liquidations', dataSheet: 'CRK Liquidations Data',
-    catCol: 'A', palette,
-    tl: { title: 'Open Interest', type: 'bar', valCol: 'B' },
-    tr: { title: 'OI Distribution', type: 'doughnut', valCol: 'B' },
-    bl: { title: '24h Trading Volume', type: 'bar', valCol: 'C' },
-    br: { title: 'Volume Market Share', type: 'pie', valCol: 'C' },
+    prefix: 'liq', visualSheet: 'CRK Liquidations',
+    tableName: 'CRK_Derivatives', catColumn: 'Market', palette,
+    tl: { title: 'Open Interest', type: 'bar', column: 'OpenInterest' },
+    tr: { title: 'OI Distribution', type: 'doughnut', column: 'OpenInterest' },
+    bl: { title: '24h Trading Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: 'Volume Market Share', type: 'pie', column: 'Volume24h' },
   });
 }
 
-/** Volatility: Bar(Price vs ATH) → Doughnut(ATH distribution) → Bar(24h%) → Line(Price trend) */
+/** Volatility: Bar(Price) → Bar(ATH) → Bar(24h%) → Line(Price vs ATH) */
 function getVolatilityCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) ATH(D)
   return makeGridCharts({
-    prefix: 'vol', visualSheet: 'CRK Volatility', dataSheet: 'CRK Volatility Data',
-    catCol: 'A', palette,
-    tl: { title: 'Current Price', type: 'bar', valCol: 'B' },
-    tr: { title: 'All-Time High', type: 'bar', valCol: 'D' },
-    bl: { title: '24h Change %', type: 'bar', valCol: 'C' },
-    br: { title: 'Price vs ATH', type: 'line', valCol: 'B',                  // Multi-series line
-          series2: { name: 'ATH', valCol: 'D', colorIdx: 3 } },              // Price vs ATH comparison
+    prefix: 'vol', visualSheet: 'CRK Volatility',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Current Price', type: 'bar', column: 'Price' },
+    tr: { title: 'All-Time High', type: 'bar', column: 'ATH' },
+    bl: { title: '24h Change %', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price vs ATH', type: 'line', column: 'Price',
+          series2: { name: 'ATH', column: 'ATH', colorIdx: 3 } },
   });
 }
 
@@ -453,90 +507,75 @@ function getVolatilityCharts(palette: string[]): ChartDefinition[] {
 // ║  Movers, performance comparison, competitive analysis     ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/**
- * Gainers: Bar(24h% — THE key metric first) → Doughnut(MCap share) → Bar(7d%) → Line(Price)
- * The 24h change is the hero chart for a gainers dashboard.
- */
+/** Gainers: Bar(24h%) → Doughnut(MCap share) → Bar(Volume) → Line(Price) */
 function getGainersCharts(palette: string[]): ChartDefinition[] {
-  // TOP() → #(A) Name(B) Symbol(C) Price(D) MCap(E) 24h%(F) 7d%(G)
   return makeGridCharts({
-    prefix: 'gain', visualSheet: 'CRK Gainers', dataSheet: 'CRK Gainers Data',
-    catCol: 'B', rows: 20, palette,
-    tl: { title: '24h Top Performers', type: 'bar', valCol: 'F' },           // HERO: 24h change
-    tr: { title: 'Market Cap Share', type: 'doughnut', valCol: 'E' },
-    bl: { title: '7d Performance', type: 'bar', valCol: 'G' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },            // Line for price trend
+    prefix: 'gain', visualSheet: 'CRK Gainers',
+    tableName: 'CRK_Gainers', catColumn: 'Name', palette,
+    tl: { title: '24h Top Performers', type: 'bar', column: 'Change24h' },
+    tr: { title: 'Market Cap Share', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: 'Trading Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
-/** Trending: Bar(MCap) → Doughnut(Distribution) → Bar(Price) → Bar(Score) */
+/** Trending: Bar(MCap) → Doughnut(Distribution) → Bar(Score) → Bar(Rank) */
 function getTrendingCharts(palette: string[]): ChartDefinition[] {
-  // Name(A) Symbol(B) Price(C) MCap(D) Score(E)
   return makeGridCharts({
-    prefix: 'trend', visualSheet: 'CRK Trending', dataSheet: 'CRK Trending Data',
-    catCol: 'A', rows: 7, palette,
-    tl: { title: 'Trending — Market Cap', type: 'bar', valCol: 'D' },
-    tr: { title: 'Trending Distribution', type: 'doughnut', valCol: 'D' },
-    bl: { title: 'Price Ranking', type: 'bar', valCol: 'C' },
-    br: { title: 'Trending Score', type: 'bar', valCol: 'E' },
+    prefix: 'trend', visualSheet: 'CRK Trending',
+    tableName: 'CRK_Trending', catColumn: 'Name', palette,
+    tl: { title: 'Trending — Rank', type: 'bar', column: 'MarketCapRank' },
+    tr: { title: 'Trending Score', type: 'bar', column: 'Score' },
+    bl: { title: 'Score Distribution', type: 'doughnut', column: 'Score' },
+    br: { title: 'Rank Overview', type: 'bar', column: 'MarketCapRank' },
   });
 }
 
-/**
- * Meme Coins: Bar(MCap ranking) → Doughnut(Meme market share) → Bar(24h%) → Line(7d trend)
- * Line chart for 7d% shows weekly momentum trend.
- */
+/** Meme Coins: Bar(MCap) → Doughnut(Meme market share) → Bar(24h%) → Bar(Volume) */
 function getMemeCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'meme', visualSheet: 'CRK Meme Coins', dataSheet: 'CRK Meme Coins Data',
-    catCol: 'B', palette,
-    tl: { title: 'Meme Market Cap', type: 'bar', valCol: 'E' },
-    tr: { title: 'Meme Market Share', type: 'doughnut', valCol: 'E' },
-    bl: { title: '24h Price Change', type: 'bar', valCol: 'F' },
-    br: { title: '7d Trend', type: 'line', valCol: 'G' },                    // Line for weekly trend
+    prefix: 'meme', visualSheet: 'CRK Meme Coins',
+    tableName: 'CRK_MemeCoins', catColumn: 'Name', palette,
+    tl: { title: 'Meme Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Meme Market Share', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Price Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Trading Volume', type: 'bar', column: 'Volume24h' },
   });
 }
 
 /** AI/Gaming: Bar(MCap) → Doughnut(Distribution) → Bar(24h%) → Line(Price) */
 function getAiGamingCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'ai', visualSheet: 'CRK AI Tokens', dataSheet: 'CRK AI Tokens Data',
-    catCol: 'B', palette,
-    tl: { title: 'AI Token Market Cap', type: 'bar', valCol: 'E' },
-    tr: { title: 'AI Market Distribution', type: 'doughnut', valCol: 'E' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },
+    prefix: 'ai', visualSheet: 'CRK AI Tokens',
+    tableName: 'CRK_AI_Tokens', catColumn: 'Name', palette,
+    tl: { title: 'AI Token Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'AI Market Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
-/**
- * Altcoin Season: Doughnut(Dominance — hero gauge) → Bar(MCap ranking) → Bar(24h%) → Line(Price)
- * Doughnut as hero shows market dominance distribution (the core altcoin season metric).
- */
+/** Altcoin Season: Doughnut(Dominance) → Bar(MCap ranking) → Bar(24h%) → Line(Price) */
 function getAltcoinCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'alt', visualSheet: 'CRK Altcoin Season', dataSheet: 'CRK Altcoin Season Data',
-    catCol: 'B', palette,
-    tl: { title: 'Dominance Distribution', type: 'doughnut', valCol: 'E' },  // HERO: dominance gauge
-    tr: { title: 'Top Coins by Market Cap', type: 'bar', valCol: 'E' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Trend', type: 'line', valCol: 'D' },
+    prefix: 'alt', visualSheet: 'CRK Altcoin Season',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Dominance Distribution', type: 'doughnut', column: 'MarketCap' },
+    tr: { title: 'Top Coins by Market Cap', type: 'bar', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Trend', type: 'line', column: 'Price' },
   });
 }
 
-/**
- * Layer Compare: Bar(MCap) → Doughnut(MCap share) → Line(RSI analysis) → Bar(24h%)
- * RSI uses LINE chart — it's a continuous oscillator, not a discrete ranking.
- */
+/** Layer Compare: Bar(MCap) → Doughnut(MCap share) → Bar(24h%) → Line(Price) */
 function getLayerCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D) RSI(E)
   return makeGridCharts({
-    prefix: 'layer', visualSheet: 'CRK Layer Compare', dataSheet: 'CRK Layer Compare Data',
-    catCol: 'A', palette,
-    tl: { title: 'Market Cap Comparison', type: 'bar', valCol: 'D' },
-    tr: { title: 'Market Share', type: 'doughnut', valCol: 'D' },
-    bl: { title: 'RSI Analysis', type: 'line', valCol: 'E' },                // LINE for oscillator
-    br: { title: '24h Performance', type: 'bar', valCol: 'C' },
+    prefix: 'layer', visualSheet: 'CRK Layer Compare',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Market Cap Comparison', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Market Share', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
@@ -545,71 +584,63 @@ function getLayerCharts(palette: string[]): ChartDefinition[] {
 // ║  Sentiment, research, correlation                         ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/**
- * Fear & Greed: Doughnut(Sentiment gauge — hero) → Bar(MCap) → Bar(24h%) → Line(Price)
- * Doughnut as hero mimics a "gauge meter" for sentiment — primary dashboard purpose.
- */
+/** Fear & Greed: Doughnut(Sentiment gauge) → Bar(MCap) → Bar(24h%) → Line(Price) */
 function getFearGreedCharts(palette: string[]): ChartDefinition[] {
-  // Data sheet: TOP(10) → #(A) Name(B) Symbol(C) Price(D) MCap(E) 24h%(F) 7d%(G)
   return makeGridCharts({
-    prefix: 'fg', visualSheet: 'CRK Fear & Greed', dataSheet: 'CRK Fear Greed Data',
-    catCol: 'B', palette,
-    tl: { title: 'Market Distribution', type: 'doughnut', valCol: 'E' },     // HERO: gauge-like
-    tr: { title: 'Top 10 Market Cap', type: 'bar', valCol: 'E' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Trend', type: 'line', valCol: 'D' },
+    prefix: 'fg', visualSheet: 'CRK Fear & Greed',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Market Distribution', type: 'doughnut', column: 'MarketCap' },
+    tr: { title: 'Top 10 Market Cap', type: 'bar', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Trend', type: 'line', column: 'Price' },
   });
 }
 
-/** Social Sentiment: Bar(24h gainers — key signal) → Doughnut(Distribution) → Bar(MCap) → Line(Price) */
+/** Social Sentiment: Bar(24h gainers) → Doughnut(Distribution) → Bar(MCap) → Line(Price) */
 function getSentimentCharts(palette: string[]): ChartDefinition[] {
-  // Data sheet: GAINERS(20) → #(A) Name(B) Symbol(C) Price(D) MCap(E) 24h%(F) 7d%(G)
   return makeGridCharts({
-    prefix: 'sent', visualSheet: 'CRK Sentiment', dataSheet: 'CRK Sentiment Data',
-    catCol: 'B', palette,
-    tl: { title: 'Top Gainers — 24h', type: 'bar', valCol: 'F' },            // HERO: biggest movers
-    tr: { title: 'Gainers Market Share', type: 'doughnut', valCol: 'E' },
-    bl: { title: 'Market Cap — Top Gainers', type: 'bar', valCol: 'E' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },
+    prefix: 'sent', visualSheet: 'CRK Sentiment',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Top Gainers — 24h', type: 'bar', column: 'Change24h' },
+    tr: { title: 'Market Share', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: 'Market Cap — Top Coins', type: 'bar', column: 'MarketCap' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
 /** Correlation: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Line(Price trend) */
 function getCorrelationCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D)
   return makeGridCharts({
-    prefix: 'corr', visualSheet: 'CRK Prices', dataSheet: 'CRK Prices Data',
-    catCol: 'A', palette,
-    tl: { title: 'Price Comparison', type: 'bar', valCol: 'B' },
-    tr: { title: 'Market Cap Distribution', type: 'doughnut', valCol: 'D' },
-    bl: { title: '24h Change', type: 'bar', valCol: 'C' },
-    br: { title: 'Price Trend', type: 'line', valCol: 'B' },                 // Line for correlation
+    prefix: 'corr', visualSheet: 'CRK Prices',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Price Comparison', type: 'bar', column: 'Price' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Trend', type: 'line', column: 'Price' },
   });
 }
 
-/** On-Chain/Whale: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Line(Price trend) */
+/** On-Chain/Whale: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Bar(MCap) */
 function getOnChainCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D)
   return makeGridCharts({
-    prefix: 'onchain', visualSheet: 'CRK On-Chain', dataSheet: 'CRK On-Chain Data',
-    catCol: 'A', palette,
-    tl: { title: 'Price Comparison', type: 'bar', valCol: 'B' },
-    tr: { title: 'On-Chain Value Distribution', type: 'doughnut', valCol: 'D' },
-    bl: { title: '24h Change', type: 'bar', valCol: 'C' },
-    br: { title: 'Market Cap Ranking', type: 'bar', valCol: 'D' },
+    prefix: 'onchain', visualSheet: 'CRK On-Chain',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Price Comparison', type: 'bar', column: 'Price' },
+    tr: { title: 'On-Chain Value Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Market Cap Ranking', type: 'bar', column: 'MarketCap' },
   });
 }
 
-/** Dev Activity: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Line(Price trend) */
+/** Dev Activity: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Line(MCap) */
 function getDevCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D)
   return makeGridCharts({
-    prefix: 'dev', visualSheet: 'CRK Dev Activity', dataSheet: 'CRK Dev Activity Data',
-    catCol: 'A', palette,
-    tl: { title: 'Price Comparison', type: 'bar', valCol: 'B' },
-    tr: { title: 'Development Ecosystem', type: 'doughnut', valCol: 'D' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'C' },
-    br: { title: 'Market Cap Overview', type: 'line', valCol: 'D' },         // Line for trend
+    prefix: 'dev', visualSheet: 'CRK Dev Activity',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Price Comparison', type: 'bar', column: 'Price' },
+    tr: { title: 'Development Ecosystem', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Market Cap Overview', type: 'line', column: 'MarketCap' },
   });
 }
 
@@ -618,41 +649,39 @@ function getDevCharts(palette: string[]): ChartDefinition[] {
 // ║  Exchange health, ETF holdings, reserves                  ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/** Exchanges: Bar(Volume ranking) → Doughnut(Volume share) → Bar(Pairs) → Bar(Trust) */
+/** Exchanges: Bar(Volume) → Doughnut(Volume share) → Bar(Trust) → Bar(Year) */
 function getExchangeCharts(palette: string[]): ChartDefinition[] {
-  // Exchange(A) Trust(B) 24hVol(C) Pairs(D) Year(E)
   return makeGridCharts({
-    prefix: 'exch', visualSheet: 'CRK Exchanges', dataSheet: 'CRK Exchanges Data',
-    catCol: 'A', palette,
-    tl: { title: 'Top 10 — 24h Volume', type: 'bar', valCol: 'C' },
-    tr: { title: 'Volume Market Share', type: 'doughnut', valCol: 'C' },
-    bl: { title: 'Trading Pairs Count', type: 'bar', valCol: 'D' },
-    br: { title: 'Trust Score', type: 'bar', valCol: 'B' },
+    prefix: 'exch', visualSheet: 'CRK Exchanges',
+    tableName: 'CRK_Exchanges', catColumn: 'Name', palette,
+    tl: { title: 'Top 10 — 24h Volume', type: 'bar', column: 'Volume24hBTC' },
+    tr: { title: 'Volume Market Share', type: 'doughnut', column: 'Volume24hBTC' },
+    bl: { title: 'Trust Score', type: 'bar', column: 'TrustScore' },
+    br: { title: 'Established Year', type: 'bar', column: 'Year' },
   });
 }
 
 /** Exchange Reserves: Same exchange data, reserve-focused titles */
 function getExchangeReserveCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'res', visualSheet: 'CRK Exchanges', dataSheet: 'CRK Exchanges Data',
-    catCol: 'A', palette,
-    tl: { title: 'Exchange Volume', type: 'bar', valCol: 'C' },
-    tr: { title: 'Reserve Distribution', type: 'doughnut', valCol: 'C' },
-    bl: { title: 'Trading Pairs', type: 'bar', valCol: 'D' },
-    br: { title: 'Trust Score', type: 'bar', valCol: 'B' },
+    prefix: 'res', visualSheet: 'CRK Exchanges',
+    tableName: 'CRK_Exchanges', catColumn: 'Name', palette,
+    tl: { title: 'Exchange Volume', type: 'bar', column: 'Volume24hBTC' },
+    tr: { title: 'Reserve Distribution', type: 'doughnut', column: 'Volume24hBTC' },
+    bl: { title: 'Trust Score', type: 'bar', column: 'TrustScore' },
+    br: { title: 'Year Established', type: 'bar', column: 'Year' },
   });
 }
 
 /** ETF: Bar(Holdings) → Doughnut(Holdings share) → Bar(Value) → Pie(Value distribution) */
 function getEtfCharts(palette: string[]): ChartDefinition[] {
-  // Company(A) Symbol(B) Holdings(C) Value(D) Country(E)
   return makeGridCharts({
-    prefix: 'etf', visualSheet: 'CRK ETFs', dataSheet: 'CRK ETFs Data',
-    catCol: 'A', palette,
-    tl: { title: 'BTC Holdings by Company', type: 'bar', valCol: 'C' },
-    tr: { title: 'Holdings Distribution', type: 'doughnut', valCol: 'C' },
-    bl: { title: 'Holding Value (USD)', type: 'bar', valCol: 'D' },
-    br: { title: 'Value Distribution', type: 'pie', valCol: 'D' },
+    prefix: 'etf', visualSheet: 'CRK ETFs',
+    tableName: 'CRK_BTC_Companies', catColumn: 'Name', palette,
+    tl: { title: 'BTC Holdings by Company', type: 'bar', column: 'TotalHoldings' },
+    tr: { title: 'Holdings Distribution', type: 'doughnut', column: 'TotalHoldings' },
+    bl: { title: 'Holding Value (USD)', type: 'bar', column: 'TotalCurrentValueUSD' },
+    br: { title: 'Value Distribution', type: 'pie', column: 'TotalCurrentValueUSD' },
   });
 }
 
@@ -661,42 +690,39 @@ function getEtfCharts(palette: string[]): ChartDefinition[] {
 // ║  Income opportunities, staking, DeFi yields               ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/** DeFi Yields: Bar(TVL) → Doughnut(TVL share) → Bar(Volume) → Line(24h trend) */
+/** DeFi Yields: Bar(MCap) → Doughnut(MCap share) → Bar(Volume) → Bar(24h%) */
 function getDefiYieldsCharts(palette: string[]): ChartDefinition[] {
-  // Protocol(A) Chain(B) TVL(C) Volume(D) 24h%(E)
   return makeGridCharts({
-    prefix: 'yield', visualSheet: 'CRK DeFi Yields', dataSheet: 'CRK DeFi Yields Data',
-    catCol: 'A', palette,
-    tl: { title: 'Top Protocols by TVL', type: 'bar', valCol: 'C' },
-    tr: { title: 'TVL Distribution', type: 'doughnut', valCol: 'C' },
-    bl: { title: '24h Volume', type: 'bar', valCol: 'D' },
-    br: { title: '24h Performance', type: 'bar', valCol: 'E' },
+    prefix: 'yield', visualSheet: 'CRK DeFi Yields',
+    tableName: 'CRK_DeFi', catColumn: 'Name', palette,
+    tl: { title: 'Top Protocols by Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Volume', type: 'bar', column: 'Volume24h' },
+    br: { title: '24h Performance', type: 'bar', column: 'Change24h' },
   });
 }
 
 /** Token Unlocks: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Line(Price trend) */
 function getTokenUnlockCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D)
   return makeGridCharts({
-    prefix: 'unlock', visualSheet: 'CRK Token Data', dataSheet: 'CRK Token Data Data',
-    catCol: 'A', palette,
-    tl: { title: 'Token Prices', type: 'bar', valCol: 'B' },
-    tr: { title: 'Market Cap Distribution', type: 'doughnut', valCol: 'D' },
-    bl: { title: '24h Change', type: 'bar', valCol: 'C' },
-    br: { title: 'Price Trend', type: 'line', valCol: 'B' },
+    prefix: 'unlock', visualSheet: 'CRK Token Data',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Token Prices', type: 'bar', column: 'Price' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Trend', type: 'line', column: 'Price' },
   });
 }
 
 /** Staking: Bar(MCap) → Doughnut(Staking share) → Bar(24h%) → Line(Price) */
 function getStakingCharts(palette: string[]): ChartDefinition[] {
-  // TOP() → #(A) Name(B) Symbol(C) Price(D) MCap(E) 24h%(F) 7d%(G)
   return makeGridCharts({
-    prefix: 'stake', visualSheet: 'CRK Staking', dataSheet: 'CRK Staking Data',
-    catCol: 'B', palette,
-    tl: { title: 'Staking Market Cap', type: 'bar', valCol: 'E' },
-    tr: { title: 'Staking Distribution', type: 'doughnut', valCol: 'E' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },
+    prefix: 'stake', visualSheet: 'CRK Staking',
+    tableName: 'CRK_StakingCoins', catColumn: 'Name', palette,
+    tl: { title: 'Staking Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'Staking Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
@@ -705,27 +731,80 @@ function getStakingCharts(palette: string[]): ChartDefinition[] {
 // ║  Mining, custom watchlist                                 ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-/** Mining: Bar(PoW MCap) → Doughnut(PoW distribution) → Bar(24h%) → Line(Price) */
+/** Mining: Bar(MCap) → Doughnut(Distribution) → Bar(24h%) → Line(Price) */
 function getMiningCharts(palette: string[]): ChartDefinition[] {
   return makeGridCharts({
-    prefix: 'mine', visualSheet: 'CRK Mining', dataSheet: 'CRK Mining Data',
-    catCol: 'B', palette,
-    tl: { title: 'PoW Market Cap', type: 'bar', valCol: 'E' },
-    tr: { title: 'PoW Distribution', type: 'doughnut', valCol: 'E' },
-    bl: { title: '24h Performance', type: 'bar', valCol: 'F' },
-    br: { title: 'Price Comparison', type: 'line', valCol: 'D' },
+    prefix: 'mine', visualSheet: 'CRK Mining',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'PoW Market Cap', type: 'bar', column: 'MarketCap' },
+    tr: { title: 'PoW Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Performance', type: 'bar', column: 'Change24h' },
+    br: { title: 'Price Comparison', type: 'line', column: 'Price' },
   });
 }
 
 /** Custom Watchlist: Bar(Price) → Doughnut(MCap share) → Bar(24h%) → Bar(Volume) */
 function getWatchlistCharts(palette: string[]): ChartDefinition[] {
-  // Coin(A) Price(B) 24h%(C) MCap(D) Volume(E)
   return makeGridCharts({
-    prefix: 'cust', visualSheet: 'CRK Watchlist', dataSheet: 'CRK Watchlist Data',
-    catCol: 'A', palette,
-    tl: { title: 'Price Overview', type: 'bar', valCol: 'B' },
-    tr: { title: 'Market Cap Distribution', type: 'doughnut', valCol: 'D' },
-    bl: { title: '24h Change', type: 'bar', valCol: 'C' },
-    br: { title: 'Trading Volume', type: 'bar', valCol: 'E' },
+    prefix: 'cust', visualSheet: 'CRK Watchlist',
+    tableName: 'CRK_Market', catColumn: 'Name', palette,
+    tl: { title: 'Price Overview', type: 'bar', column: 'Price' },
+    tr: { title: 'Market Cap Distribution', type: 'doughnut', column: 'MarketCap' },
+    bl: { title: '24h Change', type: 'bar', column: 'Change24h' },
+    br: { title: 'Trading Volume', type: 'bar', column: 'Volume24h' },
   });
+}
+
+// ============================================
+// Legacy helper for dashboards where PQ table
+// doesn't have all needed chart columns (NFT).
+// Uses hardcoded cell ranges — NOT auto-refreshable.
+// ============================================
+
+interface LegacyGridChart {
+  title: string;
+  type: ChartType;
+  valCol: string;
+}
+
+function makeGridChartsLegacy(opts: {
+  prefix: string;
+  visualSheet: string;
+  dataSheet: string;
+  catCol: string;
+  rows?: number;
+  tl: LegacyGridChart;
+  tr: LegacyGridChart;
+  bl: LegacyGridChart;
+  br: LegacyGridChart;
+  palette: string[];
+}): ChartDefinition[] {
+  const d = opts.dataSheet;
+  const n = opts.rows || 10;
+  const r1 = 6;
+  const r2 = r1 + n - 1;
+  const cat = opts.catCol;
+  const p = opts.palette;
+
+  const make = (pos: string, gc: LegacyGridChart, position: typeof TL, idx: number): ChartDefinition => {
+    return {
+      id: `${opts.prefix}-${pos}`,
+      type: gc.type,
+      title: gc.title,
+      sheetName: opts.visualSheet,
+      dataRange: {
+        categories: `${d}!$${cat}$${r1}:$${cat}$${r2}`,
+        values: [{ name: gc.title, ref: `${d}!$${gc.valCol}$${r1}:$${gc.valCol}$${r2}`, color: p[idx] }],
+      },
+      position,
+      style: { darkTheme: true, showLegend: gc.type === 'doughnut' || gc.type === 'pie', colors: p },
+    };
+  };
+
+  return [
+    make('tl', opts.tl, TL, 0),
+    make('tr', opts.tr, TR, 1),
+    make('bl', opts.bl, BL, 2),
+    make('br', opts.br, BR, 3),
+  ];
 }

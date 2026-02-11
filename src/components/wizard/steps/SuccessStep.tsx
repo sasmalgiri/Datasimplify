@@ -2,6 +2,7 @@
 
 import { useWizard } from '../WizardContext';
 import { CheckCircle, FileSpreadsheet, Key, ExternalLink, PartyPopper, BookOpen } from 'lucide-react';
+import { BYOK_HEADING, BYOK_PRIVACY_FULL } from '@/lib/constants/byokMessages';
 
 interface SuccessStepProps {
   onClose: () => void;
@@ -96,10 +97,10 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
             <div className="flex items-start gap-3">
               <Key className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm text-blue-200 font-medium mb-1">BYOK - Bring Your Own Key</p>
+                <p className="text-sm text-blue-200 font-medium mb-1">{BYOK_HEADING}</p>
                 <p className="text-xs text-blue-200/70">
-                  Your API key stays in your Excel file - we never see or store it.
-                  This gives you full control and privacy over your data access.
+                  {BYOK_PRIVACY_FULL}
+                  {' '}This gives you full control and privacy over your data access.
                 </p>
               </div>
             </div>

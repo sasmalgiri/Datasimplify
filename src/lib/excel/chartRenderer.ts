@@ -217,7 +217,6 @@ export function createDonutChart(
 
   // Calculate percentages
   const total = data.reduce((sum, d) => sum + d.value, 0);
-  let currentAngle = 0;
 
   // Create visual representation
   const segments: string[] = [];

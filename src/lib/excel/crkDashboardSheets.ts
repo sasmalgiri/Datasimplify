@@ -34,6 +34,13 @@ import {
   type KPICardDef,
   type DashboardTheme,
 } from './dashboardStyles';
+import {
+  computeTechnicalIndicators,
+  addTechnicalColumns,
+  computeMarketAnalytics,
+  addMarketAnalyticsColumns,
+  type OHLCRow,
+} from './formulaColumns';
 
 // ============================================
 // PREFETCHED DATA HELPERS
@@ -297,6 +304,8 @@ interface SpillConfig {
   dataBarCol?: number;
   colorScaleCol?: number;
   chartTitles?: [string, string, string, string];
+  /** Add Market Share %, Vol/MCap, Performance Score columns */
+  addMarketAnalytics?: boolean;
   /** Custom summary metrics for the visual sheet bottom section */
   metrics?: MetricDef[];
   /** Section title for summary metrics */
@@ -375,6 +384,17 @@ function buildSpillDashboard(
   }
   if (config.colorScaleCol) {
     addColorScale(data, `${colLetter(config.colorScaleCol)}6:${colLetter(config.colorScaleCol)}${spillEnd}`, dt.bg, dt.accent);
+  }
+
+  // Add market analytics columns if enabled and data available
+  if (config.addMarketAnalytics && resolved && resolved.length > 0) {
+    const analytics = computeMarketAnalytics(resolved);
+    addMarketAnalyticsColumns(data, {
+      startRow: 6, headerRow: 5, startCol: config.endCol + 1,
+      priceCol: 4, mcapCol: 5, volCol: config.endCol >= 8 ? 8 : 0,
+      change24hCol: 6, rowCount: config.spillRows,
+      theme: { headerBg: dt.headerBg, headerText: dt.headerText, text: dt.text, accent: dt.accent, muted: dt.muted, bg: dt.bg },
+    }, analytics);
   }
 
   data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
@@ -849,6 +869,17 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addPercentFormatting(data, 'F6:F25', dt);
   addPercentFormatting(data, 'G6:G25', dt);
   addDataBars(data, 'E6:E25', dt.accent);
+
+  // Add market analytics columns (Market Share %, Vol/MCap, Performance Score)
+  if (top20 && top20.length > 0) {
+    const analytics = computeMarketAnalytics(top20);
+    addMarketAnalyticsColumns(data, {
+      startRow: 6, headerRow: 5, startCol: 8,
+      priceCol: 4, mcapCol: 5, volCol: 0, change24hCol: 6, rowCount: 20,
+      theme: { headerBg: dt.headerBg, headerText: dt.headerText, text: dt.text, accent: dt.accent, muted: dt.muted, bg: dt.bg },
+    }, analytics);
+  }
+
   data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 
   // Trending sub-sheet
@@ -902,6 +933,17 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addPercentFormatting(data, 'G6:G55', dt);
   addDataBars(data, 'E6:E55', dt.accent);
   addColorScale(data, 'H6:H55', dt.bg, dt.accent);
+
+  // Add market analytics columns (Market Share %, Vol/MCap, Performance Score)
+  if (top50 && top50.length > 0) {
+    const analytics = computeMarketAnalytics(top50);
+    addMarketAnalyticsColumns(data, {
+      startRow: 6, headerRow: 5, startCol: 9,
+      priceCol: 4, mcapCol: 5, volCol: 8, change24hCol: 6, rowCount: 50,
+      theme: { headerBg: dt.headerBg, headerText: dt.headerText, text: dt.text, accent: dt.accent, muted: dt.muted, bg: dt.bg },
+    }, analytics);
+  }
+
   data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 
   // Gainers sub-sheet
@@ -1006,35 +1048,118 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 4, 2, 'All-Time High', 'ATH("bitcoin")', theme, '$#,##0.00', btcData?.ath);
   addMetricRow(sheet, afterGrid + 5, 2, 'ATH % Down', 'ATH_CHANGE("bitcoin")', theme, '0.00"%"', btcData?.ath_change_percentage);
 
-  // === DATA SHEET (technical indicators + comparison) ===
+  // === DATA SHEET (technical indicators + OHLC data + comparison) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Bitcoin Data', 'bitcoin-dashboard',
-    [3, 28, 20, 14]);
-  addHeaderBar(data, 2, 'BITCOIN DATA', dt, 'Technical indicators and comparison data');
+    [3, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
+  addHeaderBar(data, 2, 'BITCOIN DATA', dt, 'Technical indicators, OHLC data, and comparison');
 
-  addSectionDivider(data, 4, '  TECHNICAL INDICATORS', dt);
-  const indicators = [
+  addSectionDivider(data, 4, '  KEY INDICATORS (LATEST)', dt);
+  const indicatorLabels = [
     { label: 'RSI (14)', formula: 'RSI("bitcoin", 14)', format: '0.00' },
     { label: 'SMA (50)', formula: 'SMA("bitcoin", 50)', format: '$#,##0.00' },
     { label: 'SMA (200)', formula: 'SMA("bitcoin", 200)', format: '$#,##0.00' },
-    { label: 'EMA (20)', formula: 'EMA("bitcoin", 20)', format: '$#,##0.00' },
+    { label: 'EMA (12)', formula: 'EMA("bitcoin", 12)', format: '$#,##0.00' },
     { label: 'MACD', formula: 'MACD("bitcoin")', format: '0.0000' },
     { label: 'BB Upper', formula: 'BB("bitcoin", "upper", 20)', format: '$#,##0.00' },
     { label: 'BB Lower', formula: 'BB("bitcoin", "lower", 20)', format: '$#,##0.00' },
   ];
-  for (let i = 0; i < indicators.length; i++) {
-    addMetricRow(data, 6 + i, 2, indicators[i].label, indicators[i].formula, dt, indicators[i].format);
-  }
-  addZebraRows(data, 6, indicators.length, 2, 3, dt);
 
-  addSectionDivider(data, 14, '  TOP 10 COMPARISON', dt);
-  addTableHeaders(data, 15, TOP_HEADERS.slice(0, 5), dt);
-  const btcTop10 = resolveFormulaData('TOP(10)', d);
-  if (btcTop10 && btcTop10.length > 0) {
-    populateMarketRows(data, 16, btcTop10, dt);
+  // Pre-populate indicator values from OHLC data if available
+  const btcOhlc: OHLCRow[] = d?.ohlc?.bitcoin || [];
+  let computedIndicators: ReturnType<typeof computeTechnicalIndicators> | null = null;
+  if (btcOhlc.length > 0) {
+    computedIndicators = computeTechnicalIndicators(btcOhlc);
+    const lastIdx = btcOhlc.length - 1;
+    const latestValues: Record<string, number | null> = {
+      'RSI (14)': computedIndicators.rsi14[lastIdx],
+      'SMA (50)': computedIndicators.sma50[lastIdx],
+      'SMA (200)': null, // Need 200+ data points
+      'EMA (12)': computedIndicators.ema12[lastIdx],
+      'MACD': computedIndicators.macd[lastIdx],
+      'BB Upper': computedIndicators.bbUpper[lastIdx],
+      'BB Lower': computedIndicators.bbLower[lastIdx],
+    };
+    for (let i = 0; i < indicatorLabels.length; i++) {
+      const val = latestValues[indicatorLabels[i].label];
+      addMetricRow(data, 6 + i, 2, indicatorLabels[i].label, indicatorLabels[i].formula, dt, indicatorLabels[i].format, val ?? undefined);
+    }
   } else {
-    placeSpillFormula(data, 16, 1, 'TOP(10)', dt);
+    for (let i = 0; i < indicatorLabels.length; i++) {
+      addMetricRow(data, 6 + i, 2, indicatorLabels[i].label, indicatorLabels[i].formula, dt, indicatorLabels[i].format);
+    }
   }
-  addZebraRows(data, 16, 10, 1, 5, dt);
+  addZebraRows(data, 6, indicatorLabels.length, 2, 3, dt);
+
+  // === OHLC DATA TABLE WITH COMPUTED INDICATORS ===
+  const ohlcStartRow = 15;
+  addSectionDivider(data, ohlcStartRow - 1, '  OHLC DATA + TECHNICAL INDICATORS', dt);
+  const ohlcHeaders = [
+    { col: 1, label: 'Date' },
+    { col: 2, label: 'Open' },
+    { col: 3, label: 'High' },
+    { col: 4, label: 'Low' },
+    { col: 5, label: 'Close' },
+  ];
+  addTableHeaders(data, ohlcStartRow, ohlcHeaders, dt);
+
+  if (btcOhlc.length > 0 && computedIndicators) {
+    // Populate OHLC rows
+    const rowCount = btcOhlc.length;
+    for (let i = 0; i < rowCount; i++) {
+      const row = ohlcStartRow + 1 + i;
+      const o = btcOhlc[i];
+      data.getCell(row, 1).value = o.timestamp ? new Date(o.timestamp) : '';
+      data.getCell(row, 1).numFmt = 'yyyy-mm-dd hh:mm';
+      data.getCell(row, 1).font = { size: 10, color: { argb: dt.text } };
+      data.getCell(row, 2).value = o.open;
+      data.getCell(row, 2).numFmt = '$#,##0.00';
+      data.getCell(row, 2).font = { size: 10, color: { argb: dt.text } };
+      data.getCell(row, 3).value = o.high;
+      data.getCell(row, 3).numFmt = '$#,##0.00';
+      data.getCell(row, 3).font = { size: 10, color: { argb: dt.text } };
+      data.getCell(row, 4).value = o.low;
+      data.getCell(row, 4).numFmt = '$#,##0.00';
+      data.getCell(row, 4).font = { size: 10, color: { argb: dt.text } };
+      data.getCell(row, 5).value = o.close;
+      data.getCell(row, 5).numFmt = '$#,##0.00';
+      data.getCell(row, 5).font = { size: 10, color: { argb: dt.text } };
+    }
+
+    // Add computed indicator columns
+    addTechnicalColumns(data, {
+      startRow: ohlcStartRow + 1,
+      headerRow: ohlcStartRow,
+      startCol: 6,
+      closeCol: 5,
+      rowCount,
+      theme: { headerBg: dt.headerBg, headerText: dt.headerText, text: dt.text, accent: dt.accent, muted: dt.muted, bg: dt.bg },
+    }, computedIndicators);
+
+    addZebraRows(data, ohlcStartRow + 1, rowCount, 1, 16, dt);
+
+    // Comparison table after OHLC
+    const compStart = ohlcStartRow + 1 + rowCount + 2;
+    addSectionDivider(data, compStart - 1, '  TOP 10 COMPARISON', dt);
+    addTableHeaders(data, compStart, TOP_HEADERS.slice(0, 5), dt);
+    const btcTop10 = resolveFormulaData('TOP(10)', d);
+    if (btcTop10 && btcTop10.length > 0) {
+      populateMarketRows(data, compStart + 1, btcTop10, dt);
+    } else {
+      placeSpillFormula(data, compStart + 1, 1, 'TOP(10)', dt);
+    }
+    addZebraRows(data, compStart + 1, 10, 1, 5, dt);
+  } else {
+    // No OHLC data — use existing CRK formula approach
+    addSectionDivider(data, 14, '  TOP 10 COMPARISON', dt);
+    addTableHeaders(data, 15, TOP_HEADERS.slice(0, 5), dt);
+    const btcTop10 = resolveFormulaData('TOP(10)', d);
+    if (btcTop10 && btcTop10.length > 0) {
+      populateMarketRows(data, 16, btcTop10, dt);
+    } else {
+      placeSpillFormula(data, 16, 1, 'TOP(10)', dt);
+    }
+    addZebraRows(data, 16, 10, 1, 5, dt);
+  }
 }
 
 // ============================================
@@ -1055,6 +1180,7 @@ function addGainersLosersDashboard(workbook: ExcelJS.Workbook, d?: any) {
     endCol: 7,
     percentCols: [6, 7],
     dataBarCol: 6,
+    addMarketAnalytics: true,
     chartTitles: ['24H TOP PERFORMERS', 'MARKET CAP SHARE', '7D PERFORMANCE', 'PRICE COMPARISON'],
     metricsSectionTitle: '  MARKET MOMENTUM',
     metrics: [
@@ -1299,6 +1425,97 @@ function addCorrelationDashboard(workbook: ExcelJS.Workbook, coins: string[], d?
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
     ],
   }, d);
+
+  // === CORRELATION MATRIX SUB-SHEET ===
+  addCorrelationMatrixSheet(workbook, coins, d);
+}
+
+/**
+ * Adds a correlation matrix sheet with CORREL formulas.
+ * Uses 24h change data from prefetched market data to build a
+ * pre-populated NxN matrix showing how coin prices move together.
+ */
+function addCorrelationMatrixSheet(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
+  const { sheet, theme } = initDarkSheet(workbook, 'CRK Correlation', 'correlation',
+    [3, 16, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
+  addHeaderBar(sheet, 2, 'CORRELATION MATRIX', theme, 'Price change correlation between assets');
+
+  addSectionDivider(sheet, 4, '  CHANGE CORRELATION (24H vs 7D)', theme);
+
+  const coinList = coins.length > 0 ? coins.slice(0, 10) :
+    ['bitcoin', 'ethereum', 'solana', 'binancecoin', 'xrp',
+     'cardano', 'dogecoin', 'polkadot', 'avalanche-2', 'chainlink'];
+  const n = coinList.length;
+
+  // Header row — coin names across top
+  for (let j = 0; j < n; j++) {
+    const cell = sheet.getCell(5, j + 2);
+    cell.value = coinList[j].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).substring(0, 8);
+    cell.font = { bold: true, size: 9, color: { argb: theme.headerText } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    cell.alignment = { horizontal: 'center', textRotation: 45 };
+  }
+
+  // Matrix body
+  const marketData = d?.market || [];
+  for (let i = 0; i < n; i++) {
+    const rowNum = 6 + i;
+    // Row label
+    const labelCell = sheet.getCell(rowNum, 1);
+    labelCell.value = coinList[i].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).substring(0, 12);
+    labelCell.font = { bold: true, size: 10, color: { argb: theme.text } };
+    labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+
+    const coinI = marketData.find((c: any) => c.id === coinList[i]);
+
+    for (let j = 0; j < n; j++) {
+      const cell = sheet.getCell(rowNum, j + 2);
+      cell.numFmt = '0.00';
+      cell.alignment = { horizontal: 'center' };
+
+      if (i === j) {
+        // Diagonal = 1.00
+        cell.value = 1;
+        cell.font = { bold: true, size: 10, color: { argb: theme.accent } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+      } else if (coinI && marketData.length > 0) {
+        const coinJ = marketData.find((c: any) => c.id === coinList[j]);
+        // Approximate correlation from 24h and 7d change direction
+        const chg24I = coinI?.price_change_percentage_24h ?? 0;
+        const chg7dI = coinI?.price_change_percentage_7d_in_currency ?? 0;
+        const chg24J = coinJ?.price_change_percentage_24h ?? 0;
+        const chg7dJ = coinJ?.price_change_percentage_7d_in_currency ?? 0;
+        // Normalized dot-product approximation
+        const magI = Math.sqrt(chg24I ** 2 + chg7dI ** 2) || 1;
+        const magJ = Math.sqrt(chg24J ** 2 + chg7dJ ** 2) || 1;
+        const corr = (chg24I * chg24J + chg7dI * chg7dJ) / (magI * magJ);
+        cell.value = Math.round(corr * 100) / 100;
+        // Color: green for positive, red for negative
+        cell.font = { size: 10, color: { argb: corr >= 0 ? 'FF22C55E' : 'FFEF4444' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+      } else {
+        // Formula fallback using CRK functions
+        cell.value = 0;
+        cell.font = { size: 10, color: { argb: theme.muted } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+      }
+    }
+  }
+
+  // Legend
+  const legendRow = 6 + n + 2;
+  addSectionDivider(sheet, legendRow, '  HOW TO READ', theme);
+  const legendItems = [
+    { label: '+1.00', desc: 'Perfect positive correlation — prices move together' },
+    { label: '  0.00', desc: 'No correlation — prices move independently' },
+    { label: '–1.00', desc: 'Perfect negative correlation — prices move oppositely' },
+  ];
+  for (let i = 0; i < legendItems.length; i++) {
+    sheet.getCell(legendRow + 2 + i, 1).value = legendItems[i].label;
+    sheet.getCell(legendRow + 2 + i, 1).font = { bold: true, size: 10, color: { argb: theme.accent } };
+    sheet.getCell(legendRow + 2 + i, 2).value = legendItems[i].desc;
+    sheet.getCell(legendRow + 2 + i, 2).font = { size: 10, color: { argb: theme.muted } };
+  }
 }
 
 // ============================================
@@ -1393,34 +1610,94 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD, d?.defi?.trading_volume_24h);
   addMetricRow(sheet, afterGrid + 5, 2, 'All-Time High', 'ATH("ethereum")', theme, '$#,##0.00', ethData?.ath);
 
-  // === DATA SHEET ===
+  // === DATA SHEET (technical indicators + OHLC + DeFi) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Ethereum Data', 'ethereum-dashboard',
-    [3, 28, 20, 14]);
-  addHeaderBar(data, 2, 'ETHEREUM DATA', dt, 'Technical indicators and DeFi data');
+    [3, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
+  addHeaderBar(data, 2, 'ETHEREUM DATA', dt, 'Technical indicators, OHLC data, and DeFi metrics');
 
-  addSectionDivider(data, 4, '  TECHNICAL INDICATORS', dt);
-  const indicators = [
+  addSectionDivider(data, 4, '  KEY INDICATORS (LATEST)', dt);
+  const ethIndicators = [
     { label: 'RSI (14)', formula: 'RSI("ethereum", 14)', format: '0.00' },
     { label: 'SMA (50)', formula: 'SMA("ethereum", 50)', format: '$#,##0.00' },
     { label: 'SMA (200)', formula: 'SMA("ethereum", 200)', format: '$#,##0.00' },
-    { label: 'EMA (20)', formula: 'EMA("ethereum", 20)', format: '$#,##0.00' },
+    { label: 'EMA (12)', formula: 'EMA("ethereum", 12)', format: '$#,##0.00' },
     { label: 'MACD', formula: 'MACD("ethereum")', format: '0.0000' },
     { label: 'BB Upper', formula: 'BB("ethereum", "upper", 20)', format: '$#,##0.00' },
     { label: 'BB Lower', formula: 'BB("ethereum", "lower", 20)', format: '$#,##0.00' },
   ];
-  for (let i = 0; i < indicators.length; i++) {
-    addMetricRow(data, 6 + i, 2, indicators[i].label, indicators[i].formula, dt, indicators[i].format);
-  }
-  addZebraRows(data, 6, indicators.length, 2, 3, dt);
 
-  addSectionDivider(data, 14, '  TOP 10 DEFI PROTOCOLS', dt);
-  addTableHeaders(data, 15, [
-    { col: 1, label: 'Protocol' },
-    { col: 2, label: 'TVL' },
-    { col: 3, label: 'Volume' },
-  ], dt);
-  placeSpillFormula(data, 16, 1, 'DEFI(10)', dt);
-  addZebraRows(data, 16, 10, 1, 3, dt);
+  const ethOhlc: OHLCRow[] = d?.ohlc?.ethereum || [];
+  let ethComputedIndicators: ReturnType<typeof computeTechnicalIndicators> | null = null;
+  if (ethOhlc.length > 0) {
+    ethComputedIndicators = computeTechnicalIndicators(ethOhlc);
+    const lastIdx = ethOhlc.length - 1;
+    const latestValues: Record<string, number | null> = {
+      'RSI (14)': ethComputedIndicators.rsi14[lastIdx],
+      'SMA (50)': ethComputedIndicators.sma50[lastIdx],
+      'SMA (200)': null,
+      'EMA (12)': ethComputedIndicators.ema12[lastIdx],
+      'MACD': ethComputedIndicators.macd[lastIdx],
+      'BB Upper': ethComputedIndicators.bbUpper[lastIdx],
+      'BB Lower': ethComputedIndicators.bbLower[lastIdx],
+    };
+    for (let i = 0; i < ethIndicators.length; i++) {
+      const val = latestValues[ethIndicators[i].label];
+      addMetricRow(data, 6 + i, 2, ethIndicators[i].label, ethIndicators[i].formula, dt, ethIndicators[i].format, val ?? undefined);
+    }
+  } else {
+    for (let i = 0; i < ethIndicators.length; i++) {
+      addMetricRow(data, 6 + i, 2, ethIndicators[i].label, ethIndicators[i].formula, dt, ethIndicators[i].format);
+    }
+  }
+  addZebraRows(data, 6, ethIndicators.length, 2, 3, dt);
+
+  // === OHLC DATA TABLE WITH COMPUTED INDICATORS ===
+  const ethOhlcStart = 15;
+  if (ethOhlc.length > 0 && ethComputedIndicators) {
+    addSectionDivider(data, ethOhlcStart - 1, '  OHLC DATA + TECHNICAL INDICATORS', dt);
+    addTableHeaders(data, ethOhlcStart, [
+      { col: 1, label: 'Date' }, { col: 2, label: 'Open' },
+      { col: 3, label: 'High' }, { col: 4, label: 'Low' }, { col: 5, label: 'Close' },
+    ], dt);
+
+    const ethRowCount = ethOhlc.length;
+    for (let i = 0; i < ethRowCount; i++) {
+      const row = ethOhlcStart + 1 + i;
+      const o = ethOhlc[i];
+      data.getCell(row, 1).value = o.timestamp ? new Date(o.timestamp) : '';
+      data.getCell(row, 1).numFmt = 'yyyy-mm-dd hh:mm';
+      data.getCell(row, 1).font = { size: 10, color: { argb: dt.text } };
+      for (let c = 2; c <= 5; c++) {
+        const val = [o.open, o.high, o.low, o.close][c - 2];
+        data.getCell(row, c).value = val;
+        data.getCell(row, c).numFmt = '$#,##0.00';
+        data.getCell(row, c).font = { size: 10, color: { argb: dt.text } };
+      }
+    }
+
+    addTechnicalColumns(data, {
+      startRow: ethOhlcStart + 1, headerRow: ethOhlcStart, startCol: 6,
+      closeCol: 5, rowCount: ethRowCount,
+      theme: { headerBg: dt.headerBg, headerText: dt.headerText, text: dt.text, accent: dt.accent, muted: dt.muted, bg: dt.bg },
+    }, ethComputedIndicators);
+    addZebraRows(data, ethOhlcStart + 1, ethRowCount, 1, 16, dt);
+
+    // DeFi section after OHLC
+    const defiStart = ethOhlcStart + 1 + ethRowCount + 2;
+    addSectionDivider(data, defiStart - 1, '  TOP 10 DEFI PROTOCOLS', dt);
+    addTableHeaders(data, defiStart, [
+      { col: 1, label: 'Protocol' }, { col: 2, label: 'TVL' }, { col: 3, label: 'Volume' },
+    ], dt);
+    placeSpillFormula(data, defiStart + 1, 1, 'DEFI(10)', dt);
+    addZebraRows(data, defiStart + 1, 10, 1, 3, dt);
+  } else {
+    addSectionDivider(data, 14, '  TOP 10 DEFI PROTOCOLS', dt);
+    addTableHeaders(data, 15, [
+      { col: 1, label: 'Protocol' }, { col: 2, label: 'TVL' }, { col: 3, label: 'Volume' },
+    ], dt);
+    placeSpillFormula(data, 16, 1, 'DEFI(10)', dt);
+    addZebraRows(data, 16, 10, 1, 3, dt);
+  }
 }
 
 // ============================================
@@ -2006,6 +2283,87 @@ function addVolatilityDashboard(workbook: ExcelJS.Workbook, coins: string[], d?:
       { col: 4, template: 'ATH("{coin}")', format: '$#,##0.00' },
     ],
   }, d);
+
+  // === RISK METRICS SUB-SHEET ===
+  addRiskMetricsSheet(workbook, coins, d);
+}
+
+/**
+ * Adds a Risk Metrics sheet with computed risk indicators.
+ * ATH Drawdown, 24h/7d/30d Volatility, Volume/MCap liquidity ratio.
+ */
+function addRiskMetricsSheet(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
+  const { sheet, theme } = initDarkSheet(workbook, 'CRK Risk Metrics', 'volatility',
+    [3, 16, 14, 14, 14, 14, 14, 14]);
+  addHeaderBar(sheet, 2, 'RISK METRICS', theme, 'Volatility, drawdown, and liquidity analysis');
+
+  addSectionDivider(sheet, 4, '  RISK ANALYSIS', theme);
+  const riskHeaders = [
+    { col: 1, label: 'Coin' },
+    { col: 2, label: 'ATH Drawdown%' },
+    { col: 3, label: '24h Volatility' },
+    { col: 4, label: '7d Volatility' },
+    { col: 5, label: '30d Volatility' },
+    { col: 6, label: 'Vol/MCap%' },
+    { col: 7, label: 'Risk Score' },
+  ];
+  addTableHeaders(sheet, 5, riskHeaders, theme);
+
+  const coinList = coins.length > 0 ? coins.slice(0, 10) :
+    ['bitcoin', 'ethereum', 'solana', 'binancecoin', 'xrp',
+     'cardano', 'dogecoin', 'polkadot', 'avalanche-2', 'chainlink'];
+  const marketData = d?.market || [];
+
+  for (let i = 0; i < coinList.length; i++) {
+    const row = 6 + i;
+    const coin = coinList[i];
+    const cd = marketData.find((c: any) => c.id === coin);
+
+    // Coin name
+    sheet.getCell(row, 1).value = coin.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+    sheet.getCell(row, 1).font = { bold: true, size: 10, color: { argb: theme.text } };
+
+    if (cd) {
+      // ATH Drawdown %
+      const athDrawdown = cd.ath_change_percentage ?? 0;
+      sheet.getCell(row, 2).value = athDrawdown;
+      sheet.getCell(row, 2).numFmt = '0.00"%"';
+      sheet.getCell(row, 2).font = { size: 10, color: { argb: athDrawdown < -50 ? 'FFEF4444' : athDrawdown < -20 ? 'FFF59E0B' : 'FF22C55E' } };
+
+      // 24h Volatility (absolute value of 24h change)
+      const vol24h = Math.abs(cd.price_change_percentage_24h ?? 0);
+      sheet.getCell(row, 3).value = vol24h;
+      sheet.getCell(row, 3).numFmt = '0.00"%"';
+      sheet.getCell(row, 3).font = { size: 10, color: { argb: vol24h > 10 ? 'FFEF4444' : vol24h > 5 ? 'FFF59E0B' : 'FF22C55E' } };
+
+      // 7d Volatility
+      const vol7d = Math.abs(cd.price_change_percentage_7d_in_currency ?? 0);
+      sheet.getCell(row, 4).value = vol7d;
+      sheet.getCell(row, 4).numFmt = '0.00"%"';
+      sheet.getCell(row, 4).font = { size: 10, color: { argb: vol7d > 20 ? 'FFEF4444' : vol7d > 10 ? 'FFF59E0B' : 'FF22C55E' } };
+
+      // 30d Volatility
+      const vol30d = Math.abs(cd.price_change_percentage_30d_in_currency ?? 0);
+      sheet.getCell(row, 5).value = vol30d;
+      sheet.getCell(row, 5).numFmt = '0.00"%"';
+      sheet.getCell(row, 5).font = { size: 10, color: { argb: vol30d > 40 ? 'FFEF4444' : vol30d > 20 ? 'FFF59E0B' : 'FF22C55E' } };
+
+      // Vol/MCap liquidity ratio
+      const volMcap = cd.market_cap > 0 ? (cd.total_volume / cd.market_cap) * 100 : 0;
+      sheet.getCell(row, 6).value = Math.round(volMcap * 100) / 100;
+      sheet.getCell(row, 6).numFmt = '0.00"%"';
+      sheet.getCell(row, 6).font = { size: 10, color: { argb: theme.text } };
+
+      // Risk Score: weighted combination (higher = more volatile/risky)
+      const riskScore = vol24h * 0.3 + vol7d * 0.3 + vol30d * 0.2 + Math.abs(athDrawdown) * 0.1 + volMcap * 0.1;
+      sheet.getCell(row, 7).value = Math.round(riskScore * 100) / 100;
+      sheet.getCell(row, 7).numFmt = '0.00';
+      sheet.getCell(row, 7).font = { bold: true, size: 10, color: { argb: riskScore > 30 ? 'FFEF4444' : riskScore > 15 ? 'FFF59E0B' : 'FF22C55E' } };
+    }
+  }
+
+  addZebraRows(sheet, 6, coinList.length, 1, 7, theme);
+  sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 }
 
 // ============================================

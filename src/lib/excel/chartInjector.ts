@@ -25,10 +25,25 @@ import JSZip from 'jszip';
 
 export type ChartType = 'bar' | 'pie' | 'doughnut' | 'line' | 'area' | 'combo' | 'scatter';
 
+/** Structured table reference — resolves to TableName[ColumnName] */
+export interface StructuredRef {
+  table: string;    // e.g., "CRK_Market"
+  column: string;   // e.g., "MarketCap"
+}
+
+/** Legacy cell-range series reference */
 export interface ChartSeriesRef {
   name: string;
   ref: string;       // e.g., "'CRK Dashboard'!$D$12:$D$31"
   color?: string;     // ARGB hex, e.g., 'FF10B981'
+}
+
+/** Structured table series reference — auto-updates on PQ refresh */
+export interface StructuredSeriesRef {
+  name: string;
+  table: string;     // e.g., "CRK_Market"
+  column: string;    // e.g., "MarketCap"
+  color?: string;
 }
 
 export interface ChartDefinition {
@@ -37,8 +52,8 @@ export interface ChartDefinition {
   title: string;
   sheetName: string;
   dataRange: {
-    categories: string;   // e.g., "'CRK Dashboard'!$B$12:$B$31"
-    values: ChartSeriesRef[];
+    categories: string | StructuredRef;
+    values: (ChartSeriesRef | StructuredSeriesRef)[];
   };
   position: {
     fromCol: number;
@@ -159,6 +174,27 @@ async function resolveSheetMap(zip: JSZip): Promise<Map<string, number>> {
 // Chart XML Builders
 // ============================================
 
+// ============================================
+// Structured Reference Helpers
+// ============================================
+
+/** Resolves a category reference (string or structured) to an XML-safe formula string */
+function resolveRef(ref: string | StructuredRef): string {
+  if (typeof ref === 'string') return ref;
+  return `${ref.table}[${ref.column}]`;
+}
+
+/** Resolves a series reference (legacy or structured) to an XML-safe formula string */
+function resolveSeriesRef(s: ChartSeriesRef | StructuredSeriesRef): string {
+  if ('ref' in s) return s.ref;
+  return `${s.table}[${s.column}]`;
+}
+
+/** Gets the color from either series ref type */
+function getSeriesColor(s: ChartSeriesRef | StructuredSeriesRef): string | undefined {
+  return s.color;
+}
+
 function buildChartXml(chart: ChartDefinition, chartNum: number): string {
   const dark = chart.style?.darkTheme !== false; // Default to dark
   const bgColor = dark ? '1F2937' : 'FFFFFF';
@@ -249,8 +285,9 @@ function buildChartXml(chart: ChartDefinition, chartNum: number): string {
 }
 
 function buildBarPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const catRef = resolveRef(chart.dataRange.categories);
   const series = chart.dataRange.values.map((s, i) => {
-    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(i, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${i}"/>
@@ -260,8 +297,8 @@ function buildBarPlotArea(chart: ChartDefinition, textColor: string, gridColor: 
           <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
           <a:ln><a:noFill/></a:ln>
         </c:spPr>
-        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+        <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:val>
       </c:ser>`;
   }).join('');
 
@@ -333,6 +370,8 @@ function buildPiePlotArea(chart: ChartDefinition): string {
 
   // For pie/doughnut, use the first series and vary colors by point
   const s = chart.dataRange.values[0];
+  const catRef = resolveRef(chart.dataRange.categories);
+  const valRef = resolveSeriesRef(s);
   const colors = chart.style?.colors || DEFAULT_COLORS;
 
   // Build per-point color overrides for up to 10 data points
@@ -354,8 +393,8 @@ function buildPiePlotArea(chart: ChartDefinition): string {
           <c:order val="0"/>
           <c:tx><c:strRef><c:f>"${escapeXml(s.name)}"</c:f></c:strRef></c:tx>
           ${dataPoints}
-          <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-          <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+          <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+          <c:val><c:numRef><c:f>${escapeXml(valRef)}</c:f></c:numRef></c:val>
         </c:ser>
         ${isDoughnut ? '<c:holeSize val="50"/>' : ''}
       </${tagName}>
@@ -363,8 +402,9 @@ function buildPiePlotArea(chart: ChartDefinition): string {
 }
 
 function buildLinePlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const catRef = resolveRef(chart.dataRange.categories);
   const series = chart.dataRange.values.map((s, i) => {
-    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(i, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${i}"/>
@@ -382,8 +422,8 @@ function buildLinePlotArea(chart: ChartDefinition, textColor: string, gridColor:
             <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
           </c:spPr>
         </c:marker>
-        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+        <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:val>
       </c:ser>`;
   }).join('');
 
@@ -450,8 +490,9 @@ function buildLinePlotArea(chart: ChartDefinition, textColor: string, gridColor:
 }
 
 function buildAreaPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const catRef = resolveRef(chart.dataRange.categories);
   const series = chart.dataRange.values.map((s, i) => {
-    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(i, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${i}"/>
@@ -463,8 +504,8 @@ function buildAreaPlotArea(chart: ChartDefinition, textColor: string, gridColor:
             <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
           </a:ln>
         </c:spPr>
-        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+        <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:val>
       </c:ser>`;
   }).join('');
 
@@ -531,12 +572,13 @@ function buildAreaPlotArea(chart: ChartDefinition, textColor: string, gridColor:
 
 function buildComboPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
   // Combo chart: first series as bar, remaining as line overlay
+  const catRef = resolveRef(chart.dataRange.categories);
   const allSeries = chart.dataRange.values;
   const barSeries = allSeries.length > 0 ? [allSeries[0]] : [];
   const lineSeries = allSeries.slice(1);
 
   const barXml = barSeries.map((s, i) => {
-    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(i, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${i}"/>
@@ -546,14 +588,14 @@ function buildComboPlotArea(chart: ChartDefinition, textColor: string, gridColor
           <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
           <a:ln><a:noFill/></a:ln>
         </c:spPr>
-        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+        <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:val>
       </c:ser>`;
   }).join('');
 
   const lineXml = lineSeries.map((s, i) => {
     const idx = i + barSeries.length;
-    const color = s.color || getDefaultColor(idx, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(idx, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${idx}"/>
@@ -571,8 +613,8 @@ function buildComboPlotArea(chart: ChartDefinition, textColor: string, gridColor
             <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
           </c:spPr>
         </c:marker>
-        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
-        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+        <c:cat><c:strRef><c:f>${escapeXml(catRef)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:val>
       </c:ser>`;
   }).join('');
 
@@ -667,8 +709,9 @@ function buildComboPlotArea(chart: ChartDefinition, textColor: string, gridColor
 }
 
 function buildScatterPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const catRef = resolveRef(chart.dataRange.categories);
   const series = chart.dataRange.values.map((s, i) => {
-    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    const color = getSeriesColor(s) || getDefaultColor(i, chart.style?.colors);
     return `
       <c:ser>
         <c:idx val="${i}"/>
@@ -685,8 +728,8 @@ function buildScatterPlotArea(chart: ChartDefinition, textColor: string, gridCol
             <a:ln><a:noFill/></a:ln>
           </c:spPr>
         </c:marker>
-        <c:xVal><c:numRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:numRef></c:xVal>
-        <c:yVal><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:yVal>
+        <c:xVal><c:numRef><c:f>${escapeXml(catRef)}</c:f></c:numRef></c:xVal>
+        <c:yVal><c:numRef><c:f>${escapeXml(resolveSeriesRef(s))}</c:f></c:numRef></c:yVal>
       </c:ser>`;
   }).join('');
 

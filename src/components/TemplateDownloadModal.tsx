@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import type { ContentType } from '@/lib/templates/generator';
+import { CONTENT_OPTIONS, generateDownloadFilename } from '@/lib/constants/contentOptions';
+import type { ContentOption } from '@/lib/constants/contentOptions';
+import { BYOK_PRIVACY_SHORT } from '@/lib/constants/byokMessages';
 import { useAuth } from '@/lib/auth';
 import { Turnstile } from '@/components/security/Turnstile';
 import { SetupWizard } from '@/components/wizard';
@@ -25,34 +28,7 @@ interface TemplateDownloadModalProps {
 
 const FREE_DOWNLOAD_LIMIT = 5;
 
-/**
- * Content type options for download
- */
-type ContentOption = {
-  id: ContentType;
-  name: string;
-  description: string;
-  icon: string;
-  badge?: string;
-  badgeColor?: string;
-};
-
-const CONTENT_OPTIONS: ContentOption[] = [
-  {
-    id: 'native_charts',
-    name: 'With Charts',
-    description: 'Includes pre-built Excel charts that auto-update when you refresh data. Works everywhere.',
-    icon: '📊',
-    badge: 'Recommended',
-    badgeColor: 'bg-emerald-500',
-  },
-  {
-    id: 'formulas_only',
-    name: 'Data Only',
-    description: 'Just Power Query data tables, no charts. Smallest file size.',
-    icon: '📝',
-  },
-];
+// Content options imported from @/lib/constants/contentOptions
 
 /**
  * Template Download Modal
@@ -214,10 +190,7 @@ export function TemplateDownloadModal({
       a.href = url;
 
       // Include content type in filename
-      const contentLabel = contentType === 'formulas_only' ? '_formulas' :
-                          contentType === 'addin' ? '_interactive' :
-                          contentType === 'native_charts' ? '_native' : '';
-      a.download = `cryptoreportkit_${templateType}${contentLabel}.${format}`;
+      a.download = generateDownloadFilename(templateType, contentType, format);
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -479,7 +452,7 @@ export function TemplateDownloadModal({
               <button
                 key={option.id}
                 type="button"
-                onClick={() => setContentType(option.id)}
+                onClick={() => setContentType(option.id as ContentType)}
                 className={`relative p-4 border-2 rounded-lg transition-all text-left ${
                   contentType === option.id
                     ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 ring-2 ring-emerald-500/20'
@@ -592,7 +565,7 @@ export function TemplateDownloadModal({
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Your API key stays in your Excel file - we never see it</span>
+              <span>{BYOK_PRIVACY_SHORT}</span>
             </li>
           </ul>
         </div>

@@ -8,6 +8,7 @@
  */
 
 import type { PowerQueryDefinition } from './powerQueryInjector';
+import { BYOK_EXCEL_NOTICE } from '@/lib/constants/byokMessages';
 
 // CoinGecko API base URL
 const CG_API = 'https://api.coingecko.com/api/v3';
@@ -355,6 +356,176 @@ in
 in
     #"Added Rank"`,
 
+  // Enhanced technical data with computed indicators (SMA, EMA, RSI, MACD, BB)
+  technicalWithIndicators: (coin: string = 'bitcoin', days: number = 30) => `let
+    ApiKey = ${API_KEY_M},
+    Source = Json.Document(Web.Contents("${CG_API}/coins/${coin}/ohlc", [
+        Query = [vs_currency = "usd", days = "${days}", x_cg_demo_api_key = ApiKey]
+    ])),
+    #"To Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Extracted" = Table.TransformColumns(#"To Table", {{"Column1", each
+        [Timestamp = _{0}, Open = _{1}, High = _{2}, Low = _{3}, Close = _{4}]}}),
+    #"To Records" = Table.ExpandRecordColumn(#"Extracted", "Column1",
+        {"Timestamp", "Open", "High", "Low", "Close"},
+        {"Timestamp", "Open", "High", "Low", "Close"}),
+    #"Added Date" = Table.AddColumn(#"To Records", "Date",
+        each #datetime(1970, 1, 1, 0, 0, 0) + #duration(0, 0, 0, [Timestamp] / 1000),
+        type datetime),
+    #"Added Index" = Table.AddIndexColumn(#"Added Date", "Idx", 0, 1, Int64.Type),
+    CloseList = #"Added Index"[Close],
+    RowCount = List.Count(CloseList),
+
+    // SMA(20) - Simple Moving Average 20 periods
+    #"Added SMA20" = Table.AddColumn(#"Added Index", "SMA20", each
+        if [Idx] < 19 then null
+        else List.Average(List.Range(CloseList, [Idx] - 19, 20)),
+        type number),
+
+    // SMA(50) - Simple Moving Average 50 periods
+    #"Added SMA50" = Table.AddColumn(#"Added SMA20", "SMA50", each
+        if [Idx] < 49 then null
+        else List.Average(List.Range(CloseList, [Idx] - 49, 50)),
+        type number),
+
+    // EMA(12) using List.Accumulate
+    EMA12k = 2 / 13,
+    EMA12Vals = List.Accumulate(
+        {1..RowCount - 1},
+        {CloseList{0}},
+        (state, i) => state & {CloseList{i} * EMA12k + List.Last(state) * (1 - EMA12k)}
+    ),
+    #"Added EMA12" = Table.AddColumn(#"Added SMA50", "EMA12", each
+        if [Idx] < 11 then null else EMA12Vals{[Idx]},
+        type number),
+
+    // EMA(26) using List.Accumulate
+    EMA26k = 2 / 27,
+    EMA26Vals = List.Accumulate(
+        {1..RowCount - 1},
+        {CloseList{0}},
+        (state, i) => state & {CloseList{i} * EMA26k + List.Last(state) * (1 - EMA26k)}
+    ),
+    #"Added EMA26" = Table.AddColumn(#"Added EMA12", "EMA26", each
+        if [Idx] < 25 then null else EMA26Vals{[Idx]},
+        type number),
+
+    // RSI(14) - Relative Strength Index
+    Changes = List.Transform({1..RowCount - 1}, each CloseList{_} - CloseList{_ - 1}),
+    Gains = List.Transform(Changes, each if _ > 0 then _ else 0),
+    Losses = List.Transform(Changes, each if _ < 0 then Number.Abs(_) else 0),
+    RSICalc = List.Accumulate(
+        {14..List.Count(Changes) - 1},
+        {List.Average(List.Range(Gains, 0, 14)), List.Average(List.Range(Losses, 0, 14)),
+         {if List.Average(List.Range(Losses, 0, 14)) = 0 then 100
+          else 100 - 100 / (1 + List.Average(List.Range(Gains, 0, 14)) / List.Average(List.Range(Losses, 0, 14)))}},
+        (state, i) => let
+            ag = (state{0} * 13 + Gains{i}) / 14,
+            al = (state{1} * 13 + Losses{i}) / 14,
+            rsi = if al = 0 then 100 else 100 - 100 / (1 + ag / al)
+        in {ag, al, state{2} & {rsi}}
+    ),
+    RSIValues = RSICalc{2},
+    #"Added RSI14" = Table.AddColumn(#"Added EMA26", "RSI14", each
+        if [Idx] < 14 then null
+        else if [Idx] - 14 < List.Count(RSIValues) then RSIValues{[Idx] - 14}
+        else null,
+        type number),
+
+    // MACD = EMA(12) - EMA(26)
+    #"Added MACD" = Table.AddColumn(#"Added RSI14", "MACD", each
+        if [Idx] < 25 then null
+        else EMA12Vals{[Idx]} - EMA26Vals{[Idx]},
+        type number),
+
+    // Signal Line = 9-period EMA of MACD
+    MACDVals = List.Transform({0..RowCount - 1}, each
+        if _ < 25 then null else EMA12Vals{_} - EMA26Vals{_}),
+    ValidMACDs = List.RemoveNulls(MACDVals),
+    SignalK = 2 / 10,
+    SignalVals = if List.Count(ValidMACDs) >= 9
+        then List.Accumulate(
+            {1..List.Count(ValidMACDs) - 1},
+            {ValidMACDs{0}},
+            (state, i) => state & {ValidMACDs{i} * SignalK + List.Last(state) * (1 - SignalK)}
+        )
+        else {},
+    #"Added Signal" = Table.AddColumn(#"Added MACD", "Signal", each
+        let macdIdx = [Idx] - 25 in
+        if macdIdx < 0 or macdIdx >= List.Count(SignalVals) then null
+        else SignalVals{macdIdx},
+        type number),
+
+    // MACD Histogram = MACD - Signal
+    #"Added MACD_Hist" = Table.AddColumn(#"Added Signal", "MACD_Hist", each
+        if [MACD] = null or [Signal] = null then null
+        else [MACD] - [Signal],
+        type number),
+
+    // Bollinger Bands (20-period, 2 std dev)
+    #"Added BB_Upper" = Table.AddColumn(#"Added MACD_Hist", "BB_Upper", each
+        if [Idx] < 19 then null
+        else let
+            slice = List.Range(CloseList, [Idx] - 19, 20),
+            avg = List.Average(slice),
+            stdDev = List.StandardDeviation(slice)
+        in avg + 2 * stdDev,
+        type number),
+
+    #"Added BB_Lower" = Table.AddColumn(#"Added BB_Upper", "BB_Lower", each
+        if [Idx] < 19 then null
+        else let
+            slice = List.Range(CloseList, [Idx] - 19, 20),
+            avg = List.Average(slice),
+            stdDev = List.StandardDeviation(slice)
+        in avg - 2 * stdDev,
+        type number),
+
+    // Daily Return %
+    #"Added DailyReturn" = Table.AddColumn(#"Added BB_Lower", "DailyReturn", each
+        if [Idx] = 0 then null
+        else ([Close] - CloseList{[Idx] - 1}) / CloseList{[Idx] - 1} * 100,
+        type number),
+
+    // Clean up: remove index column, add coin name
+    #"Removed Idx" = Table.RemoveColumns(#"Added DailyReturn", {"Idx"}),
+    #"Added Coin" = Table.AddColumn(#"Removed Idx", "Coin", each "${coin}", type text)
+in
+    #"Added Coin"`,
+
+  // Enhanced market data with computed analytics (Market Share, Vol/MCap, Performance Score)
+  marketWithAnalytics: (limit: number = 100) => `let
+    ApiKey = ${API_KEY_M},
+    Source = Json.Document(Web.Contents("${CG_API}/coins/markets", [
+        Query = [vs_currency = "usd", order = "market_cap_desc", per_page = "${limit}", page = "1", sparkline = "false", price_change_percentage = "24h,7d,30d", x_cg_demo_api_key = ApiKey]
+    ])),
+    #"To Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+    #"Expanded" = Table.ExpandRecordColumn(#"To Table", "Column1",
+        {"market_cap_rank", "name", "symbol", "current_price", "market_cap", "total_volume",
+         "price_change_percentage_24h", "price_change_percentage_7d_in_currency", "price_change_percentage_30d_in_currency",
+         "ath", "ath_change_percentage", "last_updated"},
+        {"Rank", "Name", "Symbol", "Price", "MarketCap", "Volume24h",
+         "Change24h", "Change7d", "Change30d", "ATH", "ATHChange", "LastUpdated"}),
+
+    // Market Share % = MarketCap / Total MarketCap * 100
+    TotalMCap = List.Sum(#"Expanded"[MarketCap]),
+    #"Added MktShare" = Table.AddColumn(#"Expanded", "MktShare", each
+        if TotalMCap = 0 or [MarketCap] = null then 0
+        else [MarketCap] / TotalMCap * 100,
+        type number),
+
+    // Volume/MarketCap Ratio % (liquidity indicator)
+    #"Added VolMcapRatio" = Table.AddColumn(#"Added MktShare", "VolMcapRatio", each
+        if [MarketCap] = null or [MarketCap] = 0 then 0
+        else ([Volume24h] ?? 0) / [MarketCap] * 100,
+        type number),
+
+    // Performance Score = 60% * 24h Change + 40% * 7d Change
+    #"Added PerfScore" = Table.AddColumn(#"Added VolMcapRatio", "PerfScore", each
+        ([Change24h] ?? 0) * 0.6 + ([Change7d] ?? 0) * 0.4,
+        type number)
+in
+    #"Added PerfScore"`,
+
   // Wallet balance (Etherscan - needs separate explorer API key)
   wallet: (address: string, chain: string = 'ethereum') => `let
     // Wallet tracking requires a block explorer API key
@@ -378,6 +549,7 @@ in
 /** Column definitions for each PQ template output (must match M code aliases) */
 const PQ_COLUMNS = {
   market: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h', 'Change7d', 'Change30d', 'ATH', 'ATHChange', 'LastUpdated'],
+  marketWithAnalytics: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h', 'Change7d', 'Change30d', 'ATH', 'ATHChange', 'LastUpdated', 'MktShare', 'VolMcapRatio', 'PerfScore'],
   global: ['Metric', 'Value'],
   fearGreed: ['Value', 'Classification', 'Timestamp', 'Date'],
   ohlc: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Date'],
@@ -388,6 +560,7 @@ const PQ_COLUMNS = {
   losers: ['Rank', 'ID', 'Name', 'Symbol', 'Price', 'Change24h', 'Volume24h', 'MarketCap'],
   exchanges: ['Rank', 'Name', 'TrustScore', 'Volume24hBTC', 'Year', 'Country'],
   technical: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Date', 'Coin'],
+  technicalWithIndicators: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Date', 'SMA20', 'SMA50', 'EMA12', 'EMA26', 'RSI14', 'MACD', 'Signal', 'MACD_Hist', 'BB_Upper', 'BB_Lower', 'DailyReturn', 'Coin'],
   defi: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h'],
   derivatives: ['Market', 'Symbol', 'Price', 'PriceChange24h', 'FundingRate', 'OpenInterest', 'Volume24h'],
   stablecoins: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'CirculatingSupply', 'PegDeviation'],
@@ -474,7 +647,7 @@ export function addPowerQuerySetupSheet(
   // BYOK notice
   sheet.mergeCells('B3:C3');
   const byokNotice = sheet.getCell('B3');
-  byokNotice.value = 'BYOK: Your API key stays in this file. Queries connect directly to CoinGecko. Our server never sees your key or data.';
+  byokNotice.value = BYOK_EXCEL_NOTICE;
   byokNotice.font = { bold: true, size: 10, color: { argb: 'FF059669' } };
   byokNotice.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
 
@@ -549,12 +722,23 @@ export function generateQueriesForDashboard(
 ): PowerQueryDefinition[] {
   const queries: PowerQueryDefinition[] = [];
 
-  // Always include market data
+  // Dashboards that benefit from market analytics columns (Market Share %, Vol/MCap, Performance Score)
+  const analyticsTypes = [
+    'market-overview', 'complete-suite', 'screener', 'heatmap',
+    'gainers-losers', 'categories', 'correlation', 'altcoin-season',
+  ];
+  const useAnalytics = analyticsTypes.includes(dashboardType);
+
+  // Always include market data (with or without analytics columns)
   queries.push({
     name: 'CRK_Market',
-    code: POWER_QUERY_TEMPLATES.market(100),
-    description: 'Top 100 cryptocurrencies with price, market cap, and volume (direct from CoinGecko)',
-    columns: PQ_COLUMNS.market,
+    code: useAnalytics
+      ? POWER_QUERY_TEMPLATES.marketWithAnalytics(100)
+      : POWER_QUERY_TEMPLATES.market(100),
+    description: useAnalytics
+      ? 'Top 100 coins with price, market cap, volume + Market Share %, Vol/MCap, Performance Score'
+      : 'Top 100 cryptocurrencies with price, market cap, and volume (direct from CoinGecko)',
+    columns: useAnalytics ? PQ_COLUMNS.marketWithAnalytics : PQ_COLUMNS.market,
   });
 
   // Add based on dashboard type
@@ -649,15 +833,15 @@ export function generateQueriesForDashboard(
       });
       queries.push({
         name: 'CRK_BTC_Technical',
-        code: POWER_QUERY_TEMPLATES.technical('bitcoin', 30),
-        description: 'Bitcoin OHLC data for technical analysis (add SMA/EMA/RSI with Excel formulas)',
-        columns: PQ_COLUMNS.technical,
+        code: POWER_QUERY_TEMPLATES.technicalWithIndicators('bitcoin', 30),
+        description: 'Bitcoin OHLC with SMA, EMA, RSI, MACD, Bollinger Bands (auto-computed)',
+        columns: PQ_COLUMNS.technicalWithIndicators,
       });
       queries.push({
         name: 'CRK_ETH_Technical',
-        code: POWER_QUERY_TEMPLATES.technical('ethereum', 30),
-        description: 'Ethereum OHLC data for technical analysis',
-        columns: PQ_COLUMNS.technical,
+        code: POWER_QUERY_TEMPLATES.technicalWithIndicators('ethereum', 30),
+        description: 'Ethereum OHLC with SMA, EMA, RSI, MACD, Bollinger Bands (auto-computed)',
+        columns: PQ_COLUMNS.technicalWithIndicators,
       });
       break;
 
@@ -676,9 +860,9 @@ export function generateQueriesForDashboard(
       });
       queries.push({
         name: 'CRK_BTC_Technical',
-        code: POWER_QUERY_TEMPLATES.technical('bitcoin', 30),
-        description: 'Bitcoin OHLC for technical analysis',
-        columns: PQ_COLUMNS.technical,
+        code: POWER_QUERY_TEMPLATES.technicalWithIndicators('bitcoin', 30),
+        description: 'Bitcoin OHLC with SMA, EMA, RSI, MACD, Bollinger Bands (auto-computed)',
+        columns: PQ_COLUMNS.technicalWithIndicators,
       });
       break;
 
@@ -694,6 +878,12 @@ export function generateQueriesForDashboard(
         code: POWER_QUERY_TEMPLATES.coin('ethereum'),
         description: 'Ethereum detailed information',
         columns: PQ_COLUMNS.coin,
+      });
+      queries.push({
+        name: 'CRK_ETH_Technical',
+        code: POWER_QUERY_TEMPLATES.technicalWithIndicators('ethereum', 30),
+        description: 'Ethereum OHLC with SMA, EMA, RSI, MACD, Bollinger Bands (auto-computed)',
+        columns: PQ_COLUMNS.technicalWithIndicators,
       });
       break;
 

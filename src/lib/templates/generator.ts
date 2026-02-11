@@ -14,6 +14,7 @@ import { getTemplateConfig, type TemplateType, type FormulaTemplate, type Templa
 import { isCoinSupported, getAllCryptoSheetCoins, getTopCoins, CATEGORY_NAMES } from './cryptoSheetCoins';
 import { getChartsForTemplate, CHART_COLORS, type ChartConfig } from './chartDefinitions';
 import { type FormulaMode, convertToCRK } from './formulaMapping';
+import { BYOK_EXCEL_NOTE } from '@/lib/constants/byokMessages';
 
 // Re-export FormulaMode for use by other components
 export type { FormulaMode } from './formulaMapping';
@@ -396,7 +397,7 @@ async function createSettingsSheet(
   row++;
 
   const notes = [
-    '• Your API key stays in this file - we never see it',
+    BYOK_EXCEL_NOTE,
     '• Free tier: 10,000 API calls/month (plenty for most users)',
     '• Requires Excel Desktop with Power Query (2016 or later)',
     '• Excel Online does NOT support Power Query',
