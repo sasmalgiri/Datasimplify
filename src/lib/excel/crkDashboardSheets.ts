@@ -28,10 +28,123 @@ import {
   addChartGrid,
   placeSpillFormula,
   addMetricRow,
+  populateMarketRows,
+  populateExchangeRows,
   COMPACT_USD,
   type KPICardDef,
   type DashboardTheme,
 } from './dashboardStyles';
+
+// ============================================
+// PREFETCHED DATA HELPERS
+// ============================================
+
+/**
+ * Resolves a CRK formula name (e.g., 'TOP(50)', 'GAINERS(20)') to prefetched data rows.
+ * Returns the data array sorted/sliced appropriately, or null if no data available.
+ */
+function resolveFormulaData(formula: string, data: any): any[] | null {
+  if (!data?.market?.length) return null;
+
+  const match = formula.match(/^(\w+)\((\d+)?\)$/);
+  if (!match) return null;
+  const [, fn, countStr] = match;
+  const count = countStr ? parseInt(countStr, 10) : 20;
+
+  switch (fn) {
+    case 'TOP':
+      return data.market.slice(0, count);
+    case 'GAINERS': {
+      const sorted = [...data.market].sort((a: any, b: any) =>
+        (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
+      return sorted.slice(0, count);
+    }
+    case 'LOSERS': {
+      const sorted = [...data.market].sort((a: any, b: any) =>
+        (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+      return sorted.slice(0, count);
+    }
+    case 'TRENDING':
+      return (data.trending || []).slice(0, count).map((t: any) => ({
+        market_cap_rank: t.item?.market_cap_rank ?? 0,
+        name: t.item?.name ?? t.name ?? '',
+        symbol: t.item?.symbol ?? t.symbol ?? '',
+        current_price: t.item?.data?.price ?? 0,
+        market_cap: t.item?.data?.market_cap ?? 0,
+        price_change_percentage_24h: t.item?.data?.price_change_percentage_24h?.usd ?? 0,
+        price_change_percentage_7d_in_currency: 0,
+      }));
+    default:
+      return null;
+  }
+}
+
+/**
+ * Resolves a per-coin formula template to a static value from CoinGecko data.
+ */
+function resolveCoinField(template: string, coin: string, coinData: any): number | string | undefined {
+  const formula = template.replace('{coin}', coin);
+  if (formula.startsWith('PRICE(')) return coinData.current_price;
+  if (formula.startsWith('MARKETCAP(') || formula.startsWith('MCAP(')) return coinData.market_cap;
+  if (formula.startsWith('VOLUME(') || formula.startsWith('VOL(')) return coinData.total_volume;
+  if (formula.startsWith('CHANGE24H(') || formula.includes('"24h"')) return coinData.price_change_percentage_24h;
+  if (formula.includes('"7d"')) return coinData.price_change_percentage_7d_in_currency ?? coinData.price_change_percentage_7d;
+  if (formula.startsWith('RANK(')) return coinData.market_cap_rank;
+  if (formula.startsWith('ATH(')) return coinData.ath;
+  if (formula.startsWith('ATL(')) return coinData.atl;
+  if (formula.startsWith('SUPPLY(')) return coinData.circulating_supply;
+  if (formula.startsWith('HIGH24H(')) return coinData.high_24h;
+  if (formula.startsWith('LOW24H(')) return coinData.low_24h;
+  return undefined;
+}
+
+/**
+ * Adds IFERROR fallback values to KPI card definitions using prefetched data.
+ */
+function enrichKPIs(kpis: KPICardDef[], data: any): KPICardDef[] {
+  if (!data) return kpis;
+  return kpis.map(kpi => {
+    const enriched = { ...kpi };
+    // Resolve common formula patterns to fallback values
+    const fMatch = kpi.formula.match(/^(\w+)\("?([^"]*)"?\)$/);
+    if (fMatch) {
+      const [, fn, arg] = fMatch;
+      if (fn === 'PRICE' && data.market) {
+        const coin = data.market.find((c: any) => c.id === arg);
+        if (coin) enriched.fallbackValue = coin.current_price;
+      } else if (fn === 'GLOBAL' && data.global) {
+        const val = data.global[arg];
+        if (val !== undefined) enriched.fallbackValue = val;
+      } else if (fn === 'FEARGREED' && data.fearGreed?.[0]) {
+        enriched.fallbackValue = data.fearGreed[0].value ?? data.fearGreed[0];
+      } else if (fn === 'BTCDOM' && data.global?.btc_dominance) {
+        enriched.fallbackValue = data.global.btc_dominance;
+      } else if (fn === 'MARKETCAP' && data.market) {
+        const coin = data.market.find((c: any) => c.id === arg);
+        if (coin) enriched.fallbackValue = coin.market_cap;
+      } else if (fn === 'CHANGE' && data.market) {
+        const coin = data.market.find((c: any) => c.id === arg);
+        if (coin) enriched.fallbackValue = coin.price_change_percentage_24h;
+      }
+    }
+    // Also resolve change formula fallbacks
+    if (kpi.changeFormula) {
+      const cMatch = kpi.changeFormula.match(/^(\w+)\("?([^"]*)"?\)$/);
+      if (cMatch) {
+        const [, fn, arg] = cMatch;
+        if (fn === 'CHANGE' && data.market) {
+          const coin = data.market.find((c: any) => c.id === arg);
+          if (coin) enriched.changeFallback = coin.price_change_percentage_24h / 100;
+        } else if (fn === 'GLOBAL' && data.global?.[arg] !== undefined) {
+          enriched.changeFallback = data.global[arg];
+        } else if (fn === 'PORTFOLIO_PNL') {
+          enriched.changeFallback = 0;
+        }
+      }
+    }
+    return enriched;
+  });
+}
 
 // ============================================
 // REUSABLE CONSTANTS
@@ -194,12 +307,13 @@ interface SpillConfig {
 function buildSpillDashboard(
   workbook: ExcelJS.Workbook,
   config: SpillConfig,
+  prefetchedData?: any,
 ): { sheet: ExcelJS.Worksheet; theme: DashboardTheme } {
   // === VISUAL DASHBOARD SHEET (charts front and center) ===
   const visualWidths = [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
   const { sheet, theme } = initDarkSheet(workbook, config.sheetName, config.dashboardType, visualWidths);
   addHeaderBar(sheet, 2, config.title, theme, config.subtitle);
-  addKPICards(sheet, 5, config.kpis, theme);
+  addKPICards(sheet, 5, enrichKPIs(config.kpis, prefetchedData), theme);
   addSectionDivider(sheet, 10, config.sectionTitle, theme);
 
   const defaultTitles: [string, string, string, string] = [
@@ -219,7 +333,19 @@ function buildSpillDashboard(
     { label: 'Fear & Greed', formula: 'FEARGREED()' },
   ];
   for (let i = 0; i < metrics.length; i++) {
-    addMetricRow(sheet, afterGrid + 2 + i, 2, metrics[i].label, metrics[i].formula, theme, metrics[i].format);
+    // Resolve fallback values for metric rows
+    let fallback: number | string | undefined;
+    if (prefetchedData) {
+      const m = metrics[i];
+      const fm = m.formula.match(/^(\w+)\("?([^"]*)"?\)$/);
+      if (fm) {
+        const [, fn, arg] = fm;
+        if (fn === 'PRICE') fallback = prefetchedData.market?.find((c: any) => c.id === arg)?.current_price;
+        else if (fn === 'GLOBAL') fallback = prefetchedData.global?.[arg];
+        else if (fn === 'FEARGREED') fallback = prefetchedData.fearGreed?.[0]?.value;
+      }
+    }
+    addMetricRow(sheet, afterGrid + 2 + i, 2, metrics[i].label, metrics[i].formula, theme, metrics[i].format, fallback);
   }
 
   // === DATA SHEET (spill table for chart data) ===
@@ -228,7 +354,14 @@ function buildSpillDashboard(
   addHeaderBar(data, 2, config.title + ' \u2014 DATA', dt);
   addSectionDivider(data, 4, config.sectionTitle, dt);
   addTableHeaders(data, 5, config.headers, dt);
-  placeSpillFormula(data, 6, 1, config.formula, dt);
+
+  // Pre-populate with real data or fall back to CRK formula
+  const resolved = resolveFormulaData(config.formula, prefetchedData);
+  if (resolved && resolved.length > 0) {
+    populateMarketRows(data, 6, resolved, dt, config.endCol >= 8);
+  } else {
+    placeSpillFormula(data, 6, 1, config.formula, dt);
+  }
   addZebraRows(data, 6, config.spillRows, 1, config.endCol, dt);
 
   const spillEnd = 6 + config.spillRows - 1;
@@ -261,10 +394,18 @@ function buildSubSheet(
   spillRows: number,
   endCol: number,
   colWidths?: number[],
+  prefetchedData?: any,
 ): { sheet: ExcelJS.Worksheet; theme: DashboardTheme } {
   const { sheet, theme } = initDarkSheet(workbook, sheetName, dashboardType, colWidths);
   addHeaderBar(sheet, 2, title, theme);
-  placeSpillFormula(sheet, 5, 1, formula, theme);
+
+  // Pre-populate with real data or fall back to CRK formula
+  const resolved = resolveFormulaData(formula, prefetchedData);
+  if (resolved && resolved.length > 0) {
+    populateMarketRows(sheet, 5, resolved, theme, endCol >= 8);
+  } else {
+    placeSpillFormula(sheet, 5, 1, formula, theme);
+  }
   addZebraRows(sheet, 5, spillRows, 1, endCol, theme);
   return { sheet, theme };
 }
@@ -299,12 +440,13 @@ function buildPerCoinDashboard(
     metrics?: MetricDef[];
     metricsSectionTitle?: string;
   },
+  prefetchedData?: any,
 ): { sheet: ExcelJS.Worksheet; theme: DashboardTheme } {
   // === VISUAL DASHBOARD SHEET ===
   const visualWidths = [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
   const { sheet, theme } = initDarkSheet(workbook, config.sheetName, config.dashboardType, visualWidths);
   addHeaderBar(sheet, 2, config.title, theme, config.subtitle);
-  addKPICards(sheet, 5, config.kpis, theme);
+  addKPICards(sheet, 5, enrichKPIs(config.kpis, prefetchedData), theme);
   addSectionDivider(sheet, 10, config.sectionTitle, theme);
 
   const defaultTitles: [string, string, string, string] = [
@@ -344,9 +486,19 @@ function buildPerCoinDashboard(
     nameCell.value = coin;
     nameCell.font = { size: 10, bold: true, color: { argb: dt.text } };
 
+    // Try to resolve static data for this coin
+    const coinData = prefetchedData?.market?.find((c: any) => c.id === coin);
+
     for (const f of config.formulas) {
       const cell = data.getCell(row, f.col);
-      cell.value = { formula: `CRK.${f.template.replace('{coin}', coin)}` };
+      // Use prefetched value with CRK formula as IFERROR fallback
+      const staticVal = coinData ? resolveCoinField(f.template, coin, coinData) : undefined;
+      if (staticVal !== undefined) {
+        const fb = typeof staticVal === 'string' ? `"${staticVal}"` : staticVal;
+        cell.value = { formula: `IFERROR(CRK.${f.template.replace('{coin}', coin)},${fb})` };
+      } else {
+        cell.value = { formula: `CRK.${f.template.replace('{coin}', coin)}` };
+      }
       cell.font = { size: 10, color: { argb: dt.accent } };
       if (f.format) cell.numFmt = f.format;
     }
@@ -363,121 +515,125 @@ function buildPerCoinDashboard(
 /**
  * Adds CRK formula dashboard sheets to a workbook based on dashboard type.
  * All dashboards use professional dark-themed layouts.
+ * When prefetchedData is provided, data sheets are pre-populated with real values
+ * and KPI cards use IFERROR fallbacks — templates work without the add-in.
  */
 export function addCrkDashboardSheets(
   workbook: ExcelJS.Workbook,
   dashboard: DashboardType,
   coins: string[],
+  prefetchedData?: any,
 ): void {
+  const d = prefetchedData;
   switch (dashboard) {
     case 'market-overview':
-      addMarketOverviewDashboard(workbook);
+      addMarketOverviewDashboard(workbook, d);
       break;
     case 'screener':
-      addScreenerDashboard(workbook);
+      addScreenerDashboard(workbook, d);
       break;
     case 'gainers-losers':
-      addGainersLosersDashboard(workbook);
+      addGainersLosersDashboard(workbook, d);
       break;
     case 'fear-greed':
-      addFearGreedDashboard(workbook);
+      addFearGreedDashboard(workbook, d);
       break;
     case 'portfolio-tracker':
-      addPortfolioDashboard(workbook);
+      addPortfolioDashboard(workbook, d);
       break;
     case 'trending':
-      addTrendingDashboard(workbook);
+      addTrendingDashboard(workbook, d);
       break;
     case 'technical-analysis':
-      addTechnicalDashboard(workbook, coins);
+      addTechnicalDashboard(workbook, coins, d);
       break;
     case 'defi-dashboard':
-      addDefiDashboard(workbook);
+      addDefiDashboard(workbook, d);
       break;
     case 'derivatives':
     case 'funding-rates':
-      addDerivativesDashboard(workbook);
+      addDerivativesDashboard(workbook, d);
       break;
     case 'correlation':
-      addCorrelationDashboard(workbook, coins);
+      addCorrelationDashboard(workbook, coins, d);
       break;
     case 'stablecoins':
-      addStablecoinsDashboard(workbook);
+      addStablecoinsDashboard(workbook, d);
       break;
     case 'exchanges':
-      addExchangesDashboard(workbook);
+      addExchangesDashboard(workbook, d);
       break;
     case 'bitcoin-dashboard':
-      addBitcoinDashboard(workbook);
+      addBitcoinDashboard(workbook, d);
       break;
     case 'ethereum-dashboard':
-      addEthereumDashboard(workbook);
+      addEthereumDashboard(workbook, d);
       break;
     case 'nft-tracker':
-      addNftDashboard(workbook);
+      addNftDashboard(workbook, d);
       break;
     case 'whale-tracker':
     case 'on-chain':
-      addOnChainDashboard(workbook, coins);
+      addOnChainDashboard(workbook, coins, d);
       break;
     case 'heatmap':
     case 'categories':
-      addCategoriesDashboard(workbook);
+      addCategoriesDashboard(workbook, d);
       break;
     case 'etf-tracker':
-      addEtfDashboard(workbook);
+      addEtfDashboard(workbook, d);
       break;
     case 'layer1-compare':
     case 'layer2-compare':
-      addLayerCompareDashboard(workbook, coins);
+      addLayerCompareDashboard(workbook, coins, d);
       break;
     case 'meme-coins':
-      addMemeCoinsDashboard(workbook);
+      addMemeCoinsDashboard(workbook, d);
       break;
     case 'ai-gaming':
-      addAIGamingDashboard(workbook);
+      addAIGamingDashboard(workbook, d);
       break;
     case 'defi-yields':
-      addDefiYieldsDashboard(workbook);
+      addDefiYieldsDashboard(workbook, d);
       break;
     case 'liquidations':
-      addLiquidationsDashboard(workbook);
+      addLiquidationsDashboard(workbook, d);
       break;
     case 'altcoin-season':
-      addAltcoinSeasonDashboard(workbook);
+      addAltcoinSeasonDashboard(workbook, d);
       break;
     case 'token-unlocks':
-      addTokenUnlocksDashboard(workbook, coins);
+      addTokenUnlocksDashboard(workbook, coins, d);
       break;
     case 'staking-yields':
-      addStakingYieldsDashboard(workbook);
+      addStakingYieldsDashboard(workbook, d);
       break;
     case 'social-sentiment':
-      addSocialSentimentDashboard(workbook);
+      addSocialSentimentDashboard(workbook, d);
       break;
     case 'mining-calc':
-      addMiningDashboard(workbook);
+      addMiningDashboard(workbook, d);
       break;
     case 'exchange-reserves':
-      addExchangeReservesDashboard(workbook);
+      addExchangeReservesDashboard(workbook, d);
       break;
     case 'custom':
-      addCustomDashboard(workbook, coins);
+      addCustomDashboard(workbook, coins, d);
       break;
     case 'volatility':
     case 'calculator':
-      addVolatilityDashboard(workbook, coins);
+      addVolatilityDashboard(workbook, coins, d);
       break;
     case 'rwa':
     case 'metaverse':
     case 'privacy-coins':
-      addCategoryTokensDashboard(workbook, dashboard);
+      addCategoryTokensDashboard(workbook, dashboard, d);
       break;
     case 'dev-activity':
-      addDevActivityDashboard(workbook, coins);
+      addDevActivityDashboard(workbook, coins, d);
       break;
     default:
-      addMarketOverviewDashboard(workbook);
+      addMarketOverviewDashboard(workbook, d);
       break;
   }
 }
@@ -486,19 +642,19 @@ export function addCrkDashboardSheets(
 // MARKET OVERVIEW — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addMarketOverviewDashboard(workbook: ExcelJS.Workbook) {
+function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET (charts front and center) ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Dashboard', 'market-overview',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'CRYPTO MARKET DASHBOARD', theme, 'Live data via CRK formulas \u2022 Powered by CoinGecko BYOK');
 
-  addKPICards(sheet, 5, [
+  addKPICards(sheet, 5, enrichKPIs([
     { title: 'TOTAL MARKET CAP', formula: 'GLOBAL("total_market_cap")', format: COMPACT_USD, changeFormula: 'GLOBAL("market_cap_change_percentage_24h_usd")' },
     { title: '24H VOLUME', formula: 'GLOBAL("total_volume")', format: COMPACT_USD },
     { title: 'BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"' },
     { title: 'FEAR & GREED', formula: 'FEARGREED()' },
-  ], theme);
+  ], d), theme);
 
   addSectionDivider(sheet, 10, '  MARKET ANALYSIS', theme);
 
@@ -511,18 +667,27 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   // Summary metrics below charts
+  const btcPrice = d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price;
+  const ethPrice = d?.market?.find((c: any) => c.id === 'ethereum')?.current_price;
   addSectionDivider(sheet, afterGrid, '  KEY METRICS', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'Active Coins', 'GLOBAL("active_cryptocurrencies")', theme);
-  addMetricRow(sheet, afterGrid + 3, 2, 'Market Cap Change', 'GLOBAL("market_cap_change_percentage_24h_usd")', theme, '0.00"%"');
-  addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'Active Coins', 'GLOBAL("active_cryptocurrencies")', theme, undefined, d?.global?.active_cryptocurrencies);
+  addMetricRow(sheet, afterGrid + 3, 2, 'Market Cap Change', 'GLOBAL("market_cap_change_percentage_24h_usd")', theme, '0.00"%"', d?.global?.market_cap_change_percentage_24h_usd);
+  addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', btcPrice);
+  addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', ethPrice);
 
   // === DATA SHEET (spill tables for chart data) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Data', 'market-overview');
   addHeaderBar(data, 2, 'MARKET DATA', dt, 'Source data for dashboard charts');
   addSectionDivider(data, 4, '  TOP 20 CRYPTOCURRENCIES', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
-  placeSpillFormula(data, 6, 1, 'TOP(20)', dt);
+
+  // Pre-populate with real data or fall back to CRK formula
+  const top20 = resolveFormulaData('TOP(20)', d);
+  if (top20 && top20.length > 0) {
+    populateMarketRows(data, 6, top20, dt);
+  } else {
+    placeSpillFormula(data, 6, 1, 'TOP(20)', dt);
+  }
   addZebraRows(data, 6, 20, 1, 7, dt);
   addPercentFormatting(data, 'F6:F25', dt);
   addPercentFormatting(data, 'G6:G25', dt);
@@ -531,20 +696,20 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook) {
 
   // Trending sub-sheet
   buildSubSheet(workbook, 'CRK Trending', 'market-overview', 'TRENDING COINS', 'TRENDING(7)', 10, 5,
-    [3, 25, 18, 15, 14]);
+    [3, 25, 18, 15, 14], d);
 }
 
 // ============================================
 // SCREENER — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addScreenerDashboard(workbook: ExcelJS.Workbook) {
+function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Screener', 'screener',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'CRYPTO SCREENER', theme, 'Top 50 coins by market cap');
-  addKPICards(sheet, 5, MARKET_KPIS, theme);
+  addKPICards(sheet, 5, enrichKPIs(MARKET_KPIS, d), theme);
   addSectionDivider(sheet, 10, '  MARKET ANALYSIS', theme);
 
   const afterGrid = addChartGrid(sheet, 12, theme, [
@@ -554,10 +719,13 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook) {
     '7D CHANGE — TOP 20',
   ]);
 
+  const btcPrice = d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price;
+  const ethPrice = d?.market?.find((c: any) => c.id === 'ethereum')?.current_price;
+  const solPrice = d?.market?.find((c: any) => c.id === 'solana')?.current_price;
   addSectionDivider(sheet, afterGrid, '  SUMMARY', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 4, 2, 'SOL Price', 'PRICE("solana")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', btcPrice);
+  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', ethPrice);
+  addMetricRow(sheet, afterGrid + 4, 2, 'SOL Price', 'PRICE("solana")', theme, '$#,##0.00', solPrice);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Screener Data', 'screener',
@@ -565,7 +733,13 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook) {
   addHeaderBar(data, 2, 'SCREENER DATA', dt, 'Source data for screener charts');
   addSectionDivider(data, 4, '  TOP 50 BY MARKET CAP', dt);
   addTableHeaders(data, 5, TOP_HEADERS_VOL, dt);
-  placeSpillFormula(data, 6, 1, 'TOP(50)', dt);
+
+  const top50 = resolveFormulaData('TOP(50)', d);
+  if (top50 && top50.length > 0) {
+    populateMarketRows(data, 6, top50, dt, true);
+  } else {
+    placeSpillFormula(data, 6, 1, 'TOP(50)', dt);
+  }
   addZebraRows(data, 6, 50, 1, 8, dt);
   addPercentFormatting(data, 'F6:F55', dt);
   addPercentFormatting(data, 'G6:G55', dt);
@@ -575,30 +749,30 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook) {
 
   // Gainers sub-sheet
   buildSubSheet(workbook, 'CRK Gainers', 'screener', 'TOP 20 GAINERS (24H)', 'GAINERS(20)', 20, 6,
-    [3, 18, 12, 14, 16, 12]);
+    [3, 18, 12, 14, 16, 12], d);
 
   // Losers sub-sheet
   buildSubSheet(workbook, 'CRK Losers', 'screener', 'TOP 20 LOSERS (24H)', 'LOSERS(20)', 20, 6,
-    [3, 18, 12, 14, 16, 12]);
+    [3, 18, 12, 14, 16, 12], d);
 }
 
 // ============================================
 // PORTFOLIO TRACKER — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addPortfolioDashboard(workbook: ExcelJS.Workbook) {
+function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Portfolio', 'portfolio-tracker',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'PORTFOLIO TRACKER', theme, 'Track your crypto holdings and performance');
 
-  addKPICards(sheet, 5, [
+  addKPICards(sheet, 5, enrichKPIs([
     { title: 'TOTAL VALUE', formula: 'PORTFOLIO_VALUE()', format: '$#,##0.00', changeFormula: 'PORTFOLIO_PNL()' },
     { title: 'TOTAL PNL', formula: 'PORTFOLIO_PNL()', format: '$#,##0.00' },
     { title: 'FEAR & GREED', formula: 'FEARGREED()' },
     { title: 'BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"' },
-  ], theme);
+  ], d), theme);
 
   addSectionDivider(sheet, 10, '  PORTFOLIO ANALYSIS', theme);
 
@@ -610,9 +784,9 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  MARKET CONTEXT', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'Total Market Cap', 'GLOBAL("total_market_cap")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 3, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 4, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'Total Market Cap', 'GLOBAL("total_market_cap")', theme, COMPACT_USD, d?.global?.total_market_cap);
+  addMetricRow(sheet, afterGrid + 3, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
+  addMetricRow(sheet, afterGrid + 4, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
 
   // === DATA SHEET (holdings + top coins) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Portfolio Data', 'portfolio-tracker',
@@ -624,7 +798,12 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook) {
 
   addSectionDivider(data, 28, '  TOP 10 COINS', dt);
   addTableHeaders(data, 29, TOP_HEADERS.slice(0, 5), dt);
-  placeSpillFormula(data, 30, 1, 'TOP(10)', dt);
+  const top10 = resolveFormulaData('TOP(10)', d);
+  if (top10 && top10.length > 0) {
+    populateMarketRows(data, 30, top10, dt);
+  } else {
+    placeSpillFormula(data, 30, 1, 'TOP(10)', dt);
+  }
   addZebraRows(data, 30, 10, 1, 5, dt);
   data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 
@@ -640,19 +819,19 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook) {
 // BITCOIN DASHBOARD — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addBitcoinDashboard(workbook: ExcelJS.Workbook) {
+function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Bitcoin', 'bitcoin-dashboard',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'BITCOIN DASHBOARD', theme, 'BTC price, dominance, and technical indicators');
 
-  addKPICards(sheet, 5, [
+  addKPICards(sheet, 5, enrichKPIs([
     { title: 'BTC PRICE', formula: 'PRICE("bitcoin")', format: '$#,##0.00', changeFormula: 'CHANGE("bitcoin", "24h")' },
     { title: '24H CHANGE', formula: 'CHANGE("bitcoin", "24h")', format: '0.00"%"' },
     { title: 'MARKET CAP', formula: 'MCAP("bitcoin")', format: COMPACT_USD },
     { title: 'BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"' },
-  ], theme);
+  ], d), theme);
 
   addSectionDivider(sheet, 10, '  BITCOIN ANALYSIS', theme);
 
@@ -663,11 +842,12 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook) {
     'TOP COINS COMPARISON',
   ]);
 
+  const btcData = d?.market?.find((c: any) => c.id === 'bitcoin');
   addSectionDivider(sheet, afterGrid, '  MARKET SENTIMENT', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'Fear & Greed Index', 'FEARGREED()', theme);
-  addMetricRow(sheet, afterGrid + 3, 2, 'Fear & Greed Label', 'FEARGREED("class")', theme);
-  addMetricRow(sheet, afterGrid + 4, 2, 'All-Time High', 'ATH("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 5, 2, 'ATH % Down', 'ATH_CHANGE("bitcoin")', theme, '0.00"%"');
+  addMetricRow(sheet, afterGrid + 2, 2, 'Fear & Greed Index', 'FEARGREED()', theme, undefined, d?.fearGreed?.[0]?.value);
+  addMetricRow(sheet, afterGrid + 3, 2, 'Fear & Greed Label', 'FEARGREED("class")', theme, undefined, d?.fearGreed?.[0]?.value_classification);
+  addMetricRow(sheet, afterGrid + 4, 2, 'All-Time High', 'ATH("bitcoin")', theme, '$#,##0.00', btcData?.ath);
+  addMetricRow(sheet, afterGrid + 5, 2, 'ATH % Down', 'ATH_CHANGE("bitcoin")', theme, '0.00"%"', btcData?.ath_change_percentage);
 
   // === DATA SHEET (technical indicators + comparison) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Bitcoin Data', 'bitcoin-dashboard',
@@ -691,7 +871,12 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook) {
 
   addSectionDivider(data, 14, '  TOP 10 COMPARISON', dt);
   addTableHeaders(data, 15, TOP_HEADERS.slice(0, 5), dt);
-  placeSpillFormula(data, 16, 1, 'TOP(10)', dt);
+  const btcTop10 = resolveFormulaData('TOP(10)', d);
+  if (btcTop10 && btcTop10.length > 0) {
+    populateMarketRows(data, 16, btcTop10, dt);
+  } else {
+    placeSpillFormula(data, 16, 1, 'TOP(10)', dt);
+  }
   addZebraRows(data, 16, 10, 1, 5, dt);
 }
 
@@ -699,7 +884,7 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook) {
 // GAINERS & LOSERS — Rankings Sunset Theme
 // ============================================
 
-function addGainersLosersDashboard(workbook: ExcelJS.Workbook) {
+function addGainersLosersDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Gainers',
     dashboardType: 'gainers-losers',
@@ -721,22 +906,22 @@ function addGainersLosersDashboard(workbook: ExcelJS.Workbook) {
       { label: 'ETH Price', formula: 'PRICE("ethereum")', format: '$#,##0.00' },
       { label: 'Total Volume', formula: 'GLOBAL("total_volume")', format: COMPACT_USD },
     ],
-  });
+  }, d);
 
-  buildSubSheet(workbook, 'CRK Losers', 'gainers-losers', 'TOP 20 LOSERS (24H)', 'LOSERS(20)', 20, 7);
+  buildSubSheet(workbook, 'CRK Losers', 'gainers-losers', 'TOP 20 LOSERS (24H)', 'LOSERS(20)', 20, 7, undefined, d);
 }
 
 // ============================================
 // FEAR & GREED — Analytics Purple Theme
 // ============================================
 
-function addFearGreedDashboard(workbook: ExcelJS.Workbook) {
+function addFearGreedDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Fear & Greed', 'fear-greed',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'FEAR & GREED INDEX', theme, 'Crypto market sentiment indicator');
-  addKPICards(sheet, 5, SENTIMENT_KPIS, theme);
+  addKPICards(sheet, 5, enrichKPIs(SENTIMENT_KPIS, d), theme);
   addSectionDivider(sheet, 10, '  SENTIMENT ANALYSIS', theme);
 
   const afterGrid = addChartGrid(sheet, 12, theme, [
@@ -747,17 +932,22 @@ function addFearGreedDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  MARKET OVERVIEW', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'Total Market Cap', 'GLOBAL("total_market_cap")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 3, 2, '24H Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'Total Market Cap', 'GLOBAL("total_market_cap")', theme, COMPACT_USD, d?.global?.total_market_cap);
+  addMetricRow(sheet, afterGrid + 3, 2, '24H Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD, d?.global?.total_volume);
+  addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
+  addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Fear Greed Data', 'fear-greed');
   addHeaderBar(data, 2, 'SENTIMENT DATA', dt);
   addSectionDivider(data, 4, '  TOP 10 CRYPTOCURRENCIES', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
-  placeSpillFormula(data, 6, 1, 'TOP(10)', dt);
+  const top10 = resolveFormulaData('TOP(10)', d);
+  if (top10 && top10.length > 0) {
+    populateMarketRows(data, 6, top10, dt);
+  } else {
+    placeSpillFormula(data, 6, 1, 'TOP(10)', dt);
+  }
   addZebraRows(data, 6, 10, 1, 7, dt);
   addPercentFormatting(data, 'F6:F15', dt);
   addPercentFormatting(data, 'G6:G15', dt);
@@ -768,7 +958,7 @@ function addFearGreedDashboard(workbook: ExcelJS.Workbook) {
 // TRENDING — Rankings Sunset Theme
 // ============================================
 
-function addTrendingDashboard(workbook: ExcelJS.Workbook) {
+function addTrendingDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Trending',
     dashboardType: 'trending',
@@ -788,14 +978,14 @@ function addTrendingDashboard(workbook: ExcelJS.Workbook) {
     spillRows: 10,
     endCol: 5,
     dataBarCol: 4,
-  });
+  }, d);
 }
 
 // ============================================
 // TECHNICAL ANALYSIS — Trading Pro Theme
 // ============================================
 
-function addTechnicalDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addTechnicalDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Technical',
     dashboardType: 'technical-analysis',
@@ -840,20 +1030,20 @@ function addTechnicalDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 7, template: 'BB("{coin}", "lower", 20)', format: '$#,##0.00' },
       { col: 8, template: 'MACD("{coin}")', format: '0.0000' },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // DEFI DASHBOARD — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addDefiDashboard(workbook: ExcelJS.Workbook) {
+function addDefiDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK DeFi', 'defi-dashboard',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'DEFI DASHBOARD', theme, 'Decentralized finance protocols and metrics');
-  addKPICards(sheet, 5, DEFI_KPIS, theme);
+  addKPICards(sheet, 5, enrichKPIs(DEFI_KPIS, d), theme);
   addSectionDivider(sheet, 10, '  DEFI ANALYSIS', theme);
 
   const afterGrid = addChartGrid(sheet, 12, theme, [
@@ -864,9 +1054,9 @@ function addDefiDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  DEFI METRICS', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'DeFi Market Cap', 'DEFI_GLOBAL("market_cap")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"');
-  addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD);
+  addMetricRow(sheet, afterGrid + 2, 2, 'DeFi Market Cap', 'DEFI_GLOBAL("market_cap")', theme, COMPACT_USD, d?.defi?.defi_market_cap);
+  addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"', d?.defi?.defi_dominance);
+  addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD, d?.defi?.trading_volume_24h);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK DeFi Data', 'defi-dashboard',
@@ -895,7 +1085,7 @@ function addDefiDashboard(workbook: ExcelJS.Workbook) {
 // DERIVATIVES — Trading Pro Theme
 // ============================================
 
-function addDerivativesDashboard(workbook: ExcelJS.Workbook) {
+function addDerivativesDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Derivatives',
     dashboardType: 'derivatives',
@@ -916,14 +1106,14 @@ function addDerivativesDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     dataBarCol: 3,
     colorScaleCol: 5,
-  });
+  }, d);
 }
 
 // ============================================
 // CORRELATION / PRICE WATCH — Analytics Purple Theme
 // ============================================
 
-function addCorrelationDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addCorrelationDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Prices',
     dashboardType: 'correlation',
@@ -951,14 +1141,14 @@ function addCorrelationDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 3, template: 'CHANGE("{coin}", "24h")', format: '0.00"%"' },
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // STABLECOINS — Ecosystem Blue Theme
 // ============================================
 
-function addStablecoinsDashboard(workbook: ExcelJS.Workbook) {
+function addStablecoinsDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Stablecoins',
     dashboardType: 'stablecoins',
@@ -980,14 +1170,14 @@ function addStablecoinsDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     percentCols: [5],
     dataBarCol: 3,
-  });
+  }, d);
 }
 
 // ============================================
 // EXCHANGES — Institutional Theme
 // ============================================
 
-function addExchangesDashboard(workbook: ExcelJS.Workbook) {
+function addExchangesDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Exchanges',
     dashboardType: 'exchanges',
@@ -1009,26 +1199,27 @@ function addExchangesDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     dataBarCol: 3,
     colorScaleCol: 2,
-  });
+  }, d);
 }
 
 // ============================================
 // ETHEREUM DASHBOARD — Premium 2x2 Chart Grid + Data Sheet
 // ============================================
 
-function addEthereumDashboard(workbook: ExcelJS.Workbook) {
+function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Ethereum', 'ethereum-dashboard',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'ETHEREUM DASHBOARD', theme, 'ETH price, DeFi metrics, and market data');
 
-  addKPICards(sheet, 5, [
+  const ethData = d?.market?.find((c: any) => c.id === 'ethereum');
+  addKPICards(sheet, 5, enrichKPIs([
     { title: 'ETH PRICE', formula: 'PRICE("ethereum")', format: '$#,##0.00', changeFormula: 'CHANGE("ethereum", "24h")' },
     { title: '24H CHANGE', formula: 'CHANGE("ethereum", "24h")', format: '0.00"%"' },
     { title: 'ETH MARKET CAP', formula: 'MCAP("ethereum")', format: COMPACT_USD },
     { title: 'DEFI MARKET CAP', formula: 'DEFI_GLOBAL("market_cap")', format: COMPACT_USD },
-  ], theme);
+  ], d), theme);
 
   addSectionDivider(sheet, 10, '  ETHEREUM ANALYSIS', theme);
 
@@ -1040,10 +1231,10 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  DEFI ECOSYSTEM', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'DeFi Market Cap', 'DEFI_GLOBAL("market_cap")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"');
-  addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD);
-  addMetricRow(sheet, afterGrid + 5, 2, 'All-Time High', 'ATH("ethereum")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'DeFi Market Cap', 'DEFI_GLOBAL("market_cap")', theme, COMPACT_USD, d?.defi?.defi_market_cap);
+  addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"', d?.defi?.defi_dominance);
+  addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD, d?.defi?.trading_volume_24h);
+  addMetricRow(sheet, afterGrid + 5, 2, 'All-Time High', 'ATH("ethereum")', theme, '$#,##0.00', ethData?.ath);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Ethereum Data', 'ethereum-dashboard',
@@ -1079,7 +1270,7 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook) {
 // NFT TRACKER — Ecosystem Blue Theme
 // ============================================
 
-function addNftDashboard(workbook: ExcelJS.Workbook) {
+function addNftDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK NFTs',
     dashboardType: 'nft-tracker',
@@ -1101,14 +1292,14 @@ function addNftDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     percentCols: [5],
     dataBarCol: 3,
-  });
+  }, d);
 }
 
 // ============================================
 // ON-CHAIN / WHALE TRACKER — Institutional Theme
 // ============================================
 
-function addOnChainDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addOnChainDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK On-Chain',
     dashboardType: 'on-chain',
@@ -1137,14 +1328,14 @@ function addOnChainDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
     ],
     chartTitles: ['PRICE COMPARISON', 'ON-CHAIN DISTRIBUTION', '24H CHANGE', 'MARKET CAP'],
-  });
+  }, d);
 }
 
 // ============================================
 // CATEGORIES / HEATMAP — Ecosystem Blue Theme
 // ============================================
 
-function addCategoriesDashboard(workbook: ExcelJS.Workbook) {
+function addCategoriesDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Categories',
     dashboardType: 'categories',
@@ -1166,26 +1357,26 @@ function addCategoriesDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     percentCols: [4],
     dataBarCol: 2,
-  });
+  }, d);
 }
 
 // ============================================
 // ETF TRACKER — Institutional Theme
 // ============================================
 
-function addEtfDashboard(workbook: ExcelJS.Workbook) {
+function addEtfDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK ETFs', 'etf-tracker',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'CRYPTO ETF TRACKER', theme, 'Corporate Bitcoin & Ethereum holdings');
 
-  addKPICards(sheet, 5, [
+  addKPICards(sheet, 5, enrichKPIs([
     { title: 'BTC PRICE', formula: 'PRICE("bitcoin")', format: '$#,##0.00', changeFormula: 'CHANGE("bitcoin", "24h")' },
     { title: 'BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"' },
     { title: 'TOTAL MARKET CAP', formula: 'GLOBAL("total_market_cap")', format: COMPACT_USD, changeFormula: 'GLOBAL("market_cap_change_percentage_24h_usd")' },
     { title: 'FEAR & GREED', formula: 'FEARGREED()' },
-  ], theme);
+  ], d), theme);
 
   addSectionDivider(sheet, 10, '  ETF ANALYSIS', theme);
 
@@ -1197,8 +1388,8 @@ function addEtfDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  MARKET CONTEXT', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
+  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
+  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK ETFs Data', 'etf-tracker',
@@ -1226,7 +1417,7 @@ function addEtfDashboard(workbook: ExcelJS.Workbook) {
 // LAYER COMPARE — Rankings Sunset Theme
 // ============================================
 
-function addLayerCompareDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addLayerCompareDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Layer Compare',
     dashboardType: 'layer1-compare',
@@ -1259,14 +1450,14 @@ function addLayerCompareDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
       { col: 5, template: 'RSI("{coin}", 14)', format: '0.00' },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // MEME COINS — Crypto Native Theme
 // ============================================
 
-function addMemeCoinsDashboard(workbook: ExcelJS.Workbook) {
+function addMemeCoinsDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Meme Coins',
     dashboardType: 'meme-coins',
@@ -1288,17 +1479,17 @@ function addMemeCoinsDashboard(workbook: ExcelJS.Workbook) {
     endCol: 7,
     percentCols: [6, 7],
     dataBarCol: 5,
-  });
+  }, d);
 
   buildSubSheet(workbook, 'CRK Trending Meme', 'meme-coins', 'TRENDING MEME COINS', 'TRENDING(7)', 10, 5,
-    [3, 25, 18, 15, 14]);
+    [3, 25, 18, 15, 14], d);
 }
 
 // ============================================
 // AI & GAMING — Crypto Native Theme
 // ============================================
 
-function addAIGamingDashboard(workbook: ExcelJS.Workbook) {
+function addAIGamingDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK AI Tokens',
     dashboardType: 'ai-gaming',
@@ -1313,17 +1504,17 @@ function addAIGamingDashboard(workbook: ExcelJS.Workbook) {
     endCol: 7,
     percentCols: [6, 7],
     dataBarCol: 5,
-  });
+  }, d);
 
   buildSubSheet(workbook, 'CRK Gaming Tokens', 'ai-gaming', 'GAMING TOKENS',
-    'TOP(30, "gaming")', 30, 7);
+    'TOP(30, "gaming")', 30, 7, undefined, d);
 }
 
 // ============================================
 // DEFI YIELDS — Yield Finance Theme
 // ============================================
 
-function addDefiYieldsDashboard(workbook: ExcelJS.Workbook) {
+function addDefiYieldsDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK DeFi Yields',
     dashboardType: 'defi-yields',
@@ -1351,17 +1542,17 @@ function addDefiYieldsDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     percentCols: [5],
     dataBarCol: 3,
-  });
+  }, d);
 
   buildSubSheet(workbook, 'CRK Stablecoins', 'defi-yields', 'STABLECOINS', 'STABLECOINS(10)', 10, 5,
-    [3, 22, 14, 16, 16]);
+    [3, 22, 14, 16, 16], d);
 }
 
 // ============================================
 // LIQUIDATIONS — Trading Pro Theme
 // ============================================
 
-function addLiquidationsDashboard(workbook: ExcelJS.Workbook) {
+function addLiquidationsDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Liquidations',
     dashboardType: 'liquidations',
@@ -1382,14 +1573,14 @@ function addLiquidationsDashboard(workbook: ExcelJS.Workbook) {
     spillRows: 50,
     endCol: 5,
     dataBarCol: 3,
-  });
+  }, d);
 }
 
 // ============================================
 // ALTCOIN SEASON — Analytics Purple Theme
 // ============================================
 
-function addAltcoinSeasonDashboard(workbook: ExcelJS.Workbook) {
+function addAltcoinSeasonDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Altcoin Season',
     dashboardType: 'altcoin-season',
@@ -1416,14 +1607,14 @@ function addAltcoinSeasonDashboard(workbook: ExcelJS.Workbook) {
       { label: 'Active Coins', formula: 'GLOBAL("active_cryptocurrencies")' },
       { label: 'Fear & Greed', formula: 'FEARGREED()' },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // TOKEN UNLOCKS — Yield Finance Theme
 // ============================================
 
-function addTokenUnlocksDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addTokenUnlocksDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Token Data',
     dashboardType: 'token-unlocks',
@@ -1447,14 +1638,14 @@ function addTokenUnlocksDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 3, template: 'CHANGE("{coin}", "24h")', format: '0.00"%"' },
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // STAKING YIELDS — Yield Finance Theme
 // ============================================
 
-function addStakingYieldsDashboard(workbook: ExcelJS.Workbook) {
+function addStakingYieldsDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Staking',
     dashboardType: 'staking-yields',
@@ -1476,20 +1667,20 @@ function addStakingYieldsDashboard(workbook: ExcelJS.Workbook) {
     endCol: 7,
     percentCols: [6, 7],
     dataBarCol: 5,
-  });
+  }, d);
 }
 
 // ============================================
 // SOCIAL SENTIMENT — Analytics Purple Theme
 // ============================================
 
-function addSocialSentimentDashboard(workbook: ExcelJS.Workbook) {
+function addSocialSentimentDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Sentiment', 'social-sentiment',
     [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
   addHeaderBar(sheet, 2, 'SOCIAL SENTIMENT', theme, 'Market sentiment and social trends');
-  addKPICards(sheet, 5, SENTIMENT_KPIS, theme);
+  addKPICards(sheet, 5, enrichKPIs(SENTIMENT_KPIS, d), theme);
   addSectionDivider(sheet, 10, '  SENTIMENT ANALYSIS', theme);
 
   const afterGrid = addChartGrid(sheet, 12, theme, [
@@ -1500,22 +1691,32 @@ function addSocialSentimentDashboard(workbook: ExcelJS.Workbook) {
   ]);
 
   addSectionDivider(sheet, afterGrid, '  MARKET OVERVIEW', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00');
-  addMetricRow(sheet, afterGrid + 4, 2, 'Total Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD);
+  addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
+  addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
+  addMetricRow(sheet, afterGrid + 4, 2, 'Total Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD, d?.global?.total_volume);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Sentiment Data', 'social-sentiment');
   addHeaderBar(data, 2, 'SENTIMENT DATA', dt);
   addSectionDivider(data, 4, '  TOP 20 GAINERS', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
-  placeSpillFormula(data, 6, 1, 'GAINERS(20)', dt);
+  const gainers20 = resolveFormulaData('GAINERS(20)', d);
+  if (gainers20 && gainers20.length > 0) {
+    populateMarketRows(data, 6, gainers20, dt);
+  } else {
+    placeSpillFormula(data, 6, 1, 'GAINERS(20)', dt);
+  }
   addZebraRows(data, 6, 20, 1, 7, dt);
   addPercentFormatting(data, 'F6:F25', dt);
   addPercentFormatting(data, 'G6:G25', dt);
 
   addSectionDivider(data, 28, '  TRENDING COINS', dt);
-  placeSpillFormula(data, 30, 1, 'TRENDING(7)', dt);
+  const trending = resolveFormulaData('TRENDING(7)', d);
+  if (trending && trending.length > 0) {
+    populateMarketRows(data, 30, trending, dt);
+  } else {
+    placeSpillFormula(data, 30, 1, 'TRENDING(7)', dt);
+  }
   addZebraRows(data, 30, 10, 1, 5, dt);
   data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 }
@@ -1524,7 +1725,7 @@ function addSocialSentimentDashboard(workbook: ExcelJS.Workbook) {
 // MINING — Tools Dark Theme
 // ============================================
 
-function addMiningDashboard(workbook: ExcelJS.Workbook) {
+function addMiningDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Mining',
     dashboardType: 'mining-calc',
@@ -1544,14 +1745,14 @@ function addMiningDashboard(workbook: ExcelJS.Workbook) {
     percentCols: [6, 7],
     dataBarCol: 5,
     chartTitles: ['TOP 10 PoW MARKET CAP', 'PoW DISTRIBUTION', '24H CHANGE', 'PRICE COMPARISON'],
-  });
+  }, d);
 }
 
 // ============================================
 // EXCHANGE RESERVES — Institutional Theme
 // ============================================
 
-function addExchangeReservesDashboard(workbook: ExcelJS.Workbook) {
+function addExchangeReservesDashboard(workbook: ExcelJS.Workbook, d?: any) {
   buildSpillDashboard(workbook, {
     sheetName: 'CRK Exchanges',
     dashboardType: 'exchange-reserves',
@@ -1573,14 +1774,14 @@ function addExchangeReservesDashboard(workbook: ExcelJS.Workbook) {
     endCol: 5,
     dataBarCol: 3,
     colorScaleCol: 2,
-  });
+  }, d);
 }
 
 // ============================================
 // CUSTOM WATCHLIST — Tools Dark Theme
 // ============================================
 
-function addCustomDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addCustomDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Watchlist',
     dashboardType: 'custom',
@@ -1605,14 +1806,14 @@ function addCustomDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
       { col: 5, template: 'VOL("{coin}")', format: COMPACT_USD },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // VOLATILITY / CALCULATOR — Trading Pro Theme
 // ============================================
 
-function addVolatilityDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addVolatilityDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Volatility',
     dashboardType: 'volatility',
@@ -1647,14 +1848,14 @@ function addVolatilityDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 3, template: 'CHANGE("{coin}", "24h")', format: '0.00"%"' },
       { col: 4, template: 'ATH("{coin}")', format: '$#,##0.00' },
     ],
-  });
+  }, d);
 }
 
 // ============================================
 // CATEGORY TOKENS (RWA, Metaverse, Privacy) — Ecosystem Blue Theme
 // ============================================
 
-function addCategoryTokensDashboard(workbook: ExcelJS.Workbook, dashboard: DashboardType) {
+function addCategoryTokensDashboard(workbook: ExcelJS.Workbook, dashboard: DashboardType, d?: any) {
   const categoryMap: Record<string, { title: string; category: string; subtitle: string }> = {
     'rwa': { title: 'REAL WORLD ASSETS', category: 'real-world-assets-rwa', subtitle: 'Tokenized real-world assets' },
     'metaverse': { title: 'METAVERSE TOKENS', category: 'metaverse', subtitle: 'Virtual worlds and metaverse projects' },
@@ -1677,14 +1878,14 @@ function addCategoryTokensDashboard(workbook: ExcelJS.Workbook, dashboard: Dashb
     percentCols: [6, 7],
     dataBarCol: 5,
     chartTitles: ['MARKET CAP RANKING', 'MARKET CAP DISTRIBUTION', '24H PRICE CHANGE', 'PRICE COMPARISON'],
-  });
+  }, d);
 }
 
 // ============================================
 // DEVELOPER ACTIVITY — Analytics Purple Theme
 // ============================================
 
-function addDevActivityDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
+function addDevActivityDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: any) {
   buildPerCoinDashboard(workbook, {
     sheetName: 'CRK Dev Activity',
     dashboardType: 'dev-activity',
@@ -1708,5 +1909,5 @@ function addDevActivityDashboard(workbook: ExcelJS.Workbook, coins: string[]) {
       { col: 3, template: 'CHANGE("{coin}", "24h")', format: '0.00"%"' },
       { col: 4, template: 'MCAP("{coin}")', format: COMPACT_USD },
     ],
-  });
+  }, d);
 }

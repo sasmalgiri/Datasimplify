@@ -130,6 +130,8 @@ export interface KPICardDef {
   formula: string; // CRK formula without the CRK. prefix, e.g., 'GLOBAL("total_market_cap")'
   format?: string; // Number format, e.g., '$#,##0', '0.00%'
   changeFormula?: string; // Optional CRK formula for change indicator (▲/▼)
+  fallbackValue?: number | string; // Static fallback for IFERROR wrapping (when add-in not installed)
+  changeFallback?: number | string; // Static fallback for change indicator
 }
 
 /**
@@ -184,7 +186,13 @@ export function addKPICards(
     // Value: 22pt, BOLD, WHITE — merged across card width so large numbers display
     sheet.mergeCells(startRow + 1, col, startRow + 1, endCol);
     const valueCell = sheet.getCell(startRow + 1, col);
-    valueCell.value = { formula: `CRK.${card.formula}` };
+    if (card.fallbackValue !== undefined) {
+      // IFERROR wrapping: shows live CRK value if add-in loaded, fallback if not
+      const fb = typeof card.fallbackValue === 'string' ? `"${card.fallbackValue}"` : card.fallbackValue;
+      valueCell.value = { formula: `IFERROR(CRK.${card.formula},${fb})` };
+    } else {
+      valueCell.value = { formula: `CRK.${card.formula}` };
+    }
     valueCell.font = { size: 22, bold: true, color: { argb: theme.text } };
     valueCell.alignment = { horizontal: 'left', vertical: 'middle' };
     if (card.format) {
@@ -196,7 +204,12 @@ export function addKPICards(
     sheet.mergeCells(startRow + 2, col, startRow + 2, endCol);
     if (card.changeFormula) {
       const changeCell = sheet.getCell(startRow + 2, col);
-      changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},"")` };
+      if (card.changeFallback !== undefined) {
+        const cfb = typeof card.changeFallback === 'string' ? `"${card.changeFallback}"` : card.changeFallback;
+        changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},${cfb})` };
+      } else {
+        changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},"")` };
+      }
       changeCell.font = { size: 10, color: { argb: theme.muted } };
       changeCell.numFmt = CHANGE_FORMAT;
       changeCell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -508,6 +521,7 @@ export function addMetricRow(
   formula: string,
   theme: DashboardTheme,
   format?: string,
+  fallbackValue?: number | string,
 ): void {
   const labelCell = sheet.getCell(row, labelCol);
   labelCell.value = label;
@@ -515,10 +529,98 @@ export function addMetricRow(
 
   const valueCol = labelCol + 1;
   const valueCell = sheet.getCell(row, valueCol);
-  valueCell.value = { formula: `CRK.${formula}` };
+  if (fallbackValue !== undefined) {
+    const fb = typeof fallbackValue === 'string' ? `"${fallbackValue}"` : fallbackValue;
+    valueCell.value = { formula: `IFERROR(CRK.${formula},${fb})` };
+  } else {
+    valueCell.value = { formula: `CRK.${formula}` };
+  }
   valueCell.font = { size: 14, bold: true, color: { argb: theme.accent } };
   if (format) {
     valueCell.numFmt = format;
   }
   sheet.getRow(row).height = 22;
+}
+
+// ============================================
+// POPULATE DATA ROWS — Server-fetched values
+// ============================================
+
+/**
+ * Populate data rows with server-fetched CoinGecko market data.
+ * Used instead of placeSpillFormula when prefetched data is available.
+ * Column layout matches TOP_HEADERS: #, Name, Symbol, Price, MCap, 24h%, 7d%, [Volume]
+ */
+export function populateMarketRows(
+  sheet: ExcelJS.Worksheet,
+  startRow: number,
+  rows: any[],
+  theme: DashboardTheme,
+  includeVolume?: boolean,
+): void {
+  const endCol = includeVolume ? 8 : 7;
+  for (let i = 0; i < rows.length; i++) {
+    const r = startRow + i;
+    const coin = rows[i];
+    sheet.getCell(r, 1).value = coin.market_cap_rank || (i + 1);
+    sheet.getCell(r, 2).value = coin.name || '';
+    sheet.getCell(r, 3).value = ((coin.symbol as string) || '').toUpperCase();
+
+    const priceCell = sheet.getCell(r, 4);
+    priceCell.value = coin.current_price ?? 0;
+    priceCell.numFmt = '$#,##0.00';
+
+    const mcapCell = sheet.getCell(r, 5);
+    mcapCell.value = coin.market_cap ?? 0;
+    mcapCell.numFmt = COMPACT_USD;
+
+    const chg24 = sheet.getCell(r, 6);
+    chg24.value = (coin.price_change_percentage_24h ?? 0) / 100;
+    chg24.numFmt = '0.00%';
+
+    const chg7d = sheet.getCell(r, 7);
+    chg7d.value = (coin.price_change_percentage_7d_in_currency ?? coin.price_change_percentage_7d ?? 0) / 100;
+    chg7d.numFmt = '0.00%';
+
+    if (includeVolume) {
+      const volCell = sheet.getCell(r, 8);
+      volCell.value = coin.total_volume ?? 0;
+      volCell.numFmt = COMPACT_USD;
+    }
+
+    // Apply theme styling
+    for (let c = 1; c <= endCol; c++) {
+      const cell = sheet.getCell(r, c);
+      cell.font = { ...cell.font, size: 10, color: { argb: theme.text } };
+    }
+  }
+}
+
+/**
+ * Populate exchange data rows.
+ * Column layout: #, Name, Trust Score, 24h Volume, Year Est.
+ */
+export function populateExchangeRows(
+  sheet: ExcelJS.Worksheet,
+  startRow: number,
+  rows: any[],
+  theme: DashboardTheme,
+): void {
+  for (let i = 0; i < rows.length; i++) {
+    const r = startRow + i;
+    const ex = rows[i];
+    sheet.getCell(r, 1).value = i + 1;
+    sheet.getCell(r, 2).value = ex.name || '';
+    sheet.getCell(r, 3).value = ex.trust_score ?? 0;
+
+    const volCell = sheet.getCell(r, 4);
+    volCell.value = ex.trade_volume_24h_btc ?? 0;
+    volCell.numFmt = '#,##0.00';
+
+    sheet.getCell(r, 5).value = ex.year_established ?? '';
+
+    for (let c = 1; c <= 5; c++) {
+      sheet.getCell(r, c).font = { size: 10, color: { argb: theme.text } };
+    }
+  }
 }

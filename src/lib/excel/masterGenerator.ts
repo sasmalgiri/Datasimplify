@@ -689,9 +689,19 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
     options.coins || ['bitcoin', 'ethereum', 'solana']
   );
 
-  // Add CRK formula dashboard sheets (dual-mode: works with add-in installed)
-  // Without add-in, these show #NAME! but Power Query still populates data
-  addCrkDashboardSheets(workbook, options.dashboard, options.coins || ['bitcoin', 'ethereum', 'solana']);
+  // Fetch live data from CoinGecko server-side for pre-population
+  // Templates open with real data even without add-in installed
+  let prefetchedData: any = null;
+  try {
+    prefetchedData = await fetchAllData(options);
+  } catch (e) {
+    console.warn('[BYOK] Data prefetch failed, falling back to formulas-only:', e);
+  }
+
+  // Add CRK formula dashboard sheets with pre-populated data
+  // Data sheets get real values; KPI cards use IFERROR(CRK.fn, fallback)
+  const coins = options.coins || ['bitcoin', 'ethereum', 'solana'];
+  addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
 
   // Add a lightweight instructions sheet (replaces verbose M code copy-paste sheet)
   const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
