@@ -419,14 +419,20 @@ function buildSubSheet(
   const { sheet, theme } = initDarkSheet(workbook, sheetName, dashboardType, colWidths);
   addHeaderBar(sheet, 2, title, theme);
 
-  // Pre-populate with real data or fall back to CRK formula
+  // Add section divider + table headers (matching buildSpillDashboard pattern)
+  addSectionDivider(sheet, 4, `  ${title}`, theme);
+  const headers = (endCol >= 8 ? TOP_HEADERS_VOL : TOP_HEADERS).filter(h => h.col <= endCol);
+  addTableHeaders(sheet, 5, headers, theme);
+
+  // Pre-populate with real data or fall back to CRK formula (row 6 = data start)
   const resolved = resolveFormulaData(formula, prefetchedData);
   if (resolved && resolved.length > 0) {
-    populateMarketRows(sheet, 5, resolved, theme, endCol >= 8);
+    populateMarketRows(sheet, 6, resolved, theme, endCol >= 8);
   } else {
-    placeSpillFormula(sheet, 5, 1, formula, theme);
+    placeSpillFormula(sheet, 6, 1, formula, theme);
   }
-  addZebraRows(sheet, 5, spillRows, 1, endCol, theme);
+  addZebraRows(sheet, 6, spillRows, 1, endCol, theme);
+  sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
   return { sheet, theme };
 }
 

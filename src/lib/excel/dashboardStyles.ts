@@ -569,7 +569,14 @@ export function addMetricRow(
   const valueCol = labelCol + 1;
   const valueCell = sheet.getCell(row, valueCol);
   if (fallbackValue !== undefined) {
-    const fb = typeof fallbackValue === 'string' ? `"${fallbackValue}"` : fallbackValue;
+    let fb: string | number;
+    if (typeof fallbackValue === 'string') {
+      // Escape double quotes for Excel formula strings (double them up)
+      const escaped = fallbackValue.replace(/"/g, '""');
+      fb = `"${escaped}"`;
+    } else {
+      fb = typeof fallbackValue === 'number' && !isNaN(fallbackValue) ? fallbackValue : 0;
+    }
     valueCell.value = { formula: `IFERROR(CRK.${formula},${fb})` };
   } else {
     valueCell.value = { formula: `CRK.${formula}` };

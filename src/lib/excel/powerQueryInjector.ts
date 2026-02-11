@@ -309,7 +309,7 @@ async function injectTableParts(
 
     // 1. Create xl/tables/tableN.xml
     zip.file(`xl/tables/table${tableNum}.xml`, buildTableXml(
-      tableNum, mapping.queryName, tableRef, cols
+      tableNum, connectionId, mapping.queryName, tableRef, cols
     ));
 
     // 2. Create xl/queryTables/queryTableN.xml
@@ -371,7 +371,7 @@ async function buildSheetNumberMap(zip: JSZip): Promise<Record<string, number>> 
  * Generates xl/tables/tableN.xml
  * Defines an Excel Table linked to a Power Query via queryTableFieldId.
  */
-function buildTableXml(tableNum: number, queryName: string, ref: string, columns: string[]): string {
+function buildTableXml(tableNum: number, connId: number, queryName: string, ref: string, columns: string[]): string {
   const tableName = queryName.replace(/[^a-zA-Z0-9_]/g, '_');
   const colsXml = columns.map((col, i) => {
     const id = i + 1;
@@ -381,7 +381,7 @@ function buildTableXml(tableNum: number, queryName: string, ref: string, columns
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
   id="${tableNum}" name="${tableName}" displayName="${tableName}" ref="${ref}"
-  tableType="queryTable" totalsRowShown="0" connectionId="${tableNum}">
+  tableType="queryTable" totalsRowShown="0" connectionId="${connId}">
   <autoFilter ref="${ref}" />
   <tableColumns count="${columns.length}">
 ${colsXml}
@@ -499,7 +499,9 @@ async function addDefinedName(
   // localSheetId is 0-based sheet index
   const localSheetId = sheetNum - 1;
   const escapedName = sheetName.replace(/'/g, "''");
-  const definedName = `<definedName name="ExternalData_${index}" localSheetId="${localSheetId}" hidden="1">'${escapedName}'!$${ref.replace(':', ':$').replace(/([A-Z]+)(\d+)/g, '$$$1$$$2')}</definedName>`;
+  // Convert ref like "A1:E2" → "$A$1:$E$2" for absolute cell reference
+  const absRef = ref.replace(/([A-Z]+)(\d+)/g, '$$$1$$$2');
+  const definedName = `<definedName name="ExternalData_${index}" localSheetId="${localSheetId}" hidden="1">'${escapedName}'!${absRef}</definedName>`;
 
   if (xml.includes('<definedNames')) {
     // Add to existing definedNames
