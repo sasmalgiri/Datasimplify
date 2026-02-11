@@ -34,6 +34,8 @@ import {
   REFRESH_PRESETS,
 } from './powerQueryTemplates';
 import { injectPowerQueries } from './powerQueryInjector';
+import { injectCharts } from './chartInjector';
+import { getChartsForDashboard } from './dashboardCharts';
 import { addCrkDashboardSheets } from './crkDashboardSheets';
 import {
   createAdvancedSparkline,
@@ -704,9 +706,16 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   // Post-process: inject real Power Query connections into the xlsx ZIP
   // After injection, Excel shows queries in Data > Queries & Connections
   // User just pastes API key in B6 and clicks Refresh All
-  const injected = await injectPowerQueries(baseBuffer, queries);
+  const withPQ = await injectPowerQueries(baseBuffer, queries);
 
-  return Buffer.from(injected);
+  // Post-process: inject native Excel charts (bar, pie, doughnut, line)
+  // Charts reference CRK formula spill ranges — empty until data loads
+  const chartDefs = getChartsForDashboard(options.dashboard);
+  const final = chartDefs.length > 0
+    ? await injectCharts(withPQ, chartDefs)
+    : withPQ;
+
+  return Buffer.from(final);
 }
 
 // ============================================
@@ -1551,7 +1560,7 @@ function addTopCoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   });
 
   // Freeze header row
-  sheet.views = [{ state: 'frozen', ySplit: 4 }];
+  sheet.views = [{ state: 'frozen', ySplit: 4, showGridLines: false }];
 }
 
 // ============================================
@@ -2602,7 +2611,7 @@ function addScreenerSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   };
 
   // Freeze header
-  sheet.views = [{ state: 'frozen', ySplit: 5 }];
+  sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
 }
 
 // ============================================
