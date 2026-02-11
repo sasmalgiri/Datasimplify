@@ -444,7 +444,7 @@ function buildDrawingXml(charts: ChartDefinition[], chartIds: number[]): string 
   const anchors = charts.map((chart, i) => {
     const p = chart.position;
     return `
-  <xdr:twoCellAnchor>
+  <xdr:twoCellAnchor editAs="oneCell">
     <xdr:from>
       <xdr:col>${p.fromCol}</xdr:col>
       <xdr:colOff>0</xdr:colOff>
@@ -460,7 +460,9 @@ function buildDrawingXml(charts: ChartDefinition[], chartIds: number[]): string 
     <xdr:graphicFrame macro="">
       <xdr:nvGraphicFramePr>
         <xdr:cNvPr id="${i + 2}" name="Chart ${chartIds[i]}"/>
-        <xdr:cNvGraphicFramePr/>
+        <xdr:cNvGraphicFramePr>
+          <a:graphicFrameLocks noGrp="1"/>
+        </xdr:cNvGraphicFramePr>
       </xdr:nvGraphicFramePr>
       <xdr:xfrm>
         <a:off x="0" y="0"/>
@@ -468,7 +470,9 @@ function buildDrawingXml(charts: ChartDefinition[], chartIds: number[]): string 
       </xdr:xfrm>
       <a:graphic>
         <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">
-          <c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" r:id="rId${i + 1}"/>
+          <c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
+                   xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+                   r:id="rId${i + 1}"/>
         </a:graphicData>
       </a:graphic>
     </xdr:graphicFrame>
@@ -545,8 +549,17 @@ async function linkSheetToDrawing(zip: JSZip, sheetIdx: number): Promise<void> {
       const drawingRIdMatch = xml.match(/Id="(rId\d+)"[^>]*relationships\/drawing/);
       const rId = drawingRIdMatch ? drawingRIdMatch[1] : 'rId1';
 
-      // Insert before </worksheet>
-      sheetXml = sheetXml.replace('</worksheet>', `  <drawing r:id="${rId}"/>\n</worksheet>`);
+      const drawingTag = `<drawing r:id="${rId}"/>`;
+
+      // Insert <drawing> at correct position per OOXML spec:
+      // after conditionalFormatting/hyperlinks/pageMargins/etc, before tableParts/extLst
+      if (sheetXml.includes('<tableParts')) {
+        sheetXml = sheetXml.replace('<tableParts', `${drawingTag}<tableParts`);
+      } else if (sheetXml.includes('<extLst')) {
+        sheetXml = sheetXml.replace('<extLst', `${drawingTag}<extLst`);
+      } else {
+        sheetXml = sheetXml.replace('</worksheet>', `${drawingTag}</worksheet>`);
+      }
       zip.file(sheetPath, sheetXml);
     }
   }

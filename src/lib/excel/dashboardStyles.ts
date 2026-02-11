@@ -55,12 +55,15 @@ export function initDarkSheet(
     sheet.getColumn(i + 1).width = w;
   });
 
-  // Right margin column for floating effect
-  sheet.getColumn(widths.length + 1).width = 3;
+  // Right margin columns for floating effect (fill extends beyond content)
+  const rightMarginStart = widths.length + 1;
+  for (let c = rightMarginStart; c <= rightMarginStart + 4; c++) {
+    sheet.getColumn(c).width = 3;
+  }
 
-  // Fill visible area with dark background (rows 1-70, cols A through right margin)
-  const totalCols = widths.length + 1;
-  for (let r = 1; r <= 70; r++) {
+  // Fill visible area with dark background (rows 1-80, cols A through right margin)
+  const totalCols = rightMarginStart + 4;
+  for (let r = 1; r <= 80; r++) {
     const row = sheet.getRow(r);
     for (let c = 1; c <= totalCols; c++) {
       row.getCell(c).fill = {
@@ -133,6 +136,7 @@ export interface KPICardDef {
  * Add a row of 2-4 premium KPI metric cards.
  * Other Level design: large 22pt WHITE value, left accent bar, change indicator.
  * Cards at columns B, E, H, K (3 cols wide each, 5 rows tall).
+ * Cells are MERGED across card width so large values display without #####.
  */
 export function addKPICards(
   sheet: ExcelJS.Worksheet,
@@ -141,15 +145,17 @@ export function addKPICards(
   theme: DashboardTheme,
 ): number {
   const startCols = [2, 5, 8, 11]; // B, E, H, K
+  const cardWidth = 3;
   const cardHeight = 5; // 5 rows: title, value, change, spacer, bottom border
 
   for (let i = 0; i < Math.min(cards.length, 4); i++) {
     const col = startCols[i];
     const card = cards[i];
+    const endCol = col + cardWidth - 1;
 
     // Card background (3 cols × 5 rows) with kpiBg
     for (let r = startRow; r < startRow + cardHeight; r++) {
-      for (let c = col; c < col + 3; c++) {
+      for (let c = col; c <= endCol; c++) {
         sheet.getCell(r, c).fill = {
           type: 'pattern',
           pattern: 'solid',
@@ -158,7 +164,7 @@ export function addKPICards(
       }
     }
 
-    // LEFT ACCENT BAR — thin accent-colored left border on first column (Other Level signature)
+    // LEFT ACCENT BAR — accent-colored left border on first column
     for (let r = startRow; r < startRow + cardHeight; r++) {
       const cell = sheet.getCell(r, col);
       cell.border = {
@@ -167,14 +173,16 @@ export function addKPICards(
       };
     }
 
-    // Title label: 9pt, ALL CAPS, muted gray (row 1 of card)
+    // Title: 9pt, ALL CAPS, muted gray — merged across card width
+    sheet.mergeCells(startRow, col, startRow, endCol);
     const titleCell = sheet.getCell(startRow, col);
     titleCell.value = card.title;
     titleCell.font = { size: 9, color: { argb: theme.muted }, bold: true };
     titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
     sheet.getRow(startRow).height = 20;
 
-    // Value: 22pt, BOLD, WHITE — the hero number (row 2 of card)
+    // Value: 22pt, BOLD, WHITE — merged across card width so large numbers display
+    sheet.mergeCells(startRow + 1, col, startRow + 1, endCol);
     const valueCell = sheet.getCell(startRow + 1, col);
     valueCell.value = { formula: `CRK.${card.formula}` };
     valueCell.font = { size: 22, bold: true, color: { argb: theme.text } };
@@ -184,10 +192,11 @@ export function addKPICards(
     }
     sheet.getRow(startRow + 1).height = 34;
 
-    // Change indicator: ▲/▼ with green/red (row 3 of card)
+    // Change indicator: ▲/▼ with green/red — merged, wrapped in IFERROR
+    sheet.mergeCells(startRow + 2, col, startRow + 2, endCol);
     if (card.changeFormula) {
       const changeCell = sheet.getCell(startRow + 2, col);
-      changeCell.value = { formula: `CRK.${card.changeFormula}` };
+      changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},"")` };
       changeCell.font = { size: 10, color: { argb: theme.muted } };
       changeCell.numFmt = CHANGE_FORMAT;
       changeCell.alignment = { horizontal: 'left', vertical: 'middle' };
@@ -219,7 +228,7 @@ export function addKPICards(
     }
 
     // Subtle bottom border on last row
-    for (let c = col; c < col + 3; c++) {
+    for (let c = col; c <= endCol; c++) {
       const cell = sheet.getCell(startRow + cardHeight - 1, c);
       cell.border = {
         ...(cell.border || {}),
