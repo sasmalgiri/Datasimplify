@@ -14,6 +14,13 @@ import {
   colorHeatmapCell,
 } from './charts';
 
+/** Safely coerce any value to a number (guards against null/undefined/string from API) */
+function num(v: any): number {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
 // Color palette
 const COLORS = {
   primary: 'FF059669',
@@ -85,9 +92,9 @@ export function addBitcoinDashboard(
   const stats = [
     { label: 'Price', value: `$${btcData?.current_price?.toLocaleString() || 'N/A'}` },
     { label: 'Market Cap', value: formatCurrency(btcData?.market_cap || 0) },
-    { label: '24h Change', value: `${(btcData?.price_change_percentage_24h || 0).toFixed(2)}%`, isChange: true },
+    { label: '24h Change', value: `${num(btcData?.price_change_percentage_24h || 0).toFixed(2)}%`, isChange: true },
     { label: '24h Volume', value: formatCurrency(btcData?.total_volume || 0) },
-    { label: 'Circulating Supply', value: `${((btcData?.circulating_supply || 0) / 1e6).toFixed(2)}M BTC` },
+    { label: 'Circulating Supply', value: `${num((btcData?.circulating_supply || 0) / 1e6).toFixed(2)}M BTC` },
     { label: 'Max Supply', value: '21M BTC' },
   ];
 
@@ -114,7 +121,7 @@ export function addBitcoinDashboard(
 
   const dominance = globalData?.market_cap_percentage?.btc || 0;
   sheet.getCell('E5').value = 'BTC Dominance';
-  sheet.getCell('F5').value = `${dominance.toFixed(2)}%`;
+  sheet.getCell('F5').value = `${num(dominance).toFixed(2)}%`;
   sheet.getCell('F5').font = { bold: true, size: 20, color: { argb: COLORS.bitcoin } };
 
   // Visual bar
@@ -142,7 +149,7 @@ export function addBitcoinDashboard(
   sheet.getCell('I5').font = { bold: true, color: { argb: COLORS.success } };
 
   sheet.getCell('H6').value = 'From ATH';
-  sheet.getCell('I6').value = `${athChange.toFixed(2)}%`;
+  sheet.getCell('I6').value = `${num(athChange).toFixed(2)}%`;
   sheet.getCell('I6').font = { bold: true, color: { argb: COLORS.danger } };
 
   sheet.getCell('H7').value = 'ATH Date';
@@ -241,9 +248,9 @@ export function addEthereumDashboard(
   const stats = [
     { label: 'Price', value: `$${ethData?.current_price?.toLocaleString() || 'N/A'}` },
     { label: 'Market Cap', value: formatCurrency(ethData?.market_cap || 0) },
-    { label: '24h Change', value: `${(ethData?.price_change_percentage_24h || 0).toFixed(2)}%`, isChange: true },
+    { label: '24h Change', value: `${num(ethData?.price_change_percentage_24h || 0).toFixed(2)}%`, isChange: true },
     { label: '24h Volume', value: formatCurrency(ethData?.total_volume || 0) },
-    { label: 'Circulating Supply', value: `${((ethData?.circulating_supply || 0) / 1e6).toFixed(2)}M ETH` },
+    { label: 'Circulating Supply', value: `${num((ethData?.circulating_supply || 0) / 1e6).toFixed(2)}M ETH` },
   ];
 
   stats.forEach((stat, i) => {
@@ -265,7 +272,7 @@ export function addEthereumDashboard(
 
   const dominance = globalData?.market_cap_percentage?.eth || 0;
   sheet.getCell('E5').value = 'ETH Dominance';
-  sheet.getCell('F5').value = `${dominance.toFixed(2)}%`;
+  sheet.getCell('F5').value = `${num(dominance).toFixed(2)}%`;
   sheet.getCell('F5').font = { bold: true, size: 20, color: { argb: COLORS.ethereum } };
 
   createProgressBar(sheet, 6, 5, dominance, 100, { width: 25, color: COLORS.ethereum });
@@ -276,7 +283,7 @@ export function addEthereumDashboard(
 
   const defiStats = [
     { label: 'DeFi Market Cap', value: formatCurrency(parseFloat(defiData?.defi_market_cap || '0')) },
-    { label: 'DeFi/ETH Ratio', value: `${parseFloat(defiData?.defi_to_eth_ratio || '0').toFixed(4)}` },
+    { label: 'DeFi/ETH Ratio', value: `${num(parseFloat(defiData?.defi_to_eth_ratio || '0')).toFixed(4)}` },
     { label: 'Top Protocol', value: defiData?.top_coin_name || 'Unknown' },
   ];
 
@@ -328,7 +335,7 @@ export function addEthereumDashboard(
   sheet.getCell('I13').font = { bold: true, color: { argb: COLORS.success } };
 
   sheet.getCell('H14').value = 'From ATH';
-  sheet.getCell('I14').value = `${(ethData?.ath_change_percentage || 0).toFixed(2)}%`;
+  sheet.getCell('I14').value = `${num(ethData?.ath_change_percentage || 0).toFixed(2)}%`;
   sheet.getCell('I14').font = { bold: true, color: { argb: COLORS.danger } };
 }
 
@@ -394,11 +401,11 @@ export function addLayer1Comparison(
     sheet.getCell(`F${row}`).value = formatCurrency(coin.total_volume);
 
     const cell24h = sheet.getCell(`G${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
 
     const cell7d = sheet.getCell(`H${row}`);
-    cell7d.value = `${change7d >= 0 ? '+' : ''}${change7d.toFixed(2)}%`;
+    cell7d.value = `${change7d >= 0 ? '+' : ''}${num(change7d).toFixed(2)}%`;
     cell7d.font = { color: { argb: change7d >= 0 ? COLORS.success : COLORS.danger } };
 
     sheet.getCell(`I${row}`).value = coin.market_cap_rank;
@@ -406,7 +413,7 @@ export function addLayer1Comparison(
 
     // Visual market share bar
     const barWidth = Math.round(marketShare / 2);
-    sheet.getCell(`J${row}`).value = '█'.repeat(Math.max(1, barWidth)) + ` ${marketShare.toFixed(1)}%`;
+    sheet.getCell(`J${row}`).value = '█'.repeat(Math.max(1, barWidth)) + ` ${num(marketShare).toFixed(1)}%`;
     sheet.getCell(`J${row}`).font = { color: { argb: COLORS.cyan } };
 
     // Zebra
@@ -494,11 +501,11 @@ export function addLayer2Comparison(
     sheet.getCell(`E${row}`).value = formatCurrency(coin.market_cap);
 
     const cell24h = sheet.getCell(`F${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
 
     const cell7d = sheet.getCell(`G${row}`);
-    cell7d.value = `${change7d >= 0 ? '+' : ''}${change7d.toFixed(2)}%`;
+    cell7d.value = `${change7d >= 0 ? '+' : ''}${num(change7d).toFixed(2)}%`;
     cell7d.font = { color: { argb: change7d >= 0 ? COLORS.success : COLORS.danger } };
 
     sheet.getCell(`H${row}`).value = techTypes[coin.id] || 'Rollup';
@@ -572,14 +579,14 @@ export function addMemeCoins(
     sheet.getCell(`E${row}`).value = formatCurrency(coin.market_cap);
 
     const cell24h = sheet.getCell(`F${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { bold: true, color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
 
     const cell7d = sheet.getCell(`G${row}`);
-    cell7d.value = `${change7d >= 0 ? '+' : ''}${change7d.toFixed(2)}%`;
+    cell7d.value = `${change7d >= 0 ? '+' : ''}${num(change7d).toFixed(2)}%`;
     cell7d.font = { color: { argb: change7d >= 0 ? COLORS.success : COLORS.danger } };
 
-    sheet.getCell(`H${row}`).value = `${fromAth.toFixed(1)}%`;
+    sheet.getCell(`H${row}`).value = `${num(fromAth).toFixed(1)}%`;
     sheet.getCell(`H${row}`).font = { color: { argb: COLORS.danger } };
 
     if (i % 2 === 0) {
@@ -602,7 +609,7 @@ export function addMemeCoins(
   sheet.getCell(`C${statsRow + 1}`).font = { bold: true };
 
   sheet.getCell(`B${statsRow + 2}`).value = 'Average 24h Change:';
-  sheet.getCell(`C${statsRow + 2}`).value = `${avgChange >= 0 ? '+' : ''}${avgChange.toFixed(2)}%`;
+  sheet.getCell(`C${statsRow + 2}`).value = `${avgChange >= 0 ? '+' : ''}${num(avgChange).toFixed(2)}%`;
   sheet.getCell(`C${statsRow + 2}`).font = { color: { argb: avgChange >= 0 ? COLORS.success : COLORS.danger } };
 }
 
@@ -667,7 +674,7 @@ export function addAIGamingTokens(
     sheet.getCell(`E${row}`).value = formatCurrency(coin.market_cap);
 
     const cell24h = sheet.getCell(`F${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
   });
 
@@ -693,7 +700,7 @@ export function addAIGamingTokens(
     sheet.getCell(`K${row}`).value = formatCurrency(coin.market_cap);
 
     const cell24h = sheet.getCell(`L${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
   });
 }
@@ -885,7 +892,7 @@ export function addVolatilityAnalysis(
     sheet.getCell(`F${row}`).value = formatPrice(coin.current_price);
 
     const volCell = sheet.getCell(`G${row}`);
-    volCell.value = `${coin.volatility.toFixed(2)}%`;
+    volCell.value = `${num(coin.volatility).toFixed(2)}%`;
 
     // Risk level
     const riskCell = sheet.getCell(`H${row}`);
@@ -919,19 +926,21 @@ export function addVolatilityAnalysis(
 
 function formatCurrency(value: number): string {
   if (!value || isNaN(value)) return '$0';
-  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+  value = num(value);
+  if (value >= 1e12) return `$${num(value / 1e12).toFixed(2)}T`;
+  if (value >= 1e9) return `$${num(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `$${num(value / 1e6).toFixed(2)}M`;
   return `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 function formatPrice(value: number): string {
   if (!value || isNaN(value)) return 'N/A';
+  value = num(value);
   if (value >= 1000) return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (value >= 1) return `$${value.toFixed(2)}`;
-  if (value >= 0.01) return `$${value.toFixed(4)}`;
-  if (value >= 0.0001) return `$${value.toFixed(6)}`;
-  return `$${value.toFixed(8)}`;
+  if (value >= 1) return `$${num(value).toFixed(2)}`;
+  if (value >= 0.01) return `$${num(value).toFixed(4)}`;
+  if (value >= 0.0001) return `$${num(value).toFixed(6)}`;
+  return `$${num(value).toFixed(8)}`;
 }
 
 function getGaugeColor(value: number): string {
@@ -998,10 +1007,10 @@ export function addLiquidationsDashboard(
     sheet.getCell(`D${row}`).font = { color: { argb: COLORS.success } };
     sheet.getCell(`E${row}`).value = formatPrice(low);
     sheet.getCell(`E${row}`).font = { color: { argb: COLORS.danger } };
-    sheet.getCell(`F${row}`).value = `${rangePercent.toFixed(2)}%`;
+    sheet.getCell(`F${row}`).value = `${num(rangePercent).toFixed(2)}%`;
 
     // Estimated liquidation risk zones
-    const liqZone = `$${(low * 0.9).toFixed(0)} - $${(high * 1.1).toFixed(0)}`;
+    const liqZone = `$${num(low * 0.9).toFixed(0)} - $${num(high * 1.1).toFixed(0)}`;
     sheet.getCell(`G${row}`).value = liqZone;
     sheet.getCell(`G${row}`).font = { color: { argb: COLORS.warning } };
 
@@ -1102,10 +1111,10 @@ export function addFundingRatesDashboard(
     sheet.getCell(`C${row}`).value = formatPrice(coin.current_price);
 
     const fundingCell = sheet.getCell(`D${row}`);
-    fundingCell.value = `${(estFunding * 100).toFixed(4)}%`;
+    fundingCell.value = `${num(estFunding * 100).toFixed(4)}%`;
     fundingCell.font = { color: { argb: estFunding >= 0 ? COLORS.success : COLORS.danger } };
 
-    sheet.getCell(`E${row}`).value = `${annualAPR.toFixed(2)}%`;
+    sheet.getCell(`E${row}`).value = `${num(annualAPR).toFixed(2)}%`;
 
     const sentimentCell = sheet.getCell(`F${row}`);
     if (estFunding > 0.0005) {
@@ -1181,7 +1190,7 @@ export function addAltcoinSeasonDashboard(
   sheet.getCell('B4').font = { bold: true, size: 14, color: { argb: COLORS.cyan } };
 
   sheet.getCell('B6').value = 'Altcoin Season Index:';
-  sheet.getCell('C6').value = `${altSeasonIndex.toFixed(0)}%`;
+  sheet.getCell('C6').value = `${num(altSeasonIndex).toFixed(0)}%`;
   sheet.getCell('C6').font = { bold: true, size: 24, color: { argb: altSeasonIndex > 50 ? COLORS.cyan : COLORS.bitcoin } };
 
   createGauge(sheet, 7, 2, altSeasonIndex, { width: 30 });
@@ -1212,15 +1221,15 @@ export function addAltcoinSeasonDashboard(
   const altDom = 100 - btcDom - ethDom;
 
   sheet.getCell('E6').value = 'BTC Dominance:';
-  sheet.getCell('F6').value = `${btcDom.toFixed(1)}%`;
+  sheet.getCell('F6').value = `${num(btcDom).toFixed(1)}%`;
   sheet.getCell('F6').font = { bold: true, color: { argb: COLORS.bitcoin } };
 
   sheet.getCell('E7').value = 'ETH Dominance:';
-  sheet.getCell('F7').value = `${ethDom.toFixed(1)}%`;
+  sheet.getCell('F7').value = `${num(ethDom).toFixed(1)}%`;
   sheet.getCell('F7').font = { bold: true, color: { argb: COLORS.ethereum } };
 
   sheet.getCell('E8').value = 'Altcoin Dominance:';
-  sheet.getCell('F8').value = `${altDom.toFixed(1)}%`;
+  sheet.getCell('F8').value = `${num(altDom).toFixed(1)}%`;
   sheet.getCell('F8').font = { bold: true, color: { argb: COLORS.cyan } };
 
   // Top performers vs BTC
@@ -1243,9 +1252,9 @@ export function addAltcoinSeasonDashboard(
     const vsBtc = change - btcChange;
 
     sheet.getCell(`B${row}`).value = coin.name;
-    sheet.getCell(`C${row}`).value = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+    sheet.getCell(`C${row}`).value = `${change >= 0 ? '+' : ''}${num(change).toFixed(2)}%`;
     sheet.getCell(`C${row}`).font = { color: { argb: change >= 0 ? COLORS.success : COLORS.danger } };
-    sheet.getCell(`D${row}`).value = `+${vsBtc.toFixed(2)}%`;
+    sheet.getCell(`D${row}`).value = `+${num(vsBtc).toFixed(2)}%`;
     sheet.getCell(`D${row}`).font = { color: { argb: COLORS.cyan } };
   });
 }
@@ -1429,7 +1438,7 @@ export function addStakingYieldsDashboard(
     sheet.getCell(`F${row}`).value = stake.lockup;
 
     const yieldCell = sheet.getCell(`G${row}`);
-    yieldCell.value = `$${annualYield.toFixed(0)}`;
+    yieldCell.value = `$${num(annualYield).toFixed(0)}`;
     yieldCell.font = { bold: true, color: { argb: COLORS.success } };
 
     if (i % 2 === 0) {
@@ -1510,10 +1519,10 @@ export function addSocialSentimentDashboard(
     sheet.getCell(`C${row}`).value = formatPrice(coin.current_price);
 
     const changeCell = sheet.getCell(`D${row}`);
-    changeCell.value = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+    changeCell.value = `${change >= 0 ? '+' : ''}${num(change).toFixed(2)}%`;
     changeCell.font = { color: { argb: change >= 0 ? COLORS.success : COLORS.danger } };
 
-    sheet.getCell(`E${row}`).value = `${trendScore.toFixed(0)}/100`;
+    sheet.getCell(`E${row}`).value = `${num(trendScore).toFixed(0)}/100`;
 
     const sentimentCell = sheet.getCell(`F${row}`);
     if (trendScore >= 70) {
@@ -1612,7 +1621,7 @@ export function addDeveloperActivityDashboard(
 
     const scoreCell = sheet.getCell(`F${row}`);
     const barLength = Math.round(devScore / 5);
-    scoreCell.value = '█'.repeat(barLength) + ` ${devScore.toFixed(0)}`;
+    scoreCell.value = '█'.repeat(barLength) + ` ${num(devScore).toFixed(0)}`;
     scoreCell.font = { color: { argb: devScore >= 70 ? COLORS.success : devScore >= 40 ? COLORS.warning : COLORS.danger } };
 
     if (i % 2 === 0) {
@@ -1877,10 +1886,10 @@ export function addMetaverseTokensDashboard(
     sheet.getCell(`E${row}`).value = formatCurrency(coin.market_cap);
 
     const changeCell = sheet.getCell(`F${row}`);
-    changeCell.value = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+    changeCell.value = `${change >= 0 ? '+' : ''}${num(change).toFixed(2)}%`;
     changeCell.font = { color: { argb: change >= 0 ? COLORS.success : COLORS.danger } };
 
-    sheet.getCell(`G${row}`).value = `${fromAth.toFixed(1)}%`;
+    sheet.getCell(`G${row}`).value = `${num(fromAth).toFixed(1)}%`;
     sheet.getCell(`G${row}`).font = { color: { argb: COLORS.danger } };
 
     sheet.getCell(`H${row}`).value = categories[coin.id] || 'Metaverse';
@@ -1956,7 +1965,7 @@ export function addPrivacyCoinsDashboard(
     sheet.getCell(`E${row}`).value = formatCurrency(coin.market_cap);
 
     const changeCell = sheet.getCell(`F${row}`);
-    changeCell.value = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+    changeCell.value = `${change >= 0 ? '+' : ''}${num(change).toFixed(2)}%`;
     changeCell.font = { color: { argb: change >= 0 ? COLORS.success : COLORS.danger } };
 
     sheet.getCell(`G${row}`).value = privacyTech[coin.id] || 'Various';
@@ -2039,12 +2048,12 @@ export function addMiningCalculatorDashboard(
   const dailyProfit = dailyRevenue - dailyPowerCost;
 
   const results = [
-    { label: 'Est. Daily BTC', value: dailyBtc.toFixed(8), color: COLORS.bitcoin },
-    { label: 'Est. Daily Revenue', value: `$${dailyRevenue.toFixed(2)}`, color: COLORS.success },
-    { label: 'Daily Power Cost', value: `$${dailyPowerCost.toFixed(2)}`, color: COLORS.danger },
-    { label: 'Daily Profit', value: `$${dailyProfit.toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
-    { label: 'Monthly Profit', value: `$${(dailyProfit * 30).toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
-    { label: 'Annual Profit', value: `$${(dailyProfit * 365).toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
+    { label: 'Est. Daily BTC', value: num(dailyBtc).toFixed(8), color: COLORS.bitcoin },
+    { label: 'Est. Daily Revenue', value: `$${num(dailyRevenue).toFixed(2)}`, color: COLORS.success },
+    { label: 'Daily Power Cost', value: `$${num(dailyPowerCost).toFixed(2)}`, color: COLORS.danger },
+    { label: 'Daily Profit', value: `$${num(dailyProfit).toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
+    { label: 'Monthly Profit', value: `$${num(dailyProfit * 30).toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
+    { label: 'Annual Profit', value: `$${num(dailyProfit * 365).toFixed(2)}`, color: dailyProfit >= 0 ? COLORS.success : COLORS.danger },
   ];
 
   results.forEach((result, i) => {
@@ -2067,11 +2076,11 @@ export function addMiningCalculatorDashboard(
   const roiMonths = 3000 / monthlyProfit;
 
   sheet.getCell('E8').value = 'Monthly Profit:';
-  sheet.getCell('F8').value = `$${monthlyProfit.toFixed(2)}`;
+  sheet.getCell('F8').value = `$${num(monthlyProfit).toFixed(2)}`;
   sheet.getCell('F8').font = { bold: true, color: { argb: COLORS.success } };
 
   sheet.getCell('E9').value = 'Break-even:';
-  sheet.getCell('F9').value = `${roiMonths.toFixed(1)} months`;
+  sheet.getCell('F9').value = `${num(roiMonths).toFixed(1)} months`;
   sheet.getCell('F9').font = { bold: true, color: { argb: COLORS.info } };
 
   // Disclaimer
@@ -2086,9 +2095,10 @@ export function addMiningCalculatorDashboard(
 
 function formatLargeNumber(value: number): string {
   if (!value || isNaN(value)) return 'N/A';
-  if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
+  value = num(value);
+  if (value >= 1e12) return `${num(value / 1e12).toFixed(2)}T`;
+  if (value >= 1e9) return `${num(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `${num(value / 1e6).toFixed(2)}M`;
+  if (value >= 1e3) return `${num(value / 1e3).toFixed(2)}K`;
   return value.toLocaleString();
 }

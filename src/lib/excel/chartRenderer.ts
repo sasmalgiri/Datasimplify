@@ -7,6 +7,13 @@
 
 import ExcelJS from 'exceljs';
 
+/** Safely coerce any value to a number (guards against null/undefined/string from API) */
+function num(v: any): number {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
 // Chart color palettes (matching website + OtherLevel quality)
 export const CHART_PALETTES = {
   default: ['#059669', '#10B981', '#34D399', '#6EE7B7', '#A7F3D0'],
@@ -232,7 +239,7 @@ export function createDonutChart(
 
   // Legend with percentages
   data.forEach((item, i) => {
-    const percentage = ((item.value / total) * 100).toFixed(1);
+    const percentage = num((item.value / total) * 100).toFixed(1);
     const legendRow = chartRow + 2 + i;
     const color = item.color || colors[i % colors.length];
 
@@ -349,7 +356,7 @@ export function createHeatmapGrid(
   data.forEach((row, rowIndex) => {
     row.forEach((cell, colIndex) => {
       const excelCell = sheet.getCell(gridRow + rowIndex, startCol + colIndex);
-      excelCell.value = cell.value.toFixed(1);
+      excelCell.value = num(cell.value).toFixed(1);
       excelCell.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -477,7 +484,7 @@ export function addTrendIndicator(
     displayValue += isPositive ? '▲ ' : '▼ ';
   }
   if (showPercentage) {
-    displayValue += `${isPositive ? '+' : ''}${percentChange.toFixed(2)}%`;
+    displayValue += `${isPositive ? '+' : ''}${num(percentChange).toFixed(2)}%`;
   }
 
   cell.value = displayValue;
@@ -532,7 +539,7 @@ export function createDashboardCard(
   // Change
   if (data.change !== undefined) {
     const changeCell = sheet.getCell(startRow + 2, startCol);
-    changeCell.value = `${data.change >= 0 ? '▲' : '▼'} ${Math.abs(data.change).toFixed(2)}%`;
+    changeCell.value = `${data.change >= 0 ? '▲' : '▼'} ${Math.abs(num(data.change)).toFixed(2)}%`;
     changeCell.font = {
       color: { argb: data.change >= 0 ? 'FF22C55E' : 'FFEF4444' },
     };
@@ -634,7 +641,7 @@ export function createOtherLevelKPICard(
     const changeCell = sheet.getCell(changeRow, startCol + 1);
     const isPositive = data.change >= 0;
     const arrow = isPositive ? '▲' : '▼';
-    const changeText = `${arrow} ${Math.abs(data.change).toFixed(2)}%`;
+    const changeText = `${arrow} ${Math.abs(num(data.change)).toFixed(2)}%`;
     const label = data.changeLabel ? ` ${data.changeLabel}` : '';
 
     changeCell.value = changeText + label;
@@ -714,7 +721,7 @@ export function createExecutiveSummaryPanel(
     if (metric.change !== undefined) {
       const changeCell = sheet.getCell(row + 2, col);
       const isPositive = metric.change >= 0;
-      changeCell.value = `${isPositive ? '▲' : '▼'} ${Math.abs(metric.change).toFixed(2)}%`;
+      changeCell.value = `${isPositive ? '▲' : '▼'} ${Math.abs(num(metric.change)).toFixed(2)}%`;
       changeCell.font = { size: 9, color: { argb: isPositive ? 'FF22C55E' : 'FFEF4444' } };
     }
   });
@@ -845,7 +852,7 @@ export function createProgressRing(
   const segmentIndex = Math.min(4, Math.floor(percentage / 25));
 
   const cell = sheet.getCell(row, col);
-  cell.value = `${segments[segmentIndex]} ${percentage.toFixed(0)}%`;
+  cell.value = `${segments[segmentIndex]} ${num(percentage).toFixed(0)}%`;
   cell.font = {
     size: size === 'small' ? 10 : size === 'large' ? 18 : 14,
     bold: true,
@@ -897,7 +904,7 @@ export function createMetricComparisonRow(
   const formatValue = (val: number): string => {
     switch (data.format) {
       case 'currency': return `$${val.toLocaleString()}`;
-      case 'percent': return `${val.toFixed(2)}%`;
+      case 'percent': return `${num(val).toFixed(2)}%`;
       default: return val.toLocaleString();
     }
   };
@@ -913,7 +920,7 @@ export function createMetricComparisonRow(
   // Change
   const change = data.previous !== 0 ? ((data.current - data.previous) / data.previous) * 100 : 0;
   const isPositive = change >= 0;
-  sheet.getCell(row, startCol + 3).value = `${isPositive ? '+' : ''}${change.toFixed(2)}%`;
+  sheet.getCell(row, startCol + 3).value = `${isPositive ? '+' : ''}${num(change).toFixed(2)}%`;
   sheet.getCell(row, startCol + 3).font = {
     bold: true,
     color: { argb: isPositive ? 'FF22C55E' : 'FFEF4444' },

@@ -7,6 +7,13 @@
 
 import ExcelJS from 'exceljs';
 
+/** Safely coerce any value to a number (guards against null/undefined/string from API) */
+function num(v: any): number {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
 // Color palette
 const COLORS = {
   primary: 'FF059669',
@@ -164,7 +171,7 @@ export function createPieChartLegend(
     sheet.getCell(currentRow, startCol + 1).value = item.label;
     sheet.getCell(currentRow, startCol + 1).font = { bold: true };
 
-    sheet.getCell(currentRow, startCol + 2).value = `${item.percentage.toFixed(1)}%`;
+    sheet.getCell(currentRow, startCol + 2).value = `${num(item.percentage).toFixed(1)}%`;
     sheet.getCell(currentRow, startCol + 2).alignment = { horizontal: 'right' };
 
     sheet.getCell(currentRow, startCol + 3).value = formatNumber(item.value);
@@ -287,7 +294,7 @@ export function createTrendIndicator(
   const isUp = change >= 0;
 
   const arrow = isUp ? '▲' : '▼';
-  const text = `${arrow} ${Math.abs(change).toFixed(2)}%`;
+  const text = `${arrow} ${Math.abs(num(change)).toFixed(2)}%`;
 
   sheet.getCell(row, col).value = text;
   sheet.getCell(row, col).font = {
@@ -362,7 +369,7 @@ export function createProgressBar(
   sheet.getCell(row, col).font = { color: { argb: color } };
 
   if (showPercent) {
-    sheet.getCell(row, col + 1).value = `${percent.toFixed(1)}%`;
+    sheet.getCell(row, col + 1).value = `${num(percent).toFixed(1)}%`;
     sheet.getCell(row, col + 1).font = { color: { argb: COLORS.light } };
   }
 }
@@ -421,9 +428,10 @@ export function createCandlestick(
 
 // Helper function
 function formatNumber(value: number): string {
-  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
+  const v = num(value);
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+  if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+  if (v >= 1e3) return `$${(v / 1e3).toFixed(2)}K`;
+  return `$${v.toFixed(2)}`;
 }

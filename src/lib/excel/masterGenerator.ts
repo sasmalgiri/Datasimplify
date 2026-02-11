@@ -727,19 +727,28 @@ function createPQDataSheets(
 // SHAPE CARD BUILDER (OtherLevel KPI overlays)
 // ============================================
 
+/** Safely coerce any value to a number (guards against null/undefined/string from API) */
+function num(v: any): number {
+  if (typeof v === 'number' && !isNaN(v)) return v;
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
 /** Format large numbers compactly for shape cards */
 function fmtUSD(v: number | undefined): string {
   if (v === undefined || v === null) return '—';
-  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
-  if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
-  if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
-  if (v >= 1000) return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
-  return `$${v.toFixed(2)}`;
+  const n = num(v);
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1000) return `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  return `$${n.toFixed(2)}`;
 }
 
 function fmtPct(v: number | undefined): string | undefined {
   if (v === undefined || v === null) return undefined;
-  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+  const n = num(v);
+  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
 }
 
 function pctColor(v: number | undefined): string | undefined {
@@ -772,7 +781,7 @@ function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeVal
     changeColor: pctColor(g?.market_cap_change_percentage_24h_usd),
   };
   const vol: KPIShapeValue = { title: '24H VOLUME', value: fmtUSD(g?.total_volume) };
-  const dom: KPIShapeValue = { title: 'BTC DOMINANCE', value: g?.btc_dominance ? `${g.btc_dominance.toFixed(2)}%` : '—' };
+  const dom: KPIShapeValue = { title: 'BTC DOMINANCE', value: g?.btc_dominance ? `${num(g.btc_dominance).toFixed(2)}%` : '—' };
   const fgv: KPIShapeValue = { title: 'FEAR & GREED', value: fg ? String(fg.value ?? fg) : '—' };
   const btcP: KPIShapeValue = {
     title: 'BTC PRICE', value: fmtUSD(btc?.current_price),
@@ -813,7 +822,7 @@ function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeVal
 
     // Gainers — momentum focus
     case 'gainers-losers':
-      return [btcP, ethP, { title: 'MARKET CAP CHG', value: g?.market_cap_change_percentage_24h_usd ? `${g.market_cap_change_percentage_24h_usd.toFixed(2)}%` : '—' }, fgv];
+      return [btcP, ethP, { title: 'MARKET CAP CHG', value: g?.market_cap_change_percentage_24h_usd ? `${num(g.market_cap_change_percentage_24h_usd).toFixed(2)}%` : '—' }, fgv];
 
     // Trending — discovery
     case 'trending':
@@ -830,7 +839,7 @@ function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeVal
 
     // Ethereum-specific
     case 'ethereum-dashboard':
-      return [ethP, { title: 'ETH MARKET CAP', value: fmtUSD(eth?.market_cap) }, { title: '24H CHANGE', value: eth?.price_change_percentage_24h ? `${eth.price_change_percentage_24h.toFixed(2)}%` : '—', changeColor: pctColor(eth?.price_change_percentage_24h) }, fgv];
+      return [ethP, { title: 'ETH MARKET CAP', value: fmtUSD(eth?.market_cap) }, { title: '24H CHANGE', value: eth?.price_change_percentage_24h ? `${num(eth.price_change_percentage_24h).toFixed(2)}%` : '—', changeColor: pctColor(eth?.price_change_percentage_24h) }, fgv];
 
     // DeFi
     case 'defi-dashboard':
@@ -844,7 +853,7 @@ function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeVal
     case 'liquidations':
     case 'volatility':
     case 'calculator':
-      return [btcP, { title: 'BTC 24H CHANGE', value: btc?.price_change_percentage_24h ? `${btc.price_change_percentage_24h.toFixed(2)}%` : '—', changeColor: pctColor(btc?.price_change_percentage_24h) }, mcap, fgv];
+      return [btcP, { title: 'BTC 24H CHANGE', value: btc?.price_change_percentage_24h ? `${num(btc.price_change_percentage_24h).toFixed(2)}%` : '—', changeColor: pctColor(btc?.price_change_percentage_24h) }, mcap, fgv];
 
     // Exchange
     case 'exchanges':
@@ -856,8 +865,8 @@ function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeVal
       const doge = data?.market?.find((c: any) => c.id === 'dogecoin');
       const shib = data?.market?.find((c: any) => c.id === 'shiba-inu');
       return [
-        { title: 'DOGE PRICE', value: doge ? `$${doge.current_price.toFixed(4)}` : '—', change: fmtPct(doge?.price_change_percentage_24h), changeColor: pctColor(doge?.price_change_percentage_24h) },
-        { title: 'SHIB PRICE', value: shib ? `$${shib.current_price.toFixed(8)}` : '—', change: fmtPct(shib?.price_change_percentage_24h), changeColor: pctColor(shib?.price_change_percentage_24h) },
+        { title: 'DOGE PRICE', value: doge ? `$${num(doge.current_price).toFixed(4)}` : '—', change: fmtPct(doge?.price_change_percentage_24h), changeColor: pctColor(doge?.price_change_percentage_24h) },
+        { title: 'SHIB PRICE', value: shib ? `$${num(shib.current_price).toFixed(8)}` : '—', change: fmtPct(shib?.price_change_percentage_24h), changeColor: pctColor(shib?.price_change_percentage_24h) },
         dom, fgv,
       ];
     }
@@ -1684,7 +1693,7 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
       },
       {
         title: 'BTC DOMINANCE',
-        value: `${(data.global?.market_cap_percentage?.btc || 0).toFixed(1)}%`,
+        value: `${num(data.global?.market_cap_percentage?.btc || 0).toFixed(1)}%`,
         change: 0,
         icon: '₿',
       },
@@ -1745,7 +1754,7 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
       } else if (kpi.change !== undefined && kpi.change !== 0) {
         const changeCell = sheet.getCell(startRow + 3, startCol);
         const isPositive = kpi.change >= 0;
-        changeCell.value = `${isPositive ? '▲' : '▼'} ${Math.abs(kpi.change).toFixed(2)}% 24h`;
+        changeCell.value = `${isPositive ? '▲' : '▼'} ${Math.abs(num(kpi.change)).toFixed(2)}% 24h`;
         changeCell.font = { size: 10, bold: true, color: { argb: isPositive ? 'FF22C55E' : 'FFEF4444' } };
       }
     });
@@ -1765,7 +1774,7 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
     addCard(sheet, 'B', cardsRow1, '🌍 MARKET OVERVIEW', [
       ['Total Market Cap', formatCurrency(data.global?.total_market_cap?.usd || 0)],
       ['24h Volume', formatCurrency(data.global?.total_volume?.usd || 0)],
-      ['BTC Dominance', `${(data.global?.market_cap_percentage?.btc || 0).toFixed(1)}%`],
+      ['BTC Dominance', `${num(data.global?.market_cap_percentage?.btc || 0).toFixed(1)}%`],
       ['Active Coins', (data.global?.active_cryptocurrencies || 0).toLocaleString()],
       ['24h Change', formatPercent(data.global?.market_cap_change_percentage_24h_usd || 0)],
     ], cardAccentColor, cardTheme);
@@ -1824,7 +1833,7 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
   // === DEFI STATS CARD ===
   addCard(sheet, isPremiumStyle ? 'E' : 'H', cardsRow2, isPremiumStyle ? 'DEFI STATS' : '🏦 DEFI STATS', [
     ['DeFi Market Cap', formatCurrency(parseFloat(data.defi?.defi_market_cap || '0'))],
-    ['DeFi Dominance', `${parseFloat(data.defi?.defi_dominance || '0').toFixed(2)}%`],
+    ['DeFi Dominance', `${num(parseFloat(data.defi?.defi_dominance || '0')).toFixed(2)}%`],
     ['ETH in DeFi', formatCurrency(parseFloat(data.defi?.eth_market_cap || '0'))],
   ], COLORS.purple, cardTheme);
 
@@ -2000,11 +2009,11 @@ function addGlobalStatsSheet(workbook: ExcelJS.Workbook, globalData: any) {
   const stats = [
     { icon: '💰', label: 'Total Market Cap', value: formatCurrency(globalData?.total_market_cap?.usd || 0) },
     { icon: '📊', label: '24h Trading Volume', value: formatCurrency(globalData?.total_volume?.usd || 0) },
-    { icon: '₿', label: 'Bitcoin Dominance', value: `${(globalData?.market_cap_percentage?.btc || 0).toFixed(2)}%` },
-    { icon: 'Ξ', label: 'Ethereum Dominance', value: `${(globalData?.market_cap_percentage?.eth || 0).toFixed(2)}%` },
+    { icon: '₿', label: 'Bitcoin Dominance', value: `${num(globalData?.market_cap_percentage?.btc || 0).toFixed(2)}%` },
+    { icon: 'Ξ', label: 'Ethereum Dominance', value: `${num(globalData?.market_cap_percentage?.eth || 0).toFixed(2)}%` },
     { icon: '🪙', label: 'Active Cryptocurrencies', value: (globalData?.active_cryptocurrencies || 0).toLocaleString() },
     { icon: '🏛️', label: 'Active Exchanges', value: (globalData?.markets || 0).toLocaleString() },
-    { icon: '📈', label: '24h Market Cap Change', value: `${(globalData?.market_cap_change_percentage_24h_usd || 0).toFixed(2)}%` },
+    { icon: '📈', label: '24h Market Cap Change', value: `${num(globalData?.market_cap_change_percentage_24h_usd || 0).toFixed(2)}%` },
     { icon: '🎯', label: 'Ongoing ICOs', value: (globalData?.ongoing_icos || 0).toString() },
   ];
 
@@ -2044,7 +2053,7 @@ function addGlobalStatsSheet(workbook: ExcelJS.Workbook, globalData: any) {
     sheet.getCell(`C${row}`).value = '█'.repeat(Math.max(1, barWidth));
     sheet.getCell(`C${row}`).font = { color: { argb: d.color } };
 
-    sheet.getCell(`D${row}`).value = `${d.value.toFixed(1)}%`;
+    sheet.getCell(`D${row}`).value = `${num(d.value).toFixed(1)}%`;
     sheet.getCell(`D${row}`).alignment = { horizontal: 'right' };
   });
 }
@@ -2093,7 +2102,7 @@ function addTopCoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     const change1h = coin.price_change_percentage_1h_in_currency || 0;
     const change24h = coin.price_change_percentage_24h || 0;
     const change7d = coin.price_change_percentage_7d_in_currency || 0;
-    const fromAth = ((coin.current_price - coin.ath) / coin.ath) * 100;
+    const fromAth = ((num(coin.current_price) - num(coin.ath)) / (num(coin.ath) || 1)) * 100;
 
     sheet.getCell(`B${row}`).value = coin.market_cap_rank;
     sheet.getCell(`B${row}`).alignment = { horizontal: 'center' };
@@ -2124,7 +2133,7 @@ function addTopCoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     sheet.getCell(`K${row}`).value = formatPrice(coin.ath);
 
     const athCell = sheet.getCell(`L${row}`);
-    athCell.value = `${fromAth.toFixed(1)}%`;
+    athCell.value = `${num(fromAth).toFixed(1)}%`;
     athCell.font = { color: { argb: COLORS.danger } };
 
     // Zebra striping
@@ -2632,8 +2641,8 @@ function addDeFiSheet(workbook: ExcelJS.Workbook, defiData: any, marketData: any
 
   const stats = [
     ['DeFi Market Cap', formatCurrency(parseFloat(defiData?.defi_market_cap || '0'))],
-    ['DeFi to ETH Ratio', `${parseFloat(defiData?.defi_to_eth_ratio || '0').toFixed(4)}`],
-    ['DeFi Dominance', `${parseFloat(defiData?.defi_dominance || '0').toFixed(2)}%`],
+    ['DeFi to ETH Ratio', `${num(parseFloat(defiData?.defi_to_eth_ratio || '0')).toFixed(4)}`],
+    ['DeFi Dominance', `${num(parseFloat(defiData?.defi_dominance || '0')).toFixed(2)}%`],
     ['ETH Market Cap', formatCurrency(parseFloat(defiData?.eth_market_cap || '0'))],
     ['Top DeFi Protocol', defiData?.top_coin_name || 'Unknown'],
   ];
@@ -2724,7 +2733,7 @@ function addDerivativesSheet(workbook: ExcelJS.Workbook, derivativesData: any[])
     sheet.getCell(`C${row}`).value = item.symbol || 'N/A';
     sheet.getCell(`D${row}`).value = item.price ? `$${parseFloat(item.price).toLocaleString()}` : 'N/A';
     sheet.getCell(`E${row}`).value = item.index ? `$${parseFloat(item.index).toLocaleString()}` : 'N/A';
-    sheet.getCell(`F${row}`).value = item.basis ? `${parseFloat(item.basis).toFixed(2)}%` : 'N/A';
+    sheet.getCell(`F${row}`).value = item.basis ? `${num(parseFloat(item.basis)).toFixed(2)}%` : 'N/A';
     sheet.getCell(`G${row}`).value = item.volume_24h ? formatCompact(item.volume_24h) : 'N/A';
 
     if (i % 2 === 0) {
@@ -2978,7 +2987,7 @@ function addCorrelationSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
         corr = Math.max(-1, Math.min(1, corr));
       }
 
-      cell.value = corr.toFixed(2);
+      cell.value = num(corr).toFixed(2);
       cell.alignment = { horizontal: 'center' };
 
       // Color based on correlation
@@ -3142,7 +3151,7 @@ function addScreenerSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     const change24h = coin.price_change_percentage_24h || 0;
     const change7d = coin.price_change_percentage_7d_in_currency || 0;
     const change30d = coin.price_change_percentage_30d_in_currency || 0;
-    const fromAth = ((coin.current_price - coin.ath) / coin.ath) * 100;
+    const fromAth = ((num(coin.current_price) - num(coin.ath)) / (num(coin.ath) || 1)) * 100;
 
     sheet.getCell(`B${row}`).value = coin.market_cap_rank;
     sheet.getCell(`C${row}`).value = coin.name;
@@ -3238,17 +3247,17 @@ function addStablecoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Data
   stablecoins.forEach((coin: any, i: number) => {
     const row = 7 + i;
-    const pegDelta = (coin.current_price - 1) * 100;
+    const pegDelta = (num(coin.current_price) - 1) * 100;
 
     sheet.getCell(`B${row}`).value = coin.name;
     sheet.getCell(`B${row}`).font = { bold: true };
     sheet.getCell(`C${row}`).value = coin.symbol?.toUpperCase();
-    sheet.getCell(`D${row}`).value = `$${coin.current_price?.toFixed(4)}`;
+    sheet.getCell(`D${row}`).value = `$${num(coin.current_price).toFixed(4)}`;
     sheet.getCell(`E${row}`).value = formatCompact(coin.market_cap);
     sheet.getCell(`F${row}`).value = formatCompact(coin.total_volume);
 
     const pegCell = sheet.getCell(`G${row}`);
-    pegCell.value = `${pegDelta >= 0 ? '+' : ''}${pegDelta.toFixed(3)}%`;
+    pegCell.value = `${pegDelta >= 0 ? '+' : ''}${num(pegDelta).toFixed(3)}%`;
     pegCell.font = { color: { argb: Math.abs(pegDelta) < 0.1 ? COLORS.success : COLORS.warning } };
 
     if (i % 2 === 0) {
@@ -3500,7 +3509,7 @@ function addRWASheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     sheet.getCell(`E${row}`).value = formatCompact(coin.market_cap);
 
     const cell24h = sheet.getCell(`F${row}`);
-    cell24h.value = `${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%`;
+    cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
 
     sheet.getCell(`G${row}`).value = useCases[coin.id] || 'RWA';
@@ -3672,34 +3681,38 @@ function addDocumentationSheet(workbook: ExcelJS.Workbook) {
 // ============================================
 
 function formatCurrency(value: number): string {
-  if (!value || isNaN(value)) return '$0';
-  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  return `$${value.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  const v = num(value);
+  if (!v) return '$0';
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+  if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+  return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
 }
 
 function formatCompact(value: number): string {
-  if (!value || isNaN(value)) return 'N/A';
-  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
+  const v = num(value);
+  if (!v) return 'N/A';
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
+  if (v >= 1e6) return `$${(v / 1e6).toFixed(2)}M`;
+  if (v >= 1e3) return `$${(v / 1e3).toFixed(2)}K`;
+  return `$${v.toFixed(2)}`;
 }
 
 function formatPrice(value: number): string {
-  if (!value || isNaN(value)) return 'N/A';
-  if (value >= 1000) return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  if (value >= 1) return `$${value.toFixed(2)}`;
-  if (value >= 0.01) return `$${value.toFixed(4)}`;
-  if (value >= 0.0001) return `$${value.toFixed(6)}`;
-  return `$${value.toFixed(8)}`;
+  const v = num(value);
+  if (!v) return 'N/A';
+  if (v >= 1000) return `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  if (v >= 1) return `$${v.toFixed(2)}`;
+  if (v >= 0.01) return `$${v.toFixed(4)}`;
+  if (v >= 0.0001) return `$${v.toFixed(6)}`;
+  return `$${v.toFixed(8)}`;
 }
 
 function formatPercent(value: number): string {
-  if (value === undefined || value === null || isNaN(value)) return 'N/A';
-  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  const v = num(value);
+  if (value === undefined || value === null || isNaN(v)) return 'N/A';
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
 }
 
 function getGaugeColor(value: number): string {
