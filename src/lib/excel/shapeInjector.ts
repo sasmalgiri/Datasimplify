@@ -1,17 +1,22 @@
 /**
  * shapeInjector.ts — DrawingML Shape Injection for OtherLevel-Grade KPI Cards
  *
- * Post-processes an xlsx buffer to inject rounded rectangle shapes as KPI card
- * backgrounds. This is the signature OtherLevel design: professional dark
- * rounded-corner cards with large values, subtle borders, and text overlays.
+ * Post-processes an xlsx buffer to inject premium DrawingML shapes:
+ * - KPI cards: Gradient fills, 3D bevel, outer shadow, accent borders
+ * - Nav buttons: Gradient fills, clickable hyperlinks, glow effects
  *
- * Runs AFTER chartInjector in the pipeline, so it appends to existing drawings
- * (where charts already exist) or creates new ones for sheets without charts.
+ * Design inspired by otherlevel.com / premium Excel dashboards:
+ * - Subtle gradient fills (dark → darker) for depth
+ * - 3D bevel effect (relaxedInset) on KPI cards
+ * - Outer shadow for floating card appearance
+ * - Accent border glow on interactive elements
+ * - Segoe UI Semibold typography hierarchy
  *
- * OOXML parts:
- *   xl/drawings/drawingN.xml  — twoCellAnchor with sp (shape) elements
- *   [Content_Types].xml       — Drawing overrides (if new drawing)
- *   xl/worksheets/_rels/sheetN.xml.rels — Sheet→drawing link (if new)
+ * OOXML parts modified:
+ *   xl/drawings/drawingN.xml        — twoCellAnchor with sp elements
+ *   xl/drawings/_rels/drawingN.xml.rels — Hyperlink relationships (nav buttons)
+ *   [Content_Types].xml             — Drawing overrides (if new drawing)
+ *   xl/worksheets/_rels/sheetN.xml.rels — Sheet → drawing link (if new)
  */
 
 import JSZip from 'jszip';
@@ -49,13 +54,47 @@ export interface NavigationButtonDef {
   textColor?: string;
 }
 
+interface HyperlinkRel {
+  rId: string;
+  target: string;  // e.g., "#'CRK Dashboard'!A1"
+}
+
+// ============================================
+// Color Helpers
+// ============================================
+
+/** Darken a hex color by a percentage (0-100) */
+function darkenColor(hex: string, percent: number): string {
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const factor = 1 - percent / 100;
+  const dr = Math.max(0, Math.round(r * factor));
+  const dg = Math.max(0, Math.round(g * factor));
+  const db = Math.max(0, Math.round(b * factor));
+  return `${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`.toUpperCase();
+}
+
+/** Lighten a hex color by a percentage (0-100) */
+function lightenColor(hex: string, percent: number): string {
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const factor = percent / 100;
+  const lr = Math.min(255, Math.round(r + (255 - r) * factor));
+  const lg = Math.min(255, Math.round(g + (255 - g) * factor));
+  const lb = Math.min(255, Math.round(b + (255 - b) * factor));
+  return `${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`.toUpperCase();
+}
+
 // ============================================
 // Main Entry Point
 // ============================================
 
 /**
- * Injects DrawingML shapes into an xlsx buffer.
- * Appends to existing drawings (from chartInjector) or creates new ones.
+ * Injects premium DrawingML shapes into an xlsx buffer.
+ * KPI cards get gradient fills, 3D bevel, and outer shadows.
+ * Nav buttons get gradient fills and working hyperlinks.
  */
 export async function injectShapes(
   xlsxBuffer: Buffer,
@@ -103,26 +142,28 @@ export async function injectShapes(
       const sheetShapes = shapesBySheet.get(sheetName) || [];
       const sheetNavs = navBySheet.get(sheetName) || [];
 
-      // Build shape anchor XML
-      const shapeAnchors = buildShapeAnchors(sheetShapes, sheetNavs, sheetMap);
+      // Build shape anchor XML + hyperlink relationships for nav buttons
+      const { anchors: shapeAnchors, hlinkRels } = buildShapeAnchors(sheetShapes, sheetNavs, sheetMap);
 
       // Check if drawing already exists for this sheet
       const existingDrawingNum = await findExistingDrawing(zip, sheetIdx);
+      let drawingNum: number;
 
       if (existingDrawingNum !== null) {
-        // Append shapes to existing drawing
-        await appendToDrawing(zip, existingDrawingNum, shapeAnchors);
+        drawingNum = existingDrawingNum;
+        await appendToDrawing(zip, drawingNum, shapeAnchors);
       } else {
-        // Create new drawing
         maxDrawing++;
+        drawingNum = maxDrawing;
         const drawingXml = wrapInDrawingDoc(shapeAnchors);
-        zip.file(`xl/drawings/drawing${maxDrawing}.xml`, drawingXml);
+        zip.file(`xl/drawings/drawing${drawingNum}.xml`, drawingXml);
+        await linkSheetToDrawing(zip, sheetIdx, drawingNum);
+        await addDrawingContentType(zip, drawingNum);
+      }
 
-        // Link sheet → drawing
-        await linkSheetToDrawing(zip, sheetIdx, maxDrawing);
-
-        // Add to content types
-        await addDrawingContentType(zip, maxDrawing);
+      // Inject hyperlink relationships into the drawing's rels file
+      if (hlinkRels.length > 0) {
+        await addDrawingHyperlinkRels(zip, drawingNum, hlinkRels);
       }
     }
 
@@ -135,34 +176,39 @@ export async function injectShapes(
 }
 
 // ============================================
-// Shape XML Builders
+// Shape XML Builders — Premium OtherLevel Design
 // ============================================
 
 /**
  * Build twoCellAnchor XML for all shapes and nav buttons on a sheet.
+ * Returns both the DrawingML anchors and hyperlink relationships for the drawing rels file.
  */
 function buildShapeAnchors(
   shapes: ShapeCardDef[],
   navButtons: NavigationButtonDef[],
   sheetMap: Map<string, number>,
-): string {
+): { anchors: string; hlinkRels: HyperlinkRel[] } {
   let idCounter = 100; // Start high to avoid conflicts with chart IDs
+  let hlinkCounter = 1;
   let anchors = '';
+  const hlinkRels: HyperlinkRel[] = [];
 
-  // KPI card shapes
+  // KPI card shapes — Premium design with gradient + 3D + shadow
   for (const s of shapes) {
     const textColor = s.textColor || 'FFFFFF';
     const mutedColor = s.mutedColor || '8B7355';
     const changeColor = s.changeColor || '9CA3AF';
+    const gradEnd = darkenColor(s.fillColor, 20);
 
-    // Build text body paragraphs
+    // Build change indicator paragraph
     const changePara = s.change ? `
           <a:p>
-            <a:pPr algn="l"/>
+            <a:pPr algn="l" spcBef="0" spcAft="0"/>
             <a:r>
               <a:rPr lang="en-US" sz="1000" b="0" dirty="0">
                 <a:solidFill><a:srgbClr val="${changeColor}"/></a:solidFill>
-                <a:latin typeface="Segoe UI"/>
+                <a:latin typeface="Segoe UI Semibold" panose="020B0702040204020203"/>
+                <a:cs typeface="Segoe UI Semibold"/>
               </a:rPr>
               <a:t>${escapeXml(s.change)}</a:t>
             </a:r>
@@ -190,34 +236,54 @@ function buildShapeAnchors(
         </a:xfrm>
         <a:prstGeom prst="roundRect">
           <a:avLst>
-            <a:gd name="adj" fmla="val 10000"/>
+            <a:gd name="adj" fmla="val 8000"/>
           </a:avLst>
         </a:prstGeom>
-        <a:solidFill><a:srgbClr val="${s.fillColor}"/></a:solidFill>
-        <a:ln w="9525">
-          <a:solidFill><a:srgbClr val="${s.accentColor}"/></a:solidFill>
+        <a:gradFill>
+          <a:gsLst>
+            <a:gs pos="0"><a:srgbClr val="${s.fillColor}"/></a:gs>
+            <a:gs pos="100000"><a:srgbClr val="${gradEnd}"/></a:gs>
+          </a:gsLst>
+          <a:lin ang="5400000" scaled="1"/>
+        </a:gradFill>
+        <a:ln w="12700">
+          <a:solidFill><a:srgbClr val="${s.accentColor}"><a:alpha val="70000"/></a:srgbClr></a:solidFill>
         </a:ln>
+        <a:effectLst>
+          <a:outerShdw blurRad="50800" dist="25400" dir="5400000" algn="t" rotWithShape="0">
+            <a:srgbClr val="000000"><a:alpha val="35000"/></a:srgbClr>
+          </a:outerShdw>
+        </a:effectLst>
+        <a:scene3d>
+          <a:camera prst="orthographicFront"/>
+          <a:lightRig rig="threePt" dir="t"/>
+        </a:scene3d>
+        <a:sp3d>
+          <a:bevelT w="25400" h="6350" prst="relaxedInset"/>
+        </a:sp3d>
       </xdr:spPr>
       <xdr:txBody>
         <a:bodyPr vertOverflow="clip" horzOverflow="clip" wrap="square"
-          lIns="91440" tIns="45720" rIns="91440" bIns="45720" anchor="t"/>
+          lIns="109728" tIns="54864" rIns="109728" bIns="54864" anchor="t"/>
         <a:lstStyle/>
         <a:p>
-          <a:pPr algn="l"/>
+          <a:pPr algn="l" spcAft="0"/>
           <a:r>
-            <a:rPr lang="en-US" sz="900" b="1" dirty="0">
+            <a:rPr lang="en-US" sz="850" b="1" dirty="0" spc="80">
               <a:solidFill><a:srgbClr val="${mutedColor}"/></a:solidFill>
-              <a:latin typeface="Segoe UI"/>
+              <a:latin typeface="Segoe UI Semibold" panose="020B0702040204020203"/>
+              <a:cs typeface="Segoe UI Semibold"/>
             </a:rPr>
             <a:t>${escapeXml(s.title.toUpperCase())}</a:t>
           </a:r>
         </a:p>
         <a:p>
-          <a:pPr algn="l"/>
+          <a:pPr algn="l" spcBef="0"/>
           <a:r>
-            <a:rPr lang="en-US" sz="2200" b="1" dirty="0">
+            <a:rPr lang="en-US" sz="2400" b="1" dirty="0">
               <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
-              <a:latin typeface="Segoe UI"/>
+              <a:latin typeface="Segoe UI" panose="020B0502040204020203"/>
+              <a:cs typeface="Segoe UI"/>
             </a:rPr>
             <a:t>${escapeXml(s.value)}</a:t>
           </a:r>
@@ -229,15 +295,26 @@ function buildShapeAnchors(
     idCounter++;
   }
 
-  // Navigation buttons
+  // Navigation buttons — Premium gradient with working hyperlinks
   for (const btn of navButtons) {
     const textColor = btn.textColor || 'FFFFFF';
-    const targetIdx = sheetMap.get(btn.targetSheet);
+    const targetExists = sheetMap.has(btn.targetSheet);
+    const gradStart = lightenColor(btn.fillColor, 8);
+    const gradEnd = darkenColor(btn.fillColor, 15);
+    const glowColor = btn.accentColor;
 
-    // Build hyperlink element if target sheet found
-    const hlinkAttr = targetIdx !== undefined
-      ? ` <a:hlinkClick xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="" action="ppaction://hlinkshowjump?jump=${btn.targetSheet}"/>`
-      : '';
+    // Build hyperlink element with proper rId for OOXML internal navigation
+    let hlinkEl = '';
+    if (targetExists) {
+      const rId = `rHl${hlinkCounter}`;
+      hlinkEl = `
+          <a:hlinkClick r:id="${rId}"/>`;
+      hlinkRels.push({
+        rId,
+        target: `#'${btn.targetSheet}'!A1`,
+      });
+      hlinkCounter++;
+    }
 
     anchors += `
   <xdr:twoCellAnchor editAs="oneCell">
@@ -251,7 +328,7 @@ function buildShapeAnchors(
     </xdr:to>
     <xdr:sp macro="" textlink="">
       <xdr:nvSpPr>
-        <xdr:cNvPr id="${idCounter}" name="Nav ${idCounter}">${hlinkAttr}
+        <xdr:cNvPr id="${idCounter}" name="Nav ${idCounter}">${hlinkEl}
         </xdr:cNvPr>
         <xdr:cNvSpPr/>
       </xdr:nvSpPr>
@@ -262,13 +339,34 @@ function buildShapeAnchors(
         </a:xfrm>
         <a:prstGeom prst="roundRect">
           <a:avLst>
-            <a:gd name="adj" fmla="val 16667"/>
+            <a:gd name="adj" fmla="val 13000"/>
           </a:avLst>
         </a:prstGeom>
-        <a:solidFill><a:srgbClr val="${btn.fillColor}"/></a:solidFill>
-        <a:ln w="12700">
-          <a:solidFill><a:srgbClr val="${btn.accentColor}"/></a:solidFill>
+        <a:gradFill>
+          <a:gsLst>
+            <a:gs pos="0"><a:srgbClr val="${gradStart}"/></a:gs>
+            <a:gs pos="100000"><a:srgbClr val="${gradEnd}"/></a:gs>
+          </a:gsLst>
+          <a:lin ang="5400000" scaled="1"/>
+        </a:gradFill>
+        <a:ln w="15875">
+          <a:solidFill><a:srgbClr val="${btn.accentColor}"><a:alpha val="80000"/></a:srgbClr></a:solidFill>
         </a:ln>
+        <a:effectLst>
+          <a:outerShdw blurRad="40000" dist="20000" dir="5400000" algn="t" rotWithShape="0">
+            <a:srgbClr val="000000"><a:alpha val="30000"/></a:srgbClr>
+          </a:outerShdw>
+          <a:glow rad="63500">
+            <a:srgbClr val="${glowColor}"><a:alpha val="18000"/></a:srgbClr>
+          </a:glow>
+        </a:effectLst>
+        <a:scene3d>
+          <a:camera prst="orthographicFront"/>
+          <a:lightRig rig="balanced" dir="t"/>
+        </a:scene3d>
+        <a:sp3d>
+          <a:bevelT w="19050" h="6350" prst="softRound"/>
+        </a:sp3d>
       </xdr:spPr>
       <xdr:txBody>
         <a:bodyPr vertOverflow="clip" horzOverflow="clip" wrap="square"
@@ -277,9 +375,10 @@ function buildShapeAnchors(
         <a:p>
           <a:pPr algn="ctr"/>
           <a:r>
-            <a:rPr lang="en-US" sz="1100" b="1" dirty="0">
+            <a:rPr lang="en-US" sz="1200" b="1" dirty="0" spc="30">
               <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
-              <a:latin typeface="Segoe UI"/>
+              <a:latin typeface="Segoe UI Semibold" panose="020B0702040204020203"/>
+              <a:cs typeface="Segoe UI Semibold"/>
             </a:rPr>
             <a:t>${escapeXml(btn.label)}</a:t>
           </a:r>
@@ -291,7 +390,7 @@ function buildShapeAnchors(
     idCounter++;
   }
 
-  return anchors;
+  return { anchors, hlinkRels };
 }
 
 /**
@@ -366,6 +465,41 @@ async function appendToDrawing(zip: JSZip, drawingNum: number, anchors: string):
   // Insert before closing </xdr:wsDr>
   xml = xml.replace('</xdr:wsDr>', `${anchors}\n</xdr:wsDr>`);
   zip.file(path, xml);
+}
+
+/**
+ * Add hyperlink relationships to a drawing's .rels file.
+ * Required for clickable navigation buttons that jump to other sheets.
+ */
+async function addDrawingHyperlinkRels(
+  zip: JSZip,
+  drawingNum: number,
+  rels: HyperlinkRel[],
+): Promise<void> {
+  if (!rels.length) return;
+
+  const relsPath = `xl/drawings/_rels/drawing${drawingNum}.xml.rels`;
+  const existingFile = zip.file(relsPath);
+
+  if (existingFile) {
+    let xml = await existingFile.async('text');
+    // Add each hyperlink relationship before </Relationships>
+    const newRels = rels.map(r =>
+      `  <Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${escapeXml(r.target)}" TargetMode="External"/>`
+    ).join('\n');
+    xml = xml.replace('</Relationships>', `${newRels}\n</Relationships>`);
+    zip.file(relsPath, xml);
+  } else {
+    // Create new rels file for the drawing
+    const relEntries = rels.map(r =>
+      `  <Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${escapeXml(r.target)}" TargetMode="External"/>`
+    ).join('\n');
+    const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+${relEntries}
+</Relationships>`;
+    zip.file(relsPath, xml);
+  }
 }
 
 /**

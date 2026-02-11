@@ -89,12 +89,12 @@ export function initDarkSheet(
 }
 
 // ============================================
-// HEADER BAR — 20pt Premium Title
+// HEADER BAR — 22pt Premium Title with accent border
 // ============================================
 
 /**
  * Add a full-width header bar with title and optional subtitle.
- * Uses 20pt bold title (Other Level style) with generous row height.
+ * Premium: 22pt bold title, accent bottom border, generous height.
  */
 export function addHeaderBar(
   sheet: ExcelJS.Worksheet,
@@ -107,19 +107,26 @@ export function addHeaderBar(
   sheet.mergeCells(row, 2, row, 14);
   const titleCell = sheet.getCell(row, 2);
   titleCell.value = title;
-  titleCell.font = { size: 20, bold: true, color: { argb: theme.headerText } };
+  titleCell.font = { size: 22, bold: true, color: { argb: theme.headerText } };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
   titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
-  sheet.getRow(row).height = 52;
+  // Accent bottom border for premium depth
+  for (let c = 2; c <= 14; c++) {
+    const cell = sheet.getCell(row, c);
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    cell.border = { bottom: { style: 'medium', color: { argb: theme.accent } } };
+  }
+  sheet.getRow(row).height = 56;
 
   let nextRow = row + 1;
 
   if (subtitle) {
     sheet.mergeCells(nextRow, 2, nextRow, 14);
     const subCell = sheet.getCell(nextRow, 2);
-    subCell.value = subtitle;
+    subCell.value = `  ${subtitle}`;
     subCell.font = { size: 10, italic: true, color: { argb: theme.muted } };
     subCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+    sheet.getRow(nextRow).height = 22;
     nextRow++;
   }
 
@@ -210,7 +217,12 @@ export function addKPICards(
     const valueCell = sheet.getCell(startRow + 1, col);
     if (card.fallbackValue !== undefined) {
       // IFERROR wrapping: shows live CRK value if add-in loaded, fallback if not
-      const fb = typeof card.fallbackValue === 'string' ? `"${card.fallbackValue}"` : card.fallbackValue;
+      let fb: string | number;
+      if (typeof card.fallbackValue === 'string') {
+        fb = `"${card.fallbackValue.replace(/"/g, '""')}"`;
+      } else {
+        fb = typeof card.fallbackValue === 'number' && !isNaN(card.fallbackValue) ? card.fallbackValue : 0;
+      }
       valueCell.value = { formula: `IFERROR(CRK.${card.formula},${fb})` };
     } else {
       valueCell.value = { formula: `CRK.${card.formula}` };
@@ -227,7 +239,12 @@ export function addKPICards(
     if (card.changeFormula) {
       const changeCell = sheet.getCell(startRow + 2, col);
       if (card.changeFallback !== undefined) {
-        const cfb = typeof card.changeFallback === 'string' ? `"${card.changeFallback}"` : card.changeFallback;
+        let cfb: string | number;
+        if (typeof card.changeFallback === 'string') {
+          cfb = `"${card.changeFallback.replace(/"/g, '""')}"`;
+        } else {
+          cfb = typeof card.changeFallback === 'number' && !isNaN(card.changeFallback) ? card.changeFallback : 0;
+        }
         changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},${cfb})` };
       } else {
         changeCell.value = { formula: `IFERROR(CRK.${card.changeFormula},"")` };
@@ -281,7 +298,8 @@ export function addKPICards(
 // ============================================
 
 /**
- * Add a themed section divider with accent underline.
+ * Add a themed section divider with accent top + bottom borders.
+ * Premium look: top thin accent + bottom medium accent for depth.
  */
 export function addSectionDivider(
   sheet: ExcelJS.Worksheet,
@@ -295,10 +313,16 @@ export function addSectionDivider(
   cell.font = { size: 13, bold: true, color: { argb: theme.headerText } };
   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
   cell.alignment = { horizontal: 'left', vertical: 'middle' };
-  cell.border = {
-    bottom: { style: 'thin', color: { argb: theme.accent } },
-  };
-  sheet.getRow(row).height = 36;
+  // Double-border effect: thin top + medium bottom for depth
+  for (let c = 2; c <= 14; c++) {
+    const sc = sheet.getCell(row, c);
+    sc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    sc.border = {
+      top: { style: 'thin', color: { argb: theme.border } },
+      bottom: { style: 'medium', color: { argb: theme.accent } },
+    };
+  }
+  sheet.getRow(row).height = 38;
 }
 
 // ============================================
@@ -307,7 +331,7 @@ export function addSectionDivider(
 
 /**
  * Add themed column headers for a data table.
- * Modern look: accent bottom border only, no vertical borders.
+ * Premium: accent bottom border, uppercase text, padded height.
  */
 export function addTableHeaders(
   sheet: ExcelJS.Worksheet,
@@ -317,15 +341,16 @@ export function addTableHeaders(
 ): void {
   for (const h of headers) {
     const cell = sheet.getCell(row, h.col);
-    cell.value = h.label;
-    cell.font = { size: 10, bold: true, color: { argb: theme.headerText } };
+    cell.value = h.label.toUpperCase();
+    cell.font = { size: 9, bold: true, color: { argb: theme.headerText } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.border } };
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = {
-      bottom: { style: 'thin', color: { argb: theme.accent } },
+      bottom: { style: 'medium', color: { argb: theme.accent } },
+      top: { style: 'thin', color: { argb: theme.border } },
     };
   }
-  sheet.getRow(row).height = 26;
+  sheet.getRow(row).height = 28;
 }
 
 // ============================================
@@ -461,30 +486,22 @@ export function addChartCard(
     }
   }
 
-  // Full accent border on all 4 sides (OtherLevel card style)
-  // Top border (medium accent)
+  // Premium accent border — medium top, thin sides + bottom (OtherLevel card style)
   for (let c = fromCol; c <= toCol; c++) {
     sheet.getCell(fromRow, c).border = {
       ...(sheet.getCell(fromRow, c).border || {}),
       top: { style: 'medium', color: { argb: theme.accent } },
     };
-  }
-  // Bottom border
-  for (let c = fromCol; c <= toCol; c++) {
     sheet.getCell(toRow, c).border = {
       ...(sheet.getCell(toRow, c).border || {}),
-      bottom: { style: 'thin', color: { argb: theme.border } },
+      bottom: { style: 'thin', color: { argb: theme.accent } },
     };
   }
-  // Left border
   for (let r = fromRow; r <= toRow; r++) {
     sheet.getCell(r, fromCol).border = {
       ...(sheet.getCell(r, fromCol).border || {}),
       left: { style: 'thin', color: { argb: theme.border } },
     };
-  }
-  // Right border
-  for (let r = fromRow; r <= toRow; r++) {
     sheet.getCell(r, toCol).border = {
       ...(sheet.getCell(r, toCol).border || {}),
       right: { style: 'thin', color: { argb: theme.border } },
