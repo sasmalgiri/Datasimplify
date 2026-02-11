@@ -23,7 +23,7 @@ import JSZip from 'jszip';
 // Types
 // ============================================
 
-export type ChartType = 'bar' | 'pie' | 'doughnut' | 'line';
+export type ChartType = 'bar' | 'pie' | 'doughnut' | 'line' | 'area' | 'combo' | 'scatter';
 
 export interface ChartSeriesRef {
   name: string;
@@ -50,6 +50,8 @@ export interface ChartDefinition {
     darkTheme?: boolean;
     showLegend?: boolean;
     colors?: string[];    // Override series colors
+    transparent?: boolean; // Transparent chart background (OtherLevel overlay)
+    roundedCorners?: boolean; // Rounded bar corners
   };
 }
 
@@ -175,6 +177,15 @@ function buildChartXml(chart: ChartDefinition, chartNum: number): string {
     case 'line':
       plotArea = buildLinePlotArea(chart, textColor, gridColor);
       break;
+    case 'area':
+      plotArea = buildAreaPlotArea(chart, textColor, gridColor);
+      break;
+    case 'combo':
+      plotArea = buildComboPlotArea(chart, textColor, gridColor);
+      break;
+    case 'scatter':
+      plotArea = buildScatterPlotArea(chart, textColor, gridColor);
+      break;
     default:
       plotArea = buildBarPlotArea(chart, textColor, gridColor);
   }
@@ -229,8 +240,9 @@ function buildChartXml(chart: ChartDefinition, chartNum: number): string {
     ${legendXml}
     <c:plotVisOnly val="1"/>
   </c:chart>
+  ${chart.style?.roundedCorners ? '<c:roundedCorners val="1"/>' : ''}
   <c:spPr>
-    <a:solidFill><a:srgbClr val="${bgColor}"/></a:solidFill>
+    ${chart.style?.transparent ? '<a:noFill/>' : `<a:solidFill><a:srgbClr val="${bgColor}"/></a:solidFill>`}
     <a:ln><a:noFill/></a:ln>
   </c:spPr>
 </c:chartSpace>`;
@@ -405,6 +417,315 @@ function buildLinePlotArea(chart: ChartDefinition, textColor: string, gridColor:
         </c:txPr>
         <c:crossAx val="2"/>
       </c:catAx>
+      <c:valAx>
+        <c:axId val="2"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="l"/>
+        <c:majorGridlines>
+          <c:spPr>
+            <a:ln w="3175">
+              <a:solidFill><a:srgbClr val="${gridColor}"/></a:solidFill>
+            </a:ln>
+          </c:spPr>
+        </c:majorGridlines>
+        <c:txPr>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="1"/>
+      </c:valAx>
+      <c:spPr>
+        <a:noFill/>
+      </c:spPr>
+    </c:plotArea>`;
+}
+
+function buildAreaPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const series = chart.dataRange.values.map((s, i) => {
+    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    return `
+      <c:ser>
+        <c:idx val="${i}"/>
+        <c:order val="${i}"/>
+        <c:tx><c:strRef><c:f>"${escapeXml(s.name)}"</c:f></c:strRef></c:tx>
+        <c:spPr>
+          <a:solidFill><a:srgbClr val="${color}"><a:alpha val="50000"/></a:srgbClr></a:solidFill>
+          <a:ln w="22225">
+            <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
+          </a:ln>
+        </c:spPr>
+        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+      </c:ser>`;
+  }).join('');
+
+  return `
+    <c:plotArea>
+      <c:layout/>
+      <c:areaChart>
+        <c:grouping val="standard"/>
+        <c:varyColors val="0"/>
+        ${series}
+        <c:axId val="1"/>
+        <c:axId val="2"/>
+      </c:areaChart>
+      <c:catAx>
+        <c:axId val="1"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="b"/>
+        <c:txPr>
+          <a:bodyPr rot="-2700000"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="2"/>
+      </c:catAx>
+      <c:valAx>
+        <c:axId val="2"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="l"/>
+        <c:majorGridlines>
+          <c:spPr>
+            <a:ln w="3175">
+              <a:solidFill><a:srgbClr val="${gridColor}"/></a:solidFill>
+            </a:ln>
+          </c:spPr>
+        </c:majorGridlines>
+        <c:txPr>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="1"/>
+      </c:valAx>
+      <c:spPr>
+        <a:noFill/>
+      </c:spPr>
+    </c:plotArea>`;
+}
+
+function buildComboPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  // Combo chart: first series as bar, remaining as line overlay
+  const allSeries = chart.dataRange.values;
+  const barSeries = allSeries.length > 0 ? [allSeries[0]] : [];
+  const lineSeries = allSeries.slice(1);
+
+  const barXml = barSeries.map((s, i) => {
+    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    return `
+      <c:ser>
+        <c:idx val="${i}"/>
+        <c:order val="${i}"/>
+        <c:tx><c:strRef><c:f>"${escapeXml(s.name)}"</c:f></c:strRef></c:tx>
+        <c:spPr>
+          <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
+          <a:ln><a:noFill/></a:ln>
+        </c:spPr>
+        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+      </c:ser>`;
+  }).join('');
+
+  const lineXml = lineSeries.map((s, i) => {
+    const idx = i + barSeries.length;
+    const color = s.color || getDefaultColor(idx, chart.style?.colors);
+    return `
+      <c:ser>
+        <c:idx val="${idx}"/>
+        <c:order val="${idx}"/>
+        <c:tx><c:strRef><c:f>"${escapeXml(s.name)}"</c:f></c:strRef></c:tx>
+        <c:spPr>
+          <a:ln w="28575">
+            <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
+          </a:ln>
+        </c:spPr>
+        <c:marker>
+          <c:symbol val="circle"/>
+          <c:size val="5"/>
+          <c:spPr>
+            <a:solidFill><a:srgbClr val="${color}"/></a:solidFill>
+          </c:spPr>
+        </c:marker>
+        <c:cat><c:strRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:strRef></c:cat>
+        <c:val><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:val>
+      </c:ser>`;
+  }).join('');
+
+  return `
+    <c:plotArea>
+      <c:layout/>
+      <c:barChart>
+        <c:barDir val="col"/>
+        <c:grouping val="clustered"/>
+        <c:varyColors val="0"/>
+        ${barXml}
+        <c:axId val="1"/>
+        <c:axId val="2"/>
+      </c:barChart>
+      <c:lineChart>
+        <c:grouping val="standard"/>
+        <c:varyColors val="0"/>
+        ${lineXml}
+        <c:marker val="1"/>
+        <c:axId val="1"/>
+        <c:axId val="3"/>
+      </c:lineChart>
+      <c:catAx>
+        <c:axId val="1"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="b"/>
+        <c:txPr>
+          <a:bodyPr rot="-2700000"/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="2"/>
+      </c:catAx>
+      <c:valAx>
+        <c:axId val="2"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="l"/>
+        <c:majorGridlines>
+          <c:spPr>
+            <a:ln w="3175">
+              <a:solidFill><a:srgbClr val="${gridColor}"/></a:solidFill>
+            </a:ln>
+          </c:spPr>
+        </c:majorGridlines>
+        <c:txPr>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="1"/>
+      </c:valAx>
+      <c:valAx>
+        <c:axId val="3"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="r"/>
+        <c:txPr>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="1"/>
+        <c:crosses val="max"/>
+      </c:valAx>
+      <c:spPr>
+        <a:noFill/>
+      </c:spPr>
+    </c:plotArea>`;
+}
+
+function buildScatterPlotArea(chart: ChartDefinition, textColor: string, gridColor: string): string {
+  const series = chart.dataRange.values.map((s, i) => {
+    const color = s.color || getDefaultColor(i, chart.style?.colors);
+    return `
+      <c:ser>
+        <c:idx val="${i}"/>
+        <c:order val="${i}"/>
+        <c:tx><c:strRef><c:f>"${escapeXml(s.name)}"</c:f></c:strRef></c:tx>
+        <c:spPr>
+          <a:ln w="0"><a:noFill/></a:ln>
+        </c:spPr>
+        <c:marker>
+          <c:symbol val="circle"/>
+          <c:size val="6"/>
+          <c:spPr>
+            <a:solidFill><a:srgbClr val="${color}"><a:alpha val="70000"/></a:srgbClr></a:solidFill>
+            <a:ln><a:noFill/></a:ln>
+          </c:spPr>
+        </c:marker>
+        <c:xVal><c:numRef><c:f>${escapeXml(chart.dataRange.categories)}</c:f></c:numRef></c:xVal>
+        <c:yVal><c:numRef><c:f>${escapeXml(s.ref)}</c:f></c:numRef></c:yVal>
+      </c:ser>`;
+  }).join('');
+
+  return `
+    <c:plotArea>
+      <c:layout/>
+      <c:scatterChart>
+        <c:scatterStyle val="lineMarker"/>
+        <c:varyColors val="0"/>
+        ${series}
+        <c:axId val="1"/>
+        <c:axId val="2"/>
+      </c:scatterChart>
+      <c:valAx>
+        <c:axId val="1"/>
+        <c:scaling><c:orientation val="minMax"/></c:scaling>
+        <c:delete val="0"/>
+        <c:axPos val="b"/>
+        <c:majorGridlines>
+          <c:spPr>
+            <a:ln w="3175">
+              <a:solidFill><a:srgbClr val="${gridColor}"/></a:solidFill>
+            </a:ln>
+          </c:spPr>
+        </c:majorGridlines>
+        <c:txPr>
+          <a:bodyPr/>
+          <a:lstStyle/>
+          <a:p>
+            <a:pPr>
+              <a:defRPr sz="800">
+                <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
+              </a:defRPr>
+            </a:pPr>
+            <a:endParaRPr lang="en-US"/>
+          </a:p>
+        </c:txPr>
+        <c:crossAx val="2"/>
+      </c:valAx>
       <c:valAx>
         <c:axId val="2"/>
         <c:scaling><c:orientation val="minMax"/></c:scaling>

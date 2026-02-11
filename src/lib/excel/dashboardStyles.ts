@@ -74,8 +74,16 @@ export function initDarkSheet(
     }
   }
 
-  // Hide gridlines — the #1 trick from Other Level's design methodology
-  sheet.views = [{ showGridLines: false }];
+  // Hide gridlines + row/column headers — Other Level's "app-like" design methodology
+  // Freeze top rows so header + KPI cards stay visible while scrolling
+  sheet.views = [{
+    showGridLines: false,
+    showRowColHeaders: false,
+    state: 'frozen',
+    ySplit: 3,
+    topLeftCell: 'A4',
+    activeCell: 'B4',
+  }];
 
   return { sheet, theme };
 }
@@ -156,6 +164,7 @@ export function addKPICards(
     const endCol = col + cardWidth - 1;
 
     // Card background (3 cols × 5 rows) with kpiBg
+    // Bottom row uses slightly darker shade for subtle gradient effect
     for (let r = startRow; r < startRow + cardHeight; r++) {
       for (let c = col; c <= endCol; c++) {
         sheet.getCell(r, c).fill = {
@@ -166,13 +175,26 @@ export function addKPICards(
       }
     }
 
-    // LEFT ACCENT BAR — accent-colored left border on first column
+    // FULL ACCENT BORDER on all 4 sides (OtherLevel signature)
+    // Top border
+    for (let c = col; c <= endCol; c++) {
+      const cell = sheet.getCell(startRow, c);
+      cell.border = { ...(cell.border || {}), top: { style: 'thin', color: { argb: theme.accent } } };
+    }
+    // Bottom border
+    for (let c = col; c <= endCol; c++) {
+      const cell = sheet.getCell(startRow + cardHeight - 1, c);
+      cell.border = { ...(cell.border || {}), bottom: { style: 'thin', color: { argb: theme.accent } } };
+    }
+    // Left border (accent bar — slightly thicker for emphasis)
     for (let r = startRow; r < startRow + cardHeight; r++) {
       const cell = sheet.getCell(r, col);
-      cell.border = {
-        ...(cell.border || {}),
-        left: { style: 'medium', color: { argb: theme.accent } },
-      };
+      cell.border = { ...(cell.border || {}), left: { style: 'medium', color: { argb: theme.accent } } };
+    }
+    // Right border
+    for (let r = startRow; r < startRow + cardHeight; r++) {
+      const cell = sheet.getCell(r, endCol);
+      cell.border = { ...(cell.border || {}), right: { style: 'thin', color: { argb: theme.accent } } };
     }
 
     // Title: 9pt, ALL CAPS, muted gray — merged across card width
@@ -240,14 +262,15 @@ export function addKPICards(
       sheet.getRow(startRow + 2).height = 14;
     }
 
-    // Subtle bottom border on last row
-    for (let c = col; c <= endCol; c++) {
-      const cell = sheet.getCell(startRow + cardHeight - 1, c);
-      cell.border = {
-        ...(cell.border || {}),
-        bottom: { style: 'thin', color: { argb: theme.border } },
-      };
-    }
+    // Corner cells need combined borders (top+left, top+right, bottom+left, bottom+right)
+    const tl = sheet.getCell(startRow, col);
+    tl.border = { top: { style: 'thin', color: { argb: theme.accent } }, left: { style: 'medium', color: { argb: theme.accent } } };
+    const tr = sheet.getCell(startRow, endCol);
+    tr.border = { top: { style: 'thin', color: { argb: theme.accent } }, right: { style: 'thin', color: { argb: theme.accent } } };
+    const bl = sheet.getCell(startRow + cardHeight - 1, col);
+    bl.border = { bottom: { style: 'thin', color: { argb: theme.accent } }, left: { style: 'medium', color: { argb: theme.accent } } };
+    const br = sheet.getCell(startRow + cardHeight - 1, endCol);
+    br.border = { bottom: { style: 'thin', color: { argb: theme.accent } }, right: { style: 'thin', color: { argb: theme.accent } } };
   }
 
   return startRow + cardHeight + 1; // Next available row
@@ -438,10 +461,33 @@ export function addChartCard(
     }
   }
 
-  // Accent top border
+  // Full accent border on all 4 sides (OtherLevel card style)
+  // Top border (medium accent)
   for (let c = fromCol; c <= toCol; c++) {
     sheet.getCell(fromRow, c).border = {
+      ...(sheet.getCell(fromRow, c).border || {}),
       top: { style: 'medium', color: { argb: theme.accent } },
+    };
+  }
+  // Bottom border
+  for (let c = fromCol; c <= toCol; c++) {
+    sheet.getCell(toRow, c).border = {
+      ...(sheet.getCell(toRow, c).border || {}),
+      bottom: { style: 'thin', color: { argb: theme.border } },
+    };
+  }
+  // Left border
+  for (let r = fromRow; r <= toRow; r++) {
+    sheet.getCell(r, fromCol).border = {
+      ...(sheet.getCell(r, fromCol).border || {}),
+      left: { style: 'thin', color: { argb: theme.border } },
+    };
+  }
+  // Right border
+  for (let r = fromRow; r <= toRow; r++) {
+    sheet.getCell(r, toCol).border = {
+      ...(sheet.getCell(r, toCol).border || {}),
+      right: { style: 'thin', color: { argb: theme.border } },
     };
   }
 
@@ -451,13 +497,6 @@ export function addChartCard(
     titleCell.value = title;
     titleCell.font = { size: 9, bold: true, color: { argb: theme.muted } };
     titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
-  }
-
-  // Subtle bottom border
-  for (let c = fromCol; c <= toCol; c++) {
-    sheet.getCell(toRow, c).border = {
-      bottom: { style: 'thin', color: { argb: theme.border } },
-    };
   }
 }
 

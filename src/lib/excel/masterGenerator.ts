@@ -33,10 +33,13 @@ import {
   generateQueriesForDashboard,
   REFRESH_PRESETS,
 } from './powerQueryTemplates';
-import { injectPowerQueries } from './powerQueryInjector';
+import { injectPowerQueries, type PowerQueryDefinition, type PQSheetMapping } from './powerQueryInjector';
+import { injectShapes, type ShapeCardDef, type NavigationButtonDef } from './shapeInjector';
+import { injectSparklines, type SparklineDef } from './sparklineInjector';
+import { injectIconSets, type IconSetDef } from './iconSetInjector';
 import { injectCharts } from './chartInjector';
 import { getChartsForDashboard } from './dashboardCharts';
-import { addCrkDashboardSheets } from './crkDashboardSheets';
+import { addCrkDashboardSheets, addNavigationSheet, VISUAL_SHEET_NAMES } from './crkDashboardSheets';
 import {
   createAdvancedSparkline,
   createDashboardCard,
@@ -657,6 +660,501 @@ export async function generateMasterExcel(options: GenerateOptions): Promise<Buf
 }
 
 // ============================================
+// PQ DATA SHEET CREATOR (for Load-to-Table)
+// ============================================
+
+/**
+ * Creates one Excel sheet per PQ query with column headers.
+ * These sheets become the targets for PQ Load-to-Table injection.
+ * On first open, they're empty. After Refresh All, PQ fills them with live data.
+ */
+function createPQDataSheets(
+  workbook: ExcelJS.Workbook,
+  queries: PowerQueryDefinition[]
+): PQSheetMapping[] {
+  const mappings: PQSheetMapping[] = [];
+
+  for (const query of queries) {
+    if (!query.columns || query.columns.length === 0) continue;
+
+    const sheetName = `PQ_${query.name}`;
+    const sheet = workbook.addWorksheet(sheetName, {
+      properties: { tabColor: { argb: 'FF8B5CF6' } },
+    });
+
+    // Write column headers (row 1)
+    query.columns.forEach((col, i) => {
+      const cell = sheet.getCell(1, i + 1);
+      cell.value = col;
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+    });
+
+    // Add one empty data row (Excel tables need header + at least 1 data row)
+    query.columns.forEach((_, i) => {
+      sheet.getCell(2, i + 1).value = '';
+    });
+
+    // Set column widths
+    query.columns.forEach((col, i) => {
+      const excelCol = sheet.getColumn(i + 1);
+      excelCol.width = Math.max(14, col.length + 4);
+    });
+
+    mappings.push({
+      queryName: query.name,
+      sheetName,
+      columns: [...query.columns],
+      dataRowCount: 1,
+    });
+  }
+
+  return mappings;
+}
+
+// ============================================
+// SHAPE CARD BUILDER (OtherLevel KPI overlays)
+// ============================================
+
+/** Format large numbers compactly for shape cards */
+function fmtUSD(v: number | undefined): string {
+  if (v === undefined || v === null) return '—';
+  if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
+  if (v >= 1e9) return `$${(v / 1e9).toFixed(1)}B`;
+  if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
+  if (v >= 1000) return `$${v.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  return `$${v.toFixed(2)}`;
+}
+
+function fmtPct(v: number | undefined): string | undefined {
+  if (v === undefined || v === null) return undefined;
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+}
+
+function pctColor(v: number | undefined): string | undefined {
+  if (v === undefined || v === null) return undefined;
+  return v >= 0 ? '22C55E' : 'EF4444';
+}
+
+interface KPIShapeValue {
+  title: string;
+  value: string;
+  change?: string;
+  changeColor?: string;
+}
+
+/**
+ * Resolves KPI card display values from prefetched CoinGecko data.
+ * Returns 4 KPI values matching the cell-based KPI cards already placed.
+ */
+function resolveKPIShapeValues(dashboard: DashboardType, data: any): KPIShapeValue[] {
+  const btc = data?.market?.find((c: any) => c.id === 'bitcoin');
+  const eth = data?.market?.find((c: any) => c.id === 'ethereum');
+  const sol = data?.market?.find((c: any) => c.id === 'solana');
+  const g = data?.global;
+  const fg = data?.fearGreed?.[0];
+
+  // Common reusable KPI values
+  const mcap: KPIShapeValue = {
+    title: 'TOTAL MARKET CAP', value: fmtUSD(g?.total_market_cap),
+    change: fmtPct(g?.market_cap_change_percentage_24h_usd),
+    changeColor: pctColor(g?.market_cap_change_percentage_24h_usd),
+  };
+  const vol: KPIShapeValue = { title: '24H VOLUME', value: fmtUSD(g?.total_volume) };
+  const dom: KPIShapeValue = { title: 'BTC DOMINANCE', value: g?.btc_dominance ? `${g.btc_dominance.toFixed(2)}%` : '—' };
+  const fgv: KPIShapeValue = { title: 'FEAR & GREED', value: fg ? String(fg.value ?? fg) : '—' };
+  const btcP: KPIShapeValue = {
+    title: 'BTC PRICE', value: fmtUSD(btc?.current_price),
+    change: fmtPct(btc?.price_change_percentage_24h),
+    changeColor: pctColor(btc?.price_change_percentage_24h),
+  };
+  const ethP: KPIShapeValue = {
+    title: 'ETH PRICE', value: fmtUSD(eth?.current_price),
+    change: fmtPct(eth?.price_change_percentage_24h),
+    changeColor: pctColor(eth?.price_change_percentage_24h),
+  };
+  const solP: KPIShapeValue = {
+    title: 'SOL PRICE', value: fmtUSD(sol?.current_price),
+    change: fmtPct(sol?.price_change_percentage_24h),
+    changeColor: pctColor(sol?.price_change_percentage_24h),
+  };
+
+  switch (dashboard) {
+    // Executive/Market overview uses global stats
+    case 'market-overview':
+    case 'complete-suite':
+      return [mcap, vol, dom, fgv];
+
+    // Screener, stablecoins, NFTs, categories, AI, token-unlocks, dev-activity, custom
+    case 'screener':
+    case 'stablecoins':
+    case 'nft-tracker':
+    case 'categories':
+    case 'heatmap':
+    case 'ai-gaming':
+    case 'token-unlocks':
+    case 'dev-activity':
+    case 'custom':
+    case 'rwa':
+    case 'metaverse':
+    case 'privacy-coins':
+      return [mcap, vol, dom, fgv];
+
+    // Gainers — momentum focus
+    case 'gainers-losers':
+      return [btcP, ethP, { title: 'MARKET CAP CHG', value: g?.market_cap_change_percentage_24h_usd ? `${g.market_cap_change_percentage_24h_usd.toFixed(2)}%` : '—' }, fgv];
+
+    // Trending — discovery
+    case 'trending':
+      return [btcP, { title: 'ACTIVE COINS', value: g?.active_cryptocurrencies ? String(g.active_cryptocurrencies) : '—' }, dom, fgv];
+
+    // Sentiment / Fear & Greed
+    case 'fear-greed':
+    case 'social-sentiment':
+      return [fgv, { title: 'SENTIMENT', value: fg?.value_classification ?? '—' }, dom, mcap];
+
+    // Bitcoin-specific
+    case 'bitcoin-dashboard':
+      return [btcP, { title: 'BTC MARKET CAP', value: fmtUSD(btc?.market_cap) }, dom, fgv];
+
+    // Ethereum-specific
+    case 'ethereum-dashboard':
+      return [ethP, { title: 'ETH MARKET CAP', value: fmtUSD(eth?.market_cap) }, { title: '24H CHANGE', value: eth?.price_change_percentage_24h ? `${eth.price_change_percentage_24h.toFixed(2)}%` : '—', changeColor: pctColor(eth?.price_change_percentage_24h) }, fgv];
+
+    // DeFi
+    case 'defi-dashboard':
+    case 'defi-yields':
+      return [{ title: 'DEFI MARKET CAP', value: '—' }, { title: 'DEFI VOLUME', value: '—' }, { title: 'DEFI DOMINANCE', value: '—' }, mcap];
+
+    // Trading / Derivatives / Liquidations
+    case 'technical-analysis':
+    case 'derivatives':
+    case 'funding-rates':
+    case 'liquidations':
+    case 'volatility':
+    case 'calculator':
+      return [btcP, { title: 'BTC 24H CHANGE', value: btc?.price_change_percentage_24h ? `${btc.price_change_percentage_24h.toFixed(2)}%` : '—', changeColor: pctColor(btc?.price_change_percentage_24h) }, mcap, fgv];
+
+    // Exchange
+    case 'exchanges':
+    case 'exchange-reserves':
+      return [mcap, vol, { title: 'ACTIVE COINS', value: g?.active_cryptocurrencies ? String(g.active_cryptocurrencies) : '—' }, dom];
+
+    // Meme coins
+    case 'meme-coins': {
+      const doge = data?.market?.find((c: any) => c.id === 'dogecoin');
+      const shib = data?.market?.find((c: any) => c.id === 'shiba-inu');
+      return [
+        { title: 'DOGE PRICE', value: doge ? `$${doge.current_price.toFixed(4)}` : '—', change: fmtPct(doge?.price_change_percentage_24h), changeColor: pctColor(doge?.price_change_percentage_24h) },
+        { title: 'SHIB PRICE', value: shib ? `$${shib.current_price.toFixed(8)}` : '—', change: fmtPct(shib?.price_change_percentage_24h), changeColor: pctColor(shib?.price_change_percentage_24h) },
+        dom, fgv,
+      ];
+    }
+
+    // Layer compare
+    case 'layer1-compare':
+    case 'layer2-compare':
+      return [ethP, solP, mcap, dom];
+
+    // Staking yields
+    case 'staking-yields':
+      return [ethP, solP, dom, mcap];
+
+    // Altcoin season
+    case 'altcoin-season':
+      return [dom, mcap, fgv, vol];
+
+    // Mining
+    case 'mining-calc':
+      return [btcP, { title: 'BTC MARKET CAP', value: fmtUSD(btc?.market_cap) }, dom, fgv];
+
+    // ETF tracker
+    case 'etf-tracker':
+      return [btcP, ethP, mcap, fgv];
+
+    // Correlation / On-chain / Whale / Portfolio
+    case 'correlation':
+    case 'on-chain':
+    case 'whale-tracker':
+      return [btcP, mcap, dom, fgv];
+
+    case 'portfolio-tracker':
+      return [{ title: 'PORTFOLIO VALUE', value: '—' }, { title: 'TOTAL P/L', value: '—' }, btcP, fgv];
+
+    default:
+      return [mcap, vol, dom, fgv];
+  }
+}
+
+/**
+ * Builds ShapeCardDef[] for a dashboard's KPI card overlays.
+ * Each visual dashboard sheet gets 4 rounded rectangle shape overlays
+ * at the standard KPI positions (row 5, columns B/E/H/K).
+ */
+function buildShapeCards(
+  dashboard: DashboardType,
+  prefetchedData: any,
+): ShapeCardDef[] {
+  const sheetName = VISUAL_SHEET_NAMES[dashboard];
+  if (!sheetName) return [];
+
+  const category = DASHBOARD_CATEGORIES[dashboard];
+  const theme = CATEGORY_THEMES[category];
+
+  // Strip 'FF' ARGB prefix to get 6-char hex for DrawingML
+  const strip = (c: string) => c.startsWith('FF') ? c.slice(2) : c;
+  const fillColor = strip(theme.cardBg);
+  const accentColor = strip(theme.accent);
+  const textColor = strip(theme.text);
+  const mutedColor = strip(theme.muted);
+
+  const kpiValues = resolveKPIShapeValues(dashboard, prefetchedData);
+
+  // 4 KPI cards: 0-indexed positions matching addKPICards(sheet, 5, ...)
+  // Row 5 (0-based=4) to row 9, columns B(1)/E(4)/H(7)/K(10), 3 wide
+  const positions = [
+    { fromCol: 1, fromRow: 4, toCol: 4, toRow: 9 },
+    { fromCol: 4, fromRow: 4, toCol: 7, toRow: 9 },
+    { fromCol: 7, fromRow: 4, toCol: 10, toRow: 9 },
+    { fromCol: 10, fromRow: 4, toCol: 13, toRow: 9 },
+  ];
+
+  return kpiValues.slice(0, 4).map((kpi, i) => ({
+    sheetName,
+    ...positions[i],
+    title: kpi.title,
+    value: kpi.value,
+    change: kpi.change,
+    fillColor,
+    accentColor,
+    textColor,
+    mutedColor,
+    changeColor: kpi.changeColor,
+  }));
+}
+
+// ============================================
+// SPARKLINE BUILDER (Real Excel sparklines)
+// ============================================
+
+/**
+ * Builds SparklineDef[] for a dashboard's data sheet.
+ * Sparklines render in the visual sheet, referencing data in the data sheet.
+ * Each dashboard gets sparklines for its key change/trend columns.
+ */
+function buildSparklineDefs(
+  dashboard: DashboardType,
+  _prefetchedData?: any,
+): SparklineDef[] {
+  const sheetName = VISUAL_SHEET_NAMES[dashboard];
+  if (!sheetName) return [];
+
+  const category = DASHBOARD_CATEGORIES[dashboard];
+  const theme = CATEGORY_THEMES[category];
+
+  // Data sheet name pattern: visual sheet + ' Data'
+  const dataSheet = sheetName + ' Data';
+
+  // Common sparkline colors from theme
+  const colorSeries = theme.accent;
+  const colorHigh = theme.success;
+  const colorLow = theme.danger;
+
+  const sparklines: SparklineDef[] = [];
+
+  // Determine how many data rows based on dashboard type
+  let dataRows = 20;
+  switch (dashboard) {
+    case 'screener': dataRows = 50; break;
+    case 'stablecoins':
+    case 'exchanges':
+    case 'exchange-reserves':
+    case 'categories':
+    case 'nft-tracker':
+    case 'defi-yields':
+    case 'staking-yields':
+    case 'meme-coins':
+    case 'ai-gaming':
+      dataRows = 50; break;
+    case 'gainers-losers':
+    case 'liquidations':
+    case 'altcoin-season':
+      dataRows = 20; break;
+    case 'trending':
+      dataRows = 10; break;
+    default:
+      dataRows = 20; break;
+  }
+
+  const endRow = 5 + dataRows; // Data starts at row 6
+
+  // Price trend sparkline — column D (Price) data visualized in visual sheet
+  // Place sparklines in the chart grid area of the visual sheet (row 12+)
+  // Using dedicated sparkline cells at row 11 (between KPI cards and chart grid)
+  sparklines.push({
+    sheetName,
+    targetCell: 'B11',
+    dataRange: `'${dataSheet}'!D6:D${endRow}`,
+    type: 'line',
+    colorSeries,
+    colorHigh,
+    colorLow,
+    showMarkers: false,
+    showHighLow: true,
+    showLast: true,
+    colorLast: colorSeries,
+  });
+
+  // Volume sparkline (column E or H depending on dashboard)
+  sparklines.push({
+    sheetName,
+    targetCell: 'E11',
+    dataRange: `'${dataSheet}'!E6:E${endRow}`,
+    type: 'column',
+    colorSeries,
+    colorHigh,
+    colorLow,
+    showHighLow: true,
+  });
+
+  // 24h change sparkline (column F typically for percent change)
+  sparklines.push({
+    sheetName,
+    targetCell: 'H11',
+    dataRange: `'${dataSheet}'!F6:F${endRow}`,
+    type: 'line',
+    colorSeries: theme.success,
+    colorHigh: theme.success,
+    colorLow: theme.danger,
+    colorNegative: theme.danger,
+    showMarkers: true,
+    showHighLow: true,
+  });
+
+  // 7d change sparkline (column G)
+  sparklines.push({
+    sheetName,
+    targetCell: 'K11',
+    dataRange: `'${dataSheet}'!G6:G${endRow}`,
+    type: 'line',
+    colorSeries: theme.accent,
+    colorHigh: theme.success,
+    colorLow: theme.danger,
+    colorNegative: theme.danger,
+    showHighLow: true,
+  });
+
+  return sparklines;
+}
+
+// ============================================
+// ICON SET BUILDER (3-arrow icons on change% columns)
+// ============================================
+
+/**
+ * Builds IconSetDef[] for a dashboard's data sheet change% columns.
+ * Adds 3-arrow icons: green up arrow (positive), yellow sideways (zero),
+ * red down arrow (negative) — the OtherLevel signature for data tables.
+ */
+function buildIconSetDefs(dashboard: DashboardType): IconSetDef[] {
+  const sheetName = VISUAL_SHEET_NAMES[dashboard];
+  if (!sheetName) return [];
+
+  const dataSheet = sheetName + ' Data';
+  const iconSets: IconSetDef[] = [];
+
+  // Determine data row count and which columns have change% data
+  let dataRows = 20;
+  switch (dashboard) {
+    case 'screener':
+    case 'stablecoins':
+    case 'exchanges':
+    case 'exchange-reserves':
+    case 'categories':
+    case 'nft-tracker':
+    case 'defi-yields':
+    case 'staking-yields':
+    case 'meme-coins':
+    case 'ai-gaming':
+      dataRows = 50; break;
+    case 'trending': dataRows = 10; break;
+    case 'altcoin-season':
+    case 'gainers-losers':
+    case 'liquidations':
+      dataRows = 20; break;
+    default: dataRows = 20; break;
+  }
+
+  const endRow = 5 + dataRows;
+
+  // 24h change% column (F) — most dashboards have this
+  iconSets.push({
+    sheetName: dataSheet,
+    sqref: `F6:F${endRow}`,
+    iconSet: '3Arrows',
+    thresholds: [-999, 0, 0.01],
+  });
+
+  // 7d change% column (G) — many dashboards have this too
+  const has7d = !['trending', 'derivatives', 'funding-rates', 'exchanges',
+    'exchange-reserves', 'etf-tracker'].includes(dashboard);
+  if (has7d) {
+    iconSets.push({
+      sheetName: dataSheet,
+      sqref: `G6:G${endRow}`,
+      iconSet: '3ArrowsGray',
+      thresholds: [-999, 0, 0.01],
+    });
+  }
+
+  return iconSets;
+}
+
+// ============================================
+// NAVIGATION BUTTON BUILDER (Index sheet buttons)
+// ============================================
+
+/**
+ * Converts navigation button metadata from addNavigationSheet() into
+ * NavigationButtonDef[] for the shape injector.
+ * Lays out buttons in a 3-column grid starting at row 6.
+ */
+function buildNavButtonDefs(
+  buttons: { label: string; description: string; targetSheet: string }[],
+  fillColor: string,
+  accentColor: string,
+): NavigationButtonDef[] {
+  if (!buttons.length) return [];
+
+  const cols = [1, 4, 7]; // 0-based: B, E, H
+  const defs: NavigationButtonDef[] = [];
+  let row = 5; // 0-based row 5 = Excel row 6
+  let colIdx = 0;
+
+  for (const btn of buttons) {
+    defs.push({
+      sheetName: 'CRK Navigation',
+      fromCol: cols[colIdx],
+      fromRow: row,
+      toCol: cols[colIdx] + 3,
+      toRow: row + 3,
+      label: btn.label,
+      targetSheet: btn.targetSheet,
+      fillColor,
+      accentColor,
+    });
+
+    colIdx++;
+    if (colIdx >= 3) {
+      colIdx = 0;
+      row += 4; // 3 rows per button + 1 gap
+    }
+  }
+
+  return defs;
+}
+
+// ============================================
 // BYOK TEMPLATE GENERATOR (No server-side data fetch)
 // ============================================
 
@@ -698,10 +1196,17 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
     console.warn('[BYOK] Data prefetch failed, falling back to formulas-only:', e);
   }
 
+  // Add navigation index sheet (first dashboard sheet — app-like hub)
+  const navButtons = addNavigationSheet(workbook, options.dashboard);
+
   // Add CRK formula dashboard sheets with pre-populated data
   // Data sheets get real values; KPI cards use IFERROR(CRK.fn, fallback)
   const coins = options.coins || ['bitcoin', 'ethereum', 'solana'];
   addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
+
+  // Create PQ data sheets (one per query) for Load-to-Table injection
+  // Each sheet gets column headers; PQ Refresh All populates with live data
+  const pqSheetMappings = createPQDataSheets(workbook, queries);
 
   // Add a lightweight instructions sheet (replaces verbose M code copy-paste sheet)
   const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
@@ -716,14 +1221,39 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   // Post-process: inject real Power Query connections into the xlsx ZIP
   // After injection, Excel shows queries in Data > Queries & Connections
   // User just pastes API key in B6 and clicks Refresh All
-  const withPQ = await injectPowerQueries(baseBuffer, queries);
+  const withPQ = await injectPowerQueries(baseBuffer, queries, pqSheetMappings);
 
   // Post-process: inject native Excel charts (bar, pie, doughnut, line)
   // Charts reference CRK formula spill ranges — empty until data loads
   const chartDefs = getChartsForDashboard(options.dashboard);
-  const final = chartDefs.length > 0
+  const withCharts = chartDefs.length > 0
     ? await injectCharts(withPQ, chartDefs)
     : withPQ;
+
+  // Post-process: inject DrawingML rounded rectangle shape overlays on KPI cards
+  // Appends to existing drawings (from chartInjector) or creates new ones
+  // Also inject navigation buttons as rounded rectangle shapes on the Index sheet
+  const shapeCards = buildShapeCards(options.dashboard, prefetchedData);
+  const category = DASHBOARD_CATEGORIES[options.dashboard];
+  const navTheme = CATEGORY_THEMES[category];
+  const strip = (c: string) => c.startsWith('FF') ? c.slice(2) : c;
+  const navButtonDefs = buildNavButtonDefs(navButtons, strip(navTheme.cardBg), strip(navTheme.accent));
+  const withShapes = (shapeCards.length > 0 || navButtonDefs.length > 0)
+    ? await injectShapes(withCharts, shapeCards, navButtonDefs)
+    : withCharts;
+
+  // Post-process: inject real Excel sparklines into visual sheet
+  // Native sparklines render in-cell, referencing data sheet ranges
+  const sparklineDefs = buildSparklineDefs(options.dashboard, prefetchedData);
+  const withSparklines = sparklineDefs.length > 0
+    ? await injectSparklines(withShapes, sparklineDefs)
+    : withShapes;
+
+  // Post-process: inject 3-arrow icon sets on change% columns in data tables
+  const iconSetDefs = buildIconSetDefs(options.dashboard);
+  const final = iconSetDefs.length > 0
+    ? await injectIconSets(withSparklines, iconSetDefs)
+    : withSparklines;
 
   return Buffer.from(final);
 }

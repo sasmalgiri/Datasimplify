@@ -7,6 +7,8 @@
  * BYOK: Your key, your data, direct connection. Server never touches CoinGecko.
  */
 
+import type { PowerQueryDefinition } from './powerQueryInjector';
+
 // CoinGecko API base URL
 const CG_API = 'https://api.coingecko.com/api/v3';
 
@@ -373,6 +375,30 @@ in
     Result`,
 };
 
+/** Column definitions for each PQ template output (must match M code aliases) */
+const PQ_COLUMNS = {
+  market: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h', 'Change7d', 'Change30d', 'ATH', 'ATHChange', 'LastUpdated'],
+  global: ['Metric', 'Value'],
+  fearGreed: ['Value', 'Classification', 'Timestamp', 'Date'],
+  ohlc: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Date'],
+  coin: ['Metric', 'Value'],
+  trending: ['ID', 'Name', 'Symbol', 'MarketCapRank', 'Score'],
+  watchlist: ['ID', 'Name', 'Symbol', 'Rank', 'Price', 'MarketCap', 'Volume24h', 'Change24h', 'Change7d', 'Change30d'],
+  gainers: ['Rank', 'ID', 'Name', 'Symbol', 'Price', 'Change24h', 'Volume24h', 'MarketCap'],
+  losers: ['Rank', 'ID', 'Name', 'Symbol', 'Price', 'Change24h', 'Volume24h', 'MarketCap'],
+  exchanges: ['Rank', 'Name', 'TrustScore', 'Volume24hBTC', 'Year', 'Country'],
+  technical: ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Date', 'Coin'],
+  defi: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h'],
+  derivatives: ['Market', 'Symbol', 'Price', 'PriceChange24h', 'FundingRate', 'OpenInterest', 'Volume24h'],
+  stablecoins: ['Rank', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'CirculatingSupply', 'PegDeviation'],
+  batch: ['ID', 'Price', 'MarketCap', 'Volume24h', 'Change24h'],
+  nfts: ['ID', 'Name', 'Symbol', 'ContractAddress', 'Platform'],
+  categoriesWithId: ['Rank', 'ID', 'Name', 'Symbol', 'Price', 'MarketCap', 'Volume24h', 'Change24h'],
+  categoriesNoId: ['ID', 'Name', 'MarketCap', 'MarketCapChange24h', 'Volume24h', 'Rank'],
+  companies: ['Name', 'Symbol', 'Country', 'TotalHoldings', 'TotalEntryValueUSD', 'TotalCurrentValueUSD', 'PercentOfTotalSupply', 'Rank'],
+  wallet: ['Chain', 'Address', 'Balance'],
+};
+
 // ============================================
 // REFRESH CONFIGURATIONS
 // ============================================
@@ -515,18 +541,20 @@ export function addPowerQuerySetupSheet(
 /**
  * Generates all Power Query codes for a dashboard type.
  * All queries use DIRECT CoinGecko API calls with user's own key.
+ * Each query includes column definitions for Load-to-Table injection.
  */
 export function generateQueriesForDashboard(
   dashboardType: string,
   coins: string[] = ['bitcoin', 'ethereum', 'solana']
-): { name: string; code: string; description: string }[] {
-  const queries: { name: string; code: string; description: string }[] = [];
+): PowerQueryDefinition[] {
+  const queries: PowerQueryDefinition[] = [];
 
   // Always include market data
   queries.push({
     name: 'CRK_Market',
     code: POWER_QUERY_TEMPLATES.market(100),
     description: 'Top 100 cryptocurrencies with price, market cap, and volume (direct from CoinGecko)',
+    columns: PQ_COLUMNS.market,
   });
 
   // Add based on dashboard type
@@ -536,16 +564,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global crypto market statistics',
+        columns: PQ_COLUMNS.global,
       });
       queries.push({
         name: 'CRK_Trending',
         code: POWER_QUERY_TEMPLATES.trending(),
         description: 'Currently trending cryptocurrencies',
+        columns: PQ_COLUMNS.trending,
       });
       queries.push({
         name: 'CRK_FearGreed',
         code: POWER_QUERY_TEMPLATES.fearGreed(30),
         description: 'Fear & Greed Index (30-day history)',
+        columns: PQ_COLUMNS.fearGreed,
       });
       break;
 
@@ -554,41 +585,49 @@ export function generateQueriesForDashboard(
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global crypto market statistics',
+        columns: PQ_COLUMNS.global,
       });
       queries.push({
         name: 'CRK_Trending',
         code: POWER_QUERY_TEMPLATES.trending(),
         description: 'Currently trending cryptocurrencies',
+        columns: PQ_COLUMNS.trending,
       });
       queries.push({
         name: 'CRK_FearGreed',
         code: POWER_QUERY_TEMPLATES.fearGreed(30),
         description: 'Fear & Greed Index (30-day history)',
+        columns: PQ_COLUMNS.fearGreed,
       });
       queries.push({
         name: 'CRK_Gainers',
         code: POWER_QUERY_TEMPLATES.gainers(20),
         description: 'Top 20 gainers by 24h change',
+        columns: PQ_COLUMNS.gainers,
       });
       queries.push({
         name: 'CRK_Losers',
         code: POWER_QUERY_TEMPLATES.losers(20),
         description: 'Top 20 losers by 24h change',
+        columns: PQ_COLUMNS.losers,
       });
       queries.push({
         name: 'CRK_DeFi',
         code: POWER_QUERY_TEMPLATES.defi(20),
         description: 'Top 20 DeFi protocols by market cap',
+        columns: PQ_COLUMNS.defi,
       });
       queries.push({
         name: 'CRK_Exchanges',
         code: POWER_QUERY_TEMPLATES.exchanges(),
         description: 'Top cryptocurrency exchanges',
+        columns: PQ_COLUMNS.exchanges,
       });
       queries.push({
         name: 'CRK_Stablecoins',
         code: POWER_QUERY_TEMPLATES.stablecoins(10),
         description: 'Top stablecoins with peg deviation',
+        columns: PQ_COLUMNS.stablecoins,
       });
       break;
 
@@ -597,6 +636,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_FearGreed',
         code: POWER_QUERY_TEMPLATES.fearGreed(90),
         description: 'Fear & Greed Index with 90-day history',
+        columns: PQ_COLUMNS.fearGreed,
       });
       break;
 
@@ -605,16 +645,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 30),
         description: 'Bitcoin OHLC candlestick data (30 days)',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_BTC_Technical',
         code: POWER_QUERY_TEMPLATES.technical('bitcoin', 30),
         description: 'Bitcoin OHLC data for technical analysis (add SMA/EMA/RSI with Excel formulas)',
+        columns: PQ_COLUMNS.technical,
       });
       queries.push({
         name: 'CRK_ETH_Technical',
         code: POWER_QUERY_TEMPLATES.technical('ethereum', 30),
         description: 'Ethereum OHLC data for technical analysis',
+        columns: PQ_COLUMNS.technical,
       });
       break;
 
@@ -623,16 +666,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 30),
         description: 'Bitcoin OHLC candlestick data (30 days)',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_Bitcoin',
         code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
         description: 'Bitcoin detailed information',
+        columns: PQ_COLUMNS.coin,
       });
       queries.push({
         name: 'CRK_BTC_Technical',
         code: POWER_QUERY_TEMPLATES.technical('bitcoin', 30),
         description: 'Bitcoin OHLC for technical analysis',
+        columns: PQ_COLUMNS.technical,
       });
       break;
 
@@ -641,11 +687,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_ETH_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('ethereum', 30),
         description: 'Ethereum OHLC candlestick data (30 days)',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_Ethereum',
         code: POWER_QUERY_TEMPLATES.coin('ethereum'),
         description: 'Ethereum detailed information',
+        columns: PQ_COLUMNS.coin,
       });
       break;
 
@@ -655,6 +703,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Watchlist',
         code: POWER_QUERY_TEMPLATES.watchlist(coins),
         description: `Your custom watchlist: ${coins.join(', ')}`,
+        columns: PQ_COLUMNS.watchlist,
       });
       break;
 
@@ -663,6 +712,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Exchanges',
         code: POWER_QUERY_TEMPLATES.exchanges(),
         description: 'Top cryptocurrency exchanges',
+        columns: PQ_COLUMNS.exchanges,
       });
       break;
 
@@ -671,11 +721,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_Gainers',
         code: POWER_QUERY_TEMPLATES.gainers(20),
         description: 'Top 20 gaining cryptocurrencies by 24h change',
+        columns: PQ_COLUMNS.gainers,
       });
       queries.push({
         name: 'CRK_Losers',
         code: POWER_QUERY_TEMPLATES.losers(20),
         description: 'Top 20 losing cryptocurrencies by 24h change',
+        columns: PQ_COLUMNS.losers,
       });
       break;
 
@@ -684,6 +736,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_DeFi',
         code: POWER_QUERY_TEMPLATES.defi(50),
         description: 'Top 50 DeFi protocols by market cap',
+        columns: PQ_COLUMNS.defi,
       });
       break;
 
@@ -692,6 +745,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Derivatives',
         code: POWER_QUERY_TEMPLATES.derivatives(50),
         description: 'Futures & derivatives with funding rates and open interest',
+        columns: PQ_COLUMNS.derivatives,
       });
       break;
 
@@ -700,6 +754,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Stablecoins',
         code: POWER_QUERY_TEMPLATES.stablecoins(20),
         description: 'Stablecoin market data with peg deviation tracking',
+        columns: PQ_COLUMNS.stablecoins,
       });
       break;
 
@@ -708,6 +763,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_NFTs',
         code: POWER_QUERY_TEMPLATES.nfts(50),
         description: 'NFT collections with contract addresses and platforms',
+        columns: PQ_COLUMNS.nfts,
       });
       break;
 
@@ -716,6 +772,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Categories',
         code: POWER_QUERY_TEMPLATES.categories(undefined, 50),
         description: 'All crypto categories with market cap and volume',
+        columns: PQ_COLUMNS.categoriesNoId,
       });
       break;
 
@@ -724,6 +781,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Trending',
         code: POWER_QUERY_TEMPLATES.trending(),
         description: 'Currently trending cryptocurrencies',
+        columns: PQ_COLUMNS.trending,
       });
       break;
 
@@ -737,6 +795,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Watchlist',
         code: POWER_QUERY_TEMPLATES.watchlist(coins.slice(0, 20)),
         description: 'Coins for correlation analysis',
+        columns: PQ_COLUMNS.watchlist,
       });
       break;
 
@@ -745,6 +804,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Wallet',
         code: POWER_QUERY_TEMPLATES.wallet('YOUR_WALLET_ADDRESS', 'ethereum'),
         description: 'Wallet balance tracker - replace YOUR_WALLET_ADDRESS with your address',
+        columns: PQ_COLUMNS.wallet,
       });
       break;
 
@@ -753,11 +813,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_WhaleCoins',
         code: POWER_QUERY_TEMPLATES.market(50),
         description: 'Top 50 coins by market cap (whale-watched assets)',
+        columns: PQ_COLUMNS.market,
       });
       queries.push({
         name: 'CRK_Companies',
         code: POWER_QUERY_TEMPLATES.companies('bitcoin'),
         description: 'Public companies holding Bitcoin (whale tracker)',
+        columns: PQ_COLUMNS.companies,
       });
       break;
 
@@ -766,16 +828,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_Bitcoin_OnChain',
         code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
         description: 'Bitcoin on-chain metrics (supply, ATH, market data)',
+        columns: PQ_COLUMNS.coin,
       });
       queries.push({
         name: 'CRK_Ethereum_OnChain',
         code: POWER_QUERY_TEMPLATES.coin('ethereum'),
         description: 'Ethereum on-chain metrics',
+        columns: PQ_COLUMNS.coin,
       });
       queries.push({
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global crypto market statistics',
+        columns: PQ_COLUMNS.global,
       });
       break;
 
@@ -784,16 +849,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_Companies',
         code: POWER_QUERY_TEMPLATES.companies('bitcoin'),
         description: 'Public companies/ETFs holding Bitcoin',
+        columns: PQ_COLUMNS.companies,
       });
       queries.push({
         name: 'CRK_ETH_Companies',
         code: POWER_QUERY_TEMPLATES.companies('ethereum'),
         description: 'Public companies/ETFs holding Ethereum',
+        columns: PQ_COLUMNS.companies,
       });
       queries.push({
         name: 'CRK_BTC_Price',
         code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
         description: 'Bitcoin price and market data',
+        columns: PQ_COLUMNS.coin,
       });
       break;
 
@@ -806,6 +874,7 @@ export function generateQueriesForDashboard(
           'the-open-network', 'tron', 'algorand', 'fantom', 'hedera-hashgraph',
         ]),
         description: 'Top Layer 1 blockchains side-by-side comparison',
+        columns: PQ_COLUMNS.watchlist,
       });
       break;
 
@@ -814,6 +883,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_L2_Coins',
         code: POWER_QUERY_TEMPLATES.categories('layer-2', 50),
         description: 'Layer 2 scaling solutions (Arbitrum, Optimism, Polygon, etc.)',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -822,11 +892,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_MemeCoins',
         code: POWER_QUERY_TEMPLATES.categories('meme-token', 50),
         description: 'Top 50 meme coins by market cap',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       queries.push({
         name: 'CRK_Trending',
         code: POWER_QUERY_TEMPLATES.trending(),
         description: 'Currently trending coins (often memes)',
+        columns: PQ_COLUMNS.trending,
       });
       break;
 
@@ -835,11 +907,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_AI_Tokens',
         code: POWER_QUERY_TEMPLATES.categories('artificial-intelligence', 30),
         description: 'Top AI tokens by market cap',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       queries.push({
         name: 'CRK_Gaming_Tokens',
         code: POWER_QUERY_TEMPLATES.categories('gaming', 30),
         description: 'Top gaming/GameFi tokens by market cap',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -848,11 +922,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 365),
         description: 'Bitcoin 1-year OHLC data for DCA/profit calculations',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_TopCoins',
         code: POWER_QUERY_TEMPLATES.batch('bitcoin,ethereum,solana,cardano,polkadot'),
         description: 'Current prices for investment calculators',
+        columns: PQ_COLUMNS.batch,
       });
       break;
 
@@ -861,16 +937,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 90),
         description: 'Bitcoin 90-day OHLC for volatility analysis',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_ETH_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('ethereum', 90),
         description: 'Ethereum 90-day OHLC for volatility analysis',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_SOL_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('solana', 90),
         description: 'Solana 90-day OHLC for volatility analysis',
+        columns: PQ_COLUMNS.ohlc,
       });
       break;
 
@@ -879,6 +958,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_RWA_Tokens',
         code: POWER_QUERY_TEMPLATES.categories('real-world-assets-rwa', 50),
         description: 'Real World Asset tokens by market cap',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -887,11 +967,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_Derivatives',
         code: POWER_QUERY_TEMPLATES.derivatives(50),
         description: 'Derivatives data with open interest and funding rates',
+        columns: PQ_COLUMNS.derivatives,
       });
       queries.push({
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 30),
         description: 'Bitcoin 30-day OHLC for liquidation zone analysis',
+        columns: PQ_COLUMNS.ohlc,
       });
       break;
 
@@ -900,6 +982,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Derivatives',
         code: POWER_QUERY_TEMPLATES.derivatives(100),
         description: 'Perpetual futures with funding rates and open interest',
+        columns: PQ_COLUMNS.derivatives,
       });
       break;
 
@@ -908,11 +991,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_AltSeason',
         code: POWER_QUERY_TEMPLATES.market(100),
         description: 'Top 100 coins — compare altcoin vs BTC performance',
+        columns: PQ_COLUMNS.market,
       });
       queries.push({
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global stats with BTC dominance for alt season index',
+        columns: PQ_COLUMNS.global,
       });
       break;
 
@@ -924,11 +1009,13 @@ export function generateQueriesForDashboard(
           'sei-network', 'worldcoin-wld', 'starknet', 'layerzero', 'jito-governance-token',
         ]),
         description: 'Tokens with upcoming unlock events',
+        columns: PQ_COLUMNS.watchlist,
       });
       queries.push({
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global market context for unlock impact',
+        columns: PQ_COLUMNS.global,
       });
       break;
 
@@ -937,6 +1024,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_StakingCoins',
         code: POWER_QUERY_TEMPLATES.categories('proof-of-stake', 50),
         description: 'Proof-of-Stake coins for staking yield comparison',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -945,16 +1033,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_Trending',
         code: POWER_QUERY_TEMPLATES.trending(),
         description: 'Currently trending coins (social signal)',
+        columns: PQ_COLUMNS.trending,
       });
       queries.push({
         name: 'CRK_FearGreed',
         code: POWER_QUERY_TEMPLATES.fearGreed(30),
         description: 'Fear & Greed sentiment index (30-day)',
+        columns: PQ_COLUMNS.fearGreed,
       });
       queries.push({
         name: 'CRK_TopMovers',
         code: POWER_QUERY_TEMPLATES.gainers(20),
         description: 'Top gainers (social momentum indicator)',
+        columns: PQ_COLUMNS.gainers,
       });
       break;
 
@@ -966,11 +1057,13 @@ export function generateQueriesForDashboard(
           'near', 'internet-computer', 'chainlink', 'filecoin', 'aptos',
         ]),
         description: 'Top developer-active projects by market data',
+        columns: PQ_COLUMNS.watchlist,
       });
       queries.push({
         name: 'CRK_ETH_Detail',
         code: POWER_QUERY_TEMPLATES.coin('ethereum'),
         description: 'Ethereum detailed info (developer data reference)',
+        columns: PQ_COLUMNS.coin,
       });
       break;
 
@@ -979,11 +1072,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_Exchanges',
         code: POWER_QUERY_TEMPLATES.exchanges(),
         description: 'Exchange volumes and trust scores',
+        columns: PQ_COLUMNS.exchanges,
       });
       queries.push({
         name: 'CRK_BTC_Detail',
         code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
         description: 'Bitcoin supply data (circulating vs total)',
+        columns: PQ_COLUMNS.coin,
       });
       break;
 
@@ -992,11 +1087,13 @@ export function generateQueriesForDashboard(
         name: 'CRK_DeFi',
         code: POWER_QUERY_TEMPLATES.defi(50),
         description: 'Top 50 DeFi protocols for yield analysis',
+        columns: PQ_COLUMNS.defi,
       });
       queries.push({
         name: 'CRK_Stablecoins',
         code: POWER_QUERY_TEMPLATES.stablecoins(10),
         description: 'Top stablecoins (yield farming base pairs)',
+        columns: PQ_COLUMNS.stablecoins,
       });
       break;
 
@@ -1005,6 +1102,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_MetaverseTokens',
         code: POWER_QUERY_TEMPLATES.categories('metaverse', 50),
         description: 'Metaverse and virtual world tokens',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -1013,6 +1111,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_PrivacyCoins',
         code: POWER_QUERY_TEMPLATES.categories('privacy-coins', 30),
         description: 'Privacy-focused cryptocurrencies',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -1021,16 +1120,19 @@ export function generateQueriesForDashboard(
         name: 'CRK_BTC_Detail',
         code: POWER_QUERY_TEMPLATES.coin('bitcoin'),
         description: 'Bitcoin details (hash rate, supply, difficulty reference)',
+        columns: PQ_COLUMNS.coin,
       });
       queries.push({
         name: 'CRK_BTC_OHLC',
         code: POWER_QUERY_TEMPLATES.ohlc('bitcoin', 90),
         description: 'Bitcoin 90-day OHLC for profitability analysis',
+        columns: PQ_COLUMNS.ohlc,
       });
       queries.push({
         name: 'CRK_PoW_Coins',
         code: POWER_QUERY_TEMPLATES.categories('proof-of-work', 20),
         description: 'Proof-of-Work mineable coins',
+        columns: PQ_COLUMNS.categoriesWithId,
       });
       break;
 
@@ -1040,6 +1142,7 @@ export function generateQueriesForDashboard(
         name: 'CRK_Global',
         code: POWER_QUERY_TEMPLATES.global(),
         description: 'Global crypto market statistics',
+        columns: PQ_COLUMNS.global,
       });
       break;
   }

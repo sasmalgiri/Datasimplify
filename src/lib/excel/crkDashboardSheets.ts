@@ -509,6 +509,163 @@ function buildPerCoinDashboard(
 }
 
 // ============================================
+// VISUAL SHEET NAME MAPPING (for shape injector)
+// ============================================
+
+/**
+ * Maps each dashboard type to its primary visual sheet name.
+ * Used by the shape injector to place rounded rectangle KPI overlays.
+ */
+export const VISUAL_SHEET_NAMES: Partial<Record<DashboardType, string>> = {
+  'market-overview': 'CRK Dashboard',
+  'screener': 'CRK Screener',
+  'portfolio-tracker': 'CRK Portfolio',
+  'gainers-losers': 'CRK Gainers',
+  'trending': 'CRK Trending',
+  'fear-greed': 'CRK Fear & Greed',
+  'bitcoin-dashboard': 'CRK Bitcoin',
+  'ethereum-dashboard': 'CRK Ethereum',
+  'defi-dashboard': 'CRK DeFi',
+  'derivatives': 'CRK Derivatives',
+  'funding-rates': 'CRK Derivatives',
+  'stablecoins': 'CRK Stablecoins',
+  'exchanges': 'CRK Exchanges',
+  'nft-tracker': 'CRK NFTs',
+  'categories': 'CRK Categories',
+  'heatmap': 'CRK Categories',
+  'etf-tracker': 'CRK ETFs',
+  'layer1-compare': 'CRK Layer Compare',
+  'layer2-compare': 'CRK Layer Compare',
+  'meme-coins': 'CRK Meme Coins',
+  'ai-gaming': 'CRK AI Tokens',
+  'defi-yields': 'CRK DeFi Yields',
+  'liquidations': 'CRK Liquidations',
+  'altcoin-season': 'CRK Altcoin Season',
+  'staking-yields': 'CRK Staking',
+  'social-sentiment': 'CRK Sentiment',
+  'mining-calc': 'CRK Mining',
+  'exchange-reserves': 'CRK Exchanges',
+  'technical-analysis': 'CRK Technical',
+  'correlation': 'CRK Prices',
+  'on-chain': 'CRK On-Chain',
+  'whale-tracker': 'CRK On-Chain',
+  'token-unlocks': 'CRK Token Data',
+  'custom': 'CRK Watchlist',
+  'volatility': 'CRK Volatility',
+  'calculator': 'CRK Volatility',
+  'rwa': 'CRK Tokens',
+  'metaverse': 'CRK Tokens',
+  'privacy-coins': 'CRK Tokens',
+  'dev-activity': 'CRK Dev Activity',
+};
+
+// ============================================
+// NAVIGATION DASHBOARD (Index Sheet)
+// ============================================
+
+/** Navigation button metadata for the Index sheet */
+interface NavButton {
+  label: string;
+  description: string;
+  targetSheet: string;
+}
+
+/**
+ * Adds a professional navigation/index sheet as the first dashboard sheet.
+ * Creates a dark-themed hub with a grid layout. The shape injector
+ * overlays rounded rectangle buttons for each dashboard sheet.
+ *
+ * Returns the list of navigation buttons so masterGenerator can pass them
+ * to the shapeInjector for DrawingML rendering.
+ */
+export function addNavigationSheet(
+  workbook: ExcelJS.Workbook,
+  dashboard: DashboardType,
+): NavButton[] {
+  const { sheet, theme } = initDarkSheet(workbook, 'CRK Navigation', dashboard,
+    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+
+  addHeaderBar(sheet, 2, 'CRYPTOREPORTKIT', theme, 'Navigation Hub \u2022 Click any card to jump to that dashboard');
+
+  // Subtitle row
+  const subRow = sheet.getRow(4);
+  subRow.getCell(2).value = 'Paste your CoinGecko API key in Settings \u2192 Click Data \u2192 Refresh All';
+  subRow.getCell(2).font = { size: 10, color: { argb: theme.muted }, italic: true };
+  subRow.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+
+  // Collect sheets that exist in the workbook (exclude Settings, PQ, Docs sheets)
+  const navButtons: NavButton[] = [];
+  const sheetName = VISUAL_SHEET_NAMES[dashboard];
+  if (sheetName) {
+    navButtons.push({ label: sheetName.replace('CRK ', ''), description: 'Main dashboard', targetSheet: sheetName });
+  }
+  const dataSheet = sheetName ? sheetName + ' Data' : '';
+  if (dataSheet) {
+    navButtons.push({ label: 'Data Table', description: 'Raw data', targetSheet: dataSheet });
+  }
+
+  // Check for common sub-sheets based on dashboard type
+  const subSheets: Record<string, string[]> = {
+    'market-overview': ['CRK Trending'],
+    'screener': ['CRK Gainers', 'CRK Losers'],
+    'gainers-losers': ['CRK Losers'],
+    'bitcoin-dashboard': ['CRK Bitcoin Data'],
+    'ethereum-dashboard': ['CRK Ethereum Data'],
+    'fear-greed': ['CRK Fear Greed Data'],
+    'defi-dashboard': ['CRK DeFi Data'],
+    'etf-tracker': ['CRK ETFs Data'],
+    'social-sentiment': ['CRK Sentiment Data'],
+    'portfolio-tracker': ['CRK Portfolio Data', 'CRK Tax'],
+  };
+  const extras = subSheets[dashboard] || [];
+  for (const sub of extras) {
+    navButtons.push({ label: sub.replace('CRK ', ''), description: 'Sub-sheet', targetSheet: sub });
+  }
+
+  // Always add Settings and PQ Setup links
+  navButtons.push({ label: 'Settings', description: 'API Key', targetSheet: 'Settings' });
+  navButtons.push({ label: 'PQ Setup', description: 'Power Query', targetSheet: 'PQ Setup' });
+
+  // Place button labels in cells (shape injector will overlay rounded rectangles)
+  // Layout: 3 buttons per row, starting at row 6
+  const cols = [2, 5, 8]; // B, E, H
+  let row = 6;
+  let colIdx = 0;
+
+  for (const btn of navButtons) {
+    const c = cols[colIdx];
+    // Cell-based fallback label
+    sheet.getCell(row, c).value = btn.label;
+    sheet.getCell(row, c).font = { bold: true, size: 12, color: { argb: theme.text } };
+    sheet.getCell(row, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+    sheet.getCell(row + 1, c).value = btn.description;
+    sheet.getCell(row + 1, c).font = { size: 9, color: { argb: theme.muted } };
+    sheet.getCell(row + 1, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+
+    // Fill card area
+    for (let r = row; r <= row + 2; r++) {
+      for (let cc = c; cc <= c + 2; cc++) {
+        sheet.getCell(r, cc).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+      }
+    }
+
+    colIdx++;
+    if (colIdx >= 3) {
+      colIdx = 0;
+      row += 4; // 3 rows per button + 1 row gap
+    }
+  }
+
+  // Footer attribution
+  const footerRow = row + (colIdx > 0 ? 4 : 0) + 1;
+  sheet.getCell(footerRow, 2).value = 'Data provided by CoinGecko \u2022 cryptoreportkit.com';
+  sheet.getCell(footerRow, 2).font = { size: 9, color: { argb: theme.muted }, italic: true };
+  sheet.getCell(footerRow, 2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+
+  return navButtons;
+}
+
+// ============================================
 // MAIN ENTRY POINT
 // ============================================
 
