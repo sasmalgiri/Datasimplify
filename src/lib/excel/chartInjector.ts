@@ -82,6 +82,8 @@ export async function injectCharts(
     }
 
     let chartCounter = 1;
+    let drawingCounter = 1; // Sequential drawing numbering (not tied to sheet index)
+    const drawingMap = new Map<number, number>(); // sheetIdx → drawingNum
 
     for (const [sheetName, sheetCharts] of chartsBySheet) {
       const sheetIdx = sheetMap.get(sheetName);
@@ -91,6 +93,8 @@ export async function injectCharts(
       }
 
       const chartIds: number[] = [];
+      const drawingNum = drawingCounter++;
+      drawingMap.set(sheetIdx, drawingNum);
 
       // Create chart XML for each chart on this sheet
       for (const chart of sheetCharts) {
@@ -100,20 +104,20 @@ export async function injectCharts(
         chartCounter++;
       }
 
-      // Create or update drawing for this sheet
+      // Create drawing with sequential numbering (drawing1.xml, drawing2.xml, ...)
       const drawingXml = buildDrawingXml(sheetCharts, chartIds);
-      zip.file(`xl/drawings/drawing${sheetIdx}.xml`, drawingXml);
+      zip.file(`xl/drawings/drawing${drawingNum}.xml`, drawingXml);
 
       // Create drawing rels (links drawing → charts)
       const drawingRels = buildDrawingRels(chartIds);
-      zip.file(`xl/drawings/_rels/drawing${sheetIdx}.xml.rels`, drawingRels);
+      zip.file(`xl/drawings/_rels/drawing${drawingNum}.xml.rels`, drawingRels);
 
       // Link sheet → drawing
-      await linkSheetToDrawing(zip, sheetIdx);
+      await linkSheetToDrawing(zip, sheetIdx, drawingNum);
     }
 
     // Update [Content_Types].xml
-    await updateContentTypesForCharts(zip, chartCounter - 1, sheetMap, chartsBySheet);
+    await updateContentTypesForCharts(zip, chartCounter - 1, drawingMap);
 
     const result = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
     return Buffer.from(result);
@@ -509,7 +513,7 @@ ${rels}
 /**
  * Links a worksheet to its drawing via sheet rels.
  */
-async function linkSheetToDrawing(zip: JSZip, sheetIdx: number): Promise<void> {
+async function linkSheetToDrawing(zip: JSZip, sheetIdx: number, drawingNum: number): Promise<void> {
   const relsPath = `xl/worksheets/_rels/sheet${sheetIdx}.xml.rels`;
   let xml: string;
   const existingFile = zip.file(relsPath);
@@ -528,12 +532,12 @@ async function linkSheetToDrawing(zip: JSZip, sheetIdx: number): Promise<void> {
       if (num > maxId) maxId = num;
     }
 
-    const drawingRel = `  <Relationship Id="rId${maxId + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${sheetIdx}.xml"/>`;
+    const drawingRel = `  <Relationship Id="rId${maxId + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${drawingNum}.xml"/>`;
     xml = xml.replace('</Relationships>', `${drawingRel}\n</Relationships>`);
   } else {
     xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${sheetIdx}.xml"/>
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing${drawingNum}.xml"/>
 </Relationships>`;
   }
 
@@ -571,8 +575,7 @@ async function linkSheetToDrawing(zip: JSZip, sheetIdx: number): Promise<void> {
 async function updateContentTypesForCharts(
   zip: JSZip,
   totalCharts: number,
-  sheetMap: Map<string, number>,
-  chartsBySheet: Map<string, ChartDefinition[]>,
+  drawingMap: Map<number, number>,
 ): Promise<void> {
   const ctFile = zip.file('[Content_Types].xml');
   if (!ctFile) return;
@@ -587,12 +590,10 @@ async function updateContentTypesForCharts(
     }
   }
 
-  // Add drawing overrides
-  for (const [sheetName] of chartsBySheet) {
-    const sheetIdx = sheetMap.get(sheetName);
-    if (sheetIdx === undefined) continue;
-    const override = `<Override PartName="/xl/drawings/drawing${sheetIdx}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`;
-    if (!xml.includes(`/xl/drawings/drawing${sheetIdx}.xml`)) {
+  // Add drawing overrides (sequential numbering)
+  for (const [, drawingNum] of drawingMap) {
+    const override = `<Override PartName="/xl/drawings/drawing${drawingNum}.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>`;
+    if (!xml.includes(`/xl/drawings/drawing${drawingNum}.xml`)) {
       xml = xml.replace('</Types>', `  ${override}\n</Types>`);
     }
   }
