@@ -1,7 +1,7 @@
 'use client';
 
 import { useWizard } from '../WizardContext';
-import { CheckCircle, FileSpreadsheet, Key, ExternalLink, PartyPopper, BookOpen } from 'lucide-react';
+import { FileSpreadsheet, RefreshCw, ExternalLink, PartyPopper, BookOpen, Key } from 'lucide-react';
 import { BYOK_HEADING, BYOK_PRIVACY_FULL } from '@/lib/constants/byokMessages';
 
 interface SuccessStepProps {
@@ -33,59 +33,33 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
           {/* Next Steps */}
           <div className="text-left mb-8">
             <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-4 text-center">
-              Complete These Steps
+              Just Two Steps
             </h3>
             <div className="space-y-4">
-              {/* Step 1: Open in Excel */}
+              {/* Step 1: Open in Excel Desktop */}
               <div className="flex items-start gap-4 p-4 rounded-lg border bg-gray-800/50 border-gray-700">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 bg-emerald-500/20">
                   <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div className="flex-1">
                   <span className="text-xs font-medium text-emerald-400">Step 1</span>
-                  <h4 className="font-medium text-white">Open in Excel</h4>
-                  <p className="text-sm text-gray-400">Double-click the downloaded file to open it</p>
-                </div>
-              </div>
-
-              {/* Step 2: Get CoinGecko API Key */}
-              <div className="flex items-start gap-4 p-4 rounded-lg border bg-amber-500/10 border-amber-500/30">
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 bg-amber-500/20">
-                  <Key className="w-5 h-5 text-amber-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-amber-400">Step 2</span>
-                    <span className="text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded">
-                      Required
-                    </span>
-                  </div>
-                  <h4 className="font-medium text-white">Get Your Free CoinGecko API Key</h4>
-                  <p className="text-sm text-gray-400 mb-2">
-                    Sign up at CoinGecko (free, no credit card) and get your API key
+                  <h4 className="font-medium text-white">Open in Excel Desktop</h4>
+                  <p className="text-sm text-gray-400">
+                    Double-click the downloaded file. Data is already populated with live market data.
                   </p>
-                  <a
-                    href="https://www.coingecko.com/en/api/pricing"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-sm text-amber-400 hover:text-amber-300"
-                  >
-                    Get Free API Key
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
                 </div>
               </div>
 
-              {/* Step 3: Add Key to Excel */}
+              {/* Step 2: Refresh Anytime */}
               <div className="flex items-start gap-4 p-4 rounded-lg border bg-gray-800/50 border-gray-700">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0 bg-emerald-500/20">
-                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  <RefreshCw className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div className="flex-1">
-                  <span className="text-xs font-medium text-emerald-400">Step 3</span>
-                  <h4 className="font-medium text-white">Add Your API Key in Excel</h4>
+                  <span className="text-xs font-medium text-emerald-400">Step 2</span>
+                  <h4 className="font-medium text-white">Refresh Anytime</h4>
                   <p className="text-sm text-gray-400">
-                    Paste your API key in the &quot;Settings&quot; sheet (cell B2) and refresh the data
+                    Your API key is embedded in the Settings sheet. Go to Data tab and click Refresh All for latest data.
                   </p>
                 </div>
               </div>

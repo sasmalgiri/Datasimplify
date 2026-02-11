@@ -16,11 +16,11 @@ export function WizardNav({
   nextLabel = 'Continue',
   showSkip = false,
 }: WizardNavProps) {
-  const { state, dispatch, canGoNext, canGoPrev } = useWizard();
+  const { state, dispatch, canGoNext, canGoPrev, totalSteps } = useWizard();
   const { currentStep, isDownloading } = state;
 
   // Don't show navigation on success step
-  if (currentStep === 7) {
+  if (currentStep >= totalSteps) {
     return null;
   }
 

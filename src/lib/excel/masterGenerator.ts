@@ -436,14 +436,23 @@ export function getDashboardTheme(dashboard: DashboardType, chartStyle?: ChartSt
 // DATA FETCHING
 // ============================================
 
-async function fetchWithTimeout(url: string, timeout = 10000): Promise<any> {
+function getCoinGeckoConfig(apiKey?: string) {
+  if (!apiKey) return { baseUrl: 'https://api.coingecko.com/api/v3', headers: {} as Record<string, string> };
+  const isPro = apiKey.startsWith('CG-') && apiKey.length > 30;
+  return {
+    baseUrl: isPro ? 'https://pro-api.coingecko.com/api/v3' : 'https://api.coingecko.com/api/v3',
+    headers: { [isPro ? 'x-cg-pro-api-key' : 'x-cg-demo-api-key']: apiKey },
+  };
+}
+
+async function fetchWithTimeout(url: string, timeout = 10000, extraHeaders?: Record<string, string>): Promise<any> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'Accept': 'application/json' }
+      headers: { 'Accept': 'application/json', ...extraHeaders }
     });
     clearTimeout(id);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -456,6 +465,7 @@ async function fetchWithTimeout(url: string, timeout = 10000): Promise<any> {
 
 export async function fetchAllData(options: GenerateOptions) {
   const { limit = 100, days = 30 } = options;
+  const { baseUrl, headers } = getCoinGeckoConfig(options.apiKey);
 
   // Fetch all data in parallel
   const [
@@ -469,15 +479,15 @@ export async function fetchAllData(options: GenerateOptions) {
     categoriesData,
     nftData,
   ] = await Promise.all([
-    fetchWithTimeout(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=1h,24h,7d,30d`),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/global'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/search/trending'),
+    fetchWithTimeout(`${baseUrl}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=1h,24h,7d,30d`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/global`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/search/trending`, 10000, headers),
     fetchWithTimeout('https://api.alternative.me/fng/?limit=90'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/global/decentralized_finance_defi'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/derivatives'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/exchanges?per_page=50'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/coins/categories'),
-    fetchWithTimeout('https://api.coingecko.com/api/v3/nfts/list?per_page=50'),
+    fetchWithTimeout(`${baseUrl}/global/decentralized_finance_defi`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/derivatives`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/exchanges?per_page=50`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/coins/categories`, 10000, headers),
+    fetchWithTimeout(`${baseUrl}/nfts/list?per_page=50`, 10000, headers),
   ]);
 
   return {
@@ -1204,9 +1214,10 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
       const ohlcCoins = options.dashboard === 'ethereum-dashboard'
         ? ['ethereum'] : ['bitcoin'];
       if (options.dashboard === 'technical-analysis') ohlcCoins.push('ethereum');
+      const cgConfig = getCoinGeckoConfig(options.apiKey);
       const ohlcResults = await Promise.all(
         ohlcCoins.map(coin =>
-          fetchWithTimeout(`https://api.coingecko.com/api/v3/coins/${coin}/ohlc?vs_currency=usd&days=${options.days || 30}`)
+          fetchWithTimeout(`${cgConfig.baseUrl}/coins/${coin}/ohlc?vs_currency=usd&days=${options.days || 30}`, 10000, cgConfig.headers)
         )
       );
       prefetchedData.ohlc = {};

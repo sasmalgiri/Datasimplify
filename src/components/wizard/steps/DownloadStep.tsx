@@ -1,9 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useWizard } from '../WizardContext';
 import { FileSpreadsheet, Download, Check, Loader2, AlertCircle } from 'lucide-react';
 import { CONTENT_OPTIONS, generateDownloadFilename } from '@/lib/constants/contentOptions';
+
+const PROGRESS_PHASES = [
+  'Fetching market data...',
+  'Building dashboards...',
+  'Generating charts...',
+  'Preparing download...',
+];
 
 // Map coin IDs to symbols for the API
 const COIN_ID_TO_SYMBOL: Record<string, string> = {
@@ -27,6 +34,15 @@ const COIN_ID_TO_SYMBOL: Record<string, string> = {
 export function DownloadStep() {
   const { state, dispatch } = useWizard();
   const [error, setError] = useState<string | null>(null);
+  const [progressPhase, setProgressPhase] = useState(0);
+  const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clean up progress timer on unmount
+  useEffect(() => {
+    return () => {
+      if (phaseTimerRef.current) clearInterval(phaseTimerRef.current);
+    };
+  }, []);
 
   // Convert coin IDs to symbols for the API
   const coinSymbols = useMemo(() => {
@@ -36,6 +52,12 @@ export function DownloadStep() {
   const handleDownload = async () => {
     dispatch({ type: 'SET_DOWNLOADING', downloading: true });
     setError(null);
+    setProgressPhase(0);
+
+    // Start phased progress messages
+    phaseTimerRef.current = setInterval(() => {
+      setProgressPhase(p => Math.min(p + 1, PROGRESS_PHASES.length - 1));
+    }, 3000);
 
     try {
       const response = await fetch('/api/templates/download', {
@@ -43,16 +65,16 @@ export function DownloadStep() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           templateType: state.templateId,
-          coins: coinSymbols, // Use converted symbols like BTC, ETH
+          coins: coinSymbols,
           timeframe: '30d',
           currency: 'usd',
           contentType: state.contentType,
           format: state.downloadFormat,
           email: state.email,
+          apiKey: state.apiKey,
           customizations: {
             metrics: state.selectedMetrics,
             layout: state.dashboardLayout,
-            // Include charts/dashboard when layout is 'charts' or 'detailed'
             includeCharts: state.dashboardLayout === 'charts' || state.dashboardLayout === 'detailed',
           },
         }),
@@ -81,6 +103,10 @@ export function DownloadStep() {
       console.error('[DownloadStep] Error:', err);
       setError(err instanceof Error ? err.message : 'Download failed. Please try again.');
     } finally {
+      if (phaseTimerRef.current) {
+        clearInterval(phaseTimerRef.current);
+        phaseTimerRef.current = null;
+      }
       dispatch({ type: 'SET_DOWNLOADING', downloading: false });
     }
   };
@@ -130,9 +156,13 @@ export function DownloadStep() {
                 <span className="text-white capitalize">{state.dashboardLayout}</span>
               </div>
             </div>
-            <p className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-500">
-              Your CoinGecko API key stays in your Excel file. See the Success page for setup instructions.
-            </p>
+            {state.apiKeyValidated && (
+              <div className="mt-3 pt-3 border-t border-gray-700">
+                <p className="text-xs text-emerald-400">
+                  Your {state.apiKeyType === 'pro' ? 'Pro' : 'Demo'} API key will be embedded. Data will be pre-populated.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Content Type Selection */}
@@ -226,7 +256,7 @@ export function DownloadStep() {
             {state.isDownloading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Generating Template...
+                {PROGRESS_PHASES[progressPhase]}
               </>
             ) : (
               <>

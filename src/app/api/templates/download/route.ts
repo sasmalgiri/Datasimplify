@@ -295,14 +295,16 @@ export async function POST(request: Request) {
     };
     const refreshInterval = refreshMap[body.customizations?.refreshFrequency] || 'hourly';
 
-    // Generate BYOK template (no server-side data fetch)
-    // Template has Power Query M code calling CoinGecko directly with user's key
+    // Extract user's API key if provided (BYOK — used for data fetch, never logged/stored)
+    const userApiKey = typeof body.apiKey === 'string' ? body.apiKey.trim() : undefined;
+
     console.log('[Templates] Generating BYOK template:', {
       dashboard,
       coins: coinIds.length,
       days,
       email,
       ip: clientIp,
+      hasUserApiKey: !!userApiKey,
     });
 
     const buffer = await generateBYOKExcel({
@@ -314,6 +316,7 @@ export async function POST(request: Request) {
       outputMode: 'live',
       refreshInterval,
       chartStyle: 'professional',
+      apiKey: userApiKey,
     });
 
     // Generate filename

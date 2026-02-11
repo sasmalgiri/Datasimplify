@@ -17,7 +17,12 @@ export interface WizardState {
   selectedMetrics: string[];
   dashboardLayout: 'compact' | 'detailed' | 'charts';
 
-  // Step 4: Download
+  // Step 4: API Key
+  apiKey: string;
+  apiKeyValidated: boolean;
+  apiKeyType: 'demo' | 'pro' | null;
+
+  // Step 5: Download
   downloadFormat: 'xlsx' | 'xlsm';
   contentType: 'addin' | 'native_charts' | 'formulas_only';
   isDownloading: boolean;
@@ -34,13 +39,16 @@ export type WizardAction =
   | { type: 'SET_COINS'; coins: string[] }
   | { type: 'SET_METRICS'; metrics: string[] }
   | { type: 'SET_LAYOUT'; layout: 'compact' | 'detailed' | 'charts' }
+  | { type: 'SET_API_KEY'; apiKey: string }
+  | { type: 'SET_API_KEY_VALIDATED'; validated: boolean }
+  | { type: 'SET_API_KEY_TYPE'; keyType: 'demo' | 'pro' | null }
   | { type: 'SET_DOWNLOAD_FORMAT'; format: 'xlsx' | 'xlsm' }
   | { type: 'SET_CONTENT_TYPE'; contentType: 'addin' | 'native_charts' | 'formulas_only' }
   | { type: 'SET_DOWNLOADING'; downloading: boolean }
   | { type: 'SET_DOWNLOAD_COMPLETE'; complete: boolean }
   | { type: 'RESET' };
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 const initialState: WizardState = {
   currentStep: 1,
@@ -52,6 +60,9 @@ const initialState: WizardState = {
   selectedCoins: ['bitcoin', 'ethereum'],
   selectedMetrics: ['price', 'market_cap', 'volume_24h', 'change_24h'],
   dashboardLayout: 'detailed',
+  apiKey: '',
+  apiKeyValidated: false,
+  apiKeyType: null,
   downloadFormat: 'xlsx',
   contentType: 'native_charts',
   isDownloading: false,
@@ -78,6 +89,12 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return { ...state, selectedMetrics: action.metrics };
     case 'SET_LAYOUT':
       return { ...state, dashboardLayout: action.layout };
+    case 'SET_API_KEY':
+      return { ...state, apiKey: action.apiKey, apiKeyValidated: false, apiKeyType: null };
+    case 'SET_API_KEY_VALIDATED':
+      return { ...state, apiKeyValidated: action.validated };
+    case 'SET_API_KEY_TYPE':
+      return { ...state, apiKeyType: action.keyType };
     case 'SET_DOWNLOAD_FORMAT':
       return { ...state, downloadFormat: action.format };
     case 'SET_CONTENT_TYPE':
@@ -125,7 +142,7 @@ export function WizardProvider({
   });
 
   // Determine if user can proceed to next step
-  // Step order: Welcome → Email → Configure → Download → Success
+  // Step order: Welcome → Email → Configure → API Key → Download → Success
   const canGoNext = (() => {
     switch (state.currentStep) {
       case 1: // Welcome
@@ -134,16 +151,18 @@ export function WizardProvider({
         return state.isAuthenticated && state.email.includes('@');
       case 3: // Configure
         return state.selectedCoins.length > 0 && state.selectedMetrics.length > 0;
-      case 4: // Download
+      case 4: // API Key
+        return state.apiKeyValidated && state.apiKey.length > 0;
+      case 5: // Download
         return !state.isDownloading;
-      case 5: // Success
+      case 6: // Success
         return false;
       default:
         return true;
     }
   })();
 
-  const canGoPrev = state.currentStep > 1 && state.currentStep < 5;
+  const canGoPrev = state.currentStep > 1 && state.currentStep < 6;
 
   return (
     <WizardContext.Provider value={{ state, dispatch, canGoNext, canGoPrev, totalSteps: TOTAL_STEPS }}>
@@ -164,6 +183,7 @@ export const STEP_TITLES = [
   'Welcome',
   'Account',
   'Configure',
+  'API Key',
   'Download',
   'Success',
 ];
