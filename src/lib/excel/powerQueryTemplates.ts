@@ -635,6 +635,17 @@ export function addPowerQuerySetupSheet(
   sheet.getColumn('B').width = 40;
   sheet.getColumn('C').width = 60;
 
+  // Breadcrumb status bar (Row 1)
+  sheet.getRow(1).height = 22;
+  for (let c = 1; c <= 4; c++) {
+    sheet.getCell(1, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E293B' } };
+    sheet.getCell(1, c).border = { bottom: { style: 'thin', color: { argb: 'FF8B5CF6' } } };
+  }
+  sheet.getCell(1, 2).value = { text: 'CRK  \u203A  PQ Setup', hyperlink: "#'CRK Navigation'!A1" };
+  sheet.getCell(1, 2).font = { size: 9, color: { argb: 'FF64748B' } };
+  sheet.getCell(1, 2).alignment = { vertical: 'middle' };
+  sheet.views = [{ showGridLines: false }];
+
   // Header
   sheet.mergeCells('B2:C2');
   const header = sheet.getCell('B2');
@@ -703,12 +714,22 @@ export function addPowerQuerySetupSheet(
     currentRow += 1;
   });
 
-  // Footer
+  // Help link
   currentRow += 1;
   sheet.getCell(`B${currentRow}`).value = 'NEED HELP?';
   sheet.getCell(`B${currentRow}`).font = { bold: true };
   sheet.getCell(`C${currentRow}`).value = 'https://cryptoreportkit.com/learn';
   sheet.getCell(`C${currentRow}`).font = { color: { argb: 'FF3B82F6' }, underline: true };
+
+  // Footer
+  currentRow += 2;
+  for (let c = 2; c <= 3; c++) {
+    sheet.getCell(currentRow, c).border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+  }
+  sheet.getRow(currentRow).height = 8;
+  currentRow += 1;
+  sheet.getCell(`B${currentRow}`).value = 'Data provided by CoinGecko  \u2022  cryptoreportkit.com';
+  sheet.getCell(`B${currentRow}`).font = { size: 8, italic: true, color: { argb: 'FF64748B' } };
 }
 
 /**

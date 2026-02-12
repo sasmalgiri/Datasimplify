@@ -157,21 +157,23 @@ export const COLORS = {
 // ============================================
 
 const STYLES = {
+  // OtherLevel: clean white bg, large dark text, accent bottom border
   header: {
-    font: { bold: true, size: 18, color: { argb: COLORS.white } },
-    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: COLORS.primary } },
-    alignment: { horizontal: 'center' as const, vertical: 'middle' as const },
+    font: { bold: true, size: 20, color: { argb: COLORS.dark } },
+    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFFFFFFF' } },
+    alignment: { horizontal: 'left' as const, vertical: 'middle' as const },
   },
   subheader: {
-    font: { bold: true, size: 14, color: { argb: COLORS.primary } },
+    font: { bold: true, size: 13, color: { argb: COLORS.primary } },
   },
+  // OtherLevel: subtle light gray bg, dark text, thin bottom border
   columnHeader: {
-    font: { bold: true, color: { argb: COLORS.white } },
-    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: COLORS.darkAlt } },
+    font: { bold: true, size: 10, color: { argb: COLORS.medium } },
+    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFF1F5F9' } },
     alignment: { horizontal: 'center' as const },
   },
   zebraEven: {
-    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: COLORS.surface } },
+    fill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFFAFBFC' } },
   },
   gain: {
     font: { color: { argb: COLORS.success } },
@@ -268,7 +270,7 @@ export const DASHBOARD_CATEGORIES: Record<DashboardType, DashboardCategory> = {
   'token-unlocks': 'yield',
 };
 
-// Theme colors for each category
+// Theme colors for each category — LIGHT THEME (website-like clean design)
 export const CATEGORY_THEMES: Record<DashboardCategory, {
   name: string;
   bg: string;
@@ -286,138 +288,138 @@ export const CATEGORY_THEMES: Record<DashboardCategory, {
 }> = {
   executive: {
     name: 'Executive Gold',
-    bg: 'FF141414',
-    headerBg: 'FFD4A853',
-    headerText: 'FF0E0E0E',
-    cardBg: 'FF1C1C1C',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF1E293B',
+    headerText: 'FFFFFFFF',
+    cardBg: 'FFF8FAFC',
     accent: 'FFD4A853',
-    text: 'FFFFFFFF',
-    muted: 'FF9B8466',
-    border: 'FF2D2D2D',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF1A1A1A',
-    palette: ['#D4A853', '#E8C573', '#9B8466', '#F0D99A', '#B8944A'],
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFF1F5F9',
+    palette: ['#D4A853', '#B8944A', '#9B8466', '#E8C573', '#F0D99A'],
   },
   trading: {
     name: 'Trading Pro',
-    bg: 'FF0A192F',
-    headerBg: 'FF64FFDA',
-    headerText: 'FF0A192F',
-    cardBg: 'FF112240',
-    accent: 'FF64FFDA',
-    text: 'FFCCD6F6',
-    muted: 'FF8892B0',
-    border: 'FF233554',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF112240',
-    palette: ['#64FFDA', '#00D395', '#0EA5E9', '#38BDF8', '#7DD3FC'],
+    bg: 'FFFFFFFF',
+    headerBg: 'FF0F172A',
+    headerText: 'FF64FFDA',
+    cardBg: 'FFF0FDFA',
+    accent: 'FF0D9488',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFF0FDFA',
+    palette: ['#0D9488', '#14B8A6', '#0EA5E9', '#2563EB', '#3B82F6'],
   },
   analytics: {
     name: 'Analytics Purple',
-    bg: 'FF1A1A2E',
-    headerBg: 'FF8B5CF6',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF7C3AED',
     headerText: 'FFFFFFFF',
-    cardBg: 'FF0F3460',
-    accent: 'FF8B5CF6',
-    text: 'FFEAEAEA',
-    muted: 'FF7F8C8D',
-    border: 'FF533483',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF16213E',
-    palette: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#6366F1', '#818CF8'],
+    cardBg: 'FFF5F3FF',
+    accent: 'FF7C3AED',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFF5F3FF',
+    palette: ['#7C3AED', '#8B5CF6', '#A78BFA', '#6366F1', '#818CF8'],
   },
   ecosystem: {
     name: 'Ecosystem Blue',
-    bg: 'FF0F172A',
-    headerBg: 'FF3B82F6',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF1E40AF',
     headerText: 'FFFFFFFF',
-    cardBg: 'FF1E293B',
-    accent: 'FF3B82F6',
-    text: 'FFF1F5F9',
-    muted: 'FF94A3B8',
-    border: 'FF334155',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF1E293B',
-    palette: ['#3B82F6', '#60A5FA', '#93C5FD', '#2563EB', '#1D4ED8'],
+    cardBg: 'FFEFF6FF',
+    accent: 'FF2563EB',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFEFF6FF',
+    palette: ['#2563EB', '#3B82F6', '#60A5FA', '#1D4ED8', '#1E40AF'],
   },
   rankings: {
     name: 'Rankings Sunset',
-    bg: 'FF1C1917',
-    headerBg: 'FFF97316',
-    headerText: 'FF1C1917',
-    cardBg: 'FF292524',
-    accent: 'FFF97316',
-    text: 'FFF5F5F4',
-    muted: 'FFA8A29E',
-    border: 'FF44403C',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF292524',
-    palette: ['#F97316', '#FB923C', '#FDBA74', '#EA580C', '#C2410C'],
+    bg: 'FFFFFFFF',
+    headerBg: 'FF9A3412',
+    headerText: 'FFFFFFFF',
+    cardBg: 'FFFFF7ED',
+    accent: 'FFE97316',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFFFF7ED',
+    palette: ['#EA580C', '#F97316', '#FB923C', '#C2410C', '#FDBA74'],
   },
   asset: {
     name: 'Crypto Native',
-    bg: 'FF18181B',
-    headerBg: 'FFF7931A',
-    headerText: 'FF18181B',
-    cardBg: 'FF27272A',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF92400E',
+    headerText: 'FFFFFFFF',
+    cardBg: 'FFFFFBEB',
     accent: 'FFF7931A',
-    text: 'FFFAFAFA',
-    muted: 'FFA1A1AA',
-    border: 'FF3F3F46',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF27272A',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFFFFBEB',
     palette: ['#F7931A', '#627EEA', '#00D395', '#E84142', '#8247E5'],
   },
   tools: {
-    name: 'Tools Dark',
-    bg: 'FF111827',
-    headerBg: 'FF059669',
+    name: 'Tools Emerald',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF065F46',
     headerText: 'FFFFFFFF',
-    cardBg: 'FF1F2937',
+    cardBg: 'FFECFDF5',
     accent: 'FF059669',
-    text: 'FFF9FAFB',
-    muted: 'FF9CA3AF',
-    border: 'FF374151',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF1F2937',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFECFDF5',
     palette: ['#059669', '#10B981', '#34D399', '#047857', '#065F46'],
   },
   institutional: {
     name: 'Institutional',
-    bg: 'FF1A1A2E',
-    headerBg: 'FFE94560',
+    bg: 'FFFFFFFF',
+    headerBg: 'FF991B1B',
     headerText: 'FFFFFFFF',
-    cardBg: 'FF16213E',
-    accent: 'FFE94560',
-    text: 'FFEAEAEA',
-    muted: 'FF7F8C8D',
-    border: 'FF0F3460',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF16213E',
-    palette: ['#E94560', '#FF6B6B', '#F38181', '#C62828', '#B71C1C'],
+    cardBg: 'FFFEF2F2',
+    accent: 'FFDC2626',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFFEF2F2',
+    palette: ['#DC2626', '#EF4444', '#F87171', '#B91C1C', '#991B1B'],
   },
   yield: {
     name: 'Yield Finance',
-    bg: 'FF042F2E',
-    headerBg: 'FF14B8A6',
-    headerText: 'FF042F2E',
-    cardBg: 'FF134E4A',
-    accent: 'FF14B8A6',
-    text: 'FFF0FDFA',
-    muted: 'FF5EEAD4',
-    border: 'FF115E59',
-    success: 'FF22C55E',
-    danger: 'FFEF4444',
-    kpiBg: 'FF134E4A',
-    palette: ['#14B8A6', '#2DD4BF', '#5EEAD4', '#0D9488', '#0F766E'],
+    bg: 'FFFFFFFF',
+    headerBg: 'FF115E59',
+    headerText: 'FFFFFFFF',
+    cardBg: 'FFF0FDFA',
+    accent: 'FF0D9488',
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    border: 'FFE2E8F0',
+    success: 'FF16A34A',
+    danger: 'FFDC2626',
+    kpiBg: 'FFF0FDFA',
+    palette: ['#0D9488', '#14B8A6', '#2DD4BF', '#0F766E', '#115E59'],
   },
 };
 
@@ -1286,34 +1288,40 @@ function buildIconSetDefs(dashboard: DashboardType): IconSetDef[] {
  * Lays out buttons in a 3-column grid starting at row 6.
  */
 function buildNavButtonDefs(
-  buttons: { label: string; description: string; targetSheet: string }[],
+  buttons: { label: string; description: string; targetSheet: string; gridRow?: number; gridCol?: number }[],
   fillColor: string,
   accentColor: string,
 ): NavigationButtonDef[] {
   if (!buttons.length) return [];
 
-  const cols = [1, 4, 7]; // 0-based: B, E, H
+  // Use grid positions from NavButton metadata if available (new home page layout)
+  // Falls back to automatic 3-column grid for backwards compatibility
+  const fallbackCols = [1, 5, 9]; // 0-based: B, F, J (4 cols per card)
   const defs: NavigationButtonDef[] = [];
-  let row = 5; // 0-based row 5 = Excel row 6
-  let colIdx = 0;
+  let fallbackRow = 6; // 0-based row 6 = Excel row 7
+  let fallbackColIdx = 0;
 
   for (const btn of buttons) {
+    const fromCol = btn.gridCol !== undefined ? btn.gridCol - 1 : fallbackCols[fallbackColIdx];
+    const fromRow = btn.gridRow !== undefined ? btn.gridRow - 1 : fallbackRow;
+
     defs.push({
       sheetName: 'CRK Navigation',
-      fromCol: cols[colIdx],
-      fromRow: row,
-      toCol: cols[colIdx] + 3,
-      toRow: row + 3,
+      fromCol,
+      fromRow,
+      toCol: fromCol + 4,
+      toRow: fromRow + 3,
       label: btn.label,
       targetSheet: btn.targetSheet,
       fillColor,
       accentColor,
     });
 
-    colIdx++;
-    if (colIdx >= 3) {
-      colIdx = 0;
-      row += 4; // 3 rows per button + 1 gap
+    // Advance fallback grid position
+    fallbackColIdx++;
+    if (fallbackColIdx >= 3) {
+      fallbackColIdx = 0;
+      fallbackRow += 4;
     }
   }
 
@@ -1542,7 +1550,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   // Logo/Header area
   sheet.mergeCells('B2:D2');
   const logoCell = sheet.getCell('B2');
-  logoCell.value = '📊 CRYPTOREPORTKIT';
+  logoCell.value = 'CRYPTOREPORTKIT';
   logoCell.font = { bold: true, size: 24, color: { argb: COLORS.primary } };
   sheet.getRow(2).height = 40;
 
@@ -1551,7 +1559,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   sheet.getCell('B3').font = { size: 12, color: { argb: COLORS.light } };
 
   // API Key section
-  sheet.getCell('B5').value = '🔑 YOUR COINGECKO API KEY';
+  sheet.getCell('B5').value = 'YOUR COINGECKO API KEY';
   sheet.getCell('B5').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const keyCell = sheet.getCell('B6');
@@ -1569,7 +1577,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   sheet.getCell('C6').font = { italic: true, color: { argb: COLORS.light } };
 
   // Instructions
-  sheet.getCell('B8').value = '📋 GET YOUR FREE API KEY (2 minutes)';
+  sheet.getCell('B8').value = 'GET YOUR FREE API KEY (2 minutes)';
   sheet.getCell('B8').font = { bold: true, size: 12, color: { argb: COLORS.primary } };
 
   const instructions = [
@@ -1590,7 +1598,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   });
 
   // API Limits info
-  sheet.getCell('B17').value = '📊 API LIMITS';
+  sheet.getCell('B17').value = 'API LIMITS';
   sheet.getCell('B17').font = { bold: true, size: 12, color: { argb: COLORS.primary } };
 
   const limits = [
@@ -1610,7 +1618,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
   });
 
   // Template info
-  sheet.getCell('B23').value = '📁 TEMPLATE INFO';
+  sheet.getCell('B23').value = 'TEMPLATE INFO';
   sheet.getCell('B23').font = { bold: true, size: 12, color: { argb: COLORS.primary } };
 
   sheet.getCell('B24').value = 'Dashboard:';
@@ -1661,7 +1669,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
 
   // Important notes - adjust row based on settings displayed
   const notesStartRow = 32;
-  sheet.getCell(`B${notesStartRow}`).value = '⚠️ IMPORTANT NOTES';
+  sheet.getCell(`B${notesStartRow}`).value = 'IMPORTANT NOTES';
   sheet.getCell(`B${notesStartRow}`).font = { bold: true, size: 12, color: { argb: COLORS.warning } };
 
   const notes = [
@@ -1681,10 +1689,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
     sheet.getCell(`B${notesStartRow + 1 + i}`).font = { color: { argb: COLORS.medium } };
   });
 
-  // Footer
-  const footerRow = notesStartRow + notes.length + 3;
-  sheet.getCell(`B${footerRow}`).value = '© 2026 CryptoReportKit • cryptoreportkit.com';
-  sheet.getCell(`B${footerRow}`).font = { italic: true, color: { argb: COLORS.lighter } };
+  applyLegacyDesign(sheet, 'Settings', notesStartRow + notes.length, 4);
 }
 
 // ============================================
@@ -1712,15 +1717,15 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
     success: categoryTheme.success,
     danger: categoryTheme.danger,
   } : {
-    bg: 'FF111827',
-    headerBg: COLORS.primary,
+    bg: 'FFFFFFFF',
+    headerBg: 'FF1E293B',
     headerText: COLORS.white,
-    cardBg: 'FF1F2937',
+    cardBg: 'FFF8FAFC',
     accent: COLORS.primary,
-    text: COLORS.white,
-    muted: COLORS.light,
-    kpiBg: 'FF1F2937',
-    border: COLORS.medium,
+    text: 'FF1E293B',
+    muted: 'FF64748B',
+    kpiBg: 'FFF1F5F9',
+    border: 'FFE2E8F0',
     success: COLORS.success,
     danger: COLORS.danger,
   };
@@ -1743,20 +1748,30 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
   sheet.getColumn('K').width = 18;
   sheet.getColumn('L').width = 18;
 
-  // Set dark background for entire visible area (Premium style)
-  if (isPremiumStyle) {
-    for (let r = 1; r <= 50; r++) {
-      for (let c = 1; c <= 14; c++) {
-        sheet.getCell(r, c).fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: themeColors.bg },
-        };
-      }
+  // Fill visible area with theme bg (light theme: white)
+  for (let r = 1; r <= 50; r++) {
+    for (let c = 1; c <= 14; c++) {
+      sheet.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: themeColors.bg },
+      };
     }
   }
 
-  // Header - OtherLevel style with accent bar
+  // === Breadcrumb status bar (Row 1) — OtherLevel style ===
+  sheet.getRow(1).height = 22;
+  for (let c = 1; c <= 14; c++) {
+    sheet.getCell(1, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: themeColors.headerBg } };
+    sheet.getCell(1, c).border = { bottom: { style: 'thin', color: { argb: themeColors.accent } } };
+  }
+  sheet.getCell(1, 2).value = { text: 'CRK  \u203A  Dashboard', hyperlink: "#'CRK Navigation'!A1" };
+  sheet.getCell(1, 2).font = { size: 9, color: { argb: themeColors.muted } };
+  sheet.getCell(1, 2).alignment = { vertical: 'middle' };
+
+  sheet.views = [{ showGridLines: false, state: 'frozen', ySplit: 1, topLeftCell: 'A2', activeCell: 'B2' }];
+
+  // Header - styled title bar
   // Get dashboard title based on type
   const dashboardTitles: Partial<Record<DashboardType, string>> = {
     'complete-suite': 'COMPLETE CRYPTO SUITE',
@@ -1805,7 +1820,7 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
 
   sheet.mergeCells('B2:L2');
   const header = sheet.getCell('B2');
-  header.value = isPremiumStyle ? `  ${dashboardTitle}` : `📊 ${dashboardTitle}`;
+  header.value = dashboardTitle;
   header.font = { bold: true, size: 20, color: { argb: themeColors.headerText } };
   header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: themeColors.headerBg } };
   header.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -2148,26 +2163,26 @@ function addGlobalStatsSheet(workbook: ExcelJS.Workbook, globalData: any) {
   // Header
   sheet.mergeCells('B2:D2');
   const header = sheet.getCell('B2');
-  header.value = '🌍 GLOBAL CRYPTO MARKET';
+  header.value = 'GLOBAL CRYPTO MARKET';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
-  // Stats grid
+  // Stats grid — OtherLevel: clean labels, no emojis
   const stats = [
-    { icon: '💰', label: 'Total Market Cap', value: formatCurrency(globalData?.total_market_cap?.usd || 0) },
-    { icon: '📊', label: '24h Trading Volume', value: formatCurrency(globalData?.total_volume?.usd || 0) },
-    { icon: '₿', label: 'Bitcoin Dominance', value: `${num(globalData?.market_cap_percentage?.btc || 0).toFixed(2)}%` },
-    { icon: 'Ξ', label: 'Ethereum Dominance', value: `${num(globalData?.market_cap_percentage?.eth || 0).toFixed(2)}%` },
-    { icon: '🪙', label: 'Active Cryptocurrencies', value: (globalData?.active_cryptocurrencies || 0).toLocaleString() },
-    { icon: '🏛️', label: 'Active Exchanges', value: (globalData?.markets || 0).toLocaleString() },
-    { icon: '📈', label: '24h Market Cap Change', value: `${num(globalData?.market_cap_change_percentage_24h_usd || 0).toFixed(2)}%` },
-    { icon: '🎯', label: 'Ongoing ICOs', value: (globalData?.ongoing_icos || 0).toString() },
+    { label: 'Total Market Cap', value: formatCurrency(globalData?.total_market_cap?.usd || 0) },
+    { label: '24h Trading Volume', value: formatCurrency(globalData?.total_volume?.usd || 0) },
+    { label: 'Bitcoin Dominance', value: `${num(globalData?.market_cap_percentage?.btc || 0).toFixed(2)}%` },
+    { label: 'Ethereum Dominance', value: `${num(globalData?.market_cap_percentage?.eth || 0).toFixed(2)}%` },
+    { label: 'Active Cryptocurrencies', value: (globalData?.active_cryptocurrencies || 0).toLocaleString() },
+    { label: 'Active Exchanges', value: (globalData?.markets || 0).toLocaleString() },
+    { label: '24h Market Cap Change', value: `${num(globalData?.market_cap_change_percentage_24h_usd || 0).toFixed(2)}%` },
+    { label: 'Ongoing ICOs', value: (globalData?.ongoing_icos || 0).toString() },
   ];
 
   stats.forEach((stat, i) => {
     const row = 4 + i;
-    sheet.getCell(`B${row}`).value = `${stat.icon} ${stat.label}`;
-    sheet.getCell(`B${row}`).font = { bold: true, color: { argb: COLORS.dark } };
+    sheet.getCell(`B${row}`).value = stat.label;
+    sheet.getCell(`B${row}`).font = { color: { argb: COLORS.medium } };
 
     sheet.getCell(`C${row}`).value = stat.value;
     sheet.getCell(`C${row}`).font = { bold: true, size: 14, color: { argb: COLORS.primary } };
@@ -2180,7 +2195,7 @@ function addGlobalStatsSheet(workbook: ExcelJS.Workbook, globalData: any) {
   });
 
   // Dominance chart
-  sheet.getCell('B14').value = '📊 MARKET DOMINANCE';
+  sheet.getCell('B14').value = 'MARKET DOMINANCE';
   sheet.getCell('B14').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const dominanceData = [
@@ -2203,6 +2218,8 @@ function addGlobalStatsSheet(workbook: ExcelJS.Workbook, globalData: any) {
     sheet.getCell(`D${row}`).value = `${num(d.value).toFixed(1)}%`;
     sheet.getCell(`D${row}`).alignment = { horizontal: 'right' };
   });
+
+  applyLegacyDesign(sheet, 'Global Stats', 19, 5);
 }
 
 // ============================================
@@ -2231,7 +2248,7 @@ function addTopCoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells('B2:L2');
   const header = sheet.getCell('B2');
-  header.value = '📈 TOP CRYPTOCURRENCIES BY MARKET CAP';
+  header.value = 'TOP CRYPTOCURRENCIES BY MARKET CAP';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -2295,6 +2312,9 @@ function addTopCoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
 
   // Freeze header row
   sheet.views = [{ state: 'frozen', ySplit: 4, showGridLines: false }];
+
+  const lastTopRow = 4 + Math.min(marketData.length, 100);
+  applyLegacyDesign(sheet, 'Top Coins', lastTopRow, 12);
 }
 
 // ============================================
@@ -2314,7 +2334,7 @@ function addMarketChartSheet(workbook: ExcelJS.Workbook, topCoins: any[]) {
   // Header
   sheet.mergeCells('B2:D2');
   const header = sheet.getCell('B2');
-  header.value = '📊 MARKET CAP DISTRIBUTION';
+  header.value = 'MARKET CAP DISTRIBUTION';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 35;
 
@@ -2336,7 +2356,7 @@ function addMarketChartSheet(workbook: ExcelJS.Workbook, topCoins: any[]) {
   });
 
   // 24h Change comparison
-  sheet.getCell('B26').value = '📈 24H PRICE CHANGE COMPARISON';
+  sheet.getCell('B26').value = '24H PRICE CHANGE COMPARISON';
   sheet.getCell('B26').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const sorted = [...topCoins].sort((a, b) =>
@@ -2362,6 +2382,9 @@ function addMarketChartSheet(workbook: ExcelJS.Workbook, topCoins: any[]) {
     sheet.getCell(`D${row}`).value = formatPercent(change);
     sheet.getCell(`D${row}`).font = { bold: true, color: { argb: change >= 0 ? COLORS.success : COLORS.danger } };
   });
+
+  const lastChartRow = 27 + sorted.length;
+  applyLegacyDesign(sheet, 'Charts', lastChartRow, 4);
 }
 
 // ============================================
@@ -2388,7 +2411,7 @@ function addPortfolioSheet(workbook: ExcelJS.Workbook, marketData: any[], coins:
   // Header
   sheet.mergeCells('B2:K2');
   const header = sheet.getCell('B2');
-  header.value = '💼 PORTFOLIO TRACKER';
+  header.value = 'PORTFOLIO TRACKER';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -2496,15 +2519,19 @@ function addPortfolioSheet(workbook: ExcelJS.Workbook, marketData: any[], coins:
   sheet.getCell(`K${totalRow}`).value = totalPL24h;
   sheet.getCell(`K${totalRow}`).numFmt = '$#,##0.00';
   sheet.getCell(`K${totalRow}`).font = { bold: true, color: { argb: totalPL24h >= 0 ? COLORS.success : COLORS.danger } };
+
+  applyLegacyDesign(sheet, 'Portfolio', totalRow, 11);
 }
 
 function addPortfolioChartSheet(workbook: ExcelJS.Workbook) {
   // Placeholder for portfolio allocation chart
   const sheet = workbook.addWorksheet('Portfolio_Chart');
-  sheet.getCell('B2').value = '📊 Portfolio Allocation';
+  sheet.getCell('B2').value = 'Portfolio Allocation';
   sheet.getCell('B2').font = { bold: true, size: 16, color: { argb: COLORS.primary } };
   sheet.getCell('B4').value = 'Chart will be generated based on your portfolio holdings.';
   sheet.getCell('B5').value = 'Edit the Portfolio sheet to see your allocation.';
+
+  applyLegacyDesign(sheet, 'Portfolio Chart', 5, 4);
 }
 
 // ============================================
@@ -2525,7 +2552,7 @@ function addFearGreedSheet(workbook: ExcelJS.Workbook, fearGreedData: any[]) {
   // Header
   sheet.mergeCells('B2:E2');
   const header = sheet.getCell('B2');
-  header.value = '😱 CRYPTO FEAR & GREED INDEX';
+  header.value = 'CRYPTO FEAR & GREED INDEX';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -2565,7 +2592,7 @@ function addFearGreedSheet(workbook: ExcelJS.Workbook, fearGreedData: any[]) {
   }
 
   // Historical data
-  sheet.getCell('B12').value = '📅 HISTORICAL DATA (Last 90 Days)';
+  sheet.getCell('B12').value = 'HISTORICAL DATA (Last 90 Days)';
   sheet.getCell('B12').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const histHeaders = ['Date', 'Value', 'Classification', 'Visual'];
@@ -2600,6 +2627,9 @@ function addFearGreedSheet(workbook: ExcelJS.Workbook, fearGreedData: any[]) {
       }
     }
   });
+
+  const lastFGRow = 13 + Math.min(fearGreedData.length, 90);
+  applyLegacyDesign(sheet, 'Fear & Greed', lastFGRow, 5);
 }
 
 function getInterpretation(value: number): string {
@@ -2645,14 +2675,16 @@ function addMoverSheet(sheet: ExcelJS.Worksheet, data: any[], title: string, acc
   sheet.getColumn('G').width = 12;
   sheet.getColumn('H').width = 25;
 
-  // Header
+  // Header — OtherLevel: clean white bg, accent bottom border
   sheet.mergeCells('B2:H2');
   const header = sheet.getCell('B2');
   header.value = title;
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: accentColor } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 8; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: accentColor } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // Column headers
   const headers = ['#', 'Name', 'Symbol', 'Price', 'Market Cap', '24h %', 'Visual'];
@@ -2691,6 +2723,9 @@ function addMoverSheet(sheet: ExcelJS.Worksheet, data: any[], title: string, acc
       }
     }
   });
+
+  const lastMoverRow = 4 + data.length;
+  applyLegacyDesign(sheet, title.replace(/[^\w\s]/g, '').trim(), lastMoverRow, 8);
 }
 
 // ============================================
@@ -2710,14 +2745,16 @@ function addTrendingSheet(workbook: ExcelJS.Workbook, trendingData: any[], marke
   sheet.getColumn('F').width = 16;
   sheet.getColumn('G').width = 14;
 
-  // Header
+  // Header — OtherLevel light style
   sheet.mergeCells('B2:G2');
   const header = sheet.getCell('B2');
-  header.value = '🔥 TRENDING CRYPTOCURRENCIES';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.warning } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'TRENDING CRYPTOCURRENCIES';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 7; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: COLORS.warning } } };
+  }
+  sheet.getRow(2).height = 44;
 
   sheet.getCell('B3').value = 'Based on search volume and social activity in the last 24 hours';
   sheet.getCell('B3').font = { italic: true, color: { argb: COLORS.light } };
@@ -2735,7 +2772,7 @@ function addTrendingSheet(workbook: ExcelJS.Workbook, trendingData: any[], marke
     const coin = item.item;
     const row = 6 + i;
 
-    sheet.getCell(`B${row}`).value = `🔥 #${i + 1}`;
+    sheet.getCell(`B${row}`).value = `#${i + 1}`;
     sheet.getCell(`B${row}`).font = { bold: true };
 
     sheet.getCell(`C${row}`).value = coin?.name || 'Unknown';
@@ -2757,6 +2794,9 @@ function addTrendingSheet(workbook: ExcelJS.Workbook, trendingData: any[], marke
       }
     }
   });
+
+  const lastTrendRow = 5 + trendingData.length;
+  applyLegacyDesign(sheet, 'Trending', lastTrendRow, 7);
 }
 
 // ============================================
@@ -2776,14 +2816,16 @@ function addDeFiSheet(workbook: ExcelJS.Workbook, defiData: any, marketData: any
   // Header
   sheet.mergeCells('B2:D2');
   const header = sheet.getCell('B2');
-  header.value = '🏦 DEFI DASHBOARD';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.purple } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'DEFI DASHBOARD';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 4; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: COLORS.purple } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // DeFi Stats
-  sheet.getCell('B4').value = '📊 DEFI MARKET OVERVIEW';
+  sheet.getCell('B4').value = 'DEFI MARKET OVERVIEW';
   sheet.getCell('B4').font = { bold: true, size: 14, color: { argb: COLORS.purple } };
 
   const stats = [
@@ -2803,7 +2845,7 @@ function addDeFiSheet(workbook: ExcelJS.Workbook, defiData: any, marketData: any
   });
 
   // Top DeFi Protocols
-  sheet.getCell('B12').value = '🏛️ TOP DEFI PROTOCOLS';
+  sheet.getCell('B12').value = 'TOP DEFI PROTOCOLS';
   sheet.getCell('B12').font = { bold: true, size: 14, color: { argb: COLORS.purple } };
 
   const defiCoins = marketData.filter((c: any) =>
@@ -2836,6 +2878,10 @@ function addDeFiSheet(workbook: ExcelJS.Workbook, defiData: any, marketData: any
       }
     }
   });
+
+  const defiList = defiCoins.length > 0 ? defiCoins : marketData.slice(0, 15);
+  const lastDeFiRow = 13 + defiList.length;
+  applyLegacyDesign(sheet, 'DeFi', lastDeFiRow, 5);
 }
 
 // ============================================
@@ -2858,11 +2904,13 @@ function addDerivativesSheet(workbook: ExcelJS.Workbook, derivativesData: any[])
   // Header
   sheet.mergeCells('B2:G2');
   const header = sheet.getCell('B2');
-  header.value = '📈 DERIVATIVES MARKET';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.cyan } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'DERIVATIVES MARKET';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 7; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: COLORS.cyan } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // Column headers
   const headers = ['Exchange', 'Symbol', 'Price', 'Index', 'Basis', '24h Vol'];
@@ -2889,6 +2937,9 @@ function addDerivativesSheet(workbook: ExcelJS.Workbook, derivativesData: any[])
       }
     }
   });
+
+  const lastDerivRow = 4 + Math.min(derivativesData.length, 50);
+  applyLegacyDesign(sheet, 'Derivatives', lastDerivRow, 7);
 }
 
 // ============================================
@@ -2911,11 +2962,13 @@ function addExchangesSheet(workbook: ExcelJS.Workbook, exchangesData: any[]) {
   // Header
   sheet.mergeCells('B2:G2');
   const header = sheet.getCell('B2');
-  header.value = '🏛️ TOP CRYPTOCURRENCY EXCHANGES';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.info } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'TOP CRYPTOCURRENCY EXCHANGES';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 7; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: COLORS.info } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // Column headers
   const headers = ['#', 'Exchange', '24h Volume (BTC)', 'Trust Score', 'Year Est.', 'Country'];
@@ -2961,6 +3014,9 @@ function addExchangesSheet(workbook: ExcelJS.Workbook, exchangesData: any[]) {
       }
     }
   });
+
+  const lastExchRow = 4 + Math.min(exchangesData.length, 50);
+  applyLegacyDesign(sheet, 'Exchanges', lastExchRow, 7);
 }
 
 // ============================================
@@ -2982,11 +3038,13 @@ function addCategoriesSheet(workbook: ExcelJS.Workbook, categoriesData: any[]) {
   // Header
   sheet.mergeCells('B2:F2');
   const header = sheet.getCell('B2');
-  header.value = '📁 CRYPTO CATEGORIES & SECTORS';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.pink } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'CRYPTO CATEGORIES & SECTORS';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 6; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: COLORS.pink } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // Column headers
   const headers = ['Category', 'Market Cap', '24h Volume', '24h Change', 'Coins'];
@@ -3020,6 +3078,9 @@ function addCategoriesSheet(workbook: ExcelJS.Workbook, categoriesData: any[]) {
       }
     }
   });
+
+  const lastCatRow = 4 + Math.min(categoriesData.length, 50);
+  applyLegacyDesign(sheet, 'Categories', lastCatRow, 6);
 }
 
 // ============================================
@@ -3040,11 +3101,13 @@ function addNFTSheet(workbook: ExcelJS.Workbook, nftData: any[]) {
   // Header
   sheet.mergeCells('B2:E2');
   const header = sheet.getCell('B2');
-  header.value = '🖼️ NFT COLLECTIONS';
-  header.font = { bold: true, size: 18, color: { argb: COLORS.white } };
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEC4899' } };
-  header.alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getRow(2).height = 40;
+  header.value = 'NFT COLLECTIONS';
+  header.font = { bold: true, size: 20, color: { argb: COLORS.dark } };
+  header.alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 5; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: 'FFEC4899' } } };
+  }
+  sheet.getRow(2).height = 44;
 
   // Column headers
   const headers = ['#', 'Collection', 'Symbol', 'Platform'];
@@ -3073,6 +3136,9 @@ function addNFTSheet(workbook: ExcelJS.Workbook, nftData: any[]) {
       }
     }
   });
+
+  const lastNFTRow = 4 + Math.min(nftData.length, 50);
+  applyLegacyDesign(sheet, 'NFTs', lastNFTRow, 5);
 }
 
 // ============================================
@@ -3097,7 +3163,7 @@ function addCorrelationSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells(2, 2, 2, 2 + size);
   const header = sheet.getCell('B2');
-  header.value = '🔗 ASSET CORRELATION MATRIX';
+  header.value = 'ASSET CORRELATION MATRIX';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3179,6 +3245,8 @@ function addCorrelationSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     }
     cell.alignment = { horizontal: 'center' };
   });
+
+  applyLegacyDesign(sheet, 'Correlation', legendRow + 1, 2 + size);
 }
 
 // ============================================
@@ -3202,7 +3270,7 @@ function addHeatmapSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells(2, 2, 2, 1 + gridSize);
   const header = sheet.getCell('B2');
-  header.value = '🗺️ MARKET HEATMAP (24h Change)';
+  header.value = 'MARKET HEATMAP (24h Change)';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3248,6 +3316,8 @@ function addHeatmapSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   const legendRow = 4 + Math.ceil(coins.length / gridSize) + 2;
   sheet.getCell(`B${legendRow}`).value = 'Color Scale: Dark Green (+10%+) → Light Green → Light Red → Dark Red (-10%-)';
   sheet.getCell(`B${legendRow}`).font = { italic: true, color: { argb: COLORS.light } };
+
+  applyLegacyDesign(sheet, 'Heatmap', legendRow, 1 + gridSize);
 }
 
 // ============================================
@@ -3276,7 +3346,7 @@ function addScreenerSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells('B2:M2');
   const header = sheet.getCell('B2');
-  header.value = '🔍 CRYPTO SCREENER';
+  header.value = 'CRYPTO SCREENER';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3346,6 +3416,9 @@ function addScreenerSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
 
   // Freeze header
   sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  const lastScreenerRow = 5 + Math.min(marketData.length, 100);
+  applyLegacyDesign(sheet, 'Screener', lastScreenerRow, 13);
 }
 
 // ============================================
@@ -3372,7 +3445,7 @@ function addStablecoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells('B2:G2');
   const header = sheet.getCell('B2');
-  header.value = '💵 STABLECOINS';
+  header.value = 'STABLECOINS';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3413,6 +3486,9 @@ function addStablecoinsSheet(workbook: ExcelJS.Workbook, marketData: any[]) {
       }
     }
   });
+
+  const lastStableRow = 6 + stablecoins.length;
+  applyLegacyDesign(sheet, 'Stablecoins', lastStableRow, 7);
 }
 
 // ============================================
@@ -3443,7 +3519,7 @@ async function addTechnicalSheet(workbook: ExcelJS.Workbook, coin: string, days:
   // Header
   sheet.mergeCells('B2:H2');
   const header = sheet.getCell('B2');
-  header.value = `📈 ${coin.toUpperCase()} TECHNICAL ANALYSIS`;
+  header.value = `${coin.toUpperCase()} TECHNICAL ANALYSIS`;
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3475,7 +3551,7 @@ async function addTechnicalSheet(workbook: ExcelJS.Workbook, coin: string, days:
   }
 
   // OHLC Data table
-  sheet.getCell('B13').value = '📊 OHLC DATA';
+  sheet.getCell('B13').value = 'OHLC DATA';
   sheet.getCell('B13').font = { bold: true, size: 14, color: { argb: COLORS.primary } };
 
   const ohlcHeaders = ['DateTime', 'Open', 'High', 'Low', 'Close', 'Change', 'Candle'];
@@ -3521,6 +3597,9 @@ async function addTechnicalSheet(workbook: ExcelJS.Workbook, coin: string, days:
       }
     }
   });
+
+  const lastTechRow = 14 + Math.min(ohlcData.length, 50);
+  applyLegacyDesign(sheet, 'Technical', lastTechRow, 8);
 }
 
 // ============================================
@@ -3537,7 +3616,7 @@ function addETFSheet(workbook: ExcelJS.Workbook) {
 
   sheet.mergeCells('B2:C2');
   const header = sheet.getCell('B2');
-  header.value = '📈 BITCOIN & CRYPTO ETF TRACKER';
+  header.value = 'BITCOIN & CRYPTO ETF TRACKER';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3550,6 +3629,8 @@ function addETFSheet(workbook: ExcelJS.Workbook) {
   etfs.forEach((etf, i) => {
     sheet.getCell(`B${8 + i}`).value = `• ${etf}`;
   });
+
+  applyLegacyDesign(sheet, 'ETF Tracker', 12, 3);
 }
 
 function addWhaleSheet(workbook: ExcelJS.Workbook) {
@@ -3561,7 +3642,7 @@ function addWhaleSheet(workbook: ExcelJS.Workbook) {
 
   sheet.mergeCells('B2:D2');
   const header = sheet.getCell('B2');
-  header.value = '🐋 WHALE TRANSACTION TRACKER';
+  header.value = 'WHALE TRANSACTION TRACKER';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3570,6 +3651,8 @@ function addWhaleSheet(workbook: ExcelJS.Workbook) {
   sheet.getCell('B7').value = '• Whale Alert API';
   sheet.getCell('B8').value = '• Glassnode';
   sheet.getCell('B9').value = '• Santiment';
+
+  applyLegacyDesign(sheet, 'Whale Tracker', 9, 4);
 }
 
 function addOnChainSheet(workbook: ExcelJS.Workbook) {
@@ -3581,7 +3664,7 @@ function addOnChainSheet(workbook: ExcelJS.Workbook) {
 
   sheet.mergeCells('B2:D2');
   const header = sheet.getCell('B2');
-  header.value = '⛓️ ON-CHAIN ANALYTICS';
+  header.value = 'ON-CHAIN ANALYTICS';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3596,6 +3679,8 @@ function addOnChainSheet(workbook: ExcelJS.Workbook) {
   metrics.forEach((m, i) => {
     sheet.getCell(`B${7 + i}`).value = `• ${m}`;
   });
+
+  applyLegacyDesign(sheet, 'On-Chain', 15, 4);
 }
 
 function addRWASheet(workbook: ExcelJS.Workbook, marketData: any[]) {
@@ -3618,10 +3703,12 @@ function addRWASheet(workbook: ExcelJS.Workbook, marketData: any[]) {
   // Header
   sheet.mergeCells('B2:G2');
   const header = sheet.getCell('B2');
-  header.value = '🏠 REAL WORLD ASSETS (RWA) TOKENS';
+  header.value = 'REAL WORLD ASSETS (RWA) TOKENS';
   Object.assign(header, STYLES.header);
-  header.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF06B6D4' } };
-  sheet.getRow(2).height = 40;
+  for (let c = 2; c <= 7; c++) {
+    sheet.getCell(2, c).border = { bottom: { style: 'medium', color: { argb: 'FF06B6D4' } } };
+  }
+  sheet.getRow(2).height = 44;
 
   sheet.mergeCells('B3:G3');
   sheet.getCell('B3').value = 'Tokens that tokenize real-world assets like real estate, bonds, commodities';
@@ -3670,7 +3757,7 @@ function addRWASheet(workbook: ExcelJS.Workbook, marketData: any[]) {
 
   // RWA Info
   const infoRow = 6 + rwaCoins.length + 2;
-  sheet.getCell(`B${infoRow}`).value = '📊 WHY RWA MATTERS';
+  sheet.getCell(`B${infoRow}`).value = 'WHY RWA MATTERS';
   sheet.getCell(`B${infoRow}`).font = { bold: true, size: 14, color: { argb: 'FF06B6D4' } };
 
   const info = [
@@ -3685,6 +3772,8 @@ function addRWASheet(workbook: ExcelJS.Workbook, marketData: any[]) {
     sheet.getCell(`B${infoRow + 1 + i}`).value = text;
     sheet.getCell(`B${infoRow + 1 + i}`).font = { color: { argb: COLORS.medium } };
   });
+
+  applyLegacyDesign(sheet, 'RWA Tokens', infoRow + info.length, 7);
 }
 
 function addCustomWatchlistSheet(workbook: ExcelJS.Workbook, marketData: any[], coins: string[]) {
@@ -3704,7 +3793,7 @@ function addCustomWatchlistSheet(workbook: ExcelJS.Workbook, marketData: any[], 
   // Header
   sheet.mergeCells('B2:H2');
   const header = sheet.getCell('B2');
-  header.value = '⭐ MY WATCHLIST';
+  header.value = 'MY WATCHLIST';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
@@ -3747,6 +3836,9 @@ function addCustomWatchlistSheet(workbook: ExcelJS.Workbook, marketData: any[], 
       }
     }
   });
+
+  const lastWatchRow = 4 + coins.length;
+  applyLegacyDesign(sheet, 'Watchlist', lastWatchRow, 8);
 }
 
 // ============================================
@@ -3764,18 +3856,18 @@ function addDocumentationSheet(workbook: ExcelJS.Workbook) {
 
   sheet.mergeCells('B2:C2');
   const header = sheet.getCell('B2');
-  header.value = '📚 DOCUMENTATION & HELP';
+  header.value = 'DOCUMENTATION & HELP';
   Object.assign(header, STYLES.header);
   sheet.getRow(2).height = 40;
 
   const sections = [
-    { title: '🔄 How to Refresh Data', content: [
+    { title: 'How to Refresh Data', content: [
       '1. Go to the "Data" tab in Excel',
       '2. Click "Refresh All"',
       '3. Data will update from CoinGecko API',
       '4. Ensure your API key is set in Settings sheet',
     ]},
-    { title: '📊 Understanding the Sheets', content: [
+    { title: 'Understanding the Sheets', content: [
       'Dashboard - Overview of all key metrics',
       'Global_Stats - Total market statistics',
       'Top_Coins - Ranked by market cap',
@@ -3784,19 +3876,19 @@ function addDocumentationSheet(workbook: ExcelJS.Workbook) {
       'Portfolio - Track your holdings',
       'Screener - Filter coins by criteria',
     ]},
-    { title: '🎨 Color Coding', content: [
+    { title: 'Color Coding', content: [
       'Green = Positive/Gain',
       'Red = Negative/Loss',
       'Yellow = Editable input cells',
       'Gray = Headers and labels',
     ]},
-    { title: '⚡ Tips & Tricks', content: [
+    { title: 'Tips & Tricks', content: [
       'Use Excel filters on Screener sheet',
       'Edit yellow cells in Portfolio to track holdings',
       'Sort any column by clicking header',
       'Right-click for more options',
     ]},
-    { title: '🔗 Resources', content: [
+    { title: 'Resources', content: [
       'CryptoReportKit: cryptoreportkit.com',
       'CoinGecko API: coingecko.com/api',
       'Support: contact@cryptoreportkit.com',
@@ -3818,9 +3910,88 @@ function addDocumentationSheet(workbook: ExcelJS.Workbook) {
     currentRow += 1; // Space between sections
   });
 
-  // Footer
-  sheet.getCell(`B${currentRow + 2}`).value = '© 2026 CryptoReportKit - All Rights Reserved';
-  sheet.getCell(`B${currentRow + 2}`).font = { italic: true, color: { argb: COLORS.lighter } };
+  applyLegacyDesign(sheet, 'Documentation', currentRow, 3);
+}
+
+// ============================================
+// LEGACY SHEET DESIGN HELPER
+// ============================================
+
+/**
+ * Apply consistent OtherLevel-style design to legacy complete-suite sheets.
+ * Adds: breadcrumb status bar at row 1, hidden gridlines, and footer.
+ * Call AFTER all content is written to the sheet.
+ *
+ * @param sheet - The worksheet to style
+ * @param sheetName - Display name for the breadcrumb (e.g. 'Global_Stats')
+ * @param lastContentRow - The last row containing content
+ * @param maxCol - Rightmost column number used in the sheet (for breadcrumb width)
+ */
+function applyLegacyDesign(
+  sheet: ExcelJS.Worksheet,
+  sheetName: string,
+  lastContentRow: number,
+  maxCol: number = 8,
+): void {
+  const navBg = 'FF1E293B';
+  const navAccent = 'FF059669';
+  const navMuted = 'FF64748B';
+
+  // === Breadcrumb status bar (Row 1) ===
+  sheet.getRow(1).height = 22;
+  for (let c = 1; c <= maxCol; c++) {
+    sheet.getCell(1, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: navBg } };
+    sheet.getCell(1, c).border = { bottom: { style: 'thin', color: { argb: navAccent } } };
+  }
+  const breadcrumb = sheet.getCell(1, 2);
+  breadcrumb.value = { text: `CRK  \u203A  ${sheetName}`, hyperlink: "#'CRK Navigation'!A1" };
+  breadcrumb.font = { size: 9, color: { argb: navMuted } };
+  breadcrumb.alignment = { horizontal: 'left', vertical: 'middle' };
+
+  // Generated date on right side
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const dateCell = sheet.getCell(1, maxCol);
+  dateCell.value = dateStr;
+  dateCell.font = { size: 8, color: { argb: navMuted } };
+  dateCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+  // === OtherLevel accent border under header (row 2) ===
+  sheet.getRow(2).height = 44;
+  for (let c = 2; c <= maxCol; c++) {
+    const cell = sheet.getCell(2, c);
+    if (!cell.border || !cell.border.bottom) {
+      cell.border = { ...(cell.border || {}), bottom: { style: 'medium', color: { argb: navAccent } } };
+    }
+  }
+
+  // === OtherLevel column header bottom border ===
+  // Detect common header rows (row 4 or 5) and add thin border
+  for (const hdrRow of [4, 5]) {
+    const testCell = sheet.getCell(hdrRow, 2);
+    if (testCell.font && testCell.font.bold && testCell.fill) {
+      for (let c = 2; c <= maxCol; c++) {
+        const cell = sheet.getCell(hdrRow, c);
+        cell.border = { ...(cell.border || {}), bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+      }
+      break;
+    }
+  }
+
+  // === Footer ===
+  const footerRow = lastContentRow + 2;
+  // Thin separator
+  for (let c = 2; c <= maxCol; c++) {
+    sheet.getCell(footerRow, c).border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+  }
+  // Attribution
+  const attrCell = sheet.getCell(footerRow + 1, 2);
+  attrCell.value = 'Data provided by CoinGecko \u2022 cryptoreportkit.com';
+  attrCell.font = { size: 8, italic: true, color: { argb: 'FF94A3B8' } };
+
+  // === Hidden gridlines ===
+  // Preserve existing views (frozen panes etc.) and add showGridLines: false
+  const existingViews = sheet.views && sheet.views.length > 0 ? sheet.views[0] : {};
+  sheet.views = [{ ...existingViews, showGridLines: false }];
 }
 
 // ============================================

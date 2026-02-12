@@ -1,13 +1,14 @@
 /**
- * CRK Dashboard Sheets — Professional Dark Theme
+ * CRK Dashboard Sheets — Professional Light Theme (Website-like)
  *
- * ALL dashboards use professional dark-themed layouts with:
- * - Dark background fills from CATEGORY_THEMES
- * - KPI metric cards with accent borders
+ * ALL dashboards use professional themed layouts with:
+ * - Clean white backgrounds with colored accents from CATEGORY_THEMES
+ * - KPI metric cards with accent borders on light card backgrounds
  * - Themed section dividers and table headers
  * - Zebra-striped data rows
  * - Conditional formatting (green/red %, data bars, color scales)
  * - Freeze panes for data scrolling
+ * - Consistent navigation bar on every sheet
  * - Native Excel charts (via chartInjector post-processing)
  *
  * Dual-mode: same xlsx has both CRK formulas AND Power Query connections.
@@ -30,6 +31,8 @@ import {
   addMetricRow,
   populateMarketRows,
   populateExchangeRows,
+  addSidebar,
+  addFooter,
   COMPACT_USD,
   type KPICardDef,
   type DashboardTheme,
@@ -319,8 +322,15 @@ function buildSpillDashboard(
   prefetchedData?: any,
 ): { sheet: ExcelJS.Worksheet; theme: DashboardTheme } {
   // === VISUAL DASHBOARD SHEET (charts front and center) ===
-  const visualWidths = [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
+  const visualWidths = [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
   const { sheet, theme } = initDarkSheet(workbook, config.sheetName, config.dashboardType, visualWidths);
+
+  // OtherLevel sidebar navigation (fixed left panel)
+  addSidebar(sheet, config.sheetName, theme, {
+    dashboard: config.sheetName,
+    data: config.sheetName + ' Data',
+  });
+
   addHeaderBar(sheet, 2, config.title, theme, config.subtitle);
   addKPICards(sheet, 5, enrichKPIs(config.kpis, prefetchedData), theme);
   addSectionDivider(sheet, 10, config.sectionTitle, theme);
@@ -356,6 +366,9 @@ function buildSpillDashboard(
     }
     addMetricRow(sheet, afterGrid + 2 + i, 2, metrics[i].label, metrics[i].formula, theme, metrics[i].format, fallback);
   }
+
+  // Footer with attribution
+  addFooter(sheet, afterGrid + 2 + metrics.length + 2, theme);
 
   // === DATA SHEET (spill table for chart data) ===
   const dataName = config.sheetName + ' Data';
@@ -432,6 +445,10 @@ function buildSubSheet(
     placeSpillFormula(sheet, 6, 1, formula, theme);
   }
   addZebraRows(sheet, 6, spillRows, 1, endCol, theme);
+
+  // Footer after data
+  addFooter(sheet, 6 + spillRows + 1, theme);
+
   sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
   return { sheet, theme };
 }
@@ -469,8 +486,15 @@ function buildPerCoinDashboard(
   prefetchedData?: any,
 ): { sheet: ExcelJS.Worksheet; theme: DashboardTheme } {
   // === VISUAL DASHBOARD SHEET ===
-  const visualWidths = [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
+  const visualWidths = [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
   const { sheet, theme } = initDarkSheet(workbook, config.sheetName, config.dashboardType, visualWidths);
+
+  // OtherLevel sidebar navigation
+  addSidebar(sheet, config.sheetName, theme, {
+    dashboard: config.sheetName,
+    data: config.sheetName + ' Data',
+  });
+
   addHeaderBar(sheet, 2, config.title, theme, config.subtitle);
   addKPICards(sheet, 5, enrichKPIs(config.kpis, prefetchedData), theme);
   addSectionDivider(sheet, 10, config.sectionTitle, theme);
@@ -493,6 +517,9 @@ function buildPerCoinDashboard(
   for (let i = 0; i < metrics.length; i++) {
     addMetricRow(sheet, afterGrid + 2 + i, 2, metrics[i].label, metrics[i].formula, theme, metrics[i].format);
   }
+
+  // Footer with attribution
+  addFooter(sheet, afterGrid + 2 + metrics.length + 2, theme);
 
   // === DATA SHEET (per-coin formulas) ===
   const dataName = config.sheetName + ' Data';
@@ -594,6 +621,10 @@ interface NavButton {
   label: string;
   description: string;
   targetSheet: string;
+  /** 1-based row in sheet where this card starts (for shape injector) */
+  gridRow?: number;
+  /** 1-based column in sheet where this card starts (for shape injector) */
+  gridCol?: number;
 }
 
 /**
@@ -609,28 +640,67 @@ export function addNavigationSheet(
   dashboard: DashboardType,
 ): NavButton[] {
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Navigation', dashboard,
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
 
-  addHeaderBar(sheet, 2, 'CRYPTOREPORTKIT', theme, 'Navigation Hub \u2022 Click any card to jump to that dashboard');
+  // OtherLevel sidebar (Home is active)
+  addSidebar(sheet, 'CRK Navigation', theme, {
+    dashboard: VISUAL_SHEET_NAMES[dashboard] || 'CRK Dashboard',
+    data: (VISUAL_SHEET_NAMES[dashboard] || 'CRK') + ' Data',
+  });
 
-  // Subtitle row
-  const subRow = sheet.getRow(4);
-  subRow.getCell(2).value = 'Paste your CoinGecko API key in Settings \u2192 Click Data \u2192 Refresh All';
-  subRow.getCell(2).font = { size: 10, color: { argb: theme.muted }, italic: true };
-  subRow.getCell(2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+  // Hero header
+  addHeaderBar(sheet, 2, 'CRYPTOREPORTKIT', theme,
+    'Professional Crypto Analytics Dashboard');
 
-  // Collect sheets that exist in the workbook (exclude Settings, PQ, Docs sheets)
+  // Quick stats bar (row 4) — inline KPI summary cards
+  sheet.getRow(4).height = 30;
+  const statDefs = [
+    { label: 'MARKET CAP', formula: 'GLOBAL("total_market_cap")', format: COMPACT_USD, col: 2 },
+    { label: 'BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"', col: 5 },
+    { label: 'FEAR & GREED', formula: 'FEARGREED()', col: 8 },
+    { label: 'ACTIVE COINS', formula: 'GLOBAL("active_cryptocurrencies")', col: 11 },
+  ];
+  for (const stat of statDefs) {
+    // Label
+    sheet.getCell(4, stat.col).value = stat.label;
+    sheet.getCell(4, stat.col).font = { size: 7, bold: true, color: { argb: theme.muted } };
+    sheet.getCell(4, stat.col).alignment = { horizontal: 'left', vertical: 'middle' };
+    // Value with CRK formula
+    const valCell = sheet.getCell(4, stat.col + 1);
+    valCell.value = { formula: `IFERROR(CRK.${stat.formula},"\u2014")` };
+    valCell.font = { size: 11, bold: true, color: { argb: theme.accent } };
+    valCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    if (stat.format) valCell.numFmt = stat.format;
+    // Card background for stat cell group
+    for (let cc = stat.col; cc <= stat.col + 2; cc++) {
+      sheet.getCell(4, cc).fill = {
+        type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg },
+      };
+    }
+  }
+
+  // === Dashboard cards section ===
+  addSectionDivider(sheet, 6, '  YOUR DASHBOARDS', theme);
+
   const navButtons: NavButton[] = [];
   const sheetName = VISUAL_SHEET_NAMES[dashboard];
   if (sheetName) {
-    navButtons.push({ label: sheetName.replace('CRK ', ''), description: 'Main dashboard', targetSheet: sheetName });
+    navButtons.push({
+      label: sheetName.replace('CRK ', ''),
+      description: 'Main dashboard with KPIs and charts',
+      targetSheet: sheetName,
+    });
   }
   const dataSheet = sheetName ? sheetName + ' Data' : '';
   if (dataSheet) {
-    navButtons.push({ label: 'Data Table', description: 'Raw data', targetSheet: dataSheet });
+    navButtons.push({
+      label: 'Data Table',
+      description: 'Raw data with conditional formatting',
+      targetSheet: dataSheet,
+    });
   }
 
-  // Check for common sub-sheets based on dashboard type
+  // Sub-sheets based on dashboard type
   const subSheets: Record<string, string[]> = {
     'market-overview': ['CRK Trending'],
     'screener': ['CRK Gainers', 'CRK Losers'],
@@ -645,48 +715,101 @@ export function addNavigationSheet(
   };
   const extras = subSheets[dashboard] || [];
   for (const sub of extras) {
-    navButtons.push({ label: sub.replace('CRK ', ''), description: 'Sub-sheet', targetSheet: sub });
+    navButtons.push({
+      label: sub.replace('CRK ', ''),
+      description: 'Additional analysis',
+      targetSheet: sub,
+    });
   }
 
-  // Always add Settings and PQ Setup links
-  navButtons.push({ label: 'Settings', description: 'API Key', targetSheet: 'Settings' });
-  navButtons.push({ label: 'PQ Setup', description: 'Power Query', targetSheet: 'PQ Setup' });
-
-  // Place button labels in cells (shape injector will overlay rounded rectangles)
-  // Layout: 3 buttons per row, starting at row 6
-  const cols = [2, 5, 8]; // B, E, H
-  let row = 6;
+  // Place dashboard card labels in a 3-column grid (shape injector overlays rounded rectangles)
+  const cardCols = [2, 6, 10]; // B, F, J — 4 columns per card
+  const cardWidth = 4;
+  let cardRow = 7;
   let colIdx = 0;
 
   for (const btn of navButtons) {
-    const c = cols[colIdx];
-    // Cell-based fallback label
-    sheet.getCell(row, c).value = btn.label;
-    sheet.getCell(row, c).font = { bold: true, size: 12, color: { argb: theme.text } };
-    sheet.getCell(row, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
-    sheet.getCell(row + 1, c).value = btn.description;
-    sheet.getCell(row + 1, c).font = { size: 9, color: { argb: theme.muted } };
-    sheet.getCell(row + 1, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+    const c = cardCols[colIdx];
+    btn.gridRow = cardRow;
+    btn.gridCol = c;
 
-    // Fill card area
-    for (let r = row; r <= row + 2; r++) {
-      for (let cc = c; cc <= c + 2; cc++) {
-        sheet.getCell(r, cc).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
+    // Card background fill — OtherLevel: full card border + subtle bg
+    for (let r = cardRow; r <= cardRow + 2; r++) {
+      for (let cc = c; cc <= c + cardWidth - 1; cc++) {
+        sheet.getCell(r, cc).fill = {
+          type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg },
+        };
+        // Subtle card border on all sides
+        const isTop = r === cardRow;
+        const isBottom = r === cardRow + 2;
+        const isLeft = cc === c;
+        const isRight = cc === c + cardWidth - 1;
+        sheet.getCell(r, cc).border = {
+          top: isTop ? { style: 'medium', color: { argb: theme.accent } } : { style: 'thin', color: { argb: theme.border } },
+          bottom: isBottom ? { style: 'thin', color: { argb: theme.border } } : undefined,
+          left: isLeft ? { style: 'thin', color: { argb: theme.border } } : undefined,
+          right: isRight ? { style: 'thin', color: { argb: theme.border } } : undefined,
+        };
       }
     }
+    // Cell-based fallback labels
+    sheet.getCell(cardRow, c).value = btn.label;
+    sheet.getCell(cardRow, c).font = { bold: true, size: 13, color: { argb: theme.text } };
+    sheet.getCell(cardRow + 1, c).value = btn.description;
+    sheet.getCell(cardRow + 1, c).font = { size: 9, color: { argb: theme.muted } };
+    // Clickable hyperlink on card label
+    sheet.getCell(cardRow + 2, c).value = { text: 'Open \u203A', hyperlink: `#'${btn.targetSheet}'!A1` };
+    sheet.getCell(cardRow + 2, c).font = { size: 9, bold: true, color: { argb: theme.accent } };
 
     colIdx++;
     if (colIdx >= 3) {
       colIdx = 0;
-      row += 4; // 3 rows per button + 1 row gap
+      cardRow += 4; // 3 rows per card + 1 row gap
     }
   }
 
-  // Footer attribution
-  const footerRow = row + (colIdx > 0 ? 4 : 0) + 1;
-  sheet.getCell(footerRow, 2).value = 'Data provided by CoinGecko \u2022 cryptoreportkit.com';
-  sheet.getCell(footerRow, 2).font = { size: 9, color: { argb: theme.muted }, italic: true };
-  sheet.getCell(footerRow, 2).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg } };
+  // === Setup & Tools section ===
+  const toolsSectionRow = cardRow + (colIdx > 0 ? 4 : 0) + 1;
+  addSectionDivider(sheet, toolsSectionRow, '  SETUP & TOOLS', theme);
+
+  const toolRow = toolsSectionRow + 1;
+  const toolBtns: NavButton[] = [
+    { label: 'Settings', description: 'API key configuration', targetSheet: 'Settings', gridRow: toolRow, gridCol: cardCols[0] },
+    { label: 'PQ Setup', description: 'Power Query connections', targetSheet: 'PQ Setup', gridRow: toolRow, gridCol: cardCols[1] },
+  ];
+
+  for (const btn of toolBtns) {
+    const c = btn.gridCol!;
+    for (let r = toolRow; r <= toolRow + 2; r++) {
+      for (let cc = c; cc <= c + cardWidth - 1; cc++) {
+        sheet.getCell(r, cc).fill = {
+          type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg },
+        };
+        const isTop = r === toolRow;
+        const isBottom = r === toolRow + 2;
+        const isLeft = cc === c;
+        const isRight = cc === c + cardWidth - 1;
+        sheet.getCell(r, cc).border = {
+          top: isTop ? { style: 'medium', color: { argb: theme.accent } } : { style: 'thin', color: { argb: theme.border } },
+          bottom: isBottom ? { style: 'thin', color: { argb: theme.border } } : undefined,
+          left: isLeft ? { style: 'thin', color: { argb: theme.border } } : undefined,
+          right: isRight ? { style: 'thin', color: { argb: theme.border } } : undefined,
+        };
+      }
+    }
+    sheet.getCell(toolRow, c).value = btn.label;
+    sheet.getCell(toolRow, c).font = { bold: true, size: 13, color: { argb: theme.text } };
+    sheet.getCell(toolRow + 1, c).value = btn.description;
+    sheet.getCell(toolRow + 1, c).font = { size: 9, color: { argb: theme.muted } };
+    sheet.getCell(toolRow + 2, c).value = { text: 'Open \u203A', hyperlink: `#'${btn.targetSheet}'!A1` };
+    sheet.getCell(toolRow + 2, c).font = { size: 9, bold: true, color: { argb: theme.accent } };
+  }
+
+  // Add tool buttons to nav list for shape injector
+  navButtons.push(...toolBtns);
+
+  // Footer
+  addFooter(sheet, toolRow + 4, theme);
 
   return navButtons;
 }
@@ -828,7 +951,8 @@ export function addCrkDashboardSheets(
 function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET (charts front and center) ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Dashboard', 'market-overview',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Dashboard', theme, { dashboard: 'CRK Dashboard', data: 'CRK Data' });
 
   addHeaderBar(sheet, 2, 'CRYPTO MARKET DASHBOARD', theme, 'Live data via CRK formulas \u2022 Powered by CoinGecko BYOK');
 
@@ -857,6 +981,7 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 3, 2, 'Market Cap Change', 'GLOBAL("market_cap_change_percentage_24h_usd")', theme, '0.00"%"', d?.global?.market_cap_change_percentage_24h_usd);
   addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', btcPrice);
   addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', ethPrice);
+  addFooter(sheet, afterGrid + 7, theme);
 
   // === DATA SHEET (spill tables for chart data) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Data', 'market-overview');
@@ -900,7 +1025,8 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Screener', 'screener',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Screener', theme, { dashboard: 'CRK Screener', data: 'CRK Screener Data' });
 
   addHeaderBar(sheet, 2, 'CRYPTO SCREENER', theme, 'Top 50 coins by market cap');
   addKPICards(sheet, 5, enrichKPIs(MARKET_KPIS, d), theme);
@@ -920,6 +1046,7 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', btcPrice);
   addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', ethPrice);
   addMetricRow(sheet, afterGrid + 4, 2, 'SOL Price', 'PRICE("solana")', theme, '$#,##0.00', solPrice);
+  addFooter(sheet, afterGrid + 6, theme);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Screener Data', 'screener',
@@ -968,7 +1095,8 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Portfolio', 'portfolio-tracker',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Portfolio', theme, { dashboard: 'CRK Portfolio', data: 'CRK Portfolio Data' });
 
   addHeaderBar(sheet, 2, 'PORTFOLIO TRACKER', theme, 'Track your crypto holdings and performance');
 
@@ -992,6 +1120,7 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 2, 2, 'Total Market Cap', 'GLOBAL("total_market_cap")', theme, COMPACT_USD, d?.global?.total_market_cap);
   addMetricRow(sheet, afterGrid + 3, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
   addMetricRow(sheet, afterGrid + 4, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
+  addFooter(sheet, afterGrid + 6, theme);
 
   // === DATA SHEET (holdings + top coins) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Portfolio Data', 'portfolio-tracker',
@@ -1027,7 +1156,8 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Bitcoin', 'bitcoin-dashboard',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Bitcoin', theme, { dashboard: 'CRK Bitcoin', data: 'CRK Bitcoin Data' });
 
   addHeaderBar(sheet, 2, 'BITCOIN DASHBOARD', theme, 'BTC price, dominance, and technical indicators');
 
@@ -1053,6 +1183,7 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 3, 2, 'Fear & Greed Label', 'FEARGREED("class")', theme, undefined, d?.fearGreed?.[0]?.value_classification);
   addMetricRow(sheet, afterGrid + 4, 2, 'All-Time High', 'ATH("bitcoin")', theme, '$#,##0.00', btcData?.ath);
   addMetricRow(sheet, afterGrid + 5, 2, 'ATH % Down', 'ATH_CHANGE("bitcoin")', theme, '0.00"%"', btcData?.ath_change_percentage);
+  addFooter(sheet, afterGrid + 7, theme);
 
   // === DATA SHEET (technical indicators + OHLC data + comparison) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Bitcoin Data', 'bitcoin-dashboard',
@@ -1207,7 +1338,8 @@ function addGainersLosersDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addFearGreedDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Fear & Greed', 'fear-greed',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Fear & Greed', theme, { dashboard: 'CRK Fear & Greed', data: 'CRK Fear Greed Data' });
 
   addHeaderBar(sheet, 2, 'FEAR & GREED INDEX', theme, 'Crypto market sentiment indicator');
   addKPICards(sheet, 5, enrichKPIs(SENTIMENT_KPIS, d), theme);
@@ -1225,6 +1357,7 @@ function addFearGreedDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 3, 2, '24H Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD, d?.global?.total_volume);
   addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
   addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
+  addFooter(sheet, afterGrid + 7, theme);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Fear Greed Data', 'fear-greed');
@@ -1329,7 +1462,8 @@ function addTechnicalDashboard(workbook: ExcelJS.Workbook, coins: string[], d?: 
 function addDefiDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK DeFi', 'defi-dashboard',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK DeFi', theme, { dashboard: 'CRK DeFi', data: 'CRK DeFi Data' });
 
   addHeaderBar(sheet, 2, 'DEFI DASHBOARD', theme, 'Decentralized finance protocols and metrics');
   addKPICards(sheet, 5, enrichKPIs(DEFI_KPIS, d), theme);
@@ -1346,6 +1480,7 @@ function addDefiDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 2, 2, 'DeFi Market Cap', 'DEFI_GLOBAL("market_cap")', theme, COMPACT_USD, d?.defi?.defi_market_cap);
   addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"', d?.defi?.defi_dominance);
   addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD, d?.defi?.trading_volume_24h);
+  addFooter(sheet, afterGrid + 6, theme);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK DeFi Data', 'defi-dashboard',
@@ -1589,7 +1724,8 @@ function addExchangesDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Ethereum', 'ethereum-dashboard',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Ethereum', theme, { dashboard: 'CRK Ethereum', data: 'CRK Ethereum Data' });
 
   addHeaderBar(sheet, 2, 'ETHEREUM DASHBOARD', theme, 'ETH price, DeFi metrics, and market data');
 
@@ -1615,6 +1751,7 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 3, 2, 'DeFi Dominance', 'DEFI_GLOBAL("dominance")', theme, '0.00"%"', d?.defi?.defi_dominance);
   addMetricRow(sheet, afterGrid + 4, 2, 'DeFi Volume', 'DEFI_GLOBAL("volume")', theme, COMPACT_USD, d?.defi?.trading_volume_24h);
   addMetricRow(sheet, afterGrid + 5, 2, 'All-Time High', 'ATH("ethereum")', theme, '$#,##0.00', ethData?.ath);
+  addFooter(sheet, afterGrid + 7, theme);
 
   // === DATA SHEET (technical indicators + OHLC + DeFi) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Ethereum Data', 'ethereum-dashboard',
@@ -1807,7 +1944,8 @@ function addCategoriesDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addEtfDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK ETFs', 'etf-tracker',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK ETFs', theme, { dashboard: 'CRK ETFs', data: 'CRK ETFs Data' });
 
   addHeaderBar(sheet, 2, 'CRYPTO ETF TRACKER', theme, 'Corporate Bitcoin & Ethereum holdings');
 
@@ -1830,6 +1968,7 @@ function addEtfDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addSectionDivider(sheet, afterGrid, '  MARKET CONTEXT', theme);
   addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
   addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
+  addFooter(sheet, afterGrid + 5, theme);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK ETFs Data', 'etf-tracker',
@@ -2117,7 +2256,8 @@ function addStakingYieldsDashboard(workbook: ExcelJS.Workbook, d?: any) {
 function addSocialSentimentDashboard(workbook: ExcelJS.Workbook, d?: any) {
   // === VISUAL DASHBOARD SHEET ===
   const { sheet, theme } = initDarkSheet(workbook, 'CRK Sentiment', 'social-sentiment',
-    [3, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(sheet, 'CRK Sentiment', theme, { dashboard: 'CRK Sentiment', data: 'CRK Sentiment Data' });
 
   addHeaderBar(sheet, 2, 'SOCIAL SENTIMENT', theme, 'Market sentiment and social trends');
   addKPICards(sheet, 5, enrichKPIs(SENTIMENT_KPIS, d), theme);
@@ -2134,6 +2274,7 @@ function addSocialSentimentDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addMetricRow(sheet, afterGrid + 2, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price);
   addMetricRow(sheet, afterGrid + 3, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', d?.market?.find((c: any) => c.id === 'ethereum')?.current_price);
   addMetricRow(sheet, afterGrid + 4, 2, 'Total Volume', 'GLOBAL("total_volume")', theme, COMPACT_USD, d?.global?.total_volume);
+  addFooter(sheet, afterGrid + 6, theme);
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Sentiment Data', 'social-sentiment');

@@ -203,7 +203,10 @@ function buildShapeAnchors(
     // Build change indicator paragraph
     const changePara = s.change ? `
           <a:p>
-            <a:pPr algn="l" spcBef="0" spcAft="0"/>
+            <a:pPr algn="l">
+              <a:spcBef><a:spcPts val="0"/></a:spcBef>
+              <a:spcAft><a:spcPts val="0"/></a:spcAft>
+            </a:pPr>
             <a:r>
               <a:rPr lang="en-US" sz="1000" b="0" dirty="0">
                 <a:solidFill><a:srgbClr val="${changeColor}"/></a:solidFill>
@@ -250,24 +253,19 @@ function buildShapeAnchors(
           <a:solidFill><a:srgbClr val="${s.accentColor}"><a:alpha val="70000"/></a:srgbClr></a:solidFill>
         </a:ln>
         <a:effectLst>
-          <a:outerShdw blurRad="50800" dist="25400" dir="5400000" algn="t" rotWithShape="0">
-            <a:srgbClr val="000000"><a:alpha val="35000"/></a:srgbClr>
+          <a:outerShdw blurRad="40000" dist="15000" dir="5400000" algn="t" rotWithShape="0">
+            <a:srgbClr val="000000"><a:alpha val="15000"/></a:srgbClr>
           </a:outerShdw>
         </a:effectLst>
-        <a:scene3d>
-          <a:camera prst="orthographicFront"/>
-          <a:lightRig rig="threePt" dir="t"/>
-        </a:scene3d>
-        <a:sp3d>
-          <a:bevelT w="25400" h="6350" prst="relaxedInset"/>
-        </a:sp3d>
       </xdr:spPr>
       <xdr:txBody>
         <a:bodyPr vertOverflow="clip" horzOverflow="clip" wrap="square"
           lIns="109728" tIns="54864" rIns="109728" bIns="54864" anchor="t"/>
         <a:lstStyle/>
         <a:p>
-          <a:pPr algn="l" spcAft="0"/>
+          <a:pPr algn="l">
+            <a:spcAft><a:spcPts val="0"/></a:spcAft>
+          </a:pPr>
           <a:r>
             <a:rPr lang="en-US" sz="850" b="1" dirty="0" spc="80">
               <a:solidFill><a:srgbClr val="${mutedColor}"/></a:solidFill>
@@ -278,7 +276,9 @@ function buildShapeAnchors(
           </a:r>
         </a:p>
         <a:p>
-          <a:pPr algn="l" spcBef="0"/>
+          <a:pPr algn="l">
+            <a:spcBef><a:spcPts val="0"/></a:spcBef>
+          </a:pPr>
           <a:r>
             <a:rPr lang="en-US" sz="2400" b="1" dirty="0">
               <a:solidFill><a:srgbClr val="${textColor}"/></a:solidFill>
@@ -301,7 +301,6 @@ function buildShapeAnchors(
     const targetExists = sheetMap.has(btn.targetSheet);
     const gradStart = lightenColor(btn.fillColor, 8);
     const gradEnd = darkenColor(btn.fillColor, 15);
-    const glowColor = btn.accentColor;
 
     // Build hyperlink element with proper rId for OOXML internal navigation
     let hlinkEl = '';
@@ -353,20 +352,10 @@ function buildShapeAnchors(
           <a:solidFill><a:srgbClr val="${btn.accentColor}"><a:alpha val="80000"/></a:srgbClr></a:solidFill>
         </a:ln>
         <a:effectLst>
-          <a:outerShdw blurRad="40000" dist="20000" dir="5400000" algn="t" rotWithShape="0">
-            <a:srgbClr val="000000"><a:alpha val="30000"/></a:srgbClr>
+          <a:outerShdw blurRad="30000" dist="12000" dir="5400000" algn="t" rotWithShape="0">
+            <a:srgbClr val="000000"><a:alpha val="12000"/></a:srgbClr>
           </a:outerShdw>
-          <a:glow rad="63500">
-            <a:srgbClr val="${glowColor}"><a:alpha val="18000"/></a:srgbClr>
-          </a:glow>
         </a:effectLst>
-        <a:scene3d>
-          <a:camera prst="orthographicFront"/>
-          <a:lightRig rig="balanced" dir="t"/>
-        </a:scene3d>
-        <a:sp3d>
-          <a:bevelT w="19050" h="6350" prst="softRound"/>
-        </a:sp3d>
       </xdr:spPr>
       <xdr:txBody>
         <a:bodyPr vertOverflow="clip" horzOverflow="clip" wrap="square"

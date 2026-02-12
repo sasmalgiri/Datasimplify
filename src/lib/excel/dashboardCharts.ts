@@ -101,7 +101,7 @@ function makeGridCharts(opts: {
       },
       position,
       style: {
-        darkTheme: true,
+        darkTheme: false,
         showLegend: gc.showLegend ?? (isDonut || isMultiSeries),
         colors: p,
       },
@@ -223,16 +223,16 @@ function getMarketOverviewCharts(palette: string[]): ChartDefinition[] {
   return [
     { id: 'mkt-tl', type: 'bar', title: 'Top 10 by Market Cap', sheetName: 'CRK Dashboard',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
-      position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'mkt-tr', type: 'doughnut', title: 'Market Cap Distribution', sheetName: 'CRK Dashboard',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
-      position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: true, colors: palette } },
     { id: 'mkt-bl', type: 'bar', title: '24h Price Change %', sheetName: 'CRK Dashboard',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('24h Change', t, 'Change24h', palette[1])] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'mkt-br', type: 'line', title: 'Price Comparison', sheetName: 'CRK Dashboard',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Price', t, 'Price', palette[2])] },
-      position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: false, colors: palette } },
   ];
 }
 
@@ -242,16 +242,16 @@ function getScreenerCharts(palette: string[]): ChartDefinition[] {
   return [
     { id: 'scr-tl', type: 'bar', title: 'Top 20 by Market Cap', sheetName: 'CRK Screener',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
-      position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'scr-tr', type: 'doughnut', title: 'Market Share (Top 10)', sheetName: 'CRK Screener',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
-      position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: true, colors: palette } },
     { id: 'scr-bl', type: 'bar', title: '24h Change — Top 20', sheetName: 'CRK Screener',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('24h Change', t, 'Change24h', palette[1])] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'scr-br', type: 'bar', title: '7d Change — Top 20', sheetName: 'CRK Screener',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('7d Change', t, 'Change7d', palette[3])] },
-      position: BR, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: false, colors: palette } },
   ];
 }
 
@@ -261,16 +261,16 @@ function getPortfolioCharts(palette: string[]): ChartDefinition[] {
   return [
     { id: 'ptf-tl', type: 'doughnut', title: 'Portfolio Allocation', sheetName: 'CRK Portfolio',
       dataRange: { categories: `${d}!$A$6:$A$15`, values: [{ name: 'Value', ref: `${d}!$C$6:$C$15` }] },
-      position: TL, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: true, colors: palette } },
     { id: 'ptf-tr', type: 'bar', title: 'Holdings by Value', sheetName: 'CRK Portfolio',
       dataRange: { categories: `${d}!$A$6:$A$15`, values: [{ name: 'Value', ref: `${d}!$C$6:$C$15`, color: palette[0] }] },
-      position: TR, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'ptf-bl', type: 'bar', title: 'Top 10 Market Cap', sheetName: 'CRK Portfolio',
       dataRange: { categories: `${d}!$A$30:$A$39`, values: [{ name: 'Market Cap', ref: `${d}!$E$30:$E$39`, color: palette[1] }] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'ptf-br', type: 'doughnut', title: 'Market Overview', sheetName: 'CRK Portfolio',
       dataRange: { categories: `${d}!$A$30:$A$39`, values: [{ name: 'Market Cap', ref: `${d}!$E$30:$E$39` }] },
-      position: BR, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: true, colors: palette } },
   ];
 }
 
@@ -293,7 +293,7 @@ function getBitcoinCharts(palette: string[]): ChartDefinition[] {
           sRef('BB Lower', t, 'BB_Lower', palette[2]),
         ],
       },
-      position: TL, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
     // TR: Moving Averages (line)
     { id: 'btc-tr', type: 'line', title: 'Moving Averages', sheetName: 'CRK Bitcoin',
       dataRange: {
@@ -305,14 +305,14 @@ function getBitcoinCharts(palette: string[]): ChartDefinition[] {
           sRef('EMA(12)', t, 'EMA12', palette[4]),
         ],
       },
-      position: TR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
     // BL: RSI(14)
     { id: 'btc-bl', type: 'line', title: 'RSI(14)', sheetName: 'CRK Bitcoin',
       dataRange: {
         categories: tRef(t, 'Date'),
         values: [sRef('RSI', t, 'RSI14', palette[0])],
       },
-      position: BL, style: { darkTheme: true, showLegend: false, transparent: true, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, transparent: true, colors: palette } },
     // BR: MACD + Signal (combo)
     { id: 'btc-br', type: 'combo', title: 'MACD', sheetName: 'CRK Bitcoin',
       dataRange: {
@@ -323,7 +323,7 @@ function getBitcoinCharts(palette: string[]): ChartDefinition[] {
           sRef('Signal', t, 'Signal', palette[1]),
         ],
       },
-      position: BR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
   ];
 }
 
@@ -340,7 +340,7 @@ function getEthereumCharts(palette: string[]): ChartDefinition[] {
           sRef('BB Lower', t, 'BB_Lower', palette[2]),
         ],
       },
-      position: TL, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
     { id: 'eth-tr', type: 'line', title: 'Moving Averages', sheetName: 'CRK Ethereum',
       dataRange: {
         categories: tRef(t, 'Date'),
@@ -351,13 +351,13 @@ function getEthereumCharts(palette: string[]): ChartDefinition[] {
           sRef('EMA(12)', t, 'EMA12', palette[4]),
         ],
       },
-      position: TR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
     { id: 'eth-bl', type: 'line', title: 'RSI(14)', sheetName: 'CRK Ethereum',
       dataRange: {
         categories: tRef(t, 'Date'),
         values: [sRef('RSI', t, 'RSI14', palette[0])],
       },
-      position: BL, style: { darkTheme: true, showLegend: false, transparent: true, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, transparent: true, colors: palette } },
     { id: 'eth-br', type: 'combo', title: 'MACD', sheetName: 'CRK Ethereum',
       dataRange: {
         categories: tRef(t, 'Date'),
@@ -367,7 +367,7 @@ function getEthereumCharts(palette: string[]): ChartDefinition[] {
           sRef('Signal', t, 'Signal', palette[1]),
         ],
       },
-      position: BR, style: { darkTheme: true, showLegend: true, transparent: true, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: true, transparent: true, colors: palette } },
   ];
 }
 
@@ -382,19 +382,19 @@ function getDefiCharts(palette: string[]): ChartDefinition[] {
   return [
     { id: 'defi-tl', type: 'bar', title: 'Top DeFi by Market Cap', sheetName: 'CRK DeFi',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap', palette[0])] },
-      position: TL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: TL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'defi-tr', type: 'doughnut', title: 'DeFi Protocol Share', sheetName: 'CRK DeFi',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Market Cap', t, 'MarketCap')] },
-      position: TR, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: TR, style: { darkTheme: false, showLegend: true, colors: palette } },
     { id: 'defi-bl', type: 'bar', title: '24h Trading Volume', sheetName: 'CRK DeFi',
       dataRange: { categories: tRef(t, 'Name'), values: [sRef('Volume', t, 'Volume24h', palette[1])] },
-      position: BL, style: { darkTheme: true, showLegend: false, colors: palette } },
+      position: BL, style: { darkTheme: false, showLegend: false, colors: palette } },
     { id: 'defi-br', type: 'line', title: 'MCap vs Volume', sheetName: 'CRK DeFi',
       dataRange: { categories: tRef(t, 'Name'), values: [
         sRef('Market Cap', t, 'MarketCap', palette[0]),
         sRef('Volume', t, 'Volume24h', palette[1]),
       ] },
-      position: BR, style: { darkTheme: true, showLegend: true, colors: palette } },
+      position: BR, style: { darkTheme: false, showLegend: true, colors: palette } },
   ];
 }
 
@@ -797,7 +797,7 @@ function makeGridChartsLegacy(opts: {
         values: [{ name: gc.title, ref: `${d}!$${gc.valCol}$${r1}:$${gc.valCol}$${r2}`, color: p[idx] }],
       },
       position,
-      style: { darkTheme: true, showLegend: gc.type === 'doughnut' || gc.type === 'pie', colors: p },
+      style: { darkTheme: false, showLegend: gc.type === 'doughnut' || gc.type === 'pie', colors: p },
     };
   };
 

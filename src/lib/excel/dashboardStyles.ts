@@ -30,12 +30,12 @@ export const COMPACT_USD_FULL = '[>=1000000000000]$#,##0.0,,,,"T";[>=1000000000]
 export const CHANGE_FORMAT = '"▲ "0.00"%";"▼ "0.00"%";"— "0.00"%"';
 
 // ============================================
-// INIT DARK SHEET — Premium Foundation
+// INIT SHEET — Premium Light Theme Foundation
 // ============================================
 
 /**
- * Initialize a premium dark-themed worksheet.
- * Hides gridlines (Other Level signature), fills visible area with theme bg,
+ * Initialize a premium themed worksheet.
+ * Hides gridlines for clean website-like look, fills visible area with theme bg,
  * adds right margin column for floating dashboard effect.
  */
 export function initDarkSheet(
@@ -61,7 +61,8 @@ export function initDarkSheet(
     sheet.getColumn(c).width = 3;
   }
 
-  // Fill visible area with dark background (rows 1-80, cols A through right margin)
+  // Fill visible area with theme background (rows 1-80, cols A through right margin)
+  // For light themes: white/light gray creates clean website-like canvas
   const totalCols = rightMarginStart + 4;
   for (let r = 1; r <= 80; r++) {
     const row = sheet.getRow(r);
@@ -74,8 +75,11 @@ export function initDarkSheet(
     }
   }
 
-  // Hide gridlines + row/column headers — Other Level's "app-like" design methodology
-  // Freeze top rows so header + KPI cards stay visible while scrolling
+  // === NAVIGATION BAR (Row 1) — Website-like top nav ===
+  addSheetNavBar(sheet, name, theme);
+
+  // Hide gridlines + row/column headers — clean website-like design
+  // Freeze top rows so header + nav stays visible while scrolling
   sheet.views = [{
     showGridLines: false,
     showRowColHeaders: false,
@@ -86,6 +90,178 @@ export function initDarkSheet(
   }];
 
   return { sheet, theme };
+}
+
+/**
+ * Add a thin breadcrumb status bar at row 1 of every sheet.
+ * OtherLevel design: minimal top bar with page path; sidebar handles full navigation.
+ */
+export function addSheetNavBar(
+  sheet: ExcelJS.Worksheet,
+  currentSheetName: string,
+  theme: DashboardTheme,
+): void {
+  sheet.getRow(1).height = 22;
+
+  // Dark status bar background across full width
+  for (let c = 1; c <= 18; c++) {
+    sheet.getCell(1, c).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: theme.headerBg },
+    };
+    sheet.getCell(1, c).border = {
+      bottom: { style: 'thin', color: { argb: theme.accent } },
+    };
+  }
+
+  // Clickable breadcrumb path in column B
+  const pageName = currentSheetName.replace('CRK ', '');
+  const cell = sheet.getCell(1, 2);
+  cell.value = { text: `CRK  \u203A  ${pageName}`, hyperlink: "#'CRK Navigation'!A1" };
+  cell.font = { size: 9, color: { argb: theme.muted } };
+  cell.alignment = { horizontal: 'left', vertical: 'middle' };
+
+  // Generated date on the right side
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+  const tsCell = sheet.getCell(1, 13);
+  tsCell.value = dateStr;
+  tsCell.font = { size: 8, color: { argb: theme.muted } };
+  tsCell.alignment = { horizontal: 'right', vertical: 'middle' };
+}
+
+// ============================================
+// SIDEBAR NAVIGATION — OtherLevel Signature
+// ============================================
+
+/**
+ * Add a dark left sidebar navigation panel in column A.
+ * OtherLevel-inspired: fixed dark sidebar with brand, nav links, and tools section.
+ * Only added to visual dashboard sheets, not data sheets.
+ */
+export function addSidebar(
+  sheet: ExcelJS.Worksheet,
+  currentSheetName: string,
+  theme: DashboardTheme,
+  navTargets?: { dashboard?: string; data?: string },
+): void {
+  const sidebarBg = theme.headerBg;
+
+  // Set column A to sidebar width
+  sheet.getColumn(1).width = 18;
+
+  // Fill sidebar column with dark background + accent right border separator
+  for (let r = 1; r <= 80; r++) {
+    const cell = sheet.getCell(r, 1);
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sidebarBg } };
+    cell.border = { right: { style: 'thin', color: { argb: theme.accent } } };
+  }
+
+  // Brand logo — OtherLevel: prominent brand mark
+  const brandCell = sheet.getCell(2, 1);
+  brandCell.value = 'CRK';
+  brandCell.font = { size: 18, bold: true, color: { argb: theme.accent } };
+  brandCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getRow(2).height = 32;
+
+  // Thin divider line
+  sheet.getCell(3, 1).border = {
+    bottom: { style: 'thin', color: { argb: theme.accent } },
+    right: { style: 'thin', color: { argb: theme.accent } },
+  };
+  sheet.getRow(3).height = 8;
+
+  // MENU section label
+  sheet.getCell(4, 1).value = 'MENU';
+  sheet.getCell(4, 1).font = { size: 7, bold: true, color: { argb: theme.muted } };
+  sheet.getCell(4, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getRow(4).height = 18;
+
+  // Navigation items
+  const navItems: Array<{ label: string; target: string }> = [
+    { label: 'Home', target: 'CRK Navigation' },
+  ];
+  if (navTargets?.dashboard) {
+    navItems.push({ label: 'Dashboard', target: navTargets.dashboard });
+  }
+  if (navTargets?.data) {
+    navItems.push({ label: 'Data', target: navTargets.data });
+  }
+
+  let row = 5;
+  for (const item of navItems) {
+    const navCell = sheet.getCell(row, 1);
+    const isActive = currentSheetName === item.target
+      || currentSheetName.startsWith(item.target.replace('CRK ', ''));
+
+    if (isActive) {
+      navCell.value = `\u25B8 ${item.label}`;
+      navCell.font = { size: 9, bold: true, color: { argb: theme.accent } };
+      navCell.border = {
+        left: { style: 'thick', color: { argb: theme.accent } },
+        right: { style: 'thin', color: { argb: theme.accent } },
+      };
+    } else {
+      navCell.value = { text: `  ${item.label}`, hyperlink: `#'${item.target}'!A1` };
+      navCell.font = { size: 9, color: { argb: theme.headerText } };
+    }
+    navCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    row++;
+  }
+
+  row++; // spacer
+
+  // TOOLS section label
+  sheet.getCell(row, 1).value = 'TOOLS';
+  sheet.getCell(row, 1).font = { size: 7, bold: true, color: { argb: theme.muted } };
+  sheet.getCell(row, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+  row++;
+
+  const toolItems = [
+    { label: 'Settings', target: 'Settings' },
+    { label: 'PQ Setup', target: 'PQ Setup' },
+    { label: 'Docs', target: 'Documentation' },
+  ];
+
+  for (const item of toolItems) {
+    const toolCell = sheet.getCell(row, 1);
+    const isActive = currentSheetName === item.target;
+
+    if (isActive) {
+      toolCell.value = `\u25B8 ${item.label}`;
+      toolCell.font = { size: 9, bold: true, color: { argb: theme.accent } };
+      toolCell.border = {
+        left: { style: 'thick', color: { argb: theme.accent } },
+        right: { style: 'thin', color: { argb: theme.accent } },
+      };
+    } else {
+      toolCell.value = { text: `  ${item.label}`, hyperlink: `#'${item.target}'!A1` };
+      toolCell.font = { size: 9, color: { argb: theme.headerText } };
+    }
+    toolCell.alignment = { horizontal: 'left', vertical: 'middle' };
+    row++;
+  }
+
+  // Sidebar footer branding
+  sheet.getCell(42, 1).value = 'CryptoReportKit';
+  sheet.getCell(42, 1).font = { size: 7, italic: true, color: { argb: theme.muted } };
+  sheet.getCell(42, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+  sheet.getCell(43, 1).value = 'v3.0';
+  sheet.getCell(43, 1).font = { size: 7, color: { argb: theme.muted } };
+  sheet.getCell(43, 1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+  // Update freeze panes: freeze sidebar column + header rows
+  sheet.views = [{
+    showGridLines: false,
+    showRowColHeaders: false,
+    state: 'frozen',
+    xSplit: 1,
+    ySplit: 3,
+    topLeftCell: 'B4',
+    activeCell: 'B4',
+  }];
 }
 
 // ============================================
@@ -430,6 +606,9 @@ export function addDataBars(
       {
         type: 'dataBar',
         priority: 10,
+        minLength: 0,
+        maxLength: 100,
+        gradient: true,
         cfvo: [{ type: 'min' }, { type: 'max' }],
         color: { argb: color },
       } as unknown as ExcelJS.ConditionalFormattingRule,
@@ -686,4 +865,46 @@ export function populateExchangeRows(
       sheet.getCell(r, c).font = { size: 10, color: { argb: theme.text } };
     }
   }
+}
+
+// ============================================
+// FOOTER — Consistent branding on every sheet
+// ============================================
+
+/**
+ * Add a branded footer with attribution and timestamp.
+ * OtherLevel pattern: thin separator + attribution line.
+ */
+export function addFooter(
+  sheet: ExcelJS.Worksheet,
+  row: number,
+  theme: DashboardTheme,
+): void {
+  // Thin separator line
+  for (let c = 2; c <= 14; c++) {
+    sheet.getCell(row, c).border = {
+      top: { style: 'thin', color: { argb: theme.border } },
+    };
+    sheet.getCell(row, c).fill = {
+      type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg },
+    };
+  }
+  sheet.getRow(row).height = 8;
+
+  // Attribution row
+  const footRow = row + 1;
+  sheet.mergeCells(footRow, 2, footRow, 8);
+  sheet.getCell(footRow, 2).value = 'Data provided by CoinGecko  \u2022  cryptoreportkit.com';
+  sheet.getCell(footRow, 2).font = { size: 8, italic: true, color: { argb: theme.muted } };
+  sheet.getCell(footRow, 2).alignment = { horizontal: 'left', vertical: 'middle' };
+
+  // Timestamp on right
+  sheet.mergeCells(footRow, 9, footRow, 14);
+  const dateStr = new Date().toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+  });
+  sheet.getCell(footRow, 9).value = `Generated: ${dateStr}`;
+  sheet.getCell(footRow, 9).font = { size: 8, italic: true, color: { argb: theme.muted } };
+  sheet.getCell(footRow, 9).alignment = { horizontal: 'right', vertical: 'middle' };
+  sheet.getRow(footRow).height = 18;
 }

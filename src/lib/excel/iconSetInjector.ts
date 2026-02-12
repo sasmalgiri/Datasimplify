@@ -112,7 +112,7 @@ export async function injectIconSets(
 
 function buildIconSetCF(def: IconSetDef, priority: number): string {
   const thresholds = def.thresholds || [-999, 0, 0.01];
-  const showValueAttr = def.showValue === false ? '' : '';
+  const showValueAttr = def.showValue === false ? ' showValue="0"' : '';
   const reverseAttr = def.reverse ? ' reverse="1"' : '';
   const iconSetAttr = def.iconSet !== '3Arrows' ? ` iconSet="${def.iconSet}"` : '';
 

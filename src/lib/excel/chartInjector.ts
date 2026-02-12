@@ -251,6 +251,7 @@ function buildChartXml(chart: ChartDefinition, chartNum: number): string {
 <c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"
               xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
               xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  ${chart.style?.roundedCorners ? '<c:roundedCorners val="1"/>' : ''}
   <c:chart>
     <c:title>
       <c:tx>
@@ -279,7 +280,6 @@ function buildChartXml(chart: ChartDefinition, chartNum: number): string {
     ${legendXml}
     <c:plotVisOnly val="1"/>
   </c:chart>
-  ${chart.style?.roundedCorners ? '<c:roundedCorners val="1"/>' : ''}
   <c:spPr>
     ${chart.style?.transparent ? '<a:noFill/>' : `<a:solidFill><a:srgbClr val="${bgColor}"/></a:solidFill>`}
     <a:ln><a:noFill/></a:ln>
