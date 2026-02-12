@@ -13,6 +13,7 @@ import {
   createProgressBar,
   colorHeatmapCell,
 } from './charts';
+import { applyLegacyDesign } from './masterGenerator';
 
 /** Safely coerce any value to a number (guards against null/undefined/string from API) */
 function num(v: any): number {
@@ -207,6 +208,8 @@ export function addBitcoinDashboard(
     { label: 'Circulating', value: circulating, percentage: (circulating / 21000000) * 100, color: COLORS.bitcoin },
     { label: 'Unmined', value: remaining, percentage: (remaining / 21000000) * 100, color: COLORS.light },
   ]);
+
+  applyLegacyDesign(sheet, 'Bitcoin', 19, 9);
 }
 
 // ============================================
@@ -337,6 +340,8 @@ export function addEthereumDashboard(
   sheet.getCell('H14').value = 'From ATH';
   sheet.getCell('I14').value = `${num(ethData?.ath_change_percentage || 0).toFixed(2)}%`;
   sheet.getCell('I14').font = { bold: true, color: { argb: COLORS.danger } };
+
+  applyLegacyDesign(sheet, 'Ethereum', 17, 9);
 }
 
 // ============================================
@@ -431,6 +436,8 @@ export function addLayer1Comparison(
     value: c.market_cap,
     color: COLORS.cyan,
   })), { title: '📊 Market Cap Comparison' });
+
+  applyLegacyDesign(sheet, 'Layer1_Compare', chartRow + 10, 10);
 }
 
 // ============================================
@@ -516,6 +523,8 @@ export function addLayer2Comparison(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Layer2_Compare', 5 + layer2Coins.length, 8);
 }
 
 // ============================================
@@ -611,6 +620,8 @@ export function addMemeCoins(
   sheet.getCell(`B${statsRow + 2}`).value = 'Average 24h Change:';
   sheet.getCell(`C${statsRow + 2}`).value = `${avgChange >= 0 ? '+' : ''}${num(avgChange).toFixed(2)}%`;
   sheet.getCell(`C${statsRow + 2}`).font = { color: { argb: avgChange >= 0 ? COLORS.success : COLORS.danger } };
+
+  applyLegacyDesign(sheet, 'Meme_Coins', statsRow + 2, 8);
 }
 
 // ============================================
@@ -703,6 +714,8 @@ export function addAIGamingTokens(
     cell24h.value = `${change24h >= 0 ? '+' : ''}${num(change24h).toFixed(2)}%`;
     cell24h.font = { color: { argb: change24h >= 0 ? COLORS.success : COLORS.danger } };
   });
+
+  applyLegacyDesign(sheet, 'AI_Gaming', 5 + Math.max(aiCoins.length, gamingCoins.length), 12);
 }
 
 // ============================================
@@ -829,6 +842,8 @@ export function addInvestmentCalculator(
     sheet.getCell(`C${row}`).value = `=C17*${target.multiplier}`;
     sheet.getCell(`C${row}`).numFmt = '$#,##0';
   });
+
+  applyLegacyDesign(sheet, 'Calculator', 24, 8);
 }
 
 // ============================================
@@ -918,6 +933,8 @@ export function addVolatilityAnalysis(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Volatility', 5 + volatileCoins.length, 8);
 }
 
 // ============================================
@@ -1038,6 +1055,8 @@ export function addLiquidationsDashboard(
     sheet.getCell(`C${legendRow + 1 + i}`).value = r.risk;
     sheet.getCell(`C${legendRow + 1 + i}`).font = { color: { argb: r.color } };
   });
+
+  applyLegacyDesign(sheet, 'Liquidations', legendRow + 5, 7);
 }
 
 // ============================================
@@ -1146,6 +1165,8 @@ export function addFundingRatesDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Funding_Rates', 12 + coins.length, 7);
 }
 
 // ============================================
@@ -1257,6 +1278,8 @@ export function addAltcoinSeasonDashboard(
     sheet.getCell(`D${row}`).value = `+${num(vsBtc).toFixed(2)}%`;
     sheet.getCell(`D${row}`).font = { color: { argb: COLORS.cyan } };
   });
+
+  applyLegacyDesign(sheet, 'Altcoin_Season', 13 + topAltPerformers.length, 6);
 }
 
 // ============================================
@@ -1365,6 +1388,8 @@ export function addTokenUnlocksDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Token_Unlocks', 12 + tokensWithUnlocks.length, 7);
 }
 
 // ============================================
@@ -1460,6 +1485,8 @@ export function addStakingYieldsDashboard(
       .slice(0, 8),
     { title: '📊 APY Comparison' }
   );
+
+  applyLegacyDesign(sheet, 'Staking_Yields', chartRow + 10, 7);
 }
 
 // ============================================
@@ -1553,6 +1580,8 @@ export function addSocialSentimentDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Social_Sentiment', 5 + coins.length, 7);
 }
 
 // ============================================
@@ -1630,6 +1659,8 @@ export function addDeveloperActivityDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Dev_Activity', 5 + devData.length, 6);
 }
 
 // ============================================
@@ -1724,6 +1755,8 @@ export function addExchangeReservesDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Exchange_Reserves', 5 + reserveData.length, 6);
 }
 
 // ============================================
@@ -1817,6 +1850,8 @@ export function addDeFiYieldsDashboard(
   sheet.getCell(`B${warnRow}`).value = '⚠️ DeFi carries smart contract risk. Higher APY often means higher risk. DYOR!';
   sheet.getCell(`B${warnRow}`).font = { italic: true, color: { argb: COLORS.warning } };
   sheet.getCell(`B${warnRow}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF3CD' } };
+
+  applyLegacyDesign(sheet, 'DeFi_Yields', warnRow, 7);
 }
 
 // ============================================
@@ -1900,6 +1935,8 @@ export function addMetaverseTokensDashboard(
       }
     }
   });
+
+  applyLegacyDesign(sheet, 'Metaverse', 5 + metaverseCoins.length, 8);
 }
 
 // ============================================
@@ -1982,6 +2019,8 @@ export function addPrivacyCoinsDashboard(
   sheet.mergeCells(`B${disclaimerRow}:G${disclaimerRow}`);
   sheet.getCell(`B${disclaimerRow}`).value = '⚠️ Note: Privacy coins may face regulatory restrictions in some jurisdictions.';
   sheet.getCell(`B${disclaimerRow}`).font = { italic: true, color: { argb: COLORS.warning } };
+
+  applyLegacyDesign(sheet, 'Privacy_Coins', disclaimerRow, 7);
 }
 
 // ============================================
@@ -2087,6 +2126,8 @@ export function addMiningCalculatorDashboard(
   sheet.mergeCells('E12:F12');
   sheet.getCell('E12').value = '⚠️ Estimates based on current difficulty. Actual results vary.';
   sheet.getCell('E12').font = { italic: true, size: 10, color: { argb: COLORS.warning } };
+
+  applyLegacyDesign(sheet, 'Mining_Calculator', 19, 6);
 }
 
 // ============================================

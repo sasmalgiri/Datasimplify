@@ -2067,6 +2067,19 @@ function addDashboardSheet(workbook: ExcelJS.Workbook, data: any, options?: Part
     sheet.getCell(`I${row}`).value = formatCompact(coin.total_volume);
     sheet.getCell(`I${row}`).font = { color: { argb: mutedColor } };
   });
+
+  // Footer attribution
+  const footerRow = dataStartRow + 11;
+  for (let c = 2; c <= 9; c++) {
+    sheet.getCell(footerRow, c).border = { top: { style: 'thin', color: { argb: themeColors.border } } };
+  }
+  sheet.getRow(footerRow).height = 8;
+  sheet.getCell(footerRow + 1, 2).value = 'Data provided by CoinGecko  \u2022  cryptoreportkit.com';
+  sheet.getCell(footerRow + 1, 2).font = { size: 8, italic: true, color: { argb: themeColors.muted } };
+  const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  sheet.getCell(footerRow + 1, 8).value = `Generated: ${dateStr}`;
+  sheet.getCell(footerRow + 1, 8).font = { size: 8, italic: true, color: { argb: themeColors.muted } };
+  sheet.getCell(footerRow + 1, 8).alignment = { horizontal: 'right' };
 }
 
 function addCard(
@@ -3927,7 +3940,7 @@ function addDocumentationSheet(workbook: ExcelJS.Workbook) {
  * @param lastContentRow - The last row containing content
  * @param maxCol - Rightmost column number used in the sheet (for breadcrumb width)
  */
-function applyLegacyDesign(
+export function applyLegacyDesign(
   sheet: ExcelJS.Worksheet,
   sheetName: string,
   lastContentRow: number,

@@ -161,7 +161,7 @@ export function addSidebar(
 
   // Brand logo — OtherLevel: prominent brand mark
   const brandCell = sheet.getCell(2, 1);
-  brandCell.value = 'CRK';
+  brandCell.value = '⬡ CRK';
   brandCell.font = { size: 18, bold: true, color: { argb: theme.accent } };
   brandCell.alignment = { horizontal: 'center', vertical: 'middle' };
   sheet.getRow(2).height = 32;
@@ -181,13 +181,13 @@ export function addSidebar(
 
   // Navigation items
   const navItems: Array<{ label: string; target: string }> = [
-    { label: 'Home', target: 'CRK Navigation' },
+    { label: '🏠 Home', target: 'CRK Navigation' },
   ];
   if (navTargets?.dashboard) {
-    navItems.push({ label: 'Dashboard', target: navTargets.dashboard });
+    navItems.push({ label: '📊 Dashboard', target: navTargets.dashboard });
   }
   if (navTargets?.data) {
-    navItems.push({ label: 'Data', target: navTargets.data });
+    navItems.push({ label: '📋 Data', target: navTargets.data });
   }
 
   let row = 5;
@@ -220,9 +220,9 @@ export function addSidebar(
   row++;
 
   const toolItems = [
-    { label: 'Settings', target: 'Settings' },
-    { label: 'PQ Setup', target: 'PQ Setup' },
-    { label: 'Docs', target: 'Documentation' },
+    { label: '⚙️ Settings', target: 'Settings' },
+    { label: '🔗 PQ Setup', target: 'PQ Setup' },
+    { label: '📖 Docs', target: 'Documentation' },
   ];
 
   for (const item of toolItems) {
@@ -248,7 +248,7 @@ export function addSidebar(
   sheet.getCell(42, 1).value = 'CryptoReportKit';
   sheet.getCell(42, 1).font = { size: 7, italic: true, color: { argb: theme.muted } };
   sheet.getCell(42, 1).alignment = { horizontal: 'center', vertical: 'middle' };
-  sheet.getCell(43, 1).value = 'v3.0';
+  sheet.getCell(43, 1).value = '✨ v3.0';
   sheet.getCell(43, 1).font = { size: 7, color: { argb: theme.muted } };
   sheet.getCell(43, 1).alignment = { horizontal: 'center', vertical: 'middle' };
 
@@ -758,6 +758,21 @@ export function addMetricRow(
   format?: string,
   fallbackValue?: number | string,
 ): void {
+  const endCol = labelCol + 2; // 3 columns wide for card effect
+
+  // Card background fill (premium mini-card look)
+  for (let c = labelCol; c <= endCol; c++) {
+    sheet.getCell(row, c).fill = {
+      type: 'pattern', pattern: 'solid',
+      fgColor: { argb: theme.cardBg },
+    };
+  }
+
+  // Accent left border (matching KPI card signature)
+  sheet.getCell(row, labelCol).border = {
+    left: { style: 'medium', color: { argb: theme.accent } },
+  };
+
   const labelCell = sheet.getCell(row, labelCol);
   labelCell.value = label;
   labelCell.font = { size: 11, bold: true, color: { argb: theme.text } };
@@ -781,7 +796,7 @@ export function addMetricRow(
   if (format) {
     valueCell.numFmt = format;
   }
-  sheet.getRow(row).height = 22;
+  sheet.getRow(row).height = 26; // Slightly taller for card spacing
 }
 
 // ============================================
