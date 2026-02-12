@@ -681,7 +681,8 @@ export async function generateMasterExcel(options: GenerateOptions): Promise<Buf
  */
 function createPQDataSheets(
   workbook: ExcelJS.Workbook,
-  queries: PowerQueryDefinition[]
+  queries: PowerQueryDefinition[],
+  prefetchedData?: any,
 ): PQSheetMapping[] {
   const mappings: PQSheetMapping[] = [];
 
@@ -701,10 +702,24 @@ function createPQDataSheets(
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
     });
 
-    // Add one empty data row (Excel tables need header + at least 1 data row)
-    query.columns.forEach((_, i) => {
-      sheet.getCell(2, i + 1).value = '';
-    });
+    // Pre-fill data rows from prefetched data if available
+    const dataRows = prefetchedData ? resolvePQData(query.name, query.columns, prefetchedData) : [];
+    const rowCount = Math.max(dataRows.length, 1);
+
+    if (dataRows.length > 0) {
+      for (let r = 0; r < dataRows.length; r++) {
+        const row = dataRows[r];
+        for (let c = 0; c < query.columns.length; c++) {
+          const cell = sheet.getCell(r + 2, c + 1);
+          cell.value = row[c] ?? '';
+        }
+      }
+    } else {
+      // Fallback: one empty data row (Excel tables need header + at least 1 data row)
+      query.columns.forEach((_, i) => {
+        sheet.getCell(2, i + 1).value = '';
+      });
+    }
 
     // Set column widths
     query.columns.forEach((col, i) => {
@@ -716,11 +731,142 @@ function createPQDataSheets(
       queryName: query.name,
       sheetName,
       columns: [...query.columns],
-      dataRowCount: 1,
+      dataRowCount: rowCount,
     });
   }
 
   return mappings;
+}
+
+/**
+ * Maps prefetched CoinGecko data to PQ table row arrays based on query name + columns.
+ * Returns array of row arrays (each row is array of cell values matching column order).
+ */
+function resolvePQData(queryName: string, columns: string[], data: any): (string | number)[][] {
+  if (!data) return [];
+
+  switch (queryName) {
+    case 'CRK_Market': {
+      const rows = (data.market || []).slice(0, 100);
+      return rows.map((c: any) => mapMarketRow(columns, c));
+    }
+    case 'CRK_Global': {
+      const g = data.global || {};
+      const totalMcap = Object.values(g.total_market_cap || {}).reduce((a: number, b: any) => a + Number(b || 0), 0);
+      const totalVol = Object.values(g.total_volume || {}).reduce((a: number, b: any) => a + Number(b || 0), 0);
+      const btcDom = g.market_cap_percentage?.btc ?? 0;
+      const ethDom = g.market_cap_percentage?.eth ?? 0;
+      return [
+        ['Total Market Cap', totalMcap],
+        ['Total 24h Volume', totalVol],
+        ['BTC Dominance %', btcDom],
+        ['ETH Dominance %', ethDom],
+        ['Active Cryptos', g.active_cryptocurrencies ?? 0],
+        ['Markets', g.markets ?? 0],
+      ];
+    }
+    case 'CRK_Trending': {
+      const items = (data.trending || []).slice(0, 15);
+      return items.map((t: any) => {
+        const item = t.item || t;
+        return [
+          item.id ?? '',
+          item.name ?? '',
+          item.symbol ?? '',
+          item.market_cap_rank ?? 0,
+          item.score ?? 0,
+        ];
+      });
+    }
+    case 'CRK_FearGreed': {
+      const items = (data.fearGreed || []).slice(0, 90);
+      return items.map((f: any) => {
+        const ts = Number(f.timestamp || 0);
+        const dateStr = ts ? new Date(ts * 1000).toISOString().slice(0, 10) : '';
+        return [
+          Number(f.value || 0),
+          f.value_classification || '',
+          ts,
+          dateStr,
+        ];
+      });
+    }
+    case 'CRK_Gainers': {
+      const sorted = [...(data.market || [])].sort((a: any, b: any) =>
+        (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0));
+      return sorted.slice(0, 20).map((c: any, i: number) => [
+        i + 1, c.id ?? '', c.name ?? '', c.symbol ?? '',
+        c.current_price ?? 0, c.price_change_percentage_24h ?? 0,
+        c.total_volume ?? 0, c.market_cap ?? 0,
+      ]);
+    }
+    case 'CRK_Losers': {
+      const sorted = [...(data.market || [])].sort((a: any, b: any) =>
+        (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0));
+      return sorted.slice(0, 20).map((c: any, i: number) => [
+        i + 1, c.id ?? '', c.name ?? '', c.symbol ?? '',
+        c.current_price ?? 0, c.price_change_percentage_24h ?? 0,
+        c.total_volume ?? 0, c.market_cap ?? 0,
+      ]);
+    }
+    case 'CRK_DeFi': {
+      // DeFi tokens from market data (filter known DeFi tokens by category or use top by MCap)
+      const defiIds = ['uniswap', 'aave', 'maker', 'lido-dao', 'chainlink', 'the-graph',
+        'compound-governance-token', 'pancakeswap-token', 'curve-dao-token', 'sushi',
+        'yearn-finance', 'synthetix-network-token', '1inch', 'convex-finance', 'balancer',
+        'ribbon-finance', 'frax', 'radiant-capital', 'pendle', 'joe'];
+      const defiCoins = (data.market || []).filter((c: any) => defiIds.includes(c.id));
+      const fallback = defiCoins.length >= 5 ? defiCoins : (data.market || []).slice(0, 20);
+      return fallback.slice(0, 20).map((c: any, i: number) => [
+        i + 1, c.name ?? '', c.symbol ?? '', c.current_price ?? 0,
+        c.market_cap ?? 0, c.total_volume ?? 0, c.price_change_percentage_24h ?? 0,
+      ]);
+    }
+    case 'CRK_Exchanges': {
+      const exch = (data.exchanges || []).slice(0, 50);
+      return exch.map((e: any, i: number) => [
+        i + 1, e.name ?? '', e.trust_score ?? 0,
+        e.trade_volume_24h_btc ?? 0, e.year_established ?? 0, e.country ?? '',
+      ]);
+    }
+    case 'CRK_Stablecoins': {
+      const stableIds = ['tether', 'usd-coin', 'dai', 'first-digital-usd', 'ethena-usde',
+        'frax', 'trueusd', 'pax-dollar', 'usdd', 'gemini-dollar'];
+      const stables = (data.market || []).filter((c: any) => stableIds.includes(c.id));
+      const fallback = stables.length >= 3 ? stables : [];
+      return fallback.slice(0, 10).map((c: any, i: number) => [
+        i + 1, c.name ?? '', c.symbol ?? '', c.current_price ?? 0,
+        c.market_cap ?? 0, c.total_volume ?? 0, c.circulating_supply ?? 0,
+        Math.abs((c.current_price ?? 1) - 1) * 100,
+      ]);
+    }
+    default:
+      return [];
+  }
+}
+
+/** Maps a single CoinGecko market coin object to PQ table row based on column names */
+function mapMarketRow(columns: string[], c: any): (string | number)[] {
+  return columns.map(col => {
+    switch (col) {
+      case 'Rank': return c.market_cap_rank ?? 0;
+      case 'Name': return c.name ?? '';
+      case 'Symbol': return (c.symbol ?? '').toUpperCase();
+      case 'Price': return c.current_price ?? 0;
+      case 'MarketCap': return c.market_cap ?? 0;
+      case 'Volume24h': return c.total_volume ?? 0;
+      case 'Change24h': return c.price_change_percentage_24h ?? 0;
+      case 'Change7d': return c.price_change_percentage_7d_in_currency ?? 0;
+      case 'Change30d': return c.price_change_percentage_30d_in_currency ?? 0;
+      case 'ATH': return c.ath ?? 0;
+      case 'ATHChange': return c.ath_change_percentage ?? 0;
+      case 'LastUpdated': return c.last_updated ?? '';
+      case 'MktShare': return 0; // Computed by PQ analytics
+      case 'VolMcapRatio': return c.market_cap ? (c.total_volume ?? 0) / c.market_cap : 0;
+      case 'PerfScore': return 0; // Computed by PQ analytics
+      default: return '';
+    }
+  });
 }
 
 // ============================================
@@ -1251,9 +1397,9 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   const coins = options.coins || ['bitcoin', 'ethereum', 'solana'];
   addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
 
-  // Create PQ data sheets (one per query) for Load-to-Table injection
-  // Each sheet gets column headers; PQ Refresh All populates with live data
-  const pqSheetMappings = createPQDataSheets(workbook, queries);
+  // Create PQ data sheets (one per query) pre-filled with fetched data
+  // These are regular worksheets with real data — no PQ table linking needed
+  createPQDataSheets(workbook, queries, prefetchedData);
 
   // Add a lightweight instructions sheet (replaces verbose M code copy-paste sheet)
   const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
@@ -1265,10 +1411,11 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   // Generate base xlsx from ExcelJS
   const baseBuffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
-  // Post-process: inject real Power Query connections into the xlsx ZIP
-  // After injection, Excel shows queries in Data > Queries & Connections
-  // User just pastes API key in B6 and clicks Refresh All
-  const withPQ = await injectPowerQueries(baseBuffer, queries, pqSheetMappings);
+  // Post-process: inject Power Query connections as "Connection Only" into the xlsx ZIP
+  // No table/queryTable linking — avoids Excel repair errors.
+  // Queries appear in Data > Queries & Connections sidebar; users can "Load To" manually.
+  // Data is already pre-filled in PQ sheets from fetchAllData.
+  const withPQ = await injectPowerQueries(baseBuffer, queries);
 
   // Post-process: inject native Excel charts (bar, pie, doughnut, line)
   // Charts reference CRK formula spill ranges — empty until data loads

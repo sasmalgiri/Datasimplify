@@ -262,14 +262,14 @@ export function addKPICards(
           {
             type: 'cellIs',
             operator: 'greaterThan' as unknown as ExcelJS.CellIsRuleType['operator'],
-            formulae: [0],
+            formulae: ['0'],
             priority: 1,
             style: { font: { color: { argb: theme.success } } },
           },
           {
             type: 'cellIs',
             operator: 'lessThan' as unknown as ExcelJS.CellIsRuleType['operator'],
-            formulae: [0],
+            formulae: ['0'],
             priority: 2,
             style: { font: { color: { argb: theme.danger } } },
           },
@@ -401,14 +401,14 @@ export function addPercentFormatting(
       {
         type: 'cellIs',
         operator: 'greaterThanOrEqual' as unknown as ExcelJS.CellIsRuleType['operator'],
-        formulae: [0],
+        formulae: ['0'],
         priority: 1,
         style: { font: { color: { argb: theme.success } } },
       },
       {
         type: 'cellIs',
         operator: 'lessThan' as unknown as ExcelJS.CellIsRuleType['operator'],
-        formulae: [0],
+        formulae: ['0'],
         priority: 2,
         style: { font: { color: { argb: theme.danger } } },
       },

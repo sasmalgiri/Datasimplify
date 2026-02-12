@@ -99,7 +99,10 @@ export async function injectCharts(
     }
 
     let chartCounter = 1;
-    let drawingCounter = 1; // Sequential drawing numbering (not tied to sheet index)
+    // Find max existing drawing/chart numbers to avoid overwriting ExcelJS-generated ones
+    let drawingCounter = findMaxNum(zip, /^xl\/drawings\/drawing(\d+)\.xml$/) + 1;
+    const startChartAt = findMaxNum(zip, /^xl\/charts\/chart(\d+)\.xml$/) + 1;
+    chartCounter = startChartAt;
     const drawingMap = new Map<number, number>(); // sheetIdx → drawingNum
 
     for (const [sheetName, sheetCharts] of chartsBySheet) {
@@ -968,6 +971,19 @@ async function updateContentTypesForCharts(
 // ============================================
 // Utilities
 // ============================================
+
+/**
+ * Find the highest number matching a pattern in the ZIP file paths.
+ * Used to avoid overwriting existing drawings/charts created by ExcelJS.
+ */
+function findMaxNum(zip: JSZip, pattern: RegExp): number {
+  let max = 0;
+  zip.forEach((path) => {
+    const m = path.match(pattern);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  });
+  return max;
+}
 
 const DEFAULT_COLORS = [
   '10B981', '3B82F6', 'F59E0B', 'EF4444', '8B5CF6',

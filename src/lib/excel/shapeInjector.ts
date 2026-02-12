@@ -221,8 +221,8 @@ function buildShapeAnchors(
       <xdr:row>${s.fromRow}</xdr:row><xdr:rowOff>19050</xdr:rowOff>
     </xdr:from>
     <xdr:to>
-      <xdr:col>${s.toCol}</xdr:col><xdr:colOff>-38100</xdr:colOff>
-      <xdr:row>${s.toRow}</xdr:row><xdr:rowOff>-19050</xdr:rowOff>
+      <xdr:col>${s.toCol}</xdr:col><xdr:colOff>0</xdr:colOff>
+      <xdr:row>${s.toRow}</xdr:row><xdr:rowOff>0</xdr:rowOff>
     </xdr:to>
     <xdr:sp macro="" textlink="">
       <xdr:nvSpPr>
@@ -323,8 +323,8 @@ function buildShapeAnchors(
       <xdr:row>${btn.fromRow}</xdr:row><xdr:rowOff>19050</xdr:rowOff>
     </xdr:from>
     <xdr:to>
-      <xdr:col>${btn.toCol}</xdr:col><xdr:colOff>-19050</xdr:colOff>
-      <xdr:row>${btn.toRow}</xdr:row><xdr:rowOff>-19050</xdr:rowOff>
+      <xdr:col>${btn.toCol}</xdr:col><xdr:colOff>0</xdr:colOff>
+      <xdr:row>${btn.toRow}</xdr:row><xdr:rowOff>0</xdr:rowOff>
     </xdr:to>
     <xdr:sp macro="" textlink="">
       <xdr:nvSpPr>

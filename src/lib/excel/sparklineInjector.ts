@@ -170,8 +170,9 @@ function buildSparklineExtension(defs: SparklineDef[], sheetName: string): strin
     const sparklineEntries = groupDefs.map(def => {
       // Qualify the target cell with sheet name for sqref
       const qualifiedTarget = def.targetCell;
+      // Formula refs use raw single quotes around sheet names — don't escape them
       return `          <x14:sparkline>
-            <xm:f>${escapeXml(def.dataRange)}</xm:f>
+            <xm:f>${escapeXmlFormula(def.dataRange)}</xm:f>
             <xm:sqref>${qualifiedTarget}</xm:sqref>
           </x14:sparkline>`;
     }).join('\n');
@@ -216,13 +217,13 @@ async function resolveSheetMap(zip: JSZip): Promise<Map<string, number>> {
 }
 
 /**
- * Escape XML special characters.
+ * Escape XML special characters in formula references.
+ * Does NOT escape single quotes — Excel formulas use raw 'SheetName'!Ref syntax.
  */
-function escapeXml(text: string): string {
+function escapeXmlFormula(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replace(/"/g, '&quot;');
 }

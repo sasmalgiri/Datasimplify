@@ -528,8 +528,8 @@ function buildConnectionsXml(queries: PowerQueryDefinition[], loadToTable: boole
     const connId = i + 1;
     const saveData = loadToTable ? ' saveData="1"' : '';
     const refreshOnLoad = loadToTable ? ' refreshOnLoad="1"' : '';
-    return `  <connection id="${connId}" keepAlive="1" name="Query - ${q.name}" description="${escapeXml(q.description)}" type="5" refreshedVersion="6" background="1"${saveData}>
-    <dbPr connection="Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=&quot;${q.name}&quot;;" command="SELECT * FROM [${q.name}]"${refreshOnLoad} />
+    return `  <connection id="${connId}" keepAlive="1" name="Query - ${q.name}" description="${escapeXml(q.description)}" type="5" refreshedVersion="6" background="1"${saveData}${refreshOnLoad}>
+    <dbPr connection="Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=&quot;${q.name}&quot;;" command="SELECT * FROM [${q.name}]" />
   </connection>`;
   }).join('\n');
 
@@ -597,14 +597,11 @@ async function updateWorkbookRels(zip: JSZip): Promise<void> {
     if (num > maxId) maxId = num;
   }
 
+  // Only add connections.xml relationship here — customXml goes in root _rels/.rels
   const connRel = `<Relationship Id="rId${maxId + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections" Target="connections.xml" />`;
-  const pqRel = `<Relationship Id="rId${maxId + 2}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml" Target="../customXml/item1.xml" />`;
 
   if (!xml.includes('relationships/connections')) {
     xml = xml.replace('</Relationships>', `  ${connRel}\n</Relationships>`);
-  }
-  if (!xml.includes('customXml/item1.xml')) {
-    xml = xml.replace('</Relationships>', `  ${pqRel}\n</Relationships>`);
   }
 
   zip.file('xl/_rels/workbook.xml.rels', xml);
