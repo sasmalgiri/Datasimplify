@@ -372,7 +372,9 @@ function buildSpillDashboard(
 
   // === DATA SHEET (spill table for chart data) ===
   const dataName = config.sheetName + ' Data';
-  const { sheet: data, theme: dt } = initDarkSheet(workbook, dataName, config.dashboardType, config.colWidths);
+  const dataWidths = config.colWidths ? [18, ...config.colWidths.slice(1)] : undefined;
+  const { sheet: data, theme: dt } = initDarkSheet(workbook, dataName, config.dashboardType, dataWidths);
+  addSidebar(data, dataName, dt, { dashboard: config.sheetName, data: dataName });
   addHeaderBar(data, 2, config.title + ' \u2014 DATA', dt);
   addSectionDivider(data, 4, config.sectionTitle, dt);
   addTableHeaders(data, 5, config.headers, dt);
@@ -410,7 +412,14 @@ function buildSpillDashboard(
     }, analytics);
   }
 
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+  addFooter(data, spillEnd + 2, dt);
+
+  // Preserve sidebar freeze (xSplit:1) + data header freeze (ySplit:5)
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
   return { sheet, theme };
 }
 
@@ -451,7 +460,12 @@ function buildSubSheet(
   // Footer after data
   addFooter(sheet, 6 + spillRows + 1, theme);
 
-  sheet.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+  // Preserve sidebar freeze (xSplit:1) + data header freeze (ySplit:5)
+  sheet.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
   return { sheet, theme };
 }
 
@@ -525,7 +539,9 @@ function buildPerCoinDashboard(
 
   // === DATA SHEET (per-coin formulas) ===
   const dataName = config.sheetName + ' Data';
-  const { sheet: data, theme: dt } = initDarkSheet(workbook, dataName, config.dashboardType, config.colWidths);
+  const dataWidths = config.colWidths ? [18, ...config.colWidths.slice(1)] : undefined;
+  const { sheet: data, theme: dt } = initDarkSheet(workbook, dataName, config.dashboardType, dataWidths);
+  addSidebar(data, dataName, dt, { dashboard: config.sheetName, data: dataName });
   addHeaderBar(data, 2, config.title + ' \u2014 DATA', dt);
   addSectionDivider(data, 4, config.sectionTitle, dt);
   addTableHeaders(data, 5, config.headers, dt);
@@ -559,7 +575,14 @@ function buildPerCoinDashboard(
     }
   }
 
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+  addFooter(data, 6 + coinList.length + 1, dt);
+
+  // Preserve sidebar freeze (xSplit:1) + data header freeze (ySplit:5)
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
   return { sheet, theme };
 }
 
@@ -986,9 +1009,11 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addFooter(sheet, afterGrid + 7, theme);
 
   // === DATA SHEET (spill tables for chart data) ===
-  const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Data', 'market-overview');
-  addHeaderBar(data, 2, 'MARKET DATA', dt, 'Source data for dashboard charts');
-  addSectionDivider(data, 4, '  TOP 20 CRYPTOCURRENCIES', dt);
+  const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Data', 'market-overview',
+    [18, 12, 14, 14, 16, 12, 16, 12, 12, 12, 12, 12, 12, 12]);
+  addSidebar(data, 'CRK Data', dt, { dashboard: 'CRK Dashboard', data: 'CRK Data' });
+  addHeaderBar(data, 2, '📊 MARKET DATA', dt, 'Source data for dashboard charts');
+  addSectionDivider(data, 4, '  📊 TOP 20 CRYPTOCURRENCIES', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
 
   // Pre-populate with real data or fall back to CRK formula
@@ -1013,10 +1038,17 @@ function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
     }, analytics);
   }
 
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+  addFooter(data, 27, dt);
+
+  // Preserve sidebar freeze (xSplit:1) + data header freeze (ySplit:5)
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 
   // Trending sub-sheet
-  buildSubSheet(workbook, 'CRK Trending', 'market-overview', 'TRENDING COINS', 'TRENDING(7)', 10, 5,
+  buildSubSheet(workbook, 'CRK Trending', 'market-overview', '🔥 TRENDING COINS', 'TRENDING(7)', 10, 5,
     [3, 25, 18, 15, 14], d);
 }
 
@@ -1052,9 +1084,10 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Screener Data', 'screener',
-    [3, 18, 12, 14, 16, 12, 12, 16]);
-  addHeaderBar(data, 2, 'SCREENER DATA', dt, 'Source data for screener charts');
-  addSectionDivider(data, 4, '  TOP 50 BY MARKET CAP', dt);
+    [18, 18, 12, 14, 16, 12, 12, 16]);
+  addSidebar(data, 'CRK Screener Data', dt, { dashboard: 'CRK Screener', data: 'CRK Screener Data' });
+  addHeaderBar(data, 2, '🔍 SCREENER DATA', dt, 'Source data for screener charts');
+  addSectionDivider(data, 4, '  🔍 TOP 50 BY MARKET CAP', dt);
   addTableHeaders(data, 5, TOP_HEADERS_VOL, dt);
 
   const top50 = resolveFormulaData('TOP(50)', d);
@@ -1079,14 +1112,20 @@ function addScreenerDashboard(workbook: ExcelJS.Workbook, d?: any) {
     }, analytics);
   }
 
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+  addFooter(data, 58, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 
   // Gainers sub-sheet
-  buildSubSheet(workbook, 'CRK Gainers', 'screener', 'TOP 20 GAINERS (24H)', 'GAINERS(20)', 20, 6,
+  buildSubSheet(workbook, 'CRK Gainers', 'screener', '🚀 TOP 20 GAINERS (24H)', 'GAINERS(20)', 20, 6,
     [3, 18, 12, 14, 16, 12], d);
 
   // Losers sub-sheet
-  buildSubSheet(workbook, 'CRK Losers', 'screener', 'TOP 20 LOSERS (24H)', 'LOSERS(20)', 20, 6,
+  buildSubSheet(workbook, 'CRK Losers', 'screener', '📉 TOP 20 LOSERS (24H)', 'LOSERS(20)', 20, 6,
     [3, 18, 12, 14, 16, 12], d);
 }
 
@@ -1126,9 +1165,10 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET (holdings + top coins) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Portfolio Data', 'portfolio-tracker',
-    [3, 22, 18, 18, 16, 14]);
-  addHeaderBar(data, 2, 'PORTFOLIO DATA', dt, 'Holdings and market data');
-  addSectionDivider(data, 4, '  HOLDINGS', dt);
+    [18, 22, 18, 18, 16, 14]);
+  addSidebar(data, 'CRK Portfolio Data', dt, { dashboard: 'CRK Portfolio', data: 'CRK Portfolio Data' });
+  addHeaderBar(data, 2, '💼 PORTFOLIO DATA', dt, 'Holdings and market data');
+  addSectionDivider(data, 4, '  💼 HOLDINGS', dt);
   placeSpillFormula(data, 6, 1, 'PORTFOLIO_LIST()', dt);
   addZebraRows(data, 6, 20, 1, 6, dt);
 
@@ -1141,7 +1181,14 @@ function addPortfolioDashboard(workbook: ExcelJS.Workbook, d?: any) {
     placeSpillFormula(data, 30, 1, 'TOP(10)', dt);
   }
   addZebraRows(data, 30, 10, 1, 5, dt);
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  addFooter(data, 42, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 
   // Tax summary sub-sheet
   const { sheet: taxSheet, theme: taxTheme } = initDarkSheet(workbook, 'CRK Tax', 'portfolio-tracker',
@@ -1191,8 +1238,9 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET (technical indicators + OHLC data + comparison) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Bitcoin Data', 'bitcoin-dashboard',
-    [3, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
-  addHeaderBar(data, 2, 'BITCOIN DATA', dt, 'Technical indicators, OHLC data, and comparison');
+    [18, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
+  addSidebar(data, 'CRK Bitcoin Data', dt, { dashboard: 'CRK Bitcoin', data: 'CRK Bitcoin Data' });
+  addHeaderBar(data, 2, '₿ BITCOIN DATA', dt, 'Technical indicators, OHLC data, and comparison');
 
   addSectionDivider(data, 4, '  KEY INDICATORS (LATEST)', dt);
   const indicatorLabels = [
@@ -1301,6 +1349,14 @@ function addBitcoinDashboard(workbook: ExcelJS.Workbook, d?: any) {
     }
     addZebraRows(data, 16, 10, 1, 5, dt);
   }
+
+  addFooter(data, 28, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 }
 
 // ============================================
@@ -1365,8 +1421,9 @@ function addFearGreedDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Fear Greed Data', 'fear-greed');
-  addHeaderBar(data, 2, 'SENTIMENT DATA', dt);
-  addSectionDivider(data, 4, '  TOP 10 CRYPTOCURRENCIES', dt);
+  addSidebar(data, 'CRK Fear Greed Data', dt, { dashboard: 'CRK Fear & Greed', data: 'CRK Fear Greed Data' });
+  addHeaderBar(data, 2, '😱 SENTIMENT DATA', dt);
+  addSectionDivider(data, 4, '  😱 TOP 10 CRYPTOCURRENCIES', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
   const top10 = resolveFormulaData('TOP(10)', d);
   if (top10 && top10.length > 0) {
@@ -1377,7 +1434,14 @@ function addFearGreedDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addZebraRows(data, 6, 10, 1, 7, dt);
   addPercentFormatting(data, 'F6:F15', dt);
   addPercentFormatting(data, 'G6:G15', dt);
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  addFooter(data, 18, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 }
 
 // ============================================
@@ -1488,9 +1552,10 @@ function addDefiDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK DeFi Data', 'defi-dashboard',
-    [3, 22, 16, 16, 16, 14]);
-  addHeaderBar(data, 2, 'DEFI DATA', dt, 'Source data for DeFi charts');
-  addSectionDivider(data, 4, '  TOP 50 DEFI PROTOCOLS', dt);
+    [18, 22, 16, 16, 16, 14]);
+  addSidebar(data, 'CRK DeFi Data', dt, { dashboard: 'CRK DeFi', data: 'CRK DeFi Data' });
+  addHeaderBar(data, 2, '🔗 DEFI DATA', dt, 'Source data for DeFi charts');
+  addSectionDivider(data, 4, '  🔗 TOP 50 DEFI PROTOCOLS', dt);
   addTableHeaders(data, 5, [
     { col: 1, label: 'Protocol' },
     { col: 2, label: 'Chain' },
@@ -1502,7 +1567,14 @@ function addDefiDashboard(workbook: ExcelJS.Workbook, d?: any) {
   addZebraRows(data, 6, 50, 1, 5, dt);
   addPercentFormatting(data, 'E6:E55', dt);
   addDataBars(data, 'C6:C55', dt.accent);
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  addFooter(data, 58, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 
   // Pools sub-sheet
   buildSubSheet(workbook, 'CRK Pools', 'defi-dashboard', 'TOP DEX POOLS', 'POOLS("eth", 20)', 20, 5,
@@ -1597,8 +1669,8 @@ function addCorrelationMatrixSheet(workbook: ExcelJS.Workbook, coins: string[], 
   for (let j = 0; j < n; j++) {
     const cell = sheet.getCell(5, j + 2);
     cell.value = coinList[j].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).substring(0, 8);
-    cell.font = { bold: true, size: 9, color: { argb: theme.headerText } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    cell.font = { bold: true, size: 9, color: { argb: theme.text } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.border } };
     cell.alignment = { horizontal: 'center', textRotation: 45 };
   }
 
@@ -1761,8 +1833,9 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET (technical indicators + OHLC + DeFi) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Ethereum Data', 'ethereum-dashboard',
-    [3, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
-  addHeaderBar(data, 2, 'ETHEREUM DATA', dt, 'Technical indicators, OHLC data, and DeFi metrics');
+    [18, 28, 20, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14]);
+  addSidebar(data, 'CRK Ethereum Data', dt, { dashboard: 'CRK Ethereum', data: 'CRK Ethereum Data' });
+  addHeaderBar(data, 2, 'Ξ ETHEREUM DATA', dt, 'Technical indicators, OHLC data, and DeFi metrics');
 
   addSectionDivider(data, 4, '  KEY INDICATORS (LATEST)', dt);
   const ethIndicators = [
@@ -1847,6 +1920,14 @@ function addEthereumDashboard(workbook: ExcelJS.Workbook, d?: any) {
     placeSpillFormula(data, 16, 1, 'DEFI(10)', dt);
     addZebraRows(data, 16, 10, 1, 3, dt);
   }
+
+  addFooter(data, 28, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 }
 
 // ============================================
@@ -1978,9 +2059,10 @@ function addEtfDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK ETFs Data', 'etf-tracker',
-    [3, 25, 16, 16, 16, 14]);
-  addHeaderBar(data, 2, 'ETF DATA', dt, 'Corporate holdings data');
-  addSectionDivider(data, 4, '  BTC CORPORATE HOLDINGS', dt);
+    [18, 25, 16, 16, 16, 14]);
+  addSidebar(data, 'CRK ETFs Data', dt, { dashboard: 'CRK ETFs', data: 'CRK ETFs Data' });
+  addHeaderBar(data, 2, '🏛️ ETF DATA', dt, 'Corporate holdings data');
+  addSectionDivider(data, 4, '  🏛️ BTC CORPORATE HOLDINGS', dt);
   addTableHeaders(data, 5, [
     { col: 1, label: 'Company' },
     { col: 2, label: 'Symbol' },
@@ -1991,7 +2073,14 @@ function addEtfDashboard(workbook: ExcelJS.Workbook, d?: any) {
   placeSpillFormula(data, 6, 1, 'COMPANIES("bitcoin")', dt);
   addZebraRows(data, 6, 20, 1, 5, dt);
   addDataBars(data, 'D6:D25', dt.accent);
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  addFooter(data, 28, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 
   // ETH holdings sub-sheet
   buildSubSheet(workbook, 'CRK ETH Holdings', 'etf-tracker', 'ETH CORPORATE HOLDINGS',
@@ -2284,8 +2373,9 @@ function addSocialSentimentDashboard(workbook: ExcelJS.Workbook, d?: any) {
 
   // === DATA SHEET ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Sentiment Data', 'social-sentiment');
-  addHeaderBar(data, 2, 'SENTIMENT DATA', dt);
-  addSectionDivider(data, 4, '  TOP 20 GAINERS', dt);
+  addSidebar(data, 'CRK Sentiment Data', dt, { dashboard: 'CRK Sentiment', data: 'CRK Sentiment Data' });
+  addHeaderBar(data, 2, '💬 SENTIMENT DATA', dt);
+  addSectionDivider(data, 4, '  💬 TOP 20 GAINERS', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
   const gainers20 = resolveFormulaData('GAINERS(20)', d);
   if (gainers20 && gainers20.length > 0) {
@@ -2305,7 +2395,14 @@ function addSocialSentimentDashboard(workbook: ExcelJS.Workbook, d?: any) {
     placeSpillFormula(data, 30, 1, 'TRENDING(7)', dt);
   }
   addZebraRows(data, 30, 10, 1, 5, dt);
-  data.views = [{ state: 'frozen', ySplit: 5, showGridLines: false }];
+
+  addFooter(data, 42, dt);
+
+  data.views = [{
+    state: 'frozen', xSplit: 1, ySplit: 5,
+    showGridLines: false, showRowColHeaders: false,
+    topLeftCell: 'B6', activeCell: 'B6',
+  }];
 }
 
 // ============================================

@@ -696,38 +696,31 @@ function createPQDataSheets(
       properties: { tabColor: { argb: 'FF8B5CF6' } },
     });
 
-    // Write column headers (row 1)
-    query.columns.forEach((col, i) => {
-      const cell = sheet.getCell(1, i + 1);
-      cell.value = col;
-      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
-    });
-
     // Pre-fill data rows from prefetched data if available
     const dataRows = prefetchedData ? resolvePQData(query.name, query.columns, prefetchedData) : [];
     const rowCount = Math.max(dataRows.length, 1);
 
-    if (dataRows.length > 0) {
-      for (let r = 0; r < dataRows.length; r++) {
-        const row = dataRows[r];
-        for (let c = 0; c < query.columns.length; c++) {
-          const cell = sheet.getCell(r + 2, c + 1);
-          cell.value = row[c] ?? '';
-        }
-      }
-    } else {
-      // Fallback: one empty data row (Excel tables need header + at least 1 data row)
-      query.columns.forEach((_, i) => {
-        sheet.getCell(2, i + 1).value = '';
-      });
-    }
+    // Create proper Excel Table — required for chart structured references
+    // (e.g., CRK_Market[Name], CRK_Market[MarketCap]) used by chartInjector.
+    // Without a real table, Excel flags charts as corrupt and repairs/clears the dashboard sheet.
+    sheet.addTable({
+      name: query.name,
+      ref: 'A1',
+      headerRow: true,
+      totalsRow: false,
+      style: { theme: 'TableStyleMedium2', showRowStripes: true },
+      columns: query.columns.map(col => ({ name: col, filterButton: true })),
+      rows: dataRows.length > 0 ? dataRows : [query.columns.map(() => '')],
+    });
 
     // Set column widths
     query.columns.forEach((col, i) => {
       const excelCol = sheet.getColumn(i + 1);
       excelCol.width = Math.max(14, col.length + 4);
     });
+
+    // Hide gridlines for cleaner look
+    sheet.views = [{ showGridLines: false, showRowColHeaders: false }];
 
     mappings.push({
       queryName: query.name,

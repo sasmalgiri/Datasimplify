@@ -94,7 +94,7 @@ export function initDarkSheet(
 
 /**
  * Add a thin breadcrumb status bar at row 1 of every sheet.
- * OtherLevel design: minimal top bar with page path; sidebar handles full navigation.
+ * Light design: subtle accent-tinted bar with breadcrumb path.
  */
 export function addSheetNavBar(
   sheet: ExcelJS.Worksheet,
@@ -103,12 +103,12 @@ export function addSheetNavBar(
 ): void {
   sheet.getRow(1).height = 22;
 
-  // Dark status bar background across full width
+  // Light status bar background across full width
   for (let c = 1; c <= 18; c++) {
     sheet.getCell(1, c).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: theme.headerBg },
+      fgColor: { argb: theme.border },
     };
     sheet.getCell(1, c).border = {
       bottom: { style: 'thin', color: { argb: theme.accent } },
@@ -137,9 +137,9 @@ export function addSheetNavBar(
 // ============================================
 
 /**
- * Add a dark left sidebar navigation panel in column A.
- * OtherLevel-inspired: fixed dark sidebar with brand, nav links, and tools section.
- * Only added to visual dashboard sheets, not data sheets.
+ * Add a light left sidebar navigation panel in column A.
+ * Clean light design: accent-tinted background, themed nav links, and tools section.
+ * Added to all dashboard sheets for consistent website-like navigation.
  */
 export function addSidebar(
   sheet: ExcelJS.Worksheet,
@@ -147,29 +147,30 @@ export function addSidebar(
   theme: DashboardTheme,
   navTargets?: { dashboard?: string; data?: string },
 ): void {
-  const sidebarBg = theme.headerBg;
+  // Light sidebar: use kpiBg (light slate) instead of dark headerBg
+  const sidebarBg = theme.kpiBg;
 
   // Set column A to sidebar width
   sheet.getColumn(1).width = 18;
 
-  // Fill sidebar column with dark background + accent right border separator
+  // Fill sidebar column with light background + accent right border separator
   for (let r = 1; r <= 80; r++) {
     const cell = sheet.getCell(r, 1);
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: sidebarBg } };
-    cell.border = { right: { style: 'thin', color: { argb: theme.accent } } };
+    cell.border = { right: { style: 'medium', color: { argb: theme.accent } } };
   }
 
-  // Brand logo — OtherLevel: prominent brand mark
+  // Brand logo — prominent brand mark with accent color
   const brandCell = sheet.getCell(2, 1);
   brandCell.value = '⬡ CRK';
   brandCell.font = { size: 18, bold: true, color: { argb: theme.accent } };
   brandCell.alignment = { horizontal: 'center', vertical: 'middle' };
   sheet.getRow(2).height = 32;
 
-  // Thin divider line
+  // Thin accent divider line
   sheet.getCell(3, 1).border = {
     bottom: { style: 'thin', color: { argb: theme.accent } },
-    right: { style: 'thin', color: { argb: theme.accent } },
+    right: { style: 'medium', color: { argb: theme.accent } },
   };
   sheet.getRow(3).height = 8;
 
@@ -199,13 +200,14 @@ export function addSidebar(
     if (isActive) {
       navCell.value = `\u25B8 ${item.label}`;
       navCell.font = { size: 9, bold: true, color: { argb: theme.accent } };
+      navCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
       navCell.border = {
         left: { style: 'thick', color: { argb: theme.accent } },
-        right: { style: 'thin', color: { argb: theme.accent } },
+        right: { style: 'medium', color: { argb: theme.accent } },
       };
     } else {
       navCell.value = { text: `  ${item.label}`, hyperlink: `#'${item.target}'!A1` };
-      navCell.font = { size: 9, color: { argb: theme.headerText } };
+      navCell.font = { size: 9, color: { argb: theme.text } };
     }
     navCell.alignment = { horizontal: 'left', vertical: 'middle' };
     row++;
@@ -232,13 +234,14 @@ export function addSidebar(
     if (isActive) {
       toolCell.value = `\u25B8 ${item.label}`;
       toolCell.font = { size: 9, bold: true, color: { argb: theme.accent } };
+      toolCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg } };
       toolCell.border = {
         left: { style: 'thick', color: { argb: theme.accent } },
-        right: { style: 'thin', color: { argb: theme.accent } },
+        right: { style: 'medium', color: { argb: theme.accent } },
       };
     } else {
       toolCell.value = { text: `  ${item.label}`, hyperlink: `#'${item.target}'!A1` };
-      toolCell.font = { size: 9, color: { argb: theme.headerText } };
+      toolCell.font = { size: 9, color: { argb: theme.text } };
     }
     toolCell.alignment = { horizontal: 'left', vertical: 'middle' };
     row++;
@@ -270,7 +273,7 @@ export function addSidebar(
 
 /**
  * Add a full-width header bar with title and optional subtitle.
- * Premium: 22pt bold title, accent bottom border, generous height.
+ * Light theme: accent-colored text on light background, accent bottom border.
  */
 export function addHeaderBar(
   sheet: ExcelJS.Worksheet,
@@ -283,13 +286,13 @@ export function addHeaderBar(
   sheet.mergeCells(row, 2, row, 14);
   const titleCell = sheet.getCell(row, 2);
   titleCell.value = title;
-  titleCell.font = { size: 22, bold: true, color: { argb: theme.headerText } };
-  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+  titleCell.font = { size: 22, bold: true, color: { argb: theme.text } };
+  titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
   titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
   // Accent bottom border for premium depth
   for (let c = 2; c <= 14; c++) {
     const cell = sheet.getCell(row, c);
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
     cell.border = { bottom: { style: 'medium', color: { argb: theme.accent } } };
   }
   sheet.getRow(row).height = 56;
@@ -486,13 +489,13 @@ export function addSectionDivider(
   sheet.mergeCells(row, 2, row, 14);
   const cell = sheet.getCell(row, 2);
   cell.value = title;
-  cell.font = { size: 13, bold: true, color: { argb: theme.headerText } };
-  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+  cell.font = { size: 13, bold: true, color: { argb: theme.text } };
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
   cell.alignment = { horizontal: 'left', vertical: 'middle' };
-  // Double-border effect: thin top + medium bottom for depth
+  // Accent bottom border for clean separation
   for (let c = 2; c <= 14; c++) {
     const sc = sheet.getCell(row, c);
-    sc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.headerBg } };
+    sc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
     sc.border = {
       top: { style: 'thin', color: { argb: theme.border } },
       bottom: { style: 'medium', color: { argb: theme.accent } },
@@ -518,7 +521,7 @@ export function addTableHeaders(
   for (const h of headers) {
     const cell = sheet.getCell(row, h.col);
     cell.value = h.label.toUpperCase();
-    cell.font = { size: 9, bold: true, color: { argb: theme.headerText } };
+    cell.font = { size: 9, bold: true, color: { argb: theme.text } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.border } };
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = {

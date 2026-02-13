@@ -324,10 +324,10 @@ export function addTechnicalColumns(
     const c = startCol + i;
     const cell = sheet.getCell(headerRow, c);
     cell.value = col.header;
-    cell.font = { bold: true, size: 10, color: { argb: theme?.headerText || 'FFFFFFFF' } };
+    cell.font = { bold: true, size: 10, color: { argb: theme?.text || 'FF1E293B' } };
     cell.fill = {
       type: 'pattern', pattern: 'solid',
-      fgColor: { argb: theme?.headerBg || 'FF374151' },
+      fgColor: { argb: theme?.bg || 'FFE2E8F0' },
     };
     cell.alignment = { horizontal: 'center' };
     sheet.getColumn(c).width = col.header.length < 8 ? 12 : 14;
@@ -393,10 +393,10 @@ export function addMarketAnalyticsColumns(
     const c = startCol + i;
     const cell = sheet.getCell(headerRow, c);
     cell.value = col.header;
-    cell.font = { bold: true, size: 10, color: { argb: theme?.headerText || 'FFFFFFFF' } };
+    cell.font = { bold: true, size: 10, color: { argb: theme?.text || 'FF1E293B' } };
     cell.fill = {
       type: 'pattern', pattern: 'solid',
-      fgColor: { argb: theme?.headerBg || 'FF374151' },
+      fgColor: { argb: theme?.bg || 'FFE2E8F0' },
     };
     cell.alignment = { horizontal: 'center' };
     sheet.getColumn(c).width = 12;
