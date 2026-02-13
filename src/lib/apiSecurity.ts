@@ -147,7 +147,7 @@ function blockedResponse(route: string): NextResponse {
       message:
         'This endpoint serves display-only data from CoinGecko. ' +
         'Direct API access for redistribution requires a CoinGecko Data Redistribution License. ' +
-        'For Excel integration, use the CRK Add-in with your own API keys (BYOK).',
+        'For Excel integration, download templates with prefetched data. For live data, use our web dashboards with BYOK.',
       route,
       attribution: 'Data provided by CoinGecko',
     },

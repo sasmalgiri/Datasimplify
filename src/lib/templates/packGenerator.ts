@@ -5,7 +5,7 @@
  * 1. Hidden __CRK__ sheet containing recipe JSON
  * 2. Pre-formatted table areas that get populated via /api/v1/report/run
  * 3. Charts linked to table data
- * 4. No formulas - data is static and refreshed via the CRK add-in
+ * 4. No formulas - data is prefetched and static
  *
  * This is the "report-first" approach vs the "formula-first" approach.
  */
@@ -115,7 +115,7 @@ async function createCRKSheet(
   sheet.getCell('A4').value = 'pack_type';
   sheet.getCell('B4').value = 'market_overview';
 
-  // Store last refresh timestamp (will be updated by add-in)
+  // Store last refresh timestamp (set at generation time)
   sheet.getCell('A5').value = 'last_refresh';
   sheet.getCell('B5').value = '';
 }
@@ -187,7 +187,7 @@ async function createDataSheet(
     row.getCell(1).font = { color: { argb: COLORS.textSecondary } };
     row.getCell(1).alignment = { horizontal: 'center' };
 
-    // Coin (placeholder - will be populated by add-in)
+    // Coin (placeholder - will be populated with prefetched data)
     row.getCell(2).value = coin.toUpperCase();
     row.getCell(2).font = { bold: true, color: { argb: COLORS.primary } };
 
@@ -229,7 +229,7 @@ async function createDataSheet(
   sheet.mergeCells(`A${footerRow}:F${footerRow}`);
   const footerCell = sheet.getCell(`A${footerRow}`);
   footerCell.value =
-    '🔄 Click "Refresh Data" in the CRK add-in to update all values';
+    '🔄 Data is prefetched. For live updates, visit cryptoreportkit.com/live-dashboards';
   footerCell.font = { italic: true, color: { argb: COLORS.primary } };
   footerCell.alignment = { horizontal: 'center' };
 
@@ -378,7 +378,7 @@ async function createMoversSheet(
   row += 2;
   sheet.mergeCells(`B${row}:H${row}`);
   sheet.getCell(`B${row}`).value =
-    '💡 Data updates when you click "Refresh Data" in the CRK add-in';
+    '💡 Data is prefetched at download time. For live updates, visit cryptoreportkit.com';
   sheet.getCell(`B${row}`).font = {
     italic: true,
     color: { argb: COLORS.textSecondary },
@@ -537,8 +537,8 @@ async function createPackInstructionsSheet(
 
   const howItWorks = [
     'This is a CryptoReportKit Data Pack - a pre-configured Excel workbook.',
-    'Data is NOT fetched via formulas - instead, you refresh via the CRK add-in.',
-    'When you click "Refresh Data", the add-in fetches live data and populates all tables.',
+    'Data is prefetched at download time - no formulas or external connections needed.',
+    'For live updates, visit cryptoreportkit.com/live-dashboards with your BYOK API key.',
     'Charts and formatting are preserved - only the data values change.',
   ];
 
@@ -568,11 +568,11 @@ async function createPackInstructionsSheet(
   row += 1;
 
   const steps = [
-    ['Step 1:', 'Install the CryptoReportKit add-in (Insert → Get Add-ins → Search "CryptoReportKit")'],
-    ['Step 2:', 'Sign in to your CryptoReportKit account in the add-in panel'],
-    ['Step 3:', 'Click "Refresh Data" to fetch live crypto data'],
-    ['Step 4:', 'Data will populate all tables in this workbook'],
-    ['Step 5:', 'Re-click "Refresh Data" anytime to get latest prices'],
+    ['Step 1:', 'Open this file in Microsoft Excel Desktop (Windows or Mac)'],
+    ['Step 2:', 'Data is already prefetched and ready to use'],
+    ['Step 3:', 'Explore the data sheets for market data, movers, and history'],
+    ['Step 4:', 'For live data, visit cryptoreportkit.com/live-dashboards'],
+    ['Step 5:', 'Download updated packs anytime from cryptoreportkit.com'],
   ];
 
   for (const [step, instruction] of steps) {
@@ -651,7 +651,7 @@ async function createPackInstructionsSheet(
 
   const benefits = [
     '✓ Faster refresh - all data fetched in one API call',
-    '✓ Shareable - recipients don\'t need add-ins to VIEW data',
+    '✓ Shareable - recipients can view data immediately',
     '✓ Smaller file size - no formula overhead',
     '✓ Better for reports - data is "frozen" until you refresh',
     '✓ Works offline - once data is loaded, no internet needed',

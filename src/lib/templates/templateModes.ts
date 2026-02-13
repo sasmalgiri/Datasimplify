@@ -6,7 +6,7 @@
  * - Pro Mode: Larger watchlists, more intervals
  *
  * Data is prefetched at download time. For live updates, users can
- * install the CRK Excel Add-in with their own CoinGecko API key (BYOK).
+ * use our live web dashboards with their own CoinGecko API key (BYOK).
  */
 
 export type RefreshFrequency = 'manual' | 'on_open' | 'hourly' | 'daily';
@@ -69,7 +69,7 @@ export const PRO_MODE: TemplateMode = {
  * Hard requirements that must be met before template will work.
  *
  * Templates ship with prefetched data - no API key needed to view.
- * For live data via the CRK Add-in, users provide their own CoinGecko API key.
+ * For live data, use our web dashboards with your own CoinGecko API key.
  */
 export interface TemplateRequirements {
   excelDesktop: boolean;
@@ -93,9 +93,9 @@ export const TEMPLATE_REQUIREMENTS: {
   {
     id: 'api_key',
     name: 'CoinGecko API Key (Free, Optional)',
-    description: 'Templates include prefetched data. For live updates via the CRK Add-in, get a free API key from CoinGecko.',
+    description: 'Templates include prefetched data. For live updates, use our web dashboards with a free CoinGecko API key.',
     howToCheck: 'Templates work without a key — data is prefetched at download time',
-    howToFix: 'Sign up at coingecko.com/en/api/pricing (free, no credit card) for live data via the add-in',
+    howToFix: 'Sign up at coingecko.com/en/api/pricing (free, no credit card) for live data via web dashboards',
   },
 ];
 
@@ -103,13 +103,13 @@ export const TEMPLATE_REQUIREMENTS: {
  * Quota Status Messages
  *
  * User-friendly messages for different quota/error states.
- * Templates ship with prefetched data. Live updates require the CRK Add-in.
+ * Templates ship with prefetched data. Live updates are available via web dashboards.
  */
 export const QUOTA_STATUS_MESSAGES = {
   missing_api_key: {
     title: 'API Key Not Configured',
-    message: 'Your CoinGecko API key is missing. Live data via the CRK Add-in will not work.',
-    action: 'Enter your CoinGecko API key in the CRK Add-in settings',
+    message: 'Your CoinGecko API key is missing. Live data on the web dashboards will not work.',
+    action: 'Enter your CoinGecko API key in the web dashboard settings',
     severity: 'error' as const,
   },
   invalid_api_key: {
@@ -133,7 +133,7 @@ export const QUOTA_STATUS_MESSAGES = {
   ok: {
     title: 'Data Ready',
     message: 'Template data is prefetched and ready to use.',
-    action: 'For live updates, install the CRK Add-in',
+    action: 'For live updates, use our web dashboards at cryptoreportkit.com',
     severity: 'success' as const,
   },
 };

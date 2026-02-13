@@ -9,9 +9,9 @@ import { useState, Suspense } from 'react';
 // Feature descriptions for coming soon pages
 const FEATURE_INFO: Record<string, { title: string; description: string; icon: string }> = {
   excel_addin: {
-    title: 'Excel Add-in (Microsoft Store)',
-    description: 'We’re submitting the CRK Excel add-in to Microsoft for review. Once approved, you’ll be able to install it directly from Excel (no manual sideload).',
-    icon: '🧩',
+    title: 'Advanced Live Dashboards',
+    description: 'We are building more advanced live web dashboards with real-time crypto data. Use your own API key (BYOK) for full access to all metrics.',
+    icon: '📊',
   },
   exchanges: {
     title: 'Exchange Rankings',

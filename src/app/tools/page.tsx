@@ -16,7 +16,7 @@ export default function ToolsPage() {
       href: '/downloads',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,
-      features: ['Power Query', 'Live data', 'No add-in required']
+      features: ['Prefetched data', 'Ready to use', 'BYOK available']
     },
     {
       id: 'research',

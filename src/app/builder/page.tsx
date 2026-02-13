@@ -24,7 +24,7 @@ import {
  * 1. User selects/customizes a report recipe
  * 2. Live preview shows what the data will look like
  * 3. Download Excel pack with embedded recipe
- * 4. Refresh in Excel via add-in
+ * 4. Data is prefetched
  */
 
 // Popular coins for quick selection

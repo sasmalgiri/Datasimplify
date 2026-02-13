@@ -27,7 +27,7 @@ export default function TemplateRequirementsPage() {
           <ul className="mt-3 space-y-2 text-gray-300">
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">•</span>
-              <span>No add-in required - uses Excel&apos;s built-in Power Query</span>
+              <span>Templates ship with prefetched data - ready to use immediately</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">•</span>

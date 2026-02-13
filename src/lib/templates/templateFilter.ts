@@ -79,7 +79,7 @@ export function getTemplateMetadata(templateId: string): {
   };
 
   // Mode mapping (CRK vs CryptoSheets)
-  // Most templates use CRK (native BYOK add-in)
+  // Most templates use CRK (BYOK with prefetched data)
   // CryptoSheets fallback only for specific advanced cases
   const cryptoSheetsTemplates = [
     'whale_tracker', // Requires custom scraping
@@ -404,9 +404,9 @@ export const CURRENCY_OPTIONS = [
  * Mode options (CRK vs CryptoSheets)
  */
 export const MODE_OPTIONS = [
-  { value: 'all', label: 'All Add-ins', icon: '🔌' },
-  { value: 'crk', label: 'CRK (BYOK)', icon: '📊', description: 'Native add-in with your API keys' },
-  { value: 'cryptosheets', label: '3rd Party Integration', icon: '🔗', description: 'Compatible with 3rd party add-ins (not affiliated, separate license required)' },
+  { value: 'all', label: 'All Modes', icon: '🔌' },
+  { value: 'crk', label: 'CRK (BYOK)', icon: '📊', description: 'Prefetched data with your API keys' },
+  { value: 'cryptosheets', label: '3rd Party Integration', icon: '🔗', description: 'Compatible with 3rd party integrations (not affiliated, separate license required)' },
 ] as const;
 
 /**

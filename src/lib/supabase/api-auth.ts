@@ -3,7 +3,7 @@
  *
  * Supports both:
  * 1. Cookie-based auth (web browser sessions)
- * 2. Bearer token auth (Excel add-in)
+ * 2. Bearer token auth (API clients)
  */
 
 import { createServerClient } from '@supabase/ssr';
@@ -20,11 +20,11 @@ interface AuthResult {
  * Get authenticated user from either Bearer token or cookies
  *
  * Priority:
- * 1. Bearer token in Authorization header (for Excel add-in)
+ * 1. Bearer token in Authorization header (for API clients)
  * 2. Cookie-based session (for web browser)
  */
 export async function getAuthUser(request: NextRequest): Promise<AuthResult> {
-  // Check for Bearer token first (Excel add-in)
+  // Check for Bearer token first (API clients)
   const authHeader = request.headers.get('authorization');
 
   if (authHeader?.startsWith('Bearer ')) {
@@ -37,7 +37,7 @@ export async function getAuthUser(request: NextRequest): Promise<AuthResult> {
 }
 
 /**
- * Verify a Bearer token from the Excel add-in
+ * Verify a Bearer token from an API client
  */
 async function verifyBearerToken(token: string): Promise<AuthResult> {
   try {

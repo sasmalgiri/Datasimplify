@@ -40,10 +40,10 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">
-              <h3 className="font-semibold text-emerald-400 mb-2">No Add-in Required</h3>
+              <h3 className="font-semibold text-emerald-400 mb-2">Ready to Use</h3>
               <p className="text-gray-400 text-sm">
-                Uses Excel&apos;s built-in Power Query feature. Just paste your CoinGecko API key
-                and refresh to pull live data directly into your spreadsheets.
+                Templates ship with prefetched data so you can start analyzing immediately.
+                Live dashboards on the website provide real-time data with BYOK.
               </p>
             </div>
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">

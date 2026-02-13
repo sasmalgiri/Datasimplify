@@ -345,11 +345,11 @@ End Sub`,
   ],
 
   setupInstructions: [
-    'Install CryptoSheets add-in from Excel → Insert → Get Add-ins',
-    'Sign in to your CryptoSheets account (free or paid)',
-    'Click Data → Refresh All to populate the template',
+    'Open the template in Microsoft Excel Desktop',
+    'Data is prefetched and ready to use',
+    'Click Data → Refresh All to refresh if needed',
     'Charts will update automatically as data loads',
-    'Use the Refresh button to update data anytime',
+    'For live data, visit cryptoreportkit.com/live-dashboards',
   ],
 };
 
@@ -461,11 +461,11 @@ End Sub`,
   ],
 
   setupInstructions: [
-    'Install CryptoSheets add-in from Excel → Insert → Get Add-ins',
-    'Sign in to your CryptoSheets account',
+    'Open the template in Microsoft Excel Desktop',
+    'Data is prefetched and ready to use',
     'Go to the "Comparison" sheet to see current metrics',
     'Go to the "Historical" sheet for price history',
-    'Charts auto-update as data loads',
+    'For live data, visit cryptoreportkit.com/live-dashboards',
   ],
 };
 
@@ -581,8 +581,8 @@ End Sub`,
   ],
 
   setupInstructions: [
-    'Install CryptoSheets add-in',
-    'Sign in to CryptoSheets account',
+    'Open the template in Microsoft Excel Desktop',
+    'Data is prefetched and ready to use',
     'Risk metrics calculate automatically from historical data',
     'Higher volatility = higher risk',
     'Sharpe Ratio >1 is generally considered good',
@@ -683,8 +683,8 @@ End Sub`,
   ],
 
   setupInstructions: [
-    'Install CryptoSheets add-in',
-    'Sign in to your CryptoSheets account',
+    'Open the template in Microsoft Excel Desktop',
+    'Data is prefetched and ready to use',
     'Your selected coins will populate automatically',
     'Edit the "Alert Target" column to set price alerts (manual)',
     'Add personal notes in the "Notes" column',
@@ -740,8 +740,8 @@ const MARKET_OVERVIEW_TEMPLATE: TemplateConfig = {
     { column: 3, formulaPattern: '=CRYPTOSHEETS("price", "{COIN}", "{CURRENCY}")', description: 'Coin price' },
   ],
   setupInstructions: [
-    'Install CryptoSheets add-in',
-    'Global stats update automatically',
+    'Open the template in Microsoft Excel Desktop',
+    'Global stats are prefetched and ready to view',
     'Top coins sorted by market cap',
   ],
 };

@@ -50,7 +50,7 @@ const faqSchema = {
       name: 'What is CryptoReportKit?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'CryptoReportKit provides Power Query templates for crypto analytics in Excel. Our templates use BYOK (Bring Your Own Key) architecture - you provide your own CoinGecko API key, paste it in Excel, and Power Query fetches live data. No add-in required.',
+        text: 'CryptoReportKit provides Excel templates with prefetched crypto data and 20+ live web dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local.',
       },
     },
     {
@@ -74,7 +74,7 @@ const faqSchema = {
       name: 'What are CryptoReportKit Power Query Templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our Excel templates contain Power Query code (M language) that fetches live crypto data. Just paste your CoinGecko API key in the designated cell and refresh - no add-in installation required.',
+        text: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For real-time data, use the live dashboards on our website with BYOK.',
       },
     },
     {
@@ -82,7 +82,7 @@ const faqSchema = {
       name: 'What do I need to use the templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) A free CoinGecko API key from coingecko.com/api, 3) Download a template from your CRK downloads portal. That\'s it - no add-in needed!',
+        text: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from your CRK downloads portal. That\'s it - templates come with prefetched data ready to use!',
       },
     },
     {

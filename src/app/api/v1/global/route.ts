@@ -7,7 +7,7 @@
  * - Active cryptocurrencies
  * - Market cap change 24h
  *
- * Supports both cookie-based auth (web) and Bearer token auth (Excel add-in)
+ * Supports both cookie-based auth (web) and Bearer token auth (API clients)
  */
 
 import { getAuthUser, getSupabaseClient } from '@/lib/supabase/api-auth';
@@ -16,7 +16,7 @@ import { decryptApiKey } from '@/lib/encryption';
 
 export async function GET(request: NextRequest) {
   try {
-    // Support both cookie auth (web) and Bearer token (Excel add-in)
+    // Support both cookie auth (web) and Bearer token (API clients)
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {

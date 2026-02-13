@@ -110,8 +110,8 @@ export default function RefundPage() {
           <section className="bg-blue-50 border border-blue-200 p-6 rounded-lg">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Excel Templates</h2>
             <p className="mb-4">
-              Our Excel templates contain <strong>formulas only</strong> - they do not include embedded market data.
-              Data is fetched via the CRK Excel add-in using your own API keys when you open the file in Microsoft Excel.
+              Our Excel templates ship with <strong>prefetched crypto data</strong> ready to use.
+              For real-time data, use our live web dashboards with your own API key (BYOK).
             </p>
             <ul className="space-y-3 mb-4">
               <li className="flex items-start gap-3">

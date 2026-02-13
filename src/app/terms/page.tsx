@@ -34,7 +34,7 @@ export default function TermsPage() {
               <li><strong>&quot;Services&quot;</strong> means the CryptoReportKit platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
               <li><strong>&quot;Content&quot;</strong> means all analytics visualizations, templates, charts, and educational information provided through our Services.</li>
-              <li><strong>&quot;Templates&quot;</strong> means Excel files containing Power Query code (no embedded data) that fetch live data using your own API keys stored in Excel (BYOK). No add-in required.</li>
+              <li><strong>&quot;Templates&quot;</strong> means Excel files containing prefetched cryptocurrency data, ready to use. Live web dashboards are also available using BYOK architecture.</li>
               <li><strong>&quot;Subscription&quot;</strong> means a paid plan providing access to premium features of our Services.</li>
             </ul>
           </section>
@@ -89,7 +89,7 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.1 We Are Not a Data Vendor</h3>
             <p className="mb-4">
-              CryptoReportKit provides <strong>software tools</strong> (Excel templates, add-ins, formulas) —
+              CryptoReportKit provides <strong>software tools</strong> (Excel templates, live dashboards) —
               we are <strong>not a data vendor</strong> and do not sell, license, or redistribute market data as a product.
             </p>
 

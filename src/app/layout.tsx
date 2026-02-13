@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: 'CryptoReportKit - Power Query Templates for Crypto',
     template: '%s | CryptoReportKit'
   },
-  description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required. Educational analytics tools.',
+  description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture. Educational analytics tools.',
   keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'power query crypto', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
 
   // Favicon & Icons
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName: 'CryptoReportKit',
     title: 'CryptoReportKit - Power Query Templates for Crypto',
-    description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required.',
+    description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'CryptoReportKit - Power Query Templates for Crypto',
-    description: 'Power Query templates for live crypto data in Excel. BYOK - your API key stays in Excel. No add-in required.',
+    description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
     images: [`${siteUrl}/og-image.png`],
     creator: '@cryptoreportkit',
   },

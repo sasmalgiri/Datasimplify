@@ -15,7 +15,7 @@ export async function GET() {
     {
       error: 'Market data API is not available',
       message: 'CryptoReportKit provides Excel templates with formulas, not market data APIs. ' +
-               'Templates fetch data via the CRK add-in on your machine using your own API keys (BYOK).',
+               'Templates contain prefetched data. For live updates, use our web dashboards with BYOK.',
       alternative: '/api/templates/download',
       documentation: '/template-requirements',
     },

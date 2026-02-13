@@ -1,8 +1,8 @@
 /**
  * Client Usage Sync Endpoint
  *
- * Receives batched usage reports from the Excel add-in's client-side
- * tracking and persists them for quota enforcement.
+ * Receives batched usage reports from API clients and persists them
+ * for quota enforcement.
  *
  * POST /api/v1/usage/report
  * Body: { date: string, clientCount: number, source: string }
@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
       .from('usage_events')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
+      // 'api_addin_call' kept for backwards compatibility with historical data
       .in('event_type', ['api_price', 'api_ohlcv', 'api_info', 'api_addin_call'])
       .gte('created_at', `${date}T00:00:00.000Z`)
       .lt('created_at', `${date}T23:59:59.999Z`);
@@ -60,11 +61,12 @@ export async function POST(request: NextRequest) {
     if (clientCount > (serverCount as number)) {
       const delta = clientCount - (serverCount as number);
       // Insert a single summary event for the delta
+      // event_type and source kept as legacy values for analytics continuity
       await supabase.from('usage_events').insert({
         user_id: user.id,
         event_type: 'api_addin_call',
         metadata: {
-          source: source || 'excel_addin',
+          source: source || 'web_dashboard',
           batch_count: delta,
           client_total: clientCount,
           reported_at: new Date().toISOString(),

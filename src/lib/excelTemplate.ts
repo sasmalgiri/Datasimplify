@@ -1,7 +1,7 @@
 // Excel Template Generator (safe, template-oriented)
 //
 // This module intentionally does NOT generate or instruct raw market-data exports.
-// CryptoReportKit ships Excel templates that rely on the CRK Add-in with BYOK
+// CryptoReportKit ships Excel templates with BYOK prefetched data
 // (Bring Your Own Key) to fetch data directly within the user's spreadsheet.
 
 import ExcelJS from 'exceljs';
@@ -25,8 +25,8 @@ export async function generateLiveDataTemplate(): Promise<Uint8Array> {
     [''],
     ['RECOMMENDED SETUP (EXCEL DESKTOP)'],
     ['1) Open this file in Microsoft Excel Desktop (Windows/Mac).'],
-    ['2) Install and enable the CRK Add-in, then connect your API keys (BYOK).'],
-    ['3) Sign in to your add-in account.'],
+    ['2) Data is prefetched. For live updates, use our web dashboards at cryptoreportkit.com/live-dashboards'],
+    ['3) Visit cryptoreportkit.com for live interactive dashboards.'],
     ['4) Use the template sheets as a starting point for your dashboard/report.'],
     [''],
     ['NOTES'],

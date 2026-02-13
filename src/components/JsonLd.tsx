@@ -101,7 +101,7 @@ export function FAQJsonLd() {
     {
       question: 'How do Report Kits work?',
       answer:
-        'Report Kits are Excel templates containing CRK formulas. Download the template, install the CRK add-in, connect your API key (BYOK), and refresh to see live data.',
+        'Download the template to get prefetched crypto data. For live interactive data, use our web dashboards with BYOK.',
     },
     {
       question: 'What is BYOK (Bring Your Own Key)?',
@@ -287,7 +287,7 @@ export function ExcelTemplateJsonLd({
       availability: 'https://schema.org/InStock',
     },
     featureList: features,
-    softwareRequirements: 'Microsoft Excel 2016+, CRK Add-in',
+    softwareRequirements: 'Microsoft Excel 2016+',
     publisher: {
       '@type': 'Organization',
       name: 'CryptoReportKit',

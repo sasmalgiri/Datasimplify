@@ -145,11 +145,11 @@ export default async function TemplateDetailPage({ params }: PageProps) {
         {/* Power Query Notice */}
         <div className="bg-emerald-900/30 border-2 border-emerald-500/50 rounded-xl p-6 mb-8">
           <h2 className="text-lg font-bold text-emerald-400 mb-2">
-            Power Query Templates - No Add-in Required
+            Excel Templates - Prefetched Data Included
           </h2>
           <p className="text-gray-300 text-sm mb-3">
-            This template uses Excel&apos;s built-in Power Query to fetch live cryptocurrency data.
-            Just paste your API key and refresh - no add-in installation needed.
+            This template ships with prefetched cryptocurrency data, ready to analyze immediately.
+            For live data, use our web dashboards with BYOK.
           </p>
           <p className="text-gray-400 text-xs">
             <strong>BYOK (Bring Your Own Keys):</strong> Your CoinGecko API key stays in Excel - 
@@ -236,21 +236,13 @@ export default async function TemplateDetailPage({ params }: PageProps) {
                 2
               </span>
               <div className="text-gray-300">
-                Choose your setup:
-                <div className="mt-2 space-y-2 text-sm text-gray-400">
-                  <div>
-                    <span className="text-gray-200 font-medium">Option A (Power Query, no add-in):</span>{' '}
-                    Open the file in Excel Desktop, paste your API key in the template's API cell, then use{' '}
-                    <span className="text-gray-200">Data &gt; Refresh All</span>.
-                  </div>
-                  <div>
-                    <span className="text-gray-200 font-medium">Option B (Excel add-in, formula mode):</span>{' '}
-                    The{' '}
-                    <Link href="/coming-soon?feature=excel_addin" className="text-emerald-400 hover:underline">
-                      CryptoReportKit Excel Add-in
-                    </Link>{' '}
-                    is coming soon via Microsoft for in-Excel installation.
-                  </div>
+                Open in Excel Desktop - the template includes prefetched data so you can start analyzing immediately.
+                <div className="mt-2 text-sm text-gray-400">
+                  For real-time data, use our{' '}
+                  <Link href="/live-dashboards" className="text-emerald-400 hover:underline">
+                    live web dashboards
+                  </Link>{' '}
+                  with your own API key (BYOK).
                 </div>
               </div>
             </li>

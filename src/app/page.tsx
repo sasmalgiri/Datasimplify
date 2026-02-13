@@ -171,7 +171,7 @@ export default function LandingPage() {
                 <>
                   {' '}
                   <span className="bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                    (BYOK - No Add-in Required)
+                    (BYOK - Prefetched Data Ready to Use)
                   </span>
                 </>
               )}
@@ -179,9 +179,9 @@ export default function LandingPage() {
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
               {isSimple
-                ? 'Download a Power Query template, add your API key, and get live crypto prices in Excel.'
-                : 'Power Query templates that fetch data directly from CoinGecko. Your API key stays in Excel (BYOK).'}
-              <span className="text-white font-semibold"> {isSimple ? 'No add-in needed.' : 'Works in Excel Desktop.'}</span>
+                ? 'Download Excel templates with prefetched crypto data, or use live dashboards on the web.'
+                : 'Excel templates with prefetched data and 20+ live web dashboards. BYOK architecture.'}
+              <span className="text-white font-semibold"> {isSimple ? 'Data included.' : 'Works in Excel Desktop.'}</span>
             </p>
 
             {/* Simple Mode: 3-Step Strip */}
@@ -257,7 +257,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>No add-in required</span>
+                    <span>Prefetched data included</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-blue-400">✓</span>
@@ -317,7 +317,7 @@ export default function LandingPage() {
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-green-400">✓</div>
-                <div className="text-gray-400 text-xs">No Add-in</div>
+                <div className="text-gray-400 text-xs">Data Included</div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-yellow-400">BYOK</div>
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <ul className="space-y-1 text-gray-300 text-xs">
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Power Query – no add-in needed</span>
+                    <span>Excel templates with prefetched data</span>
                   </li>
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
@@ -464,7 +464,7 @@ export default function LandingPage() {
             {isSimple ? 'Ready to Start?' : 'Ready to Get Live Crypto Data?'}
           </h2>
           <p className="text-sm text-gray-400 mb-3">
-            {isSimple ? 'Get Power Query templates for Excel – no add-in required.' : 'Download Power Query templates with BYOK. Your API key stays in Excel.'}
+            {isSimple ? 'Excel templates with prefetched data and live web dashboards.' : 'Download Excel templates with prefetched crypto data. BYOK architecture.'}
           </p>
           <Link
             href="/downloads"

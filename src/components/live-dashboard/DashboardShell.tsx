@@ -7,6 +7,7 @@ import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
 import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
+import { CustomizePanel } from './CustomizePanel';
 import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
 interface DashboardShellProps {
@@ -15,38 +16,34 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error } = useLiveDashboardStore();
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, customization } = useLiveDashboardStore();
 
   const handleRefresh = useCallback(() => {
     const params: Record<string, any> = {};
+    const c = customization;
+
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
     if (needsOhlc) {
       const ohlcWidget = definition.widgets.find((w) => w.props?.coinId);
-      if (ohlcWidget) {
-        params.coinId = ohlcWidget.props?.coinId || 'bitcoin';
-        params.days = ohlcWidget.props?.days || 30;
-      }
+      params.coinId = c.coinId || ohlcWidget?.props?.coinId || 'bitcoin';
+      params.days = c.days || ohlcWidget?.props?.days || 30;
     }
     // Check for multi-coin OHLC
     const needsMultiOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc_multi'));
     if (needsMultiOhlc) {
       const multiWidget = definition.widgets.find((w) => w.props?.coinIds);
-      if (multiWidget) {
-        params.coinIds = multiWidget.props?.coinIds;
-        params.days = multiWidget.props?.days || 30;
-      }
+      params.coinIds = c.coinIds.length > 0 ? c.coinIds : multiWidget?.props?.coinIds;
+      params.days = c.days || multiWidget?.props?.days || 30;
     }
     // Check for coin history
     const needsHistory = definition.widgets.some((w) => w.dataEndpoints.includes('coin_history'));
     if (needsHistory) {
       const histWidget = definition.widgets.find((w) => w.props?.coinId && w.dataEndpoints.includes('coin_history'));
-      if (histWidget) {
-        params.historyCoinId = histWidget.props?.coinId || 'bitcoin';
-        params.historyDays = histWidget.props?.days || 90;
-      }
+      params.historyCoinId = c.coinId || histWidget?.props?.coinId || 'bitcoin';
+      params.historyDays = c.days || histWidget?.props?.days || 90;
     }
     fetchData(definition.requiredEndpoints, params);
-  }, [definition, fetchData]);
+  }, [definition, fetchData, customization]);
 
   const timeAgo = lastFetched
     ? `${Math.round((Date.now() - lastFetched) / 1000)}s ago`
@@ -91,6 +88,9 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
               Connect API Key
             </button>
           )}
+
+          {/* Customize */}
+          <CustomizePanel onApply={handleRefresh} />
 
           {/* Export */}
           <ExportButton dashboardName={definition.name} />

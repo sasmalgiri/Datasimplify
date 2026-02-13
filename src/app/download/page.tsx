@@ -65,24 +65,18 @@ export default function DownloadPage() {
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-white">Excel Templates</h1>
           <p className="text-gray-400 text-sm">
-            Choose Power Query (no add-in) or the CRK Excel add-in (formula mode).
+            Excel templates with prefetched crypto data, ready to analyze.
           </p>
         </div>
 
         <div className="mb-4 bg-gray-900 border border-gray-800 rounded-lg p-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="text-sm text-gray-300">
-              <span className="font-semibold text-white">Power Query templates</span> are generated here.
-              <span className="text-gray-400"> Prefer formulas like </span>
-              <span className="text-gray-200">=CRK.PRICE(...)</span>
-              <span className="text-gray-400">? Install the CRK Excel Add-in.</span>
+              <span className="font-semibold text-white">Excel templates</span> are generated here with prefetched data.
+              <span className="text-gray-400"> For real-time data, use our </span>
+              <Link href="/live-dashboards" className="text-emerald-400 hover:underline">live dashboards</Link>
+              <span className="text-gray-400"> on the website.</span>
             </div>
-            <Link
-              href="/addin/setup"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition text-sm font-medium text-white"
-            >
-              Install Add-in
-            </Link>
           </div>
         </div>
 

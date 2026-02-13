@@ -222,7 +222,7 @@ function generateWarnings(
   // Free user trying to use non-free-safe template
   if (isFreeUser && !template.free_safe) {
     warnings.push(
-      'This template may exceed CryptoSheets Free tier limits (100 calls/day). Consider upgrading or reducing asset count.'
+      'This template may exceed free API tier limits. Consider upgrading your CoinGecko plan or reducing asset count.'
     );
   }
 
@@ -241,7 +241,7 @@ function generateWarnings(
   // Screener or correlation on free tier
   if (isFreeUser && (template.features.screener || template.features.correlation)) {
     warnings.push(
-      'Advanced features like screener/correlation work best with CryptoSheets Pro plan.'
+      'Advanced features like screener/correlation work best with a CoinGecko Pro API plan.'
     );
   }
 
@@ -260,17 +260,17 @@ function generateSetupSteps(
   // Step 2: Open in Excel Desktop
   steps.push('Open the file in Excel Desktop (Excel Online is NOT supported)');
 
-  // Step 3: CryptoSheets
-  steps.push('Go to the CryptoSheets tab in Excel ribbon');
+  // Step 3: Explore data
+  steps.push('Data is prefetched and ready to use');
 
-  // Step 4: Sign in
-  steps.push('Sign in to your CryptoSheets account (or create one at cryptosheets.com)');
+  // Step 4: Charts
+  steps.push('Select data and Insert charts to visualize');
 
-  // Step 5: Refresh
-  steps.push('Go to START_HERE sheet and press Ctrl+Alt+F5 to refresh data');
+  // Step 5: Live data
+  steps.push('For live data, visit cryptoreportkit.com/live-dashboards with your BYOK API key');
 
   // Step 6: Verify
-  steps.push('Check that the Status Checker shows "Connected" and sample data loads');
+  steps.push('Check that the data sheets contain your prefetched market data');
 
   return steps;
 }
@@ -326,9 +326,9 @@ function generateReasoning(
   // Free tier consideration
   if (isFreeUser) {
     if (template.free_safe) {
-      parts.push('Works within CryptoSheets Free tier (100 calls/day).');
+      parts.push('Works within CoinGecko free API tier limits.');
     } else {
-      parts.push('May require CryptoSheets Pro for best results.');
+      parts.push('May require CoinGecko Pro API for best results.');
     }
   }
 
@@ -357,33 +357,33 @@ export interface TroubleshootingItem {
 export const TROUBLESHOOTING_GUIDE: TroubleshootingItem[] = [
   {
     symptom: '#NAME? errors in cells',
-    cause: 'CryptoSheets add-in not installed',
-    solution: 'Install CryptoSheets add-in from cryptosheets.com',
+    cause: 'Formula references not available in this template',
+    solution: 'Data is prefetched. For live data, use web dashboards at cryptoreportkit.com',
   },
   {
     symptom: 'Empty data / #VALUE! errors',
-    cause: 'Not signed in to CryptoSheets',
-    solution: 'Sign in via the CryptoSheets tab in Excel ribbon',
+    cause: 'Data not loaded or invalid reference',
+    solution: 'Re-download the template or check cell references',
   },
   {
     symptom: 'Rate limit / quota errors',
-    cause: 'CryptoSheets API quota exceeded',
-    solution: 'Wait for quota reset, reduce coins, or upgrade CryptoSheets plan',
+    cause: 'API quota exceeded',
+    solution: 'Wait for quota reset, reduce coins, or upgrade your CoinGecko plan',
   },
   {
     symptom: 'Stale data',
     cause: 'Data not refreshed recently',
-    solution: 'Press Ctrl+Alt+F5 (Windows) or Cmd+Alt+F5 (Mac) to refresh',
+    solution: 'Download a fresh template or use live web dashboards at cryptoreportkit.com',
   },
   {
     symptom: 'Formulas showing as text',
     cause: 'Excel Online or mobile app',
-    solution: 'Open in Excel Desktop app (required for add-in support)',
+    solution: 'Open in Excel Desktop app for best experience',
   },
   {
-    symptom: 'Add-in tab missing',
-    cause: 'Add-in not activated',
-    solution: 'Go to Insert > Add-ins > Search for CryptoSheets',
+    symptom: 'Data looks outdated',
+    cause: 'Template was downloaded some time ago',
+    solution: 'Download a new template from cryptoreportkit.com for latest data',
   },
 ];
 

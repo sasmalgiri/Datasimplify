@@ -1,12 +1,12 @@
 /**
  * CryptoSheets Supported Coins
  *
- * Comprehensive list of all cryptocurrencies supported by CryptoSheets add-in.
- * These coins can be used in template formulas.
+ * Comprehensive list of all cryptocurrencies supported for templates.
+ * These coins can be used in template formulas and prefetched data.
  *
- * Note: CryptoSheets supports 5000+ coins. This list includes the most popular
- * and commonly used coins. The add-in dynamically supports any coin available
- * on supported exchanges.
+ * Note: CoinGecko supports 5000+ coins. This list includes the most popular
+ * and commonly used coins. Templates support any coin available
+ * on CoinGecko.
  */
 
 export interface CryptoSheetCoin {

@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
                 <h2>Price Alert Triggered</h2>
                 <p><strong>${alert.coin_id.toUpperCase()}</strong> has ${direction} your threshold of <strong>$${alert.threshold.toLocaleString()}</strong>.</p>
                 <p>Current price: <strong>$${currentPrice.toLocaleString()}</strong></p>
-                <p style="color: #666; font-size: 12px;">This alert has been deactivated. Create a new one in your Excel add-in with =CRK.ALERT()</p>
+                <p style="color: #666; font-size: 12px;">This alert has been deactivated. Create a new one in your dashboard.</p>
               `,
             });
           }

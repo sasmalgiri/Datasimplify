@@ -4,7 +4,7 @@
  * Get top N coins by market cap
  * Returns coin list with price, market cap, and 24h change
  *
- * Supports both cookie-based auth (web) and Bearer token auth (Excel add-in)
+ * Supports both cookie-based auth (web) and Bearer token auth (API clients)
  */
 
 import { getAuthUser, getSupabaseClient } from '@/lib/supabase/api-auth';
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const currency = searchParams.get('currency') || 'usd';
 
   try {
-    // Support both cookie auth (web) and Bearer token (Excel add-in)
+    // Support both cookie auth (web) and Bearer token (API clients)
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {

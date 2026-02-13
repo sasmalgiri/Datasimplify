@@ -270,7 +270,7 @@ export function ConfigureStep() {
             <h3 className="font-medium text-white mb-3">
               Preview
               <span className="text-gray-400 font-normal text-sm ml-2">
-                (Data view • Charts created via add-in)
+                (Data view • Charts included)
               </span>
             </h3>
             {previewCoins.length > 0 ? (

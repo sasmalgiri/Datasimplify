@@ -4,7 +4,7 @@
  * 8 Curated Excel Template Packs for CryptoReportKit
  *
  * All templates use BYOK (Bring Your Own Key) architecture.
- * Data is fetched via the CRK Excel add-in using user's own API key.
+ * Data is prefetched at download time. Live data available via web dashboards.
  *
  * Data Source: CoinGecko (https://www.coingecko.com/)
  */
@@ -65,7 +65,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Calculate profit/loss',
     ],
     faqs: [
-      { question: 'What API key do I need?', answer: 'A CoinGecko API key (free tier available). Connect it in the CRK add-in.' },
+      { question: 'What API key do I need?', answer: 'A CoinGecko API key (free tier available). Use it on our web dashboards for live data.' },
     ],
     relatedKits: ['market-overview', 'screener-watchlist'],
     functions: ['PRICE', 'CHANGE24H', 'MARKETCAP', 'VOLUME', 'OHLCV'],
@@ -95,7 +95,7 @@ export const REPORT_KITS: ReportKit[] = [
       'Track market trends',
     ],
     faqs: [
-      { question: 'How often should I refresh?', answer: 'Once per session is typical. The add-in caches data for 30 seconds.' },
+      { question: 'How often should I refresh?', answer: 'Data is prefetched at download time. For live data, use our web dashboards.' },
     ],
     relatedKits: ['portfolio-starter', 'trader-charts'],
     functions: ['GLOBAL', 'BTCDOM', 'ETHDOM', 'TOP', 'GAINERS', 'LOSERS', 'FEARGREED'],

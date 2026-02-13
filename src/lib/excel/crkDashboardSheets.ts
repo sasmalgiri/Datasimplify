@@ -805,7 +805,7 @@ export function addNavigationSheet(
  * Adds CRK formula dashboard sheets to a workbook based on dashboard type.
  * All dashboards use professional dark-themed layouts.
  * When prefetchedData is provided, data sheets are pre-populated with real values
- * and KPI cards use IFERROR fallbacks — templates work without the add-in.
+ * and KPI cards use IFERROR fallbacks — templates work with prefetched data.
  */
 export function addCrkDashboardSheets(
   workbook: ExcelJS.Workbook,

@@ -34,7 +34,6 @@ export const CONTENT_OPTIONS: ContentOption[] = [
 /** Maps content type ID to filename suffix */
 const CONTENT_LABEL_MAP: Record<string, string> = {
   formulas_only: '_formulas',
-  addin: '_interactive',
   native_charts: '_native',
 };
 

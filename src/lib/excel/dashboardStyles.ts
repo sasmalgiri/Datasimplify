@@ -328,7 +328,7 @@ export interface KPICardDef {
   formula: string; // CRK formula without the CRK. prefix, e.g., 'GLOBAL("total_market_cap")'
   format?: string; // Number format, e.g., '$#,##0', '0.00%'
   changeFormula?: string; // Optional CRK formula for change indicator (▲/▼)
-  fallbackValue?: number | string; // Static fallback for IFERROR wrapping (when add-in not installed)
+  fallbackValue?: number | string; // Static fallback for IFERROR wrapping (prefetched value)
   changeFallback?: number | string; // Static fallback for change indicator
 }
 
@@ -399,7 +399,7 @@ export function addKPICards(
     sheet.mergeCells(startRow + 1, col, startRow + 1, endCol);
     const valueCell = sheet.getCell(startRow + 1, col);
     if (card.fallbackValue !== undefined) {
-      // IFERROR wrapping: shows live CRK value if add-in loaded, fallback if not
+      // IFERROR wrapping: shows live CRK value if available, prefetched fallback otherwise
       let fb: string | number;
       if (typeof card.fallbackValue === 'string') {
         fb = `"${card.fallbackValue.replace(/"/g, '""')}"`;

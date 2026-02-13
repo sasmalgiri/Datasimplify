@@ -306,10 +306,10 @@ export default function TemplatesPage() {
                   </div>
                   {/* Mode */}
                   <div>
-                    <label htmlFor="filter-mode" className="text-[10px] text-gray-500 uppercase mb-1 block">Add-in</label>
+                    <label htmlFor="filter-mode" className="text-[10px] text-gray-500 uppercase mb-1 block">Mode</label>
                     <select
                       id="filter-mode"
-                      aria-label="Select add-in mode"
+                      aria-label="Select template mode"
                       value={config.mode}
                       onChange={(e) => updateConfig({ mode: e.target.value as TemplateMode | 'all' })}
                       className="w-full px-2 py-1 text-xs bg-gray-700/50 border border-gray-600 rounded text-white"

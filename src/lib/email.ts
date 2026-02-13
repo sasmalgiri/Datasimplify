@@ -165,7 +165,7 @@ https://cryptoreportkit.com`,
     <div class="content">
       <h2 style="margin-top: 0;">Your Report is Ready</h2>
       <p>Your scheduled report <strong>"${exportName}"</strong> has been generated and is attached to this email.</p>
-      <p>Open the Excel file and use the CRK Add-in to refresh with the latest data.</p>
+      <p>Open the Excel file in Microsoft Excel to see your prefetched data.</p>
       <a href="https://cryptoreportkit.com/account/schedules" class="button">Manage Schedules</a>
     </div>
     <div class="footer">
@@ -205,8 +205,8 @@ Thanks for signing up for CryptoReportKit.
 
 Get started:
 1. Download a report pack from the Builder
-2. Install the CRK Excel Add-in
-3. Connect your API keys for unlimited data
+2. Open in Microsoft Excel
+3. Visit cryptoreportkit.com/live-dashboards for live data
 
 Need help? Reply to this email or visit our FAQ.
 
@@ -241,8 +241,8 @@ The CryptoReportKit Team`,
       </div>
 
       <div class="step">
-        <strong>2. Install the Add-in</strong>
-        <p style="margin: 5px 0 0 0;">Download and install the CRK Excel Add-in for live data refresh.</p>
+        <strong>2. Open in Excel</strong>
+        <p style="margin: 5px 0 0 0;">Open the downloaded file in Microsoft Excel to view your prefetched data.</p>
       </div>
 
       <div class="step">

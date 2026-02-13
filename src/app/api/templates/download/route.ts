@@ -8,7 +8,7 @@
  * - Documentation
  *
  * Data is fetched server-side at download time and baked into the file.
- * For live updates, users can install the CRK Excel Add-in (BYOK).
+ * For live updates, users can use the web dashboards with BYOK.
  *
  * Security features:
  * - IP-based rate limiting (10 downloads/15min per IP)
@@ -198,7 +198,8 @@ export async function POST(request: Request) {
     }
 
     // 6. Validate and sanitize inputs
-    const validContentTypes: ContentType[] = ['formulas_only', 'addin', 'native_charts'];
+    // 'addin' removed — templates now ship with prefetched data
+    const validContentTypes: ContentType[] = ['formulas_only', 'native_charts'];
     const contentType: ContentType = validContentTypes.includes(body.contentType)
       ? body.contentType
       : 'native_charts';
@@ -375,7 +376,7 @@ export async function GET() {
         dataIncluded: false,
         byok: true,
         powerQuery: true,
-        noAddinRequired: true,
+        standalone: true, // templates ship with prefetched data, no add-in needed
         serverNeverTouchesData: true,
         dualMode: true,
         tiers: { free: freeCount, pro: proCount },

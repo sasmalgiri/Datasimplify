@@ -119,7 +119,7 @@ async function buildPortfolioTracker(workbook: ExcelJS.Workbook) {
   intro.addRow(['CRK Portfolio Tracker']);
   intro.getRow(1).font = { bold: true, size: 16, color: { argb: COLORS.emerald } };
   intro.addRow(['']);
-  intro.addRow(['1. Install the CryptoReportKit Excel Add-in']);
+  intro.addRow(['1. Data is prefetched and ready to use']);
   intro.addRow(['2. Add holdings: =CRK.PORTFOLIO_ADD("bitcoin", 0.5, 45000)']);
   intro.addRow(['3. Go to "Portfolio" sheet to see live values']);
   intro.addRow(['4. Go to "Tax" sheet for cost basis and gains']);

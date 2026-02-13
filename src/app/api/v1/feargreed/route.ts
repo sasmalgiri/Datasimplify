@@ -4,7 +4,7 @@
  * Fetches the Crypto Fear & Greed Index from Alternative.me
  * Returns current value (0-100) and classification
  *
- * Supports both cookie-based auth (web) and Bearer token auth (Excel add-in)
+ * Supports both cookie-based auth (web) and Bearer token auth (API clients)
  */
 
 import { getAuthUser, getSupabaseClient } from '@/lib/supabase/api-auth';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   const limit = searchParams.get('limit') || '1';
 
   try {
-    // Support both cookie auth (web) and Bearer token (Excel add-in)
+    // Support both cookie auth (web) and Bearer token (API clients)
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {

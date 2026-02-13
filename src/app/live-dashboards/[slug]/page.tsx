@@ -17,43 +17,39 @@ export default function LiveDashboardPage() {
   const slug = params.slug as string;
   const definition = getDashboardBySlug(slug);
 
-  const { apiKey, fetchData } = useLiveDashboardStore();
+  const { apiKey, fetchData, customization } = useLiveDashboardStore();
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
   const loadData = useCallback(() => {
     if (!definition || !apiKey) return;
     const params: Record<string, any> = {};
+    const c = customization;
+
     // OHLC
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
     if (needsOhlc) {
       const ohlcWidget = definition.widgets.find((w) => w.props?.coinId);
-      if (ohlcWidget) {
-        params.coinId = ohlcWidget.props?.coinId || 'bitcoin';
-        params.days = ohlcWidget.props?.days || 30;
-      }
+      params.coinId = c.coinId || ohlcWidget?.props?.coinId || 'bitcoin';
+      params.days = c.days || ohlcWidget?.props?.days || 30;
     }
     // Multi OHLC
     const needsMultiOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc_multi'));
     if (needsMultiOhlc) {
       const multiWidget = definition.widgets.find((w) => w.props?.coinIds);
-      if (multiWidget) {
-        params.coinIds = multiWidget.props?.coinIds;
-        params.days = multiWidget.props?.days || 30;
-      }
+      params.coinIds = c.coinIds.length > 0 ? c.coinIds : multiWidget?.props?.coinIds;
+      params.days = c.days || multiWidget?.props?.days || 30;
     }
     // Coin history
     const needsHistory = definition.widgets.some((w) => w.dataEndpoints.includes('coin_history'));
     if (needsHistory) {
       const histWidget = definition.widgets.find((w) => w.props?.coinId && w.dataEndpoints.includes('coin_history'));
-      if (histWidget) {
-        params.historyCoinId = histWidget.props?.coinId || 'bitcoin';
-        params.historyDays = histWidget.props?.days || 90;
-      }
+      params.historyCoinId = c.coinId || histWidget?.props?.coinId || 'bitcoin';
+      params.historyDays = c.days || histWidget?.props?.days || 90;
     }
     fetchData(definition.requiredEndpoints, params);
     setInitialLoaded(true);
-  }, [definition, apiKey, fetchData]);
+  }, [definition, apiKey, fetchData, customization]);
 
   // Auto-fetch on mount if key exists
   useEffect(() => {

@@ -4,7 +4,7 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 
 export const metadata: Metadata = {
   title: 'About CryptoReportKit - Power Query Templates for Crypto',
-  description: 'CryptoReportKit provides Power Query templates for live cryptocurrency data in Excel. BYOK architecture means your API key stays in Excel. No add-in required.',
+  description: 'CryptoReportKit provides Excel templates with prefetched crypto data and live web dashboards. BYOK architecture.',
   keywords: [
     'about cryptoreportkit',
     'crypto report kit',

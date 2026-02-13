@@ -22,7 +22,7 @@ export default function DataSourcesPage() {
               <ul className="text-sm text-gray-700 space-y-1">
                 <li><strong>Display-Only Dashboards:</strong> Our website dashboards (e.g., /market, /research) display
                   aggregated data publicly for educational purposes. We aim to comply with provider API terms; use is subject to provider policies.</li>
-                <li><strong>BYOK (Bring Your Own Keys):</strong> Our Excel add-in uses <strong>your own API keys</strong>.
+                <li><strong>BYOK (Bring Your Own Keys):</strong> Our live dashboards use <strong>your own API keys</strong>.
                   Data fetched via your keys is governed by your agreement with the provider.</li>
               </ul>
             </div>
@@ -61,7 +61,7 @@ export default function DataSourcesPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Usage Context</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• <strong>Website:</strong> Display-only dashboards (free API tier)</li>
-                  <li>• <strong>Excel Add-in:</strong> BYOK - you provide your own API key</li>
+                  <li>• <strong>Live Dashboards:</strong> BYOK - you provide your own API key</li>
                 </ul>
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function DataSourcesPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Usage Context</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• <strong>Website:</strong> Display-only dashboards (public API)</li>
-                  <li>• <strong>Excel Add-in:</strong> Included formulas (no API key required)</li>
+                  <li>• <strong>Live Dashboards:</strong> Included in website dashboards (no API key required)</li>
                 </ul>
               </div>
             </div>
@@ -178,7 +178,7 @@ export default function DataSourcesPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Usage Context</h3>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• <strong>Website:</strong> SafeContract verification tool</li>
-                  <li>• <strong>Excel Add-in:</strong> Not currently used</li>
+                  <li>• <strong>Templates:</strong> Not currently used</li>
                 </ul>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function DataSourcesPage() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-3">BYOK (Bring Your Own Keys)</h2>
               <p className="text-gray-700 mb-4">
-                Our Excel add-in operates on a <strong>server-proxy BYOK architecture</strong>. Here&apos;s how it works:
+                Our live dashboards operate on a <strong>BYOK architecture</strong>. Here&apos;s how it works:
               </p>
               <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
                 <li><strong>You provide:</strong> Your own API keys from data providers (e.g., CoinGecko)</li>

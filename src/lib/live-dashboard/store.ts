@@ -66,6 +66,18 @@ export interface DashboardData {
   coinHistory: Record<string, any> | null;
 }
 
+export interface DashboardCustomization {
+  coinId: string;        // Primary coin override (empty = use definition default)
+  coinIds: string[];     // Comparison coins override (empty = use definition default)
+  days: number;          // Timeframe override (0 = use definition default)
+}
+
+const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
+  coinId: '',
+  coinIds: [],
+  days: 0,
+};
+
 interface LiveDashboardStore {
   apiKey: string | null;
   keyType: 'pro' | 'demo' | null;
@@ -76,6 +88,10 @@ interface LiveDashboardStore {
   isLoading: boolean;
   error: string | null;
   lastFetched: number | null;
+
+  customization: DashboardCustomization;
+  setCustomization: (updates: Partial<DashboardCustomization>) => void;
+  resetCustomization: () => void;
 
   fetchData: (endpoints: string[], params?: Record<string, any>) => Promise<void>;
   resetData: () => void;
@@ -105,6 +121,12 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       isLoading: false,
       error: null,
       lastFetched: null,
+
+      customization: DEFAULT_CUSTOMIZATION,
+      setCustomization: (updates) => set((state) => ({
+        customization: { ...state.customization, ...updates },
+      })),
+      resetCustomization: () => set({ customization: DEFAULT_CUSTOMIZATION }),
 
       fetchData: async (endpoints, params) => {
         const { apiKey } = get();

@@ -52,8 +52,8 @@ export default function BYOKPage() {
             </li>
           </ul>
           <p className="mt-4 text-sm text-gray-400 border-t border-gray-600 pt-4">
-            <strong>Two options:</strong> Use our <strong>Power Query templates</strong> (key in Excel cells) or the
-            <strong> CRK Excel Add-in</strong> (key in browser LocalStorage). Both methods keep your key 100% local.
+            <strong>Two options:</strong> Use our <strong>Excel templates</strong> (with prefetched data) or the
+            <strong> live dashboards</strong> on the website (key in browser sessionStorage). Both methods keep your key 100% local.
           </p>
         </div>
 
@@ -261,8 +261,7 @@ export default function BYOKPage() {
             <div>
               <h3 className="font-medium text-white mb-1">Does CryptoReportKit store my API key?</h3>
               <p className="text-sm text-gray-400">
-                No! Your API key is stored only on your computer. With Power Query, it stays in your Excel file.
-                With the CRK Add-in, it stays in your browser&apos;s LocalStorage. We never see, transmit, or store your keys on our servers.
+                No! Your API key is stored only on your computer. With live dashboards, it stays in your browser&apos;s sessionStorage. We never see, transmit, or store your keys on our servers.
               </p>
             </div>
 

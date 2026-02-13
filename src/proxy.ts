@@ -117,20 +117,8 @@ function addSecurityHeaders(response: NextResponse, pathname: string): NextRespo
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
 
-  // Allow Office add-in pages to load in iframes
-  const isAddinPage = pathname.startsWith('/addin/');
-  if (isAddinPage) {
-    // Allow iframe loading for Office add-ins
-    response.headers.set('X-Frame-Options', 'ALLOWALL');
-    // Set CSP to allow Office add-in contexts
-    response.headers.set(
-      'Content-Security-Policy',
-      "frame-ancestors 'self' https://*.officeapps.live.com https://*.excel.officeapps.live.com https://*.office.com https://*.office365.com https://*.sharepoint.com"
-    );
-  } else {
-    // Block iframe loading for all other pages
-    response.headers.set('X-Frame-Options', 'DENY');
-  }
+  // Block iframe loading for all pages
+  response.headers.set('X-Frame-Options', 'DENY');
 
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');

@@ -677,8 +677,8 @@ export function routeToTemplate(
   const setupSteps = [
     'Download the report (click the button below)',
     'Open the file in Excel Desktop (not Excel Online)',
-    'If prompted, enable the CryptoSheets add-in',
-    'Sign in to your CryptoSheets account',
+    'Data is prefetched and ready to view',
+    'For live data, visit cryptoreportkit.com/live-dashboards',
     'Click "Update" to load fresh data',
     "You're done! Your report is ready.",
   ];
@@ -737,12 +737,12 @@ export const TROUBLESHOOTING_STEPS: TroubleshootingStep[] = [
   {
     symptom: '#NAME? showing in cells',
     simpleExplanation: "Excel doesn't recognize the formulas",
-    fix: 'Install the CryptoSheets add-in from cryptosheets.com',
+    fix: 'Data is prefetched. For live data, visit cryptoreportkit.com/live-dashboards',
   },
   {
     symptom: 'Empty cells or #VALUE! errors',
     simpleExplanation: 'The data connection is not working',
-    fix: 'Sign in to CryptoSheets (look for CryptoSheets tab in Excel)',
+    fix: 'Re-download the template for fresh data or check cell references',
   },
   {
     symptom: 'Data not updating',
@@ -756,7 +756,7 @@ export const TROUBLESHOOTING_STEPS: TroubleshootingStep[] = [
   },
   {
     symptom: 'Nothing happens when I open the file',
-    simpleExplanation: 'Excel Online or mobile app cannot run add-ins',
+    simpleExplanation: 'Excel Online or mobile app may have limited support',
     fix: 'Open the file in Excel Desktop app instead',
   },
 ];

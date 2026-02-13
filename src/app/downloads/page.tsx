@@ -87,7 +87,7 @@ export default function DownloadsPage() {
                 <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
                   <div className="text-lg font-semibold">Power Query Templates</div>
                   <div className="text-gray-400 text-sm mt-1">
-                    No add-in required. Paste your API key in Excel and refresh.
+                    Templates ship with prefetched crypto data, ready to use.
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
@@ -106,22 +106,16 @@ export default function DownloadsPage() {
                 </div>
 
                 <div className="bg-gray-800/40 border border-emerald-500/30 rounded-xl p-5">
-                  <div className="text-lg font-semibold">Excel Add-in</div>
+                  <div className="text-lg font-semibold">Live Dashboards</div>
                   <div className="text-gray-400 text-sm mt-1">
-                    Install the CRK add-in for 85+ live crypto formulas directly in Excel. Use =CRK.PRICE(&quot;bitcoin&quot;) and more.
+                    20+ live web dashboards with real-time crypto data. Use your own API key (BYOK) for full access.
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
-                      href="/addin/setup"
+                      href="/live-dashboards"
                       className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition text-white"
                     >
-                      Install Add-in
-                    </Link>
-                    <Link
-                      href="/addin"
-                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
-                    >
-                      Learn More
+                      View Dashboards
                     </Link>
                   </div>
                 </div>

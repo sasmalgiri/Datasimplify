@@ -41,7 +41,7 @@ async function incrementAiQueryCount(supabase: any, userId: string): Promise<voi
     .insert({
       user_id: userId,
       event_type: 'ai_ask',
-      metadata: { source: 'excel_addin' },
+      metadata: { source: 'web_dashboard' },
     });
 }
 
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: `You are CRK AI, a crypto market assistant built into CryptoReportKit Excel add-in. Give concise, data-driven answers about cryptocurrency markets. If real-time price data is provided, use it. Keep answers under 200 words. Don't give financial advice - only factual analysis.${priceContext}`,
+          content: `You are CRK AI, a crypto market assistant built into CryptoReportKit. Give concise, data-driven answers about cryptocurrency markets. If real-time price data is provided, use it. Keep answers under 200 words. Don't give financial advice - only factual analysis.${priceContext}`,
         },
         { role: 'user', content: question },
       ],

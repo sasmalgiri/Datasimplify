@@ -1135,11 +1135,11 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   workbook.modified = new Date();
   workbook.properties.date1904 = false;
 
-  // Settings sheet removed — not needed without the add-in.
+  // Settings sheet removed — not needed for prefetched templates.
   // API key is handled via BYOK on the web dashboard instead.
 
   // Fetch live data from CoinGecko server-side for pre-population
-  // Templates open with real data even without add-in installed
+  // Templates open with real prefetched data
   let prefetchedData: any = null;
   try {
     prefetchedData = await fetchAllData(options);
@@ -1182,7 +1182,7 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
 
   // Delete visual dashboard sheet — live dashboards are on the web.
-  // Visual sheets had chart placeholders + KPI formulas that need the add-in.
+  // Visual sheets had chart placeholders + KPI formulas that need live data.
   // Only data sheets with prefetched values are kept.
   const visualSheetName = VISUAL_SHEET_NAMES[options.dashboard];
   if (visualSheetName) {
@@ -1391,7 +1391,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
     const modeLabels: Record<string, string> = {
       static: '📊 Static Report',
       live: '⚡ Live Excel (Power Query)',
-      interactive: '🚀 Interactive (CRK Add-in)',
+      interactive: '🚀 Interactive (Web Dashboard)',
     };
     sheet.getCell('C27').value = modeLabels[options.outputMode] || options.outputMode;
     sheet.getCell('C27').font = { bold: true, color: { argb: COLORS.info } };

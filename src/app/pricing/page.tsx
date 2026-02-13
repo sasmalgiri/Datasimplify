@@ -7,75 +7,6 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
-// Excel Add-in subscription tiers
-const ADDIN_TIERS = [
-  {
-    name: 'Free',
-    key: 'free',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    description: 'Try CRK formulas in Excel',
-    features: [
-      '100 API calls / day',
-      '10 basic functions (PRICE, OHLCV, etc.)',
-      'Up to 10 coins per request',
-      '7 days OHLCV history',
-      'Community support',
-    ],
-    popular: false,
-  },
-  {
-    name: 'Pro',
-    key: 'pro',
-    monthlyPrice: 49,
-    yearlyPrice: 490,
-    description: 'For serious crypto analysts',
-    features: [
-      '5,000 API calls / day',
-      'All 70+ functions',
-      'Up to 100 coins per request',
-      '1 year OHLCV history',
-      'Technical indicators (RSI, SMA, BB)',
-      'Screener & Discovery functions',
-      'Email support',
-    ],
-    checkoutMonthly: 'https://cryptoreportkit.onfastspring.com/crk-addin-pro-monthly',
-    checkoutYearly: 'https://cryptoreportkit.onfastspring.com/crk-addin-pro-yearly',
-    popular: true,
-  },
-  {
-    name: 'Premium',
-    key: 'premium',
-    monthlyPrice: 199,
-    yearlyPrice: 1990,
-    description: 'For teams & power users',
-    features: [
-      '50,000 API calls / day',
-      'All 70+ functions',
-      'Up to 500 coins per request',
-      '2 years OHLCV history',
-      'All technical indicators',
-      'Scheduled exports',
-      'API access',
-      'Priority support',
-    ],
-    checkoutMonthly: 'https://cryptoreportkit.onfastspring.com/crk-addin-premium-monthly',
-    checkoutYearly: 'https://cryptoreportkit.onfastspring.com/crk-addin-premium-yearly',
-    popular: false,
-  },
-];
-
-// Add-in feature comparison rows
-const ADDIN_COMPARISON = [
-  { feature: 'Daily API Calls', free: '100', pro: '5,000', premium: '50,000' },
-  { feature: 'Available Functions', free: '10 basic', pro: 'All 70+', premium: 'All 70+' },
-  { feature: 'Coins per Request', free: '10', pro: '100', premium: '500' },
-  { feature: 'OHLCV History', free: '7 days', pro: '1 year', premium: '2 years' },
-  { feature: 'Technical Indicators', free: '—', pro: 'All', premium: 'All' },
-  { feature: 'Screener & Discovery', free: '—', pro: 'Yes', premium: 'Yes' },
-  { feature: 'Scheduled Exports', free: '—', pro: '—', premium: '25' },
-  { feature: 'Support', free: 'Community', pro: 'Email', premium: 'Priority' },
-];
 
 // Help Icon with tooltip for explanations
 function HelpIcon({ text }: { text: string }) {
@@ -123,7 +54,7 @@ export default function PricingPage() {
   const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  const [pricingType, setPricingType] = useState<'addin' | 'subscription'>('addin');
+  // Single pricing type - subscription only (add-in removed)
 
   if (!pricingEnabled) {
     return (
@@ -136,8 +67,8 @@ export default function PricingPage() {
             CryptoReportKit is currently running in free mode. All features are available without payment.
           </p>
           <p className="text-gray-400 text-sm mb-6">
-            We provide Excel templates with prefetched crypto data and live dashboards.
-            For live Excel data, use the CRK Add-in with BYOK (Bring Your Own Key).
+            We provide Excel templates with prefetched crypto data and 20+ live interactive dashboards.
+            All powered by BYOK (Bring Your Own Key) — your CoinGecko API key, your data.
           </p>
           <div className="mt-6 flex gap-4">
             <Link href="/downloads" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
@@ -230,219 +161,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Pricing Type Toggle */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-gray-800 p-1 rounded-lg inline-flex items-center">
-            <button
-              onClick={() => setPricingType('addin')}
-              className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-                pricingType === 'addin'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Excel Add-in
-            </button>
-            <button
-              onClick={() => setPricingType('subscription')}
-              className={`px-5 py-2 rounded-md text-sm font-medium transition ${
-                pricingType === 'subscription'
-                  ? 'bg-emerald-600 text-white'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Subscription
-            </button>
-          </div>
-        </div>
-
-        {/* Excel Add-in Pricing */}
-        {pricingType === 'addin' && (
-          <>
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-semibold mb-2">CRK Excel Add-in</h2>
-              <p className="text-gray-400">
-                70+ custom functions for live crypto data directly in Excel.
-              </p>
-            </div>
-
-            {/* Billing Toggle */}
-            <div className="flex justify-center mb-8">
-              <div className="bg-gray-800 p-1 rounded-lg inline-flex items-center">
-                <button
-                  onClick={() => setBillingPeriod('monthly')}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition ${
-                    billingPeriod === 'monthly'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingPeriod('yearly')}
-                  className={`px-6 py-2 rounded-md text-sm font-medium transition flex items-center gap-2 ${
-                    billingPeriod === 'yearly'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  Yearly
-                  <span className="text-xs px-2 py-0.5 bg-emerald-500 text-white rounded-full">
-                    Save 17%
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-12">
-              {ADDIN_TIERS.map((tier) => {
-                const price = billingPeriod === 'monthly' ? tier.monthlyPrice : tier.yearlyPrice;
-                const perMonth = billingPeriod === 'yearly' && tier.yearlyPrice > 0
-                  ? Math.round(tier.yearlyPrice / 12)
-                  : tier.monthlyPrice;
-                const checkoutUrl = billingPeriod === 'monthly'
-                  ? (tier as any).checkoutMonthly
-                  : (tier as any).checkoutYearly;
-
-                return (
-                  <div
-                    key={tier.key}
-                    className={`bg-gray-800 rounded-2xl border-2 ${
-                      tier.popular ? 'border-emerald-500' : 'border-gray-700'
-                    } p-6 relative`}
-                  >
-                    {tier.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                        <span className="bg-emerald-500 text-white text-xs font-bold px-4 py-1 rounded-full">
-                          MOST POPULAR
-                        </span>
-                      </div>
-                    )}
-
-                    <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
-                    <p className="text-gray-400 text-sm mb-4">{tier.description}</p>
-
-                    <div className="mb-4">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold">
-                          {price === 0 ? 'Free' : `$${price}`}
-                        </span>
-                        {price > 0 && (
-                          <span className="text-gray-400">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
-                        )}
-                      </div>
-                      {billingPeriod === 'yearly' && price > 0 && (
-                        <p className="text-emerald-400 text-sm mt-1">
-                          ${perMonth}/mo billed annually
-                        </p>
-                      )}
-                    </div>
-
-                    <ul className="space-y-2 mb-6 text-sm">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <span className="text-emerald-400 mt-0.5">✓</span>
-                          <span className="text-gray-300">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {price === 0 ? (
-                      <Link
-                        href="/addin/taskpane"
-                        className="block w-full py-2.5 rounded-lg font-medium text-center bg-gray-700 hover:bg-gray-600 text-white transition"
-                      >
-                        Get Started Free
-                      </Link>
-                    ) : (
-                      <a
-                        href={checkoutUrl || '#'}
-                        className={`block w-full py-2.5 rounded-lg font-medium text-center transition ${
-                          tier.popular
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : 'bg-gray-700 hover:bg-gray-600 text-white'
-                        }`}
-                      >
-                        Get {tier.name}
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Feature Comparison Table */}
-            <div className="max-w-4xl mx-auto mb-12">
-              <h3 className="text-lg font-bold text-center mb-6">Feature Comparison</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-700">
-                      <th className="text-left py-3 px-4 text-gray-400 font-medium">Feature</th>
-                      <th className="text-center py-3 px-4 text-gray-400 font-medium">Free</th>
-                      <th className="text-center py-3 px-4 text-emerald-400 font-medium">Pro</th>
-                      <th className="text-center py-3 px-4 text-purple-400 font-medium">Premium</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ADDIN_COMPARISON.map((row, i) => (
-                      <tr key={i} className="border-b border-gray-800">
-                        <td className="py-3 px-4 text-gray-300">{row.feature}</td>
-                        <td className="py-3 px-4 text-center text-gray-400">{row.free}</td>
-                        <td className="py-3 px-4 text-center text-gray-300">{row.pro}</td>
-                        <td className="py-3 px-4 text-center text-gray-300">{row.premium}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Add-in Benefits */}
-            <div className="max-w-3xl mx-auto mb-12">
-              <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-6">
-                <h3 className="font-bold text-lg mb-4 text-center">Why CRK Excel Add-in?</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-start gap-3">
-                    <span className="text-emerald-400 text-lg">⚡</span>
-                    <div>
-                      <strong className="text-white">70+ Custom Functions</strong>
-                      <p className="text-gray-400">PRICE, OHLCV, RSI, SMA, MACD, FEARGREED and more</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-emerald-400 text-lg">🔑</span>
-                    <div>
-                      <strong className="text-white">BYOK Architecture</strong>
-                      <p className="text-gray-400">Your CoinGecko key, stored locally in Excel</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-emerald-400 text-lg">📊</span>
-                    <div>
-                      <strong className="text-white">Real-Time Data</strong>
-                      <p className="text-gray-400">Live prices, technicals, and market data in cells</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="text-emerald-400 text-lg">📈</span>
-                    <div>
-                      <strong className="text-white">Usage Dashboard</strong>
-                      <p className="text-gray-400">Track your API usage and rate limits in real time</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Subscription Pricing */}
-        {pricingType === 'subscription' && (
-          <>
-            {/* Billing Toggle */}
+        {/* Billing Toggle */}
         <div className="flex justify-center mb-10">
           <div className="bg-gray-800 p-1 rounded-lg inline-flex items-center">
             <button
@@ -537,8 +256,6 @@ export default function PricingPage() {
             );
           })}
         </div>
-          </>
-        )}
 
         {/* Renewal Notice */}
         <p className="text-center text-gray-500 text-sm mt-6">
@@ -571,7 +288,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What is BYOK?</h3>
-              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. In the CRK Add-in and live dashboards, your key stays local. If you save a key in the app, it&apos;s stored encrypted. Get a key at <a href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>.</p>
+              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. Your key stays local in your browser for live dashboards. If you save a key in the app, it&apos;s stored encrypted. Get a key at <a href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">Can I cancel anytime?</h3>
@@ -579,11 +296,11 @@ export default function PricingPage() {
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What&apos;s included in templates?</h3>
-              <p className="text-gray-400 text-sm">Templates come with prefetched market data, professional styling, charts, and navigation. For live updates, install the CRK Excel Add-in.</p>
+              <p className="text-gray-400 text-sm">Templates come with prefetched market data, professional styling, charts, and navigation. For live interactive data, use our web dashboards with your BYOK key.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="font-bold mb-2 text-white">Do I need an add-in?</h3>
-              <p className="text-gray-400 text-sm">Templates work without an add-in (data is prefetched). The CRK Add-in is optional and adds 70+ live formulas for real-time data.</p>
+              <h3 className="font-bold mb-2 text-white">How do live dashboards work?</h3>
+              <p className="text-gray-400 text-sm">Enter your free CoinGecko API key to unlock 20+ interactive dashboards with real-time charts, market data, and export capabilities — all in your browser.</p>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, FileSpreadsheet, ChevronRight, Check, AlertTriangle, ExternalLink } from 'lucide-react';
+import { X, FileSpreadsheet, ChevronRight, Check, ExternalLink } from 'lucide-react';
 import { PageContext, getTemplatesForPage, mergeWithDefaults, PAGE_META } from '@/lib/templates/pageMapping';
 import { TEMPLATES, TemplateType } from '@/lib/templates/templateConfig';
 import { TemplateDownloadModal } from './TemplateDownloadModal';
@@ -104,14 +104,14 @@ export function TemplateSelectionModal({
           </button>
         </div>
 
-        {/* CRK Add-in Info Banner */}
-        <div className="mx-4 mt-4 p-3 bg-yellow-900/20 border border-yellow-600/30 rounded-lg">
+        {/* Template Info Banner */}
+        <div className="mx-4 mt-4 p-3 bg-emerald-900/20 border border-emerald-600/30 rounded-lg">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+            <Check className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
             <div className="text-sm">
-              <p className="text-yellow-400 font-medium">CRK Add-in + API Key Required (BYOK)</p>
-              <p className="text-yellow-500/80 mt-0.5">
-                Templates contain CRK formulas. Data is fetched using your own API key when you open in Excel.
+              <p className="text-emerald-400 font-medium">Templates include prefetched data (BYOK)</p>
+              <p className="text-emerald-500/80 mt-0.5">
+                Templates ship with prefetched crypto data. For live interactive dashboards, use our website.
               </p>
             </div>
           </div>

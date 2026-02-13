@@ -27,7 +27,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link></li>
               <li><Link href="/download" className="hover:text-white transition-colors">Customize Templates</Link></li>
-              <li><Link href="/coming-soon?feature=excel_addin" className="hover:text-white transition-colors">Excel Add-in (Coming Soon)</Link></li>
+              <li><Link href="/live-dashboards" className="hover:text-white transition-colors">Live Dashboards</Link></li>
               <li><Link href="/compare" className="hover:text-white transition-colors">Compare Coins</Link></li>
               <li><Link href="/smart-contract-verifier" className="hover:text-white transition-colors">Verify Contracts</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
@@ -92,7 +92,7 @@ export function Footer() {
                 <li>CryptoReportKit is software analytics tooling - not a data vendor or broker.</li>
                 <li>No trading execution, order routing, or brokerage services.</li>
                 <li>No market-data redistribution - we do not sell or license raw data.</li>
-                <li>Excel templates support Power Query (no add-in required). The Excel add-in (formula mode) is coming soon via Microsoft.</li>
+                <li>Excel templates contain prefetched data. Live dashboards are available on the website with BYOK.</li>
                 <li>Display-only dashboards for educational visualization.</li>
                 <li><strong>We do not provide, sell, or redistribute provider API keys or credentials.</strong> BYOK means you bring your own API keys from data providers.</li>
               </ul>

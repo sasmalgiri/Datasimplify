@@ -286,7 +286,7 @@ async function addChartsPlaceholders(
   sheet.getCell('A1').font = { bold: true, size: 18, color: { argb: 'FF10b981' } };
 
   sheet.getCell('A3').value =
-    'Note: Charts will be created when you refresh the workbook in Excel with the CRK Add-in.';
+    'Note: Charts can be created from the prefetched data using Excel\'s Insert → Chart tools.';
   sheet.getCell('A3').font = { size: 12, italic: true, color: { argb: 'FFf59e0b' } };
 
   let currentRow = 5;
@@ -317,21 +317,21 @@ async function createInstructionsSheet(
 
   const instructions = [
     '',
-    '1. Install the CRK Excel Add-in',
-    '   Go to: Insert → Office Add-ins → Upload My Add-in',
-    '   Or visit: https://cryptoreportkit.com/addin/setup',
+    '1. Open in Microsoft Excel Desktop',
+    '   Data is prefetched and ready to use',
+    '   For live data, visit: https://cryptoreportkit.com/live-dashboards',
     '',
-    '2. Sign In',
-    '   Click "CRK Panel" in the Excel ribbon',
-    '   Sign in with your CryptoReportKit account',
+    '2. Explore Your Data',
+    '   Navigate the data sheets to see prefetched market data',
+    '   All values are current as of download time',
     '',
-    '3. Connect Your API Keys (Optional)',
-    '   In the CRK Panel, connect your provider API keys for higher rate limits',
-    '   Supported: CoinGecko, CoinMarketCap, etc.',
+    '3. Create Charts (Optional)',
+    '   Select data ranges and use Insert → Chart to visualize',
+    '   Excel native charts work with the prefetched data',
     '',
-    '4. Refresh Data',
-    '   Click "Refresh All Data" in the CRK Panel',
-    '   Data will be fetched using your API keys (BYOK)',
+    '4. Live Data',
+    '   Visit cryptoreportkit.com/live-dashboards for live updates',
+    '   Connect your CoinGecko API key (BYOK) for real-time data',
     '',
     '5. Schedule Exports (Pro/Premium)',
     '   Set up scheduled refreshes and email delivery',
@@ -375,7 +375,7 @@ async function createInstructionsSheet(
 
   instructions.push('');
   instructions.push('Need Help?');
-  instructions.push('- Setup Guide: https://cryptoreportkit.com/addin/setup');
+  instructions.push('- Live Dashboards: https://cryptoreportkit.com/live-dashboards');
   instructions.push('- Support: support@cryptoreportkit.com');
   instructions.push('- Documentation: https://cryptoreportkit.com/docs');
 

@@ -4,7 +4,7 @@
  * Fetches OHLC (Open, High, Low, Close, Volume) data from CoinGecko
  * using user's BYOK API key
  *
- * Supports both cookie-based auth (web) and Bearer token auth (Excel add-in)
+ * Supports both cookie-based auth (web) and Bearer token auth (API clients)
  *
  * Sub-hourly intervals (5m, 15m, 30m, 1h) require CoinGecko Pro API key
  * Free tier only supports daily candles
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Support both cookie auth (web) and Bearer token (Excel add-in)
+    // Support both cookie auth (web) and Bearer token (API clients)
     const { user, error: authError } = await getAuthUser(request);
 
     if (authError || !user) {

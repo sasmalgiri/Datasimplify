@@ -53,8 +53,6 @@ import {
   Glasses,
   Lock,
   HardHat,
-  ExternalLink,
-  Puzzle,
   Monitor,
   RefreshCw,
 } from 'lucide-react';
@@ -532,9 +530,9 @@ const outputModes = [
   {
     id: 'interactive' as OutputMode,
     name: 'Interactive',
-    description: 'Full CRK Add-in experience with real-time charts. Best for trading.',
+    description: 'Prefetched data with embedded charts. Use our web dashboards for real-time data.',
     icon: '🚀',
-    features: ['CRK Add-in', 'Real-time', 'Chart.js', 'Custom formulas'],
+    features: ['Prefetched data', 'Embedded charts', 'Styled formatting', 'Web dashboards'],
     recommended: false,
   },
 ];
@@ -571,8 +569,7 @@ export default function WizardPage() {
   const [outputMode, setOutputMode] = useState<OutputMode>('live');
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('hourly');
   const [chartStyle, setChartStyle] = useState<ChartStyle>('professional');
-  // Add-in installation state
-  const [addinInstalled, setAddinInstalled] = useState(false);
+
 
   const validateApiKey = async () => {
     if (!apiKey.trim()) {
@@ -1149,9 +1146,9 @@ export default function WizardPage() {
                       )}
                       {outputMode === 'interactive' && (
                         <>
-                          <p className="text-xs text-gray-400">🚀 CRK Add-in with Chart.js visuals</p>
-                          <p className="text-xs text-gray-400">⏱️ Real-time price updates</p>
-                          <p className="text-xs text-gray-400">🧮 Custom CRK formulas enabled</p>
+                          <p className="text-xs text-gray-400">🚀 Prefetched data with embedded charts</p>
+                          <p className="text-xs text-gray-400">🌐 Use web dashboards for real-time data</p>
+                          <p className="text-xs text-gray-400">📊 Professional styling and formatting</p>
                         </>
                       )}
                     </div>
@@ -1208,7 +1205,7 @@ export default function WizardPage() {
               <h2 className="text-2xl font-bold text-white mb-2">Dashboard Generated! 🎉</h2>
               <p className="text-gray-400 max-w-lg mx-auto">
                 Your <span className="text-emerald-400">{selectedDashboardInfo?.name}</span> Excel dashboard
-                has been downloaded. {outputMode === 'interactive' ? 'Complete the add-in setup below for real-time data.' : 'Open it in Excel to see your styled data and charts.'}
+                has been downloaded. Open it in Excel to see your styled data and charts.
               </p>
             </div>
 
@@ -1239,81 +1236,6 @@ export default function WizardPage() {
                   </li>
                 </ul>
               </div>
-
-              {/* CRK Add-in Installation (shown for Interactive mode) */}
-              {outputMode === 'interactive' && (
-                <div className={`rounded-lg p-6 border-2 ${addinInstalled ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-purple-500/10 border-purple-500/30'}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${addinInstalled ? 'bg-emerald-500/20' : 'bg-purple-500/20'}`}>
-                      <Puzzle className={`w-5 h-5 ${addinInstalled ? 'text-emerald-400' : 'text-purple-400'}`} />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-white">Install CRK Add-in</h3>
-                      <p className="text-xs text-gray-400">Required for real-time data & custom formulas</p>
-                    </div>
-                  </div>
-
-                  {!addinInstalled ? (
-                    <>
-                      <ol className="space-y-3 text-sm text-gray-300 mb-4">
-                        <li className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">1</span>
-                          <span>Open Excel and go to <strong>Insert → Get Add-ins</strong></span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">2</span>
-                          <span>Search for "<strong>CryptoReportKit</strong>" in the store</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">3</span>
-                          <span>Click "<strong>Add</strong>" to install the add-in</span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs">4</span>
-                          <span>Use <strong>=CRK.PRICE("bitcoin")</strong> and other formulas</span>
-                        </li>
-                      </ol>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setAddinInstalled(true)}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          I've Installed It
-                        </button>
-                        <a
-                          href="/addin/setup"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Detailed Guide
-                        </a>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-emerald-400">
-                        <CheckCircle className="w-5 h-5" />
-                        <span className="font-medium">Add-in installed successfully!</span>
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <p className="mb-2">🎉 You're all set! Try these formulas in your Excel:</p>
-                        <div className="bg-gray-800/50 rounded p-3 font-mono text-xs space-y-1">
-                          <p><span className="text-purple-400">=CRK.PRICE</span>("bitcoin")</p>
-                          <p><span className="text-purple-400">=CRK.CHANGE24H</span>("ethereum")</p>
-                          <p><span className="text-purple-400">=CRK.MARKETCAP</span>("solana")</p>
-                          <p><span className="text-purple-400">=CRK.OHLCV</span>("bitcoin", 30)</p>
-                          <p><span className="text-purple-400">=CRK.FEARGREED</span>()</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Power Query Setup (shown for Live mode) */}
               {outputMode === 'live' && (
@@ -1373,7 +1295,7 @@ export default function WizardPage() {
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-amber-400" />
-                      <span>No add-in required</span>
+                      <span>Ready to use immediately</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-amber-400" />
@@ -1382,7 +1304,7 @@ export default function WizardPage() {
                   </ul>
 
                   <p className="text-xs text-gray-400 mt-4">
-                    💡 Want live data? Go back and select "Live Excel" or "Interactive" mode.
+                    💡 Want live data? Go back and select "Live Excel" mode, or use our web dashboards.
                   </p>
                 </div>
               )}
@@ -1405,7 +1327,6 @@ export default function WizardPage() {
                   setStep(2);
                   setSelectedDashboard(null);
                   setDownloadUrl(null);
-                  setAddinInstalled(false);
                 }}
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
               >

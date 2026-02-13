@@ -319,7 +319,7 @@ export function TemplatePreview({ selectedCoins, selectedMetrics, dashboardLayou
             <span className="text-amber-400">{error}</span>
           ) : (
             <span className="text-emerald-400/70">
-              Live data from CoinGecko • Same data will appear in Excel after add-in setup
+              Live data from CoinGecko • Same data will appear in your downloaded Excel template
             </span>
           )}
         </p>

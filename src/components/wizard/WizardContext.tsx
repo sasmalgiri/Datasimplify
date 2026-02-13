@@ -24,7 +24,7 @@ export interface WizardState {
 
   // Step 5: Download
   downloadFormat: 'xlsx' | 'xlsm';
-  contentType: 'addin' | 'native_charts' | 'formulas_only';
+  contentType: 'native_charts' | 'formulas_only';
   isDownloading: boolean;
   downloadComplete: boolean;
 }
@@ -43,7 +43,7 @@ export type WizardAction =
   | { type: 'SET_API_KEY_VALIDATED'; validated: boolean }
   | { type: 'SET_API_KEY_TYPE'; keyType: 'demo' | 'pro' | null }
   | { type: 'SET_DOWNLOAD_FORMAT'; format: 'xlsx' | 'xlsm' }
-  | { type: 'SET_CONTENT_TYPE'; contentType: 'addin' | 'native_charts' | 'formulas_only' }
+  | { type: 'SET_CONTENT_TYPE'; contentType: 'native_charts' | 'formulas_only' }
   | { type: 'SET_DOWNLOADING'; downloading: boolean }
   | { type: 'SET_DOWNLOAD_COMPLETE'; complete: boolean }
   | { type: 'RESET' };

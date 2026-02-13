@@ -124,7 +124,7 @@ function mapProductToKey(productRef: string | null, payload: any): string | null
   const PRODUCT_MAP: Record<string, string> = {
     'power-query-pro': 'power_query_pro',
     'power-query-enterprise': 'power_query_enterprise',
-    // CRK Add-in subscriptions
+    // Legacy: CRK Add-in subscriptions (add-in removed; kept for existing subscribers)
     'crk-addin-pro-monthly': 'crk_addin_pro',
     'crk-addin-pro-yearly': 'crk_addin_pro',
     'crk-addin-premium-monthly': 'crk_addin_premium',
@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Handle CRK add-in subscription lifecycle (activate/cancel)
+    // Legacy: Handle CRK add-in subscription lifecycle (add-in removed; kept for existing subscribers)
     for (const p of purchases) {
       if (!p.productKey?.startsWith('crk_addin_')) continue;
 

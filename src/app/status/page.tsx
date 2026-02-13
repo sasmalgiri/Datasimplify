@@ -279,17 +279,17 @@ export default function StatusPage() {
           </div>
         )}
 
-        {/* CRK Add-in Info */}
+        {/* CRK Info */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-emerald-900 mb-2">
-                CryptoReportKit Add-in
+                CryptoReportKit
               </h3>
               <p className="text-emerald-800 text-sm mb-3">
-                CRK templates use BYOK (Bring Your Own Key) architecture.
-                Your CoinGecko API key stays in your Excel file - we never see or store your keys.
+                CRK uses BYOK (Bring Your Own Key) architecture for live dashboards.
+                Excel templates ship with prefetched data. Your API key stays local - we never see or store your keys.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link

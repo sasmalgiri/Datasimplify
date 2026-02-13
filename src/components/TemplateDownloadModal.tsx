@@ -48,7 +48,7 @@ export function TemplateDownloadModal({
   const [understood, setUnderstood] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [format, setFormat] = useState<'xlsx' | 'xlsm'>('xlsx');
-  const [contentType, setContentType] = useState<ContentType>('addin');
+  const [contentType, setContentType] = useState<ContentType>('native_charts');
   const [error, setError] = useState<string | null>(null);
 
   // Email registration state
@@ -501,7 +501,7 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>No add-ins required - uses Power Query for live data</span>
+                <span>Templates include prefetched data - ready to use immediately</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>

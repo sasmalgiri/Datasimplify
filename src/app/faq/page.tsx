@@ -16,7 +16,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is CryptoReportKit?',
-    answer: 'CryptoReportKit provides Power Query templates for crypto analytics in Excel. Our templates use BYOK (Bring Your Own Key) architecture - you provide your own CoinGecko API key, paste it in Excel, and Power Query fetches live data to your spreadsheets. No add-in required.',
+    answer: 'CryptoReportKit provides Excel templates with prefetched crypto data and 20+ live web dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local. Templates ship with data included, and live dashboards on the website let you explore real-time data.',
   },
   {
     category: 'Getting Started',
@@ -32,12 +32,12 @@ const faqs: FAQItem[] = [
   {
     category: 'Templates',
     question: 'What are CryptoReportKit Power Query Templates?',
-    answer: 'Our Excel templates contain Power Query code (M language) that fetches live crypto data. Just paste your CoinGecko API key in the designated cell and refresh - no add-in installation required.',
+    answer: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For real-time data, use the live dashboards on our website with your own CoinGecko API key (BYOK).',
   },
   {
     category: 'Templates',
     question: 'What do I need to use the templates?',
-    answer: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) A free CoinGecko API key from coingecko.com/api, 3) Download a template from your CRK downloads portal. That\'s it - no add-in needed!',
+    answer: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from your CRK downloads portal. That\'s it - templates come with prefetched data ready to use!',
   },
   {
     category: 'Templates',
@@ -231,7 +231,7 @@ export default function FAQPage() {
           >
             <div className="text-2xl mb-2">📊</div>
             <div className="font-semibold">Power Query Templates</div>
-            <div className="text-sm text-gray-500">BYOK - No add-in needed</div>
+            <div className="text-sm text-gray-500">BYOK - Prefetched data included</div>
           </Link>
           <Link
             href="/template-requirements"
