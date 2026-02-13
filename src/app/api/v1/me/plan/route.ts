@@ -49,6 +49,7 @@ const PLAN_LIMITS = {
 type PlanType = keyof typeof PLAN_LIMITS;
 
 export async function GET() {
+  try {
   const supabase = await createClient();
   const {
     data: { user },
@@ -195,6 +196,10 @@ export async function GET() {
       hasProKey: !!connectedProviders['coingecko']?.connected && (connectedProviders['coingecko']?.isValid ?? false),
     },
   });
+  } catch (error) {
+    console.error('Plan API error:', error);
+    return NextResponse.json({ error: 'Failed to fetch plan info' }, { status: 500 });
+  }
 }
 
 function getPlanDisplayName(plan: PlanType): string {

@@ -23,8 +23,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const result = await cleanupOldData();
-  return NextResponse.json(result);
+  try {
+    const result = await cleanupOldData();
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Cleanup POST error:', error);
+    return NextResponse.json({ success: false, error: 'Cleanup failed' }, { status: 500 });
+  }
 }
 
 export async function GET(request: Request) {
@@ -32,6 +37,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const stats = await getDatabaseStats();
-  return NextResponse.json({ success: true, ...stats });
+  try {
+    const stats = await getDatabaseStats();
+    return NextResponse.json({ success: true, ...stats });
+  } catch (error) {
+    console.error('Cleanup GET error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to get stats' }, { status: 500 });
+  }
 }

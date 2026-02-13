@@ -14,13 +14,11 @@ import {
 } from '@/lib/syncService';
 import { cleanupOldData, getDatabaseStats } from '@/lib/dbCleanup';
 
-// Secret key to protect sync endpoint
+// Secret key to protect sync endpoint — MUST be set in environment
 const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
-const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
 
 function getExpectedSecret(): string | null {
   if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
-  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
   return null;
 }
 

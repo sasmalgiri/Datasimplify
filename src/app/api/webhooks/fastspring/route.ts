@@ -50,12 +50,8 @@ function assertWebhookAuthorized(request: NextRequest): NextResponse | null {
     return null;
   }
 
-  // No auth configured: refuse in production
-  if (process.env.NODE_ENV === 'production') {
-    return unauthorized('Webhook auth not configured');
-  }
-
-  return null;
+  // No auth configured: always refuse (require proper credentials)
+  return unauthorized('Webhook auth not configured. Set FASTSPRING_WEBHOOK_SECRET or FASTSPRING_WEBHOOK_USERNAME/PASSWORD.');
 }
 
 function pickString(value: unknown): string | null {

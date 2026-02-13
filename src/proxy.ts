@@ -20,6 +20,34 @@ const BLOCKED_IPS = new Set<string>([
   // '1.2.3.4',
 ]);
 
+// ── In-memory rate limiter (per edge instance) ──
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  if (entry.count >= limit) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup stale entries every 60s to prevent memory leaks
+if (typeof globalThis !== 'undefined') {
+  const cleanup = () => {
+    const now = Date.now();
+    for (const [key, value] of rateLimitMap) {
+      if (now > value.resetAt) rateLimitMap.delete(key);
+    }
+  };
+  setInterval(cleanup, 60_000);
+}
+
 // Blocked user agent patterns (known bots/scrapers)
 const BLOCKED_UA_PATTERNS = [
   /python-requests/i,
@@ -125,13 +153,40 @@ export function proxy(request: NextRequest) {
     return new NextResponse('Access Denied', { status: 403 });
   }
 
-  // 2. Block suspicious paths (common attack vectors)
+  // 2. Rate limiting for API routes
+  if (pathname.startsWith('/api/')) {
+    const isAuthSensitive = pathname.startsWith('/api/v1/keys') ||
+                            pathname.startsWith('/api/webhooks') ||
+                            pathname.startsWith('/api/user/register');
+    const limit = isAuthSensitive ? 20 : 60; // per minute
+    const bucket = `${clientIp}:${pathname.split('/').slice(0, 4).join('/')}`;
+
+    if (!checkRateLimit(bucket, limit, 60_000)) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+  }
+
+  // 3. Admin route protection — require session cookie
+  if (pathname.startsWith('/admin')) {
+    const hasCookie = request.cookies.getAll().some(c =>
+      c.name.includes('auth-token') || c.name.includes('sb-')
+    );
+    if (!hasCookie) {
+      const loginUrl = new URL('/login?redirect=/admin', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // 5. Block suspicious paths (common attack vectors)
   if (isSuspiciousPath(pathname)) {
     console.warn(`[Middleware] Suspicious path blocked: ${pathname} from ${clientIp}`);
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  // 3. Check for blocked user agents on API routes
+  // 6. Check for blocked user agents on API routes
   // Exception: Allow /api/v1/* and /api/cron/* for server-side access (BYOK APIs, cron jobs)
   const isInternalApi = pathname.startsWith('/api/v1/') || pathname.startsWith('/api/cron/');
 
@@ -168,7 +223,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 4. Rate limit check for downloads (simple edge-based check)
+  // 7. Rate limit check for downloads (simple edge-based check)
   // Note: This is supplementary to the API-level rate limiting
   if (pathname === '/api/templates/download' && request.method === 'POST') {
     // Add custom header to track edge processing
@@ -178,7 +233,7 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(response, pathname);
   }
 
-  // 5. Add security headers to all responses
+  // 8. Add security headers to all responses
   const response = NextResponse.next();
   return addSecurityHeaders(response, pathname);
 }

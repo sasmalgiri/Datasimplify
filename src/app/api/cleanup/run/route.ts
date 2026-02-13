@@ -23,6 +23,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
-  const result = await cleanupOldData();
-  return NextResponse.json(result);
+  try {
+    const result = await cleanupOldData();
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Cleanup run error:', error);
+    return NextResponse.json({ success: false, error: 'Cleanup run failed' }, { status: 500 });
+  }
 }

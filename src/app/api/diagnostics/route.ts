@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
-// Protect diagnostics endpoint (avoid exposing internal state publicly)
+// Protect diagnostics endpoint — MUST have SYNC_SECRET_KEY set
 const SYNC_SECRET_KEY = (process.env.SYNC_SECRET_KEY || '').trim();
-const DEV_FALLBACK_SECRET = 'dev-secret-change-in-production';
 
 function getExpectedSecret(): string | null {
   if (SYNC_SECRET_KEY) return SYNC_SECRET_KEY;
-  if (process.env.NODE_ENV !== 'production') return DEV_FALLBACK_SECRET;
   return null;
 }
 
