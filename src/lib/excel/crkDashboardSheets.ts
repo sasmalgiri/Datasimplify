@@ -595,7 +595,7 @@ function buildPerCoinDashboard(
  * Used by the shape injector to place rounded rectangle KPI overlays.
  */
 export const VISUAL_SHEET_NAMES: Partial<Record<DashboardType, string>> = {
-  'market-overview': 'CRK Dashboard',
+  'market-overview': 'CRK Data',
   'screener': 'CRK Screener',
   'portfolio-tracker': 'CRK Portfolio',
   'gainers-losers': 'CRK Gainers',
@@ -710,19 +710,23 @@ export function addNavigationSheet(
   const navButtons: NavButton[] = [];
   const sheetName = VISUAL_SHEET_NAMES[dashboard];
   if (sheetName) {
+    // If the visual sheet IS the data sheet (e.g. market-overview → 'CRK Data'),
+    // show it as "Data Table" and skip the separate data table card.
+    const isDataSheet = sheetName.endsWith(' Data') || sheetName === 'CRK Data';
     navButtons.push({
-      label: sheetName.replace('CRK ', ''),
-      description: 'Main dashboard with KPIs and charts',
+      label: isDataSheet ? '📋 Data Table' : sheetName.replace('CRK ', ''),
+      description: isDataSheet ? 'Market data with conditional formatting' : 'Main dashboard with KPIs and charts',
       targetSheet: sheetName,
     });
-  }
-  const dataSheet = sheetName ? sheetName + ' Data' : '';
-  if (dataSheet) {
-    navButtons.push({
-      label: '📋 Data Table',
-      description: 'Raw data with conditional formatting',
-      targetSheet: dataSheet,
-    });
+    // Only add separate data table if visual sheet is NOT the data sheet
+    if (!isDataSheet) {
+      const dataSheet = sheetName + ' Data';
+      navButtons.push({
+        label: '📋 Data Table',
+        description: 'Raw data with conditional formatting',
+        targetSheet: dataSheet,
+      });
+    }
   }
 
   // Sub-sheets based on dashboard type
@@ -793,48 +797,11 @@ export function addNavigationSheet(
     }
   }
 
-  // === Setup & Tools section ===
-  const toolsSectionRow = cardRow + (colIdx > 0 ? 4 : 0) + 1;
-  addSectionDivider(sheet, toolsSectionRow, '  🔧 SETUP & TOOLS', theme);
-
-  const toolRow = toolsSectionRow + 1;
-  const toolBtns: NavButton[] = [
-    { label: '⚙️ Settings', description: 'API key configuration', targetSheet: 'Settings', gridRow: toolRow, gridCol: cardCols[0] },
-    { label: '🔗 PQ Setup', description: 'Power Query connections', targetSheet: 'PQ Setup', gridRow: toolRow, gridCol: cardCols[1] },
-  ];
-
-  for (const btn of toolBtns) {
-    const c = btn.gridCol!;
-    for (let r = toolRow; r <= toolRow + 2; r++) {
-      for (let cc = c; cc <= c + cardWidth - 1; cc++) {
-        sheet.getCell(r, cc).fill = {
-          type: 'pattern', pattern: 'solid', fgColor: { argb: theme.cardBg },
-        };
-        const isTop = r === toolRow;
-        const isBottom = r === toolRow + 2;
-        const isLeft = cc === c;
-        const isRight = cc === c + cardWidth - 1;
-        sheet.getCell(r, cc).border = {
-          top: isTop ? { style: 'medium', color: { argb: theme.accent } } : { style: 'thin', color: { argb: theme.border } },
-          bottom: isBottom ? { style: 'thin', color: { argb: theme.border } } : undefined,
-          left: isLeft ? { style: 'thin', color: { argb: theme.border } } : undefined,
-          right: isRight ? { style: 'thin', color: { argb: theme.border } } : undefined,
-        };
-      }
-    }
-    sheet.getCell(toolRow, c).value = btn.label;
-    sheet.getCell(toolRow, c).font = { bold: true, size: 13, color: { argb: theme.text } };
-    sheet.getCell(toolRow + 1, c).value = btn.description;
-    sheet.getCell(toolRow + 1, c).font = { size: 9, color: { argb: theme.muted } };
-    sheet.getCell(toolRow + 2, c).value = { text: 'Open \u203A', hyperlink: `#'${btn.targetSheet}'!A1` };
-    sheet.getCell(toolRow + 2, c).font = { size: 9, bold: true, color: { argb: theme.accent } };
-  }
-
-  // Add tool buttons to nav list for shape injector
-  navButtons.push(...toolBtns);
+  // Setup & Tools section removed — Settings and PQ Setup sheets no longer included.
 
   // Footer
-  addFooter(sheet, toolRow + 4, theme);
+  const footerRow = cardRow + (colIdx > 0 ? 4 : 0) + 1;
+  addFooter(sheet, footerRow, theme);
 
   return navButtons;
 }
@@ -974,45 +941,14 @@ export function addCrkDashboardSheets(
 // ============================================
 
 function addMarketOverviewDashboard(workbook: ExcelJS.Workbook, d?: any) {
-  // === VISUAL DASHBOARD SHEET (charts front and center) ===
-  const { sheet, theme } = initDarkSheet(workbook, 'CRK Dashboard', 'market-overview',
-    [18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12]);
-  addSidebar(sheet, 'CRK Dashboard', theme, { dashboard: 'CRK Dashboard', data: 'CRK Data' });
+  // NOTE: Visual "CRK Dashboard" sheet removed — live dashboards are on the web.
+  // Only the data table + trending sub-sheet are generated.
 
-  addHeaderBar(sheet, 2, '📊 CRYPTO MARKET DASHBOARD', theme, 'Live data via CRK formulas \u2022 Powered by CoinGecko BYOK');
-
-  addKPICards(sheet, 5, enrichKPIs([
-    { title: '💰 TOTAL MARKET CAP', formula: 'GLOBAL("total_market_cap")', format: COMPACT_USD, changeFormula: 'GLOBAL("market_cap_change_percentage_24h_usd")' },
-    { title: '📊 24H VOLUME', formula: 'GLOBAL("total_volume")', format: COMPACT_USD },
-    { title: '🏆 BTC DOMINANCE', formula: 'BTCDOM()', format: '0.00"%"' },
-    { title: '😱 FEAR & GREED', formula: 'FEARGREED()' },
-  ], d), theme);
-
-  addSectionDivider(sheet, 10, '  📊 MARKET ANALYSIS', theme);
-
-  // 2x2 chart grid with card backgrounds (charts injected by chartInjector)
-  const afterGrid = addChartGrid(sheet, 12, theme, [
-    '📊 TOP 10 RANKING',
-    '🥧 MARKET DISTRIBUTION',
-    '📈 24H PRICE CHANGE',
-    '💹 PRICE COMPARISON',
-  ]);
-
-  // Summary metrics below charts
-  const btcPrice = d?.market?.find((c: any) => c.id === 'bitcoin')?.current_price;
-  const ethPrice = d?.market?.find((c: any) => c.id === 'ethereum')?.current_price;
-  addSectionDivider(sheet, afterGrid, '  📈 KEY METRICS', theme);
-  addMetricRow(sheet, afterGrid + 2, 2, 'Active Coins', 'GLOBAL("active_cryptocurrencies")', theme, undefined, d?.global?.active_cryptocurrencies);
-  addMetricRow(sheet, afterGrid + 3, 2, 'Market Cap Change', 'GLOBAL("market_cap_change_percentage_24h_usd")', theme, '0.00"%"', d?.global?.market_cap_change_percentage_24h_usd);
-  addMetricRow(sheet, afterGrid + 4, 2, 'BTC Price', 'PRICE("bitcoin")', theme, '$#,##0.00', btcPrice);
-  addMetricRow(sheet, afterGrid + 5, 2, 'ETH Price', 'PRICE("ethereum")', theme, '$#,##0.00', ethPrice);
-  addFooter(sheet, afterGrid + 7, theme);
-
-  // === DATA SHEET (spill tables for chart data) ===
+  // === DATA SHEET (the main user-facing sheet) ===
   const { sheet: data, theme: dt } = initDarkSheet(workbook, 'CRK Data', 'market-overview',
     [18, 12, 14, 14, 16, 12, 16, 12, 12, 12, 12, 12, 12, 12]);
-  addSidebar(data, 'CRK Data', dt, { dashboard: 'CRK Dashboard', data: 'CRK Data' });
-  addHeaderBar(data, 2, '📊 MARKET DATA', dt, 'Source data for dashboard charts');
+  addSidebar(data, 'CRK Data', dt, { dashboard: 'CRK Data', data: 'CRK Data' });
+  addHeaderBar(data, 2, '📊 MARKET DATA', dt, 'Top 20 cryptocurrencies by market cap \u2022 Powered by CoinGecko BYOK');
   addSectionDivider(data, 4, '  📊 TOP 20 CRYPTOCURRENCIES', dt);
   addTableHeaders(data, 5, TOP_HEADERS, dt);
 

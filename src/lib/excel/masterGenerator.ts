@@ -1342,17 +1342,8 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   workbook.modified = new Date();
   workbook.properties.date1904 = false;
 
-  // Add Settings sheet with API key cell
-  addSettingsSheet(workbook, { ...options, outputMode: 'live' });
-
-  // Create named range for API key cell (used by Power Query M code)
-  workbook.definedNames.add("'Settings'!$B$6", 'CRK_ApiKey');
-
-  // Generate Power Query definitions
-  const queries = generateQueriesForDashboard(
-    options.dashboard,
-    options.coins || ['bitcoin', 'ethereum', 'solana']
-  );
+  // Settings sheet removed — not needed without the add-in.
+  // API key is handled via BYOK on the web dashboard instead.
 
   // Fetch live data from CoinGecko server-side for pre-population
   // Templates open with real data even without add-in installed
@@ -1398,32 +1389,20 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   const coins = options.coins || ['bitcoin', 'ethereum', 'solana'];
   addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
 
-  // Create PQ data sheets (one per query) pre-filled with fetched data
-  // These are regular worksheets with real data — no PQ table linking needed
-  createPQDataSheets(workbook, queries, prefetchedData);
-
-  // Add a lightweight instructions sheet (replaces verbose M code copy-paste sheet)
-  const refreshConfig = REFRESH_PRESETS[options.refreshInterval || 'hourly'];
-  addPowerQuerySetupSheet(workbook, queries, refreshConfig);
-
-  // Add documentation
-  addDocumentationSheet(workbook);
+  // PQ data sheets and PQ Setup removed — templates ship with prefetched data only.
+  // Live dashboards are available on the web instead.
 
   // Generate base xlsx from ExcelJS
   const baseBuffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
-  // Post-process: inject Power Query connections as "Connection Only" into the xlsx ZIP
-  // No table/queryTable linking — avoids Excel repair errors.
-  // Queries appear in Data > Queries & Connections sidebar; users can "Load To" manually.
-  // Data is already pre-filled in PQ sheets from fetchAllData.
-  const withPQ = await injectPowerQueries(baseBuffer, queries);
+  // Power Query injection skipped — templates ship with prefetched data only.
 
   // Post-process: inject native Excel charts (bar, pie, doughnut, line)
-  // Charts reference CRK formula spill ranges — empty until data loads
+  // Charts reference data sheet ranges with prefetched data
   const chartDefs = getChartsForDashboard(options.dashboard);
   const withCharts = chartDefs.length > 0
-    ? await injectCharts(withPQ, chartDefs)
-    : withPQ;
+    ? await injectCharts(baseBuffer, chartDefs)
+    : baseBuffer;
 
   // Post-process: inject DrawingML rounded rectangle shape overlays on KPI cards
   // Appends to existing drawings (from chartInjector) or creates new ones
