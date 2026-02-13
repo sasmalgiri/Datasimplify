@@ -4,7 +4,7 @@
  * Post-processes an ExcelJS-generated xlsx buffer to inject real OOXML charts.
  * ExcelJS doesn't support charts, so we inject chart XML directly into the ZIP.
  *
- * Same pattern as powerQueryInjector.ts:
+ * Pattern:
  *   JSZip.loadAsync(buffer) → add chart XML entries → modify rels → generateAsync()
  *
  * ZIP entries created per chart:

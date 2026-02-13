@@ -1,14 +1,14 @@
 /**
  * Template Download API Route
  *
- * Generates BYOK Excel templates with Power Query setup.
- * NO data is fetched by the server - templates contain:
- * - Settings sheet with API key cell + named range
- * - Power Query M code calling CoinGecko DIRECTLY with user's key
+ * Generates Excel templates with prefetched market data.
+ * Templates contain:
+ * - Pre-populated data sheets with current market data
+ * - Professional styling, charts, and navigation
  * - Documentation
  *
- * BYOK: We provide software only. User's API key stays in their file.
- * Server never calls CoinGecko. All data flows directly user → CoinGecko.
+ * Data is fetched server-side at download time and baked into the file.
+ * For live updates, users can install the CRK Excel Add-in (BYOK).
  *
  * Security features:
  * - IP-based rate limiting (10 downloads/15min per IP)

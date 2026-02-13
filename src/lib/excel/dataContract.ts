@@ -1,12 +1,9 @@
 /**
- * dataContract.ts — Single source of truth for PQ table names and column schemas.
+ * dataContract.ts — Single source of truth for table names and column schemas.
  *
- * Maps every PQ query name to its Excel Table displayName and ordered columns.
+ * Maps every data table name to its Excel Table displayName and ordered columns.
  * Used by dashboardCharts.ts to generate structured table references
- * (`TableName[ColumnName]`) that auto-update when PQ refreshes.
- *
- * Table names are derived from query names via: queryName.replace(/[^a-zA-Z0-9_]/g, '_')
- * Since all query names are already CRK_* format, tableName === queryName.
+ * (`TableName[ColumnName]`) for chart data sources.
  */
 
 // ============================================
@@ -19,7 +16,7 @@ export interface TableContract {
 }
 
 // ============================================
-// Registry — mirrors PQ_COLUMNS from powerQueryTemplates.ts
+// Registry — table names and column schemas for Excel data tables
 // ============================================
 
 export const TABLE_REGISTRY: Record<string, TableContract> = {

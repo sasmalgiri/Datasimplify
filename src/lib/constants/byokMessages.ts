@@ -4,12 +4,12 @@
  * Single source of truth for privacy/BYOK copy used across:
  * - Generated Excel files (Settings sheet, setup instructions)
  * - Download UI components (modals, wizards, gates)
- * - Info cards (FormulaModePicker, RequirementsGate)
+ * - Info cards (RequirementsGate)
  */
 
 // ─── Excel-embedded messages (written into generated .xlsx files) ───
 
-/** Full BYOK notice for the Power Query Settings sheet (cell B3). */
+/** Full BYOK notice for the Excel Settings sheet. */
 export const BYOK_EXCEL_NOTICE =
   'BYOK: Your API key stays in this file. Queries connect directly to CoinGecko. Our server never sees your key or data.';
 

@@ -1,12 +1,12 @@
 /**
  * CRK Template Modes Configuration
  *
- * Templates ship with two modes to manage API quota:
- * - Low-Quota Mode (default): Manual refresh, small watchlist, daily intervals only
- * - Pro Mode: Larger watchlists, more intervals, optional auto-refresh
+ * Templates ship with prefetched data and two configuration modes:
+ * - Low-Quota Mode (default): Small watchlist, daily intervals
+ * - Pro Mode: Larger watchlists, more intervals
  *
- * BYOK Architecture: Users provide their own data provider API key (e.g., CoinGecko).
- * This ensures users don't hit rate limits unexpectedly.
+ * Data is prefetched at download time. For live updates, users can
+ * install the CRK Excel Add-in with their own CoinGecko API key (BYOK).
  */
 
 export type RefreshFrequency = 'manual' | 'on_open' | 'hourly' | 'daily';
@@ -68,12 +68,11 @@ export const PRO_MODE: TemplateMode = {
  *
  * Hard requirements that must be met before template will work.
  *
- * BYOK Architecture: Templates use Power Query to call CoinGecko API directly.
- * Users enter their own API key in the Excel Settings sheet - we never see or store it.
+ * Templates ship with prefetched data - no API key needed to view.
+ * For live data via the CRK Add-in, users provide their own CoinGecko API key.
  */
 export interface TemplateRequirements {
   excelDesktop: boolean;
-  powerQuery: boolean;
   apiKey: boolean;
 }
 
@@ -87,23 +86,16 @@ export const TEMPLATE_REQUIREMENTS: {
   {
     id: 'excel_desktop',
     name: 'Microsoft Excel Desktop',
-    description: 'Excel Desktop (Windows or Mac) with Power Query is required. Excel Online does not support Power Query.',
+    description: 'Excel Desktop (Windows or Mac) is required for full functionality.',
     howToCheck: 'Open in Excel Desktop, not browser',
     howToFix: 'Download and install Microsoft Office 2016+ or Microsoft 365',
   },
   {
-    id: 'power_query',
-    name: 'Power Query Support',
-    description: 'Templates use Power Query to fetch live data. Included in Excel 2016+ and Microsoft 365.',
-    howToCheck: 'Go to Data tab > look for "Get Data" or "Queries & Connections"',
-    howToFix: 'Upgrade to Excel 2016 or later, or Microsoft 365',
-  },
-  {
     id: 'api_key',
-    name: 'CoinGecko API Key (Free)',
-    description: 'Get your free API key from CoinGecko and paste it in the Settings sheet (cell B2).',
-    howToCheck: 'Open the Settings sheet and check if your API key is entered',
-    howToFix: 'Sign up at coingecko.com/en/api/pricing (free, no credit card) and paste your key in Excel',
+    name: 'CoinGecko API Key (Free, Optional)',
+    description: 'Templates include prefetched data. For live updates via the CRK Add-in, get a free API key from CoinGecko.',
+    howToCheck: 'Templates work without a key — data is prefetched at download time',
+    howToFix: 'Sign up at coingecko.com/en/api/pricing (free, no credit card) for live data via the add-in',
   },
 ];
 
@@ -111,43 +103,37 @@ export const TEMPLATE_REQUIREMENTS: {
  * Quota Status Messages
  *
  * User-friendly messages for different quota/error states.
- * Templates use Power Query with user's own CoinGecko API key.
+ * Templates ship with prefetched data. Live updates require the CRK Add-in.
  */
 export const QUOTA_STATUS_MESSAGES = {
   missing_api_key: {
     title: 'API Key Not Configured',
-    message: 'Your CoinGecko API key is missing. Data cannot be fetched.',
-    action: 'Open the Settings sheet and paste your CoinGecko API key in cell B2',
+    message: 'Your CoinGecko API key is missing. Live data via the CRK Add-in will not work.',
+    action: 'Enter your CoinGecko API key in the CRK Add-in settings',
     severity: 'error' as const,
   },
   invalid_api_key: {
     title: 'Invalid API Key',
     message: 'Your CoinGecko API key appears to be invalid or expired.',
-    action: 'Check your API key at coingecko.com/en/developers/dashboard and update cell B2 in Settings',
-    severity: 'error' as const,
-  },
-  no_power_query: {
-    title: 'Power Query Not Available',
-    message: 'This Excel version does not support Power Query. Data formulas will not work.',
-    action: 'Upgrade to Excel 2016 or later, or use Microsoft 365',
+    action: 'Check your API key at coingecko.com/en/developers/dashboard',
     severity: 'error' as const,
   },
   quota_exceeded: {
     title: 'API Rate Limit Reached',
     message: 'Your CoinGecko API limit was reached. Data may be stale or missing.',
-    action: 'Reduce watchlist size, lower refresh frequency, or upgrade your CoinGecko plan',
+    action: 'Reduce watchlist size or upgrade your CoinGecko plan',
     severity: 'warning' as const,
   },
   rate_limited: {
     title: 'Rate Limited',
     message: 'Too many requests. CoinGecko is temporarily blocking new data.',
-    action: 'Wait a few minutes and try refreshing again. Consider enabling Low-Quota Mode.',
+    action: 'Wait a few minutes and try again.',
     severity: 'warning' as const,
   },
   ok: {
     title: 'Data Ready',
-    message: 'Power Query is configured and ready to fetch data.',
-    action: 'Go to Data > Refresh All to update all data',
+    message: 'Template data is prefetched and ready to use.',
+    action: 'For live updates, install the CRK Add-in',
     severity: 'success' as const,
   },
 };
