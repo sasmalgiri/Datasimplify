@@ -103,12 +103,12 @@ export function addSheetNavBar(
 ): void {
   sheet.getRow(1).height = 22;
 
-  // Light status bar background across full width
+  // Light status bar background across full width with accent tinting
   for (let c = 1; c <= 18; c++) {
     sheet.getCell(1, c).fill = {
       type: 'pattern',
       pattern: 'solid',
-      fgColor: { argb: theme.border },
+      fgColor: { argb: theme.kpiBg },
     };
     sheet.getCell(1, c).border = {
       bottom: { style: 'thin', color: { argb: theme.accent } },
@@ -286,11 +286,15 @@ export function addHeaderBar(
   sheet.mergeCells(row, 2, row, 14);
   const titleCell = sheet.getCell(row, 2);
   titleCell.value = title;
-  titleCell.font = { size: 22, bold: true, color: { argb: theme.text } };
+  titleCell.font = { size: 22, bold: true, color: { argb: theme.accent } };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
   titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
-  // Accent bottom border for premium depth
-  for (let c = 2; c <= 14; c++) {
+  // Accent left bar + bottom border for premium depth
+  titleCell.border = {
+    left: { style: 'thick', color: { argb: theme.accent } },
+    bottom: { style: 'medium', color: { argb: theme.accent } },
+  };
+  for (let c = 3; c <= 14; c++) {
     const cell = sheet.getCell(row, c);
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
     cell.border = { bottom: { style: 'medium', color: { argb: theme.accent } } };
@@ -489,11 +493,16 @@ export function addSectionDivider(
   sheet.mergeCells(row, 2, row, 14);
   const cell = sheet.getCell(row, 2);
   cell.value = title;
-  cell.font = { size: 13, bold: true, color: { argb: theme.text } };
+  cell.font = { size: 13, bold: true, color: { argb: theme.accent } };
   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
   cell.alignment = { horizontal: 'left', vertical: 'middle' };
-  // Accent bottom border for clean separation
-  for (let c = 2; c <= 14; c++) {
+  // Accent left bar + bottom border for premium section identity
+  cell.border = {
+    left: { style: 'thick', color: { argb: theme.accent } },
+    top: { style: 'thin', color: { argb: theme.border } },
+    bottom: { style: 'medium', color: { argb: theme.accent } },
+  };
+  for (let c = 3; c <= 14; c++) {
     const sc = sheet.getCell(row, c);
     sc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
     sc.border = {
@@ -521,8 +530,8 @@ export function addTableHeaders(
   for (const h of headers) {
     const cell = sheet.getCell(row, h.col);
     cell.value = h.label.toUpperCase();
-    cell.font = { size: 9, bold: true, color: { argb: theme.text } };
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.border } };
+    cell.font = { size: 9, bold: true, color: { argb: theme.accent } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg } };
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
     cell.border = {
       bottom: { style: 'medium', color: { argb: theme.accent } },
@@ -690,11 +699,11 @@ export function addChartCard(
     };
   }
 
-  // Optional title in top-left of card
+  // Optional title in top-left of card with accent color
   if (title) {
     const titleCell = sheet.getCell(fromRow, fromCol);
     titleCell.value = title;
-    titleCell.font = { size: 9, bold: true, color: { argb: theme.muted } };
+    titleCell.font = { size: 9, bold: true, color: { argb: theme.accent } };
     titleCell.alignment = { horizontal: 'left', vertical: 'middle' };
   }
 }
@@ -898,10 +907,10 @@ export function addFooter(
   row: number,
   theme: DashboardTheme,
 ): void {
-  // Thin separator line
+  // Accent separator line
   for (let c = 2; c <= 14; c++) {
     sheet.getCell(row, c).border = {
-      top: { style: 'thin', color: { argb: theme.border } },
+      top: { style: 'thin', color: { argb: theme.accent } },
     };
     sheet.getCell(row, c).fill = {
       type: 'pattern', pattern: 'solid', fgColor: { argb: theme.bg },
@@ -909,12 +918,17 @@ export function addFooter(
   }
   sheet.getRow(row).height = 8;
 
-  // Attribution row
+  // Attribution row with accent-tinted background
   const footRow = row + 1;
   sheet.mergeCells(footRow, 2, footRow, 8);
   sheet.getCell(footRow, 2).value = 'Data provided by CoinGecko  \u2022  cryptoreportkit.com';
-  sheet.getCell(footRow, 2).font = { size: 8, italic: true, color: { argb: theme.muted } };
+  sheet.getCell(footRow, 2).font = { size: 8, italic: true, color: { argb: theme.accent } };
   sheet.getCell(footRow, 2).alignment = { horizontal: 'left', vertical: 'middle' };
+  for (let c = 2; c <= 14; c++) {
+    sheet.getCell(footRow, c).fill = {
+      type: 'pattern', pattern: 'solid', fgColor: { argb: theme.kpiBg },
+    };
+  }
 
   // Timestamp on right
   sheet.mergeCells(footRow, 9, footRow, 14);

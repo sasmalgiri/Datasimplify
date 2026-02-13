@@ -93,8 +93,9 @@ export function FreeNavbar() {
     reports: {
       label: 'Templates',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok'],
+      paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok', '/live-dashboards'],
       items: [
+        { href: '/live-dashboards', label: 'Live Dashboards', description: 'Interactive web dashboards with your API key', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/downloads', label: 'Downloads', description: 'Power Query templates + add-in coming soon', icon: <Download className="w-4 h-4" /> },
         { href: '/download', label: 'Power Query Templates', description: 'Customize coins/timeframe and download .xlsx', icon: <FileSpreadsheet className="w-4 h-4" /> },
         { href: '/addin/setup', label: 'Excel Add-in', description: 'Install CRK add-in for live crypto formulas in Excel', icon: <FileSpreadsheet className="w-4 h-4" /> },
@@ -142,6 +143,7 @@ export function FreeNavbar() {
 
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
+    { href: '/live-dashboards', label: 'Live Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
     { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { href: '/addin/setup', label: 'Excel Add-in', icon: <FileSpreadsheet className="w-4 h-4" /> },

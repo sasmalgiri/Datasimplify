@@ -137,6 +137,7 @@ const routeNames: Record<string, string> = {
   signup: 'Sign Up',
   coin: 'Coin',
   advanced: 'Advanced Charts',
+  'live-dashboards': 'Live Dashboards',
 };
 
 interface BreadcrumbProps {
