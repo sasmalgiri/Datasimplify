@@ -595,7 +595,7 @@ function buildPerCoinDashboard(
  * Used by the shape injector to place rounded rectangle KPI overlays.
  */
 export const VISUAL_SHEET_NAMES: Partial<Record<DashboardType, string>> = {
-  'market-overview': 'CRK Data',
+  'market-overview': 'CRK Dashboard',
   'screener': 'CRK Screener',
   'portfolio-tracker': 'CRK Portfolio',
   'gainers-losers': 'CRK Gainers',
@@ -710,23 +710,14 @@ export function addNavigationSheet(
   const navButtons: NavButton[] = [];
   const sheetName = VISUAL_SHEET_NAMES[dashboard];
   if (sheetName) {
-    // If the visual sheet IS the data sheet (e.g. market-overview → 'CRK Data'),
-    // show it as "Data Table" and skip the separate data table card.
-    const isDataSheet = sheetName.endsWith(' Data') || sheetName === 'CRK Data';
+    // Visual dashboard sheets removed — link directly to data sheet only.
+    // Data sheet is either "CRK Data" (market-overview) or "{visual} Data" (all others).
+    const dataSheet = dashboard === 'market-overview' ? 'CRK Data' : sheetName + ' Data';
     navButtons.push({
-      label: isDataSheet ? '📋 Data Table' : sheetName.replace('CRK ', ''),
-      description: isDataSheet ? 'Market data with conditional formatting' : 'Main dashboard with KPIs and charts',
-      targetSheet: sheetName,
+      label: '📋 Data Table',
+      description: 'Pre-populated market data with formatting',
+      targetSheet: dataSheet,
     });
-    // Only add separate data table if visual sheet is NOT the data sheet
-    if (!isDataSheet) {
-      const dataSheet = sheetName + ' Data';
-      navButtons.push({
-        label: '📋 Data Table',
-        description: 'Raw data with conditional formatting',
-        targetSheet: dataSheet,
-      });
-    }
   }
 
   // Sub-sheets based on dashboard type

@@ -1384,50 +1384,39 @@ export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffe
   // Add navigation index sheet (first dashboard sheet — app-like hub)
   const navButtons = addNavigationSheet(workbook, options.dashboard);
 
-  // Add CRK formula dashboard sheets with pre-populated data
-  // Data sheets get real values; KPI cards use IFERROR(CRK.fn, fallback)
+  // Add CRK data sheets with pre-populated data
   const coins = options.coins || ['bitcoin', 'ethereum', 'solana'];
   addCrkDashboardSheets(workbook, options.dashboard, coins, prefetchedData);
 
-  // PQ data sheets and PQ Setup removed — templates ship with prefetched data only.
-  // Live dashboards are available on the web instead.
+  // Delete visual dashboard sheet — live dashboards are on the web.
+  // Visual sheets had chart placeholders + KPI formulas that need the add-in.
+  // Only data sheets with prefetched values are kept.
+  const visualSheetName = VISUAL_SHEET_NAMES[options.dashboard];
+  if (visualSheetName) {
+    const vs = workbook.getWorksheet(visualSheetName);
+    if (vs) workbook.removeWorksheet(vs.id);
+  }
 
   // Generate base xlsx from ExcelJS
   const baseBuffer = Buffer.from(await workbook.xlsx.writeBuffer());
 
-  // Power Query injection skipped — templates ship with prefetched data only.
+  // Charts, sparklines, and KPI shape overlays skipped — they targeted the
+  // deleted visual sheet. Only navigation button shapes + icon sets remain.
 
-  // Post-process: inject native Excel charts (bar, pie, doughnut, line)
-  // Charts reference data sheet ranges with prefetched data
-  const chartDefs = getChartsForDashboard(options.dashboard);
-  const withCharts = chartDefs.length > 0
-    ? await injectCharts(baseBuffer, chartDefs)
-    : baseBuffer;
-
-  // Post-process: inject DrawingML rounded rectangle shape overlays on KPI cards
-  // Appends to existing drawings (from chartInjector) or creates new ones
-  // Also inject navigation buttons as rounded rectangle shapes on the Index sheet
-  const shapeCards = buildShapeCards(options.dashboard, prefetchedData);
+  // Post-process: inject navigation buttons as rounded rectangle shapes
   const category = DASHBOARD_CATEGORIES[options.dashboard];
   const navTheme = CATEGORY_THEMES[category];
   const strip = (c: string) => c.startsWith('FF') ? c.slice(2) : c;
   const navButtonDefs = buildNavButtonDefs(navButtons, strip(navTheme.cardBg), strip(navTheme.accent));
-  const withShapes = (shapeCards.length > 0 || navButtonDefs.length > 0)
-    ? await injectShapes(withCharts, shapeCards, navButtonDefs)
-    : withCharts;
-
-  // Post-process: inject real Excel sparklines into visual sheet
-  // Native sparklines render in-cell, referencing data sheet ranges
-  const sparklineDefs = buildSparklineDefs(options.dashboard, prefetchedData);
-  const withSparklines = sparklineDefs.length > 0
-    ? await injectSparklines(withShapes, sparklineDefs)
-    : withShapes;
+  const withShapes = navButtonDefs.length > 0
+    ? await injectShapes(baseBuffer, [], navButtonDefs)
+    : baseBuffer;
 
   // Post-process: inject 3-arrow icon sets on change% columns in data tables
   const iconSetDefs = buildIconSetDefs(options.dashboard);
   const final = iconSetDefs.length > 0
-    ? await injectIconSets(withSparklines, iconSetDefs)
-    : withSparklines;
+    ? await injectIconSets(withShapes, iconSetDefs)
+    : withShapes;
 
   return Buffer.from(final);
 }
