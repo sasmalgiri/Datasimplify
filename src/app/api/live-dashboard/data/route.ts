@@ -169,6 +169,65 @@ export async function POST(req: NextRequest) {
           );
         }
         break;
+
+      case 'ohlc_multi':
+        if (params?.coinIds && Array.isArray(params.coinIds)) {
+          for (const cid of params.coinIds.slice(0, 5)) {
+            fetchers.push(
+              fetchCoinGecko(`/coins/${cid}/ohlc`, apiKey, keyType, {
+                vs_currency: 'usd',
+                days: String(params?.days || 30),
+              })
+                .then((data) => {
+                  result.ohlc = { ...(result.ohlc || {}), [cid]: data };
+                })
+                .catch(() => {}),
+            );
+          }
+        }
+        break;
+
+      case 'exchanges':
+        fetchers.push(
+          fetchCoinGecko('/exchanges', apiKey, keyType, {
+            per_page: '20',
+            page: '1',
+          })
+            .then((data) => { result.exchanges = data; })
+            .catch((err) => { result.exchangesError = err.message; }),
+        );
+        break;
+
+      case 'coin_history':
+        if (params?.historyCoinId) {
+          fetchers.push(
+            fetchCoinGecko(`/coins/${params.historyCoinId}/market_chart`, apiKey, keyType, {
+              vs_currency: 'usd',
+              days: String(params?.historyDays || 90),
+            })
+              .then((data) => { result.coinHistory = data; })
+              .catch((err) => { result.coinHistoryError = err.message; }),
+          );
+        }
+        break;
+
+      case 'coin_detail':
+        if (params?.detailCoinId) {
+          fetchers.push(
+            fetchCoinGecko(`/coins/${params.detailCoinId}`, apiKey, keyType, {
+              localization: 'false',
+              tickers: 'false',
+              community_data: 'true',
+              developer_data: 'true',
+              sparkline: 'false',
+            })
+              .then((data) => {
+                result.coinDetail = { ...(result.coinDetail || {}), [params.detailCoinId]: data };
+              })
+              .catch((err) => { result.coinDetailError = err.message; }),
+          );
+        }
+        break;
     }
   }
 

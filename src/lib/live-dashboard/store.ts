@@ -61,6 +61,9 @@ export interface DashboardData {
   fearGreed: FearGreedData[] | null;
   categories: any[] | null;
   ohlc: Record<string, number[][]>;
+  coinDetail: Record<string, any> | null;
+  exchanges: any[] | null;
+  coinHistory: Record<string, any> | null;
 }
 
 interface LiveDashboardStore {
@@ -85,6 +88,9 @@ const emptyData: DashboardData = {
   fearGreed: null,
   categories: null,
   ohlc: {},
+  coinDetail: null,
+  exchanges: null,
+  coinHistory: null,
 };
 
 export const useLiveDashboardStore = create<LiveDashboardStore>()(
@@ -132,6 +138,9 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
               fearGreed: result.fearGreed ?? currentData.fearGreed,
               categories: result.categories ?? currentData.categories,
               ohlc: { ...currentData.ohlc, ...(result.ohlc || {}) },
+              coinDetail: result.coinDetail ?? currentData.coinDetail,
+              exchanges: result.exchanges ?? currentData.exchanges,
+              coinHistory: result.coinHistory ?? currentData.coinHistory,
             },
             isLoading: false,
             lastFetched: Date.now(),

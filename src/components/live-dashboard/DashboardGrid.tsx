@@ -12,7 +12,7 @@ export function DashboardGrid({ definition }: DashboardGridProps) {
 
   return (
     <div
-      className="grid gap-4"
+      className="grid gap-5"
       style={{
         gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
       }}

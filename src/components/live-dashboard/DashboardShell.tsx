@@ -1,10 +1,13 @@
 'use client';
 
 import { useCallback } from 'react';
-import { RefreshCw, Key, LogOut, Clock } from 'lucide-react';
+import { RefreshCw, Key, LogOut, Clock, Shield } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
+import { ExportButton } from './ExportButton';
+import { ShareButton } from './ShareButton';
+import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
 interface DashboardShellProps {
   definition: LiveDashboardDefinition;
@@ -16,13 +19,30 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
   const handleRefresh = useCallback(() => {
     const params: Record<string, any> = {};
-    // Check if any widget needs OHLC data
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
     if (needsOhlc) {
       const ohlcWidget = definition.widgets.find((w) => w.props?.coinId);
       if (ohlcWidget) {
         params.coinId = ohlcWidget.props?.coinId || 'bitcoin';
         params.days = ohlcWidget.props?.days || 30;
+      }
+    }
+    // Check for multi-coin OHLC
+    const needsMultiOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc_multi'));
+    if (needsMultiOhlc) {
+      const multiWidget = definition.widgets.find((w) => w.props?.coinIds);
+      if (multiWidget) {
+        params.coinIds = multiWidget.props?.coinIds;
+        params.days = multiWidget.props?.days || 30;
+      }
+    }
+    // Check for coin history
+    const needsHistory = definition.widgets.some((w) => w.dataEndpoints.includes('coin_history'));
+    if (needsHistory) {
+      const histWidget = definition.widgets.find((w) => w.props?.coinId && w.dataEndpoints.includes('coin_history'));
+      if (histWidget) {
+        params.historyCoinId = histWidget.props?.coinId || 'bitcoin';
+        params.historyDays = histWidget.props?.days || 90;
       }
     }
     fetchData(definition.requiredEndpoints, params);
@@ -35,27 +55,27 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
   return (
     <div className="space-y-6">
       {/* Header toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className={`${CARD_CLASSES_STATIC} p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}>
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-3">
             <span className="text-3xl">{definition.icon}</span>
             {definition.name}
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{definition.description}</p>
+          <p className="text-gray-500 text-sm mt-1">{definition.description}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Last updated */}
           {timeAgo && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
+            <span className="text-[10px] text-gray-600 flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Updated {timeAgo}
+              {timeAgo}
             </span>
           )}
 
           {/* API Key status pill */}
           {apiKey ? (
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 text-[10px] font-medium">
               <Key className="w-3 h-3" />
               {keyType === 'pro' ? 'Pro' : 'Demo'} Key
               <button onClick={clearApiKey} className="ml-1 hover:text-red-400 transition" title="Disconnect key">
@@ -72,11 +92,17 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             </button>
           )}
 
+          {/* Export */}
+          <ExportButton dashboardName={definition.name} />
+
+          {/* Share */}
+          <ShareButton slug={definition.slug} />
+
           {/* Refresh button */}
           <button
             onClick={handleRefresh}
             disabled={isLoading || !apiKey}
-            className="p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed border border-white/[0.06]"
             title="Refresh data"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -86,19 +112,24 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
           {error}
         </div>
       )}
 
       {/* Dashboard grid */}
-      <DashboardGrid definition={definition} />
+      <div id="dashboard-content">
+        <DashboardGrid definition={definition} />
+      </div>
 
-      {/* Footer attribution */}
-      <div className="flex items-center justify-between text-xs text-gray-600 pt-4 border-t border-gray-800">
-        <span>Data provided by CoinGecko &bull; cryptoreportkit.com</span>
-        <span>
-          {lastFetched && new Date(lastFetched).toLocaleString()}
+      {/* Footer with disclaimer */}
+      <div className="flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-600 pt-4 border-t border-white/[0.06] gap-2">
+        <div className="flex items-center gap-1.5">
+          <Shield className="w-3 h-3 text-emerald-600" />
+          <span>Data sourced from CoinGecko via your personal API key. All exports are strictly for your personal, non-commercial use.</span>
+        </div>
+        <span className="text-gray-700">
+          {lastFetched && new Date(lastFetched).toLocaleString()} &bull; cryptoreportkit.com
         </span>
       </div>
     </div>

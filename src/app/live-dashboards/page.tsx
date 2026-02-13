@@ -4,17 +4,18 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
-import { BarChart3, Lock, ArrowRight, Key, FileSpreadsheet, Sparkles } from 'lucide-react';
+import { BarChart3, Lock, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield } from 'lucide-react';
+import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
 
 function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
   const isFree = dashboard.tier === 'free';
 
   return (
-    <div className="group relative bg-gray-800/50 border border-gray-700 rounded-2xl p-6 hover:border-emerald-500/50 hover:bg-gray-800/80 transition-all duration-300 flex flex-col">
+    <div className={`group relative ${GLOW_CARD_CLASSES} p-6 flex flex-col`}>
       {/* Tier badge */}
       <div className="absolute top-4 right-4">
         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-          isFree ? 'bg-emerald-500/20 text-emerald-400' : 'bg-purple-500/20 text-purple-400'
+          isFree ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 'bg-purple-400/10 text-purple-400 border border-purple-400/20'
         }`}>
           {dashboard.tier}
         </span>
@@ -27,18 +28,20 @@ function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
       <h3 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-400 transition">
         {dashboard.name}
       </h3>
-      <p className="text-gray-400 text-sm flex-1 mb-4">{dashboard.description}</p>
+      <p className="text-gray-500 text-sm flex-1 mb-4 leading-relaxed">{dashboard.description}</p>
 
-      {/* Widgets count */}
-      <div className="text-xs text-gray-500 mb-4">
-        {dashboard.widgets.length} widgets &bull; {dashboard.requiredEndpoints.length} data sources
+      {/* Meta */}
+      <div className="flex items-center gap-3 text-[10px] text-gray-600 mb-4">
+        <span>{dashboard.widgets.length} widgets</span>
+        <span className="w-1 h-1 rounded-full bg-gray-700" />
+        <span>{dashboard.requiredEndpoints.length} data sources</span>
       </div>
 
       {/* Action button */}
       {isFree ? (
         <Link
           href={`/live-dashboards/${dashboard.slug}`}
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2 text-sm"
+          className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/20 text-emerald-400 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
         >
           Launch Dashboard
           <ArrowRight className="w-4 h-4" />
@@ -46,7 +49,7 @@ function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
       ) : (
         <Link
           href={`/live-dashboards/${dashboard.slug}`}
-          className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium py-2.5 rounded-lg transition flex items-center justify-center gap-2 text-sm"
+          className="w-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-400/20 text-purple-400 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
         >
           <Lock className="w-3 h-3" />
           Preview (Pro)
@@ -61,52 +64,59 @@ export default function LiveDashboardsPage() {
   const proDashboards = LIVE_DASHBOARDS.filter((d) => d.tier === 'pro');
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#0a0a0f]">
       <FreeNavbar />
       <Breadcrumb />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm mb-6">
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-400/5 border border-emerald-400/10 text-emerald-400 text-sm mb-6">
             <Sparkles className="w-4 h-4" />
             BYOK — Your Key, Your Data
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Interactive Live Dashboards
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-5 tracking-tight">
+            Interactive Live{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
+              Dashboards
+            </span>
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">
             Beautiful crypto dashboards powered by your CoinGecko API key.
             Real-time data, stunning charts, and instant insights — all in your browser.
           </p>
         </div>
 
-        {/* How it works */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* Features row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-16">
           {[
-            { icon: <Key className="w-6 h-6" />, title: '1. Connect Your Key', desc: 'Enter your free CoinGecko API key. It stays in your browser only.' },
-            { icon: <BarChart3 className="w-6 h-6" />, title: '2. View Live Data', desc: 'Interactive charts, tables, and KPIs update with real-time market data.' },
-            { icon: <FileSpreadsheet className="w-6 h-6" />, title: '3. Download Excel', desc: 'Export any dashboard as a professionally styled Excel template.' },
-          ].map((step) => (
-            <div key={step.title} className="flex items-start gap-4 p-4 rounded-xl bg-gray-800/30 border border-gray-800">
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 shrink-0">
-                {step.icon}
+            { icon: <Key className="w-5 h-5" />, title: 'BYOK Model', desc: 'Your key stays in your browser' },
+            { icon: <BarChart3 className="w-5 h-5" />, title: 'Live Charts', desc: 'Interactive real-time visualizations' },
+            { icon: <Download className="w-5 h-5" />, title: 'PDF Export', desc: 'Download dashboards as PDF/PNG' },
+            { icon: <Share2 className="w-5 h-5" />, title: 'Shareable', desc: 'Share links for personal use' },
+          ].map((f) => (
+            <div key={f.title} className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <div className="p-2 rounded-lg bg-emerald-400/5 text-emerald-400 shrink-0">
+                {f.icon}
               </div>
               <div>
-                <h3 className="text-white font-semibold text-sm">{step.title}</h3>
-                <p className="text-gray-500 text-xs mt-1">{step.desc}</p>
+                <h3 className="text-white font-semibold text-sm">{f.title}</h3>
+                <p className="text-gray-600 text-xs">{f.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Free dashboards */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <span className="w-2 h-6 bg-emerald-500 rounded-full" />
-            Free Dashboards
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-emerald-400 rounded-full" />
+            <div>
+              <h2 className="text-xl font-bold text-white">Free Dashboards</h2>
+              <p className="text-gray-600 text-sm">{freeDashboards.length} dashboards available with any CoinGecko API key</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {freeDashboards.map((d) => (
               <DashboardCard key={d.slug} dashboard={d} />
             ))}
@@ -115,12 +125,15 @@ export default function LiveDashboardsPage() {
 
         {/* Pro dashboards */}
         {proDashboards.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <span className="w-2 h-6 bg-purple-500 rounded-full" />
-              Pro Dashboards
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <section className="mb-16">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-1 h-8 bg-purple-400 rounded-full" />
+              <div>
+                <h2 className="text-xl font-bold text-white">Pro Dashboards</h2>
+                <p className="text-gray-600 text-sm">{proDashboards.length} advanced dashboards for deeper analysis</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {proDashboards.map((d) => (
                 <DashboardCard key={d.slug} dashboard={d} />
               ))}
@@ -128,14 +141,18 @@ export default function LiveDashboardsPage() {
           </section>
         )}
 
-        {/* CTA */}
-        <div className="text-center py-8 border-t border-gray-800">
-          <p className="text-gray-400 text-sm mb-3">
-            Want these dashboards in Excel? Download our professionally styled templates.
+        {/* Bottom CTA */}
+        <div className="text-center py-10 border-t border-white/[0.04]">
+          <div className="flex items-center justify-center gap-1.5 text-gray-600 text-[10px] mb-4">
+            <Shield className="w-3 h-3" />
+            All data is for your personal, non-commercial use only
+          </div>
+          <p className="text-gray-500 text-sm mb-4">
+            Want raw data in Excel? Download our professionally styled data templates.
           </p>
           <Link
             href="/templates"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium transition"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] text-white text-sm font-medium transition"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Browse Excel Templates

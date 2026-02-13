@@ -9,7 +9,8 @@ import { getDashboardBySlug } from '@/lib/live-dashboard/definitions';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { DashboardShell } from '@/components/live-dashboard/DashboardShell';
 import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
-import { ArrowLeft, Key, Lock } from 'lucide-react';
+import { ArrowLeft, Key, Lock, Shield } from 'lucide-react';
+import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
 
 export default function LiveDashboardPage() {
   const params = useParams();
@@ -23,12 +24,31 @@ export default function LiveDashboardPage() {
   const loadData = useCallback(() => {
     if (!definition || !apiKey) return;
     const params: Record<string, any> = {};
+    // OHLC
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
     if (needsOhlc) {
       const ohlcWidget = definition.widgets.find((w) => w.props?.coinId);
       if (ohlcWidget) {
         params.coinId = ohlcWidget.props?.coinId || 'bitcoin';
         params.days = ohlcWidget.props?.days || 30;
+      }
+    }
+    // Multi OHLC
+    const needsMultiOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc_multi'));
+    if (needsMultiOhlc) {
+      const multiWidget = definition.widgets.find((w) => w.props?.coinIds);
+      if (multiWidget) {
+        params.coinIds = multiWidget.props?.coinIds;
+        params.days = multiWidget.props?.days || 30;
+      }
+    }
+    // Coin history
+    const needsHistory = definition.widgets.some((w) => w.dataEndpoints.includes('coin_history'));
+    if (needsHistory) {
+      const histWidget = definition.widgets.find((w) => w.props?.coinId && w.dataEndpoints.includes('coin_history'));
+      if (histWidget) {
+        params.historyCoinId = histWidget.props?.coinId || 'bitcoin';
+        params.historyDays = histWidget.props?.days || 90;
       }
     }
     fetchData(definition.requiredEndpoints, params);
@@ -57,7 +77,7 @@ export default function LiveDashboardPage() {
   const isPro = definition.tier === 'pro';
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-[#0a0a0f]">
       <FreeNavbar />
       <Breadcrumb customTitle={definition.name} />
 
@@ -65,7 +85,7 @@ export default function LiveDashboardPage() {
         {/* Back link */}
         <Link
           href="/live-dashboards"
-          className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white text-sm mb-6 transition"
+          className="inline-flex items-center gap-1.5 text-gray-600 hover:text-white text-sm mb-6 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           All Dashboards
@@ -73,13 +93,13 @@ export default function LiveDashboardPage() {
 
         {/* No API key state */}
         {!apiKey && (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">{definition.icon}</div>
-            <h2 className="text-2xl font-bold text-white mb-2">{definition.name}</h2>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">{definition.description}</p>
+          <div className="text-center py-24">
+            <div className="text-6xl mb-6">{definition.icon}</div>
+            <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">{definition.name}</h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">{definition.description}</p>
 
             {isPro && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-400/5 border border-purple-400/10 text-purple-400 text-sm mb-8">
                 <Lock className="w-4 h-4" />
                 Pro Dashboard — Requires subscription
               </div>
@@ -87,12 +107,18 @@ export default function LiveDashboardPage() {
 
             <div>
               <button
+                type="button"
                 onClick={() => setShowKeyModal(true)}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-6 py-3 rounded-lg transition flex items-center gap-2 mx-auto"
+                className={`${GLOW_CARD_CLASSES} bg-emerald-500/10 border-emerald-400/20 hover:border-emerald-400/40 text-emerald-400 font-medium px-8 py-4 transition flex items-center gap-2 mx-auto text-lg`}
               >
-                <Key className="w-4 h-4" />
+                <Key className="w-5 h-5" />
                 Connect API Key to Start
               </button>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-gray-700">
+              <Shield className="w-3 h-3" />
+              Your key stays in your browser. Data is for personal use only.
             </div>
           </div>
         )}
