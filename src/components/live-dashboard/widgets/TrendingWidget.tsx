@@ -1,11 +1,13 @@
 'use client';
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 import { Flame } from 'lucide-react';
 
 export function TrendingWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const trending = data.trending;
 
   if (!trending) {

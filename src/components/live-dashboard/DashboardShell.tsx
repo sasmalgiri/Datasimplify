@@ -8,6 +8,7 @@ import { DashboardGrid } from './DashboardGrid';
 import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
 import { CustomizePanel } from './CustomizePanel';
+import { ApiUsagePill } from './ApiUsagePill';
 import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
 const AUTO_REFRESH_OPTIONS = [
@@ -118,6 +119,9 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
               Connect API Key
             </button>
           )}
+
+          {/* API Usage */}
+          {apiKey && <ApiUsagePill definition={definition} />}
 
           {/* Customize */}
           <CustomizePanel onApply={handleRefresh} />

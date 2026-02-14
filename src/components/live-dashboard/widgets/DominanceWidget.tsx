@@ -1,11 +1,11 @@
 'use client';
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-
-const COLORS = ['#f7931a', '#627eea', '#26a17b', '#e84142', '#8247e5', '#00d395', '#64748b'];
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 
 export function DominanceWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const global = data.global;
 
   if (!global?.market_cap_percentage) {
@@ -34,7 +34,7 @@ export function DominanceWidget() {
         {entries.map(([symbol, pct], i) => (
           <div
             key={symbol}
-            style={{ width: `${(pct / total) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }}
+            style={{ width: `${(pct / total) * 100}%`, backgroundColor: themeColors.palette[i % themeColors.palette.length] }}
             className="transition-all duration-500"
             title={`${symbol.toUpperCase()}: ${pct.toFixed(1)}%`}
           />
@@ -46,7 +46,7 @@ export function DominanceWidget() {
         {entries.map(([symbol, pct], i) => (
           <div key={symbol} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: themeColors.palette[i % themeColors.palette.length] }} />
               <span className="text-gray-300 uppercase font-medium">{symbol}</span>
             </div>
             <span className="text-white font-semibold">{pct.toFixed(1)}%</span>

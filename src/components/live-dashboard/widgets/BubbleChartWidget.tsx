@@ -7,7 +7,7 @@ import { ScatterChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_HEIGHT_MAP, getThemeColors, formatCompact } from '@/lib/live-dashboard/theme';
 
 echarts.use([ScatterChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface BubbleChartWidgetProps {
 }
 
 export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -42,8 +43,8 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
           c.total_volume,
         ],
         itemStyle: {
-          color: change >= 0 ? 'rgba(52,211,153,0.7)' : 'rgba(239,68,68,0.6)',
-          borderColor: change >= 0 ? '#34d399' : '#ef4444',
+          color: change >= 0 ? themeColors.fill : 'rgba(239,68,68,0.6)',
+          borderColor: change >= 0 ? themeColors.primary : '#ef4444',
           borderWidth: 1,
         },
         label: {
@@ -58,12 +59,13 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         trigger: 'item' as const,
         formatter: (params: any) => {
           const d = params.value;
-          const changeColor = d[1] >= 0 ? '#34d399' : '#ef4444';
+          const changeColor = d[1] >= 0 ? themeColors.primary : '#ef4444';
           const changeSign = d[1] >= 0 ? '+' : '';
           return [
             `<strong>${params.name}</strong>`,
@@ -115,7 +117,7 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
       ],
       animationEasing: 'elasticOut' as const,
     };
-  }, [data.markets, limit]);
+  }, [data.markets, limit, customization]);
 
   if (!option) {
     return (
@@ -129,7 +131,7 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

@@ -7,7 +7,7 @@ import { LineChart, BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP, formatCompact } from '@/lib/live-dashboard/theme';
 
 echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -18,7 +18,8 @@ interface HistoricalPriceWidgetProps {
 }
 
 export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all' }: HistoricalPriceWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const history = data.coinHistory;
 
   const option = useMemo(() => {
@@ -74,16 +75,16 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
         data: prices.map((p) => p[1]),
         xAxisIndex: xIdx,
         yAxisIndex: yIdx,
-        smooth: true,
+        smooth: customization.chartStyle === 'smooth',
         symbol: 'none',
-        lineStyle: { color: '#34d399', width: 2 },
+        lineStyle: { color: themeColors.primary, width: 2 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(52,211,153,0.25)' },
+            { offset: 0, color: themeColors.fill },
             { offset: 1, color: 'rgba(52,211,153,0.02)' },
           ]),
         },
-        itemStyle: { color: '#34d399' },
+        itemStyle: { color: themeColors.primary },
       });
     }
 
@@ -132,6 +133,7 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: grids,
       xAxis: xAxes,
       yAxis: yAxes,
@@ -161,12 +163,12 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
           end: 100,
           borderColor: 'rgba(255,255,255,0.06)',
           backgroundColor: 'rgba(255,255,255,0.03)',
-          fillerColor: 'rgba(52,211,153,0.1)',
-          handleStyle: { color: '#34d399', borderColor: '#34d399' },
+          fillerColor: themeColors.fill,
+          handleStyle: { color: themeColors.primary, borderColor: themeColors.primary },
           textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 9 },
           dataBackground: {
-            lineStyle: { color: 'rgba(52,211,153,0.3)' },
-            areaStyle: { color: 'rgba(52,211,153,0.05)' },
+            lineStyle: { color: themeColors.primary },
+            areaStyle: { color: themeColors.fill },
           },
         },
         {
@@ -178,7 +180,7 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
       ],
       series,
     };
-  }, [history, metric]);
+  }, [history, metric, customization]);
 
   if (!history?.prices || !option) {
     return (
@@ -192,7 +194,7 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

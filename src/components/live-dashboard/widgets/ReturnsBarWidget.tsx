@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -17,7 +17,8 @@ interface ReturnsBarWidgetProps {
 }
 
 export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -47,6 +48,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '12%', containLabel: true },
       legend: {
         show: true,
@@ -89,7 +91,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
           barMaxWidth: 16,
           itemStyle: {
             borderRadius: [3, 3, 0, 0],
-            color: (params: any) => params.value >= 0 ? CHART_COLORS[0] : '#ef4444',
+            color: (params: any) => params.value >= 0 ? themeColors.palette[0 % themeColors.palette.length] : '#ef4444',
           },
           animationDelay: (idx: number) => idx * 30,
         },
@@ -100,7 +102,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
           barMaxWidth: 16,
           itemStyle: {
             borderRadius: [3, 3, 0, 0],
-            color: (params: any) => params.value >= 0 ? CHART_COLORS[1] : '#f97316',
+            color: (params: any) => params.value >= 0 ? themeColors.palette[1 % themeColors.palette.length] : '#f97316',
           },
           animationDelay: (idx: number) => idx * 30 + 100,
         },
@@ -111,14 +113,14 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
           barMaxWidth: 16,
           itemStyle: {
             borderRadius: [3, 3, 0, 0],
-            color: (params: any) => params.value >= 0 ? CHART_COLORS[4] : '#dc2626',
+            color: (params: any) => params.value >= 0 ? themeColors.palette[4 % themeColors.palette.length] : '#dc2626',
           },
           animationDelay: (idx: number) => idx * 30 + 200,
         },
       ],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.markets, coinIds, limit]);
+  }, [data.markets, coinIds, limit, customization]);
 
   if (!option) {
     return (
@@ -132,7 +134,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

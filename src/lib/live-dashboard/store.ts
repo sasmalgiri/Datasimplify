@@ -99,6 +99,11 @@ export interface DashboardData {
   derivativesExchanges: DerivativesExchange[] | null;
 }
 
+export type ChartHeight = 'compact' | 'normal' | 'tall';
+export type ColorTheme = 'emerald' | 'blue' | 'purple' | 'amber' | 'rose';
+export type TableDensity = 'compact' | 'normal' | 'comfortable';
+export type ChartStyle = 'smooth' | 'sharp';
+
 export interface DashboardCustomization {
   coinId: string;        // Primary coin override (empty = use definition default)
   coinIds: string[];     // Comparison coins override (empty = use definition default)
@@ -106,6 +111,19 @@ export interface DashboardCustomization {
   vsCurrency: string;    // Currency for prices (default 'usd')
   perPage: number;       // Coins per page (default 100)
   sortOrder: string;     // Sort order for markets (default 'market_cap_desc')
+  chartHeight: ChartHeight;
+  dataLimit: number;     // 0 = use widget default
+  colorTheme: ColorTheme;
+  showAnimations: boolean;
+  tableDensity: TableDensity;
+  chartStyle: ChartStyle;
+}
+
+export interface ApiUsageStats {
+  apiCallsPerRefresh: number;
+  totalApiCalls: number;
+  sessionStartTime: number;
+  refreshCount: number;
 }
 
 const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
@@ -115,6 +133,36 @@ const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
   vsCurrency: 'usd',
   perPage: 100,
   sortOrder: 'market_cap_desc',
+  chartHeight: 'normal',
+  dataLimit: 0,
+  colorTheme: 'emerald',
+  showAnimations: true,
+  tableDensity: 'normal',
+  chartStyle: 'smooth',
+};
+
+/** Calculate CoinGecko API calls for a dashboard definition */
+export function calculateApiCallsForDefinition(
+  requiredEndpoints: string[],
+  params?: { coinIds?: string[] },
+): number {
+  let calls = 0;
+  for (const ep of requiredEndpoints) {
+    if (ep === 'fear_greed') continue; // External API, not counted
+    if (ep === 'ohlc_multi') {
+      calls += params?.coinIds ? Math.min(params.coinIds.length, 5) : 2;
+    } else {
+      calls += 1;
+    }
+  }
+  return calls;
+}
+
+const DEFAULT_API_USAGE: ApiUsageStats = {
+  apiCallsPerRefresh: 0,
+  totalApiCalls: 0,
+  sessionStartTime: Date.now(),
+  refreshCount: 0,
 };
 
 interface LiveDashboardStore {
@@ -134,6 +182,10 @@ interface LiveDashboardStore {
 
   autoRefreshInterval: number; // 0 = off, 60/120/300 seconds
   setAutoRefreshInterval: (interval: number) => void;
+
+  apiUsage: ApiUsageStats;
+  incrementApiCalls: (count: number) => void;
+  resetApiUsage: () => void;
 
   fetchData: (endpoints: string[], params?: Record<string, any>) => Promise<void>;
   resetData: () => void;
@@ -176,12 +228,26 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       autoRefreshInterval: 0,
       setAutoRefreshInterval: (interval) => set({ autoRefreshInterval: interval }),
 
+      apiUsage: DEFAULT_API_USAGE,
+      incrementApiCalls: (count) => set((state) => ({
+        apiUsage: {
+          ...state.apiUsage,
+          totalApiCalls: state.apiUsage.totalApiCalls + count,
+          refreshCount: state.apiUsage.refreshCount + 1,
+          apiCallsPerRefresh: count,
+        },
+      })),
+      resetApiUsage: () => set({ apiUsage: { ...DEFAULT_API_USAGE, sessionStartTime: Date.now() } }),
+
       fetchData: async (endpoints, params) => {
         const { apiKey } = get();
         if (!apiKey) {
           set({ error: 'No API key provided' });
           return;
         }
+
+        const callCount = calculateApiCallsForDefinition(endpoints, params);
+        get().incrementApiCalls(callCount);
 
         set({ isLoading: true, error: null });
 
@@ -238,6 +304,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
         apiKey: state.apiKey,
         keyType: state.keyType,
         autoRefreshInterval: state.autoRefreshInterval,
+        customization: state.customization,
       }),
     },
   ),

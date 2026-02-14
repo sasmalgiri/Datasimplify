@@ -1,6 +1,7 @@
 'use client';
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 interface PriceChartWidgetProps {
   coinId?: string;
@@ -8,7 +9,8 @@ interface PriceChartWidgetProps {
 }
 
 export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const ohlcData = data.ohlc[coinId];
 
   if (!ohlcData || ohlcData.length === 0) {
@@ -40,8 +42,8 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
   const areaPoints = `${padding},${h - padding} ${points} ${w - padding},${h - padding}`;
 
   const isUp = closes[closes.length - 1] >= closes[0];
-  const lineColor = isUp ? '#10b981' : '#ef4444';
-  const fillColor = isUp ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+  const lineColor = isUp ? themeColors.primary : '#ef4444';
+  const fillColor = isUp ? themeColors.fill : 'rgba(239, 68, 68, 0.1)';
 
   const currentPrice = closes[closes.length - 1];
   const startPrice = closes[0];

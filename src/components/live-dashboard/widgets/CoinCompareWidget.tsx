@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { formatCompact, formatPercent, percentColor } from '@/lib/live-dashboard/theme';
+import { formatCompact, formatPercent, percentColor, getThemeColors } from '@/lib/live-dashboard/theme';
 import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
 interface CoinCompareWidgetProps {
@@ -10,7 +10,8 @@ interface CoinCompareWidgetProps {
 }
 
 export function CoinCompareWidget({ coinIds = ['bitcoin', 'ethereum'] }: CoinCompareWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const coins = useMemo(() => {
     if (!data.markets) return [];

@@ -7,7 +7,7 @@ import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, formatCompact, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -17,7 +17,8 @@ interface MarketCapTimelineWidgetProps {
 }
 
 export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: MarketCapTimelineWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     let dates: string[] = [];
@@ -52,6 +53,7 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         trigger: 'axis' as const,
@@ -79,20 +81,20 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
       series: [{
         type: 'line' as const,
         data: values,
-        smooth: true,
+        smooth: customization.chartStyle === 'smooth',
         symbol: 'none',
-        lineStyle: { color: '#34d399', width: 2 },
+        lineStyle: { color: themeColors.primary, width: 2 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(52,211,153,0.3)' },
-            { offset: 1, color: 'rgba(52,211,153,0)' },
+            { offset: 0, color: themeColors.fill },
+            { offset: 1, color: 'rgba(0,0,0,0)' },
           ]),
         },
         animationDuration: 1500,
         animationEasing: 'cubicOut' as const,
       }],
     };
-  }, [data.coinHistory, data.ohlc, data.markets, coinId]);
+  }, [data.coinHistory, data.ohlc, data.markets, coinId, customization]);
 
   if (!option) {
     return (
@@ -106,7 +108,7 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '260px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

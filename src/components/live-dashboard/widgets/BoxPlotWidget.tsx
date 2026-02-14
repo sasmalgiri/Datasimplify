@@ -7,7 +7,7 @@ import { BoxplotChart, ScatterChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BoxplotChart, ScatterChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -28,7 +28,8 @@ function computeBoxStats(arr: number[]): [number, number, number, number, number
 }
 
 export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -67,6 +68,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '8%', containLabel: true },
       tooltip: {
         ...ECHARTS_THEME.tooltip,
@@ -106,8 +108,8 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
           type: 'boxplot' as const,
           data: boxData,
           itemStyle: {
-            color: 'rgba(52,211,153,0.15)',
-            borderColor: '#34d399',
+            color: themeColors.fill,
+            borderColor: themeColors.primary,
             borderWidth: 1.5,
           },
           emphasis: {
@@ -126,7 +128,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
         },
       ],
     };
-  }, [data.markets, coinIds, limit]);
+  }, [data.markets, coinIds, limit, customization]);
 
   if (!option) {
     return (
@@ -140,7 +142,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

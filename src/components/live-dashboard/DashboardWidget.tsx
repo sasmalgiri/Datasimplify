@@ -2,7 +2,8 @@
 
 import { Suspense, type ComponentType } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { CARD_CLASSES } from '@/lib/live-dashboard/theme';
+import { CARD_CLASSES, getThemeColors } from '@/lib/live-dashboard/theme';
+import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 // Widget registry — maps component name strings to actual components
 import { KPICards } from './widgets/KPICards';
@@ -83,6 +84,8 @@ interface DashboardWidgetProps {
 
 export function DashboardWidget({ component, title, gridColumn, gridRow, props }: DashboardWidgetProps) {
   const Component = WIDGET_REGISTRY[component];
+  const colorTheme = useLiveDashboardStore((s) => s.customization.colorTheme);
+  const themeColors = getThemeColors(colorTheme);
 
   // KPI cards get no wrapper card (they are their own cards)
   if (component === 'KPICards') {
@@ -99,7 +102,7 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
       style={{ gridColumn, gridRow }}
     >
       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-        <div className="w-1 h-3.5 bg-emerald-400 rounded-full" />
+        <div className="w-1 h-3.5 rounded-full" style={{ backgroundColor: themeColors.primary }} />
         {title}
       </h3>
       <div className="flex-1 min-h-0">

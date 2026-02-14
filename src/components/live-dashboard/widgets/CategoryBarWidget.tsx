@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface CategoryBarWidgetProps {
 }
 
 export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.categories || !Array.isArray(data.categories)) return null;
@@ -35,13 +36,14 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
       value: parseFloat(c.market_cap_change_24h.toFixed(2)),
       itemStyle: {
         color: c.market_cap_change_24h >= 0
-          ? 'rgba(52,211,153,0.6)'
+          ? themeColors.fill
           : 'rgba(239,68,68,0.5)',
       },
     }));
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: { left: '30%', right: '8%', top: '3%', bottom: '3%', containLabel: false },
       tooltip: {
         ...ECHARTS_THEME.tooltip,
@@ -86,7 +88,7 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
       }],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.categories, limit]);
+  }, [data.categories, limit, customization]);
 
   if (!option) {
     return (
@@ -100,7 +102,7 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

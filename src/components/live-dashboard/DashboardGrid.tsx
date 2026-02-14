@@ -33,6 +33,9 @@ export function DashboardGrid({ definition }: DashboardGridProps) {
           if (customization.days > 0 && effectiveProps.days) {
             effectiveProps.days = customization.days;
           }
+          if (customization.dataLimit > 0 && effectiveProps.limit != null) {
+            effectiveProps.limit = customization.dataLimit;
+          }
 
           return (
             <DashboardWidget

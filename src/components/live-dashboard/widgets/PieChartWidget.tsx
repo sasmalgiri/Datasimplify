@@ -7,7 +7,7 @@ import { PieChart } from 'echarts/charts';
 import { TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, formatCompact, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface PieChartWidgetProps {
 }
 
 export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     let chartData: { name: string; value: number }[] = [];
@@ -53,6 +54,7 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         trigger: 'item' as const,
@@ -81,17 +83,17 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
         label: { show: false },
         emphasis: {
           label: { show: true, color: '#fff', fontSize: 12, fontWeight: 'bold' as const },
-          itemStyle: { shadowBlur: 10, shadowColor: 'rgba(52,211,153,0.3)' },
+          itemStyle: { shadowBlur: 10, shadowColor: themeColors.fill },
         },
         animationType: 'scale' as const,
         animationEasing: 'elasticOut' as const,
         data: chartData.map((item, i) => ({
           ...item,
-          itemStyle: { color: CHART_COLORS[i % CHART_COLORS.length] },
+          itemStyle: { color: themeColors.palette[i % themeColors.palette.length] },
         })),
       }],
     };
-  }, [data.global, data.markets, mode]);
+  }, [data.global, data.markets, mode, customization]);
 
   if (!option) {
     return (
@@ -105,7 +107,7 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

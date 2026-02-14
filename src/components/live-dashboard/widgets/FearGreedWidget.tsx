@@ -1,6 +1,7 @@
 'use client';
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 
 function getColor(value: number): string {
   if (value <= 25) return '#ef4444'; // Extreme Fear - red
@@ -15,7 +16,8 @@ function getLabel(classification: string): string {
 }
 
 export function FearGreedWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const fg = data.fearGreed?.[0];
 
   if (!fg) {

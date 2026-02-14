@@ -7,7 +7,7 @@ import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -17,7 +17,8 @@ interface MultiLineChartWidgetProps {
 }
 
 export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: MultiLineChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -37,10 +38,10 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
         name: coin.symbol.toUpperCase(),
         type: 'line' as const,
         data: sampled,
-        smooth: true,
+        smooth: customization.chartStyle === 'smooth',
         symbol: 'none',
-        lineStyle: { width: 2, color: CHART_COLORS[idx % CHART_COLORS.length] },
-        itemStyle: { color: CHART_COLORS[idx % CHART_COLORS.length] },
+        lineStyle: { width: 2, color: themeColors.palette[idx % themeColors.palette.length] },
+        itemStyle: { color: themeColors.palette[idx % themeColors.palette.length] },
         emphasis: { lineStyle: { width: 3 } },
         animationDuration: 1500,
         animationEasing: 'cubicOut' as const,
@@ -51,6 +52,7 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       legend: {
         show: true,
         bottom: 0,
@@ -87,7 +89,7 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
       dataZoom: [{ type: 'inside' as const }],
       series: seriesData,
     };
-  }, [data.markets, coinIds]);
+  }, [data.markets, coinIds, customization]);
 
   if (!option) {
     return (
@@ -101,7 +103,7 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '260px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

@@ -2,10 +2,19 @@
 
 import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { formatPercent, percentColor } from '@/lib/live-dashboard/theme';
+import { formatPercent, percentColor, getThemeColors } from '@/lib/live-dashboard/theme';
+
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
 
 export function HeatmapWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
+  const primaryRgb = hexToRgb(themeColors.primary);
 
   const categories = useMemo(() => {
     if (!data.categories || !Array.isArray(data.categories)) return [];
@@ -36,10 +45,10 @@ export function HeatmapWidget() {
         const intensity = Math.min(Math.abs(cat.change) / maxAbsChange, 1);
         const isPositive = cat.change >= 0;
         const bgColor = isPositive
-          ? `rgba(52, 211, 153, ${0.08 + intensity * 0.25})`
+          ? `rgba(${primaryRgb}, ${0.08 + intensity * 0.25})`
           : `rgba(239, 68, 68, ${0.08 + intensity * 0.25})`;
         const borderColor = isPositive
-          ? `rgba(52, 211, 153, ${0.1 + intensity * 0.2})`
+          ? `rgba(${primaryRgb}, ${0.1 + intensity * 0.2})`
           : `rgba(239, 68, 68, ${0.1 + intensity * 0.2})`;
 
         return (

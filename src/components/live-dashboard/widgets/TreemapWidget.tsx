@@ -7,7 +7,7 @@ import { TreemapChart } from 'echarts/charts';
 import { TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([TreemapChart, TooltipComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface TreemapWidgetProps {
 }
 
 export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets || data.markets.length === 0) return null;
@@ -37,7 +38,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
         },
         itemStyle: {
           color: isPositive
-            ? `rgba(52, 211, 153, ${0.3 + Math.min(Math.abs(change) / 15, 0.6)})`
+            ? `${themeColors.primary}${Math.round((0.3 + Math.min(Math.abs(change) / 15, 0.6)) * 255).toString(16).padStart(2, '0')}`
             : `rgba(239, 68, 68, ${0.3 + Math.min(Math.abs(change) / 15, 0.6)})`,
           borderColor: 'rgba(10, 10, 15, 0.8)',
           borderWidth: 2,
@@ -48,6 +49,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         formatter: (p: any) => {
@@ -57,7 +59,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
           return `<strong>${coin.name} (${p.name})</strong><br/>
             Market Cap: $${(coin.market_cap / 1e9).toFixed(2)}B<br/>
             Price: $${coin.current_price.toLocaleString()}<br/>
-            24h: <span style="color:${change >= 0 ? '#34d399' : '#ef4444'}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</span>`;
+            24h: <span style="color:${change >= 0 ? themeColors.primary : '#ef4444'}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</span>`;
         },
       },
       series: [
@@ -79,7 +81,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
         },
       ],
     };
-  }, [data.markets, limit]);
+  }, [data.markets, limit, customization]);
 
   if (!data.markets || !option) {
     return (
@@ -93,7 +95,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

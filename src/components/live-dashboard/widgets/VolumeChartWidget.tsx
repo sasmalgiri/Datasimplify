@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, formatCompact, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface VolumeChartWidgetProps {
 }
 
 export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -27,13 +28,14 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
       value: c.total_volume,
       itemStyle: {
         color: (c.price_change_percentage_24h || 0) >= 0
-          ? 'rgba(52,211,153,0.6)'
+          ? themeColors.fill
           : 'rgba(239,68,68,0.5)',
       },
     }));
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         trigger: 'axis' as const,
@@ -68,7 +70,7 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
       ],
       animationEasing: 'elasticOut' as const,
     };
-  }, [data.markets, limit]);
+  }, [data.markets, limit, customization]);
 
   if (!option) {
     return (
@@ -82,7 +84,7 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '260px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 
 function formatPrice(price: number): string {
@@ -37,9 +38,10 @@ interface SparklineSVGProps {
   prices: number[];
   width?: number;
   height?: number;
+  upColor?: string;
 }
 
-function SparklineSVG({ prices, width = 60, height = 20 }: SparklineSVGProps) {
+function SparklineSVG({ prices, width = 60, height = 20, upColor = '#10b981' }: SparklineSVGProps) {
   const path = useMemo(() => buildSparklinePath(prices, width, height), [prices, width, height]);
 
   if (!prices || prices.length < 2) return null;
@@ -56,7 +58,7 @@ function SparklineSVG({ prices, width = 60, height = 20 }: SparklineSVGProps) {
       <path
         d={path}
         fill="none"
-        stroke={isUp ? '#10b981' : '#ef4444'}
+        stroke={isUp ? upColor : '#ef4444'}
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -70,7 +72,8 @@ interface MiniSparklineGridProps {
 }
 
 export function MiniSparklineGrid({ limit = 20 }: MiniSparklineGridProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const coins = data.markets?.slice(0, limit) || [];
 
   if (!data.markets) {
@@ -122,7 +125,7 @@ export function MiniSparklineGrid({ limit = 20 }: MiniSparklineGridProps) {
 
             {/* Sparkline */}
             <div className="flex items-center justify-center mt-auto">
-              <SparklineSVG prices={sparkPrices} width={60} height={20} />
+              <SparklineSVG prices={sparkPrices} width={60} height={20} upColor={themeColors.primary} />
             </div>
           </div>
         );

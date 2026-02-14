@@ -7,7 +7,7 @@ import { HeatmapChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, VisualMapComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([HeatmapChart, GridComponent, TooltipComponent, VisualMapComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface CorrelationWidgetProps {
 }
 
 export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     // Use sparkline data from markets as a proxy for correlation
@@ -54,6 +55,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: { left: '15%', right: '5%', top: '5%', bottom: '15%' },
       xAxis: {
         type: 'category' as const,
@@ -81,7 +83,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
         min: -1,
         max: 1,
         inRange: {
-          color: ['#ef4444', '#1f1f2e', '#34d399'],
+          color: ['#ef4444', '#1f1f2e', themeColors.primary],
         },
         textStyle: { color: 'rgba(255,255,255,0.4)', fontSize: 10 },
         show: false,
@@ -104,7 +106,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
         },
       ],
     };
-  }, [data.markets, coinIds]);
+  }, [data.markets, coinIds, customization]);
 
   if (!option) {
     return (
@@ -118,7 +120,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

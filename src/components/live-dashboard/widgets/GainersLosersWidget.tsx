@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
+import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export function GainersLosersWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const density = TABLE_DENSITY_MAP[customization.tableDensity];
   const [tab, setTab] = useState<'gainers' | 'losers'>('gainers');
 
   if (!data.markets) {
@@ -49,7 +51,7 @@ export function GainersLosersWidget() {
 
       <div className="space-y-2">
         {top.map((coin: MarketCoin) => (
-          <div key={coin.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition">
+          <div key={coin.id} className={`flex items-center justify-between ${density.py} ${density.px} rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition`}>
             <div className="flex items-center gap-2">
               {coin.image && <Image src={coin.image} alt={coin.name} width={20} height={20} className="rounded-full" />}
               <span className="text-white text-sm font-medium">{coin.name}</span>

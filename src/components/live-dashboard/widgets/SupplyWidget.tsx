@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface SupplyWidgetProps {
 }
 
 export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -33,6 +34,7 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       legend: {
         show: true,
         bottom: 0,
@@ -70,7 +72,7 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
           stack: 'supply',
           data: circulating,
           barMaxWidth: 24,
-          itemStyle: { color: 'rgba(52,211,153,0.6)' },
+          itemStyle: { color: themeColors.fill },
           animationDelay: (idx: number) => idx * 30,
         },
         {
@@ -88,7 +90,7 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
       ],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.markets, limit]);
+  }, [data.markets, limit, customization]);
 
   if (!option) {
     return (
@@ -102,7 +104,7 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

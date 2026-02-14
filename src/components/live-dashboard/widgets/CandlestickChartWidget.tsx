@@ -7,7 +7,7 @@ import { CandlestickChart, BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([CandlestickChart, BarChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -17,7 +17,8 @@ interface CandlestickChartWidgetProps {
 }
 
 export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: CandlestickChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const ohlcData = data.ohlc?.[coinId];
 
   const option = useMemo(() => {
@@ -31,11 +32,12 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
     const values = ohlcData.map((d) => [d[1], d[4], d[3], d[2]]); // [open, close, low, high]
     const volumes = ohlcData.map((d) => {
       const isUp = d[4] >= d[1];
-      return { value: Math.abs(d[4] - d[1]) * 1000, itemStyle: { color: isUp ? 'rgba(52,211,153,0.3)' : 'rgba(239,68,68,0.3)' } };
+      return { value: Math.abs(d[4] - d[1]) * 1000, itemStyle: { color: isUp ? themeColors.fill : 'rgba(239,68,68,0.3)' } };
     });
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: [
         { left: '8%', right: '3%', top: '5%', bottom: '30%' },
         { left: '8%', right: '3%', top: '75%', bottom: '5%' },
@@ -96,9 +98,9 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
           xAxisIndex: 0,
           yAxisIndex: 0,
           itemStyle: {
-            color: '#34d399',
+            color: themeColors.primary,
             color0: '#ef4444',
-            borderColor: '#34d399',
+            borderColor: themeColors.primary,
             borderColor0: '#ef4444',
           },
         },
@@ -111,7 +113,7 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
         },
       ],
     };
-  }, [ohlcData]);
+  }, [ohlcData, customization]);
 
   if (!ohlcData || !option) {
     return (
@@ -125,7 +127,7 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '320px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

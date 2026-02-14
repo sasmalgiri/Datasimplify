@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Settings, X, RotateCcw } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization } from '@/lib/live-dashboard/store';
@@ -67,6 +67,42 @@ const PER_PAGE_OPTIONS = [
   { value: 250, label: '250' },
 ];
 
+const CHART_HEIGHT_OPTIONS = [
+  { value: 'compact' as const, label: 'Compact' },
+  { value: 'normal' as const, label: 'Normal' },
+  { value: 'tall' as const, label: 'Tall' },
+];
+
+const DATA_LIMIT_OPTIONS = [
+  { value: 0, label: 'Default' },
+  { value: 10, label: '10' },
+  { value: 15, label: '15' },
+  { value: 20, label: '20' },
+  { value: 25, label: '25' },
+  { value: 50, label: '50' },
+];
+
+const COLOR_THEME_OPTIONS = [
+  { value: 'emerald' as const, label: 'Emerald', color: '#34d399' },
+  { value: 'blue' as const, label: 'Blue', color: '#60a5fa' },
+  { value: 'purple' as const, label: 'Purple', color: '#a78bfa' },
+  { value: 'amber' as const, label: 'Amber', color: '#f59e0b' },
+  { value: 'rose' as const, label: 'Rose', color: '#f43f5e' },
+];
+
+const TABLE_DENSITY_OPTIONS = [
+  { value: 'compact' as const, label: 'Compact' },
+  { value: 'normal' as const, label: 'Normal' },
+  { value: 'comfortable' as const, label: 'Spacious' },
+];
+
+const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
+  coinId: '', coinIds: [], days: 0, vsCurrency: 'usd', perPage: 100,
+  sortOrder: 'market_cap_desc', chartHeight: 'normal', dataLimit: 0,
+  colorTheme: 'emerald', showAnimations: true, tableDensity: 'normal',
+  chartStyle: 'smooth',
+};
+
 interface CustomizePanelProps {
   onApply: () => void;
 }
@@ -75,11 +111,31 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
   const { customization, setCustomization, resetCustomization } = useLiveDashboardStore();
   const [open, setOpen] = useState(false);
   const [local, setLocal] = useState<DashboardCustomization>(customization);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [panelPos, setPanelPos] = useState({ top: 0, right: 0 });
+
+  const computePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPanelPos({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
 
   const handleOpen = () => {
     setLocal(customization);
+    computePosition();
     setOpen(true);
   };
+
+  useEffect(() => {
+    if (!open) return;
+    const onResize = () => computePosition();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [open, computePosition]);
 
   const handleApply = () => {
     setCustomization(local);
@@ -89,7 +145,7 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
 
   const handleReset = () => {
     resetCustomization();
-    setLocal({ coinId: '', coinIds: [], days: 0, vsCurrency: 'usd', perPage: 100, sortOrder: 'market_cap_desc' });
+    setLocal(DEFAULT_CUSTOMIZATION);
     setOpen(false);
     onApply();
   };
@@ -107,11 +163,22 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
 
   const hasCustomization =
     customization.coinId !== '' || customization.coinIds.length > 0 || customization.days !== 0 ||
-    customization.vsCurrency !== 'usd' || customization.perPage !== 100 || customization.sortOrder !== 'market_cap_desc';
+    customization.vsCurrency !== 'usd' || customization.perPage !== 100 || customization.sortOrder !== 'market_cap_desc' ||
+    customization.chartHeight !== 'normal' || customization.dataLimit !== 0 || customization.colorTheme !== 'emerald' ||
+    !customization.showAnimations || customization.tableDensity !== 'normal' || customization.chartStyle !== 'smooth';
+
+  // Shared button style helper
+  const btnClass = (active: boolean) =>
+    `px-2 py-1.5 rounded-lg text-xs font-medium transition ${
+      active
+        ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
+        : 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]'
+    }`;
 
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={handleOpen}
         className={`p-2 rounded-xl transition border ${
@@ -126,11 +193,14 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
 
       {open && (
         <>
-          {/* Backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          {/* Backdrop — fixed so it's above everything */}
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
 
-          {/* Panel */}
-          <div className="absolute right-0 top-full mt-2 z-50 w-[340px] bg-[#0f0f18] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden">
+          {/* Panel — fixed positioning to escape stacking context */}
+          <div
+            className="fixed z-[9999] w-[340px] bg-[#0f0f18] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden"
+            style={{ top: panelPos.top, right: panelPos.right }}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -142,7 +212,10 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
               </button>
             </div>
 
-            <div className="p-5 space-y-5 max-h-[480px] overflow-y-auto">
+            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* ─── Data Controls ─── */}
+              <div className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold">Data Controls</div>
+
               {/* Currency & Sort Row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -192,13 +265,28 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
                       key={p.value}
                       type="button"
                       onClick={() => setLocal({ ...local, perPage: p.value })}
-                      className={`px-2 py-1.5 rounded-lg text-xs font-medium transition ${
-                        local.perPage === p.value
-                          ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
-                          : 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]'
-                      }`}
+                      className={btnClass(local.perPage === p.value)}
                     >
                       {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Data Limit */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Data Limit (rows)
+                </label>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {DATA_LIMIT_OPTIONS.map((d) => (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => setLocal({ ...local, dataLimit: d.value })}
+                      className={btnClass(local.dataLimit === d.value)}
+                    >
+                      {d.label}
                     </button>
                   ))}
                 </div>
@@ -212,6 +300,7 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
                 <select
                   value={local.coinId}
                   onChange={(e) => setLocal({ ...local, coinId: e.target.value })}
+                  title="Select primary coin"
                   className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
                 >
                   {POPULAR_COINS.map((c) => (
@@ -233,11 +322,7 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
                       key={t.days}
                       type="button"
                       onClick={() => setLocal({ ...local, days: t.days })}
-                      className={`px-2 py-1.5 rounded-lg text-xs font-medium transition ${
-                        local.days === t.days
-                          ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
-                          : 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]'
-                      }`}
+                      className={btnClass(local.days === t.days)}
                     >
                       {t.label}
                     </button>
@@ -269,6 +354,124 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
                 {local.coinIds.length === 0 && (
                   <p className="text-[10px] text-gray-600 mt-1.5">Using dashboard defaults</p>
                 )}
+              </div>
+
+              {/* ─── Appearance ─── */}
+              <div className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold pt-2 border-t border-white/[0.06]">
+                Appearance
+              </div>
+
+              {/* Color Theme */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Color Theme
+                </label>
+                <div className="flex gap-2">
+                  {COLOR_THEME_OPTIONS.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setLocal({ ...local, colorTheme: t.value })}
+                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition border ${
+                        local.colorTheme === t.value
+                          ? 'border-white/20 bg-white/[0.06]'
+                          : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'
+                      }`}
+                      title={t.label}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full border-2"
+                        style={{
+                          backgroundColor: t.color,
+                          borderColor: local.colorTheme === t.value ? '#fff' : 'transparent',
+                        }}
+                      />
+                      <span className="text-[9px] text-gray-500">{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chart Height */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Chart Height
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {CHART_HEIGHT_OPTIONS.map((h) => (
+                    <button
+                      key={h.value}
+                      type="button"
+                      onClick={() => setLocal({ ...local, chartHeight: h.value })}
+                      className={btnClass(local.chartHeight === h.value)}
+                    >
+                      {h.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chart Style */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Chart Style
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setLocal({ ...local, chartStyle: 'smooth' })}
+                    className={btnClass(local.chartStyle === 'smooth')}
+                  >
+                    Smooth
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLocal({ ...local, chartStyle: 'sharp' })}
+                    className={btnClass(local.chartStyle === 'sharp')}
+                  >
+                    Sharp
+                  </button>
+                </div>
+              </div>
+
+              {/* Table Density */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Table Density
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {TABLE_DENSITY_OPTIONS.map((d) => (
+                    <button
+                      key={d.value}
+                      type="button"
+                      onClick={() => setLocal({ ...local, tableDensity: d.value })}
+                      className={btnClass(local.tableDensity === d.value)}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Animations Toggle */}
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">
+                  Animations
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setLocal({ ...local, showAnimations: !local.showAnimations })}
+                  title={local.showAnimations ? 'Disable animations' : 'Enable animations'}
+                  className={`relative w-10 h-5 rounded-full transition ${
+                    local.showAnimations ? 'bg-emerald-500' : 'bg-gray-700'
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                      local.showAnimations ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 

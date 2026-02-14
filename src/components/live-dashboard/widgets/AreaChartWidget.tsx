@@ -7,7 +7,7 @@ import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, DataZoomComponent, CanvasRenderer]);
 
@@ -18,7 +18,8 @@ interface AreaChartWidgetProps {
 }
 
 export function AreaChartWidget({ coinIds, limit = 8, mode = 'volume' }: AreaChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -64,15 +65,15 @@ export function AreaChartWidget({ coinIds, limit = 8, mode = 'volume' }: AreaCha
         areaStyle: {
           opacity: 0.3,
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: CHART_COLORS[idx % CHART_COLORS.length] },
+            { offset: 0, color: themeColors.palette[idx % themeColors.palette.length] },
             { offset: 1, color: 'transparent' },
           ]),
         },
-        lineStyle: { width: 1.5, color: CHART_COLORS[idx % CHART_COLORS.length] },
-        itemStyle: { color: CHART_COLORS[idx % CHART_COLORS.length] },
+        lineStyle: { width: 1.5, color: themeColors.palette[idx % themeColors.palette.length] },
+        itemStyle: { color: themeColors.palette[idx % themeColors.palette.length] },
         emphasis: { focus: 'series' as const },
         showSymbol: false,
-        smooth: true,
+        smooth: customization.chartStyle === 'smooth',
         data: values,
         animationDelay: (i: number) => i * 5 + idx * 100,
       };
@@ -124,15 +125,16 @@ export function AreaChartWidget({ coinIds, limit = 8, mode = 'volume' }: AreaCha
           bottom: 5,
           borderColor: 'transparent',
           backgroundColor: 'rgba(255,255,255,0.02)',
-          fillerColor: 'rgba(52,211,153,0.1)',
-          handleStyle: { color: '#34d399', borderColor: '#34d399' },
+          fillerColor: themeColors.fill,
+          handleStyle: { color: themeColors.primary, borderColor: themeColors.primary },
           textStyle: { color: 'rgba(255,255,255,0.3)', fontSize: 9 },
         },
       ],
+      animation: customization.showAnimations,
       series,
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.markets, coinIds, limit, mode]);
+  }, [data.markets, coinIds, limit, mode, customization]);
 
   if (!option) {
     return (
@@ -146,7 +148,7 @@ export function AreaChartWidget({ coinIds, limit = 8, mode = 'volume' }: AreaCha
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '320px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

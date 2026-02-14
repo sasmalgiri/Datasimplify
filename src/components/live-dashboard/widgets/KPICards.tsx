@@ -1,6 +1,7 @@
 'use client';
 
 import { useLiveDashboardStore, type GlobalData, type MarketCoin } from '@/lib/live-dashboard/store';
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 import { TrendingUp, TrendingDown, DollarSign, BarChart3, Activity, Coins } from 'lucide-react';
 
 function formatCompact(n: number): string {
@@ -45,7 +46,8 @@ interface KPICardsProps {
 }
 
 export function KPICards({ mode = 'market' }: KPICardsProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const global = data.global;
   const markets = data.markets;
 

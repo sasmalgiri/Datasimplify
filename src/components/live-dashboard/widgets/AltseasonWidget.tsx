@@ -7,7 +7,7 @@ import { GaugeChart } from 'echarts/charts';
 import { TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([GaugeChart, TooltipComponent, CanvasRenderer]);
 
@@ -28,7 +28,8 @@ function getSeasonColor(score: number): string {
 }
 
 export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const scoreData = useMemo(() => {
     if (!data.markets || !data.global?.market_cap_percentage) return null;
@@ -58,6 +59,7 @@ export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       series: [
         {
           type: 'gauge' as const,
@@ -131,7 +133,7 @@ export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
         },
       ],
     };
-  }, [scoreData]);
+  }, [scoreData, customization]);
 
   if (!scoreData || !option) {
     return (
@@ -150,7 +152,7 @@ export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
       <ReactEChartsCore
         echarts={echarts}
         option={option}
-        style={{ height: '220px', width: '100%' }}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
         notMerge
         lazyUpdate
       />

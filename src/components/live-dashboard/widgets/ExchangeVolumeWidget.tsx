@@ -7,12 +7,13 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, formatCompact } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, formatCompact, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 
 export function ExchangeVolumeWidget() {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     // Try derivatives exchanges, then regular exchanges
@@ -33,6 +34,7 @@ export function ExchangeVolumeWidget() {
 
         return {
           ...ECHARTS_THEME,
+          animation: customization.showAnimations,
           tooltip: {
             ...ECHARTS_THEME.tooltip,
             trigger: 'axis' as const,
@@ -64,8 +66,8 @@ export function ExchangeVolumeWidget() {
             itemStyle: {
               borderRadius: [4, 4, 0, 0],
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'rgba(52,211,153,0.7)' },
-                { offset: 1, color: 'rgba(52,211,153,0.2)' },
+                { offset: 0, color: themeColors.primary },
+                { offset: 1, color: themeColors.fill },
               ]),
             },
             animationDelay: (idx: number) => idx * 40,
@@ -84,6 +86,7 @@ export function ExchangeVolumeWidget() {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         trigger: 'axis' as const,
@@ -114,15 +117,15 @@ export function ExchangeVolumeWidget() {
         itemStyle: {
           borderRadius: [4, 4, 0, 0],
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(96,165,250,0.7)' },
-            { offset: 1, color: 'rgba(96,165,250,0.2)' },
+            { offset: 0, color: themeColors.primary },
+            { offset: 1, color: themeColors.fill },
           ]),
         },
         animationDelay: (idx: number) => idx * 40,
       }],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.exchanges, data.derivativesExchanges, data.markets]);
+  }, [data.exchanges, data.derivativesExchanges, data.markets, customization]);
 
   if (!option) {
     return (
@@ -136,7 +139,7 @@ export function ExchangeVolumeWidget() {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

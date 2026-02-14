@@ -2,13 +2,24 @@
 
 import { useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
+import { getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 
+/** Parse a hex color string (e.g. '#34d399') into [r, g, b] */
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ];
+}
+
 /**
- * Interpolate a background color from deep red through neutral dark to deep green.
- * -10% or worse => deep red, 0% => neutral dark, +10% or better => deep green.
+ * Interpolate a background color from deep red through neutral dark to the theme's primary color.
+ * -10% or worse => deep red, 0% => neutral dark, +10% or better => primary color.
  */
-function getHeatColor(value: number): string {
+function getHeatColor(value: number, primaryHex: string): string {
   // Clamp between -10 and +10 for color mapping
   const clamped = Math.max(-10, Math.min(10, value));
   // Normalize to 0..1 where 0 = -10%, 0.5 = 0%, 1 = +10%
@@ -22,11 +33,12 @@ function getHeatColor(value: number): string {
     const b = Math.round(38 + (50 - 38) * ratio);
     return `rgb(${r}, ${g}, ${b})`;
   } else {
-    // Neutral to green: interpolate from (38, 38, 50) to (16, 185, 129)
+    // Neutral to primary: interpolate from (38, 38, 50) to theme primary
+    const [pr, pg, pb] = hexToRgb(primaryHex);
     const ratio = (t - 0.5) / 0.5;
-    const r = Math.round(38 + (16 - 38) * ratio);
-    const g = Math.round(38 + (185 - 38) * ratio);
-    const b = Math.round(50 + (129 - 50) * ratio);
+    const r = Math.round(38 + (pr - 38) * ratio);
+    const g = Math.round(38 + (pg - 38) * ratio);
+    const b = Math.round(50 + (pb - 50) * ratio);
     return `rgb(${r}, ${g}, ${b})`;
   }
 }
@@ -50,7 +62,8 @@ interface PerformanceHeatmapWidgetProps {
 }
 
 export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
   const coins = data.markets?.slice(0, limit) || [];
 
   const rows = useMemo(() => {
@@ -135,7 +148,7 @@ export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidge
                   <td key={tf.label} className="py-2.5 px-2 text-center">
                     <div
                       className="inline-flex items-center justify-center rounded-md px-2 py-1 min-w-[60px]"
-                      style={{ backgroundColor: getHeatColor(value) }}
+                      style={{ backgroundColor: getHeatColor(value, themeColors.primary) }}
                     >
                       <span className={`text-xs font-semibold ${getTextColor(value)}`}>
                         {value >= 0 ? '+' : ''}

@@ -7,7 +7,7 @@ import { RadarChart } from 'echarts/charts';
 import { TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([RadarChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 
@@ -16,7 +16,8 @@ interface RadarChartWidgetProps {
 }
 
 export function RadarChartWidget({ coinIds }: RadarChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -49,13 +50,14 @@ export function RadarChartWidget({ coinIds }: RadarChartWidgetProps) {
         maxAthDiff ? Math.round((100 - Math.abs(coin.ath_change_percentage || 0)) / 100 * 100) : 50,
         Math.max(0, 100 - (coin.market_cap_rank - 1) * 10),
       ],
-      lineStyle: { color: CHART_COLORS[idx % CHART_COLORS.length], width: 2 },
-      itemStyle: { color: CHART_COLORS[idx % CHART_COLORS.length] },
-      areaStyle: { color: CHART_COLORS[idx % CHART_COLORS.length], opacity: 0.08 },
+      lineStyle: { color: themeColors.palette[idx % themeColors.palette.length], width: 2 },
+      itemStyle: { color: themeColors.palette[idx % themeColors.palette.length] },
+      areaStyle: { color: themeColors.palette[idx % themeColors.palette.length], opacity: 0.08 },
     }));
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       legend: {
         show: true,
         bottom: 0,
@@ -79,7 +81,7 @@ export function RadarChartWidget({ coinIds }: RadarChartWidgetProps) {
         animationDuration: 1200,
       }],
     };
-  }, [data.markets, coinIds]);
+  }, [data.markets, coinIds, customization]);
 
   if (!option) {
     return (
@@ -93,7 +95,7 @@ export function RadarChartWidget({ coinIds }: RadarChartWidgetProps) {
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '280px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

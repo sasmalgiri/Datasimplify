@@ -1,6 +1,7 @@
 'use client';
 
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
+import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
@@ -39,7 +40,8 @@ interface TopCoinsTableProps {
 }
 
 export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const density = TABLE_DENSITY_MAP[customization.tableDensity];
   const coins = data.markets?.slice(0, limit) || [];
 
   if (!data.markets) {
@@ -54,24 +56,24 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className={`w-full ${density.text}`}>
         <thead>
           <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
-            <th className="text-left py-3 px-2">#</th>
-            <th className="text-left py-3 px-2">Coin</th>
-            <th className="text-right py-3 px-2">Price</th>
-            <th className="text-right py-3 px-2">24h %</th>
-            <th className="text-right py-3 px-2 hidden md:table-cell">7d %</th>
-            <th className="text-right py-3 px-2 hidden md:table-cell">Market Cap</th>
-            <th className="text-right py-3 px-2 hidden lg:table-cell">Volume (24h)</th>
-            <th className="text-center py-3 px-2 hidden lg:table-cell">7d Chart</th>
+            <th className={`text-left ${density.py} ${density.px}`}>#</th>
+            <th className={`text-left ${density.py} ${density.px}`}>Coin</th>
+            <th className={`text-right ${density.py} ${density.px}`}>Price</th>
+            <th className={`text-right ${density.py} ${density.px}`}>24h %</th>
+            <th className={`text-right ${density.py} ${density.px} hidden md:table-cell`}>7d %</th>
+            <th className={`text-right ${density.py} ${density.px} hidden md:table-cell`}>Market Cap</th>
+            <th className={`text-right ${density.py} ${density.px} hidden lg:table-cell`}>Volume (24h)</th>
+            <th className={`text-center ${density.py} ${density.px} hidden lg:table-cell`}>7d Chart</th>
           </tr>
         </thead>
         <tbody>
           {coins.map((coin: MarketCoin) => (
             <tr key={coin.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition">
-              <td className="py-3 px-2 text-gray-400">{coin.market_cap_rank}</td>
-              <td className="py-3 px-2">
+              <td className={`${density.py} ${density.px} text-gray-400`}>{coin.market_cap_rank}</td>
+              <td className={`${density.py} ${density.px}`}>
                 <div className="flex items-center gap-2">
                   {coin.image && (
                     <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" />
@@ -82,24 +84,24 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
                   </div>
                 </div>
               </td>
-              <td className="py-3 px-2 text-right text-white font-medium">
+              <td className={`${density.py} ${density.px} text-right text-white font-medium`}>
                 ${coin.current_price < 1 ? coin.current_price.toFixed(6) : coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </td>
-              <td className="py-3 px-2 text-right">
+              <td className={`${density.py} ${density.px} text-right`}>
                 <span className={`flex items-center justify-end gap-0.5 font-medium ${(coin.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {(coin.price_change_percentage_24h ?? 0) >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                   {Math.abs(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                 </span>
               </td>
-              <td className="py-3 px-2 text-right hidden md:table-cell">
+              <td className={`${density.py} ${density.px} text-right hidden md:table-cell`}>
                 <span className={`font-medium ${(coin.price_change_percentage_7d_in_currency ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {(coin.price_change_percentage_7d_in_currency ?? 0) >= 0 ? '+' : ''}
                   {(coin.price_change_percentage_7d_in_currency ?? 0).toFixed(2)}%
                 </span>
               </td>
-              <td className="py-3 px-2 text-right text-gray-300 hidden md:table-cell">{formatCompact(coin.market_cap)}</td>
-              <td className="py-3 px-2 text-right text-gray-300 hidden lg:table-cell">{formatCompact(coin.total_volume)}</td>
-              <td className="py-3 px-2 text-center hidden lg:table-cell">
+              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden md:table-cell`}>{formatCompact(coin.market_cap)}</td>
+              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden lg:table-cell`}>{formatCompact(coin.total_volume)}</td>
+              <td className={`${density.py} ${density.px} text-center hidden lg:table-cell`}>
                 <MiniSparkline prices={coin.sparkline_in_7d?.price || []} />
               </td>
             </tr>

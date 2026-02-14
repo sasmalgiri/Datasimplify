@@ -7,7 +7,7 @@ import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ECHARTS_THEME } from '@/lib/live-dashboard/theme';
+import { ECHARTS_THEME, CHART_COLORS, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 
 echarts.use([BarChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
@@ -17,7 +17,8 @@ interface WaterfallChartWidgetProps {
 }
 
 export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallChartWidgetProps) {
-  const { data } = useLiveDashboardStore();
+  const { data, customization } = useLiveDashboardStore();
+  const themeColors = getThemeColors(customization.colorTheme);
 
   const option = useMemo(() => {
     if (!data.markets) return null;
@@ -76,6 +77,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '8%', containLabel: true },
       tooltip: {
         ...ECHARTS_THEME.tooltip,
@@ -124,7 +126,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
           data: gainData,
           barMaxWidth: 20,
           itemStyle: {
-            color: 'rgba(52,211,153,0.7)',
+            color: themeColors.fill,
             borderRadius: [3, 3, 0, 0],
           },
           animationDelay: (idx: number) => idx * 40,
@@ -144,7 +146,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
       ],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.markets, limit, metric]);
+  }, [data.markets, limit, metric, customization]);
 
   if (!option) {
     return (
@@ -158,7 +160,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
     <ReactEChartsCore
       echarts={echarts}
       option={option}
-      style={{ height: '300px', width: '100%' }}
+      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
       notMerge
       lazyUpdate
     />

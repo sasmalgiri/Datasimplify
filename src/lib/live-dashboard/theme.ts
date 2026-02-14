@@ -81,6 +81,61 @@ export const CHART_COLORS = [
   '#f472b6', '#2dd4bf', '#fb923c', '#818cf8', '#4ade80',
 ];
 
+// Chart height presets
+export const CHART_HEIGHT_MAP = {
+  compact: 200,
+  normal: 300,
+  tall: 400,
+} as const;
+
+// Color theme palettes
+export const COLOR_THEMES = {
+  emerald: {
+    primary: '#34d399',
+    secondary: '#6ee7b7',
+    fill: 'rgba(52, 211, 153, 0.15)',
+    palette: ['#34d399', '#60a5fa', '#f59e0b', '#ef4444', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#818cf8', '#4ade80'],
+  },
+  blue: {
+    primary: '#60a5fa',
+    secondary: '#93c5fd',
+    fill: 'rgba(96, 165, 250, 0.15)',
+    palette: ['#60a5fa', '#34d399', '#f59e0b', '#ef4444', '#a78bfa', '#f472b6', '#2dd4bf', '#fb923c', '#818cf8', '#4ade80'],
+  },
+  purple: {
+    primary: '#a78bfa',
+    secondary: '#c4b5fd',
+    fill: 'rgba(167, 139, 250, 0.15)',
+    palette: ['#a78bfa', '#818cf8', '#c084fc', '#e879f9', '#60a5fa', '#34d399', '#f472b6', '#f59e0b', '#2dd4bf', '#fb923c'],
+  },
+  amber: {
+    primary: '#f59e0b',
+    secondary: '#fbbf24',
+    fill: 'rgba(245, 158, 11, 0.15)',
+    palette: ['#f59e0b', '#fbbf24', '#fb923c', '#ef4444', '#34d399', '#60a5fa', '#a78bfa', '#f472b6', '#2dd4bf', '#818cf8'],
+  },
+  rose: {
+    primary: '#f43f5e',
+    secondary: '#fb7185',
+    fill: 'rgba(244, 63, 94, 0.15)',
+    palette: ['#f43f5e', '#fb7185', '#f472b6', '#e879f9', '#ef4444', '#f59e0b', '#60a5fa', '#34d399', '#a78bfa', '#2dd4bf'],
+  },
+} as const;
+
+// Table density presets
+export const TABLE_DENSITY_MAP = {
+  compact: { py: 'py-1.5', px: 'px-3', text: 'text-xs' },
+  normal: { py: 'py-2.5', px: 'px-4', text: 'text-sm' },
+  comfortable: { py: 'py-3.5', px: 'px-5', text: 'text-sm' },
+} as const;
+
+export type ColorThemeKey = keyof typeof COLOR_THEMES;
+
+/** Get theme colors for a given color theme */
+export function getThemeColors(theme: ColorThemeKey = 'emerald') {
+  return COLOR_THEMES[theme] ?? COLOR_THEMES.emerald;
+}
+
 // Format utilities
 export function formatCompact(n: number): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
