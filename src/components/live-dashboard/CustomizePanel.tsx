@@ -1,86 +1,60 @@
 'use client';
 
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Settings, X, RotateCcw } from 'lucide-react';
+import { Settings, X, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization } from '@/lib/live-dashboard/store';
 
 const POPULAR_COINS = [
-  { id: '', label: 'Default (from dashboard)' },
-  { id: 'bitcoin', label: 'Bitcoin (BTC)' },
-  { id: 'ethereum', label: 'Ethereum (ETH)' },
-  { id: 'solana', label: 'Solana (SOL)' },
+  { id: '', label: 'Default' },
+  { id: 'bitcoin', label: 'BTC' },
+  { id: 'ethereum', label: 'ETH' },
+  { id: 'solana', label: 'SOL' },
   { id: 'binancecoin', label: 'BNB' },
   { id: 'ripple', label: 'XRP' },
-  { id: 'cardano', label: 'Cardano (ADA)' },
-  { id: 'dogecoin', label: 'Dogecoin (DOGE)' },
-  { id: 'avalanche-2', label: 'Avalanche (AVAX)' },
-  { id: 'polkadot', label: 'Polkadot (DOT)' },
-  { id: 'chainlink', label: 'Chainlink (LINK)' },
-  { id: 'tron', label: 'Tron (TRX)' },
-  { id: 'polygon-ecosystem-token', label: 'Polygon (POL)' },
-  { id: 'litecoin', label: 'Litecoin (LTC)' },
-  { id: 'uniswap', label: 'Uniswap (UNI)' },
-  { id: 'near', label: 'NEAR Protocol' },
-  { id: 'aptos', label: 'Aptos (APT)' },
-  { id: 'sui', label: 'Sui (SUI)' },
-  { id: 'arbitrum', label: 'Arbitrum (ARB)' },
-  { id: 'optimism', label: 'Optimism (OP)' },
+  { id: 'cardano', label: 'ADA' },
+  { id: 'dogecoin', label: 'DOGE' },
+  { id: 'avalanche-2', label: 'AVAX' },
+  { id: 'polkadot', label: 'DOT' },
+  { id: 'chainlink', label: 'LINK' },
+  { id: 'tron', label: 'TRX' },
+  { id: 'polygon-ecosystem-token', label: 'POL' },
+  { id: 'litecoin', label: 'LTC' },
+  { id: 'uniswap', label: 'UNI' },
+  { id: 'near', label: 'NEAR' },
+  { id: 'aptos', label: 'APT' },
+  { id: 'sui', label: 'SUI' },
+  { id: 'arbitrum', label: 'ARB' },
+  { id: 'optimism', label: 'OP' },
 ];
 
 const TIMEFRAME_OPTIONS = [
   { days: 0, label: 'Default' },
-  { days: 7, label: '7 days' },
-  { days: 14, label: '14 days' },
-  { days: 30, label: '30 days' },
-  { days: 90, label: '90 days' },
-  { days: 180, label: '180 days' },
-  { days: 365, label: '1 year' },
+  { days: 7, label: '7d' },
+  { days: 14, label: '14d' },
+  { days: 30, label: '30d' },
+  { days: 90, label: '90d' },
+  { days: 180, label: '180d' },
+  { days: 365, label: '1y' },
 ];
 
 const CURRENCY_OPTIONS = [
-  { value: 'usd', label: 'USD ($)', symbol: '$' },
-  { value: 'eur', label: 'EUR (€)', symbol: '€' },
-  { value: 'gbp', label: 'GBP (£)', symbol: '£' },
-  { value: 'jpy', label: 'JPY (¥)', symbol: '¥' },
-  { value: 'aud', label: 'AUD (A$)', symbol: 'A$' },
-  { value: 'cad', label: 'CAD (C$)', symbol: 'C$' },
-  { value: 'chf', label: 'CHF (Fr)', symbol: 'Fr' },
-  { value: 'inr', label: 'INR (₹)', symbol: '₹' },
-  { value: 'btc', label: 'BTC (₿)', symbol: '₿' },
-  { value: 'eth', label: 'ETH (Ξ)', symbol: 'Ξ' },
+  { value: 'usd', label: 'USD ($)' },
+  { value: 'eur', label: 'EUR (€)' },
+  { value: 'gbp', label: 'GBP (£)' },
+  { value: 'jpy', label: 'JPY (¥)' },
+  { value: 'inr', label: 'INR (₹)' },
+  { value: 'btc', label: 'BTC (₿)' },
+  { value: 'eth', label: 'ETH (Ξ)' },
 ];
 
 const SORT_OPTIONS = [
-  { value: 'market_cap_desc', label: 'Market Cap ↓' },
-  { value: 'market_cap_asc', label: 'Market Cap ↑' },
-  { value: 'volume_desc', label: 'Volume ↓' },
-  { value: 'volume_asc', label: 'Volume ↑' },
-  { value: 'id_asc', label: 'Name A→Z' },
-  { value: 'id_desc', label: 'Name Z→A' },
-];
-
-const PER_PAGE_OPTIONS = [
-  { value: 25, label: '25' },
-  { value: 50, label: '50' },
-  { value: 100, label: '100' },
-  { value: 250, label: '250' },
-];
-
-const CHART_HEIGHT_OPTIONS = [
-  { value: 'compact' as const, label: 'Compact' },
-  { value: 'normal' as const, label: 'Normal' },
-  { value: 'tall' as const, label: 'Tall' },
-];
-
-const DATA_LIMIT_OPTIONS = [
-  { value: 0, label: 'Default' },
-  { value: 10, label: '10' },
-  { value: 15, label: '15' },
-  { value: 20, label: '20' },
-  { value: 25, label: '25' },
-  { value: 50, label: '50' },
+  { value: 'market_cap_desc', label: 'MCap ↓' },
+  { value: 'market_cap_asc', label: 'MCap ↑' },
+  { value: 'volume_desc', label: 'Vol ↓' },
+  { value: 'volume_asc', label: 'Vol ↑' },
+  { value: 'id_asc', label: 'A→Z' },
+  { value: 'id_desc', label: 'Z→A' },
 ];
 
 const COLOR_THEME_OPTIONS = [
@@ -91,12 +65,6 @@ const COLOR_THEME_OPTIONS = [
   { value: 'rose' as const, label: 'Rose', color: '#f43f5e' },
 ];
 
-const TABLE_DENSITY_OPTIONS = [
-  { value: 'compact' as const, label: 'Compact' },
-  { value: 'normal' as const, label: 'Normal' },
-  { value: 'comfortable' as const, label: 'Spacious' },
-];
-
 const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
   coinId: '', coinIds: [], days: 0, vsCurrency: 'usd', perPage: 100,
   sortOrder: 'market_cap_desc', chartHeight: 'normal', dataLimit: 0,
@@ -104,30 +72,57 @@ const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
   chartStyle: 'smooth',
 };
 
-interface CustomizePanelProps {
-  onApply: () => void;
+// ─── Trigger Button (renders in toolbar) ───
+interface CustomizeButtonProps {
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function CustomizePanel({ onApply }: CustomizePanelProps) {
-  const { customization, setCustomization, resetCustomization } = useLiveDashboardStore();
-  const [open, setOpen] = useState(false);
-  const [local, setLocal] = useState<DashboardCustomization>(customization);
+export function CustomizeButton({ isOpen, onToggle }: CustomizeButtonProps) {
+  const customization = useLiveDashboardStore((s) => s.customization);
 
-  const handleOpen = () => {
-    setLocal(customization);
-    setOpen(true);
-  };
+  const hasCustomization =
+    customization.coinId !== '' || customization.coinIds.length > 0 || customization.days !== 0 ||
+    customization.vsCurrency !== 'usd' || customization.perPage !== 100 || customization.sortOrder !== 'market_cap_desc' ||
+    customization.chartHeight !== 'normal' || customization.dataLimit !== 0 || customization.colorTheme !== 'emerald' ||
+    !customization.showAnimations || customization.tableDensity !== 'normal' || customization.chartStyle !== 'smooth';
+
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`flex items-center gap-1 p-2 rounded-xl transition border ${
+        isOpen || hasCustomization
+          ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
+          : 'bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border-white/[0.06]'
+      }`}
+      title="Customize dashboard"
+    >
+      <Settings className="w-4 h-4" />
+      {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+    </button>
+  );
+}
+
+// ─── Inline Bar (renders between toolbar and grid) ───
+interface CustomizeBarProps {
+  onApply: () => void;
+  onClose: () => void;
+}
+
+export function CustomizeBar({ onApply, onClose }: CustomizeBarProps) {
+  const { customization, setCustomization, resetCustomization } = useLiveDashboardStore();
+  const [local, setLocal] = useState<DashboardCustomization>(customization);
+  const [showMore, setShowMore] = useState(false);
 
   const handleApply = () => {
     setCustomization(local);
-    setOpen(false);
     onApply();
   };
 
   const handleReset = () => {
     resetCustomization();
     setLocal(DEFAULT_CUSTOMIZATION);
-    setOpen(false);
     onApply();
   };
 
@@ -142,345 +137,203 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
     });
   };
 
-  const hasCustomization =
-    customization.coinId !== '' || customization.coinIds.length > 0 || customization.days !== 0 ||
-    customization.vsCurrency !== 'usd' || customization.perPage !== 100 || customization.sortOrder !== 'market_cap_desc' ||
-    customization.chartHeight !== 'normal' || customization.dataLimit !== 0 || customization.colorTheme !== 'emerald' ||
-    !customization.showAnimations || customization.tableDensity !== 'normal' || customization.chartStyle !== 'smooth';
-
-  const btnClass = (active: boolean) =>
-    `px-2 py-1.5 rounded-lg text-xs font-medium transition ${
+  const chip = (active: boolean) =>
+    `px-2 py-1 rounded-lg text-[10px] font-medium transition cursor-pointer ${
       active
         ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
         : 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]'
     }`;
 
+  const selectClass = 'bg-white/[0.04] border border-white/[0.1] rounded-lg px-2 py-1 text-[11px] text-white focus:border-emerald-400/40 focus:outline-none';
+
   return (
-    <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        className={`p-2 rounded-xl transition border ${
-          hasCustomization
-            ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
-            : 'bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border-white/[0.06]'
-        }`}
-        title="Customize dashboard"
-      >
-        <Settings className="w-4 h-4" />
-      </button>
-
-      {open && typeof document !== 'undefined' && createPortal(
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-            style={{ zIndex: 99998 }}
-            onClick={() => setOpen(false)}
-          />
-
-          {/* Right-side drawer */}
-          <div
-            className="fixed top-0 right-0 h-full w-[360px] max-w-[90vw] bg-[#0c0c14] border-l border-white/[0.08] shadow-2xl flex flex-col"
-            style={{ zIndex: 99999 }}
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl overflow-hidden">
+      {/* Row 1: Primary controls */}
+      <div className="px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {/* Currency */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Currency</span>
+          <select
+            value={local.vsCurrency}
+            onChange={(e) => setLocal({ ...local, vsCurrency: e.target.value })}
+            title="Currency"
+            className={selectClass}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06] shrink-0">
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Settings className="w-4 h-4 text-emerald-400" />
-                Customize Dashboard
-              </h3>
-              <button type="button" onClick={() => setOpen(false)} className="text-gray-500 hover:text-white transition" title="Close panel">
-                <X className="w-4 h-4" />
+            {CURRENCY_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value} className="bg-gray-900">{c.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Sort */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Sort</span>
+          <select
+            value={local.sortOrder}
+            onChange={(e) => setLocal({ ...local, sortOrder: e.target.value })}
+            title="Sort order"
+            className={selectClass}
+          >
+            {SORT_OPTIONS.map((s) => (
+              <option key={s.value} value={s.value} className="bg-gray-900">{s.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Primary Coin */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Coin</span>
+          <select
+            value={local.coinId}
+            onChange={(e) => setLocal({ ...local, coinId: e.target.value })}
+            title="Primary coin"
+            className={selectClass}
+          >
+            {POPULAR_COINS.map((c) => (
+              <option key={c.id} value={c.id} className="bg-gray-900">{c.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Timeframe chips */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold mr-0.5">Time</span>
+          {TIMEFRAME_OPTIONS.map((t) => (
+            <button key={t.days} type="button" onClick={() => setLocal({ ...local, days: t.days })} className={chip(local.days === t.days)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Color Theme */}
+        <div className="flex items-center gap-1">
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold mr-0.5">Theme</span>
+          {COLOR_THEME_OPTIONS.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setLocal({ ...local, colorTheme: t.value })}
+              title={t.label}
+              className={`w-5 h-5 rounded-full border-2 transition ${
+                local.colorTheme === t.value ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'
+              }`}
+              style={{ backgroundColor: t.color }}
+            />
+          ))}
+        </div>
+
+        {/* Spacer + actions */}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <button
+            type="button"
+            onClick={() => setShowMore(!showMore)}
+            className="text-[10px] text-gray-500 hover:text-white transition flex items-center gap-0.5"
+          >
+            {showMore ? 'Less' : 'More'}
+            {showMore ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+          <button type="button" onClick={handleReset} className="p-1 text-gray-500 hover:text-white transition" title="Reset all">
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleApply}
+            className="px-3 py-1 rounded-lg text-[10px] font-medium bg-emerald-500 hover:bg-emerald-600 text-white transition"
+          >
+            Apply
+          </button>
+          <button type="button" onClick={onClose} className="p-1 text-gray-500 hover:text-white transition" title="Close">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Row 2: Extended controls (collapsible) */}
+      {showMore && (
+        <div className="px-4 py-3 border-t border-white/[0.04] flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* Per Page */}
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Per Page</span>
+            {[25, 50, 100, 250].map((v) => (
+              <button key={v} type="button" onClick={() => setLocal({ ...local, perPage: v })} className={chip(local.perPage === v)}>
+                {v}
               </button>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-5">
-              {/* ─── Data Controls ─── */}
-              <div className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold">Data Controls</div>
-
-              {/* Currency & Sort Row */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                    Currency
-                  </label>
-                  <select
-                    value={local.vsCurrency}
-                    onChange={(e) => setLocal({ ...local, vsCurrency: e.target.value })}
-                    title="Select currency"
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
-                  >
-                    {CURRENCY_OPTIONS.map((c) => (
-                      <option key={c.value} value={c.value} className="bg-gray-900">
-                        {c.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                    Sort By
-                  </label>
-                  <select
-                    value={local.sortOrder}
-                    onChange={(e) => setLocal({ ...local, sortOrder: e.target.value })}
-                    title="Select sort order"
-                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
-                  >
-                    {SORT_OPTIONS.map((s) => (
-                      <option key={s.value} value={s.value} className="bg-gray-900">
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Coins Per Page */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Coins Per Page
-                </label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {PER_PAGE_OPTIONS.map((p) => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => setLocal({ ...local, perPage: p.value })}
-                      className={btnClass(local.perPage === p.value)}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Data Limit */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Data Limit (rows)
-                </label>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {DATA_LIMIT_OPTIONS.map((d) => (
-                    <button
-                      key={d.value}
-                      type="button"
-                      onClick={() => setLocal({ ...local, dataLimit: d.value })}
-                      className={btnClass(local.dataLimit === d.value)}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Primary Coin */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Primary Coin (Charts)
-                </label>
-                <select
-                  value={local.coinId}
-                  onChange={(e) => setLocal({ ...local, coinId: e.target.value })}
-                  title="Select primary coin"
-                  className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
-                >
-                  {POPULAR_COINS.map((c) => (
-                    <option key={c.id} value={c.id} className="bg-gray-900">
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Timeframe */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Timeframe
-                </label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {TIMEFRAME_OPTIONS.map((t) => (
-                    <button
-                      key={t.days}
-                      type="button"
-                      onClick={() => setLocal({ ...local, days: t.days })}
-                      className={btnClass(local.days === t.days)}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Comparison Coins */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Comparison Coins ({local.coinIds.length}/5)
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {POPULAR_COINS.filter((c) => c.id !== '').map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => toggleCoinId(c.id)}
-                      className={`px-2 py-1 rounded-lg text-[11px] font-medium transition ${
-                        local.coinIds.includes(c.id)
-                          ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
-                          : 'bg-white/[0.04] text-gray-500 border border-white/[0.06] hover:text-gray-300'
-                      }`}
-                    >
-                      {c.label.split(' (')[0]}
-                    </button>
-                  ))}
-                </div>
-                {local.coinIds.length === 0 && (
-                  <p className="text-[10px] text-gray-600 mt-1.5">Using dashboard defaults</p>
-                )}
-              </div>
-
-              {/* ─── Appearance ─── */}
-              <div className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold pt-2 border-t border-white/[0.06]">
-                Appearance
-              </div>
-
-              {/* Color Theme */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Color Theme
-                </label>
-                <div className="flex gap-2">
-                  {COLOR_THEME_OPTIONS.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => setLocal({ ...local, colorTheme: t.value })}
-                      className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition border ${
-                        local.colorTheme === t.value
-                          ? 'border-white/20 bg-white/[0.06]'
-                          : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'
-                      }`}
-                      title={t.label}
-                    >
-                      <span
-                        className="w-5 h-5 rounded-full border-2"
-                        style={{
-                          backgroundColor: t.color,
-                          borderColor: local.colorTheme === t.value ? '#fff' : 'transparent',
-                        }}
-                      />
-                      <span className="text-[9px] text-gray-500">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Chart Height */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Chart Height
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {CHART_HEIGHT_OPTIONS.map((h) => (
-                    <button
-                      key={h.value}
-                      type="button"
-                      onClick={() => setLocal({ ...local, chartHeight: h.value })}
-                      className={btnClass(local.chartHeight === h.value)}
-                    >
-                      {h.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Chart Style */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Chart Style
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setLocal({ ...local, chartStyle: 'smooth' })}
-                    className={btnClass(local.chartStyle === 'smooth')}
-                  >
-                    Smooth
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLocal({ ...local, chartStyle: 'sharp' })}
-                    className={btnClass(local.chartStyle === 'sharp')}
-                  >
-                    Sharp
-                  </button>
-                </div>
-              </div>
-
-              {/* Table Density */}
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
-                  Table Density
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {TABLE_DENSITY_OPTIONS.map((d) => (
-                    <button
-                      key={d.value}
-                      type="button"
-                      onClick={() => setLocal({ ...local, tableDensity: d.value })}
-                      className={btnClass(local.tableDensity === d.value)}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Animations Toggle */}
-              <div className="flex items-center justify-between">
-                <label className="text-[11px] uppercase tracking-wider text-gray-500 font-medium">
-                  Animations
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setLocal({ ...local, showAnimations: !local.showAnimations })}
-                  title={local.showAnimations ? 'Disable animations' : 'Enable animations'}
-                  className={`relative w-10 h-5 rounded-full transition ${
-                    local.showAnimations ? 'bg-emerald-500' : 'bg-gray-700'
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                      local.showAnimations ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
-            {/* Sticky actions at bottom */}
-            <div className="flex items-center gap-2 px-5 py-4 border-t border-white/[0.06] shrink-0">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs text-gray-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition"
-              >
-                <RotateCcw className="w-3 h-3" />
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleApply}
-                className="flex-1 px-4 py-2 rounded-lg text-xs font-medium bg-emerald-500 hover:bg-emerald-600 text-white transition"
-              >
-                Apply & Refresh
-              </button>
-            </div>
+            ))}
           </div>
-        </>,
-        document.body,
+
+          {/* Data Limit */}
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Limit</span>
+            {[0, 10, 15, 20, 25, 50].map((v) => (
+              <button key={v} type="button" onClick={() => setLocal({ ...local, dataLimit: v })} className={chip(local.dataLimit === v)}>
+                {v === 0 ? 'All' : v}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart Height */}
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Height</span>
+            {(['compact', 'normal', 'tall'] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setLocal({ ...local, chartHeight: v })} className={chip(local.chartHeight === v)}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart Style */}
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Style</span>
+            {(['smooth', 'sharp'] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setLocal({ ...local, chartStyle: v })} className={chip(local.chartStyle === v)}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Table Density */}
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Density</span>
+            {(['compact', 'normal', 'comfortable'] as const).map((v) => (
+              <button key={v} type="button" onClick={() => setLocal({ ...local, tableDensity: v })} className={chip(local.tableDensity === v)}>
+                {v === 'comfortable' ? 'Spacious' : v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Animations */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Anim</span>
+            <button
+              type="button"
+              onClick={() => setLocal({ ...local, showAnimations: !local.showAnimations })}
+              title={local.showAnimations ? 'Disable animations' : 'Enable animations'}
+              className={`relative w-8 h-4 rounded-full transition ${local.showAnimations ? 'bg-emerald-500' : 'bg-gray-700'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-white transition-transform ${local.showAnimations ? 'translate-x-4' : 'translate-x-0'}`} />
+            </button>
+          </div>
+
+          {/* Comparison Coins */}
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Compare ({local.coinIds.length}/5)</span>
+            {POPULAR_COINS.filter((c) => c.id !== '').map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => toggleCoinId(c.id)}
+                className={`px-1.5 py-0.5 rounded text-[9px] font-medium transition ${
+                  local.coinIds.includes(c.id)
+                    ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
+                    : 'bg-white/[0.03] text-gray-600 border border-white/[0.04] hover:text-gray-400'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }

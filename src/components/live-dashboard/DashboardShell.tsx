@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw, Key, LogOut, Clock, Shield, Timer } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
 import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
-import { CustomizePanel } from './CustomizePanel';
+import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
 import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
@@ -26,6 +26,7 @@ interface DashboardShellProps {
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
   const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, customization, autoRefreshInterval, setAutoRefreshInterval } = useLiveDashboardStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const handleRefresh = useCallback(() => {
     const params: Record<string, any> = {};
@@ -124,7 +125,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           {apiKey && <ApiUsagePill definition={definition} />}
 
           {/* Customize */}
-          <CustomizePanel onApply={handleRefresh} />
+          <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
 
           {/* Export */}
           <ExportButton dashboardName={definition.name} />
@@ -169,6 +170,11 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           </button>
         </div>
       </div>
+
+      {/* Inline customize bar */}
+      {customizeOpen && (
+        <CustomizeBar onApply={handleRefresh} onClose={() => setCustomizeOpen(false)} />
+      )}
 
       {/* Error banner */}
       {error && (
