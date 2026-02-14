@@ -10,9 +10,9 @@ export default function ToolsPage() {
   const tools = [
     {
       id: 'templates',
-      name: 'Power Query Templates',
+      name: 'Excel Data Templates',
       emoji: '📊',
-      description: 'Power Query templates for live crypto data (BYOK)',
+      description: 'Excel templates with prefetched crypto data (BYOK)',
       href: '/downloads',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,

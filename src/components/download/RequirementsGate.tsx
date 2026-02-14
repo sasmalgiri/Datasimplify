@@ -15,7 +15,7 @@ interface RequirementsGateProps {
  *
  * Hard gate that users must acknowledge before downloading templates.
  * Ensures they understand the BYOK requirements:
- * - Excel Desktop with Power Query (not Excel Online)
+ * - Excel Desktop (not Excel Online)
  * - CoinGecko API key (free, entered directly in Excel)
  */
 export function RequirementsGate({ onConfirm, className = '' }: RequirementsGateProps) {

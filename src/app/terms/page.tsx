@@ -108,13 +108,13 @@ export default function TermsPage() {
                 <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page for the full list of providers.</li>
             </ul>
 
-            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.3 BYOK (Bring Your Own Keys) Power Query Templates</h3>
+            <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.3 BYOK (Bring Your Own Keys) Excel Templates</h3>
             <p className="mb-4">
-              Our Power Query templates operate on a <strong>BYOK (Bring Your Own Key)</strong> model:
+              Our Excel templates operate on a <strong>BYOK (Bring Your Own Key)</strong> model:
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
               <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (e.g., CoinGecko)</li>
-              <li><strong>Power Query Code Only:</strong> Excel templates contain Power Query code, not embedded market data</li>
+              <li><strong>Prefetched Data:</strong> Excel templates ship with prefetched market data for immediate analysis</li>
               <li><strong>Client-Side Architecture:</strong> Your API key stays in Excel - data flows directly from CoinGecko
                 to your workbook without passing through our servers</li>
               <li><strong>Your Responsibility:</strong> You must comply with your data provider&apos;s terms of use,
@@ -127,7 +127,7 @@ export default function TermsPage() {
 
             <p className="mb-4">
               <strong>Provider Ownership & Rights:</strong> All market data displayed on our platform or accessed via
-              Power Query templates is sourced from third-party data providers, including but not limited to{' '}
+              Excel templates is sourced from third-party data providers, including but not limited to{' '}
               <strong>CoinGecko</strong> (cryptocurrency market data) and others listed on our{' '}
               <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
               This data remains the <strong>intellectual property of the respective providers</strong>.

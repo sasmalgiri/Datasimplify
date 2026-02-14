@@ -26,7 +26,7 @@ export const CONTENT_OPTIONS: ContentOption[] = [
   {
     id: 'formulas_only',
     name: 'Data Only',
-    description: 'Just Power Query data tables, no charts. Smallest file size.',
+    description: 'Just data tables, no charts. Smallest file size.',
     icon: '\u{1F4DD}',
   },
 ];

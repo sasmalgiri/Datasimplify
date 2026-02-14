@@ -2,7 +2,7 @@
  * dashboardCharts.ts — Chart definitions per dashboard type (Premium 2x2 Grid)
  *
  * Charts now use structured table references (TableName[ColumnName]) that
- * auto-update when Power Query refreshes data. This replaces the old
+ * auto-update when data refreshes. This replaces the old
  * hardcoded cell ranges ('Sheet'!$A$1:$A$10) that broke on data resize.
  *
  * OTHER-LEVELS DESIGN PRINCIPLES applied:

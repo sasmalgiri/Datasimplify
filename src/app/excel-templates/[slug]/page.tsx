@@ -142,7 +142,7 @@ export default async function TemplateDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Power Query Notice */}
+        {/* Template Notice */}
         <div className="bg-emerald-900/30 border-2 border-emerald-500/50 rounded-xl p-6 mb-8">
           <h2 className="text-lg font-bold text-emerald-400 mb-2">
             Excel Templates - Prefetched Data Included
@@ -153,7 +153,7 @@ export default async function TemplateDetailPage({ params }: PageProps) {
           </p>
           <p className="text-gray-400 text-xs">
             <strong>BYOK (Bring Your Own Keys):</strong> Your CoinGecko API key stays in Excel - 
-            it never touches our servers. The template contains Power Query code only - no embedded data.
+            it never touches our servers. Templates include prefetched data for immediate analysis.
             See{' '}
             <Link href="/template-requirements" className="text-emerald-400 hover:underline">
               Setup Guide

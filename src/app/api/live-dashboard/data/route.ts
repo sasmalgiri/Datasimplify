@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
       case 'markets':
         fetchers.push(
           fetchCoinGecko('/coins/markets', apiKey, keyType, {
-            vs_currency: 'usd',
-            order: 'market_cap_desc',
+            vs_currency: params?.vsCurrency || 'usd',
+            order: params?.sortOrder || 'market_cap_desc',
             per_page: String(params?.perPage || 100),
             page: '1',
             sparkline: 'true',
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
         if (params?.coinId) {
           fetchers.push(
             fetchCoinGecko(`/coins/${params.coinId}/ohlc`, apiKey, keyType, {
-              vs_currency: 'usd',
+              vs_currency: params?.vsCurrency || 'usd',
               days: String(params?.days || 30),
             })
               .then((data) => {
@@ -175,13 +175,16 @@ export async function POST(req: NextRequest) {
           for (const cid of params.coinIds.slice(0, 5)) {
             fetchers.push(
               fetchCoinGecko(`/coins/${cid}/ohlc`, apiKey, keyType, {
-                vs_currency: 'usd',
+                vs_currency: params?.vsCurrency || 'usd',
                 days: String(params?.days || 30),
               })
                 .then((data) => {
                   result.ohlc = { ...(result.ohlc || {}), [cid]: data };
                 })
-                .catch(() => {}),
+                .catch((err) => {
+                  if (!result.ohlcMultiErrors) result.ohlcMultiErrors = {};
+                  result.ohlcMultiErrors[cid] = err.message;
+                }),
             );
           }
         }
@@ -202,7 +205,7 @@ export async function POST(req: NextRequest) {
         if (params?.historyCoinId) {
           fetchers.push(
             fetchCoinGecko(`/coins/${params.historyCoinId}/market_chart`, apiKey, keyType, {
-              vs_currency: 'usd',
+              vs_currency: params?.vsCurrency || 'usd',
               days: String(params?.historyDays || 90),
             })
               .then((data) => { result.coinHistory = data; })
@@ -227,6 +230,33 @@ export async function POST(req: NextRequest) {
               .catch((err) => { result.coinDetailError = err.message; }),
           );
         }
+        break;
+
+      case 'defi_global':
+        fetchers.push(
+          fetchCoinGecko('/global/decentralized_finance_defi', apiKey, keyType)
+            .then((data) => { result.defiGlobal = data?.data || data; })
+            .catch((err) => { result.defiGlobalError = err.message; }),
+        );
+        break;
+
+      case 'derivatives':
+        fetchers.push(
+          fetchCoinGecko('/derivatives', apiKey, keyType)
+            .then((data) => { result.derivatives = Array.isArray(data) ? data.slice(0, 50) : data; })
+            .catch((err) => { result.derivativesError = err.message; }),
+        );
+        break;
+
+      case 'derivatives_exchanges':
+        fetchers.push(
+          fetchCoinGecko('/derivatives/exchanges', apiKey, keyType, {
+            order: 'open_interest_btc_desc',
+            per_page: '20',
+          })
+            .then((data) => { result.derivativesExchanges = data; })
+            .catch((err) => { result.derivativesExchangesError = err.message; }),
+        );
         break;
     }
   }

@@ -170,8 +170,8 @@ export default function GainersLosersPage() {
             <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download market movers data as Power Query templates (BYOK).
-            Track gainers and losers with auto-updating data. Your API key stays in Excel.
+            Download market movers data as Excel templates with prefetched data.
+            Track gainers and losers with snapshot data. Your API key stays in Excel.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -185,7 +185,7 @@ export default function GainersLosersPage() {
               href="/downloads"
               className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
             >
-              Power Query Templates
+              Excel Templates
             </Link>
           </div>
         </div>

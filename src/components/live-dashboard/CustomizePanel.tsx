@@ -38,6 +38,35 @@ const TIMEFRAME_OPTIONS = [
   { days: 365, label: '1 year' },
 ];
 
+const CURRENCY_OPTIONS = [
+  { value: 'usd', label: 'USD ($)', symbol: '$' },
+  { value: 'eur', label: 'EUR (€)', symbol: '€' },
+  { value: 'gbp', label: 'GBP (£)', symbol: '£' },
+  { value: 'jpy', label: 'JPY (¥)', symbol: '¥' },
+  { value: 'aud', label: 'AUD (A$)', symbol: 'A$' },
+  { value: 'cad', label: 'CAD (C$)', symbol: 'C$' },
+  { value: 'chf', label: 'CHF (Fr)', symbol: 'Fr' },
+  { value: 'inr', label: 'INR (₹)', symbol: '₹' },
+  { value: 'btc', label: 'BTC (₿)', symbol: '₿' },
+  { value: 'eth', label: 'ETH (Ξ)', symbol: 'Ξ' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'market_cap_desc', label: 'Market Cap ↓' },
+  { value: 'market_cap_asc', label: 'Market Cap ↑' },
+  { value: 'volume_desc', label: 'Volume ↓' },
+  { value: 'volume_asc', label: 'Volume ↑' },
+  { value: 'id_asc', label: 'Name A→Z' },
+  { value: 'id_desc', label: 'Name Z→A' },
+];
+
+const PER_PAGE_OPTIONS = [
+  { value: 25, label: '25' },
+  { value: 50, label: '50' },
+  { value: 100, label: '100' },
+  { value: 250, label: '250' },
+];
+
 interface CustomizePanelProps {
   onApply: () => void;
 }
@@ -60,7 +89,7 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
 
   const handleReset = () => {
     resetCustomization();
-    setLocal({ coinId: '', coinIds: [], days: 0 });
+    setLocal({ coinId: '', coinIds: [], days: 0, vsCurrency: 'usd', perPage: 100, sortOrder: 'market_cap_desc' });
     setOpen(false);
     onApply();
   };
@@ -77,7 +106,8 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
   };
 
   const hasCustomization =
-    customization.coinId !== '' || customization.coinIds.length > 0 || customization.days !== 0;
+    customization.coinId !== '' || customization.coinIds.length > 0 || customization.days !== 0 ||
+    customization.vsCurrency !== 'usd' || customization.perPage !== 100 || customization.sortOrder !== 'market_cap_desc';
 
   return (
     <div className="relative">
@@ -112,7 +142,68 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
               </button>
             </div>
 
-            <div className="p-5 space-y-5 max-h-[400px] overflow-y-auto">
+            <div className="p-5 space-y-5 max-h-[480px] overflow-y-auto">
+              {/* Currency & Sort Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                    Currency
+                  </label>
+                  <select
+                    value={local.vsCurrency}
+                    onChange={(e) => setLocal({ ...local, vsCurrency: e.target.value })}
+                    title="Select currency"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
+                  >
+                    {CURRENCY_OPTIONS.map((c) => (
+                      <option key={c.value} value={c.value} className="bg-gray-900">
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                    Sort By
+                  </label>
+                  <select
+                    value={local.sortOrder}
+                    onChange={(e) => setLocal({ ...local, sortOrder: e.target.value })}
+                    title="Select sort order"
+                    className="w-full bg-white/[0.04] border border-white/[0.1] rounded-xl px-3 py-2.5 text-sm text-white focus:border-emerald-400/40 focus:outline-none transition"
+                  >
+                    {SORT_OPTIONS.map((s) => (
+                      <option key={s.value} value={s.value} className="bg-gray-900">
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Coins Per Page */}
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">
+                  Coins Per Page
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {PER_PAGE_OPTIONS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      onClick={() => setLocal({ ...local, perPage: p.value })}
+                      className={`px-2 py-1.5 rounded-lg text-xs font-medium transition ${
+                        local.perPage === p.value
+                          ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
+                          : 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Primary Coin */}
               <div>
                 <label className="block text-[11px] uppercase tracking-wider text-gray-500 mb-2 font-medium">

@@ -58,7 +58,7 @@ const faqSchema = {
       name: 'Where does CRK store my API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'With Power Query templates, your API key stays in Excel - it never leaves your workbook or touches our servers. This is the most private approach possible.',
+        text: 'With Excel templates, your API key stays in your workbook - it never leaves your computer or touches our servers. This is the most private approach possible.',
       },
     },
     {

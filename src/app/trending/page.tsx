@@ -106,7 +106,7 @@ export default function TrendingPage() {
             <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
           </div>
           <p className="text-gray-400 mb-4">
-            Download trending coins and market movers data as Power Query templates (BYOK). Your API key stays in Excel.
+            Download trending coins and market movers data as Excel templates with prefetched data.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -119,7 +119,7 @@ export default function TrendingPage() {
               href="/downloads"
               className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
             >
-              Power Query Templates
+              Excel Templates
             </Link>
           </div>
         </div>

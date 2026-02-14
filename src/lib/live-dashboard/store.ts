@@ -54,6 +54,36 @@ export interface FearGreedData {
   timestamp: string;
 }
 
+export interface DefiGlobalData {
+  defi_market_cap: string;
+  eth_market_cap: string;
+  defi_to_eth_ratio: string;
+  trading_volume_24h: string;
+  defi_dominance: string;
+  top_coin_name: string;
+  top_coin_defi_dominance: number;
+}
+
+export interface DerivativeTicker {
+  market: string;
+  symbol: string;
+  price: string;
+  price_percentage_change_24h: number;
+  contract_type: string;
+  funding_rate: number;
+  open_interest: number;
+  volume_24h: number;
+}
+
+export interface DerivativesExchange {
+  name: string;
+  id: string;
+  open_interest_btc: number;
+  trade_volume_24h_btc: string;
+  number_of_perpetual_pairs: number;
+  number_of_futures_pairs: number;
+}
+
 export interface DashboardData {
   markets: MarketCoin[] | null;
   global: GlobalData | null;
@@ -64,18 +94,27 @@ export interface DashboardData {
   coinDetail: Record<string, any> | null;
   exchanges: any[] | null;
   coinHistory: Record<string, any> | null;
+  defiGlobal: DefiGlobalData | null;
+  derivatives: DerivativeTicker[] | null;
+  derivativesExchanges: DerivativesExchange[] | null;
 }
 
 export interface DashboardCustomization {
   coinId: string;        // Primary coin override (empty = use definition default)
   coinIds: string[];     // Comparison coins override (empty = use definition default)
   days: number;          // Timeframe override (0 = use definition default)
+  vsCurrency: string;    // Currency for prices (default 'usd')
+  perPage: number;       // Coins per page (default 100)
+  sortOrder: string;     // Sort order for markets (default 'market_cap_desc')
 }
 
 const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
   coinId: '',
   coinIds: [],
   days: 0,
+  vsCurrency: 'usd',
+  perPage: 100,
+  sortOrder: 'market_cap_desc',
 };
 
 interface LiveDashboardStore {
@@ -93,6 +132,9 @@ interface LiveDashboardStore {
   setCustomization: (updates: Partial<DashboardCustomization>) => void;
   resetCustomization: () => void;
 
+  autoRefreshInterval: number; // 0 = off, 60/120/300 seconds
+  setAutoRefreshInterval: (interval: number) => void;
+
   fetchData: (endpoints: string[], params?: Record<string, any>) => Promise<void>;
   resetData: () => void;
 }
@@ -107,6 +149,9 @@ const emptyData: DashboardData = {
   coinDetail: null,
   exchanges: null,
   coinHistory: null,
+  defiGlobal: null,
+  derivatives: null,
+  derivativesExchanges: null,
 };
 
 export const useLiveDashboardStore = create<LiveDashboardStore>()(
@@ -127,6 +172,9 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
         customization: { ...state.customization, ...updates },
       })),
       resetCustomization: () => set({ customization: DEFAULT_CUSTOMIZATION }),
+
+      autoRefreshInterval: 0,
+      setAutoRefreshInterval: (interval) => set({ autoRefreshInterval: interval }),
 
       fetchData: async (endpoints, params) => {
         const { apiKey } = get();
@@ -163,6 +211,9 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
               coinDetail: result.coinDetail ?? currentData.coinDetail,
               exchanges: result.exchanges ?? currentData.exchanges,
               coinHistory: result.coinHistory ?? currentData.coinHistory,
+              defiGlobal: result.defiGlobal ?? currentData.defiGlobal,
+              derivatives: result.derivatives ?? currentData.derivatives,
+              derivativesExchanges: result.derivativesExchanges ?? currentData.derivativesExchanges,
             },
             isLoading: false,
             lastFetched: Date.now(),
@@ -186,6 +237,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       partialize: (state) => ({
         apiKey: state.apiKey,
         keyType: state.keyType,
+        autoRefreshInterval: state.autoRefreshInterval,
       }),
     },
   ),

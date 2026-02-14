@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
-import { RefreshCw, Key, LogOut, Clock, Shield } from 'lucide-react';
+import { useCallback, useEffect, useRef } from 'react';
+import { RefreshCw, Key, LogOut, Clock, Shield, Timer } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
@@ -10,17 +10,30 @@ import { ShareButton } from './ShareButton';
 import { CustomizePanel } from './CustomizePanel';
 import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
 
+const AUTO_REFRESH_OPTIONS = [
+  { value: 0, label: 'Off' },
+  { value: 60, label: '1m' },
+  { value: 120, label: '2m' },
+  { value: 300, label: '5m' },
+];
+
 interface DashboardShellProps {
   definition: LiveDashboardDefinition;
   onOpenKeyModal: () => void;
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, customization } = useLiveDashboardStore();
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, customization, autoRefreshInterval, setAutoRefreshInterval } = useLiveDashboardStore();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handleRefresh = useCallback(() => {
     const params: Record<string, any> = {};
     const c = customization;
+
+    // Pass global customization params
+    if (c.vsCurrency && c.vsCurrency !== 'usd') params.vsCurrency = c.vsCurrency;
+    if (c.perPage && c.perPage !== 100) params.perPage = c.perPage;
+    if (c.sortOrder && c.sortOrder !== 'market_cap_desc') params.sortOrder = c.sortOrder;
 
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
     if (needsOhlc) {
@@ -28,22 +41,39 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       params.coinId = c.coinId || ohlcWidget?.props?.coinId || 'bitcoin';
       params.days = c.days || ohlcWidget?.props?.days || 30;
     }
-    // Check for multi-coin OHLC
     const needsMultiOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc_multi'));
     if (needsMultiOhlc) {
       const multiWidget = definition.widgets.find((w) => w.props?.coinIds);
       params.coinIds = c.coinIds.length > 0 ? c.coinIds : multiWidget?.props?.coinIds;
       params.days = c.days || multiWidget?.props?.days || 30;
     }
-    // Check for coin history
     const needsHistory = definition.widgets.some((w) => w.dataEndpoints.includes('coin_history'));
     if (needsHistory) {
       const histWidget = definition.widgets.find((w) => w.props?.coinId && w.dataEndpoints.includes('coin_history'));
       params.historyCoinId = c.coinId || histWidget?.props?.coinId || 'bitcoin';
       params.historyDays = c.days || histWidget?.props?.days || 90;
     }
+    const needsDetail = definition.widgets.some((w) => w.dataEndpoints.includes('coin_detail'));
+    if (needsDetail) {
+      const detailWidget = definition.widgets.find((w) => w.props?.coinId);
+      params.detailCoinId = c.coinId || detailWidget?.props?.coinId || 'bitcoin';
+    }
     fetchData(definition.requiredEndpoints, params);
   }, [definition, fetchData, customization]);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (autoRefreshInterval > 0 && apiKey) {
+      intervalRef.current = setInterval(handleRefresh, autoRefreshInterval * 1000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoRefreshInterval, apiKey, handleRefresh]);
 
   const timeAgo = lastFetched
     ? `${Math.round((Date.now() - lastFetched) / 1000)}s ago`
@@ -97,6 +127,32 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
           {/* Share */}
           <ShareButton slug={definition.slug} />
+
+          {/* Auto-refresh selector */}
+          <div className="flex items-center gap-1">
+            <div className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl border text-[10px] font-medium transition ${
+              autoRefreshInterval > 0
+                ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
+                : 'bg-white/[0.04] border-white/[0.06] text-gray-500'
+            }`}>
+              <Timer className="w-3 h-3" />
+              {autoRefreshInterval > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              )}
+              <select
+                value={autoRefreshInterval}
+                onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+                className="bg-transparent outline-none cursor-pointer text-[10px] appearance-none pr-1"
+                title="Auto-refresh interval"
+              >
+                {AUTO_REFRESH_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-gray-900 text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Refresh button */}
           <button

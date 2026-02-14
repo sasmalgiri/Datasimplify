@@ -15,17 +15,21 @@ export function ExchangeVolumeWidget() {
   const { data } = useLiveDashboardStore();
 
   const option = useMemo(() => {
-    // Try exchanges data first
-    if (data.exchanges && Array.isArray(data.exchanges) && data.exchanges.length > 0) {
-      const exchanges = data.exchanges
-        .filter((e: any) => e.trade_volume_24h_btc != null)
+    // Try derivatives exchanges, then regular exchanges
+    const rawExchanges = (data.derivativesExchanges && data.derivativesExchanges.length > 0)
+      ? data.derivativesExchanges
+      : data.exchanges;
+
+    if (rawExchanges && Array.isArray(rawExchanges) && rawExchanges.length > 0) {
+      const exchanges = rawExchanges
+        .filter((e: any) => e.trade_volume_24h_btc != null || e.open_interest_btc != null)
         .slice(0, 15);
 
       if (exchanges.length > 0) {
         const names = exchanges.map((e: any) =>
           e.name?.length > 14 ? e.name.slice(0, 14) + '..' : e.name,
         );
-        const volumes = exchanges.map((e: any) => e.trade_volume_24h_btc);
+        const volumes = exchanges.map((e: any) => Number(e.trade_volume_24h_btc) || e.open_interest_btc || 0);
 
         return {
           ...ECHARTS_THEME,
@@ -118,7 +122,7 @@ export function ExchangeVolumeWidget() {
       }],
       animationEasing: 'cubicOut' as const,
     };
-  }, [data.exchanges, data.markets]);
+  }, [data.exchanges, data.derivativesExchanges, data.markets]);
 
   if (!option) {
     return (

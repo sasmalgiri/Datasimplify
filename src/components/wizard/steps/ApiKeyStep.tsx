@@ -61,7 +61,7 @@ export function ApiKeyStep() {
               Enter Your CoinGecko API Key
             </h2>
             <p className="text-gray-400 text-sm">
-              Your key is used to fetch live data and embedded in your Excel file for Power Query refresh.
+              Your key is used to fetch data for your Excel template.
             </p>
           </div>
 
@@ -155,7 +155,7 @@ export function ApiKeyStep() {
           <div className="flex items-start gap-2 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
             <Shield className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-gray-400">
-              Your API key is used only for this download and embedded in your Excel file for Power Query refresh. It is never stored on our servers.
+              Your API key is used only for this download to prefetch data. It is never stored on our servers.
             </p>
           </div>
         </div>

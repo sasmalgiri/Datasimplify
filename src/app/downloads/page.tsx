@@ -85,7 +85,7 @@ export default function DownloadsPage() {
               {/* Main Download Options */}
               <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-5">
-                  <div className="text-lg font-semibold">Power Query Templates</div>
+                  <div className="text-lg font-semibold">Excel Data Templates</div>
                   <div className="text-gray-400 text-sm mt-1">
                     Templates ship with prefetched crypto data, ready to use.
                   </div>

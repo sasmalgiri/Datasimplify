@@ -26,6 +26,19 @@ import { CoinCompareWidget } from './widgets/CoinCompareWidget';
 import { ExchangeVolumeWidget } from './widgets/ExchangeVolumeWidget';
 import { SupplyWidget } from './widgets/SupplyWidget';
 import { MarketCapTimelineWidget } from './widgets/MarketCapTimelineWidget';
+// Phase 3 widgets
+import { BubbleChartWidget } from './widgets/BubbleChartWidget';
+import { AltseasonWidget } from './widgets/AltseasonWidget';
+import { HistoricalPriceWidget } from './widgets/HistoricalPriceWidget';
+import { DerivativesTableWidget } from './widgets/DerivativesTableWidget';
+import { PerformanceHeatmapWidget } from './widgets/PerformanceHeatmapWidget';
+import { MiniSparklineGrid } from './widgets/MiniSparklineGrid';
+// Phase 4 comparison widgets
+import { BoxPlotWidget } from './widgets/BoxPlotWidget';
+import { ReturnsBarWidget } from './widgets/ReturnsBarWidget';
+// Phase 5 advanced charts
+import { AreaChartWidget } from './widgets/AreaChartWidget';
+import { WaterfallChartWidget } from './widgets/WaterfallChartWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -48,6 +61,16 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   ExchangeVolumeWidget,
   SupplyWidget,
   MarketCapTimelineWidget,
+  BubbleChartWidget,
+  AltseasonWidget,
+  HistoricalPriceWidget,
+  DerivativesTableWidget,
+  PerformanceHeatmapWidget,
+  MiniSparklineGrid,
+  BoxPlotWidget,
+  ReturnsBarWidget,
+  AreaChartWidget,
+  WaterfallChartWidget,
 };
 
 interface DashboardWidgetProps {

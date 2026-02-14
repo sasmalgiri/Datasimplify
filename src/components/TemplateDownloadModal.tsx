@@ -34,7 +34,7 @@ const FREE_DOWNLOAD_LIMIT = 5;
  * Template Download Modal
  *
  * Gates template downloads with clear requirements and warnings.
- * Offers 2 content types: With Charts (native Excel), Data Only (Power Query tables)
+ * Offers 2 content types: With Charts (native Excel), Data Only (tables)
  */
 export function TemplateDownloadModal({
   isOpen,
@@ -524,7 +524,7 @@ export function TemplateDownloadModal({
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
-                <span>Just Power Query data tables, no charts</span>
+                <span>Just data tables, no charts</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="mt-0.5">•</span>
@@ -553,7 +553,7 @@ export function TemplateDownloadModal({
           <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-1.5">
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Microsoft Excel Desktop (2016 or later) with <strong>Power Query</strong></span>
+              <span>Microsoft Excel Desktop (2016 or later)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
@@ -561,7 +561,7 @@ export function TemplateDownloadModal({
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
-              <span>Internet connection (Power Query fetches live data)</span>
+              <span>Internet connection (for downloading templates)</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-600 dark:text-emerald-400 mt-0.5">✓</span>
@@ -657,7 +657,7 @@ export function TemplateDownloadModal({
           />
           <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white">
             I understand this template requires a <strong>free CoinGecko API key</strong> (pasted in Excel&apos;s Settings sheet)
-            and <strong>Excel Desktop with Power Query</strong> to fetch live data.
+            and <strong>Excel Desktop</strong> to view and analyze data.
           </span>
         </label>
 

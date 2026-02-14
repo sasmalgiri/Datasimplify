@@ -238,7 +238,7 @@ export default function ReportKitPage() {
             {/* Preview Footer */}
             <div className="px-4 py-3 bg-emerald-900/20 border-t border-emerald-500/30">
               <p className="text-xs text-emerald-400 text-center">
-                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, Power Query will fetch the latest data using your own API key (BYOK).
+                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, you can analyze the prefetched data immediately. Use our live dashboards for real-time data.
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@ export default function ReportKitPage() {
                   <h3 className="font-medium text-gray-900 capitalize">
                     {templateId.replace(/_/g, ' ')}
                   </h3>
-                  <p className="text-sm text-gray-500">Power Query template (BYOK)</p>
+                  <p className="text-sm text-gray-500">Excel data template (BYOK)</p>
                 </div>
                 <button
                   type="button"

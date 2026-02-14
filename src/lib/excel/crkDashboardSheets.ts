@@ -11,7 +11,7 @@
  * - Consistent navigation bar on every sheet
  * - Native Excel charts (via chartInjector post-processing)
  *
- * Dual-mode: same xlsx has both CRK formulas AND Power Query connections.
+ * Dual-mode: same xlsx has both CRK formulas AND data connections.
  */
 
 import ExcelJS from 'exceljs';

@@ -109,9 +109,9 @@ export default function DisclaimerPage() {
 
           {/* Template Requirements */}
           <section className="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-6">
-            <h2 className="text-2xl font-semibold text-emerald-400 mb-4">Power Query Template Requirements (BYOK)</h2>
+            <h2 className="text-2xl font-semibold text-emerald-400 mb-4">Excel Template Requirements (BYOK)</h2>
             <div className="space-y-4">
-              <p>Our Excel templates use a <strong>BYOK (Bring Your Own Key)</strong> architecture with Power Query:</p>
+              <p>Our Excel templates use a <strong>BYOK (Bring Your Own Key)</strong> architecture:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li><strong>Microsoft Excel Desktop</strong> (Windows or Mac) or Excel Online</li>
                 <li><strong>Templates include prefetched data</strong> - ready to use out of the box</li>
@@ -119,9 +119,7 @@ export default function DisclaimerPage() {
                 <li><strong>Active internet connection</strong> for data retrieval</li>
               </ul>
               <p className="mt-4">
-                Templates contain <strong>Power Query code only</strong> - no market data is embedded.
-                When you refresh, Power Query fetches live data using your API key stored in Excel.
-                Your key never leaves your workbook.
+                Templates contain <strong>prefetched market data</strong>. For the latest data, download a fresh template or use our live dashboards.
               </p>
               <Link
                 href="/template-requirements"

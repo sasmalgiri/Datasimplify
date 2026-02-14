@@ -144,7 +144,7 @@ export async function generateTemplate(
   // This is the most important sheet - shown first when file opens
   await createSettingsSheet(workbook, baseTemplate, userConfig);
 
-  // 4. Add DATA sheet(s) with Power Query formulas
+  // 4. Add DATA sheet(s) with data
   const dataSheets = baseTemplate.sheets.filter((s) => s.type === 'data');
   for (const sheetDef of dataSheets) {
     await createDataSheet(workbook, baseTemplate, userConfig, sheetDef);
@@ -396,8 +396,8 @@ async function createSettingsSheet(
   const notes = [
     BYOK_EXCEL_NOTE,
     '• Free tier: 10,000 API calls/month (plenty for most users)',
-    '• Requires Excel Desktop with Power Query (2016 or later)',
-    '• Excel Online does NOT support Power Query',
+    '• Requires Excel Desktop (2016 or later)',
+    '• Excel Online has limited functionality',
   ];
 
   for (const note of notes) {

@@ -1119,13 +1119,13 @@ function buildNavButtonDefs(
 // ============================================
 
 /**
- * Generates a BYOK Excel template with Power Query setup.
+ * Generates a BYOK Excel template with prefetched data.
  * NO data is fetched by the server - the template contains:
  * - Settings sheet with API key cell + named range
- * - Power Query Setup sheet with M code calling CoinGecko DIRECTLY
+ * - Setup sheet with API key configuration
  * - Documentation sheet
  *
- * The user pastes their own CoinGecko API key and sets up Power Query.
+ * The user pastes their own CoinGecko API key for data refresh.
  * All data flows directly from CoinGecko to Excel. Server never touches data.
  */
 export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffer> {
@@ -1390,7 +1390,7 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
     sheet.getCell('B27').value = 'Output Mode:';
     const modeLabels: Record<string, string> = {
       static: '📊 Static Report',
-      live: '⚡ Live Excel (Power Query)',
+      live: '⚡ Live Excel (BYOK)',
       interactive: '🚀 Interactive (Web Dashboard)',
     };
     sheet.getCell('C27').value = modeLabels[options.outputMode] || options.outputMode;
@@ -1428,14 +1428,14 @@ function addSettingsSheet(workbook: ExcelJS.Workbook, options: GenerateOptions) 
 
   const notes = [
     BYOK_EXCEL_NOTE,
-    '• Requires Excel Desktop (2016+) with Power Query',
-    '• Excel Online does NOT support Power Query refresh',
+    '• Requires Excel Desktop (2016+)',
+    '• Excel Online has limited functionality',
     '• Data refreshes when you click Refresh All',
     '• Some features require Pro CoinGecko API key',
   ];
 
   if (options.outputMode === 'live') {
-    notes.push('• See "Power Query Setup" sheet for live data instructions');
+    notes.push('• See "Setup" sheet for live data instructions');
   }
 
   notes.forEach((note, i) => {

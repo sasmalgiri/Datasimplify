@@ -370,12 +370,12 @@ export async function GET() {
         requiresAddons: [],
         supportedFormats: ['xlsx'],
         supportedContentTypes: [
-          { id: 'native_charts', name: 'Power Query Template', description: 'BYOK template with Power Query M code - connects directly to CoinGecko with your API key (recommended)' },
-          { id: 'formulas_only', name: 'Data Only Template', description: 'BYOK template with Power Query data queries only, no charts' },
+          { id: 'native_charts', name: 'Excel Data Template', description: 'BYOK template with prefetched data from CoinGecko (recommended)' },
+          { id: 'formulas_only', name: 'Data Only Template', description: 'BYOK template with data tables only, no charts' },
         ],
         dataIncluded: false,
         byok: true,
-        powerQuery: true,
+        prefetchedData: true,
         standalone: true, // templates ship with prefetched data, no add-in needed
         serverNeverTouchesData: true,
         dualMode: true,

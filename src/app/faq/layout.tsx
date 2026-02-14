@@ -58,7 +58,7 @@ const faqSchema = {
       name: 'Do I need to create an account to use CryptoReportKit?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No account is required to browse our analytics tools and charts. Creating a free account lets you access and download Power Query templates from your downloads portal.',
+        text: 'No account is required to browse our analytics tools and charts. Creating a free account lets you access and download Excel templates from your downloads portal.',
       },
     },
     {
@@ -66,12 +66,12 @@ const faqSchema = {
       name: 'What is BYOK (Bring Your Own Key)?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "BYOK means you provide your own CoinGecko API key. Your key stays in Excel - it never touches our servers. Power Query uses YOUR key to fetch data directly from CoinGecko.",
+        text: "BYOK means you provide your own CoinGecko API key. Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For live data, use our web dashboards with YOUR key.",
       },
     },
     {
       '@type': 'Question',
-      name: 'What are CryptoReportKit Power Query Templates?',
+      name: 'What are CryptoReportKit Excel Templates?',
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For real-time data, use the live dashboards on our website with BYOK.',
@@ -90,7 +90,7 @@ const faqSchema = {
       name: 'Do templates include market data?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No. Templates contain Power Query code only - no market data is embedded. Data is fetched via Power Query using your own API key when you refresh. CryptoReportKit is software tooling, not a data vendor.',
+        text: 'Yes! Templates ship with prefetched market data from CoinGecko, ready to analyze immediately. For the latest data, download a fresh template or use our live dashboards.',
       },
     },
     {
@@ -98,7 +98,7 @@ const faqSchema = {
       name: 'Why do I need my own API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, paste it in your Excel workbook, and Power Query uses YOUR key to fetch data. Your key never leaves Excel.',
+        text: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, and your key stays in your Excel file. For live dashboards, your key stays in browser sessionStorage.',
       },
     },
     {
@@ -106,7 +106,7 @@ const faqSchema = {
       name: 'How often is the data updated?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "Update frequency depends on your CoinGecko API plan. Click 'Data > Refresh All' in Excel to fetch fresh data using Power Query. Free keys have rate limits; Pro keys have higher limits.",
+        text: "Download a fresh template for the latest data, or use our live dashboards for real-time updates. Update frequency on live dashboards depends on your CoinGecko API plan.",
       },
     },
     {
@@ -114,15 +114,15 @@ const faqSchema = {
       name: 'Is the data accurate?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Data accuracy depends on CoinGecko. CryptoReportKit provides the Power Query code to fetch and display data - we do not guarantee accuracy or completeness of third-party data sources.',
+        text: 'Data accuracy depends on CoinGecko. CryptoReportKit provides Excel templates with prefetched data - we do not guarantee accuracy or completeness of third-party data sources.',
       },
     },
     {
       '@type': 'Question',
-      name: 'How does Power Query work?',
+      name: 'How do the templates work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Power Query is Excel\'s built-in data transformation tool. Our templates include M code (Power Query\'s language) that fetches data from CoinGecko using your API key. Just paste your key and refresh!',
+        text: 'Our Excel templates are generated with the latest crypto data from CoinGecko already included. Just download, open in Excel, and start analyzing. For live data, use our web-based dashboards with your own CoinGecko API key.',
       },
     },
     {
@@ -135,10 +135,10 @@ const faqSchema = {
     },
     {
       '@type': 'Question',
-      name: 'How do I set up Power Query templates?',
+      name: 'How do I use the Excel templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'See our Setup Guide. Steps: 1) Get a free CoinGecko API key at coingecko.com/api, 2) Download a template from your CRK downloads portal, 3) Open in Excel, paste your API key in the designated cell, 4) Click Data > Refresh All.',
+        text: 'Steps: 1) Download a template from the downloads page, 2) Open the .xlsx file in Excel, 3) Analyze the prefetched data. For real-time data, visit our live dashboards page.',
       },
     },
     {
@@ -154,7 +154,7 @@ const faqSchema = {
       name: 'Is my data private?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! With Power Query templates, your API key stays in Excel - it never touches our servers. Data flows directly from CoinGecko to your Excel workbook.',
+        text: 'Yes! With Excel templates, data is prefetched server-side. With live dashboards, your API key stays in your browser - it never touches our servers.',
       },
     },
   ],

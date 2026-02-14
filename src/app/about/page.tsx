@@ -33,10 +33,10 @@ export default function AboutPage() {
           <h2 className="text-2xl font-semibold text-white mb-4">What We Provide</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">
-              <h3 className="font-semibold text-emerald-400 mb-2">Power Query Templates</h3>
+              <h3 className="font-semibold text-emerald-400 mb-2">Excel Data Templates</h3>
               <p className="text-gray-400 text-sm">
-                Pre-built Excel template packs with Power Query code. Templates contain code only -
-                no embedded market data. Data is fetched using your own API key stored in Excel.
+                Pre-built Excel templates with prefetched crypto data. Templates are ready to use immediately.
+                For live data, use our web dashboards with your own API key.
               </p>
             </div>
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">

@@ -99,7 +99,7 @@ export function SuccessStep({ onClose }: SuccessStepProps) {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors text-sm"
             >
-              Power Query Requirements
+              Template Requirements
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>

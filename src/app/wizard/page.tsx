@@ -522,9 +522,9 @@ const outputModes = [
   {
     id: 'live' as OutputMode,
     name: 'Live Excel',
-    description: 'Auto-refreshing data with Power Query. Best for daily analysis.',
+    description: 'Prefetched data in Excel. Best for snapshot analysis.',
     icon: '⚡',
-    features: ['Power Query', 'Auto-refresh', 'Live prices', 'Editable'],
+    features: ['Prefetched Data', 'Ready to Use', 'Charts Included', 'Editable'],
     recommended: true,
   },
   {
@@ -1139,7 +1139,7 @@ export default function WizardPage() {
                       )}
                       {outputMode === 'live' && (
                         <>
-                          <p className="text-xs text-gray-400">⚡ Power Query connections for live data</p>
+                          <p className="text-xs text-gray-400">⚡ Prefetched data included</p>
                           <p className="text-xs text-gray-400">🔄 Auto-refresh at your chosen interval</p>
                           <p className="text-xs text-gray-400">📋 Setup instructions included</p>
                         </>
@@ -1237,7 +1237,7 @@ export default function WizardPage() {
                 </ul>
               </div>
 
-              {/* Power Query Setup (shown for Live mode) */}
+              {/* Excel Template Info (shown for Live mode) */}
               {outputMode === 'live' && (
                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -1246,7 +1246,7 @@ export default function WizardPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-white">Enable Live Refresh</h3>
-                      <p className="text-xs text-gray-400">Power Query is pre-configured</p>
+                      <p className="text-xs text-gray-400">Data is prefetched</p>
                     </div>
                   </div>
 
@@ -1261,7 +1261,7 @@ export default function WizardPage() {
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="flex-shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">3</span>
-                      <span>See the "Power Query Setup" sheet for advanced options</span>
+                      <span>See the "Setup" sheet for options</span>
                     </li>
                   </ol>
 

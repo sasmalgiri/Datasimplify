@@ -14,11 +14,11 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'CryptoReportKit - Power Query Templates for Crypto',
+    default: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
     template: '%s | CryptoReportKit'
   },
   description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture. Educational analytics tools.',
-  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'power query crypto', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
+  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'excel crypto data', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
 
   // Favicon & Icons
   icons: {
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: 'CryptoReportKit',
-    title: 'CryptoReportKit - Power Query Templates for Crypto',
+    title: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
     description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
     images: [
       {
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'CryptoReportKit - Power Query Templates for Crypto',
+    title: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
     description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
     images: [`${siteUrl}/og-image.png`],
     creator: '@cryptoreportkit',

@@ -194,7 +194,7 @@ export default function DownloadPage() {
             {/* Compact Disclaimer */}
             <div className="text-center">
               <p className="text-gray-500 text-xs">
-                Templates generated on this page use Power Query (BYOK). Your API key stays in Excel.
+                Templates include prefetched crypto data. For live data, use our web dashboards.
                 <Link href="/disclaimer" className="text-emerald-400 hover:underline ml-1">Disclaimer</Link>
               </p>
             </div>
@@ -212,7 +212,7 @@ export default function DownloadPage() {
           coins: selectedCoins,
           timeframe: selectedTimeframe,
           currency: 'USD',
-          formulaMode: 'crk', // Power Query templates
+          formulaMode: 'crk', // Excel data templates
           customizations: {
             includeCharts,
             refreshFrequency,

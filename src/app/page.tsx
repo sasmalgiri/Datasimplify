@@ -165,7 +165,7 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                {isSimple ? 'Live Crypto Data in Excel' : 'Power Query Templates for Crypto'}
+                {isSimple ? 'Live Crypto Data in Excel' : 'Excel Templates for Crypto'}
               </span>
               {isPro && (
                 <>
@@ -197,7 +197,7 @@ export default function LandingPage() {
                       <div className="font-semibold text-white flex items-center gap-1">
                         Download <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
                       </div>
-                      <div className="text-xs text-gray-400">Get Power Query code</div>
+                      <div className="text-xs text-gray-400">Get Excel template</div>
                     </div>
                   </Link>
                   <Link
@@ -227,7 +227,7 @@ export default function LandingPage() {
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
                 >
                   <Download className="w-4 h-4" />
-                  Get Power Query Template
+                  Get Excel Template
                 </Link>
               </div>
             )}
@@ -240,7 +240,7 @@ export default function LandingPage() {
                     href="/downloads"
                     className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm hover:opacity-90 transition shadow-lg shadow-emerald-500/25"
                   >
-                    Download Power Query Templates
+                    Download Excel Templates
                   </Link>
                   <Link
                     href="/compare"
@@ -253,7 +253,7 @@ export default function LandingPage() {
                 <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-xs">
                   <div className="flex items-center gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Power Query + BYOK</span>
+                    <span>Excel + BYOK</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-green-400">✓</span>
@@ -273,7 +273,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               <Link href="/downloads" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
                 <div className="text-3xl mb-2">📊</div>
-                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Power Query Templates</h3>
+                <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Excel Data Templates</h3>
                 <p className="text-gray-400 text-sm">Live crypto data in Excel</p>
               </Link>
               <Link href="/compare" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
@@ -309,7 +309,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-4 gap-4 text-center">
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-emerald-400">⚡</div>
-                <div className="text-gray-400 text-xs">Power Query</div>
+                <div className="text-gray-400 text-xs">Excel Data</div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-bold text-purple-400">100+</div>
@@ -389,7 +389,7 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {[
-                { icon: '�', title: 'Power Query', desc: 'Live crypto data in Excel', href: '/downloads' },
+                { icon: '�', title: 'Excel Data', desc: 'Crypto data in Excel', href: '/downloads' },
                 { icon: '⚖️', title: 'Coin Compare', desc: 'Side-by-side + What If calc', href: '/compare' },
                 { icon: '🔐', title: 'Contract Verify', desc: 'Sourcify verification', href: '/smart-contract-verifier' },
                 { icon: '📚', title: 'Learn', desc: 'Academy guides + glossary', href: '/learn' },
@@ -471,7 +471,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg font-semibold text-sm shadow-lg"
           >
             {isSimple && <Download className="w-4 h-4" />}
-            {isSimple ? 'Get Templates' : 'Download Power Query Templates'}
+            {isSimple ? 'Get Templates' : 'Download Excel Templates'}
           </Link>
         </div>
       </section>

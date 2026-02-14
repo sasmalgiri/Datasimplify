@@ -149,9 +149,9 @@ export default function BYOKPage() {
                 5
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Add Key to Power Query</h3>
+                <h3 className="font-semibold text-lg mb-2">Add Key to Excel Template</h3>
                 <p className="text-gray-300 mb-3">
-                  Add your API key to Excel for use with Power Query:
+                  Add your API key to Excel for live data refresh:
                 </p>
                 <ol className="list-decimal list-inside text-gray-400 text-sm space-y-1 ml-4">
                   <li>Create a named cell (e.g., &quot;ApiKey&quot;) on a Settings sheet</li>
@@ -228,7 +228,7 @@ export default function BYOKPage() {
             >
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-4 h-4 text-emerald-400" />
-                <h3 className="font-semibold">Power Query Setup Guide</h3>
+                <h3 className="font-semibold">Excel Template Setup Guide</h3>
               </div>
               <p className="text-sm text-gray-400">How to use our templates in Excel</p>
             </Link>
@@ -241,7 +241,7 @@ export default function BYOKPage() {
                 <Key className="w-4 h-4 text-emerald-400" />
                 <h3 className="font-semibold">Download Templates</h3>
               </div>
-              <p className="text-sm text-gray-400">Get free and Pro Power Query templates</p>
+              <p className="text-sm text-gray-400">Get free and Pro Excel templates</p>
             </Link>
           </div>
         </div>
@@ -276,7 +276,7 @@ export default function BYOKPage() {
             <div>
               <h3 className="font-medium text-white mb-1">What if I exceed my CoinGecko rate limit?</h3>
               <p className="text-sm text-gray-400">
-                Power Query will show an error. Reduce refresh frequency or upgrade to CoinGecko Pro for higher limits.
+                Excel will show an error. Reduce refresh frequency or upgrade to CoinGecko Pro for higher limits.
               </p>
             </div>
 
@@ -297,7 +297,7 @@ export default function BYOKPage() {
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition"
           >
             <Key className="w-5 h-5" />
-            Get Power Query Templates
+            Get Excel Templates
           </Link>
         </div>
 

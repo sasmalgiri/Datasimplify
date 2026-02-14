@@ -47,6 +47,12 @@ export default function LiveDashboardPage() {
       params.historyCoinId = c.coinId || histWidget?.props?.coinId || 'bitcoin';
       params.historyDays = c.days || histWidget?.props?.days || 90;
     }
+    // Coin detail
+    const needsDetail = definition.widgets.some((w) => w.dataEndpoints.includes('coin_detail'));
+    if (needsDetail) {
+      const detailWidget = definition.widgets.find((w) => w.props?.coinId);
+      params.detailCoinId = c.coinId || detailWidget?.props?.coinId || 'bitcoin';
+    }
     fetchData(definition.requiredEndpoints, params);
     setInitialLoaded(true);
   }, [definition, apiKey, fetchData, customization]);

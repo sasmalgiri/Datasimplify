@@ -376,7 +376,7 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
             </Link>
           </div>
 
-          {/* CRK Power Query Link */}
+          {/* CRK Templates Link */}
           <div className="text-center pt-2 border-t border-gray-700">
             <p className="text-xs text-gray-500">
               Powered by{' '}
@@ -386,7 +386,7 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
               >
                 CryptoReportKit
               </Link>
-              {' '}Power Query Templates (BYOK)
+              {' '}Excel Templates (BYOK)
             </p>
           </div>
         </div>
