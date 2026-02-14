@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Activity, X } from 'lucide-react';
 import { useLiveDashboardStore, calculateApiCallsForDefinition } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
@@ -12,8 +13,6 @@ interface ApiUsagePillProps {
 export function ApiUsagePill({ definition }: ApiUsagePillProps) {
   const { apiUsage, autoRefreshInterval, keyType, customization } = useLiveDashboardStore();
   const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, right: 0 });
 
   const callsPerRefresh = calculateApiCallsForDefinition(
     definition.requiredEndpoints,
@@ -36,28 +35,6 @@ export function ApiUsagePill({ definition }: ApiUsagePillProps) {
   const statusColor = usagePercent > 80 ? 'text-red-400' : usagePercent > 50 ? 'text-yellow-400' : 'text-emerald-400';
   const barColor = usagePercent > 80 ? 'bg-red-400' : usagePercent > 50 ? 'bg-yellow-400' : 'bg-emerald-400';
 
-  const computePosition = useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({
-        top: rect.bottom + 8,
-        right: Math.max(8, window.innerWidth - rect.right),
-      });
-    }
-  }, []);
-
-  const handleOpen = () => {
-    computePosition();
-    setOpen((v) => !v);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const onResize = () => computePosition();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [open, computePosition]);
-
   const formatDuration = (ms: number) => {
     const mins = Math.floor(ms / 60000);
     if (mins < 60) return `${mins}m`;
@@ -66,11 +43,10 @@ export function ApiUsagePill({ definition }: ApiUsagePillProps) {
   };
 
   return (
-    <div className="relative">
+    <>
       <button
-        ref={triggerRef}
         type="button"
-        onClick={handleOpen}
+        onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-medium transition border ${statusColor} ${
           open ? 'bg-white/[0.08] border-white/[0.15]' : 'bg-white/[0.04] border-white/[0.06] hover:bg-white/[0.08]'
         }`}
@@ -80,25 +56,32 @@ export function ApiUsagePill({ definition }: ApiUsagePillProps) {
         ~{callsPerRefresh} calls
       </button>
 
-      {open && (
+      {open && typeof document !== 'undefined' && createPortal(
         <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          {/* Backdrop */}
           <div
-            className="fixed z-[9999] w-[280px] bg-[#0f0f18] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden"
-            style={{ top: pos.top, right: pos.right }}
+            className="fixed inset-0 bg-black/40"
+            style={{ zIndex: 99998 }}
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Centered modal */}
+          <div
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] max-w-[90vw] bg-[#0c0c14] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden"
+            style={{ zIndex: 99999 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-              <h3 className="text-xs font-semibold text-white flex items-center gap-1.5">
-                <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" />
                 API Usage
               </h3>
               <button type="button" onClick={() => setOpen(false)} className="text-gray-500 hover:text-white transition" title="Close">
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-4 space-y-4">
+            <div className="p-5 space-y-4">
               {/* Per-refresh */}
               <div className="flex justify-between text-xs">
                 <span className="text-gray-500">Calls per refresh</span>
@@ -121,11 +104,11 @@ export function ApiUsagePill({ definition }: ApiUsagePillProps) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-lg font-bold text-white">{apiUsage.totalApiCalls}</div>
+                  <div className="text-xl font-bold text-white">{apiUsage.totalApiCalls}</div>
                   <div className="text-[10px] text-gray-600">Total Calls</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-white">{apiUsage.refreshCount}</div>
+                  <div className="text-xl font-bold text-white">{apiUsage.refreshCount}</div>
                   <div className="text-[10px] text-gray-600">Refreshes</div>
                 </div>
               </div>
@@ -156,8 +139,9 @@ export function ApiUsagePill({ definition }: ApiUsagePillProps) {
               </div>
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }

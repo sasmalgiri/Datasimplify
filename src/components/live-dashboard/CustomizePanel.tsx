@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, X, RotateCcw } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization } from '@/lib/live-dashboard/store';
@@ -111,31 +112,11 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
   const { customization, setCustomization, resetCustomization } = useLiveDashboardStore();
   const [open, setOpen] = useState(false);
   const [local, setLocal] = useState<DashboardCustomization>(customization);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const [panelPos, setPanelPos] = useState({ top: 0, right: 0 });
-
-  const computePosition = useCallback(() => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPanelPos({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
-    }
-  }, []);
 
   const handleOpen = () => {
     setLocal(customization);
-    computePosition();
     setOpen(true);
   };
-
-  useEffect(() => {
-    if (!open) return;
-    const onResize = () => computePosition();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [open, computePosition]);
 
   const handleApply = () => {
     setCustomization(local);
@@ -167,7 +148,6 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
     customization.chartHeight !== 'normal' || customization.dataLimit !== 0 || customization.colorTheme !== 'emerald' ||
     !customization.showAnimations || customization.tableDensity !== 'normal' || customization.chartStyle !== 'smooth';
 
-  // Shared button style helper
   const btnClass = (active: boolean) =>
     `px-2 py-1.5 rounded-lg text-xs font-medium transition ${
       active
@@ -176,9 +156,8 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
     }`;
 
   return (
-    <div className="relative">
+    <>
       <button
-        ref={triggerRef}
         type="button"
         onClick={handleOpen}
         className={`p-2 rounded-xl transition border ${
@@ -191,28 +170,33 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
         <Settings className="w-4 h-4" />
       </button>
 
-      {open && (
+      {open && typeof document !== 'undefined' && createPortal(
         <>
-          {/* Backdrop — fixed so it's above everything */}
-          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
-
-          {/* Panel — fixed positioning to escape stacking context */}
+          {/* Backdrop */}
           <div
-            className="fixed z-[9999] w-[340px] bg-[#0f0f18] border border-white/[0.1] rounded-2xl shadow-2xl overflow-hidden"
-            style={{ top: panelPos.top, right: panelPos.right }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+            style={{ zIndex: 99998 }}
+            onClick={() => setOpen(false)}
+          />
+
+          {/* Right-side drawer */}
+          <div
+            className="fixed top-0 right-0 h-full w-[360px] max-w-[90vw] bg-[#0c0c14] border-l border-white/[0.08] shadow-2xl flex flex-col"
+            style={{ zIndex: 99999 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06] shrink-0">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Settings className="w-4 h-4 text-emerald-400" />
                 Customize Dashboard
               </h3>
-              <button type="button" onClick={() => setOpen(false)} className="text-gray-500 hover:text-white transition">
+              <button type="button" onClick={() => setOpen(false)} className="text-gray-500 hover:text-white transition" title="Close panel">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5">
               {/* ─── Data Controls ─── */}
               <div className="text-[10px] uppercase tracking-widest text-gray-600 font-semibold">Data Controls</div>
 
@@ -475,8 +459,8 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 px-5 py-4 border-t border-white/[0.06]">
+            {/* Sticky actions at bottom */}
+            <div className="flex items-center gap-2 px-5 py-4 border-t border-white/[0.06] shrink-0">
               <button
                 type="button"
                 onClick={handleReset}
@@ -494,8 +478,9 @@ export function CustomizePanel({ onApply }: CustomizePanelProps) {
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }
