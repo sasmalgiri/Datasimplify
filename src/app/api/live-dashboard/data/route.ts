@@ -100,6 +100,12 @@ export async function POST(req: NextRequest) {
   const keyType = detectKeyType(apiKey);
   const result: Record<string, any> = {};
 
+  // Sanitize coin IDs to prevent path traversal
+  const safeCoinId = (id: unknown): string | null => {
+    if (typeof id !== 'string' || id.length === 0 || id.length > 100) return null;
+    return /^[a-z0-9_-]+$/i.test(id) ? id.toLowerCase() : null;
+  };
+
   // Fetch each endpoint in parallel
   const fetchers: Promise<void>[] = [];
 
@@ -155,24 +161,27 @@ export async function POST(req: NextRequest) {
         );
         break;
 
-      case 'ohlc':
-        if (params?.coinId) {
+      case 'ohlc': {
+        const coinId = safeCoinId(params?.coinId);
+        if (coinId) {
           fetchers.push(
-            fetchCoinGecko(`/coins/${params.coinId}/ohlc`, apiKey, keyType, {
+            fetchCoinGecko(`/coins/${coinId}/ohlc`, apiKey, keyType, {
               vs_currency: params?.vsCurrency || 'usd',
               days: String(params?.days || 30),
             })
               .then((data) => {
-                result.ohlc = { ...(result.ohlc || {}), [params.coinId]: data };
+                result.ohlc = { ...(result.ohlc || {}), [coinId]: data };
               })
               .catch((err) => { result.ohlcError = err.message; }),
           );
         }
         break;
+      }
 
       case 'ohlc_multi':
         if (params?.coinIds && Array.isArray(params.coinIds)) {
-          for (const cid of params.coinIds.slice(0, 5)) {
+          const validIds = params.coinIds.map(safeCoinId).filter(Boolean).slice(0, 5) as string[];
+          for (const cid of validIds) {
             fetchers.push(
               fetchCoinGecko(`/coins/${cid}/ohlc`, apiKey, keyType, {
                 vs_currency: params?.vsCurrency || 'usd',
@@ -201,10 +210,11 @@ export async function POST(req: NextRequest) {
         );
         break;
 
-      case 'coin_history':
-        if (params?.historyCoinId) {
+      case 'coin_history': {
+        const histCoinId = safeCoinId(params?.historyCoinId);
+        if (histCoinId) {
           fetchers.push(
-            fetchCoinGecko(`/coins/${params.historyCoinId}/market_chart`, apiKey, keyType, {
+            fetchCoinGecko(`/coins/${histCoinId}/market_chart`, apiKey, keyType, {
               vs_currency: params?.vsCurrency || 'usd',
               days: String(params?.historyDays || 90),
             })
@@ -213,11 +223,13 @@ export async function POST(req: NextRequest) {
           );
         }
         break;
+      }
 
-      case 'coin_detail':
-        if (params?.detailCoinId) {
+      case 'coin_detail': {
+        const detailId = safeCoinId(params?.detailCoinId);
+        if (detailId) {
           fetchers.push(
-            fetchCoinGecko(`/coins/${params.detailCoinId}`, apiKey, keyType, {
+            fetchCoinGecko(`/coins/${detailId}`, apiKey, keyType, {
               localization: 'false',
               tickers: 'false',
               community_data: 'true',
@@ -225,12 +237,13 @@ export async function POST(req: NextRequest) {
               sparkline: 'false',
             })
               .then((data) => {
-                result.coinDetail = { ...(result.coinDetail || {}), [params.detailCoinId]: data };
+                result.coinDetail = { ...(result.coinDetail || {}), [detailId]: data };
               })
               .catch((err) => { result.coinDetailError = err.message; }),
           );
         }
         break;
+      }
 
       case 'defi_global':
         fetchers.push(
@@ -263,14 +276,24 @@ export async function POST(req: NextRequest) {
 
   await Promise.allSettled(fetchers);
 
-  // Check if any critical data was fetched
-  const hasData = Object.keys(result).some((k) => !k.endsWith('Error'));
+  // Separate errors from data and include both in response
+  const errors: string[] = [];
+  for (const [k, v] of Object.entries(result)) {
+    if (k.endsWith('Error') && typeof v === 'string') {
+      errors.push(v);
+    }
+  }
+
+  const hasData = Object.keys(result).some((k) => !k.endsWith('Error') && !k.endsWith('Errors'));
   if (!hasData) {
-    const firstError = Object.entries(result).find(([k]) => k.endsWith('Error'));
     return NextResponse.json(
-      { error: firstError?.[1] || 'Failed to fetch data from CoinGecko' },
+      { error: errors[0] || 'Failed to fetch data from CoinGecko' },
       { status: 502 },
     );
+  }
+
+  if (errors.length > 0) {
+    result._partialErrors = errors;
   }
 
   return NextResponse.json(result);

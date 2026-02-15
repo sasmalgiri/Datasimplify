@@ -1,9 +1,10 @@
 'use client';
 
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
+import { useUserPrefsStore } from '@/lib/live-dashboard/user-prefs-store';
 import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Star } from 'lucide-react';
 
 function formatCompact(n: number): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -41,6 +42,7 @@ interface TopCoinsTableProps {
 
 export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
   const { data, customization } = useLiveDashboardStore();
+  const { watchlist, toggleWatchlist } = useUserPrefsStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
   const coins = data.markets?.slice(0, limit) || [];
 
@@ -59,11 +61,13 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
       <table className={`w-full ${density.text}`}>
         <thead>
           <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
+            <th className={`text-center ${density.py} px-1 w-8`} title="Watchlist"><Star className="w-3 h-3 inline" /></th>
             <th className={`text-left ${density.py} ${density.px}`}>#</th>
             <th className={`text-left ${density.py} ${density.px}`}>Coin</th>
             <th className={`text-right ${density.py} ${density.px}`}>Price</th>
             <th className={`text-right ${density.py} ${density.px}`}>24h %</th>
             <th className={`text-right ${density.py} ${density.px} hidden md:table-cell`}>7d %</th>
+            <th className={`text-right ${density.py} ${density.px} hidden md:table-cell`}>ATH Dist</th>
             <th className={`text-right ${density.py} ${density.px} hidden md:table-cell`}>Market Cap</th>
             <th className={`text-right ${density.py} ${density.px} hidden lg:table-cell`}>Volume (24h)</th>
             <th className={`text-center ${density.py} ${density.px} hidden lg:table-cell`}>7d Chart</th>
@@ -72,6 +76,16 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
         <tbody>
           {coins.map((coin: MarketCoin) => (
             <tr key={coin.id} className="border-b border-gray-800 hover:bg-gray-800/30 transition">
+              <td className={`${density.py} px-1 text-center`}>
+                <button
+                  type="button"
+                  onClick={() => toggleWatchlist(coin.id)}
+                  className="p-0.5 transition hover:scale-110"
+                  title={watchlist.includes(coin.id) ? 'Remove from watchlist' : 'Add to watchlist'}
+                >
+                  <Star className={`w-3.5 h-3.5 ${watchlist.includes(coin.id) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600 hover:text-gray-400'}`} />
+                </button>
+              </td>
               <td className={`${density.py} ${density.px} text-gray-400`}>{coin.market_cap_rank}</td>
               <td className={`${density.py} ${density.px}`}>
                 <div className="flex items-center gap-2">
@@ -98,6 +112,15 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
                   {(coin.price_change_percentage_7d_in_currency ?? 0) >= 0 ? '+' : ''}
                   {(coin.price_change_percentage_7d_in_currency ?? 0).toFixed(2)}%
                 </span>
+              </td>
+              <td className={`${density.py} ${density.px} text-right hidden md:table-cell`}>
+                {coin.ath_change_percentage != null ? (
+                  <span className={`text-xs font-medium ${coin.ath_change_percentage > -10 ? 'text-emerald-400' : coin.ath_change_percentage > -50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    {coin.ath_change_percentage.toFixed(1)}%
+                  </span>
+                ) : (
+                  <span className="text-gray-600">—</span>
+                )}
               </td>
               <td className={`${density.py} ${density.px} text-right text-gray-300 hidden md:table-cell`}>{formatCompact(coin.market_cap)}</td>
               <td className={`${density.py} ${density.px} text-right text-gray-300 hidden lg:table-cell`}>{formatCompact(coin.total_volume)}</td>

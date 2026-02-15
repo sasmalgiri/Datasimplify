@@ -17,14 +17,20 @@ export default function LiveDashboardPage() {
   const slug = params.slug as string;
   const definition = getDashboardBySlug(slug);
 
-  const { apiKey, fetchData, customization } = useLiveDashboardStore();
+  const { apiKey, fetchData } = useLiveDashboardStore();
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
   const loadData = useCallback(() => {
     if (!definition || !apiKey) return;
+    // Read customization fresh from store to avoid stale closure
+    const c = useLiveDashboardStore.getState().customization;
     const params: Record<string, any> = {};
-    const c = customization;
+
+    // Global customization params
+    if (c.vsCurrency && c.vsCurrency !== 'usd') params.vsCurrency = c.vsCurrency;
+    if (c.perPage && c.perPage !== 100) params.perPage = c.perPage;
+    if (c.sortOrder && c.sortOrder !== 'market_cap_desc') params.sortOrder = c.sortOrder;
 
     // OHLC
     const needsOhlc = definition.widgets.some((w) => w.dataEndpoints.includes('ohlc'));
@@ -55,7 +61,7 @@ export default function LiveDashboardPage() {
     }
     fetchData(definition.requiredEndpoints, params);
     setInitialLoaded(true);
-  }, [definition, apiKey, fetchData, customization]);
+  }, [definition, apiKey, fetchData]);
 
   // Auto-fetch on mount if key exists
   useEffect(() => {

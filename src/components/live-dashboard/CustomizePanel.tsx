@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, X, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
-import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { Settings, X, RotateCcw, ChevronDown, ChevronUp, LayoutGrid } from 'lucide-react';
+import { useLiveDashboardStore, DEFAULT_VISIBLE_WIDGET_COUNT } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization } from '@/lib/live-dashboard/store';
+import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 
 const POPULAR_COINS = [
   { id: '', label: 'Default' },
@@ -106,14 +107,38 @@ export function CustomizeButton({ isOpen, onToggle }: CustomizeButtonProps) {
 
 // ─── Inline Bar (renders between toolbar and grid) ───
 interface CustomizeBarProps {
+  definition: LiveDashboardDefinition;
   onApply: () => void;
   onClose: () => void;
 }
 
-export function CustomizeBar({ onApply, onClose }: CustomizeBarProps) {
-  const { customization, setCustomization, resetCustomization } = useLiveDashboardStore();
+export function CustomizeBar({ definition, onApply, onClose }: CustomizeBarProps) {
+  const { customization, setCustomization, resetCustomization, enabledWidgets, setEnabledWidgets } = useLiveDashboardStore();
   const [local, setLocal] = useState<DashboardCustomization>(customization);
   const [showMore, setShowMore] = useState(false);
+
+  // Widget selection: default to first N widgets by mobileOrder
+  const sortedWidgets = [...definition.widgets].sort((a, b) => (a.mobileOrder ?? 99) - (b.mobileOrder ?? 99));
+  const defaultWidgetIds = sortedWidgets.slice(0, DEFAULT_VISIBLE_WIDGET_COUNT).map((w) => w.id);
+  const currentEnabled = enabledWidgets[definition.slug] ?? defaultWidgetIds;
+
+  const toggleWidget = (widgetId: string) => {
+    const next = currentEnabled.includes(widgetId)
+      ? currentEnabled.filter((id) => id !== widgetId)
+      : [...currentEnabled, widgetId];
+    // Must have at least 1 widget enabled
+    if (next.length > 0) {
+      setEnabledWidgets(definition.slug, next);
+    }
+  };
+
+  const selectAllWidgets = () => {
+    setEnabledWidgets(definition.slug, definition.widgets.map((w) => w.id));
+  };
+
+  const selectDefaultWidgets = () => {
+    setEnabledWidgets(definition.slug, defaultWidgetIds);
+  };
 
   const handleApply = () => {
     setCustomization(local);
@@ -123,6 +148,7 @@ export function CustomizeBar({ onApply, onClose }: CustomizeBarProps) {
   const handleReset = () => {
     resetCustomization();
     setLocal(DEFAULT_CUSTOMIZATION);
+    setEnabledWidgets(definition.slug, defaultWidgetIds);
     onApply();
   };
 
@@ -248,7 +274,44 @@ export function CustomizeBar({ onApply, onClose }: CustomizeBarProps) {
         </div>
       </div>
 
-      {/* Row 2: Extended controls (collapsible) */}
+      {/* Row 2: Widget selector (always visible) */}
+      <div className="px-4 py-3 border-t border-white/[0.04] flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <div className="flex items-center gap-1.5 mr-1">
+          <LayoutGrid className="w-3 h-3 text-gray-500" />
+          <span className="text-[9px] uppercase tracking-wider text-gray-600 font-semibold">Charts ({currentEnabled.length}/{definition.widgets.length})</span>
+        </div>
+        <button
+          type="button"
+          onClick={selectAllWidgets}
+          className="px-1.5 py-0.5 rounded text-[9px] font-medium text-gray-500 hover:text-white border border-white/[0.06] hover:bg-white/[0.06] transition"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          onClick={selectDefaultWidgets}
+          className="px-1.5 py-0.5 rounded text-[9px] font-medium text-gray-500 hover:text-white border border-white/[0.06] hover:bg-white/[0.06] transition"
+        >
+          Default
+        </button>
+        <span className="w-px h-4 bg-white/[0.06] mx-1" />
+        {sortedWidgets.map((w) => (
+          <button
+            key={w.id}
+            type="button"
+            onClick={() => toggleWidget(w.id)}
+            className={`px-2 py-0.5 rounded text-[9px] font-medium transition ${
+              currentEnabled.includes(w.id)
+                ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
+                : 'bg-white/[0.03] text-gray-600 border border-white/[0.04] hover:text-gray-400'
+            }`}
+          >
+            {w.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Row 3: Extended controls (collapsible) */}
       {showMore && (
         <div className="px-4 py-3 border-t border-white/[0.04] flex flex-wrap items-center gap-x-4 gap-y-2">
           {/* Per Page */}

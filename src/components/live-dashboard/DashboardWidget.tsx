@@ -40,6 +40,12 @@ import { ReturnsBarWidget } from './widgets/ReturnsBarWidget';
 // Phase 5 advanced charts
 import { AreaChartWidget } from './widgets/AreaChartWidget';
 import { WaterfallChartWidget } from './widgets/WaterfallChartWidget';
+// Phase 6 value-add widgets
+import { MarketPulseWidget } from './widgets/MarketPulseWidget';
+import { CategoryBadgesWidget } from './widgets/CategoryBadgesWidget';
+import { PriceConverterWidget } from './widgets/PriceConverterWidget';
+import { WatchlistWidget } from './widgets/WatchlistWidget';
+import { PriceAlertWidget } from './widgets/PriceAlertWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -72,6 +78,11 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   ReturnsBarWidget,
   AreaChartWidget,
   WaterfallChartWidget,
+  MarketPulseWidget,
+  CategoryBadgesWidget,
+  PriceConverterWidget,
+  WatchlistWidget,
+  PriceAlertWidget,
 };
 
 interface DashboardWidgetProps {
@@ -87,8 +98,8 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
   const colorTheme = useLiveDashboardStore((s) => s.customization.colorTheme);
   const themeColors = getThemeColors(colorTheme);
 
-  // KPI cards get no wrapper card (they are their own cards)
-  if (component === 'KPICards') {
+  // KPI cards and market pulse get no wrapper card (they are their own cards)
+  if (component === 'KPICards' || component === 'MarketPulseWidget') {
     return (
       <div style={{ gridColumn, gridRow }}>
         {Component ? <Component {...(props || {})} /> : <UnknownWidget name={component} />}

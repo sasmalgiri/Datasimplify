@@ -24,13 +24,14 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, customization, autoRefreshInterval, setAutoRefreshInterval } = useLiveDashboardStore();
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval } = useLiveDashboardStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const handleRefresh = useCallback(() => {
+    // Read customization fresh from store to avoid stale closure
+    const c = useLiveDashboardStore.getState().customization;
     const params: Record<string, any> = {};
-    const c = customization;
 
     // Pass global customization params
     if (c.vsCurrency && c.vsCurrency !== 'usd') params.vsCurrency = c.vsCurrency;
@@ -61,7 +62,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       params.detailCoinId = c.coinId || detailWidget?.props?.coinId || 'bitcoin';
     }
     fetchData(definition.requiredEndpoints, params);
-  }, [definition, fetchData, customization]);
+  }, [definition, fetchData]);
 
   // Auto-refresh interval
   useEffect(() => {
@@ -76,6 +77,29 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [autoRefreshInterval, apiKey, handleRefresh]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Ignore when typing in inputs
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      switch (e.key.toLowerCase()) {
+        case 'r':
+          if (!e.metaKey && !e.ctrlKey && apiKey && !isLoading) handleRefresh();
+          break;
+        case 'c':
+          if (!e.metaKey && !e.ctrlKey) setCustomizeOpen((v) => !v);
+          break;
+        case 'escape':
+          setCustomizeOpen(false);
+          break;
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [apiKey, isLoading, handleRefresh]);
 
   const timeAgo = lastFetched
     ? `${Math.round((Date.now() - lastFetched) / 1000)}s ago`
@@ -164,7 +188,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             onClick={handleRefresh}
             disabled={isLoading || !apiKey}
             className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed border border-white/[0.06]"
-            title="Refresh data"
+            title="Refresh data (R)"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -173,7 +197,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
       {/* Inline customize bar */}
       {customizeOpen && (
-        <CustomizeBar onApply={handleRefresh} onClose={() => setCustomizeOpen(false)} />
+        <CustomizeBar definition={definition} onApply={handleRefresh} onClose={() => setCustomizeOpen(false)} />
       )}
 
       {/* Error banner */}
@@ -188,15 +212,24 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         <DashboardGrid definition={definition} />
       </div>
 
-      {/* Footer with disclaimer */}
+      {/* Footer with disclaimer + keyboard hints */}
       <div className="flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-600 pt-4 border-t border-white/[0.06] gap-2">
         <div className="flex items-center gap-1.5">
           <Shield className="w-3 h-3 text-emerald-600" />
           <span>Data sourced from CoinGecko via your personal API key. All exports are strictly for your personal, non-commercial use.</span>
         </div>
-        <span className="text-gray-700">
-          {lastFetched && new Date(lastFetched).toLocaleString()} &bull; cryptoreportkit.com
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-gray-700 hidden sm:inline">
+            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">R</kbd> Refresh
+            <span className="mx-1.5">&middot;</span>
+            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">C</kbd> Customize
+            <span className="mx-1.5">&middot;</span>
+            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">Esc</kbd> Close
+          </span>
+          <span className="text-gray-700">
+            {lastFetched && new Date(lastFetched).toLocaleString()} &bull; cryptoreportkit.com
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -126,6 +126,9 @@ export interface ApiUsageStats {
   refreshCount: number;
 }
 
+/** Number of widgets shown by default before user customizes */
+export const DEFAULT_VISIBLE_WIDGET_COUNT = 4;
+
 const DEFAULT_CUSTOMIZATION: DashboardCustomization = {
   coinId: '',
   coinIds: [],
@@ -183,6 +186,10 @@ interface LiveDashboardStore {
   autoRefreshInterval: number; // 0 = off, 60/120/300 seconds
   setAutoRefreshInterval: (interval: number) => void;
 
+  // Per-dashboard enabled widgets (keyed by slug). Empty array = use defaults (first 4).
+  enabledWidgets: Record<string, string[]>;
+  setEnabledWidgets: (slug: string, widgetIds: string[]) => void;
+
   apiUsage: ApiUsageStats;
   incrementApiCalls: (count: number) => void;
   resetApiUsage: () => void;
@@ -227,6 +234,11 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
 
       autoRefreshInterval: 0,
       setAutoRefreshInterval: (interval) => set({ autoRefreshInterval: interval }),
+
+      enabledWidgets: {},
+      setEnabledWidgets: (slug, widgetIds) => set((state) => ({
+        enabledWidgets: { ...state.enabledWidgets, [slug]: widgetIds },
+      })),
 
       apiUsage: DEFAULT_API_USAGE,
       incrementApiCalls: (count) => set((state) => ({
@@ -305,6 +317,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
         keyType: state.keyType,
         autoRefreshInterval: state.autoRefreshInterval,
         customization: state.customization,
+        enabledWidgets: state.enabledWidgets,
       }),
     },
   ),
