@@ -6,7 +6,7 @@
  * Returns: { answer: string }
  *
  * Uses Groq SDK with llama-3.3-70b-versatile for fast AI responses.
- * Rate-limited per tier: free=5/day, pro=50/day, premium=200/day.
+ * Rate-limited per tier: free=5/day, pro=100/day.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

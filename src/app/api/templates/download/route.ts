@@ -181,7 +181,7 @@ export async function POST(request: Request) {
           .select('plan')
           .eq('email', email.toLowerCase())
           .single() as { data: { plan?: string } | null; error: unknown };
-        isPro = profile?.plan === 'pro' || profile?.plan === 'premium';
+        isPro = profile?.plan === 'pro';
       }
 
       if (!isPro) {

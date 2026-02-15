@@ -63,9 +63,9 @@ export function SoftwareApplicationJsonLd() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '79',
+      highPrice: '19',
       priceCurrency: 'USD',
-      offerCount: '3',
+      offerCount: '2',
     },
     featureList: [
       'Excel templates with CRK formulas (BYOK)',
@@ -96,7 +96,7 @@ export function FAQJsonLd() {
     {
       question: 'Is CryptoReportKit free to use?',
       answer:
-        'Yes! CryptoReportKit offers free Report Kits for market overview and watchlist tracking. Pro and Premium plans are available for more advanced templates.',
+        'Yes! CryptoReportKit offers free Report Kits for market overview and watchlist tracking. A Pro plan is available for more advanced templates.',
     },
     {
       question: 'How do Report Kits work?',
@@ -145,10 +145,10 @@ export function ReportKitProductJsonLd({
 }: {
   name: string;
   description: string;
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro';
   slug: string;
 }) {
-  const prices = { free: '0', pro: '29', premium: '79' };
+  const prices = { free: '0', pro: '19' };
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -192,9 +192,9 @@ export function PricingJsonLd() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '79',
+      highPrice: '19',
       priceCurrency: 'USD',
-      offerCount: '3',
+      offerCount: '2',
       offers: [
         {
           '@type': 'Offer',
@@ -206,16 +206,9 @@ export function PricingJsonLd() {
         {
           '@type': 'Offer',
           name: 'Pro Plan',
-          price: '29',
+          price: '19',
           priceCurrency: 'USD',
           description: 'Advanced templates with technical indicators and portfolio tracking',
-        },
-        {
-          '@type': 'Offer',
-          name: 'Premium Plan',
-          price: '79',
-          priceCurrency: 'USD',
-          description: 'Full access to all templates with priority support',
         },
       ],
     },
@@ -268,9 +261,9 @@ export function ExcelTemplateJsonLd({
   slug: string;
   category: string;
   features: string[];
-  tier?: 'free' | 'pro' | 'premium';
+  tier?: 'free' | 'pro';
 }) {
-  const prices = { free: '0', pro: '29', premium: '79' };
+  const prices = { free: '0', pro: '19' };
 
   const structuredData = {
     '@context': 'https://schema.org',

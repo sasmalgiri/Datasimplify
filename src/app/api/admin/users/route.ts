@@ -128,7 +128,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   // Validate subscription tier
-  const validTiers = ['free', 'pro', 'premium'];
+  const validTiers = ['free', 'pro'];
   if (subscription_tier && !validTiers.includes(subscription_tier)) {
     return NextResponse.json(
       { error: `Invalid tier. Must be one of: ${validTiers.join(', ')}` },
@@ -155,7 +155,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update downloads_limit based on tier if not explicitly set
     if (downloads_limit === undefined) {
-      const tierLimits = { free: 5, pro: 100, premium: 999999 };
+      const tierLimits = { free: 3, pro: 300 };
       updates.downloads_limit = tierLimits[subscription_tier as keyof typeof tierLimits];
     }
   }

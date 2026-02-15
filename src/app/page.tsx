@@ -415,41 +415,37 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-3 gap-3 max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
               <div className="text-xs text-gray-400">Free</div>
               <div className="text-2xl font-bold mb-2">$0</div>
               <ul className="space-y-1 text-xs text-gray-300 mb-3">
+                <li>✓ 5 dashboard widgets</li>
+                <li>✓ 2-coin compare</li>
                 <li>✓ Basic templates</li>
-                <li>✓ Compare + Learn</li>
+                <li>✓ 30-day history</li>
+                <li>✓ Learn + Glossary</li>
               </ul>
               <Link href="/signup" className="block text-center py-1.5 border border-gray-600 rounded-lg hover:bg-gray-700 text-xs">
-                Get Started
+                Get Started Free
               </Link>
             </div>
 
-            <div className="bg-gradient-to-b from-blue-500/20 to-purple-500/20 border-2 border-blue-500 rounded-xl p-4 relative">
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-blue-500 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                SOON
+            <div className="bg-gradient-to-b from-emerald-500/20 to-blue-500/20 border-2 border-emerald-500 rounded-xl p-4 relative">
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                BEST VALUE
               </div>
-              <div className="text-xs text-blue-400">Pro</div>
-              <div className="text-2xl font-bold mb-2">$29<span className="text-xs text-gray-400">/mo</span></div>
+              <div className="text-xs text-emerald-400">Pro</div>
+              <div className="text-2xl font-bold mb-2">$19<span className="text-xs text-gray-400">/mo</span></div>
               <ul className="space-y-1 text-xs text-gray-300 mb-3">
-                <li>✓ 100 downloads/mo</li>
-                <li>✓ All categories</li>
+                <li>✓ 300 downloads/mo</li>
+                <li>✓ All 47 widgets</li>
+                <li>✓ 10-coin compare</li>
+                <li>✓ Full history + technicals</li>
+                <li>✓ Advanced charts + filters</li>
               </ul>
-              <span className="block text-center py-1.5 bg-gray-600 rounded-lg opacity-60 text-xs">Notify Me</span>
-            </div>
-
-            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
-              <div className="text-xs text-gray-400">Premium</div>
-              <div className="text-2xl font-bold mb-2">$79<span className="text-xs text-gray-400">/mo</span></div>
-              <ul className="space-y-1 text-xs text-gray-300 mb-3">
-                <li>✓ Unlimited</li>
-                <li>✓ White-label</li>
-              </ul>
-              <Link href="/signup?plan=premium" className="block text-center py-1.5 border border-gray-600 rounded-lg hover:bg-gray-700 text-xs">
-                Notify Me
+              <Link href="/signup?plan=pro" className="block text-center py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-xs font-medium">
+                Get Pro
               </Link>
             </div>
           </div>

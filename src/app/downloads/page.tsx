@@ -159,17 +159,17 @@ export default function DownloadsPage() {
                 </>
               )}
 
-              {/* Pro Templates Coming Soon */}
-              <div className="p-6 bg-gradient-to-r from-emerald-900/20 to-gray-800/40 border border-emerald-500/20 rounded-xl">
-                <h2 className="text-xl font-semibold mb-2">Pro Templates (Coming Soon)</h2>
-                <p className="text-gray-400 text-sm mb-4">
-                  Premium templates with advanced features, more coins, and priority support.
+              {/* Upgrade Prompt */}
+              <div className="p-5 bg-gradient-to-r from-emerald-900/20 to-gray-800/40 border border-emerald-500/20 rounded-xl">
+                <h2 className="text-lg font-semibold mb-1">Want more?</h2>
+                <p className="text-gray-400 text-sm mb-3">
+                  Pro members get 300 downloads/month, all 47 dashboard widgets, advanced charts, and full history.
                 </p>
                 <Link
-                  href="/coming-soon?feature=pro_templates"
-                  className="inline-block px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
+                  href="/pricing"
+                  className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
                 >
-                  Get notified when available
+                  View Pro Plan — $19/mo
                 </Link>
               </div>
             </>

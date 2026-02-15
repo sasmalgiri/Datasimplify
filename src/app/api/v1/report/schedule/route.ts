@@ -1,6 +1,6 @@
 /**
  * Scheduled Exports API
- * Allows Pro/Premium users to schedule automatic report generation and delivery
+ * Allows Pro users to schedule automatic report generation and delivery
  *
  * POST /api/v1/report/schedule - Create a new schedule
  * GET /api/v1/report/schedule - List all schedules for the user

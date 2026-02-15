@@ -13,7 +13,7 @@
 
 import { SupabaseClient } from '@supabase/supabase-js';
 
-export type SubscriptionTier = 'free' | 'pro' | 'premium';
+export type SubscriptionTier = 'free' | 'pro';
 export type SubscriptionStatus =
   | 'active'
   | 'cancelled'
@@ -35,7 +35,7 @@ export interface UserEntitlement {
   dailyApiCallsUsed: number;
   dailyApiCallsRemaining: number;
   allowedFunctions: 'basic' | 'all';
-  canAccessPremiumFeatures: boolean;
+  canAccessProFeatures: boolean;
   canDownload: boolean;
   canScheduleExports: boolean;
   canUsePacks: boolean;
@@ -56,38 +56,34 @@ export interface EntitlementCheckResult {
 export const PLAN_LIMITS = {
   free: {
     dailyApiCalls: 100,
-    dailyAiQueries: 5,
+    dailyAiQueries: 0,
     maxAlerts: 0,
-    downloads: 5,
+    downloads: 3,
     scheduledExports: 0,
     maxCoinsPerRequest: 10,
-    maxOhlcvDays: 7,
-    canAccessPremiumFeatures: false,
+    maxOhlcvDays: 30,         // 30-day history cap
+    maxDashboardWidgets: 5,   // KPI, PriceChart, TopCoins, FearGreed, Trending
+    maxCompareCoins: 2,       // Simple mode only
+    canAccessProFeatures: false,
     canScheduleExports: false,
+    canUseAdvancedCharts: false,
+    canUseDeepFilters: false,
     allowedFunctions: 'basic' as const,
   },
   pro: {
-    dailyApiCalls: 5000,
-    dailyAiQueries: 50,
-    maxAlerts: 20,
-    downloads: 100,
+    dailyApiCalls: 10000,
+    dailyAiQueries: 100,
+    maxAlerts: 10,
+    downloads: 300,
     scheduledExports: 5,
     maxCoinsPerRequest: 100,
-    maxOhlcvDays: 365,
-    canAccessPremiumFeatures: true,
+    maxOhlcvDays: 730,        // 2 years of history
+    maxDashboardWidgets: 999, // All 47
+    maxCompareCoins: 10,      // Full compare
+    canAccessProFeatures: true,
     canScheduleExports: true,
-    allowedFunctions: 'all' as const,
-  },
-  premium: {
-    dailyApiCalls: 50000,
-    dailyAiQueries: 200,
-    maxAlerts: 100,
-    downloads: 999999, // Unlimited
-    scheduledExports: 25,
-    maxCoinsPerRequest: 500,
-    maxOhlcvDays: 730, // 2 years
-    canAccessPremiumFeatures: true,
-    canScheduleExports: true,
+    canUseAdvancedCharts: true,
+    canUseDeepFilters: true,
     allowedFunctions: 'all' as const,
   },
 };
@@ -146,7 +142,7 @@ export async function getUserEntitlement(
     dailyApiCallsUsed: 0, // Populated by caller if needed
     dailyApiCallsRemaining: limits.dailyApiCalls,
     allowedFunctions: limits.allowedFunctions,
-    canAccessPremiumFeatures: isActive && limits.canAccessPremiumFeatures,
+    canAccessProFeatures: isActive && limits.canAccessProFeatures,
     canDownload:
       isActive &&
       (profile.downloads_this_month || 0) <
@@ -166,7 +162,7 @@ export async function checkEntitlement(
   supabase: SupabaseClient,
   userId: string,
   options?: {
-    requirePremium?: boolean;
+    requirePro?: boolean;
     requireScheduledExports?: boolean;
     requireDownload?: boolean;
     coinsRequested?: number;
@@ -190,8 +186,8 @@ export async function checkEntitlement(
     entitlement.status === 'cancelled'
   ) {
     // Paused/cancelled users are downgraded to free
-    // If they're trying premium features, block
-    if (options?.requirePremium) {
+    // If they're trying pro features, block
+    if (options?.requirePro) {
       return {
         allowed: false,
         entitlement,
@@ -206,12 +202,12 @@ export async function checkEntitlement(
   // Check if past due (grace period - warn but allow)
   // The webhook will eventually downgrade if payment isn't resolved
 
-  // Check premium feature requirement
-  if (options?.requirePremium && !entitlement.canAccessPremiumFeatures) {
+  // Check pro feature requirement
+  if (options?.requirePro && !entitlement.canAccessProFeatures) {
     return {
       allowed: false,
       entitlement,
-      error: 'This feature requires a Pro or Premium subscription.',
+      error: 'This feature requires a Pro subscription.',
       code: 'SUBSCRIPTION_REQUIRED',
       status: 402,
     };
@@ -223,7 +219,7 @@ export async function checkEntitlement(
       allowed: false,
       entitlement,
       error:
-        'Scheduled exports require a Pro or Premium subscription.',
+        'Scheduled exports require a Pro subscription.',
       code: 'SUBSCRIPTION_REQUIRED',
       status: 402,
     };

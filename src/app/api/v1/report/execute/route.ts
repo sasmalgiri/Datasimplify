@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
-    const userPlan = (profile?.plan || 'free') as 'free' | 'pro' | 'premium';
+    const userPlan = (profile?.plan || 'free') as 'free' | 'pro';
 
     // Check plan compatibility
     const planCheck = checkPlanCompatibility(recipe, userPlan);

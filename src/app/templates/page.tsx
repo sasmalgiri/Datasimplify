@@ -157,9 +157,9 @@ export default function TemplatesPage() {
                         ? 'bg-green-500/20 text-green-400'
                         : kit.tier === 'pro'
                         ? 'bg-blue-500/20 text-blue-400'
-                        : 'bg-purple-500/20 text-purple-400'
+                        : 'bg-blue-500/20 text-blue-400'
                     }`}>
-                      {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
+                      {kit.tier === 'free' ? 'Free' : 'Pro'}
                     </span>
                   </div>
                   <h3 className="font-semibold text-white group-hover:text-emerald-400 transition-colors mb-1">
@@ -203,11 +203,9 @@ export default function TemplatesPage() {
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                     kit.tier === 'free'
                       ? 'bg-green-500/20 text-green-400'
-                      : kit.tier === 'pro'
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : 'bg-purple-500/20 text-purple-400'
+                      : 'bg-blue-500/20 text-blue-400'
                   }`}>
-                    {kit.tier === 'free' ? 'Free' : kit.tier === 'pro' ? 'Pro' : 'Premium'}
+                    {kit.tier === 'free' ? 'Free' : 'Pro'}
                   </span>
                 </div>
                 <h3 className="font-medium text-white text-sm group-hover:text-emerald-400 transition-colors truncate">

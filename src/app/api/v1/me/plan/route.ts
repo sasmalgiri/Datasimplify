@@ -29,21 +29,6 @@ const PLAN_LIMITS = {
       'priority_support',
     ],
   },
-  premium: {
-    ...ENTITLEMENT_LIMITS.premium,
-    maxReportRecipes: 100,
-    features: [
-      'basic_templates',
-      'advanced_templates',
-      'premium_templates',
-      'manual_refresh',
-      'scheduled_exports',
-      'api_access',
-      'white_label',
-      'priority_support',
-      'dedicated_support',
-    ],
-  },
 } as const;
 
 type PlanType = keyof typeof PLAN_LIMITS;
@@ -206,7 +191,6 @@ function getPlanDisplayName(plan: PlanType): string {
   const names: Record<PlanType, string> = {
     free: 'Free',
     pro: 'Pro',
-    premium: 'Premium',
   };
   return names[plan];
 }

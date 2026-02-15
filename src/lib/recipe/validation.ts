@@ -32,8 +32,7 @@ const SOURCES_MATRIX_RULES = {
   // Plan gates
   planGates: {
     free: ['price', 'ohlcv_1h', 'market_cap', 'volume', 'fear_greed', 'defi_tvl'],
-    pro: ['ohlcv_5m', 'ohlcv_15m', 'funding', 'reddit_sentiment'],
-    premium: ['ohlcv_1m', 'nansen_smart_money', 'deribit_options'],
+    pro: ['ohlcv_5m', 'ohlcv_15m', 'funding', 'reddit_sentiment', 'ohlcv_1m', 'nansen_smart_money', 'deribit_options'],
   },
 };
 
@@ -184,8 +183,7 @@ export function validateRecipe(recipe: RecipeV1): RecipeValidationResult {
     if (
       !recipe.refreshPolicy.planLimits ||
       !recipe.refreshPolicy.planLimits.free ||
-      !recipe.refreshPolicy.planLimits.pro ||
-      !recipe.refreshPolicy.planLimits.premium
+      !recipe.refreshPolicy.planLimits.pro
     ) {
       errors.push('Refresh policy must define limits for all plans');
     }
@@ -203,8 +201,8 @@ export function validateRecipe(recipe: RecipeV1): RecipeValidationResult {
  */
 export function checkPlanCompatibility(
   recipe: RecipeV1,
-  plan: 'free' | 'pro' | 'premium'
-): { compatible: boolean; requiredPlan?: 'pro' | 'premium'; reason?: string } {
+  plan: 'free' | 'pro'
+): { compatible: boolean; requiredPlan?: 'pro'; reason?: string } {
   // Check dataset plan gates
   for (const dataset of recipe.datasets) {
     if (
@@ -218,24 +216,6 @@ export function checkPlanCompatibility(
           reason: `Dataset ${dataset.id} (${dataset.type}) requires Pro plan`,
         };
       }
-      if (SOURCES_MATRIX_RULES.planGates.premium.includes(dataset.type)) {
-        return {
-          compatible: false,
-          requiredPlan: 'premium',
-          reason: `Dataset ${dataset.id} (${dataset.type}) requires Premium plan`,
-        };
-      }
-    }
-
-    if (
-      plan === 'pro' &&
-      SOURCES_MATRIX_RULES.planGates.premium.includes(dataset.type)
-    ) {
-      return {
-        compatible: false,
-        requiredPlan: 'premium',
-        reason: `Dataset ${dataset.id} (${dataset.type}) requires Premium plan`,
-      };
     }
   }
 
@@ -269,7 +249,6 @@ export function generateRefreshPolicy(
     planLimits: {
       free: 50, // 50 refreshes per day
       pro: 500, // 500 per day
-      premium: -1, // Unlimited
     },
   };
 }

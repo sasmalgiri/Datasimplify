@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
 export const metadata: Metadata = {
-  title: 'Pricing Plans - Free, Pro & Premium | Excel Crypto Templates',
-  description: 'CryptoReportKit pricing: Free tier with 3 downloads/month, Pro at $19/mo with unlimited templates, Premium at $79/mo with scheduled exports. BYOK architecture - bring your own API key.',
+  title: 'Pricing — Free & Pro Plans | CryptoReportKit',
+  description: 'CryptoReportKit pricing: Free tier with 5 widgets, 2-coin compare, and 3 downloads/month. Pro at $19/mo with 47 widgets, 300 downloads, advanced charts, and full analytics. BYOK architecture.',
   keywords: [
     'cryptoreportkit pricing',
     'crypto excel template pricing',
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
     'pro crypto templates'
   ],
   openGraph: {
-    title: 'Pricing Plans | CryptoReportKit',
-    description: 'Choose your plan: Free tier with 3 downloads/month, Pro at $19/mo, Premium at $79/mo. BYOK architecture - use your own API keys.',
+    title: 'Pricing — Free & Pro | CryptoReportKit',
+    description: 'Free tier with 5 widgets and basic tools. Pro at $19/mo with 47 widgets, 300 downloads, advanced charts, and AI analytics. BYOK architecture.',
     url: `${siteUrl}/pricing`,
     type: 'website',
     images: [
@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Pricing Plans | CryptoReportKit',
-    description: 'Free tier, Pro $19/mo, Premium $79/mo. BYOK architecture for Excel crypto templates.',
+    title: 'Pricing — Free & Pro | CryptoReportKit',
+    description: 'Free tier with essentials. Pro $19/mo with 47 widgets, 300 downloads, and full analytics. BYOK architecture.',
     images: [`${siteUrl}/og-image.png`],
   },
   alternates: {

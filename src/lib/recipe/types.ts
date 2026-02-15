@@ -113,7 +113,6 @@ export interface RefreshPolicy {
   planLimits: {
     free: number; // Max refreshes per day
     pro: number;
-    premium: number;
   };
 }
 

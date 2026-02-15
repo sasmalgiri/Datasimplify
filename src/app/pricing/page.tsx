@@ -33,21 +33,27 @@ function HelpIcon({ text }: { text: string }) {
 
 // Feature explanations for tooltips
 const FEATURE_EXPLANATIONS: Record<string, string> = {
-  // Starter tier
-  '10 downloads per month': 'Download up to 10 template packs with CRK formulas each month.',
-  'Basic templates': 'Access to essential template packs: Market Overview, Watchlist, Portfolio Starter.',
-  'Up to 25 coins per template': 'Templates configured for smaller portfolios. Works great with free CoinGecko API.',
-  'Daily timeframes': 'Daily price data and analysis in your templates.',
-  'Community support': 'Help via documentation and community resources.',
+  // Free tier
+  '5 dashboard widgets': 'Access KPI Cards, Price Chart, Top Coins, Fear & Greed, and Trending widgets.',
+  '2-coin compare': 'Compare any two cryptocurrencies side by side with key metrics.',
+  '3 downloads per month': 'Download up to 3 template packs each month.',
+  '30-day price history': 'View price charts and history for the last 30 days.',
+  'Basic chart types': 'Line charts and simple bar charts. No multi-axis overlays or advanced layouts.',
+  'Learn + Glossary': 'Full access to educational content, crypto glossary, and FAQ.',
+  'Contract verification': 'Verify smart contracts via Sourcify — free for everyone.',
 
   // Pro tier
-  'Unlimited downloads': 'No monthly limits on template pack downloads.',
-  'All template packs': 'Access to every template: Screener, Technical Analysis, Correlation, Risk, DeFi, and more.',
-  'Up to 100 coins per template': 'Templates supporting larger watchlists. May require CoinGecko Pro API for best performance.',
-  'All timeframe options': 'Hourly, 4-hour, daily, and weekly timeframes in templates.',
-  'Scheduled exports': 'Set up automatic report generation and email delivery.',
-  'Email support': 'Email support with 24-48 hour response time.',
-  'Early access to new packs': 'Get new template packs before they\'re released publicly.',
+  '300 downloads per month': 'Download up to 300 template packs each month.',
+  'All 47 dashboard widgets': 'Every widget: candlesticks, heatmaps, radar, waterfall, treemap, whale distribution, and 40+ more.',
+  '10-coin compare + head-to-head': 'Compare up to 10 coins with 26 columns, technical indicators, visual charts, and head-to-head ratios.',
+  'Full price history (all timeframes)': 'Unlimited historical data — hourly, daily, weekly, monthly, and yearly.',
+  'Advanced charts & filters': 'Multi-axis charts, overlays, indicator stacks, sector/category filters, custom metrics.',
+  'Technical indicators': 'RSI, Sharpe ratio, volatility, momentum, max drawdown — computed from real candle data.',
+  'All template packs': 'Every template: Screener, Technical Analysis, Correlation, Risk, DeFi, and more.',
+  'Market, screener & analysis pages': 'Access to market overview, screener, heatmap, correlation, portfolio, sentiment, and analyst hub.',
+  'AI Ask (Groq)': 'Ask questions about crypto in natural language. Powered by Groq llama-3.3-70b.',
+  'Alerts (email notifications)': 'Set price alerts with email notifications. Up to 10 active alerts.',
+  'Priority email support': 'Email support with 24-48 hour response time.',
 };
 
 export default function PricingPage() {
@@ -93,8 +99,6 @@ export default function PricingPage() {
     // TODO: Integrate FastSpring checkout
     // For now, redirect to FastSpring hosted checkout
     const productPaths: Record<string, string> = {
-      'starter-monthly': 'starter-monthly',
-      'starter-yearly': 'starter-yearly',
       'pro-monthly': 'pro-monthly',
       'pro-yearly': 'pro-yearly',
     };
@@ -108,34 +112,40 @@ export default function PricingPage() {
 
   const tiers = [
     {
-      name: 'Starter',
-      key: 'starter',
-      monthlyPrice: 5,
-      yearlyPrice: 50,
-      description: 'Perfect for getting started',
+      name: 'Free',
+      key: 'free',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      description: 'Get started with essential crypto tools',
       features: [
-        '10 downloads per month',
-        'Basic templates',
-        'Up to 25 coins per template',
-        'Daily timeframes',
-        'Community support',
+        '5 dashboard widgets',
+        '2-coin compare',
+        '3 downloads per month',
+        '30-day price history',
+        'Basic chart types',
+        'Learn + Glossary',
+        'Contract verification',
       ],
       popular: false,
     },
     {
       name: 'Pro',
       key: 'pro',
-      monthlyPrice: 12,
-      yearlyPrice: 120,
-      description: 'For serious crypto analysts',
+      monthlyPrice: 19,
+      yearlyPrice: 190,
+      description: 'Full analytics suite for serious crypto research',
       features: [
-        'Unlimited downloads',
+        '300 downloads per month',
+        'All 47 dashboard widgets',
+        '10-coin compare + head-to-head',
+        'Full price history (all timeframes)',
+        'Advanced charts & filters',
+        'Technical indicators',
         'All template packs',
-        'Up to 100 coins per template',
-        'All timeframe options',
-        'Scheduled exports',
-        'Email support',
-        'Early access to new packs',
+        'Market, screener & analysis pages',
+        'AI Ask (Groq)',
+        'Alerts (email notifications)',
+        'Priority email support',
       ],
       popular: true,
     },
@@ -151,7 +161,7 @@ export default function PricingPage() {
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
           <p className="text-gray-400 text-lg mb-2">
-            Excel templates with live crypto data. Choose your preferred option.
+            Free forever with essentials. Upgrade for full analytics power.
           </p>
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm text-emerald-400">
             <span>🔑</span>
@@ -217,9 +227,14 @@ export default function PricingPage() {
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-5xl font-bold">${price}</span>
-                    <span className="text-gray-400">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
+                    {price > 0 && (
+                      <span className="text-gray-400">/{billingPeriod === 'monthly' ? 'mo' : 'yr'}</span>
+                    )}
+                    {price === 0 && (
+                      <span className="text-gray-400">forever</span>
+                    )}
                   </div>
-                  {billingPeriod === 'yearly' && (
+                  {billingPeriod === 'yearly' && price > 0 && (
                     <p className="text-emerald-400 text-sm mt-1">
                       ${perMonth}/mo billed annually
                     </p>
@@ -240,18 +255,23 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <button
-                  type="button"
-                  onClick={() => handleSubscribe(tier.key, billingPeriod)}
-                  disabled={profile?.subscription_tier === tier.key}
-                  className={`w-full py-3 rounded-lg font-medium transition ${
-                    tier.popular
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-gray-700 hover:bg-gray-600 text-white'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {profile?.subscription_tier === tier.key ? 'Current Plan' : `Get ${tier.name}`}
-                </button>
+                {tier.key === 'free' ? (
+                  <Link
+                    href="/signup"
+                    className="block w-full py-3 rounded-lg font-medium transition bg-gray-700 hover:bg-gray-600 text-white text-center"
+                  >
+                    {user ? 'Current Plan' : 'Get Started Free'}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSubscribe(tier.key, billingPeriod)}
+                    disabled={profile?.subscription_tier === tier.key}
+                    className="w-full py-3 rounded-lg font-medium transition bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {profile?.subscription_tier === tier.key ? 'Current Plan' : `Get ${tier.name}`}
+                  </button>
+                )}
               </div>
             );
           })}

@@ -112,12 +112,10 @@ export default async function TemplateDetailPage({ params }: PageProps) {
               className={`px-3 py-1 rounded-full text-sm font-medium ${
                 template.tier === 'free'
                   ? 'bg-emerald-500/20 text-emerald-400'
-                  : template.tier === 'pro'
-                    ? 'bg-blue-500/20 text-blue-400'
-                    : 'bg-purple-500/20 text-purple-400'
+                  : 'bg-blue-500/20 text-blue-400'
               }`}
             >
-              {template.tier === 'free' ? 'Free' : template.tier === 'pro' ? 'Pro' : 'Premium'}
+              {template.tier === 'free' ? 'Free' : 'Pro'}
             </span>
             <span className="text-gray-400 text-sm">{template.category}</span>
           </div>

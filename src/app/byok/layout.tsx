@@ -82,7 +82,7 @@ const faqSchema = {
       name: 'Does CRK charge me for BYOK?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No! BYOK is included in all CRK plans (Free, Pro, Premium). You only pay CoinGecko directly for your API plan. CRK charges for features like scheduled exports, advanced templates, and premium support.',
+        text: 'No! BYOK is included in all CRK plans (Free and Pro). You only pay CoinGecko directly for your API plan. CRK charges for features like scheduled exports, advanced templates, and priority support.',
       },
     },
   ],

@@ -10,7 +10,7 @@ import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-
 export interface UserProfile {
   id: string;
   email: string;
-  subscription_tier: 'free' | 'pro' | 'premium';
+  subscription_tier: 'free' | 'pro';
   downloads_this_month: number;
   downloads_limit: number;
   created_at: string;
@@ -83,11 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState<SupabaseClient | null>(() => getSupabaseClient());
   const [isConfigured] = useState(() => supabase !== null);
 
-  // Download limits by tier (Free: 5, Pro: 100, Premium: unlimited)
+  // Download limits by tier (Free: 3, Pro: 300)
   const downloadLimits: Record<string, number> = {
-    free: 5,
-    pro: 100,
-    premium: 999999,
+    free: 3,
+    pro: 300,
   };
 
   // Fetch user profile from database
@@ -364,18 +363,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user can download
   const canDownload = () => {
     if (!profile) return true;
-    if (profile.subscription_tier === 'premium') {
-      return true; // Premium has unlimited
-    }
     return profile.downloads_this_month < profile.downloads_limit;
   };
 
   // Get remaining downloads
   const remainingDownloads = () => {
-    if (!profile) return 5;
-    if (profile.subscription_tier === 'premium') {
-      return 999999; // Premium has unlimited
-    }
+    if (!profile) return 3;
     return Math.max(0, profile.downloads_limit - profile.downloads_this_month);
   };
 

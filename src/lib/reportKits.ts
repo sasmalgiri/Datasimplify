@@ -27,7 +27,7 @@ export interface ReportKit {
   tagline: string;
   description: string;
   icon: string;
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro';
   templates: string[];
   presets: ReportKitPresets;
   features: string[];
@@ -191,7 +191,7 @@ export const REPORT_KITS: ReportKit[] = [
     functions: ['INFO', 'ATH', 'ATL', 'SUPPLY', 'RANK', 'PRICEHISTORY', 'OHLCV', 'MARKETCAP'],
   },
 
-  // Pack 6 — Risk + Correlation Lab (Premium)
+  // Pack 6 — Risk + Correlation Lab (Pro)
   {
     id: 'risk-correlation',
     slug: 'risk-correlation',
@@ -199,7 +199,7 @@ export const REPORT_KITS: ReportKit[] = [
     tagline: 'High perceived value analytics',
     description: 'Correlation matrix, rolling correlation, volatility, drawdown, and risk scores - all computed in Excel from OHLCV data.',
     icon: '⚗️',
-    tier: 'premium',
+    tier: 'pro',
     templates: ['correlation_matrix', 'rolling_corr', 'volatility', 'drawdown', 'risk_score'],
     presets: { coins: 10, timeframe: '30d', refresh: 'manual' },
     features: [
@@ -221,7 +221,7 @@ export const REPORT_KITS: ReportKit[] = [
     functions: ['OHLCV'],
   },
 
-  // Pack 7 — DeFi TVL Dashboard (Premium)
+  // Pack 7 — DeFi TVL Dashboard (Pro)
   {
     id: 'defi-tvl',
     slug: 'defi-tvl',
@@ -229,7 +229,7 @@ export const REPORT_KITS: ReportKit[] = [
     tagline: 'Track DeFi protocol rankings',
     description: 'Monitor Total Value Locked across DeFi protocols with trend charts and protocol watchlist.',
     icon: '🏦',
-    tier: 'premium',
+    tier: 'pro',
     templates: ['protocols_list', 'tvl_trend', 'top_chains', 'watchlist'],
     presets: { coins: 50, timeframe: '1d', refresh: 'manual' },
     features: [

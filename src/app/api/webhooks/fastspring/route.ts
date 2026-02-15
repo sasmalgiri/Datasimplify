@@ -127,8 +127,8 @@ function mapProductToKey(productRef: string | null, payload: any): string | null
     // Legacy: CRK Add-in subscriptions (add-in removed; kept for existing subscribers)
     'crk-addin-pro-monthly': 'crk_addin_pro',
     'crk-addin-pro-yearly': 'crk_addin_pro',
-    'crk-addin-premium-monthly': 'crk_addin_premium',
-    'crk-addin-premium-yearly': 'crk_addin_premium',
+    'crk-addin-premium-monthly': 'crk_addin_pro',
+    'crk-addin-premium-yearly': 'crk_addin_pro',
   };
 
   const normalized = productRef.toLowerCase();
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
     for (const p of purchases) {
       if (!p.productKey?.startsWith('crk_addin_')) continue;
 
-      const tier = p.productKey === 'crk_addin_premium' ? 'premium' : 'pro';
+      const tier = 'pro';
       const eventType = (p.eventType || '').toLowerCase();
 
       // Find user by email

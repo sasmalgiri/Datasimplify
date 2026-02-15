@@ -12,7 +12,7 @@ export interface TemplateLandingPage {
   description: string;
   keywords: string[];
   category: string;
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro';
   features: string[];
   whoIsItFor: string[];
   customization: string[];
@@ -451,7 +451,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       'whale watching excel',
     ],
     category: 'On-Chain',
-    tier: 'premium',
+    tier: 'pro',
     features: [
       'Large transaction alerts',
       'Exchange inflow/outflow tracking',
@@ -919,7 +919,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       'derivatives liquidation monitor',
     ],
     category: 'Derivatives',
-    tier: 'premium',
+    tier: 'pro',
     features: [
       'Real-time liquidation data',
       'Long vs short liquidations',

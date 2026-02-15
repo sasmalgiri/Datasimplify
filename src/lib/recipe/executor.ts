@@ -23,7 +23,7 @@ export interface DatasetResult {
 export interface ExecutionContext {
   userId: string;
   userKeys: Record<string, string>; // Provider keys (decrypted)
-  plan: 'free' | 'pro' | 'premium';
+  plan: 'free' | 'pro';
 }
 
 /**

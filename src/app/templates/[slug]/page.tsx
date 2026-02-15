@@ -33,12 +33,11 @@ function TierBadge({ tier }: { tier: ReportKit['tier'] }) {
   const colors = {
     free: 'bg-green-100 text-green-800 border-green-200',
     pro: 'bg-blue-100 text-blue-800 border-blue-200',
-    premium: 'bg-purple-100 text-purple-800 border-purple-200',
   };
 
   return (
     <span className={`px-3 py-1 rounded-full text-sm font-medium border ${colors[tier]}`}>
-      {tier === 'free' ? 'Free' : tier === 'pro' ? 'Pro' : 'Premium'}
+      {tier === 'free' ? 'Free' : 'Pro'}
     </span>
   );
 }

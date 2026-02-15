@@ -89,13 +89,13 @@ export interface UserDownload {
 export interface UserSubscription {
   id: string;
   user_id: string;
-  tier: 'free' | 'pro' | 'premium';
+  tier: 'free' | 'pro';
   status: 'active' | 'canceled' | 'past_due';
   current_period_end?: string;
 }
 
 export interface SubscriptionTier {
-  id: 'free' | 'pro' | 'premium';
+  id: 'free' | 'pro';
   name: string;
   price: number;
   downloads_per_month: number;

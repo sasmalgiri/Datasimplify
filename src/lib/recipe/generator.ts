@@ -109,7 +109,7 @@ async function createMetadataSheet(
   sheet.getCell('E8').value = `${recipe.refreshPolicy.minInterval}s`;
 
   sheet.getCell('D9').value = 'Plan Limits:';
-  sheet.getCell('E9').value = `Free: ${recipe.refreshPolicy.planLimits.free}/day | Pro: ${recipe.refreshPolicy.planLimits.pro}/day | Premium: ${recipe.refreshPolicy.planLimits.premium === -1 ? 'Unlimited' : recipe.refreshPolicy.planLimits.premium + '/day'}`;
+  sheet.getCell('E9').value = `Free: ${recipe.refreshPolicy.planLimits.free}/day | Pro: ${recipe.refreshPolicy.planLimits.pro}/day`;
 
   // Add attribution requirements
   sheet.getCell('D11').value = 'ATTRIBUTION';
@@ -333,9 +333,9 @@ async function createInstructionsSheet(
     '   Visit cryptoreportkit.com/live-dashboards for live updates',
     '   Connect your CoinGecko API key (BYOK) for real-time data',
     '',
-    '5. Schedule Exports (Pro/Premium)',
+    '5. Schedule Exports (Pro)',
     '   Set up scheduled refreshes and email delivery',
-    '   Available in Pro and Premium plans',
+    '   Available in Pro plan',
     '',
     'Recipe Information:',
     `- Name: ${recipe.name}`,

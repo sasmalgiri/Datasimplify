@@ -85,7 +85,7 @@ export function QuotaEstimator({
           Estimated API Usage
         </h3>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.badge}`}>
-          {estimate.withinFreeLimit ? 'Free Tier OK' : estimate.withinProLimit ? 'Pro Tier Required' : 'Premium Required'}
+          {estimate.withinFreeLimit ? 'Free Tier OK' : estimate.withinProLimit ? 'Pro Tier Required' : 'Pro Required'}
         </span>
       </div>
 

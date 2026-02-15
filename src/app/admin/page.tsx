@@ -133,8 +133,6 @@ export default function AdminPage() {
 
   const getTierBadgeColor = (tier: string) => {
     switch (tier) {
-      case 'premium':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
       case 'pro':
         return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
       default:
@@ -345,7 +343,6 @@ export default function AdminPage() {
                   >
                     <option value="free">Free</option>
                     <option value="pro">Pro</option>
-                    <option value="premium">Premium</option>
                   </select>
                 </div>
 
