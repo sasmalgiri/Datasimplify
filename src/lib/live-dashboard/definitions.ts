@@ -1048,6 +1048,13 @@ const AUGMENT_CATALOG: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'fear-greed', component: 'FearGreedWidget', title: 'Fear & Greed Index', gridColumn: 'span 2', dataEndpoints: ['fear_greed'] },
   { id: 'trending', component: 'TrendingWidget', title: 'Trending Now', gridColumn: 'span 2', dataEndpoints: ['trending'] },
   { id: 'gainers', component: 'GainersLosersWidget', title: 'Top Movers', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  // Advanced charts (Phase 7)
+  { id: 'sankey-flow', component: 'SankeyFlowWidget', title: 'Capital Flow (Sankey)', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'whale-dist', component: 'WhaleDistributionWidget', title: 'Whale Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'sunburst', component: 'SunburstWidget', title: 'Market Sunburst', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 50 } },
+  { id: 'funnel', component: 'FunnelWidget', title: 'Market Cap Funnel', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
+  { id: 'gauge-cluster', component: 'GaugeClusterWidget', title: 'Market Health Gauges', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'] },
+  { id: 'scatter-3d', component: 'Scatter3DWidget', title: '3D Market Explorer', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 } },
   // Full-width visualizations
   { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
   { id: 'sparkline-grid', component: 'MiniSparklineGrid', title: 'Sparkline Grid', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },

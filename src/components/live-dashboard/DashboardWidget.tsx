@@ -46,6 +46,13 @@ import { CategoryBadgesWidget } from './widgets/CategoryBadgesWidget';
 import { PriceConverterWidget } from './widgets/PriceConverterWidget';
 import { WatchlistWidget } from './widgets/WatchlistWidget';
 import { PriceAlertWidget } from './widgets/PriceAlertWidget';
+// Phase 7 advanced charts
+import { SankeyFlowWidget } from './widgets/SankeyFlowWidget';
+import { WhaleDistributionWidget } from './widgets/WhaleDistributionWidget';
+import { SunburstWidget } from './widgets/SunburstWidget';
+import { FunnelWidget } from './widgets/FunnelWidget';
+import { GaugeClusterWidget } from './widgets/GaugeClusterWidget';
+import { Scatter3DWidget } from './widgets/Scatter3DWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -83,6 +90,12 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   PriceConverterWidget,
   WatchlistWidget,
   PriceAlertWidget,
+  SankeyFlowWidget,
+  WhaleDistributionWidget,
+  SunburstWidget,
+  FunnelWidget,
+  GaugeClusterWidget,
+  Scatter3DWidget,
 };
 
 interface DashboardWidgetProps {
