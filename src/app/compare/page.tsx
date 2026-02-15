@@ -8,7 +8,7 @@ import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { useViewMode } from '@/lib/viewMode';
-import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent, Zap } from 'lucide-react';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -235,6 +235,18 @@ const SORT_OPTIONS = [
   { id: 'ath_change_asc', label: 'Furthest from ATH' },
 ];
 
+// Preset comparison groups
+const PRESET_GROUPS = [
+  { label: 'Top 5', icon: '🏆', ids: ['bitcoin', 'ethereum', 'tether', 'xrp', 'solana'] },
+  { label: 'Layer 1s', icon: '🔗', ids: ['bitcoin', 'ethereum', 'solana', 'cardano', 'avalanche-2', 'near', 'sui'] },
+  { label: 'Layer 2s', icon: '⚡', ids: ['matic-network', 'arbitrum', 'optimism', 'starknet'] },
+  { label: 'DeFi', icon: '🏦', ids: ['uniswap', 'aave', 'lido-dao', 'maker', 'chainlink'] },
+  { label: 'Meme Coins', icon: '🐕', ids: ['dogecoin', 'shiba-inu', 'pepe', 'bonk', 'floki'] },
+  { label: 'AI Tokens', icon: '🤖', ids: ['render-token', 'fetch-ai', 'bittensor', 'the-graph'] },
+  { label: 'Exchange', icon: '🏛️', ids: ['binancecoin', 'uniswap', 'okb', 'crypto-com-chain'] },
+  { label: 'BTC vs ETH', icon: '⚔️', ids: ['bitcoin', 'ethereum'] },
+];
+
 // Visible columns configuration - expanded to match Download page parity
 const COLUMN_OPTIONS = [
   // Market Data
@@ -264,15 +276,21 @@ const COLUMN_OPTIONS = [
   { id: 'rsi', label: 'RSI (14)', default: false, category: 'Technical' },
   { id: 'volatility', label: 'Volatility (30d)', default: false, category: 'Technical' },
   { id: 'momentum', label: 'Momentum (30d)', default: false, category: 'Technical' },
+  { id: 'sharpe', label: 'Sharpe Ratio', default: false, category: 'Technical' },
+  { id: 'max_drawdown', label: 'Max Drawdown', default: false, category: 'Technical' },
 
-  // Market Dominance
+  // Market Dominance & Ratios
   { id: 'dominance', label: 'Market Dominance', default: false, category: 'Dominance' },
+  { id: 'ratio_btc', label: 'Price in BTC', default: false, category: 'Dominance' },
+  { id: 'ratio_eth', label: 'Price in ETH', default: false, category: 'Dominance' },
 ];
 
 type TechnicalMetrics = {
   rsi14: number | null;
   volatility30dPct: number | null;
   momentum30dPct: number | null;
+  sharpeRatio: number | null;
+  maxDrawdown: number | null;
   source: string | null;
   lastUpdate: string | null;
 };
@@ -395,6 +413,8 @@ export default function ComparePage() {
               rsi14: null,
               volatility30dPct: null,
               momentum30dPct: null,
+              sharpeRatio: null,
+              maxDrawdown: null,
               source: null,
               lastUpdate: null,
             }] as const;
@@ -411,6 +431,8 @@ export default function ComparePage() {
             rsi14: typeof rsi === 'number' ? rsi : null,
             volatility30dPct: typeof metrics.volatility30dPct === 'number' ? metrics.volatility30dPct : null,
             momentum30dPct: typeof metrics.momentum30dPct === 'number' ? metrics.momentum30dPct : null,
+            sharpeRatio: typeof metrics.sharpeRatio === 'number' ? metrics.sharpeRatio : null,
+            maxDrawdown: typeof metrics.maxDrawdownPct === 'number' ? metrics.maxDrawdownPct : null,
             source: typeof json.data?.meta?.source === 'string' ? json.data.meta.source : null,
             lastUpdate: typeof json.data?.meta?.lastUpdate === 'string' ? json.data.meta.lastUpdate : null,
           }] as const;
@@ -419,6 +441,8 @@ export default function ComparePage() {
             rsi14: null,
             volatility30dPct: null,
             momentum30dPct: null,
+            sharpeRatio: null,
+            maxDrawdown: null,
             source: null,
             lastUpdate: null,
           }] as const;
@@ -852,6 +876,28 @@ export default function ComparePage() {
               )}
             </div>
 
+            {/* Preset Comparison Groups */}
+            <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
+              <h2 className="text-lg font-semibold text-white mb-3 flex items-center">
+                <Zap className="w-5 h-5 text-emerald-400 mr-2" />
+                Quick Presets
+                <HelpIcon text="Load a preset group of coins for instant comparison. Click any preset to replace your current selection." />
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_GROUPS.map((group) => (
+                  <button
+                    key={group.label}
+                    type="button"
+                    onClick={() => setSelectedIds(group.ids)}
+                    className="px-4 py-2 bg-gray-700 hover:bg-emerald-600/20 hover:border-emerald-500/30 border border-gray-600 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-all"
+                  >
+                    <span className="mr-1.5">{group.icon}</span>
+                    {group.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Coin Selection */}
             <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700 shadow-sm">
               <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
@@ -955,7 +1001,11 @@ export default function ComparePage() {
                         {visibleColumns.includes('rsi') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">RSI</th>}
                         {visibleColumns.includes('volatility') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Vol (30d)</th>}
                         {visibleColumns.includes('momentum') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Mom (30d)</th>}
+                        {visibleColumns.includes('sharpe') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Sharpe</th>}
+                        {visibleColumns.includes('max_drawdown') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Max DD</th>}
                         {visibleColumns.includes('dominance') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">Dominance</th>}
+                        {visibleColumns.includes('ratio_btc') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">BTC Price</th>}
+                        {visibleColumns.includes('ratio_eth') && <th className="px-4 py-3 text-right text-emerald-400 font-medium">ETH Price</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1103,13 +1153,168 @@ export default function ComparePage() {
                           {technicalsLoading ? 'Loading…' : formatNullablePercent(technicals.get(coin.id)?.momentum30dPct)}
                         </td>
                       )}
+                      {visibleColumns.includes('sharpe') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {technicalsLoading ? 'Loading…' : (technicals.get(coin.id)?.sharpeRatio?.toFixed(2) ?? 'N/A')}
+                        </td>
+                      )}
+                      {visibleColumns.includes('max_drawdown') && (
+                        <td className={`px-4 py-3 text-right ${
+                          (technicals.get(coin.id)?.maxDrawdown ?? 0) < -20 ? 'text-red-400' : 'text-gray-300'
+                        }`}>
+                          {technicalsLoading ? 'Loading…' : formatNullablePercent(technicals.get(coin.id)?.maxDrawdown)}
+                        </td>
+                      )}
                       {visibleColumns.includes('dominance') && (
-                        <td className="px-4 py-3 text-right text-gray-300">Unavailable</td>
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {(() => {
+                            const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
+                            return totalMcap > 0 ? `${((coin.market_cap / totalMcap) * 100).toFixed(2)}%` : 'N/A';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns.includes('ratio_btc') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {(() => {
+                            const btc = coins.find(c => c.id === 'bitcoin');
+                            return btc && btc.current_price > 0
+                              ? `₿${(coin.current_price / btc.current_price).toFixed(8)}`
+                              : coin.id === 'bitcoin' ? '₿1.00000000' : 'N/A';
+                          })()}
+                        </td>
+                      )}
+                      {visibleColumns.includes('ratio_eth') && (
+                        <td className="px-4 py-3 text-right text-gray-300">
+                          {(() => {
+                            const eth = coins.find(c => c.id === 'ethereum');
+                            return eth && eth.current_price > 0
+                              ? `Ξ${(coin.current_price / eth.current_price).toFixed(6)}`
+                              : coin.id === 'ethereum' ? 'Ξ1.000000' : 'N/A';
+                          })()}
+                        </td>
                       )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Visual Comparison Charts */}
+            {!loading && coins.length >= 2 && (
+              <div className="mt-6 space-y-6">
+                {/* Market Cap Bar Chart */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">Market Cap Comparison</h3>
+                  <div className="space-y-3">
+                    {coins.map((coin) => {
+                      const maxMcap = Math.max(...coins.map(c => c.market_cap || 0));
+                      const pct = maxMcap > 0 ? ((coin.market_cap || 0) / maxMcap) * 100 : 0;
+                      return (
+                        <div key={coin.id} className="flex items-center gap-3">
+                          <div className="w-16 text-xs text-gray-400 font-medium uppercase text-right flex-shrink-0">{coin.symbol}</div>
+                          <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                              style={{ width: `${Math.max(pct, 2)}%` }}
+                            >
+                              {pct > 15 && <span className="text-xs font-medium text-white">{formatLargeNumber(coin.market_cap)}</span>}
+                            </div>
+                          </div>
+                          {pct <= 15 && <span className="text-xs text-gray-400">{formatLargeNumber(coin.market_cap)}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 24h Performance Comparison */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">24h Performance</h3>
+                  <div className="flex items-end gap-2 h-48 px-4">
+                    {coins.map((coin) => {
+                      const change = coin.price_change_percentage_24h || 0;
+                      const maxAbs = Math.max(1, ...coins.map(c => Math.abs(c.price_change_percentage_24h || 0)));
+                      const barHeight = (Math.abs(change) / maxAbs) * 80;
+                      const isPositive = change >= 0;
+                      return (
+                        <div key={coin.id} className="flex-1 flex flex-col items-center justify-end h-full">
+                          <span className={`text-xs font-bold mb-1 ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                            {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                          </span>
+                          <div className="w-full flex justify-center">
+                            <div
+                              className={`w-10 max-w-full rounded-t-lg transition-all duration-500 ${
+                                isPositive ? 'bg-gradient-to-t from-emerald-600 to-emerald-400' : 'bg-gradient-to-t from-red-600 to-red-400'
+                              }`}
+                              style={{ height: `${Math.max(barHeight, 4)}%` }}
+                            />
+                          </div>
+                          <div className="w-full border-t border-gray-600 mt-0" />
+                          <span className="text-xs text-gray-400 mt-2 uppercase font-medium">{coin.symbol}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Volume Comparison */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">24h Volume Comparison</h3>
+                  <div className="space-y-3">
+                    {coins.map((coin) => {
+                      const maxVol = Math.max(...coins.map(c => c.total_volume || 0));
+                      const pct = maxVol > 0 ? ((coin.total_volume || 0) / maxVol) * 100 : 0;
+                      return (
+                        <div key={coin.id} className="flex items-center gap-3">
+                          <div className="w-16 text-xs text-gray-400 font-medium uppercase text-right flex-shrink-0">{coin.symbol}</div>
+                          <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-blue-500 to-purple-400 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
+                              style={{ width: `${Math.max(pct, 2)}%` }}
+                            >
+                              {pct > 15 && <span className="text-xs font-medium text-white">{formatLargeNumber(coin.total_volume)}</span>}
+                            </div>
+                          </div>
+                          {pct <= 15 && <span className="text-xs text-gray-400">{formatLargeNumber(coin.total_volume)}</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ATH Distance Comparison */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">Distance from All-Time High</h3>
+                  <div className="space-y-3">
+                    {coins.map((coin) => {
+                      const athPct = coin.ath_change_percentage || -100;
+                      const fillPct = Math.min(100, 100 + athPct); // 0% at ATH = 100% full, -100% = 0% full
+                      return (
+                        <div key={coin.id} className="flex items-center gap-3">
+                          <div className="w-16 text-xs text-gray-400 font-medium uppercase text-right flex-shrink-0">{coin.symbol}</div>
+                          <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full flex items-center justify-end pr-2 transition-all duration-500 ${
+                                fillPct > 70 ? 'bg-gradient-to-r from-green-600 to-green-400' :
+                                fillPct > 40 ? 'bg-gradient-to-r from-yellow-600 to-yellow-400' :
+                                'bg-gradient-to-r from-red-600 to-red-400'
+                              }`}
+                              style={{ width: `${Math.max(fillPct, 2)}%` }}
+                            >
+                              {fillPct > 20 && (
+                                <span className="text-xs font-medium text-white">
+                                  {athPct.toFixed(1)}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {fillPct <= 20 && <span className="text-xs text-gray-400">{athPct.toFixed(1)}%</span>}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}

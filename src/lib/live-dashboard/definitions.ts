@@ -1055,6 +1055,12 @@ const AUGMENT_CATALOG: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'funnel', component: 'FunnelWidget', title: 'Market Cap Funnel', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
   { id: 'gauge-cluster', component: 'GaugeClusterWidget', title: 'Market Health Gauges', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'] },
   { id: 'scatter-3d', component: 'Scatter3DWidget', title: '3D Market Explorer', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 } },
+  // Pro charts (Phase 8)
+  { id: 'radial-bar', component: 'RadialBarWidget', title: 'Radial Bar (Market Cap)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12, mode: 'market_cap' } },
+  { id: 'composed-chart', component: 'ComposedChartWidget', title: 'Volume + Change (Composed)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 15 } },
+  { id: 'dominance-area', component: 'DominanceAreaWidget', title: 'Dominance Stacked Area', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'] },
+  { id: 'drawdown', component: 'DrawdownChartWidget', title: 'Drawdown from Peak (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 6 } },
+  { id: 'return-histogram', component: 'ReturnHistogramWidget', title: 'Return Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 50 } },
   // Full-width visualizations
   { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
   { id: 'sparkline-grid', component: 'MiniSparklineGrid', title: 'Sparkline Grid', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
@@ -1066,6 +1072,7 @@ const OHLC_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'candlestick', component: 'CandlestickChartWidget', title: 'BTC Candlestick (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
   { id: 'price-chart', component: 'PriceChartWidget', title: 'BTC Price Trend (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
   { id: 'mcap-timeline', component: 'MarketCapTimelineWidget', title: 'BTC Market Cap (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
+  { id: 'heikin-ashi', component: 'HeikinAshiWidget', title: 'BTC Heikin-Ashi (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin' } },
 ];
 
 const HISTORY_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [

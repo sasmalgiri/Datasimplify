@@ -53,6 +53,13 @@ import { SunburstWidget } from './widgets/SunburstWidget';
 import { FunnelWidget } from './widgets/FunnelWidget';
 import { GaugeClusterWidget } from './widgets/GaugeClusterWidget';
 import { Scatter3DWidget } from './widgets/Scatter3DWidget';
+// Phase 8 pro charts
+import { RadialBarWidget } from './widgets/RadialBarWidget';
+import { ComposedChartWidget } from './widgets/ComposedChartWidget';
+import { DominanceAreaWidget } from './widgets/DominanceAreaWidget';
+import { DrawdownChartWidget } from './widgets/DrawdownChartWidget';
+import { HeikinAshiWidget } from './widgets/HeikinAshiWidget';
+import { ReturnHistogramWidget } from './widgets/ReturnHistogramWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -96,6 +103,12 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   FunnelWidget,
   GaugeClusterWidget,
   Scatter3DWidget,
+  RadialBarWidget,
+  ComposedChartWidget,
+  DominanceAreaWidget,
+  DrawdownChartWidget,
+  HeikinAshiWidget,
+  ReturnHistogramWidget,
 };
 
 interface DashboardWidgetProps {
