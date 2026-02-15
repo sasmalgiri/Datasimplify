@@ -9,6 +9,23 @@ export function DominanceWidget() {
   const themeColors = getThemeColors(customization.colorTheme);
   const global = data.global;
 
+  const insight = useMemo(() => {
+    if (!global?.market_cap_percentage) return null;
+    const btcDom = global.market_cap_percentage.btc ?? 0;
+    const position = btcDom >= 50 ? 'above' : 'below';
+    const interpretation = btcDom >= 50
+      ? 'capital concentrated in Bitcoin'
+      : 'capital spreading to altcoins';
+    const trend = btcDom >= 55
+      ? 'Rising = risk-off sentiment'
+      : btcDom <= 45
+        ? 'Falling = alt-friendly rotation'
+        : btcDom >= 50
+          ? 'Rising = risk-off sentiment'
+          : 'Falling = alt-friendly rotation';
+    return `BTC dominance ${btcDom.toFixed(1)}% \u2014 ${position} 50%, ${interpretation}. ${trend}`;
+  }, [global?.market_cap_percentage]);
+
   if (!global?.market_cap_percentage) {
     return (
       <div className="animate-pulse space-y-4 p-4">
@@ -27,22 +44,6 @@ export function DominanceWidget() {
     .slice(0, 7);
 
   const total = entries.reduce((s, [, v]) => s + v, 0);
-
-  const insight = useMemo(() => {
-    const btcDom = global.market_cap_percentage.btc ?? 0;
-    const position = btcDom >= 50 ? 'above' : 'below';
-    const interpretation = btcDom >= 50
-      ? 'capital concentrated in Bitcoin'
-      : 'capital spreading to altcoins';
-    const trend = btcDom >= 55
-      ? 'Rising = risk-off sentiment'
-      : btcDom <= 45
-        ? 'Falling = alt-friendly rotation'
-        : btcDom >= 50
-          ? 'Rising = risk-off sentiment'
-          : 'Falling = alt-friendly rotation';
-    return `BTC dominance ${btcDom.toFixed(1)}% \u2014 ${position} 50%, ${interpretation}. ${trend}`;
-  }, [global.market_cap_percentage]);
 
   return (
     <div>

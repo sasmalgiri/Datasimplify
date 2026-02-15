@@ -21,19 +21,12 @@ export function FearGreedWidget() {
   const themeColors = getThemeColors(customization.colorTheme);
   const fg = data.fearGreed?.[0];
 
-  if (!fg) {
-    return (
-      <div className="flex items-center justify-center h-48 animate-pulse">
-        <div className="w-32 h-32 bg-gray-700 rounded-full" />
-      </div>
-    );
-  }
-
-  const value = parseInt(fg.value, 10);
-  const color = getColor(value);
-  const label = getLabel(fg.value_classification);
+  const value = fg ? parseInt(fg.value, 10) : 0;
+  const color = fg ? getColor(value) : '#374151';
+  const label = fg ? getLabel(fg.value_classification) : '';
 
   const insight = useMemo(() => {
+    if (!fg) return null;
     let interpretation = '';
     if (value <= 25) interpretation = 'Extreme fear \u2014 historically a buying zone';
     else if (value <= 45) interpretation = 'Fear zone \u2014 market sentiment cautious';
@@ -41,7 +34,15 @@ export function FearGreedWidget() {
     else if (value <= 75) interpretation = 'Greed zone \u2014 optimism rising, watch for overextension';
     else interpretation = 'Extreme greed \u2014 historically a sell zone';
     return `Current: ${value} (${label}) \u00B7 ${interpretation}`;
-  }, [value, label]);
+  }, [fg, value, label]);
+
+  if (!fg) {
+    return (
+      <div className="flex items-center justify-center h-48 animate-pulse">
+        <div className="w-32 h-32 bg-gray-700 rounded-full" />
+      </div>
+    );
+  }
 
   // SVG gauge
   const radius = 60;

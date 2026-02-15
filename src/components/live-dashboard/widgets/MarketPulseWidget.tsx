@@ -90,27 +90,13 @@ function MetricCard({ label, value, change, accentColor, extra }: MetricCardProp
 /*  Main widget                                                        */
 /* ------------------------------------------------------------------ */
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface MarketPulseWidgetProps {}
-
-export function MarketPulseWidget(_props: MarketPulseWidgetProps) {
+export function MarketPulseWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
   const global = data.global;
   const markets = data.markets;
   const fearGreed = data.fearGreed;
-
-  /* ----- Still loading: show skeletons ----- */
-  if (!global && !markets) {
-    return (
-      <div className="flex flex-wrap gap-2">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <MetricSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
 
   /* ----- Derive values ----- */
   const btc = markets?.find((c) => c.id === 'bitcoin');
@@ -146,6 +132,17 @@ export function MarketPulseWidget(_props: MarketPulseWidgetProps) {
     const parts = [`Market is ${direction} — ${pctGaining}% of top coins gaining`, domText, fgContext, mcapText].filter(Boolean);
     return parts.join('. ') + '.';
   }, [markets, fgValue, btcDom, mcapChange]);
+
+  /* ----- Still loading: show skeletons ----- */
+  if (!global && !markets) {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <MetricSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
