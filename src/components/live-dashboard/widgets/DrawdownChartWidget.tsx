@@ -20,12 +20,12 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: '' };
 
     // Pick coins with sparkline data
     const coinsWithSparkline = data.markets.filter((c) => c.sparkline_in_7d?.price?.length).slice(0, limit);
-    if (coinsWithSparkline.length === 0) return null;
+    if (coinsWithSparkline.length === 0) return { option: null, insight: '' };
 
     const sparkLen = coinsWithSparkline[0].sparkline_in_7d!.price.length;
     const now = Date.now();
@@ -35,6 +35,7 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
       return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:00`;
     });
 
+    const drawdownStats: { symbol: string; maxDD: number }[] = [];
     const series = coinsWithSparkline.map((coin, idx) => {
       const prices = coin.sparkline_in_7d!.price;
       // Calculate drawdown from running max
@@ -43,6 +44,7 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
         if (p > runningMax) runningMax = p;
         return ((p - runningMax) / runningMax) * 100;
       });
+      drawdownStats.push({ symbol: coin.symbol.toUpperCase(), maxDD: Math.min(...drawdowns) });
 
       const color = themeColors.palette[idx % themeColors.palette.length];
 
@@ -65,7 +67,12 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
       };
     });
 
-    return {
+    drawdownStats.sort((a, b) => a.maxDD - b.maxDD);
+    const deepest = drawdownStats[0];
+    const shallowest = drawdownStats[drawdownStats.length - 1];
+    const insightText = `Deepest dip: ${deepest.symbol} (${deepest.maxDD.toFixed(1)}%) · Shallowest: ${shallowest.symbol} (${shallowest.maxDD.toFixed(1)}%)`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '15%', top: '15%', containLabel: true },
@@ -118,7 +125,7 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
         },
       ],
       series,
-    };
+    } };
   }, [data.markets, limit, themeColors, customization]);
 
   if (!data.markets) {
@@ -138,12 +145,17 @@ export function DrawdownChartWidget({ limit = 6 }: DrawdownChartWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }

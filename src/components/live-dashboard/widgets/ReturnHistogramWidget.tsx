@@ -20,8 +20,8 @@ export function ReturnHistogramWidget({ limit = 50 }: ReturnHistogramWidgetProps
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: '' };
 
     const coins = data.markets.slice(0, limit);
     const changes = coins.map((c) => c.price_change_percentage_24h || 0);
@@ -63,7 +63,11 @@ export function ReturnHistogramWidget({ limit = 50 }: ReturnHistogramWidgetProps
     const sorted = [...changes].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
 
-    return {
+    const positiveCount = changes.filter(c => c >= 0).length;
+    const skew = mean > median ? 'right-skewed (more extreme winners)' : mean < median ? 'left-skewed (more extreme losers)' : 'balanced';
+    const insightText = `Mean: ${mean >= 0 ? '+' : ''}${mean.toFixed(2)}% · Median: ${median >= 0 ? '+' : ''}${median.toFixed(2)}% · ${positiveCount}/${changes.length} positive · ${skew}`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '10%', top: '12%', containLabel: true },
@@ -115,7 +119,7 @@ export function ReturnHistogramWidget({ limit = 50 }: ReturnHistogramWidgetProps
           },
         },
       ],
-    };
+    } };
   }, [data.markets, limit, themeColors, customization]);
 
   if (!data.markets) {
@@ -129,12 +133,17 @@ export function ReturnHistogramWidget({ limit = 50 }: ReturnHistogramWidgetProps
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }

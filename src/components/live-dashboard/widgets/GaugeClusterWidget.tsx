@@ -71,10 +71,10 @@ export function GaugeClusterWidget({}: GaugeClusterWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     const markets = data.markets;
     const global = data.global;
-    if (!markets?.length) return null;
+    if (!markets?.length) return { option: null, insight: '' };
 
     const top50 = markets.slice(0, 50);
 
@@ -92,13 +92,24 @@ export function GaugeClusterWidget({}: GaugeClusterWidgetProps) {
     const totalMcap = global?.total_market_cap?.usd || markets.reduce((s, c) => s + (c.market_cap || 0), 0);
     const volStrength = totalMcap > 0 ? Math.min(100, (totalVol / totalMcap) * 1000) : 0;
 
+    const mRound = Math.round(momentum);
+    const vRound = Math.round(volatility);
+    const vsRound = Math.round(volStrength);
+    const rating = (mRound >= 60 && vRound < 60 && vsRound >= 40) ? 'Healthy market — bullish momentum with moderate volatility'
+      : (mRound < 40) ? 'Weak momentum — most coins declining, caution advised'
+      : (vRound >= 70) ? 'High volatility — market is swinging, expect large moves'
+      : 'Mixed signals — monitor closely for direction';
+
     return {
-      ...ECHARTS_THEME,
-      series: [
-        makeGauge(['17%', '55%'], momentum, 'Momentum', themeColors.primary),
-        makeGauge(['50%', '55%'], volatility, 'Volatility', themeColors.primary),
-        makeGauge(['83%', '55%'], volStrength, 'Volume', themeColors.primary),
-      ],
+      option: {
+        ...ECHARTS_THEME,
+        series: [
+          makeGauge(['17%', '55%'], momentum, 'Momentum', themeColors.primary),
+          makeGauge(['50%', '55%'], volatility, 'Volatility', themeColors.primary),
+          makeGauge(['83%', '55%'], volStrength, 'Volume', themeColors.primary),
+        ],
+      },
+      insight: rating,
     };
   }, [data.markets, data.global, themeColors]);
 
@@ -113,12 +124,17 @@ export function GaugeClusterWidget({}: GaugeClusterWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }

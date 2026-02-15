@@ -19,15 +19,15 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     // Use sparkline data from markets as a proxy for correlation
-    if (!data.markets) return null;
+    if (!data.markets) return { option: null, insight: '' };
 
     const coins = coinIds
       ? data.markets.filter((c) => coinIds.includes(c.id))
       : data.markets.filter((c) => c.sparkline_in_7d?.price?.length).slice(0, 8);
 
-    if (coins.length < 2) return null;
+    if (coins.length < 2) return { option: null, insight: '' };
 
     const symbols = coins.map((c) => c.symbol.toUpperCase());
 
@@ -46,6 +46,17 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
       }
     }
 
+    // Find most and least correlated pair
+    let maxCorr = -2, minCorr = 2;
+    let maxPair = '', minPair = '';
+    for (let i = 0; i < coins.length; i++) {
+      for (let j = i + 1; j < coins.length; j++) {
+        if (correlations[i][j] > maxCorr) { maxCorr = correlations[i][j]; maxPair = `${symbols[i]}-${symbols[j]}`; }
+        if (correlations[i][j] < minCorr) { minCorr = correlations[i][j]; minPair = `${symbols[i]}-${symbols[j]}`; }
+      }
+    }
+    const insightText = `Most correlated: ${maxPair} (${maxCorr.toFixed(2)}) · Least: ${minPair} (${minCorr.toFixed(2)})`;
+
     const heatmapData: [number, number, number][] = [];
     for (let i = 0; i < symbols.length; i++) {
       for (let j = 0; j < symbols.length; j++) {
@@ -53,7 +64,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
       }
     }
 
-    return {
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '15%', right: '5%', top: '5%', bottom: '15%' },
@@ -105,7 +116,7 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
           },
         },
       ],
-    };
+    } };
   }, [data.markets, coinIds, customization]);
 
   if (!option) {
@@ -117,13 +128,18 @@ export function CorrelationWidget({ coinIds }: CorrelationWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }
 

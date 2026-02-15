@@ -43,10 +43,12 @@ export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: '' };
 
     const linkMap = new Map<string, { value: number; count: number }>();
+    let gainCount = 0;
+    let lossCount = 0;
 
     for (const coin of data.markets) {
       const tier = getTier(coin.market_cap || 0);
@@ -56,6 +58,8 @@ export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
       existing.value += coin.market_cap || 0;
       existing.count += 1;
       linkMap.set(key, existing);
+      if ((coin.price_change_percentage_24h || 0) >= 0) gainCount++;
+      else lossCount++;
     }
 
     const nodeSet = new Set<string>();
@@ -77,36 +81,45 @@ export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
       };
     });
 
+    const total = gainCount + lossCount;
+    const gainPct = total > 0 ? ((gainCount / total) * 100).toFixed(0) : '0';
+    const insightText = gainCount > lossCount
+      ? `${gainPct}% of coins are gaining — capital flowing toward green`
+      : `${100 - Number(gainPct)}% of coins are losing — capital flowing toward red`;
+
     return {
-      ...ECHARTS_THEME,
-      tooltip: {
-        ...ECHARTS_THEME.tooltip,
-        trigger: 'item' as const,
-        formatter: (params: any) => {
-          if (params.dataType === 'edge') {
-            const d = params.data;
-            return `<b>${d.source}</b> → <b>${d.target}</b><br/>${d.count} coins<br/>MCap: ${formatCompact(d.value)}`;
-          }
-          return `<b>${params.name}</b>`;
+      option: {
+        ...ECHARTS_THEME,
+        tooltip: {
+          ...ECHARTS_THEME.tooltip,
+          trigger: 'item' as const,
+          formatter: (params: any) => {
+            if (params.dataType === 'edge') {
+              const d = params.data;
+              return `<b>${d.source}</b> → <b>${d.target}</b><br/>${d.count} coins<br/>MCap: ${formatCompact(d.value)}`;
+            }
+            return `<b>${params.name}</b>`;
+          },
         },
+        series: [
+          {
+            type: 'sankey',
+            left: '2%',
+            right: '2%',
+            top: '5%',
+            bottom: '5%',
+            nodeWidth: 20,
+            nodeGap: 10,
+            layoutIterations: 32,
+            emphasis: { focus: 'adjacency' },
+            lineStyle: { color: 'gradient', opacity: 0.35, curveness: 0.5 },
+            label: { color: '#fff', fontSize: 10 },
+            data: nodes,
+            links,
+          },
+        ],
       },
-      series: [
-        {
-          type: 'sankey',
-          left: '2%',
-          right: '2%',
-          top: '5%',
-          bottom: '5%',
-          nodeWidth: 20,
-          nodeGap: 10,
-          layoutIterations: 32,
-          emphasis: { focus: 'adjacency' },
-          lineStyle: { color: 'gradient', opacity: 0.35, curveness: 0.5 },
-          label: { color: '#fff', fontSize: 10 },
-          data: nodes,
-          links,
-        },
-      ],
+      insight: insightText,
     };
   }, [data.markets, themeColors]);
 
@@ -121,12 +134,17 @@ export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }

@@ -19,8 +19,8 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: '' };
 
     const coins = data.markets.slice(0, limit);
 
@@ -57,7 +57,13 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
       };
     });
 
-    return {
+    // Generate insight
+    const gainers = coins.filter(c => (c.price_change_percentage_24h ?? 0) >= 0);
+    const bestCoin = coins.reduce((best, c) => (c.price_change_percentage_24h ?? 0) > (best.price_change_percentage_24h ?? 0) ? c : best, coins[0]);
+    const worstCoin = coins.reduce((worst, c) => (c.price_change_percentage_24h ?? 0) < (worst.price_change_percentage_24h ?? 0) ? c : worst, coins[0]);
+    const insightText = `${gainers.length}/${coins.length} coins gaining · Best: ${bestCoin.symbol.toUpperCase()} (${(bestCoin.price_change_percentage_24h ?? 0) >= 0 ? '+' : ''}${(bestCoin.price_change_percentage_24h ?? 0).toFixed(1)}%) · Worst: ${worstCoin.symbol.toUpperCase()} (${(worstCoin.price_change_percentage_24h ?? 0).toFixed(1)}%)`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -116,7 +122,7 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
         },
       ],
       animationEasing: 'elasticOut' as const,
-    };
+    } };
   }, [data.markets, limit, customization]);
 
   if (!option) {
@@ -128,12 +134,17 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }

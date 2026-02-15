@@ -20,8 +20,8 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: '' };
 
     const coins = data.markets.slice(0, limit);
     const labels = coins.map((c) => c.symbol.toUpperCase());
@@ -30,7 +30,13 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
     const changeData = coins.map((c) => c.price_change_percentage_24h || 0);
     const mcapData = coins.map((c) => c.market_cap);
 
-    return {
+    // Find coins where high volume + positive change (strong signal)
+    const strongSignals = coins.filter((c, i) => changeData[i] > 1 && volumeData[i] > volumeData[0] * 0.1);
+    const insightText = strongSignals.length > 0
+      ? `Strong signals: ${strongSignals.map(c => c.symbol.toUpperCase()).join(', ')} — rising price backed by high volume`
+      : 'No strong volume-backed moves detected right now';
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '8%', bottom: '15%', top: '15%', containLabel: true },
@@ -116,7 +122,7 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
           },
         },
       ],
-    };
+    } };
   }, [data.markets, limit, themeColors, customization]);
 
   if (!data.markets) {
@@ -130,12 +136,17 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && (
+        <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>
+      )}
+    </div>
   );
 }
