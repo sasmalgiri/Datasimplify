@@ -1009,6 +1009,109 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   },
 ];
 
+// ─── AUTO-AUGMENT: Ensure every dashboard has access to ALL chart types ───────
+// Each dashboard keeps its curated widget order. Missing widgets are appended at
+// the end so they appear as toggleable options in the widget selector.
+// Only "universal" endpoints (cheap & lightweight) are auto-added to all dashboards.
+// OHLC / Exchange / Derivatives widgets are only added where those endpoints already exist.
+
+const UNIVERSAL_ENDPOINTS = ['markets', 'global', 'fear_greed', 'trending', 'categories'] as const;
+
+/** All widgets that only need universal endpoints */
+const AUGMENT_CATALOG: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  // Value-add widgets
+  { id: 'market-pulse', component: 'MarketPulseWidget', title: 'Key Indicators', gridColumn: '1 / -1', dataEndpoints: ['markets', 'global', 'fear_greed'] },
+  { id: 'category-badges', component: 'CategoryBadgesWidget', title: 'Sector Movers', gridColumn: 'span 2', dataEndpoints: ['categories'] },
+  { id: 'watchlist', component: 'WatchlistWidget', title: 'My Watchlist', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'price-alerts', component: 'PriceAlertWidget', title: 'Price Alerts', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'converter', component: 'PriceConverterWidget', title: 'Quick Convert', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  // Visualization charts
+  { id: 'treemap', component: 'TreemapWidget', title: 'Market Cap Treemap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 } },
+  { id: 'heatmap', component: 'HeatmapWidget', title: 'Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'] },
+  { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 } },
+  { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 } },
+  { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'correlation', component: 'CorrelationWidget', title: 'Correlation Matrix', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'multi-line', component: 'MultiLineChartWidget', title: 'Price Overlay (7d %)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { coinIds: ['bitcoin', 'ethereum', 'solana'] } },
+  { id: 'compare', component: 'CoinCompareWidget', title: 'Coin Comparison', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { coinIds: ['bitcoin', 'ethereum', 'solana'] } },
+  { id: 'boxplot', component: 'BoxPlotWidget', title: '7d Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
+  { id: 'returns-bar', component: 'ReturnsBarWidget', title: 'Returns by Timeframe', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
+  { id: 'altseason', component: 'AltseasonWidget', title: 'Altseason Gauge', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], props: { topN: 50 } },
+  { id: 'area-chart', component: 'AreaChartWidget', title: 'Stacked Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' } },
+  { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Change Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 } },
+  // Market structure
+  { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'] },
+  { id: 'pie', component: 'PieChartWidget', title: 'Market Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' } },
+  { id: 'supply', component: 'SupplyWidget', title: 'Supply Analysis', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
+  { id: 'volume', component: 'VolumeChartWidget', title: 'Volume Rankings', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 } },
+  // Sentiment & trends
+  { id: 'fear-greed', component: 'FearGreedWidget', title: 'Fear & Greed Index', gridColumn: 'span 2', dataEndpoints: ['fear_greed'] },
+  { id: 'trending', component: 'TrendingWidget', title: 'Trending Now', gridColumn: 'span 2', dataEndpoints: ['trending'] },
+  { id: 'gainers', component: 'GainersLosersWidget', title: 'Top Movers', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  // Full-width visualizations
+  { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
+  { id: 'sparkline-grid', component: 'MiniSparklineGrid', title: 'Sparkline Grid', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
+  { id: 'top-coins', component: 'TopCoinsTable', title: 'Top Cryptocurrencies', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 } },
+];
+
+/** Endpoint-specific widgets — only added where the dashboard already fetches that data */
+const OHLC_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'candlestick', component: 'CandlestickChartWidget', title: 'BTC Candlestick (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
+  { id: 'price-chart', component: 'PriceChartWidget', title: 'BTC Price Trend (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
+  { id: 'mcap-timeline', component: 'MarketCapTimelineWidget', title: 'BTC Market Cap (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 } },
+];
+
+const HISTORY_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'historical', component: 'HistoricalPriceWidget', title: 'BTC Historical (90d)', gridColumn: 'span 2', dataEndpoints: ['coin_history'], props: { coinId: 'bitcoin', days: 90 } },
+];
+
+const EXCHANGE_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'exchange-vol', component: 'ExchangeVolumeWidget', title: 'Exchange Volume', gridColumn: 'span 2', dataEndpoints: ['exchanges'] },
+];
+
+const DERIVATIVES_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'derivatives-table', component: 'DerivativesTableWidget', title: 'Derivatives Tickers', gridColumn: '1 / -1', dataEndpoints: ['derivatives'], props: { limit: 20 } },
+];
+
+// Run augmentation on every dashboard
+LIVE_DASHBOARDS.forEach((dashboard) => {
+  // 1. Ensure universal endpoints are present (cheap lightweight calls)
+  for (const ep of UNIVERSAL_ENDPOINTS) {
+    if (!dashboard.requiredEndpoints.includes(ep)) {
+      dashboard.requiredEndpoints.push(ep);
+    }
+  }
+
+  // 2. Track existing components to avoid duplicates
+  const existingComponents = new Set(dashboard.widgets.map((w) => w.component));
+  let maxOrder = Math.max(0, ...dashboard.widgets.map((w) => w.mobileOrder ?? 0));
+
+  const addIfMissing = (widget: Omit<WidgetConfig, 'mobileOrder'>) => {
+    if (!existingComponents.has(widget.component)) {
+      maxOrder++;
+      dashboard.widgets.push({ ...widget, mobileOrder: maxOrder });
+      existingComponents.add(widget.component);
+    }
+  };
+
+  // 3. Add all universal widgets
+  AUGMENT_CATALOG.forEach(addIfMissing);
+
+  // 4. Add endpoint-specific widgets only where those endpoints already exist
+  if (dashboard.requiredEndpoints.includes('ohlc') || dashboard.requiredEndpoints.includes('ohlc_multi')) {
+    OHLC_AUGMENT.forEach(addIfMissing);
+  }
+  if (dashboard.requiredEndpoints.includes('coin_history')) {
+    HISTORY_AUGMENT.forEach(addIfMissing);
+  }
+  if (dashboard.requiredEndpoints.includes('exchanges')) {
+    EXCHANGE_AUGMENT.forEach(addIfMissing);
+  }
+  if (dashboard.requiredEndpoints.includes('derivatives') || dashboard.requiredEndpoints.includes('derivatives_exchanges')) {
+    DERIVATIVES_AUGMENT.forEach(addIfMissing);
+  }
+});
+
 export function getDashboardBySlug(slug: string): LiveDashboardDefinition | undefined {
   return LIVE_DASHBOARDS.find((d) => d.slug === slug);
 }
