@@ -18,7 +18,7 @@ interface FunnelWidgetProps {
 export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
   const option = useMemo(() => {
     if (!data.markets?.length) return null;
@@ -37,6 +37,7 @@ export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         formatter: (params: any) => {

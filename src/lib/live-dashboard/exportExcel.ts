@@ -139,7 +139,7 @@ export async function exportDashboardAsExcel(
     data.fearGreed.forEach((fg: FearGreedData) => {
       const d = new Date(Number(fg.timestamp) * 1000);
       ws.addRow({
-        date: d.toLocaleDateString(),
+        date: d.toISOString().split('T')[0],
         value: Number(fg.value),
         classification: fg.value_classification,
       });
@@ -336,12 +336,17 @@ export async function exportDashboardAsCsv(
   const slug = dashboardName.toLowerCase().replace(/\s+/g, '-');
   let hasFiles = false;
 
+  // Helper: escape double quotes in CSV fields per RFC 4180
+  const q = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  // Helper: add UTF-8 BOM for Windows Excel compatibility
+  const bom = '\uFEFF';
+
   // Markets CSV
   if (data.markets?.length) {
     const header = ['Rank', 'Name', 'Symbol', 'Price (USD)', '24h %', '7d %', 'Market Cap', 'Volume (24h)', '24h High', '24h Low', 'Circulating Supply', 'Max Supply', 'Supply %'];
     const rows = data.markets.map((c: MarketCoin) => [
       c.market_cap_rank,
-      `"${c.name}"`,
+      q(c.name),
       c.symbol.toUpperCase(),
       c.current_price,
       c.price_change_percentage_24h,
@@ -354,7 +359,7 @@ export async function exportDashboardAsCsv(
       c.max_supply ?? '',
       c.circulating_supply && c.max_supply ? ((c.circulating_supply / c.max_supply) * 100).toFixed(1) : '',
     ].join(','));
-    zip.file('markets.csv', [header.join(','), ...rows].join('\n'));
+    zip.file('markets.csv', bom + [header.join(','), ...rows].join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -376,7 +381,7 @@ export async function exportDashboardAsCsv(
         .slice(0, 10)
         .forEach(([coin, pct]) => lines.push(`${coin.toUpperCase()},${pct}`));
     }
-    zip.file('global.csv', lines.join('\n'));
+    zip.file('global.csv', bom + lines.join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -384,9 +389,9 @@ export async function exportDashboardAsCsv(
   if (data.trending?.length) {
     const header = 'Rank,Name,Symbol,Price,24h %';
     const rows = data.trending.map((t: TrendingCoin) =>
-      `${t.item.market_cap_rank},"${t.item.name}",${t.item.symbol.toUpperCase()},${t.item.data?.price ?? ''},${t.item.data?.price_change_percentage_24h?.usd ?? ''}`,
+      `${t.item.market_cap_rank},${q(t.item.name)},${t.item.symbol.toUpperCase()},${t.item.data?.price ?? ''},${t.item.data?.price_change_percentage_24h?.usd ?? ''}`,
     );
-    zip.file('trending.csv', [header, ...rows].join('\n'));
+    zip.file('trending.csv', bom + [header, ...rows].join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -395,9 +400,9 @@ export async function exportDashboardAsCsv(
     const header = 'Date,Value,Classification';
     const rows = data.fearGreed.map((fg: FearGreedData) => {
       const d = new Date(Number(fg.timestamp) * 1000);
-      return `${d.toLocaleDateString()},${fg.value},"${fg.value_classification}"`;
+      return `${d.toISOString().split('T')[0]},${fg.value},${q(fg.value_classification)}`;
     });
-    zip.file('fear-greed.csv', [header, ...rows].join('\n'));
+    zip.file('fear-greed.csv', bom + [header, ...rows].join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -405,9 +410,9 @@ export async function exportDashboardAsCsv(
   if (data.categories?.length) {
     const header = 'Category,Market Cap,24h Volume,24h %';
     const rows = data.categories.map((cat: any) =>
-      `"${cat.name}",${cat.market_cap ?? ''},${cat.total_volume ?? ''},${cat.market_cap_change_percentage_24h ?? ''}`,
+      `${q(cat.name)},${cat.market_cap ?? ''},${cat.total_volume ?? ''},${cat.market_cap_change_percentage_24h ?? ''}`,
     );
-    zip.file('categories.csv', [header, ...rows].join('\n'));
+    zip.file('categories.csv', bom + [header, ...rows].join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -415,9 +420,9 @@ export async function exportDashboardAsCsv(
   if (data.exchanges?.length) {
     const header = 'Rank,Exchange,Trust Score,24h Volume (BTC),Year Est.';
     const rows = data.exchanges.map((ex: any) =>
-      `${ex.trust_score_rank},"${ex.name}",${ex.trust_score},${ex.trade_volume_24h_btc ?? ''},${ex.year_established ?? ''}`,
+      `${ex.trust_score_rank},${q(ex.name)},${ex.trust_score},${ex.trade_volume_24h_btc ?? ''},${ex.year_established ?? ''}`,
     );
-    zip.file('exchanges.csv', [header, ...rows].join('\n'));
+    zip.file('exchanges.csv', bom + [header, ...rows].join('\n') + '\n');
     hasFiles = true;
   }
 
@@ -432,7 +437,7 @@ export async function exportDashboardAsCsv(
       }
     }
     if (rows.length > 0) {
-      zip.file('ohlc.csv', [header, ...rows].join('\n'));
+      zip.file('ohlc.csv', bom + [header, ...rows].join('\n') + '\n');
       hasFiles = true;
     }
   }
@@ -448,7 +453,7 @@ export async function exportDashboardAsCsv(
       const rows = prices.map((p, i) =>
         `${new Date(p[0]).toISOString().split('T')[0]},${p[1]},${mcaps[i]?.[1] ?? ''},${vols[i]?.[1] ?? ''}`,
       );
-      zip.file('historical.csv', [header, ...rows].join('\n'));
+      zip.file('historical.csv', bom + [header, ...rows].join('\n') + '\n');
       hasFiles = true;
     }
   }
@@ -457,9 +462,26 @@ export async function exportDashboardAsCsv(
   if ((data as any).derivatives?.length) {
     const header = 'Market,Symbol,Price,24h %,Funding Rate,Open Interest,Volume 24h,Type';
     const rows = (data as any).derivatives.map((d: any) =>
-      `"${d.market}","${d.symbol}",${d.price},${d.price_percentage_change_24h},${d.funding_rate},${d.open_interest},${d.volume_24h},"${d.contract_type}"`,
+      `${q(d.market)},${q(d.symbol)},${d.price},${d.price_percentage_change_24h},${d.funding_rate},${d.open_interest},${d.volume_24h},${q(d.contract_type)}`,
     );
-    zip.file('derivatives.csv', [header, ...rows].join('\n'));
+    zip.file('derivatives.csv', bom + [header, ...rows].join('\n') + '\n');
+    hasFiles = true;
+  }
+
+  // DeFi Global CSV
+  if ((data as any).defiGlobal) {
+    const dg = (data as any).defiGlobal;
+    const lines = [
+      'Metric,Value',
+      `DeFi Market Cap,${dg.defi_market_cap ?? ''}`,
+      `ETH Market Cap,${dg.eth_market_cap ?? ''}`,
+      `DeFi to ETH Ratio,${dg.defi_to_eth_ratio ?? ''}`,
+      `DeFi Trading Volume (24h),${dg.trading_volume_24h ?? ''}`,
+      `DeFi Dominance,${dg.defi_dominance ?? ''}`,
+      `Top Coin,${dg.top_coin_name ?? ''}`,
+      `Top Coin DeFi Dominance,${dg.top_coin_defi_dominance ?? ''}`,
+    ];
+    zip.file('defi-global.csv', bom + lines.join('\n') + '\n');
     hasFiles = true;
   }
 

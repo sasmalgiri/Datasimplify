@@ -18,7 +18,7 @@ interface HeikinAshiWidgetProps {
 export function HeikinAshiWidget({ coinId = 'bitcoin' }: HeikinAshiWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
   const ohlcData = data.ohlc?.[coinId];
 
   const option = useMemo(() => {

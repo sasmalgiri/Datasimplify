@@ -17,7 +17,7 @@ interface Scatter3DWidgetProps {
 export function Scatter3DWidget({ limit = 30 }: Scatter3DWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = Math.max(400, CHART_HEIGHT_MAP[customization.chartHeight || 'normal']);
+  const chartHeight = Math.max(400, CHART_HEIGHT_MAP[customization.chartHeight]);
   const chartRef = useRef<HTMLDivElement>(null);
 
   const option = useMemo(() => {

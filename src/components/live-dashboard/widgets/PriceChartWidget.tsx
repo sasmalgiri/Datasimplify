@@ -11,6 +11,7 @@ interface PriceChartWidgetProps {
 export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
   const ohlcData = data.ohlc[coinId];
 
   if (!ohlcData || ohlcData.length === 0) {
@@ -29,7 +30,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
   const range = max - min || 1;
 
   const w = 600;
-  const h = 200;
+  const h = chartHeight;
   const padding = 20;
 
   const points = closes.map((p, i) => {

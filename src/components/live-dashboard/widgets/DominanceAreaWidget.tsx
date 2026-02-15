@@ -16,7 +16,7 @@ interface DominanceAreaWidgetProps {}
 export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
   const option = useMemo(() => {
     const global = data.global;

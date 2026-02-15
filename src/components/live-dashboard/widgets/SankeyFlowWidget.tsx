@@ -41,7 +41,7 @@ function getBucket(change: number) {
 export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
   const { option, insight } = useMemo(() => {
     if (!data.markets?.length) return { option: null, insight: '' };

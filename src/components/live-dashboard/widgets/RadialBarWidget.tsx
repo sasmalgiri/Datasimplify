@@ -19,7 +19,7 @@ interface RadialBarWidgetProps {
 export function RadialBarWidget({ limit = 12, mode = 'market_cap' }: RadialBarWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
   const option = useMemo(() => {
     if (!data.markets?.length) return null;

@@ -69,7 +69,7 @@ function makeGauge(
 export function GaugeClusterWidget({}: GaugeClusterWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
   const { option, insight } = useMemo(() => {
     const markets = data.markets;

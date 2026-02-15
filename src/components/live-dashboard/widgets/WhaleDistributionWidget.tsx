@@ -30,7 +30,7 @@ function getTier(mcap: number) {
 export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = Math.max(300, CHART_HEIGHT_MAP[customization.chartHeight || 'normal']);
+  const chartHeight = Math.max(300, CHART_HEIGHT_MAP[customization.chartHeight]);
 
   const option = useMemo(() => {
     if (!data.markets?.length) return null;
