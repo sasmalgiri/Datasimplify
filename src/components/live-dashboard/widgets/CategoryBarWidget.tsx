@@ -19,15 +19,15 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.categories || !Array.isArray(data.categories)) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.categories || !Array.isArray(data.categories)) return { option: null, insight: null };
 
     const categories = data.categories
       .filter((c: any) => c.market_cap_change_24h != null && c.name)
       .sort((a: any, b: any) => Math.abs(b.market_cap_change_24h) - Math.abs(a.market_cap_change_24h))
       .slice(0, limit);
 
-    if (categories.length === 0) return null;
+    if (categories.length === 0) return { option: null, insight: null };
 
     const names = categories.map((c: any) =>
       c.name.length > 20 ? c.name.slice(0, 20) + '...' : c.name,
@@ -41,7 +41,14 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
       },
     }));
 
-    return {
+    // Compute insight
+    const sortedByChange = [...categories].sort((a: any, b: any) => b.market_cap_change_24h - a.market_cap_change_24h);
+    const leading = sortedByChange[0];
+    const lagging = sortedByChange[sortedByChange.length - 1];
+    const avgReturn = categories.reduce((s: number, c: any) => s + c.market_cap_change_24h, 0) / categories.length;
+    const insightText = `Leading: ${leading.name} (${leading.market_cap_change_24h >= 0 ? '+' : ''}${leading.market_cap_change_24h.toFixed(1)}%) \u00B7 Lagging: ${lagging.name} (${lagging.market_cap_change_24h >= 0 ? '+' : ''}${lagging.market_cap_change_24h.toFixed(1)}%) \u00B7 Average sector return: ${avgReturn >= 0 ? '+' : ''}${avgReturn.toFixed(1)}%`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '30%', right: '8%', top: '3%', bottom: '3%', containLabel: false },
@@ -87,7 +94,7 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
         animationDelay: (idx: number) => idx * 40,
       }],
       animationEasing: 'cubicOut' as const,
-    };
+    }};
   }, [data.categories, limit, customization]);
 
   if (!option) {
@@ -99,12 +106,15 @@ export function CategoryBarWidget({ limit = 15 }: CategoryBarWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

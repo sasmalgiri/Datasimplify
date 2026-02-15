@@ -66,8 +66,8 @@ export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidge
   const themeColors = getThemeColors(customization.colorTheme);
   const coins = data.markets?.slice(0, limit) || [];
 
-  const rows = useMemo(() => {
-    return coins.map((coin: MarketCoin) => {
+  const { rows, insight } = useMemo(() => {
+    const rowData = coins.map((coin: MarketCoin) => {
       const change24h = coin.price_change_percentage_24h ?? 0;
       const change7d = coin.price_change_percentage_7d_in_currency ?? null;
       const change30d = calc30dChange(coin.sparkline_in_7d);
@@ -82,6 +82,32 @@ export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidge
         change30d,
       };
     });
+
+    // Compute insight: find coins consistently strong (positive across ALL timeframes) and consistently weak
+    if (rowData.length === 0) return { rows: rowData, insight: '' };
+
+    const consistentlyStrong = rowData.filter(
+      (r) => r.change24h > 0 && (r.change7d === null || r.change7d > 0) && (r.change30d === null || r.change30d > 0)
+    );
+    const consistentlyWeak = rowData.filter(
+      (r) => r.change24h < 0 && (r.change7d === null || r.change7d < 0) && (r.change30d === null || r.change30d < 0)
+    );
+
+    const strongNames = consistentlyStrong.slice(0, 3).map((r) => r.symbol.toUpperCase()).join(', ');
+    const weakNames = consistentlyWeak.slice(0, 3).map((r) => r.symbol.toUpperCase()).join(', ');
+
+    let insightText = '';
+    if (strongNames && weakNames) {
+      insightText = `Consistently strong: ${strongNames} (green across all timeframes) · Consistently weak: ${weakNames}`;
+    } else if (strongNames) {
+      insightText = `Consistently strong: ${strongNames} (green across all timeframes)`;
+    } else if (weakNames) {
+      insightText = `Consistently weak: ${weakNames} (red across all timeframes)`;
+    } else {
+      insightText = 'No coins consistently positive or negative across all timeframes';
+    }
+
+    return { rows: rowData, insight: insightText };
   }, [coins]);
 
   if (!data.markets) {
@@ -98,6 +124,7 @@ export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidge
 
   return (
     <div className="overflow-x-auto">
+      {insight && <p className="text-[10px] text-gray-400 mb-2 text-center italic">{insight}</p>}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-gray-500 text-xs uppercase border-b border-gray-700">

@@ -32,8 +32,8 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = Math.max(300, CHART_HEIGHT_MAP[customization.chartHeight]);
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: null };
 
     const totalMcap = data.markets.reduce((s, c) => s + (c.market_cap || 0), 0);
     const tierStats = TIERS.map(() => ({ count: 0, totalMcap: 0, totalChange: 0, coins: [] as string[] }));
@@ -64,7 +64,21 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
       };
     }).filter(Boolean);
 
-    return {
+    // Compute insight
+    const humpbackIdx = 0; // Humpback tier
+    const humpbackPct = totalMcap > 0 ? ((tierStats[humpbackIdx].totalMcap / totalMcap) * 100).toFixed(1) : '0';
+    const activeTiers = tierStats.filter((t) => t.count > 0).length;
+    let mostCoinsTier: string = TIERS[0].label;
+    let mostCoinsCount = 0;
+    tierStats.forEach((t, i) => {
+      if (t.count > mostCoinsCount) {
+        mostCoinsCount = t.count;
+        mostCoinsTier = TIERS[i].label;
+      }
+    });
+    const insightText = `Humpbacks hold ${humpbackPct}% of market \u00B7 ${activeTiers} tiers active \u00B7 Most coins in ${mostCoinsTier} tier`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -133,7 +147,7 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
           },
         },
       ],
-    };
+    }};
   }, [data.markets, themeColors, customization]);
 
   if (!data.markets) {
@@ -155,7 +169,8 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
         opts={{ renderer: 'canvas' }}
         notMerge
       />
-      <p className="text-[10px] text-gray-500 mt-1 text-center">
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+      <p className="text-[10px] text-gray-500 mt-0.5 text-center">
         Block size = proportion of total market cap held
       </p>
     </div>

@@ -19,20 +19,26 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     const coins = data.markets
       .filter((c) => c.circulating_supply && c.max_supply && c.max_supply > 0)
       .slice(0, limit);
 
-    if (coins.length === 0) return null;
+    if (coins.length === 0) return { option: null, insight: null };
 
     const names = coins.map((c) => c.symbol.toUpperCase());
     const circulating = coins.map((c) => parseFloat(((c.circulating_supply! / c.max_supply!) * 100).toFixed(1)));
     const remaining = coins.map((c) => parseFloat((100 - (c.circulating_supply! / c.max_supply!) * 100).toFixed(1)));
 
-    return {
+    const sortedByPct = coins.map((c, i) => ({ sym: c.symbol.toUpperCase(), pct: circulating[i] })).sort((a, b) => b.pct - a.pct);
+    const mostScarce = sortedByPct[0];
+    const leastScarce = sortedByPct[sortedByPct.length - 1];
+    const noCap = data.markets.filter((c) => !c.max_supply || c.max_supply === 0).length;
+    const insightText = `Most scarce: ${mostScarce.sym} (${mostScarce.pct}% mined) · Most inflationary: ${leastScarce.sym} (${leastScarce.pct}% mined) · ${noCap} coins have no cap`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       legend: {
@@ -89,7 +95,7 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
         },
       ],
       animationEasing: 'cubicOut' as const,
-    };
+    }};
   }, [data.markets, limit, customization]);
 
   if (!option) {
@@ -101,12 +107,15 @@ export function SupplyWidget({ limit = 12 }: SupplyWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

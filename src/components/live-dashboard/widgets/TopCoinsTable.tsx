@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
 import { useUserPrefsStore } from '@/lib/live-dashboard/user-prefs-store';
 import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
@@ -45,6 +46,17 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
   const { watchlist, toggleWatchlist } = useUserPrefsStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
   const coins = data.markets?.slice(0, limit) || [];
+
+  const insight = useMemo(() => {
+    if (!coins.length) return null;
+    const greenCount = coins.filter((c) => (c.price_change_percentage_24h ?? 0) >= 0).length;
+    const avg24h = coins.reduce((s, c) => s + (c.price_change_percentage_24h ?? 0), 0) / coins.length;
+    const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
+    const totalVol = coins.reduce((s, c) => s + (c.total_volume || 0), 0);
+    const volMcapRatio = totalMcap > 0 ? ((totalVol / totalMcap) * 100).toFixed(1) : '0';
+    const mcapStr = totalMcap >= 1e12 ? `$${(totalMcap / 1e12).toFixed(2)}T` : totalMcap >= 1e9 ? `$${(totalMcap / 1e9).toFixed(1)}B` : `$${(totalMcap / 1e6).toFixed(0)}M`;
+    return `${greenCount}/${coins.length} coins green \u00B7 Avg 24h change: ${avg24h >= 0 ? '+' : ''}${avg24h.toFixed(2)}% \u00B7 Total MCap: ${mcapStr} \u00B7 Vol/MCap ratio: ${volMcapRatio}%`;
+  }, [coins]);
 
   if (!data.markets) {
     return (
@@ -131,6 +143,7 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
           ))}
         </tbody>
       </table>
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
     </div>
   );
 }

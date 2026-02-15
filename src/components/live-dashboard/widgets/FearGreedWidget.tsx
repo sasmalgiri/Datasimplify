@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getThemeColors } from '@/lib/live-dashboard/theme';
 
@@ -31,6 +32,16 @@ export function FearGreedWidget() {
   const value = parseInt(fg.value, 10);
   const color = getColor(value);
   const label = getLabel(fg.value_classification);
+
+  const insight = useMemo(() => {
+    let interpretation = '';
+    if (value <= 25) interpretation = 'Extreme fear \u2014 historically a buying zone';
+    else if (value <= 45) interpretation = 'Fear zone \u2014 market sentiment cautious';
+    else if (value <= 55) interpretation = 'Neutral zone \u2014 market undecided';
+    else if (value <= 75) interpretation = 'Greed zone \u2014 optimism rising, watch for overextension';
+    else interpretation = 'Extreme greed \u2014 historically a sell zone';
+    return `Current: ${value} (${label}) \u00B7 ${interpretation}`;
+  }, [value, label]);
 
   // SVG gauge
   const radius = 60;
@@ -69,6 +80,7 @@ export function FearGreedWidget() {
       <span className="text-xs text-gray-500 mt-1">
         {new Date(parseInt(fg.timestamp, 10) * 1000).toLocaleDateString()}
       </span>
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
     </div>
   );
 }

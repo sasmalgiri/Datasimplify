@@ -19,8 +19,8 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const names = coins.map((c) => c.symbol.toUpperCase());
@@ -33,7 +33,14 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
       },
     }));
 
-    return {
+    const sorted = [...coins].sort((a, b) => b.total_volume - a.total_volume);
+    const topCoin = sorted[0];
+    const totalVol = coins.reduce((s, c) => s + c.total_volume, 0);
+    const top3Vol = sorted.slice(0, 3).reduce((s, c) => s + c.total_volume, 0);
+    const top3Pct = totalVol > 0 ? ((top3Vol / totalVol) * 100).toFixed(1) : '0';
+    const insightText = `Top volume: ${topCoin.symbol.toUpperCase()} (${formatCompact(topCoin.total_volume)}) · Top 3 = ${top3Pct}% of displayed volume`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -69,7 +76,7 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
         },
       ],
       animationEasing: 'elasticOut' as const,
-    };
+    }};
   }, [data.markets, limit, customization]);
 
   if (!option) {
@@ -81,12 +88,15 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

@@ -31,15 +31,15 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     const candidates = coinIds
       ? data.markets.filter((c) => coinIds.includes(c.id))
       : data.markets.slice(0, limit);
 
     const coins = candidates.filter((c) => c.sparkline_in_7d?.price?.length);
-    if (coins.length === 0) return null;
+    if (coins.length === 0) return { option: null, insight: null };
 
     const symbols = coins.map((c) => c.symbol.toUpperCase());
 
@@ -66,7 +66,25 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
       });
     });
 
-    return {
+    // Compute insight: compare range (max - min) of each box plot
+    const ranges = boxData.map((bd, idx) => ({
+      name: symbols[idx],
+      range: Math.abs(bd[4] - bd[0]),
+      median: bd[2],
+    }));
+    const sortedByRange = [...ranges].sort((a, b) => b.range - a.range);
+    const mostVolatile = sortedByRange[0];
+    const tightest = sortedByRange[sortedByRange.length - 1];
+    const medianSpread = ranges.length > 0
+      ? Math.abs(Math.max(...ranges.map((r) => r.median)) - Math.min(...ranges.map((r) => r.median)))
+      : 0;
+    const insightText = ranges.length >= 2
+      ? `Most volatile: ${mostVolatile.name} (${mostVolatile.range.toFixed(1)}% range) · Tightest: ${tightest.name} (${tightest.range.toFixed(1)}% range) · Median spread: ${medianSpread.toFixed(1)}%`
+      : ranges.length === 1
+        ? `${mostVolatile.name}: ${mostVolatile.range.toFixed(1)}% range`
+        : '';
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '8%', containLabel: true },
@@ -127,7 +145,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
           symbolSize: 5,
         },
       ],
-    };
+    }};
   }, [data.markets, coinIds, limit, customization]);
 
   if (!option) {
@@ -139,12 +157,15 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

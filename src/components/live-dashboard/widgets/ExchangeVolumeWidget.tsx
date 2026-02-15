@@ -15,7 +15,7 @@ export function ExchangeVolumeWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     // Try derivatives exchanges, then regular exchanges
     const rawExchanges = (data.derivativesExchanges && data.derivativesExchanges.length > 0)
       ? data.derivativesExchanges
@@ -32,7 +32,14 @@ export function ExchangeVolumeWidget() {
         );
         const volumes = exchanges.map((e: any) => Number(e.trade_volume_24h_btc) || e.open_interest_btc || 0);
 
-        return {
+        const totalVol = volumes.reduce((s: number, v: number) => s + v, 0);
+        const top3Vol = [...volumes].sort((a, b) => b - a).slice(0, 3).reduce((s: number, v: number) => s + v, 0);
+        const top3Pct = totalVol > 0 ? ((top3Vol / totalVol) * 100).toFixed(1) : '0';
+        const topIdx = volumes.indexOf(Math.max(...volumes));
+        const topName = exchanges[topIdx]?.name || names[topIdx];
+        const insightText = `Top exchange: ${topName} (${Math.round(volumes[topIdx]).toLocaleString()} BTC) · Top 3 = ${top3Pct}% of total volume`;
+
+        return { insight: insightText, option: {
           ...ECHARTS_THEME,
           animation: customization.showAnimations,
           tooltip: {
@@ -73,18 +80,23 @@ export function ExchangeVolumeWidget() {
             animationDelay: (idx: number) => idx * 40,
           }],
           animationEasing: 'cubicOut' as const,
-        };
+        }};
       }
     }
 
     // Fallback: use coin volume from markets
-    if (!data.markets) return null;
+    if (!data.markets) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, 12);
     const names = coins.map((c) => c.symbol.toUpperCase());
     const volumes = coins.map((c) => c.total_volume);
 
-    return {
+    const totalVol = volumes.reduce((s, v) => s + v, 0);
+    const top3Vol = [...volumes].sort((a, b) => b - a).slice(0, 3).reduce((s, v) => s + v, 0);
+    const top3Pct = totalVol > 0 ? ((top3Vol / totalVol) * 100).toFixed(1) : '0';
+    const fbInsight = `Top volume: ${names[0]} (${formatCompact(volumes[0])}) · Top 3 = ${top3Pct}% of total`;
+
+    return { insight: fbInsight, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -124,7 +136,7 @@ export function ExchangeVolumeWidget() {
         animationDelay: (idx: number) => idx * 40,
       }],
       animationEasing: 'cubicOut' as const,
-    };
+    }};
   }, [data.exchanges, data.derivativesExchanges, data.markets, customization]);
 
   if (!option) {
@@ -136,12 +148,15 @@ export function ExchangeVolumeWidget() {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

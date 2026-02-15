@@ -32,8 +32,8 @@ export function SunburstWidget({ limit = 50 }: SunburstWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const groups = new Map<string, typeof coins>();
@@ -70,7 +70,20 @@ export function SunburstWidget({ limit = 50 }: SunburstWidgetProps) {
       };
     }).filter(Boolean);
 
-    return {
+    // Compute insight
+    const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
+    const tierPcts = TIERS.map((tier) => {
+      const tierCoins = groups.get(tier.label) || [];
+      const tierMcap = tierCoins.reduce((s, c) => s + (c.market_cap || 0), 0);
+      return { label: tier.label, pct: totalMcap > 0 ? (tierMcap / totalMcap) * 100 : 0, count: tierCoins.length };
+    });
+    const megaPct = tierPcts[0].pct.toFixed(1);
+    const largePct = tierPcts[1].pct.toFixed(1);
+    const midSmallPct = (tierPcts[2].pct + tierPcts[3].pct).toFixed(1);
+    const gainingCount = coins.filter((c) => (c.price_change_percentage_24h || 0) > 0).length;
+    const insightText = `Mega caps: ${megaPct}% of market \u00B7 Large: ${largePct}% \u00B7 Mid+Small: ${midSmallPct}% \u00B7 ${gainingCount} coins gaining across tiers`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -122,7 +135,7 @@ export function SunburstWidget({ limit = 50 }: SunburstWidgetProps) {
           animationDurationUpdate: 500,
         },
       ],
-    };
+    }};
   }, [data.markets, limit, themeColors]);
 
   if (!data.markets) {
@@ -136,12 +149,15 @@ export function SunburstWidget({ limit = 50 }: SunburstWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

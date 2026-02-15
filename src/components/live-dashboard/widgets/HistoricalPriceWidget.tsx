@@ -22,13 +22,13 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
   const themeColors = getThemeColors(customization.colorTheme);
   const history = data.coinHistory;
 
-  const option = useMemo(() => {
-    if (!history?.prices) return null;
+  const { option, insight } = useMemo(() => {
+    if (!history?.prices) return { option: null, insight: null };
 
     const prices: [number, number][] = history.prices;
     const volumes: [number, number][] = history.total_volumes ?? [];
 
-    if (prices.length === 0) return null;
+    if (prices.length === 0) return { option: null, insight: null };
 
     const showPrice = metric === 'price' || metric === 'all';
     const showVolume = metric === 'volume' || metric === 'all';
@@ -131,7 +131,16 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
 
     const dataZoomAxes = dualAxis ? [0, 1] : [0];
 
-    return {
+    const priceValues = prices.map((p) => p[1]);
+    const periodHigh = Math.max(...priceValues);
+    const periodLow = Math.min(...priceValues);
+    const firstPrice = priceValues[0];
+    const lastPrice = priceValues[priceValues.length - 1];
+    const periodReturn = ((lastPrice - firstPrice) / firstPrice) * 100;
+    const sign = periodReturn >= 0 ? '+' : '';
+    const insightText = `Period return: ${sign}${periodReturn.toFixed(2)}% · High: $${periodHigh.toLocaleString()} · Low: $${periodLow.toLocaleString()}`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: grids,
@@ -179,7 +188,7 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
         },
       ],
       series,
-    };
+    }};
   }, [history, metric, customization]);
 
   if (!history?.prices || !option) {
@@ -191,12 +200,15 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

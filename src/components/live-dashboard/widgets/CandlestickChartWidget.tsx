@@ -21,8 +21,8 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
   const themeColors = getThemeColors(customization.colorTheme);
   const ohlcData = data.ohlc?.[coinId];
 
-  const option = useMemo(() => {
-    if (!ohlcData || ohlcData.length === 0) return null;
+  const { option, insight } = useMemo(() => {
+    if (!ohlcData || ohlcData.length === 0) return { option: null, insight: null };
 
     // OHLC format from CoinGecko: [timestamp, open, high, low, close]
     const dates = ohlcData.map((d) => {
@@ -35,7 +35,13 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
       return { value: Math.abs(d[4] - d[1]) * 1000, itemStyle: { color: isUp ? themeColors.fill : 'rgba(239,68,68,0.3)' } };
     });
 
-    return {
+    const bullish = ohlcData.filter((d) => d[4] >= d[1]).length;
+    const periodHigh = Math.max(...ohlcData.map((d) => d[2]));
+    const periodLow = Math.min(...ohlcData.map((d) => d[3]));
+    const lastClose = ohlcData[ohlcData.length - 1][4];
+    const insightText = `${bullish}/${ohlcData.length} candles bullish · Last close: $${lastClose.toLocaleString()} · Range: $${periodLow.toLocaleString()}–$${periodHigh.toLocaleString()}`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: [
@@ -112,7 +118,7 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
           yAxisIndex: 1,
         },
       ],
-    };
+    }};
   }, [ohlcData, customization]);
 
   if (!ohlcData || !option) {
@@ -124,12 +130,15 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

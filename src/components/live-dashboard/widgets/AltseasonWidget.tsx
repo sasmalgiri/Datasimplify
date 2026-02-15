@@ -147,6 +147,17 @@ export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
   const label = getSeasonLabel(score);
   const labelColor = getSeasonColor(score);
 
+  // Compute insight based on altseason score
+  const interpretation = score <= 25
+    ? 'Bitcoin Season'
+    : score <= 50
+      ? 'BTC-leaning'
+      : score <= 75
+        ? 'Alt-leaning'
+        : 'Altcoin Season';
+  const outperformPct = total > 0 ? Math.round((outperformers / total) * 100) : 0;
+  const altseasonInsight = `Altseason score: ${score}/100 — ${interpretation}. ${outperformPct}% of top ${total + 1} altcoins outperforming BTC`;
+
   return (
     <div className="flex flex-col items-center">
       <ReactEChartsCore
@@ -163,6 +174,7 @@ export function AltseasonWidget({ topN = 50 }: AltseasonWidgetProps) {
         <span>BTC Dom: {btcDominance.toFixed(1)}%</span>
         <span>Outperformers: {outperformers}/{total}</span>
       </div>
+      {altseasonInsight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{altseasonInsight}</p>}
     </div>
   );
 }

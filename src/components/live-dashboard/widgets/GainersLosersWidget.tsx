@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
 import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
@@ -10,6 +10,21 @@ export function GainersLosersWidget() {
   const { data, customization } = useLiveDashboardStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
   const [tab, setTab] = useState<'gainers' | 'losers'>('gainers');
+
+  const insight = useMemo(() => {
+    if (!data.markets?.length) return null;
+    const allSorted = [...data.markets].sort((a, b) =>
+      (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0),
+    );
+    const topGainer = allSorted[0];
+    const topLoser = allSorted[allSorted.length - 1];
+    const gainerChange = Math.abs(topGainer.price_change_percentage_24h ?? 0);
+    const loserChange = Math.abs(topLoser.price_change_percentage_24h ?? 0);
+    const ratio = loserChange > 0 ? (gainerChange / loserChange).toFixed(1) : '~';
+    const gainerSign = (topGainer.price_change_percentage_24h ?? 0) >= 0 ? '+' : '';
+    const loserSign = (topLoser.price_change_percentage_24h ?? 0) >= 0 ? '+' : '';
+    return `Top gainer: ${topGainer.symbol.toUpperCase()} (${gainerSign}${(topGainer.price_change_percentage_24h ?? 0).toFixed(2)}%) \u00B7 Top loser: ${topLoser.symbol.toUpperCase()} (${loserSign}${(topLoser.price_change_percentage_24h ?? 0).toFixed(2)}%) \u00B7 Gain/loss magnitude ratio: ${ratio}x`;
+  }, [data.markets]);
 
   if (!data.markets) {
     return (
@@ -71,6 +86,7 @@ export function GainersLosersWidget() {
           </div>
         ))}
       </div>
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
     </div>
   );
 }

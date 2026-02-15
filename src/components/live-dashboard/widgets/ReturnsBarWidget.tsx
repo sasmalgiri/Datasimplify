@@ -20,14 +20,14 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     const coins = coinIds
       ? data.markets.filter((c) => coinIds.includes(c.id))
       : data.markets.slice(0, limit);
 
-    if (coins.length === 0) return null;
+    if (coins.length === 0) return { option: null, insight: null };
 
     const symbols = coins.map((c) => c.symbol.toUpperCase());
 
@@ -46,7 +46,17 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
       return parseFloat(((last - first) / first * 100).toFixed(2));
     });
 
-    return {
+    // Compute insight: best performers per timeframe, count positive across all
+    const best24hIdx = returns24h.reduce((best, v, i) => v > returns24h[best] ? i : best, 0);
+    const best7dIdx = returns7d.reduce((best, v, i) => v > returns7d[best] ? i : best, 0);
+    const positiveAllCount = symbols.filter((_, i) =>
+      returns24h[i] >= 0 && returns7d[i] >= 0 && returns30d[i] >= 0
+    ).length;
+    const insightText = symbols.length > 0
+      ? `Best 24h: ${symbols[best24hIdx]} (${returns24h[best24hIdx] >= 0 ? '+' : ''}${returns24h[best24hIdx]}%) · Best 7d: ${symbols[best7dIdx]} (${returns7d[best7dIdx] >= 0 ? '+' : ''}${returns7d[best7dIdx]}%) · ${positiveAllCount}/${symbols.length} positive across all timeframes`
+      : '';
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '12%', containLabel: true },
@@ -119,7 +129,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
         },
       ],
       animationEasing: 'cubicOut' as const,
-    };
+    }};
   }, [data.markets, coinIds, limit, customization]);
 
   if (!option) {
@@ -131,12 +141,15 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

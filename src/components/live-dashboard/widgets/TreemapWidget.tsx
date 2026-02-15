@@ -19,8 +19,8 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets || data.markets.length === 0) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets || data.markets.length === 0) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const treeData = coins.map((coin) => {
@@ -47,7 +47,14 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
       };
     });
 
-    return {
+    const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
+    const top3Mcap = [...coins].sort((a, b) => b.market_cap - a.market_cap).slice(0, 3).reduce((s, c) => s + c.market_cap, 0);
+    const top3Pct = totalMcap > 0 ? ((top3Mcap / totalMcap) * 100).toFixed(1) : '0';
+    const gaining = coins.filter((c) => (c.price_change_percentage_24h || 0) >= 0).length;
+    const losing = coins.length - gaining;
+    const insightText = `Top 3 coins hold ${top3Pct}% of displayed market cap · ${gaining} gaining, ${losing} losing`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -80,7 +87,7 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
           ],
         },
       ],
-    };
+    }};
   }, [data.markets, limit, customization]);
 
   if (!data.markets || !option) {
@@ -92,12 +99,15 @@ export function TreemapWidget({ limit = 30 }: TreemapWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

@@ -18,10 +18,10 @@ export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     const global = data.global;
     const markets = data.markets;
-    if (!global?.market_cap_percentage || !markets?.length) return null;
+    if (!global?.market_cap_percentage || !markets?.length) return { option: null, insight: null };
 
     // Build dominance breakdown from global data
     const btcDom = global.market_cap_percentage.btc || 0;
@@ -87,7 +87,12 @@ export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
       };
     });
 
-    return {
+    // Compute insight
+    const topAlt = topAltDom.length > 0 ? topAltDom.sort((a, b) => b.value - a.value)[0] : null;
+    const combinedAltShare = (100 - btcDom).toFixed(1);
+    const insightText = `BTC: ${btcDom.toFixed(1)}% \u00B7 ETH: ${ethDom.toFixed(1)}%${topAlt ? ` \u00B7 Top alt: ${topAlt.name} ${topAlt.value.toFixed(1)}%` : ''} \u00B7 Combined alt share: ${combinedAltShare}%`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '5%', top: '15%', containLabel: true },
@@ -126,7 +131,7 @@ export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
         axisLabel: { ...ECHARTS_THEME.yAxis.axisLabel, formatter: (v: number) => `${v}%` },
       },
       series,
-    };
+    }};
   }, [data.global, data.markets, themeColors, customization]);
 
   if (!data.global) {
@@ -140,12 +145,15 @@ export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

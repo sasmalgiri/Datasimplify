@@ -19,7 +19,7 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     let chartData: { name: string; value: number }[] = [];
 
     if (mode === 'dominance' && data.global) {
@@ -50,9 +50,19 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
       }
     }
 
-    if (chartData.length === 0) return null;
+    if (chartData.length === 0) return { option: null, insight: null };
 
-    return {
+    const sorted = [...chartData].sort((a, b) => b.value - a.value);
+    const top1 = sorted[0];
+    const top3Sum = sorted.slice(0, 3).reduce((s, d) => s + d.value, 0);
+    const total = sorted.reduce((s, d) => s + d.value, 0);
+    const top3Pct = total > 0 ? ((top3Sum / total) * 100).toFixed(1) : '0';
+    const restCount = Math.max(0, sorted.length - 3);
+    const restPct = total > 0 ? (((total - top3Sum) / total) * 100).toFixed(1) : '0';
+    const top1Val = mode === 'dominance' ? `${top1.value}%` : formatCompact(top1.value);
+    const insightText = `${top1.name} dominates at ${top1Val} · Top 3 = ${top3Pct}% · Remaining ${restCount} share ${restPct}%`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -92,7 +102,7 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
           itemStyle: { color: themeColors.palette[i % themeColors.palette.length] },
         })),
       }],
-    };
+    }};
   }, [data.global, data.markets, mode, customization]);
 
   if (!option) {
@@ -104,12 +114,15 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

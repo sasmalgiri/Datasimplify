@@ -20,7 +20,7 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
+  const { option, insight } = useMemo(() => {
     let dates: string[] = [];
     let values: number[] = [];
 
@@ -49,9 +49,16 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
       }
     }
 
-    if (values.length === 0) return null;
+    if (values.length === 0) return { option: null, insight: null };
 
-    return {
+    const firstVal = values[0];
+    const lastVal = values[values.length - 1];
+    const peakVal = Math.max(...values);
+    const change = firstVal > 0 ? ((lastVal - firstVal) / firstVal) * 100 : 0;
+    const dir = change >= 0 ? 'grew' : 'shrank';
+    const insightText = `Market cap ${dir} ${Math.abs(change).toFixed(2)}% over period · Current: ${formatCompact(lastVal)} · Peak: ${formatCompact(peakVal)}`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -93,7 +100,7 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
         animationDuration: 1500,
         animationEasing: 'cubicOut' as const,
       }],
-    };
+    }};
   }, [data.coinHistory, data.ohlc, data.markets, coinId, customization]);
 
   if (!option) {
@@ -105,12 +112,15 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

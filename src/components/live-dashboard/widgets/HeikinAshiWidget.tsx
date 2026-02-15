@@ -21,8 +21,8 @@ export function HeikinAshiWidget({ coinId = 'bitcoin' }: HeikinAshiWidgetProps) 
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
   const ohlcData = data.ohlc?.[coinId];
 
-  const option = useMemo(() => {
-    if (!ohlcData || ohlcData.length === 0) return null;
+  const { option, insight } = useMemo(() => {
+    if (!ohlcData || ohlcData.length === 0) return { option: null, insight: null };
 
     // Convert OHLC to Heikin-Ashi
     // HA Close = (O + H + L + C) / 4
@@ -54,7 +54,22 @@ export function HeikinAshiWidget({ coinId = 'bitcoin' }: HeikinAshiWidgetProps) 
     const dates = ha.map((d) => d.date);
     const values = ha.map((d) => [d.open, d.close, d.low, d.high]);
 
-    return {
+    // Count consecutive same-color candles at the end
+    let consecutive = 1;
+    const lastGreen = ha[ha.length - 1].close >= ha[ha.length - 1].open;
+    for (let j = ha.length - 2; j >= 0; j--) {
+      const green = ha[j].close >= ha[j].open;
+      if (green === lastGreen) consecutive++;
+      else break;
+    }
+    const haHigh = Math.max(...ha.map((d) => d.high));
+    const haLow = Math.min(...ha.map((d) => d.low));
+    const trend = lastGreen ? 'green' : 'red';
+    const signal = consecutive >= 5 ? 'strong ' : consecutive >= 3 ? '' : 'weak ';
+    const dir = lastGreen ? 'uptrend' : 'downtrend';
+    const insightText = `${consecutive} consecutive ${trend} HA candles — ${signal}${dir}. Smoothed range: $${haLow.toLocaleString()}–$${haHigh.toLocaleString()}`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '8%', right: '3%', bottom: '15%', top: '5%' },
@@ -111,7 +126,7 @@ export function HeikinAshiWidget({ coinId = 'bitcoin' }: HeikinAshiWidgetProps) 
           },
         },
       ],
-    };
+    }};
   }, [ohlcData, themeColors, customization]);
 
   if (!ohlcData || !option) {
@@ -123,12 +138,15 @@ export function HeikinAshiWidget({ coinId = 'bitcoin' }: HeikinAshiWidgetProps) 
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

@@ -20,8 +20,8 @@ export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const palette = themeColors.palette;
@@ -35,7 +35,16 @@ export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
       itemStyle: { color: palette[i % palette.length] },
     }));
 
-    return {
+    // Compute insight
+    const first = funnelData[0];
+    const last = funnelData[funnelData.length - 1];
+    const ratio = last.value > 0 ? (first.value / last.value).toFixed(0) : '~';
+    const top3Mcap = funnelData.slice(0, 3).reduce((s, d) => s + d.value, 0);
+    const totalDisplayed = funnelData.reduce((s, d) => s + d.value, 0);
+    const top3Pct = totalDisplayed > 0 ? ((top3Mcap / totalDisplayed) * 100).toFixed(1) : '0';
+    const insightText = `#1 ${first.name} is ${ratio}x larger than #${funnelData.length} ${last.name} \u00B7 Top 3 = ${top3Pct}% of displayed market cap`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -72,7 +81,7 @@ export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
           },
         },
       ],
-    };
+    }};
   }, [data.markets, limit, themeColors]);
 
   if (!data.markets) {
@@ -86,12 +95,15 @@ export function FunnelWidget({ limit = 10 }: FunnelWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

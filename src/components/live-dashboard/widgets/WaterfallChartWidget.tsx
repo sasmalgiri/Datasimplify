@@ -20,8 +20,8 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     // Sort by absolute change for interesting waterfall
     const sorted = [...data.markets]
@@ -36,7 +36,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
       })
       .slice(0, limit);
 
-    if (sorted.length === 0) return null;
+    if (sorted.length === 0) return { option: null, insight: null };
 
     const names = sorted.map((c) => c.symbol.toUpperCase());
     const changes = sorted.map((c) =>
@@ -75,7 +75,17 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
       lossData.push(parseFloat(Math.abs(running).toFixed(2)));
     }
 
-    return {
+    // Compute insight: biggest mover, net impact, positive/negative counts
+    const biggestIdx = changes.reduce((best, v, i) => Math.abs(v) > Math.abs(changes[best]) ? i : best, 0);
+    const biggestName = names[biggestIdx];
+    const biggestVal = changes[biggestIdx];
+    const positiveCount = changes.filter((c) => c >= 0).length;
+    const negativeCount = changes.filter((c) => c < 0).length;
+    const insightText = changes.length > 0
+      ? `Biggest mover: ${biggestName} (${biggestVal >= 0 ? '+' : ''}${biggestVal.toFixed(1)}%) · Net impact: ${running >= 0 ? '+' : ''}${running.toFixed(1)}% · ${positiveCount} positive, ${negativeCount} negative`
+      : '';
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       grid: { left: '3%', right: '3%', bottom: '12%', top: '8%', containLabel: true },
@@ -145,7 +155,7 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
         },
       ],
       animationEasing: 'cubicOut' as const,
-    };
+    }};
   }, [data.markets, limit, metric, customization]);
 
   if (!option) {
@@ -157,12 +167,15 @@ export function WaterfallChartWidget({ limit = 12, metric = '24h' }: WaterfallCh
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

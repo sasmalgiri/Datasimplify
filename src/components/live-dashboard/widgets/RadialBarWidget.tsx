@@ -21,8 +21,8 @@ export function RadialBarWidget({ limit = 12, mode = 'market_cap' }: RadialBarWi
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
 
-  const option = useMemo(() => {
-    if (!data.markets?.length) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets?.length) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const palette = themeColors.palette;
@@ -46,7 +46,18 @@ export function RadialBarWidget({ limit = 12, mode = 'market_cap' }: RadialBarWi
       },
     }));
 
-    return {
+    // Compute insight
+    const leader = coins[0];
+    const leaderVal = values[0];
+    const runnerUp = coins.length > 1 ? coins[1] : null;
+    const runnerUpVal = values.length > 1 ? values[1] : 0;
+    const bottom = coins[coins.length - 1];
+    const bottomVal = values[values.length - 1];
+    const gap = leaderVal > 0 && runnerUpVal > 0 ? (((leaderVal - runnerUpVal) / leaderVal) * 100).toFixed(1) : '0';
+    const bottomPct = leaderVal > 0 ? ((bottomVal / leaderVal) * 100).toFixed(1) : '0';
+    const insightText = `Leader: ${leader.symbol.toUpperCase()}${runnerUp ? ` \u00B7 Runner-up gap: ${gap}%` : ''} \u00B7 Bottom: ${bottom.symbol.toUpperCase()} at ${bottomPct}% of leader`;
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       tooltip: {
@@ -87,7 +98,7 @@ export function RadialBarWidget({ limit = 12, mode = 'market_cap' }: RadialBarWi
           },
         },
       ],
-    };
+    }};
   }, [data.markets, limit, mode, themeColors, customization]);
 
   if (!data.markets) {
@@ -101,12 +112,15 @@ export function RadialBarWidget({ limit = 12, mode = 'market_cap' }: RadialBarWi
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }

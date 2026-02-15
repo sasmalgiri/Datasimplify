@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getThemeColors } from '@/lib/live-dashboard/theme';
 
@@ -124,8 +125,31 @@ export function MarketPulseWidget(_props: MarketPulseWidgetProps) {
   const fgValue = fg ? parseInt(fg.value, 10) : null;
   const fgLabel = fg?.value_classification ?? null;
 
+  /* ----- Market Brief ----- */
+  const marketBrief = useMemo(() => {
+    if (!markets?.length) return null;
+    const gaining = markets.filter((c) => (c.price_change_percentage_24h || 0) > 0).length;
+    const pctGaining = ((gaining / markets.length) * 100).toFixed(0);
+    const direction = gaining > markets.length * 0.6 ? 'bullish' : gaining < markets.length * 0.4 ? 'bearish' : 'mixed';
+
+    let fgContext = '';
+    if (fgValue != null) {
+      if (fgValue <= 25) fgContext = `Fear & Greed at ${fgValue} (Extreme Fear — historically a buying zone)`;
+      else if (fgValue <= 50) fgContext = `Fear & Greed at ${fgValue} (Fear)`;
+      else if (fgValue <= 75) fgContext = `Fear & Greed at ${fgValue} (Greed)`;
+      else fgContext = `Fear & Greed at ${fgValue} (Extreme Greed — historically a sell zone)`;
+    }
+
+    const domText = btcDom > 0 ? `BTC dominance at ${btcDom.toFixed(1)}%` : '';
+    const mcapText = mcapChange != null ? `Total market cap ${mcapChange >= 0 ? 'up' : 'down'} ${Math.abs(mcapChange).toFixed(2)}% in 24h` : '';
+
+    const parts = [`Market is ${direction} — ${pctGaining}% of top coins gaining`, domText, fgContext, mcapText].filter(Boolean);
+    return parts.join('. ') + '.';
+  }, [markets, fgValue, btcDom, mcapChange]);
+
   return (
-    <div className="flex flex-wrap gap-2">
+    <div>
+      <div className="flex flex-wrap gap-2">
       {/* BTC Price */}
       <MetricCard
         label="BTC"
@@ -196,6 +220,10 @@ export function MarketPulseWidget(_props: MarketPulseWidgetProps) {
         value={totalVol ? formatCompact(totalVol) : '--'}
         accentColor={themeColors.primary}
       />
+      </div>
+      {marketBrief && (
+        <p className="text-[10px] text-gray-400 mt-2 text-center italic">{marketBrief}</p>
+      )}
     </div>
   );
 }

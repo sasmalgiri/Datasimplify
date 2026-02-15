@@ -20,11 +20,11 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
-  const option = useMemo(() => {
-    if (!data.markets) return null;
+  const { option, insight } = useMemo(() => {
+    if (!data.markets) return { option: null, insight: null };
 
     const coins = data.markets.filter((c) => coinIds.includes(c.id) && c.sparkline_in_7d?.price?.length);
-    if (coins.length === 0) return null;
+    if (coins.length === 0) return { option: null, insight: null };
 
     // Normalize prices to % change from start
     const seriesData = coins.map((coin, idx) => {
@@ -50,7 +50,22 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
 
     const maxLen = Math.max(...seriesData.map((s) => s.data.length));
 
-    return {
+    // Compute insight: compare last values of each series
+    const performances = seriesData.map((s) => ({
+      name: s.name,
+      lastValue: s.data.length > 0 ? s.data[s.data.length - 1] : 0,
+    }));
+    const sorted = [...performances].sort((a, b) => b.lastValue - a.lastValue);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const spread = Math.abs(best.lastValue - worst.lastValue);
+    const insightText = performances.length >= 2
+      ? `Best performer: ${best.name} (${best.lastValue >= 0 ? '+' : ''}${best.lastValue.toFixed(1)}%) · Worst: ${worst.name} (${worst.lastValue >= 0 ? '+' : ''}${worst.lastValue.toFixed(1)}%) · Spread: ${spread.toFixed(1)} pp`
+      : performances.length === 1
+        ? `${best.name}: ${best.lastValue >= 0 ? '+' : ''}${best.lastValue.toFixed(1)}%`
+        : '';
+
+    return { insight: insightText, option: {
       ...ECHARTS_THEME,
       animation: customization.showAnimations,
       legend: {
@@ -88,7 +103,7 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
       },
       dataZoom: [{ type: 'inside' as const }],
       series: seriesData,
-    };
+    }};
   }, [data.markets, coinIds, customization]);
 
   if (!option) {
@@ -100,12 +115,15 @@ export function MultiLineChartWidget({ coinIds = ['bitcoin', 'ethereum'] }: Mult
   }
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
-      notMerge
-      lazyUpdate
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: `${CHART_HEIGHT_MAP[customization.chartHeight]}px`, width: '100%' }}
+        notMerge
+        lazyUpdate
+      />
+      {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
+    </div>
   );
 }
