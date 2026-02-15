@@ -3,38 +3,40 @@
 import { useMemo } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
-import { PieChart } from 'echarts/charts';
-import { TooltipComponent, LegendComponent } from 'echarts/components';
+import { TreemapChart } from 'echarts/charts';
+import { TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP, formatCompact } from '@/lib/live-dashboard/theme';
 
-echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
+echarts.use([TreemapChart, TooltipComponent, CanvasRenderer]);
 
 interface WhaleDistributionWidgetProps {}
 
 const TIERS = [
-  { label: 'Whale (>$50B)', emoji: '\u{1F40B}', min: 50e9 },
-  { label: 'Shark ($10B–$50B)', emoji: '\u{1F988}', min: 10e9 },
-  { label: 'Dolphin ($1B–$10B)', emoji: '\u{1F42C}', min: 1e9 },
-  { label: 'Fish ($100M–$1B)', emoji: '\u{1F41F}', min: 100e6 },
-  { label: 'Shrimp (<$100M)', emoji: '\u{1F990}', min: 0 },
+  { label: 'Humpback', range: '>$100B', emoji: '\u{1F40B}', min: 100e9, color: '#34d399' },
+  { label: 'Whale', range: '$50B–$100B', emoji: '\u{1F433}', min: 50e9, color: '#2dd4bf' },
+  { label: 'Shark', range: '$10B–$50B', emoji: '\u{1F988}', min: 10e9, color: '#a78bfa' },
+  { label: 'Dolphin', range: '$1B–$10B', emoji: '\u{1F42C}', min: 1e9, color: '#60a5fa' },
+  { label: 'Fish', range: '$100M–$1B', emoji: '\u{1F41F}', min: 100e6, color: '#fb923c' },
+  { label: 'Shrimp', range: '<$100M', emoji: '\u{1F990}', min: 0, color: '#f472b6' },
 ] as const;
 
 function getTier(mcap: number) {
   for (const t of TIERS) if (mcap >= t.min) return t;
-  return TIERS[4];
+  return TIERS[5];
 }
 
 export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
-  const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight || 'normal'];
+  const chartHeight = Math.max(300, CHART_HEIGHT_MAP[customization.chartHeight || 'normal']);
 
   const option = useMemo(() => {
     if (!data.markets?.length) return null;
 
-    const tierStats = TIERS.map(() => ({ count: 0, totalMcap: 0, totalChange: 0 }));
+    const totalMcap = data.markets.reduce((s, c) => s + (c.market_cap || 0), 0);
+    const tierStats = TIERS.map(() => ({ count: 0, totalMcap: 0, totalChange: 0, coins: [] as string[] }));
 
     for (const coin of data.markets) {
       const tier = getTier(coin.market_cap || 0);
@@ -42,56 +44,97 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
       tierStats[idx].count += 1;
       tierStats[idx].totalMcap += coin.market_cap || 0;
       tierStats[idx].totalChange += coin.price_change_percentage_24h || 0;
+      if (tierStats[idx].coins.length < 5) tierStats[idx].coins.push(coin.symbol.toUpperCase());
     }
 
-    const palette = themeColors.palette;
-    const seriesData = TIERS.map((tier, i) => ({
-      name: `${tier.emoji} ${tier.label}`,
-      value: tierStats[i].totalMcap,
-      count: tierStats[i].count,
-      avgChange: tierStats[i].count > 0 ? tierStats[i].totalChange / tierStats[i].count : 0,
-      itemStyle: { color: palette[i % palette.length] },
-    })).filter((d) => d.value > 0);
+    const treemapData = TIERS.map((tier, i) => {
+      const stats = tierStats[i];
+      if (stats.count === 0) return null;
+      const pct = totalMcap > 0 ? (stats.totalMcap / totalMcap) * 100 : 0;
+      return {
+        name: tier.label,
+        value: stats.totalMcap,
+        pct,
+        count: stats.count,
+        range: tier.range,
+        emoji: tier.emoji,
+        avgChange: stats.count > 0 ? stats.totalChange / stats.count : 0,
+        topCoins: stats.coins,
+        itemStyle: { color: tier.color, borderColor: '#0a0a0f', borderWidth: 3 },
+      };
+    }).filter(Boolean);
 
     return {
       ...ECHARTS_THEME,
+      animation: customization.showAnimations,
       tooltip: {
         ...ECHARTS_THEME.tooltip,
         formatter: (params: any) => {
           const d = params.data;
           const sign = d.avgChange >= 0 ? '+' : '';
-          return `<b>${d.name}</b><br/>${d.count} coins<br/>Market Cap: ${formatCompact(d.value)}<br/>Avg 24h: ${sign}${d.avgChange.toFixed(2)}%`;
+          return `<b>${d.emoji} ${d.name} (${d.range})</b><br/>${d.count} coins · ${d.pct.toFixed(1)}% of market<br/>Total MCap: ${formatCompact(d.value)}<br/>Avg 24h: ${sign}${d.avgChange.toFixed(2)}%<br/>Top: ${d.topCoins.join(', ')}`;
         },
-      },
-      legend: {
-        bottom: 0,
-        textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 10 },
-        itemWidth: 12,
-        itemHeight: 12,
       },
       series: [
         {
-          type: 'pie',
-          roseType: 'area',
-          center: ['50%', '45%'],
-          radius: ['12%', '75%'],
-          data: seriesData,
+          type: 'treemap',
+          width: '100%',
+          height: '100%',
+          roam: false,
+          nodeClick: false,
+          breadcrumb: { show: false },
+          data: treemapData,
           label: {
             show: true,
-            position: 'outside',
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: 10,
-            formatter: (p: any) => `${p.data.count} coins`,
+            formatter: (p: any) => {
+              const d = p.data;
+              return `{emoji|${d.emoji}}\n{name|${d.name.toUpperCase()}}\n{pct|${d.pct.toFixed(1)}%}`;
+            },
+            rich: {
+              emoji: { fontSize: 28, lineHeight: 36, align: 'center' },
+              name: {
+                fontSize: 13,
+                fontWeight: 'bold',
+                color: '#fff',
+                lineHeight: 20,
+                align: 'center',
+                textShadowColor: 'rgba(0,0,0,0.5)',
+                textShadowBlur: 4,
+              },
+              pct: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: 'rgba(255,255,255,0.9)',
+                lineHeight: 24,
+                align: 'center',
+                textShadowColor: 'rgba(0,0,0,0.5)',
+                textShadowBlur: 4,
+              },
+            },
+            position: 'inside',
+            align: 'center',
+            verticalAlign: 'middle',
           },
-          labelLine: { lineStyle: { color: 'rgba(255,255,255,0.15)' } },
-          itemStyle: { borderColor: '#0a0a0f', borderWidth: 2 },
-          emphasis: { scaleSize: 8 },
-          animationType: 'scale',
-          animationEasing: 'elasticOut',
+          upperLabel: { show: false },
+          levels: [
+            {
+              itemStyle: {
+                borderColor: '#0a0a0f',
+                borderWidth: 3,
+                gapWidth: 3,
+              },
+            },
+          ],
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 20,
+              shadowColor: 'rgba(0,0,0,0.5)',
+            },
+          },
         },
       ],
     };
-  }, [data.markets, themeColors]);
+  }, [data.markets, themeColors, customization]);
 
   if (!data.markets) {
     return (
@@ -104,12 +147,17 @@ export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
   if (!option) return null;
 
   return (
-    <ReactEChartsCore
-      echarts={echarts}
-      option={option}
-      style={{ height: chartHeight, width: '100%' }}
-      opts={{ renderer: 'canvas' }}
-      notMerge
-    />
+    <div>
+      <ReactEChartsCore
+        echarts={echarts}
+        option={option}
+        style={{ height: chartHeight, width: '100%' }}
+        opts={{ renderer: 'canvas' }}
+        notMerge
+      />
+      <p className="text-[10px] text-gray-500 mt-1 text-center">
+        Block size = proportion of total market cap held
+      </p>
+    </div>
   );
 }
