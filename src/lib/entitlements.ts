@@ -14,6 +14,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export type SubscriptionTier = 'free' | 'pro';
+export type ExportFormat = 'pdf' | 'png' | 'excel' | 'csv';
 export type SubscriptionStatus =
   | 'active'
   | 'cancelled'
@@ -58,7 +59,7 @@ export const PLAN_LIMITS = {
     dailyApiCalls: 100,
     dailyAiQueries: 0,
     maxAlerts: 0,
-    downloads: 3,
+    downloads: 30,
     scheduledExports: 0,
     maxCoinsPerRequest: 10,
     maxOhlcvDays: 30,         // 30-day history cap
@@ -69,6 +70,11 @@ export const PLAN_LIMITS = {
     canUseAdvancedCharts: false,
     canUseDeepFilters: false,
     allowedFunctions: 'basic' as const,
+    allowedExportFormats: ['png'] as ExportFormat[],
+    exportScale: 1,
+    exportWatermark: true,
+    exportCustomization: false,
+    bulkExport: false,
   },
   pro: {
     dailyApiCalls: 10000,
@@ -85,6 +91,11 @@ export const PLAN_LIMITS = {
     canUseAdvancedCharts: true,
     canUseDeepFilters: true,
     allowedFunctions: 'all' as const,
+    allowedExportFormats: ['pdf', 'png', 'excel', 'csv'] as ExportFormat[],
+    exportScale: 2,
+    exportWatermark: false,
+    exportCustomization: true,
+    bulkExport: true,
   },
 };
 
@@ -346,4 +357,42 @@ export function createEntitlementErrorResponse(result: EntitlementCheckResult) {
     upgrade_url: '/pricing',
     current_tier: result.entitlement?.tier,
   };
+}
+
+/**
+ * Export entitlement (pure function — no DB call)
+ */
+export interface ExportEntitlement {
+  tier: SubscriptionTier;
+  allowedFormats: ExportFormat[];
+  scale: number;
+  watermark: boolean;
+  canCustomize: boolean;
+  canBulkExport: boolean;
+  downloadsLimit: number;
+  downloadsUsed: number;
+  canExport: boolean;
+}
+
+export function getExportEntitlement(
+  tier: SubscriptionTier,
+  downloadsUsed: number,
+): ExportEntitlement {
+  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  return {
+    tier,
+    allowedFormats: [...limits.allowedExportFormats],
+    scale: limits.exportScale,
+    watermark: limits.exportWatermark,
+    canCustomize: limits.exportCustomization,
+    canBulkExport: limits.bulkExport,
+    downloadsLimit: limits.downloads,
+    downloadsUsed,
+    canExport: downloadsUsed < limits.downloads,
+  };
+}
+
+export function isFormatAllowed(tier: SubscriptionTier, format: ExportFormat): boolean {
+  const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  return limits.allowedExportFormats.includes(format);
 }

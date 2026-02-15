@@ -1,5 +1,10 @@
 'use client';
 
+export interface ExportOptions {
+  scale?: number;
+  watermark?: boolean;
+}
+
 /**
  * Convert modern CSS color functions (oklch, oklab) that html2canvas can't parse
  * into standard rgb() values. Uses a hidden DOM probe to let the browser resolve them.
@@ -86,7 +91,49 @@ function applyStyleFixes(clonedDoc: Document, linkFixes: Map<string, string>) {
   });
 }
 
-export async function exportDashboardAsPdf(dashboardName: string) {
+function applyWatermark(canvas: HTMLCanvasElement): void {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Diagonal tiled text
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px sans-serif';
+  ctx.rotate(-Math.PI / 6); // -30 degrees
+
+  for (let y = -h; y < h * 2; y += 300) {
+    for (let x = -w; x < w * 2; x += 400) {
+      ctx.fillText('CryptoReportKit', x, y);
+    }
+  }
+  ctx.restore();
+
+  // Bottom-right badge
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  const badgeText = 'CryptoReportKit Free';
+  ctx.font = 'bold 24px sans-serif';
+  const metrics = ctx.measureText(badgeText);
+  const bw = metrics.width + 32;
+  const bh = 40;
+  const bx = w - bw - 20;
+  const by = h - bh - 20;
+
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.roundRect(bx, by, bw, bh, 8);
+  ctx.fill();
+
+  ctx.fillStyle = '#10b981';
+  ctx.fillText(badgeText, bx + 16, by + 28);
+  ctx.restore();
+}
+
+export async function exportDashboardAsPdf(dashboardName: string, options?: ExportOptions) {
   const element = document.getElementById('dashboard-content');
   if (!element) throw new Error('Dashboard content not found. Please ensure the dashboard has loaded.');
 
@@ -99,11 +146,13 @@ export async function exportDashboardAsPdf(dashboardName: string) {
 
     const canvas = await html2canvas(element, {
       backgroundColor: '#0a0a0f',
-      scale: 2,
+      scale: options?.scale ?? 2,
       useCORS: true,
       logging: false,
       onclone: (clonedDoc) => applyStyleFixes(clonedDoc, linkFixes),
     });
+
+    if (options?.watermark) applyWatermark(canvas);
 
     const imgData = canvas.toDataURL('image/png');
     const imgWidth = canvas.width;
@@ -147,7 +196,7 @@ export async function exportDashboardAsPdf(dashboardName: string) {
   }
 }
 
-export async function exportDashboardAsPng(dashboardName: string) {
+export async function exportDashboardAsPng(dashboardName: string, options?: ExportOptions) {
   const element = document.getElementById('dashboard-content');
   if (!element) throw new Error('Dashboard content not found. Please ensure the dashboard has loaded.');
 
@@ -159,11 +208,13 @@ export async function exportDashboardAsPng(dashboardName: string) {
 
     const canvas = await html2canvas(element, {
       backgroundColor: '#0a0a0f',
-      scale: 2,
+      scale: options?.scale ?? 2,
       useCORS: true,
       logging: false,
       onclone: (clonedDoc) => applyStyleFixes(clonedDoc, linkFixes),
     });
+
+    if (options?.watermark) applyWatermark(canvas);
 
     const link = document.createElement('a');
     link.download = `${dashboardName.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.png`;

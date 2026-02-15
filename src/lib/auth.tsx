@@ -83,9 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState<SupabaseClient | null>(() => getSupabaseClient());
   const [isConfigured] = useState(() => supabase !== null);
 
-  // Download limits by tier (Free: 3, Pro: 300)
+  // Download limits by tier (Free: 30, Pro: 300)
   const downloadLimits: Record<string, number> = {
-    free: 3,
+    free: 30,
     pro: 300,
   };
 
@@ -368,7 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Get remaining downloads
   const remainingDownloads = () => {
-    if (!profile) return 3;
+    if (!profile) return 30;
     return Math.max(0, profile.downloads_limit - profile.downloads_this_month);
   };
 
