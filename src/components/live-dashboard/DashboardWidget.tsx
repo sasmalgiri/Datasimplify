@@ -78,6 +78,17 @@ import { VolatilityForecastWidget } from './widgets/VolatilityForecastWidget';
 import { MarketBriefWidget } from './widgets/MarketBriefWidget';
 import { SectorRotationWidget } from './widgets/SectorRotationWidget';
 import { MoneyFlowIndexWidget } from './widgets/MoneyFlowIndexWidget';
+// Phase 11 new feature widgets
+import { CycleComparisonWidget } from './widgets/CycleComparisonWidget';
+import { TaxReportWidget } from './widgets/TaxReportWidget';
+import { DCASimulatorWidget } from './widgets/DCASimulatorWidget';
+import { DCATrackerWidget } from './widgets/DCATrackerWidget';
+import { ScreenerWidget } from './widgets/ScreenerWidget';
+import { PortfolioInputWidget } from './widgets/PortfolioInputWidget';
+import { PLSummaryWidget } from './widgets/PLSummaryWidget';
+import { PLChartWidget } from './widgets/PLChartWidget';
+import { AllocationPieWidget } from './widgets/AllocationPieWidget';
+import { ExchangeBalanceWidget } from './widgets/ExchangeBalanceWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -143,6 +154,17 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   MarketBriefWidget,
   SectorRotationWidget,
   MoneyFlowIndexWidget,
+  // Phase 11 new feature widgets
+  CycleComparisonWidget,
+  TaxReportWidget,
+  DCASimulatorWidget,
+  DCATrackerWidget,
+  ScreenerWidget,
+  PortfolioInputWidget,
+  PLSummaryWidget,
+  PLChartWidget,
+  AllocationPieWidget,
+  ExchangeBalanceWidget,
 };
 
 /** Contextual descriptions for each widget — explains what it shows and how to read it */
@@ -235,6 +257,18 @@ export const WIDGET_DESCRIPTIONS: Record<string, string> = {
   MarketBriefWidget: 'Executive summary in 6 bullet points — market direction, top mover, risk status, sector leader, trending coins, and key numbers. Urgency-coded dots.',
   SectorRotationWidget: 'Where is money moving? Shows sectors outperforming (inflow) vs underperforming (outflow) relative to market average. Spot rotation early.',
   MoneyFlowIndexWidget: 'Buying vs selling pressure gauge (0-100) — analyzes price×volume flow direction across top 20 coins. Detects accumulation, distribution, and divergences.',
+
+  // Phase 11 new feature widgets
+  CycleComparisonWidget: 'BTC halving cycle overlay — compares 2012, 2016, 2020, and current 2024 cycles on a normalized scale. Spot where we are relative to past cycles.',
+  TaxReportWidget: 'Tax calculator — input buy/sell trades, calculate FIFO/LIFO/AVG cost basis, view realized gains summary, and export IRS Form 8949 CSV.',
+  DCASimulatorWidget: 'DCA simulator — "What if you invested $X/week into BTC?" Compares DCA vs lump sum strategy with interactive chart.',
+  DCATrackerWidget: 'DCA purchase log — track actual dollar-cost-average purchases with running P&L against current market prices.',
+  ScreenerWidget: 'Smart coin screener — filter by 24h%, 7d%, market cap, volume, price, rank with AND conditions. Save custom presets.',
+  PortfolioInputWidget: 'Portfolio input — add holdings with buy price and date. See real-time P&L per position against current market prices.',
+  PLSummaryWidget: 'P&L summary table — aggregated view of portfolio holdings with unrealized gains/losses grouped by coin.',
+  PLChartWidget: 'P&L bar chart — visual comparison of gains and losses per holding. Green = profit, Red = loss.',
+  AllocationPieWidget: 'Portfolio allocation pie — see how your holdings are distributed by current market value.',
+  ExchangeBalanceWidget: 'Multi-exchange balances — connect Binance, Coinbase, Kraken, KuCoin, Bybit, OKX with read-only API keys. Unified balance view.',
 };
 
 interface DashboardWidgetProps {

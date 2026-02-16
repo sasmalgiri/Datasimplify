@@ -163,7 +163,7 @@ export default function DownloadsPage() {
               <div className="p-5 bg-gradient-to-r from-emerald-900/20 to-gray-800/40 border border-emerald-500/20 rounded-xl">
                 <h2 className="text-lg font-semibold mb-1">Want more?</h2>
                 <p className="text-gray-400 text-sm mb-3">
-                  Pro members get 300 downloads/month, all 47 dashboard widgets, advanced charts, and full history.
+                  Pro members get 300 downloads/month, all 63+ dashboard widgets, advanced charts, and full history.
                 </p>
                 <Link
                   href="/pricing"

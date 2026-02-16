@@ -92,18 +92,22 @@ export default function QuickActionsCard({ className = '' }: QuickActionsCardPro
         {/* Stats preview */}
         <div className="mt-4 p-3 bg-gray-700/30 rounded-lg border border-gray-700/50">
           <p className="text-xs text-gray-400 mb-2">Why CryptoReportKit?</p>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-4 gap-1.5 text-center">
             <div>
-              <div className="text-lg font-bold text-white">6+</div>
-              <div className="text-[10px] text-gray-500">Templates</div>
+              <div className="text-lg font-bold text-emerald-400">32+</div>
+              <div className="text-[10px] text-gray-500">Dashboards</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-white">100+</div>
-              <div className="text-[10px] text-gray-500">Coins</div>
+              <div className="text-lg font-bold text-blue-400">63+</div>
+              <div className="text-[10px] text-gray-500">Widgets</div>
             </div>
             <div>
-              <div className="text-lg font-bold text-white">Free</div>
-              <div className="text-[10px] text-gray-500">To Start</div>
+              <div className="text-lg font-bold text-purple-400">85+</div>
+              <div className="text-[10px] text-gray-500">Functions</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold text-amber-400">8</div>
+              <div className="text-[10px] text-gray-500">Smart Widgets</div>
             </div>
           </div>
         </div>

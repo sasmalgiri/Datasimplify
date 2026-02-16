@@ -235,12 +235,31 @@ export function getThemeColors(theme: ColorThemeKey = 'emerald') {
 }
 
 // Format utilities
-export function formatCompact(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
+import { getCurrencySymbol, isCryptoCurrency } from './currency';
+
+export function formatCompact(n: number, currency: string = 'usd'): string {
+  const s = getCurrencySymbol(currency);
+  if (isCryptoCurrency(currency)) {
+    if (n >= 1e6) return `${s}${(n / 1e6).toFixed(2)}M`;
+    if (n >= 1e3) return `${s}${(n / 1e3).toFixed(2)}K`;
+    if (n >= 1) return `${s}${n.toFixed(4)}`;
+    return `${s}${n.toFixed(8)}`;
+  }
+  if (n >= 1e12) return `${s}${(n / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `${s}${(n / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${s}${(n / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${s}${(n / 1e3).toFixed(1)}K`;
+  return `${s}${n.toFixed(2)}`;
+}
+
+export function formatPrice(n: number, currency: string = 'usd'): string {
+  const s = getCurrencySymbol(currency);
+  if (isCryptoCurrency(currency)) {
+    return `${s}${n < 1 ? n.toFixed(8) : n.toFixed(4)}`;
+  }
+  if (n < 0.01) return `${s}${n.toFixed(6)}`;
+  if (n < 1) return `${s}${n.toFixed(4)}`;
+  return `${s}${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatPercent(n: number | null | undefined): string {

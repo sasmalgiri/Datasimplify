@@ -5,13 +5,14 @@ import {
   Settings, X, RotateCcw, ChevronDown, ChevronUp, LayoutGrid, Lock, Crown,
   Brain, BarChart3, LineChart, Droplets, Layers, Grid3X3, GitCompare,
   Activity, TrendingUp, Wrench, CandlestickChart, PieChart,
-  Moon, Sun,
+  Moon, Sun, Wallet,
 } from 'lucide-react';
 import { useLiveDashboardStore, DEFAULT_VISIBLE_WIDGET_COUNT } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization, SiteTheme } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { WIDGET_DESCRIPTIONS } from './DashboardWidget';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
+import { ALL_CURRENCIES } from '@/lib/live-dashboard/currency';
 import { useAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/lib/entitlements';
 
@@ -103,12 +104,24 @@ const WIDGET_TO_CATEGORY: Record<string, string> = {
 
   // Derivatives
   DerivativesTableWidget: 'Derivatives',
+
+  // Portfolio & Tax
+  TaxReportWidget: 'Portfolio & Tax',
+  DCASimulatorWidget: 'Portfolio & Tax',
+  DCATrackerWidget: 'Portfolio & Tax',
+  PortfolioInputWidget: 'Portfolio & Tax',
+  PLSummaryWidget: 'Portfolio & Tax',
+  PLChartWidget: 'Portfolio & Tax',
+  AllocationPieWidget: 'Portfolio & Tax',
+  ScreenerWidget: 'Portfolio & Tax',
+  ExchangeBalanceWidget: 'Portfolio & Tax',
+  CycleComparisonWidget: 'Price Charts',
 };
 
 const CATEGORY_ORDER = [
   'Intelligence', 'Market Overview', 'Price Charts', 'Volume & Liquidity',
   'Market Structure', 'Sectors', 'Comparison', 'Advanced Charts',
-  'Analytics', 'Sentiment', 'Utilities', 'Derivatives',
+  'Analytics', 'Sentiment', 'Portfolio & Tax', 'Utilities', 'Derivatives',
 ];
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -122,6 +135,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   'Advanced Charts': CandlestickChart,
   'Analytics': Activity,
   'Sentiment': TrendingUp,
+  'Portfolio & Tax': Wallet,
   'Utilities': Wrench,
   'Derivatives': PieChart,
 };
@@ -160,15 +174,10 @@ const TIMEFRAME_OPTIONS = [
   { days: 365, label: '1y' },
 ];
 
-const CURRENCY_OPTIONS = [
-  { value: 'usd', label: 'USD ($)' },
-  { value: 'eur', label: 'EUR (€)' },
-  { value: 'gbp', label: 'GBP (£)' },
-  { value: 'jpy', label: 'JPY (¥)' },
-  { value: 'inr', label: 'INR (₹)' },
-  { value: 'btc', label: 'BTC (₿)' },
-  { value: 'eth', label: 'ETH (Ξ)' },
-];
+const CURRENCY_OPTIONS = ALL_CURRENCIES.map((c) => ({
+  value: c.value,
+  label: `${c.value.toUpperCase()} (${c.symbol.trim()})`,
+}));
 
 const SORT_OPTIONS = [
   { value: 'market_cap_desc', label: 'MCap ↓' },

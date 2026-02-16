@@ -84,7 +84,7 @@ export const PLAN_LIMITS = {
     scheduledExports: 5,
     maxCoinsPerRequest: 100,
     maxOhlcvDays: 730,        // 2 years of history
-    maxDashboardWidgets: 999, // All 47
+    maxDashboardWidgets: 999, // All 63+
     maxCompareCoins: 10,      // Full compare
     canAccessProFeatures: true,
     canScheduleExports: true,
