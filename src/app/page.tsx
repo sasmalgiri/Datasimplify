@@ -10,26 +10,37 @@ import {
   Shield, Zap, Layout, TrendingUp, Wallet, FileSpreadsheet,
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
+  Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
 } from 'lucide-react';
 
-/* ─── Dashboard Preview Tiles ─── */
+/* ─── Dashboard Preview Tiles (24 showcased out of 70+) ─── */
 const DASHBOARD_PREVIEWS = [
+  // Free dashboards — show the best first
   { icon: '📊', name: 'Market Overview', widgets: 14, tier: 'free' },
   { icon: '₿', name: 'Bitcoin Dashboard', widgets: 10, tier: 'free' },
-  { icon: '💼', name: 'Portfolio Overview', widgets: 12, tier: 'free' },
-  { icon: 'Ξ', name: 'Ethereum Dashboard', widgets: 10, tier: 'free' },
-  { icon: '🔥', name: 'Altcoin Radar', widgets: 11, tier: 'free' },
-  { icon: '🏗️', name: 'Sector Analysis', widgets: 10, tier: 'free' },
-  { icon: '📋', name: 'Executive Summary', widgets: 12, tier: 'free' },
-  { icon: '🏛️', name: 'Layer 1 Comparison', widgets: 12, tier: 'free' },
-  { icon: '📈', name: 'DeFi Tracker', widgets: 10, tier: 'pro' },
-  { icon: '⚡', name: 'Trader Dashboard', widgets: 12, tier: 'pro' },
-  { icon: '⚠️', name: 'Risk & Volatility', widgets: 10, tier: 'pro' },
-  { icon: '🐋', name: 'Whale Watch', widgets: 8, tier: 'pro' },
-  { icon: '🔬', name: 'Technical Analysis', widgets: 10, tier: 'pro' },
-  { icon: '🎯', name: 'Technical Screener', widgets: 8, tier: 'pro' },
-  { icon: '📊', name: 'Correlation Matrix', widgets: 8, tier: 'pro' },
-  { icon: '🎮', name: 'NFT & Gaming', widgets: 8, tier: 'pro' },
+  { icon: '👑', name: 'BTC Dominance & Altseason Timer', widgets: 10, tier: 'free' },
+  { icon: '📊', name: 'Market Breadth', widgets: 10, tier: 'free' },
+  { icon: '⚖️', name: 'ETH/BTC Ratio Tracker', widgets: 10, tier: 'free' },
+  { icon: '🛡️', name: 'Bear Market Survival Kit', widgets: 10, tier: 'free' },
+  { icon: '📈', name: 'Crypto Indices', widgets: 9, tier: 'free' },
+  { icon: '🔄', name: 'BTC Cycle Comparison', widgets: 7, tier: 'free' },
+  { icon: '💵', name: 'Stablecoin Capital Monitor', widgets: 8, tier: 'free' },
+  { icon: '🌉', name: 'Multi-Chain Bridge Monitor', widgets: 7, tier: 'free' },
+  // Pro dashboards — highlight the most exciting
+  { icon: '🚦', name: 'Risk-On / Risk-Off Regime', widgets: 9, tier: 'pro' },
+  { icon: '🎯', name: 'Accumulation Zone Finder', widgets: 9, tier: 'pro' },
+  { icon: '💎', name: 'Micro-Cap Gems Scanner', widgets: 9, tier: 'pro' },
+  { icon: '🐋', name: 'Whale Accumulation Radar', widgets: 10, tier: 'pro' },
+  { icon: '🔍', name: 'Divergence Spotter', widgets: 10, tier: 'pro' },
+  { icon: '🧬', name: 'Sector Alpha Generator', widgets: 9, tier: 'pro' },
+  { icon: '💹', name: 'P&L Tracker', widgets: 6, tier: 'pro' },
+  { icon: '💰', name: 'Funding Rate Arbitrage', widgets: 8, tier: 'pro' },
+  { icon: '🐸', name: 'Meme Coin Momentum', widgets: 8, tier: 'pro' },
+  { icon: '🤖', name: 'AI Token Intelligence', widgets: 7, tier: 'pro' },
+  { icon: '📐', name: 'Volatility Regime & Sizing', widgets: 10, tier: 'pro' },
+  { icon: '🏛️', name: 'Exchange Portfolio', widgets: 5, tier: 'pro' },
+  { icon: '🏆', name: 'Copy Trading Leaderboard', widgets: 9, tier: 'pro' },
+  { icon: '🌾', name: 'DeFi Yield Explorer', widgets: 8, tier: 'pro' },
 ];
 
 /* ─── Intelligence Features ─── */
@@ -92,22 +103,93 @@ const INTELLIGENCE_FEATURES = [
   },
 ];
 
+/* ─── Pro Tools (new features) ─── */
+const PRO_TOOLS = [
+  {
+    icon: Hammer,
+    name: 'Custom Dashboard Builder',
+    description: 'Build your own dashboards from 75+ widgets — pick, arrange, save, and share. Your data layout, your way.',
+    color: 'text-emerald-400',
+    bg: 'from-emerald-500/20 to-emerald-600/5',
+    tier: 'pro',
+  },
+  {
+    icon: Calculator,
+    name: 'Tax Report Export',
+    description: 'Input trades, calculate FIFO/LIFO/AVG cost basis, view realized gains by short/long-term, and export Form 8949 CSV.',
+    color: 'text-blue-400',
+    bg: 'from-blue-500/20 to-blue-600/5',
+    tier: 'pro',
+  },
+  {
+    icon: Repeat,
+    name: 'DCA Tracker & Simulator',
+    description: 'Simulate "what if you DCA\'d $X/week since DATE" with charts — plus a real purchase log to track actual DCA performance.',
+    color: 'text-purple-400',
+    bg: 'from-purple-500/20 to-purple-600/5',
+    tier: 'free',
+  },
+  {
+    icon: BarChart2,
+    name: 'P&L Dashboard',
+    description: 'Input holdings, see unrealized P&L in real-time. Bar charts for gains/losses, pie chart for allocation, detailed summary table.',
+    color: 'text-rose-400',
+    bg: 'from-rose-500/20 to-rose-600/5',
+    tier: 'pro',
+  },
+  {
+    icon: Search,
+    name: 'Smart Screener',
+    description: 'Filter coins by multiple AND conditions — 24h%, 7d%, market cap, volume, rank. Save presets for one-click filtering.',
+    color: 'text-amber-400',
+    bg: 'from-amber-500/20 to-amber-600/5',
+    tier: 'pro',
+  },
+  {
+    icon: ArrowLeftRight,
+    name: 'Multi-Exchange Portfolio',
+    description: 'Connect Binance, Coinbase, Kraken, KuCoin, Bybit, OKX with read-only keys. Unified balance view across all exchanges.',
+    color: 'text-cyan-400',
+    bg: 'from-cyan-500/20 to-cyan-600/5',
+    tier: 'pro',
+  },
+  {
+    icon: TrendingUp,
+    name: 'BTC Cycle Comparison',
+    description: 'Overlay 2012, 2016, 2020, and current 2024 BTC halving cycles on a normalized chart. See where we are in the cycle.',
+    color: 'text-orange-400',
+    bg: 'from-orange-500/20 to-orange-600/5',
+    tier: 'free',
+  },
+  {
+    icon: Globe,
+    name: '60+ Currency Support',
+    description: 'View prices in USD, EUR, GBP, JPY, INR, BRL, KRW, and 55+ more currencies. Proper symbols and locale formatting.',
+    color: 'text-indigo-400',
+    bg: 'from-indigo-500/20 to-indigo-600/5',
+    tier: 'free',
+  },
+];
+
 /* ─── Competitor Comparison ─── */
 const COMPARISON_ROWS = [
-  { feature: 'Live interactive dashboards', crk: true, others: 'Limited or none' },
-  { feature: 'Dashboard widgets', crk: '63+', others: '5-15' },
+  { feature: 'Live interactive dashboards', crk: '70+', others: 'Limited or none' },
+  { feature: 'Dashboard widgets', crk: '75+', others: '5-15' },
   { feature: 'Smart intelligence widgets', crk: '8 built-in', others: 'Basic alerts only' },
+  { feature: 'Custom dashboard builder', crk: true, others: 'Not available' },
   { feature: 'Excel add-in with custom functions', crk: '85+ functions', others: 'CSV export only' },
   { feature: 'BYOK — your keys stay local', crk: true, others: 'Keys stored on their servers' },
-  { feature: 'Dark + Light Blue themes', crk: true, others: 'Single theme' },
+  { feature: 'Tax report with CSV export', crk: true, others: 'Separate paid tool ($49+)' },
+  { feature: 'Multi-exchange portfolio', crk: '6 exchanges', others: 'Manual tracking' },
+  { feature: 'DCA simulator + tracker', crk: true, others: 'Basic or none' },
+  { feature: 'Currency support', crk: '60+', others: 'USD only or 5-7' },
   { feature: 'Price alerts with email', crk: true, others: 'Pro only ($29+/mo)' },
-  { feature: 'Portfolio & tax tracking', crk: true, others: 'Separate paid tool' },
   { feature: 'Starting price', crk: '$0 free / $9 pro', others: '$19-49/mo' },
 ];
 
 export default function LandingPage() {
   const [showAllDashboards, setShowAllDashboards] = useState(false);
-  const visibleDashboards = showAllDashboards ? DASHBOARD_PREVIEWS : DASHBOARD_PREVIEWS.slice(0, 8);
+  const visibleDashboards = showAllDashboards ? DASHBOARD_PREVIEWS : DASHBOARD_PREVIEWS.slice(0, 12);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -122,7 +204,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            32+ Live Dashboards &middot; 63+ Widgets &middot; 85+ Excel Functions
+            70+ Live Dashboards &middot; 75+ Widgets &middot; 85+ Excel Functions
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight tracking-tight">
@@ -136,7 +218,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Live dashboards, smart intelligence widgets, Excel add-in with 85+ functions — all powered by{' '}
+            70+ live dashboards, smart intelligence widgets, tax tools, DCA tracker, custom builder, and an Excel add-in with 85+ functions — all powered by{' '}
             <span className="text-white font-medium">your own API key</span>. Privacy-first. No data leaves your browser.
           </p>
 
@@ -171,11 +253,11 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-emerald-400">32+</div>
+              <div className="text-3xl md:text-4xl font-bold text-emerald-400">70+</div>
               <div className="text-gray-400 text-sm mt-1">Live Dashboards</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-blue-400">63+</div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-400">75+</div>
               <div className="text-gray-400 text-sm mt-1">Dashboard Widgets</div>
             </div>
             <div>
@@ -183,7 +265,7 @@ export default function LandingPage() {
               <div className="text-gray-400 text-sm mt-1">Excel Functions</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-amber-400">12</div>
+              <div className="text-3xl md:text-4xl font-bold text-amber-400">13</div>
               <div className="text-gray-400 text-sm mt-1">Widget Categories</div>
             </div>
           </div>
@@ -199,11 +281,11 @@ export default function LandingPage() {
               INTERACTIVE DASHBOARDS
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              32+ Live Dashboards, <span className="text-emerald-400">Real-Time Data</span>
+              70+ Live Dashboards, <span className="text-emerald-400">Real-Time Data</span>
             </h2>
             <p className="text-gray-400 text-base max-w-2xl mx-auto">
-              Beautiful interactive dashboards with candlestick charts, treemaps, heatmaps, radar plots, and more.
-              13 dashboards free — no credit card needed.
+              From BTC dominance timing to whale accumulation radar — purpose-built dashboards for every crypto strategy.
+              23 dashboards free, no credit card needed.
             </p>
           </div>
 
@@ -226,13 +308,13 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {!showAllDashboards && DASHBOARD_PREVIEWS.length > 8 && (
+          {!showAllDashboards && DASHBOARD_PREVIEWS.length > 12 && (
             <button
               type="button"
               onClick={() => setShowAllDashboards(true)}
               className="mt-4 mx-auto flex items-center gap-1.5 text-sm text-gray-400 hover:text-emerald-400 transition-colors"
             >
-              +{DASHBOARD_PREVIEWS.length - 8} more dashboards
+              +{DASHBOARD_PREVIEWS.length - 12} more dashboards shown here, 70+ total
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -272,6 +354,43 @@ export default function LandingPage() {
                   key={f.name}
                   className={`bg-gradient-to-br ${f.bg} border border-gray-700/40 rounded-xl p-5 hover:border-gray-600/60 transition-all duration-200`}
                 >
+                  <Icon className={`w-6 h-6 ${f.color} mb-3`} />
+                  <h3 className="text-sm font-bold text-white mb-1.5">{f.name}</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">{f.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ PRO TOOLS — NEW FEATURES ═══════ */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-4">
+              <Zap className="w-3.5 h-3.5" />
+              NEW: PRO TOOLS
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              8 Powerful Tools <span className="text-emerald-400">Built In</span>
+            </h2>
+            <p className="text-gray-400 text-base max-w-2xl mx-auto">
+              Tax reports, DCA tracking, custom dashboards, multi-exchange portfolio, and more — features that competitors charge $30-50/month for, included in your $9 plan.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PRO_TOOLS.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.name}
+                  className={`bg-gradient-to-br ${f.bg} border border-gray-700/40 rounded-xl p-5 hover:border-gray-600/60 transition-all duration-200 relative`}
+                >
+                  {f.tier === 'free' && (
+                    <span className="absolute top-3 right-3 text-[9px] px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-full font-medium">FREE</span>
+                  )}
                   <Icon className={`w-6 h-6 ${f.color} mb-3`} />
                   <h3 className="text-sm font-bold text-white mb-1.5">{f.name}</h3>
                   <p className="text-xs text-gray-400 leading-relaxed">{f.description}</p>
@@ -371,7 +490,7 @@ export default function LandingPage() {
               Fully <span className="text-blue-400">Customizable</span>
             </h2>
             <p className="text-gray-400 text-base max-w-2xl mx-auto">
-              Toggle any widget on or off, choose from 5 color themes, switch between Dark and Light Blue modes, and organize by 12 categories.
+              Toggle any widget on or off, choose from 5 color themes, switch between Dark and Light Blue modes, and organize by 13 categories.
             </p>
           </div>
 
@@ -401,8 +520,8 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mx-auto mb-3">
                 <Cpu className="w-6 h-6 text-amber-400" />
               </div>
-              <h3 className="text-sm font-bold text-white mb-1">12 Categories</h3>
-              <p className="text-xs text-gray-500">Intelligence, Analytics, Sentiment, and more</p>
+              <h3 className="text-sm font-bold text-white mb-1">13 Categories</h3>
+              <p className="text-xs text-gray-500">Intelligence, Analytics, Portfolio & Tax, and more</p>
             </div>
           </div>
         </div>
@@ -502,14 +621,15 @@ export default function LandingPage() {
 
                 <ul className="space-y-2.5 text-sm text-gray-300 mb-6">
                   {[
-                    '13 live dashboards',
+                    '23 live dashboards',
                     '5 widgets per dashboard',
+                    'BTC dominance, market breadth, crypto indices',
+                    'DCA simulator + BTC cycle comparison',
+                    '60+ currency support',
                     '2-coin compare',
                     '3 downloads/month',
                     '30-day price history',
-                    'Basic chart types',
                     'Learn + Glossary',
-                    'Contract verification',
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -538,16 +658,16 @@ export default function LandingPage() {
 
                 <ul className="space-y-2.5 text-sm text-gray-300 mb-6">
                   {[
-                    'All 32+ dashboards',
-                    'All 63+ widgets unlocked',
-                    '8 intelligence features',
+                    'All 70+ dashboards unlocked',
+                    'All 75+ widgets unlocked',
+                    'Custom dashboard builder',
+                    'Tax report with CSV export',
+                    'P&L tracker + DCA tracker',
+                    'Smart screener with presets',
+                    'Multi-exchange portfolio (6 exchanges)',
+                    '8 intelligence widgets',
                     '300 downloads/month',
                     '10-coin compare + head-to-head',
-                    'Full price history (all timeframes)',
-                    'Technical indicators & screeners',
-                    'Smart intelligence widgets',
-                    'Price alerts with email',
-                    'Portfolio & tax tracking',
                     'Wallet & exchange balances',
                     'All template packs',
                     'Priority email support',
@@ -580,7 +700,7 @@ export default function LandingPage() {
             Start Analyzing Crypto <span className="text-emerald-400">Today</span>
           </h2>
           <p className="text-gray-400 text-base mb-8 max-w-lg mx-auto">
-            32+ dashboards, 63+ widgets, 85+ Excel functions. Free to start, powerful enough for professionals.
+            70+ dashboards, 75+ widgets, tax tools, DCA tracker, custom builder, and 85+ Excel functions. Free to start, powerful enough for professionals.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
