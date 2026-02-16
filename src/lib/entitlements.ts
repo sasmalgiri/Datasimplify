@@ -128,7 +128,7 @@ export async function getUserEntitlement(
       'subscription_tier, subscription_status, downloads_limit, downloads_this_month'
     )
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (error || !profile) {
     return null;
@@ -298,7 +298,7 @@ export async function incrementDownloadCount(
         .from('user_profiles')
         .select('downloads_this_month')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         await supabase

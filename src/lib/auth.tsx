@@ -94,32 +94,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
 
     try {
+      // Use maybeSingle() to avoid 406 error when no row exists
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        const { data: newProfile } = await supabase
-          .from('user_profiles')
-          .insert({
+      if (data) {
+        // Profile exists — use it
+        setProfile(data);
+        return;
+      }
+
+      // Profile doesn't exist (data is null) or there was an error — try to create it
+      if (!data) {
+        try {
+          const { data: newProfile, error: insertError } = await supabase
+            .from('user_profiles')
+            .upsert({
+              id: userId,
+              email: userEmail || '',
+              subscription_tier: 'free',
+              downloads_this_month: 0,
+              downloads_limit: downloadLimits.free,
+            }, { onConflict: 'id' })
+            .select()
+            .maybeSingle();
+
+          if (newProfile) {
+            setProfile(newProfile);
+          } else if (insertError) {
+            console.warn('Could not create profile:', insertError.message);
+            // Set a minimal local profile so the app still works
+            setProfile({
+              id: userId,
+              email: userEmail || '',
+              subscription_tier: 'free',
+              downloads_this_month: 0,
+              downloads_limit: downloadLimits.free,
+              created_at: new Date().toISOString(),
+            } as UserProfile);
+          }
+        } catch {
+          // Fallback: set minimal profile to avoid blocking the UI
+          setProfile({
             id: userId,
             email: userEmail || '',
             subscription_tier: 'free',
             downloads_this_month: 0,
             downloads_limit: downloadLimits.free,
-          })
-          .select()
-          .single();
-        
-        setProfile(newProfile);
-      } else if (data) {
-        setProfile(data);
+            created_at: new Date().toISOString(),
+          } as UserProfile);
+        }
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
+      // Still set a minimal profile so login isn't blocked
+      setProfile({
+        id: userId,
+        email: userEmail || '',
+        subscription_tier: 'free',
+        downloads_this_month: 0,
+        downloads_limit: downloadLimits.free,
+        created_at: new Date().toISOString(),
+      } as UserProfile);
     }
   };
 
