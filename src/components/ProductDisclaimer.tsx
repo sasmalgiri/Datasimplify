@@ -69,7 +69,7 @@ export function ProductDisclaimer({
               <FileSpreadsheet className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Templates + Workflow</p>
-                <p className="text-xs text-gray-600">Excel files with CRK formulas</p>
+                <p className="text-xs text-gray-600">Static Excel files with prefetched data</p>
               </div>
             </div>
 
@@ -91,8 +91,8 @@ export function ProductDisclaimer({
           </div>
 
           <p className="text-sm text-gray-600 mb-3">
-            We provide Excel templates with CRK formulas. The templates fetch data using <strong>your own</strong> API
-            key (BYOK = Bring Your Own Key) - we don&apos;t store or redistribute market data. CoinGecko free tier available.
+            We provide static Excel templates with prefetched crypto data. BYOK (Bring Your Own Key) architecture —
+            we don&apos;t store or redistribute market data. CoinGecko free tier available.
           </p>
 
           <div className="flex flex-wrap gap-3 text-sm">
@@ -127,7 +127,7 @@ export function ProductDisclaimer({
 export function ProductDisclaimerInline({ className = '' }: { className?: string }) {
   return (
     <p className={`text-xs text-gray-500 ${className}`}>
-      Templates use CRK formulas. Data fetched via your own API key (BYOK).{' '}
+      Static templates with prefetched data. BYOK architecture.{' '}
       <Link href="/refund" className="underline hover:text-gray-700">
         30-day refund
       </Link>

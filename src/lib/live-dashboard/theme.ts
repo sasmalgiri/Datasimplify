@@ -1,6 +1,69 @@
 // Premium design tokens for Live Dashboards
 // Inspired by otherlevel.com — glassmorphism, deep dark, neon emerald accent
 
+import type { SiteTheme } from './store';
+
+// ─── Site Theme System ───
+export const SITE_THEMES = {
+  dark: {
+    pageBg: 'bg-[#0a0a0f]',
+    cardClasses: 'bg-white/[0.03] backdrop-blur-md border border-white/[0.06] rounded-2xl',
+    cardHover: 'hover:border-white/[0.12] transition-all duration-300',
+    cardGlow: 'hover:border-emerald-400/20 hover:shadow-[0_0_30px_rgba(52,211,153,0.06)] transition-all duration-300',
+    textPrimary: 'text-white',
+    textSecondary: 'text-gray-300',
+    textMuted: 'text-gray-400',
+    textDim: 'text-gray-500',
+    textFaint: 'text-gray-600',
+    subtleBg: 'bg-white/[0.04]',
+    subtleBorder: 'border-white/[0.06]',
+    panelBg: 'bg-white/[0.02] border border-white/[0.06]',
+    inputBg: 'bg-white/[0.04] border border-white/[0.1] text-white',
+    selectOptionBg: 'bg-gray-900',
+    chipActive: 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30',
+    chipInactive: 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08]',
+    buttonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+    buttonSecondary: 'bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/[0.06]',
+    errorBg: 'bg-red-500/10 border border-red-500/20 text-red-400',
+    footerBorder: 'border-t border-white/[0.06]',
+    kbdBg: 'bg-white/[0.04] border-white/[0.08]',
+    divider: 'border-white/[0.04]',
+    linkText: 'text-gray-600 hover:text-white',
+  },
+  'light-blue': {
+    pageBg: 'bg-[#f0f4ff]',
+    cardClasses: 'bg-white border border-blue-200/40 rounded-2xl shadow-sm',
+    cardHover: 'hover:border-blue-300/60 hover:shadow-md transition-all duration-300',
+    cardGlow: 'hover:border-blue-400/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300',
+    textPrimary: 'text-slate-800',
+    textSecondary: 'text-slate-700',
+    textMuted: 'text-slate-600',
+    textDim: 'text-slate-500',
+    textFaint: 'text-slate-400',
+    subtleBg: 'bg-blue-50/50',
+    subtleBorder: 'border-blue-200/30',
+    panelBg: 'bg-white/80 border border-blue-200/30',
+    inputBg: 'bg-white border border-blue-200/50 text-slate-800',
+    selectOptionBg: 'bg-white',
+    chipActive: 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/25',
+    chipInactive: 'bg-blue-50/50 text-slate-500 border border-blue-200/30 hover:bg-blue-100/50',
+    buttonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+    buttonSecondary: 'bg-blue-50/50 hover:bg-blue-100/60 text-slate-500 hover:text-slate-700 border border-blue-200/30',
+    errorBg: 'bg-red-50 border border-red-200 text-red-600',
+    footerBorder: 'border-t border-blue-200/30',
+    kbdBg: 'bg-blue-50 border-blue-200/40',
+    divider: 'border-blue-200/20',
+    linkText: 'text-slate-400 hover:text-slate-700',
+  },
+} as const;
+
+export type SiteThemeClasses = (typeof SITE_THEMES)[SiteTheme];
+
+/** Get site theme class strings for a given theme */
+export function getSiteThemeClasses(theme: SiteTheme = 'dark'): SiteThemeClasses {
+  return SITE_THEMES[theme] ?? SITE_THEMES.dark;
+}
+
 export const THEME = {
   // Backgrounds
   pageBg: 'bg-[#0a0a0f]',
@@ -74,6 +137,41 @@ export const ECHARTS_THEME = {
     textStyle: { color: '#fff', fontSize: 12 },
   },
 } as const;
+
+// ECharts theme for light-blue site theme
+export const ECHARTS_THEME_LIGHT = {
+  backgroundColor: 'transparent',
+  textStyle: { color: 'rgba(30,41,59,0.6)', fontFamily: 'inherit' },
+  grid: {
+    left: '3%',
+    right: '3%',
+    bottom: '3%',
+    top: '10%',
+    containLabel: true,
+  },
+  xAxis: {
+    axisLine: { lineStyle: { color: 'rgba(59,130,246,0.15)' } },
+    axisTick: { show: false },
+    axisLabel: { color: 'rgba(30,41,59,0.5)', fontSize: 10 },
+    splitLine: { lineStyle: { color: 'rgba(59,130,246,0.08)' } },
+  },
+  yAxis: {
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: { color: 'rgba(30,41,59,0.5)', fontSize: 10 },
+    splitLine: { lineStyle: { color: 'rgba(59,130,246,0.08)' } },
+  },
+  tooltip: {
+    backgroundColor: 'rgba(255,255,255,0.97)',
+    borderColor: 'rgba(59,130,246,0.15)',
+    textStyle: { color: '#1e293b', fontSize: 12 },
+  },
+} as const;
+
+/** Get ECharts theme options for a given site theme */
+export function getEchartsTheme(siteTheme: SiteTheme = 'dark') {
+  return siteTheme === 'light-blue' ? ECHARTS_THEME_LIGHT : ECHARTS_THEME;
+}
 
 // Shared chart color palette (used by all ECharts widgets)
 export const CHART_COLORS = [

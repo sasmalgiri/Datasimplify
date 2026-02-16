@@ -16,7 +16,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is CryptoReportKit?',
-    answer: 'CryptoReportKit provides Excel templates with prefetched crypto data and 20+ live web dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local. Templates ship with data included, and live dashboards on the website let you explore real-time data.',
+    answer: 'CryptoReportKit provides static Excel templates with prefetched crypto data and web-based dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local. Templates ship with data included, and dashboards on the website let you explore data.',
   },
   {
     category: 'Getting Started',
@@ -26,23 +26,23 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is BYOK (Bring Your Own Key)?',
-    answer: 'BYOK means you provide your own data provider API key (e.g., CoinGecko free or Pro). Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For live data, use our web dashboards with YOUR key.',
+    answer: 'BYOK means you provide your own data provider API key (e.g., CoinGecko free or Pro). Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For current data, use our web dashboards with YOUR key.',
   },
   // Templates
   {
     category: 'Templates',
     question: 'What are CryptoReportKit Excel Templates?',
-    answer: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For real-time data, use the live dashboards on our website with your own CoinGecko API key (BYOK).',
+    answer: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For current data, use the dashboards on our website with your own CoinGecko API key (BYOK).',
   },
   {
     category: 'Templates',
     question: 'What do I need to use the templates?',
-    answer: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from your CRK downloads portal. That\'s it - templates come with prefetched data ready to use!',
+    answer: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from the downloads page. That\'s it - templates come with prefetched data ready to use!',
   },
   {
     category: 'Templates',
     question: 'Do templates include market data?',
-    answer: 'Yes! Templates ship with prefetched market data from CoinGecko, ready to analyze immediately. For the latest data, download a fresh template or use our live dashboards.',
+    answer: 'Yes! Templates ship with prefetched market data from CoinGecko, ready to analyze immediately. For the latest data, download a fresh template or use our web dashboards.',
   },
   {
     category: 'Templates',
@@ -53,7 +53,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Data & Accuracy',
     question: 'How often is the data updated?',
-    answer: 'Download a fresh template for the latest data, or use our live dashboards for real-time updates. Update frequency on live dashboards depends on your CoinGecko API plan.',
+    answer: 'Download a fresh template for the latest data, or use our web dashboards for the latest updates. Update frequency on dashboards depends on your CoinGecko API plan.',
   },
   {
     category: 'Data & Accuracy',
@@ -69,7 +69,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Tools & Features',
     question: 'How do the templates work?',
-    answer: 'Our Excel templates are generated with the latest crypto data from CoinGecko already included. Just download, open in Excel, and start analyzing. For live data, use our web-based dashboards with your own CoinGecko API key.',
+    answer: 'Our Excel templates are generated with the latest crypto data from CoinGecko already included. Just download, open in Excel, and start analyzing. For current data, use our web-based dashboards with your own CoinGecko API key.',
   },
   {
     category: 'Tools & Features',
@@ -91,7 +91,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Technical',
     question: 'How do I use the Excel templates?',
-    answer: 'Steps: 1) Download a template from the downloads page, 2) Open the .xlsx file in Excel, 3) Analyze the prefetched data. For real-time data, visit our live dashboards page.',
+    answer: 'Steps: 1) Download a template from the downloads page, 2) Open the .xlsx file in Excel, 3) Analyze the prefetched data. For current data, visit our dashboards page.',
   },
   {
     category: 'Technical',

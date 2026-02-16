@@ -14,10 +14,10 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
+    default: 'CryptoReportKit - Static Excel Templates for Crypto Data',
     template: '%s | CryptoReportKit'
   },
-  description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture. Educational analytics tools.',
+  description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
   keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'excel crypto data', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
 
   // Favicon & Icons
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: 'CryptoReportKit',
-    title: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
-    description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
+    title: 'CryptoReportKit - Static Excel Templates for Crypto Data',
+    description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
@@ -48,8 +48,8 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'CryptoReportKit - Excel Templates & Live Dashboards for Crypto',
-    description: 'Excel templates with prefetched crypto data and 20+ live web dashboards. BYOK architecture.',
+    title: 'CryptoReportKit - Static Excel Templates for Crypto Data',
+    description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
     images: [`${siteUrl}/og-image.png`],
     creator: '@cryptoreportkit',
   },

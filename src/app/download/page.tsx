@@ -73,7 +73,7 @@ export default function DownloadPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="text-sm text-gray-300">
               <span className="font-semibold text-white">Excel templates</span> are generated here with prefetched data.
-              <span className="text-gray-400"> For real-time data, use our </span>
+              <span className="text-gray-400"> For current data, use our </span>
               <Link href="/live-dashboards" className="text-emerald-400 hover:underline">live dashboards</Link>
               <span className="text-gray-400"> on the website.</span>
             </div>

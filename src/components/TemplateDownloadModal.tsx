@@ -740,20 +740,17 @@ export function TemplateDownloadModal({
           </button>
         </div>
 
-        {/* CRK Attribution */}
+        {/* Attribution */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 text-center">
-          Data powered by{' '}
+          Template by{' '}
           <a
             href="/template-requirements"
             className="text-blue-500 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            CRK
+            CryptoReportKit
           </a>
-          {' • '}
-          Template by{' '}
-          <span className="text-gray-600 dark:text-gray-300">CryptoReportKit</span>
         </div>
       </div>
     </div>

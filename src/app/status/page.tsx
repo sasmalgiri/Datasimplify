@@ -279,7 +279,7 @@ export default function StatusPage() {
           </div>
         )}
 
-        {/* CRK Info */}
+        {/* Platform Info */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -288,7 +288,7 @@ export default function StatusPage() {
                 CryptoReportKit
               </h3>
               <p className="text-emerald-800 text-sm mb-3">
-                CRK uses BYOK (Bring Your Own Key) architecture for live dashboards.
+                CryptoReportKit uses BYOK (Bring Your Own Key) architecture.
                 Excel templates ship with prefetched data. Your API key stays local - we never see or store your keys.
               </p>
               <div className="flex flex-wrap gap-3">

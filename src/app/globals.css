@@ -174,3 +174,73 @@ body {
 .template-content-expanded {
   max-height: 400px;
 }
+
+/* ─── Light Blue Dashboard Theme Overrides ─── */
+[data-dashboard-theme="light-blue"] {
+  /* Text: map dark-mode white/gray to slate tones */
+  & .text-white { color: #1e293b; }
+  & .text-gray-300 { color: #334155; }
+  & .text-gray-400 { color: #475569; }
+  & .text-gray-500 { color: #64748b; }
+  & .text-gray-600 { color: #94a3b8; }
+  & .text-gray-700 { color: #cbd5e1; }
+
+  /* Backgrounds: map dark glass to light surfaces */
+  & .bg-white\/\[0\.02\] { background-color: rgba(240,244,255,0.5); }
+  & .bg-white\/\[0\.03\] { background-color: #ffffff; }
+  & .bg-white\/\[0\.04\] { background-color: rgba(59,130,246,0.04); }
+  & .bg-white\/\[0\.06\] { background-color: rgba(59,130,246,0.05); }
+  & .bg-white\/\[0\.08\] { background-color: rgba(59,130,246,0.06); }
+  & .bg-gray-800\/50 { background-color: rgba(219,234,254,0.5); }
+  & .bg-gray-800 { background-color: #e2e8f0; }
+  & .bg-gray-900 { background-color: #f1f5f9; }
+
+  /* Borders: map white-opacity to blue-tinted */
+  & .border-white\/\[0\.04\] { border-color: rgba(59,130,246,0.06); }
+  & .border-white\/\[0\.06\] { border-color: rgba(59,130,246,0.1); }
+  & .border-white\/\[0\.08\] { border-color: rgba(59,130,246,0.12); }
+  & .border-white\/\[0\.1\] { border-color: rgba(59,130,246,0.15); }
+  & .border-white\/\[0\.12\] { border-color: rgba(59,130,246,0.2); }
+  & .border-gray-800 { border-color: #e2e8f0; }
+  & .border-gray-700 { border-color: #cbd5e1; }
+  & .border-gray-600 { border-color: #e2e8f0; }
+
+  /* Hover states */
+  & .hover\:bg-white\/\[0\.08\]:hover { background-color: rgba(59,130,246,0.06); }
+  & .hover\:bg-white\/\[0\.06\]:hover { background-color: rgba(59,130,246,0.05); }
+  & .hover\:border-white\/\[0\.12\]:hover { border-color: rgba(59,130,246,0.2); }
+  & .hover\:text-white:hover { color: #1e293b; }
+
+  /* Signal colors — slightly adjusted for light bg readability */
+  & .text-emerald-400 { color: #059669; }
+  & .text-red-400 { color: #dc2626; }
+  & .text-amber-400 { color: #d97706; }
+  & .text-amber-500\/70 { color: rgba(217,119,6,0.85); }
+  & .bg-emerald-400\/10 { background-color: rgba(5,150,105,0.1); }
+  & .bg-emerald-400\/20 { background-color: rgba(5,150,105,0.12); }
+  & .border-emerald-400\/20 { border-color: rgba(5,150,105,0.2); }
+  & .border-emerald-400\/30 { border-color: rgba(5,150,105,0.25); }
+  & .bg-red-500\/10 { background-color: rgba(220,38,38,0.08); }
+
+  /* Loading skeletons */
+  & .bg-gray-800\/50 { background-color: rgba(186,210,255,0.3); }
+
+  /* Select dropdowns */
+  & option.bg-gray-900 { background-color: #ffffff; color: #1e293b; }
+
+  /* Modal / popup backgrounds */
+  & .bg-gray-800 { background-color: #ffffff; }
+  & .bg-\[\#0a0a0f\] { background-color: #f0f4ff; }
+  & .bg-\[\#0c0c14\] { background-color: #ffffff; }
+
+  /* Scrollbar overrides for dashboard containers */
+  & .dropdown-scroll::-webkit-scrollbar-track { background: #e2e8f0; }
+  & .dropdown-scroll::-webkit-scrollbar-thumb { background: #94a3b8; }
+  & .dropdown-scroll::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+  /* Backdrop blur — keep it but no dark tint */
+  & .backdrop-blur-md { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+
+  /* SVG stroke overrides for chart-like elements */
+  & .stroke-gray-800 { stroke: #e2e8f0; }
+}

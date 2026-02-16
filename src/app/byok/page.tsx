@@ -149,15 +149,15 @@ export default function BYOKPage() {
                 5
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-2">Add Key to Excel Template</h3>
+                <h3 className="font-semibold text-lg mb-2">Download Templates</h3>
                 <p className="text-gray-300 mb-3">
-                  Add your API key to Excel for live data refresh:
+                  Get static Excel templates with prefetched data:
                 </p>
                 <ol className="list-decimal list-inside text-gray-400 text-sm space-y-1 ml-4">
-                  <li>Create a named cell (e.g., &quot;ApiKey&quot;) on a Settings sheet</li>
-                  <li>Paste your CoinGecko API key in that cell</li>
-                  <li>Our Pro templates reference this cell automatically</li>
-                  <li>Or paste the key directly in the M code (less secure for shared files)</li>
+                  <li>Go to the Downloads page</li>
+                  <li>Choose a template for your analysis needs</li>
+                  <li>Open the .xlsx file in Excel — data is already included</li>
+                  <li>Download a fresh template anytime to get updated data</li>
                 </ol>
               </div>
             </div>

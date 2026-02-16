@@ -76,7 +76,7 @@ function TemplateCard({
                 ? 'bg-emerald-500/20 text-emerald-400'
                 : 'bg-blue-500/20 text-blue-400'
             }`}>
-              {template.mode === 'crk' ? 'CRK' : '3P'}
+              {template.mode === 'crk' ? 'Static' : '3P'}
             </span>
             <span className={`text-[10px] px-1 py-0.5 rounded ${
               template.difficulty === 'beginner'

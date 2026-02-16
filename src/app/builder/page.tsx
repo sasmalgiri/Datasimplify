@@ -215,7 +215,7 @@ export default function BuilderPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedTemplate.name.replace(/\s+/g, '-')}-CRK-Pack.xlsx`;
+      a.download = `${selectedTemplate.name.replace(/\s+/g, '-')}-Template.xlsx`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

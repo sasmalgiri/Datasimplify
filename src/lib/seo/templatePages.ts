@@ -23,10 +23,10 @@ export interface TemplateLandingPage {
 export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
   {
     slug: 'crypto-portfolio-tracker',
-    title: 'Crypto Portfolio Tracker Excel Template (Live Updates)',
+    title: 'Crypto Portfolio Tracker Excel Template',
     h1: 'Crypto Portfolio Tracker Excel Template',
     description:
-      'Track your crypto portfolio in Excel with live price updates. Download our free portfolio tracker template with CRK formulas for real-time P&L tracking.',
+      'Track your crypto portfolio in Excel with prefetched data. Download our free portfolio tracker template for P&L tracking.',
     keywords: [
       'crypto portfolio tracker excel',
       'cryptocurrency portfolio spreadsheet',
@@ -36,12 +36,12 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     category: 'Portfolio',
     tier: 'free',
     features: [
-      'Real-time portfolio value tracking',
+      'Portfolio value tracking',
       'Profit/Loss calculations per coin',
       'Portfolio allocation breakdown',
       'Cost basis tracking',
       '24h and 7d performance metrics',
-      'Auto-refresh with CRK',
+      'Prefetched market data included',
     ],
     whoIsItFor: [
       'Crypto investors tracking multiple coins',
@@ -49,7 +49,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       'Analysts building custom portfolio reports',
     ],
     customization: [
-      'Add your own coins (any supported by CRK)',
+      'Add your own coins (any supported by CoinGecko)',
       'Set your cost basis and purchase dates',
       'Choose your base currency (USD, EUR, etc.)',
       'Add custom columns for notes',
@@ -64,12 +64,12 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How do I update prices in the portfolio tracker?',
         answer:
-          'Open the file in Excel with CRK installed, then press Ctrl+Alt+F5 or click Data > Refresh All. Prices update automatically via CRK formulas.',
+          'Download a fresh template from the downloads page to get the latest prices. Templates ship with prefetched data ready to use.',
       },
       {
         question: 'Can I track any cryptocurrency?',
         answer:
-          'Yes! You can track any coin supported by CRK (thousands of coins). Simply add the coin symbol to the template.',
+          'Yes! You can track any coin supported by CoinGecko (thousands of coins). Simply add the coin to the template.',
       },
     ],
   },
@@ -78,7 +78,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     title: 'Crypto Screener Excel Template - Market Data Dashboard',
     h1: 'Crypto Screener Excel Template',
     description:
-      'Screen and filter cryptocurrencies in Excel with live market data. Download our screener template with customizable filters, market cap rankings, and price alerts.',
+      'Screen and filter cryptocurrencies in Excel with prefetched market data. Download our screener template with customizable filters, market cap rankings, and price alerts.',
     keywords: [
       'crypto screener excel',
       'cryptocurrency screener spreadsheet',
@@ -93,7 +93,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       '24h and 7d price change tracking',
       'Customizable filters and sorting',
       'Built-in charts for visualization',
-      'Auto-refresh market data',
+      'Prefetched market data',
     ],
     whoIsItFor: [
       'Traders screening for opportunities',
@@ -116,12 +116,12 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How often does the screener data update?',
         answer:
-          'Data updates whenever you refresh the workbook. CRK fetches live data from multiple exchanges and aggregators.',
+          'Download a fresh template to get the latest data. Templates include prefetched data from CoinGecko.',
       },
       {
         question: 'Can I add custom metrics to the screener?',
         answer:
-          'Yes! You can add any CRK formula to create custom columns with technical indicators, on-chain data, or other metrics.',
+          'Yes! You can add custom Excel formulas to create additional columns with your own calculations and analysis.',
       },
     ],
   },
@@ -221,7 +221,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'Which technical indicators are included?',
         answer:
-          'The template includes RSI, MACD, Moving Averages (SMA/EMA), Bollinger Bands, Volume indicators, and support/resistance calculations. You can add more using CRK formulas.',
+          'The template includes RSI, MACD, Moving Averages (SMA/EMA), Bollinger Bands, Volume indicators, and support/resistance calculations.',
       },
       {
         question: 'Can I backtest strategies with this template?',
@@ -278,7 +278,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How often does DeFi data update?',
         answer:
-          'DeFi data updates on each refresh. CRK pulls data from DeFiLlama and other aggregators for accurate TVL tracking.',
+          'Templates include prefetched DeFi data from DeFiLlama and other aggregators. Download a fresh template for the latest TVL data.',
       },
     ],
   },
@@ -297,7 +297,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     category: 'Derivatives',
     tier: 'pro',
     features: [
-      'Real-time funding rates by exchange',
+      'Funding rates by exchange',
       'Funding rate history charts',
       'Exchange comparison (Bybit, OKX, etc.)',
       'Funding arbitrage opportunities',
@@ -651,7 +651,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     title: 'Crypto Watchlist Excel Template - Price Alert Tracker',
     h1: 'Crypto Watchlist Excel Template',
     description:
-      'Create a custom cryptocurrency watchlist in Excel. Track your favorite coins with live prices, alerts, and custom notes.',
+      'Create a custom cryptocurrency watchlist in Excel. Track your favorite coins with current prices, alerts, and custom notes.',
     keywords: [
       'crypto watchlist excel',
       'cryptocurrency price tracker spreadsheet',
@@ -662,7 +662,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     tier: 'free',
     features: [
       'Custom coin watchlist',
-      'Live price tracking',
+      'Price tracking',
       'Price alert thresholds',
       'Notes and tags per coin',
       '24h/7d performance',
@@ -689,7 +689,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How do I add a coin to my watchlist?',
         answer:
-          'Simply add a new row and enter the coin symbol (e.g., BTC, ETH). The CRK formulas will automatically fetch the data.',
+          'Simply add a new row and enter the coin symbol (e.g., BTC, ETH). Download a fresh template to get the latest data for your coins.',
       },
       {
         question: 'Do price alerts work automatically?',
@@ -897,7 +897,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
       {
         question: 'How accurate are staking APY numbers?',
         answer:
-          'APY figures are fetched from live protocol data via CRK. Actual yields may vary based on network conditions and validator performance.',
+          'APY figures are prefetched from protocol data. Actual yields may vary based on network conditions and validator performance.',
       },
       {
         question: 'Does the template account for unstaking periods?',
@@ -921,7 +921,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     category: 'Derivatives',
     tier: 'pro',
     features: [
-      'Real-time liquidation data',
+      'Liquidation data',
       'Long vs short liquidations',
       'Exchange breakdown',
       'Liquidation heatmap by price level',

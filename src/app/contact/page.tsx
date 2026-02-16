@@ -107,8 +107,8 @@ export default function ContactPage() {
               <h2 className="text-lg font-semibold text-blue-800 mb-3">About CryptoReportKit</h2>
               <p className="text-blue-700 text-sm">
                 CryptoReportKit is a cryptocurrency research and comparison tool designed for
-                researchers, analysts, and educators. We provide CRK formula templates with
-                BYOK (bring your own API key) architecture for live data analysis.
+                researchers, analysts, and educators. We provide static Excel templates with
+                prefetched data using BYOK (bring your own API key) architecture.
               </p>
               <p className="text-blue-700 text-sm mt-2">
                 <strong>Note:</strong> We do not provide financial advice, trading signals,

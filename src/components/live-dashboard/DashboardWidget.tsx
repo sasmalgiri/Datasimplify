@@ -2,7 +2,7 @@
 
 import { Suspense, type ComponentType } from 'react';
 import { AlertCircle } from 'lucide-react';
-import { CARD_CLASSES, getThemeColors } from '@/lib/live-dashboard/theme';
+import { getThemeColors, getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 // Widget registry — maps component name strings to actual components
@@ -146,7 +146,7 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
 };
 
 /** Contextual descriptions for each widget — explains what it shows and how to read it */
-const WIDGET_DESCRIPTIONS: Record<string, string> = {
+export const WIDGET_DESCRIPTIONS: Record<string, string> = {
   // Market Overview
   TopCoinsTable: 'Full rankings table — click column headers to sort. Green = gaining, Red = losing.',
   PriceChartWidget: 'Price trend over time — drag to zoom, hover for exact values. Uptrend = bullish momentum.',
@@ -247,8 +247,9 @@ interface DashboardWidgetProps {
 
 export function DashboardWidget({ component, title, gridColumn, gridRow, props }: DashboardWidgetProps) {
   const Component = WIDGET_REGISTRY[component];
-  const colorTheme = useLiveDashboardStore((s) => s.customization.colorTheme);
+  const { colorTheme, siteTheme } = useLiveDashboardStore((s) => ({ colorTheme: s.customization.colorTheme, siteTheme: s.siteTheme }));
   const themeColors = getThemeColors(colorTheme);
+  const st = getSiteThemeClasses(siteTheme);
   const description = WIDGET_DESCRIPTIONS[component];
 
   // KPI cards and market pulse get no wrapper card (they are their own cards)
@@ -262,16 +263,16 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
 
   return (
     <div
-      className={`${CARD_CLASSES} p-5 flex flex-col`}
+      className={`${st.cardClasses} ${st.cardHover} p-5 flex flex-col`}
       style={{ gridColumn, gridRow }}
     >
       <div className="mb-4">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+        <h3 className={`text-xs font-semibold ${st.textMuted} uppercase tracking-widest flex items-center gap-2`}>
           <div className="w-1 h-3.5 rounded-full" style={{ backgroundColor: themeColors.primary }} />
           {title}
         </h3>
         {description && (
-          <p className="text-[10px] text-gray-500 mt-1 ml-3 leading-relaxed">{description}</p>
+          <p className={`text-[10px] ${st.textDim} mt-1 ml-3 leading-relaxed`}>{description}</p>
         )}
       </div>
       <div className="flex-1 min-h-0">
@@ -286,9 +287,9 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
 function WidgetSkeleton() {
   return (
     <div className="animate-pulse space-y-3">
-      <div className="h-4 bg-white/[0.04] rounded w-3/4" />
-      <div className="h-4 bg-white/[0.04] rounded w-1/2" />
-      <div className="h-24 bg-white/[0.04] rounded" />
+      <div className="h-4 bg-gray-800/50 rounded w-3/4" />
+      <div className="h-4 bg-gray-800/50 rounded w-1/2" />
+      <div className="h-24 bg-gray-800/50 rounded" />
     </div>
   );
 }

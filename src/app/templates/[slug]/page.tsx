@@ -237,7 +237,7 @@ export default function ReportKitPage() {
             {/* Preview Footer */}
             <div className="px-4 py-3 bg-emerald-900/20 border-t border-emerald-500/30">
               <p className="text-xs text-emerald-400 text-center">
-                💡 This preview shows live data with charts, filters & advanced visualizations. In Excel, you can analyze the prefetched data immediately. Use our live dashboards for real-time data.
+                💡 This preview shows data with charts, filters & advanced visualizations. In Excel, you can analyze the prefetched data immediately. Use our web dashboards for current data.
               </p>
             </div>
           </div>

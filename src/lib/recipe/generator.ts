@@ -21,7 +21,7 @@ export async function generateWorkbook(
   workbook.creator = 'CryptoReportKit';
   workbook.created = new Date();
   workbook.modified = new Date();
-  workbook.lastModifiedBy = 'CRK Recipe Engine';
+  workbook.lastModifiedBy = 'CryptoReportKit';
 
   // Create __CRK__ metadata sheet (must be first)
   await createMetadataSheet(workbook, recipe, executionResult);
@@ -197,7 +197,7 @@ async function createDashboardSheet(
   sheet.getCell('B25').font = { size: 10, color: { argb: 'FF9ca3af' } };
 
   // Instructions
-  sheet.getCell('A27').value = 'To refresh data: Open CRK Panel → Click "Refresh All Data"';
+  sheet.getCell('A27').value = 'To get fresh data: Download a new template from cryptoreportkit.com/downloads';
   sheet.getCell('A27').font = { size: 10, italic: true, color: { argb: 'FF10b981' } };
   sheet.mergeCells('A27:F27');
 }

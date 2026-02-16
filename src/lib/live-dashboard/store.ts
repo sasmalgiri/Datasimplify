@@ -103,6 +103,7 @@ export type ChartHeight = 'compact' | 'normal' | 'tall';
 export type ColorTheme = 'emerald' | 'blue' | 'purple' | 'amber' | 'rose';
 export type TableDensity = 'compact' | 'normal' | 'comfortable';
 export type ChartStyle = 'smooth' | 'sharp';
+export type SiteTheme = 'dark' | 'light-blue';
 
 export interface DashboardCustomization {
   coinId: string;        // Primary coin override (empty = use definition default)
@@ -183,6 +184,9 @@ interface LiveDashboardStore {
   setCustomization: (updates: Partial<DashboardCustomization>) => void;
   resetCustomization: () => void;
 
+  siteTheme: SiteTheme;
+  setSiteTheme: (theme: SiteTheme) => void;
+
   autoRefreshInterval: number; // 0 = off, 60/120/300 seconds
   setAutoRefreshInterval: (interval: number) => void;
 
@@ -231,6 +235,9 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
         customization: { ...state.customization, ...updates },
       })),
       resetCustomization: () => set({ customization: DEFAULT_CUSTOMIZATION }),
+
+      siteTheme: 'dark' as SiteTheme,
+      setSiteTheme: (theme) => set({ siteTheme: theme }),
 
       autoRefreshInterval: 0,
       setAutoRefreshInterval: (interval) => set({ autoRefreshInterval: interval }),
@@ -317,6 +324,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
         keyType: state.keyType,
         autoRefreshInterval: state.autoRefreshInterval,
         customization: state.customization,
+        siteTheme: state.siteTheme,
         enabledWidgets: state.enabledWidgets,
       }),
     },

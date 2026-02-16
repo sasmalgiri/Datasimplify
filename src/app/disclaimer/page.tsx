@@ -26,7 +26,7 @@ export default function DisclaimerPage() {
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li><strong>No Trading Execution:</strong> We do not execute trades, route orders, or provide brokerage services.</li>
                 <li><strong>No Market-Data Redistribution:</strong> We do not sell, license, or redistribute raw market data.</li>
-                <li><strong>Templates with Prefetched Data:</strong> Our Excel templates ship with prefetched crypto data ready to use. Live dashboards on the website use BYOK architecture for real-time data.</li>
+                <li><strong>Templates with Prefetched Data:</strong> Our Excel templates ship with prefetched crypto data ready to use. Web dashboards on the website use BYOK architecture.</li>
                 <li><strong>Display-Only Dashboards:</strong> Website displays are for educational visualization purposes only, showing publicly available information.</li>
                 <li><strong>Software Tools:</strong> We provide software tools for analytics and visualization - the underlying data comes from third-party providers via your own API keys.</li>
               </ul>
@@ -119,7 +119,7 @@ export default function DisclaimerPage() {
                 <li><strong>Active internet connection</strong> for data retrieval</li>
               </ul>
               <p className="mt-4">
-                Templates contain <strong>prefetched market data</strong>. For the latest data, download a fresh template or use our live dashboards.
+                Templates contain <strong>prefetched market data</strong>. For the latest data, download a fresh template or use our web dashboards.
               </p>
               <Link
                 href="/template-requirements"

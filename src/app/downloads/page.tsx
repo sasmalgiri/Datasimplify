@@ -108,7 +108,7 @@ export default function DownloadsPage() {
                 <div className="bg-gray-800/40 border border-emerald-500/30 rounded-xl p-5">
                   <div className="text-lg font-semibold">Live Dashboards</div>
                   <div className="text-gray-400 text-sm mt-1">
-                    20+ live web dashboards with real-time crypto data. Use your own API key (BYOK) for full access.
+                    20+ web dashboards with crypto data. Use your own API key (BYOK) for full access.
                   </div>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link
@@ -169,7 +169,7 @@ export default function DownloadsPage() {
                   href="/pricing"
                   className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
                 >
-                  View Pro Plan — $19/mo
+                  View Pro Plan — $9/mo
                 </Link>
               </div>
             </>

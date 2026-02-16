@@ -10,14 +10,15 @@ import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { DashboardShell } from '@/components/live-dashboard/DashboardShell';
 import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
 import { ArrowLeft, Key, Lock, Shield } from 'lucide-react';
-import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
+import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 
 export default function LiveDashboardPage() {
   const params = useParams();
   const slug = params.slug as string;
   const definition = getDashboardBySlug(slug);
 
-  const { apiKey, fetchData } = useLiveDashboardStore();
+  const { apiKey, fetchData, siteTheme } = useLiveDashboardStore();
+  const st = getSiteThemeClasses(siteTheme);
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
@@ -85,7 +86,7 @@ export default function LiveDashboardPage() {
   const isPro = definition.tier === 'pro';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className={`min-h-screen ${st.pageBg}`} data-dashboard-theme={siteTheme}>
       <FreeNavbar />
       <Breadcrumb customTitle={definition.name} />
 
@@ -93,7 +94,7 @@ export default function LiveDashboardPage() {
         {/* Back link */}
         <Link
           href="/live-dashboards"
-          className="inline-flex items-center gap-1.5 text-gray-600 hover:text-white text-sm mb-6 transition"
+          className={`inline-flex items-center gap-1.5 ${st.linkText} text-sm mb-6 transition`}
         >
           <ArrowLeft className="w-4 h-4" />
           All Dashboards
@@ -103,8 +104,8 @@ export default function LiveDashboardPage() {
         {!apiKey && (
           <div className="text-center py-24">
             <div className="text-6xl mb-6">{definition.icon}</div>
-            <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">{definition.name}</h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto leading-relaxed">{definition.description}</p>
+            <h2 className={`text-3xl font-bold ${st.textPrimary} mb-3 tracking-tight`}>{definition.name}</h2>
+            <p className={`${st.textDim} mb-8 max-w-md mx-auto leading-relaxed`}>{definition.description}</p>
 
             {isPro && (
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-400/5 border border-purple-400/10 text-purple-400 text-sm mb-8">
@@ -117,14 +118,14 @@ export default function LiveDashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowKeyModal(true)}
-                className={`${GLOW_CARD_CLASSES} bg-emerald-500/10 border-emerald-400/20 hover:border-emerald-400/40 text-emerald-400 font-medium px-8 py-4 transition flex items-center gap-2 mx-auto text-lg`}
+                className={`${st.cardClasses} ${st.cardGlow} bg-emerald-500/10 border-emerald-400/20 hover:border-emerald-400/40 text-emerald-400 font-medium px-8 py-4 transition flex items-center gap-2 mx-auto text-lg`}
               >
                 <Key className="w-5 h-5" />
                 Connect API Key to Start
               </button>
             </div>
 
-            <div className="mt-6 flex items-center justify-center gap-1.5 text-[11px] text-gray-700">
+            <div className={`mt-6 flex items-center justify-center gap-1.5 text-[11px] ${st.textFaint}`}>
               <Shield className="w-3 h-3" />
               Your key stays in your browser. Data is for personal use only.
             </div>

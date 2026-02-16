@@ -236,9 +236,9 @@ export default async function TemplateDetailPage({ params }: PageProps) {
               <div className="text-gray-300">
                 Open in Excel Desktop - the template includes prefetched data so you can start analyzing immediately.
                 <div className="mt-2 text-sm text-gray-400">
-                  For real-time data, use our{' '}
+                  For current data, use our{' '}
                   <Link href="/live-dashboards" className="text-emerald-400 hover:underline">
-                    live web dashboards
+                    web dashboards
                   </Link>{' '}
                   with your own API key (BYOK).
                 </div>

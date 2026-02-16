@@ -376,7 +376,7 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
             </Link>
           </div>
 
-          {/* CRK Templates Link */}
+          {/* Templates Link */}
           <div className="text-center pt-2 border-t border-gray-700">
             <p className="text-xs text-gray-500">
               Powered by{' '}

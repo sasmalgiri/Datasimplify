@@ -1,10 +1,12 @@
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Vercel Edge Middleware
+ * Vercel Edge Proxy
  *
  * Runs before every request at the edge for:
+ * - Authentication wall (login required for protected pages)
  * - IP blocking
  * - Bot detection
  * - Request validation
@@ -12,6 +14,55 @@ import type { NextRequest } from 'next/server';
  *
  * This runs on Vercel's edge network (free with Pro).
  */
+
+/**
+ * Public routes that don't require authentication.
+ * Everything else redirects to /login?redirect=<path>
+ */
+const PUBLIC_ROUTES = new Set([
+  '/',
+  '/about',
+  '/byok',
+  '/coming-soon',
+  '/contact',
+  '/data-sources',
+  '/disclaimer',
+  '/faq',
+  '/forgot-password',
+  '/login',
+  '/pricing',
+  '/privacy',
+  '/refund',
+  '/roadmap',
+  '/signup',
+  '/status',
+  '/template-requirements',
+  '/terms',
+]);
+
+const PUBLIC_PREFIXES = [
+  '/api/',
+  '/auth/',
+  '/_next/',
+  '/favicon',
+  '/sitemap',
+  '/robots',
+  '/manifest',
+  '/icons/',
+  '/images/',
+  '/assets/',
+];
+
+function isPublicRoute(pathname: string): boolean {
+  if (PUBLIC_ROUTES.has(pathname)) return true;
+  for (const prefix of PUBLIC_PREFIXES) {
+    if (pathname.startsWith(prefix)) return true;
+  }
+  if (/\.(ico|png|jpg|jpeg|gif|svg|webp|css|js|woff2?|ttf|eot|map|xml|txt)$/.test(pathname)) {
+    return true;
+  }
+  return false;
+}
 
 // Blocked IP addresses (add known bad actors here)
 // In production, consider using Vercel KV or Supabase for dynamic blocklist
@@ -130,7 +181,7 @@ function addSecurityHeaders(response: NextResponse, pathname: string): NextRespo
   return response;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIp = getClientIp(request);
   const userAgent = request.headers.get('user-agent');
@@ -157,24 +208,48 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Admin route protection — require session cookie
-  if (pathname.startsWith('/admin')) {
-    const hasCookie = request.cookies.getAll().some(c =>
-      c.name.includes('auth-token') || c.name.includes('sb-')
+  // 3. Authentication wall — require login for all non-public pages
+  if (!isPublicRoute(pathname)) {
+    let response = NextResponse.next({
+      request: { headers: request.headers },
+    });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              request.cookies.set(name, value);
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      },
     );
-    if (!hasCookie) {
-      const loginUrl = new URL('/login?redirect=/admin', request.url);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  // 5. Block suspicious paths (common attack vectors)
+  // 4. Block suspicious paths (common attack vectors)
   if (isSuspiciousPath(pathname)) {
     console.warn(`[Middleware] Suspicious path blocked: ${pathname} from ${clientIp}`);
     return new NextResponse('Not Found', { status: 404 });
   }
 
-  // 6. Check for blocked user agents on API routes
+  // 5. Check for blocked user agents on API routes
   // Exception: Allow /api/v1/* and /api/cron/* for server-side access (BYOK APIs, cron jobs)
   const isInternalApi = pathname.startsWith('/api/v1/') || pathname.startsWith('/api/cron/');
 
@@ -211,7 +286,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  // 7. Rate limit check for downloads (simple edge-based check)
+  // 6. Rate limit check for downloads (simple edge-based check)
   // Note: This is supplementary to the API-level rate limiting
   if (pathname === '/api/templates/download' && request.method === 'POST') {
     // Add custom header to track edge processing
@@ -221,7 +296,7 @@ export function proxy(request: NextRequest) {
     return addSecurityHeaders(response, pathname);
   }
 
-  // 8. Add security headers to all responses
+  // 7. Add security headers to all responses
   const response = NextResponse.next();
   return addSecurityHeaders(response, pathname);
 }

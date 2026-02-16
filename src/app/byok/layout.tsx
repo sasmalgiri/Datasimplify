@@ -55,7 +55,7 @@ const faqSchema = {
     },
     {
       '@type': 'Question',
-      name: 'Where does CRK store my API key?',
+      name: 'Where does CryptoReportKit store my API key?',
       acceptedAnswer: {
         '@type': 'Answer',
         text: 'With Excel templates, your API key stays in your workbook - it never leaves your computer or touches our servers. This is the most private approach possible.',
@@ -79,10 +79,10 @@ const faqSchema = {
     },
     {
       '@type': 'Question',
-      name: 'Does CRK charge me for BYOK?',
+      name: 'Does CryptoReportKit charge me for BYOK?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'No! BYOK is included in all CRK plans (Free and Pro). You only pay CoinGecko directly for your API plan. CRK charges for features like scheduled exports, advanced templates, and priority support.',
+        text: 'No! BYOK is included in all plans (Free and Pro). You only pay CoinGecko directly for your API plan. CryptoReportKit charges for features like advanced templates and priority support.',
       },
     },
   ],

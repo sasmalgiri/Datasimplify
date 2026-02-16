@@ -8,7 +8,9 @@ import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { useViewMode } from '@/lib/viewMode';
-import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent, Zap, Info } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { PLAN_LIMITS } from '@/lib/entitlements';
+import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent, Zap, Info, Lock } from 'lucide-react';
 
 // Help icon with tooltip
 function HelpIcon({ text }: { text: string }) {
@@ -403,7 +405,10 @@ type TechnicalMetrics = {
 
 export default function ComparePage() {
   const { isSimple, isPro } = useViewMode();
-  const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum', 'solana']);
+  const { profile } = useAuth();
+  const tier = profile?.subscription_tier ?? 'free';
+  const maxCoins = PLAN_LIMITS[tier].maxCompareCoins;
+  const [selectedIds, setSelectedIds] = useState<string[]>(['bitcoin', 'ethereum']);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [technicals, setTechnicals] = useState<Map<string, TechnicalMetrics>>(new Map());
   const [technicalsLoading, setTechnicalsLoading] = useState(false);
@@ -553,7 +558,7 @@ export default function ComparePage() {
   const toggleCoin = (id: string) => {
     if (selectedIds.includes(id)) {
       setSelectedIds(selectedIds.filter(i => i !== id));
-    } else if (selectedIds.length < 10) {
+    } else if (selectedIds.length < maxCoins) {
       setSelectedIds([...selectedIds, id]);
     }
   };
@@ -566,7 +571,7 @@ export default function ComparePage() {
 
   const selectAllInCategory = (cat: string) => {
     const catCoins = availableCoins.filter(c => c.category === cat).map(c => c.id);
-    const newSelection = [...new Set([...selectedIds, ...catCoins])].slice(0, 10);
+    const newSelection = [...new Set([...selectedIds, ...catCoins])].slice(0, maxCoins);
     setSelectedIds(newSelection);
   };
 
@@ -669,9 +674,10 @@ export default function ComparePage() {
             <h1 className="text-2xl font-bold mb-1">Compare Cryptocurrencies</h1>
             <p className="text-gray-400 text-sm">
               {isSimple
-                ? 'Quick comparison of any two coins · Free, no login required'
-                : 'Compare up to 10 coins side-by-side with 50+ metrics · Free, no login required'
+                ? `Quick comparison of up to ${maxCoins} coins`
+                : `Compare up to ${maxCoins} coins side-by-side with 50+ metrics`
               }
+              {tier === 'free' && <span className="text-amber-500/70"> · <Link href="/pricing" className="hover:text-amber-400">Upgrade for up to 10</Link></span>}
             </p>
             <div className="mt-1">
               <CoinGeckoAttribution variant="compact" showIcon />
@@ -857,7 +863,7 @@ export default function ComparePage() {
                 <p className="text-emerald-400 flex items-start gap-1.5">
                   <span>🚀</span>
                   <span>
-                    <strong>Compare up to 10 coins</strong> side-by-side with 26 metrics, technical indicators, category filters, and visual charts.
+                    <strong>Compare up to {maxCoins} coins</strong> side-by-side with 26 metrics, technical indicators, category filters, and visual charts.
                   </span>
                 </p>
               </div>
@@ -992,7 +998,7 @@ export default function ComparePage() {
                   <button
                     key={group.label}
                     type="button"
-                    onClick={() => setSelectedIds(group.ids)}
+                    onClick={() => setSelectedIds(group.ids.slice(0, maxCoins))}
                     className="px-3 py-1.5 bg-gray-700 hover:bg-emerald-600/20 hover:border-emerald-500/30 border border-gray-600 rounded-lg text-xs font-medium text-gray-300 hover:text-white transition-all"
                   >
                     <span className="mr-1">{group.icon}</span>
@@ -1005,8 +1011,8 @@ export default function ComparePage() {
             {/* Coin Selection */}
             <div className="bg-gray-800 rounded-xl p-4 mb-4 border border-gray-700">
               <h2 className="text-sm font-semibold text-white mb-2 flex items-center">
-                Select Coins ({selectedIds.length}/10)
-                <HelpIcon text="Click coins to add/remove from comparison. Green = selected. Max 10 coins." />
+                Select Coins ({selectedIds.length}/{maxCoins})
+                <HelpIcon text={`Click coins to add/remove from comparison. Green = selected. Max ${maxCoins} coins.${tier === 'free' ? ' Upgrade to Pro for up to 10.' : ''}`} />
               </h2>
               <div className="flex flex-wrap gap-1.5 max-h-[240px] overflow-y-auto pr-1">
                 {filteredCoins.map((coin) => {
@@ -1017,11 +1023,11 @@ export default function ComparePage() {
                       key={coin.id}
                       type="button"
                       onClick={() => toggleCoin(coin.id)}
-                      disabled={!isSelected && selectedIds.length >= 10}
+                      disabled={!isSelected && selectedIds.length >= maxCoins}
                       className={`px-2 py-1 rounded-lg border transition-all text-xs ${
                         isSelected
                           ? 'bg-emerald-600 border-emerald-400 text-white shadow-md'
-                          : selectedIds.length >= 10
+                          : selectedIds.length >= maxCoins
                             ? 'bg-gray-700 border-gray-600 text-gray-500 cursor-not-allowed'
                             : 'bg-gray-700 border-gray-600 text-gray-300 hover:border-gray-500'
                       }`}
@@ -1465,7 +1471,7 @@ export default function ComparePage() {
               <div className="text-center py-12 text-gray-500">
                 <p className="text-4xl mb-3">📊</p>
                 <p className="text-lg">Select coins above to compare them</p>
-                <p className="text-sm mt-1">Compare up to 10 coins side-by-side</p>
+                <p className="text-sm mt-1">Compare up to {maxCoins} coins side-by-side</p>
               </div>
             )}
 
@@ -1507,7 +1513,7 @@ export default function ComparePage() {
             >
               Powered by CoinGecko
             </a>
-            {' '}· Updates frequently · {isPro ? '50+ coins available' : 'Quick compare tool'}
+            {' '}· Updates frequently · {tier === 'pro' ? '50+ coins available' : 'Quick compare tool'}
           </p>
           <p>
             Want historical charts, alerts, and analytics? <Link href="/pricing" className="text-emerald-400 hover:underline">View pricing</Link>

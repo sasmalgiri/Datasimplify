@@ -530,7 +530,7 @@ const outputModes = [
   {
     id: 'interactive' as OutputMode,
     name: 'Interactive',
-    description: 'Prefetched data with embedded charts. Use our web dashboards for real-time data.',
+    description: 'Prefetched data with embedded charts. Use our web dashboards for current data.',
     icon: '🚀',
     features: ['Prefetched data', 'Embedded charts', 'Styled formatting', 'Web dashboards'],
     recommended: false,
@@ -1147,7 +1147,7 @@ export default function WizardPage() {
                       {outputMode === 'interactive' && (
                         <>
                           <p className="text-xs text-gray-400">🚀 Prefetched data with embedded charts</p>
-                          <p className="text-xs text-gray-400">🌐 Use web dashboards for real-time data</p>
+                          <p className="text-xs text-gray-400">🌐 Use web dashboards for current data</p>
                           <p className="text-xs text-gray-400">📊 Professional styling and formatting</p>
                         </>
                       )}

@@ -2,7 +2,7 @@
  * Display Only Badge Component
  *
  * Shows "Display Only" indicator and "Recreate in Excel" link
- * for analytics pages that can be recreated with CRK templates.
+ * for analytics pages that can be recreated with Excel templates.
  */
 
 'use client';

@@ -111,7 +111,7 @@ export default function RefundPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Excel Templates</h2>
             <p className="mb-4">
               Our Excel templates ship with <strong>prefetched crypto data</strong> ready to use.
-              For real-time data, use our live web dashboards with your own API key (BYOK).
+              For current data, use our web dashboards with your own API key (BYOK).
             </p>
             <ul className="space-y-3 mb-4">
               <li className="flex items-start gap-3">

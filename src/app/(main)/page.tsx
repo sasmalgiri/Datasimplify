@@ -248,7 +248,7 @@ export default function HomePage() {
             <span className="text-4xl">📊</span>
             <h3 className="text-lg font-bold mt-3 text-gray-900 group-hover:text-blue-600">Excel Templates</h3>
             <p className="text-gray-600 text-sm mt-1">
-              CRK formula templates with BYOK data.
+              Static templates with prefetched data.
             </p>
           </Link>
 

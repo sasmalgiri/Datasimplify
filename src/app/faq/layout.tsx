@@ -50,7 +50,7 @@ const faqSchema = {
       name: 'What is CryptoReportKit?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'CryptoReportKit provides Excel templates with prefetched crypto data and 20+ live web dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local.',
+        text: 'CryptoReportKit provides static Excel templates with prefetched crypto data and web-based dashboards. Our BYOK (Bring Your Own Key) architecture means your API key stays local.',
       },
     },
     {
@@ -66,7 +66,7 @@ const faqSchema = {
       name: 'What is BYOK (Bring Your Own Key)?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "BYOK means you provide your own CoinGecko API key. Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For live data, use our web dashboards with YOUR key.",
+        text: "BYOK means you provide your own CoinGecko API key. Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For current data, use our web dashboards with YOUR key.",
       },
     },
     {
@@ -74,7 +74,7 @@ const faqSchema = {
       name: 'What are CryptoReportKit Excel Templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For real-time data, use the live dashboards on our website with BYOK.',
+        text: 'Our Excel templates ship with prefetched crypto data so you can start analyzing immediately. For current data, use the dashboards on our website with BYOK.',
       },
     },
     {
@@ -82,7 +82,7 @@ const faqSchema = {
       name: 'What do I need to use the templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from your CRK downloads portal. That\'s it - templates come with prefetched data ready to use!',
+        text: 'You need: 1) Microsoft Excel Desktop (Windows/Mac) or Excel Online, 2) Download a template from the downloads page. That\'s it - templates come with prefetched data ready to use!',
       },
     },
     {
@@ -90,7 +90,7 @@ const faqSchema = {
       name: 'Do templates include market data?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! Templates ship with prefetched market data from CoinGecko, ready to analyze immediately. For the latest data, download a fresh template or use our live dashboards.',
+        text: 'Yes! Templates ship with prefetched market data from CoinGecko, ready to analyze immediately. For the latest data, download a fresh template or use our web dashboards.',
       },
     },
     {
@@ -98,7 +98,7 @@ const faqSchema = {
       name: 'Why do I need my own API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, and your key stays in your Excel file. For live dashboards, your key stays in browser sessionStorage.',
+        text: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, and your key stays in your Excel file. For web dashboards, your key stays in browser sessionStorage.',
       },
     },
     {
@@ -106,7 +106,7 @@ const faqSchema = {
       name: 'How often is the data updated?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "Download a fresh template for the latest data, or use our live dashboards for real-time updates. Update frequency on live dashboards depends on your CoinGecko API plan.",
+        text: "Download a fresh template for the latest data, or use our web dashboards for the latest updates. Update frequency on dashboards depends on your CoinGecko API plan.",
       },
     },
     {
@@ -122,7 +122,7 @@ const faqSchema = {
       name: 'How do the templates work?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Our Excel templates are generated with the latest crypto data from CoinGecko already included. Just download, open in Excel, and start analyzing. For live data, use our web-based dashboards with your own CoinGecko API key.',
+        text: 'Our Excel templates are generated with the latest crypto data from CoinGecko already included. Just download, open in Excel, and start analyzing. For current data, use our web-based dashboards with your own CoinGecko API key.',
       },
     },
     {
@@ -138,7 +138,7 @@ const faqSchema = {
       name: 'How do I use the Excel templates?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Steps: 1) Download a template from the downloads page, 2) Open the .xlsx file in Excel, 3) Analyze the prefetched data. For real-time data, visit our live dashboards page.',
+        text: 'Steps: 1) Download a template from the downloads page, 2) Open the .xlsx file in Excel, 3) Analyze the prefetched data. For current data, visit our dashboards page.',
       },
     },
     {
@@ -154,7 +154,7 @@ const faqSchema = {
       name: 'Is my data private?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! With Excel templates, data is prefetched server-side. With live dashboards, your API key stays in your browser - it never touches our servers.',
+        text: 'Yes! With Excel templates, data is prefetched server-side. With web dashboards, your API key stays in your browser - it never touches our servers.',
       },
     },
   ],

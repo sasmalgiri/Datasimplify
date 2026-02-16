@@ -9,7 +9,7 @@ import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
 import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
-import { CARD_CLASSES_STATIC } from '@/lib/live-dashboard/theme';
+import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 
 const AUTO_REFRESH_OPTIONS = [
   { value: 0, label: 'Off' },
@@ -24,7 +24,8 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval } = useLiveDashboardStore();
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme } = useLiveDashboardStore();
+  const st = getSiteThemeClasses(siteTheme);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
@@ -107,87 +108,95 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
   return (
     <div className="space-y-6">
-      {/* Header toolbar */}
-      <div className={`${CARD_CLASSES_STATIC} p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4`}>
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <span className="text-3xl">{definition.icon}</span>
-            {definition.name}
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">{definition.description}</p>
+      {/* Header toolbar — collapses when customize is open */}
+      <div className={`${st.cardClasses} p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-200`}>
+        <div className="flex items-center gap-3">
+          <span className={customizeOpen ? 'text-2xl' : 'text-3xl'}>{definition.icon}</span>
+          <div>
+            <h1 className={`font-bold ${st.textPrimary} ${customizeOpen ? 'text-lg' : 'text-2xl'}`}>
+              {definition.name}
+            </h1>
+            {!customizeOpen && (
+              <p className={`${st.textDim} text-sm mt-1`}>{definition.description}</p>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Last updated */}
-          {timeAgo && (
-            <span className="text-[10px] text-gray-600 flex items-center gap-1">
+          {/* Last updated — hidden when customize open */}
+          {!customizeOpen && timeAgo && (
+            <span className={`text-[10px] ${st.textFaint} flex items-center gap-1`}>
               <Clock className="w-3 h-3" />
               {timeAgo}
             </span>
           )}
 
-          {/* API Key status pill */}
-          {apiKey ? (
-            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 text-[10px] font-medium">
-              <Key className="w-3 h-3" />
-              {keyType === 'pro' ? 'Pro' : 'Demo'} Key
-              <button onClick={clearApiKey} className="ml-1 hover:text-red-400 transition" title="Disconnect key">
-                <LogOut className="w-3 h-3" />
+          {/* API Key status pill — hidden when customize open */}
+          {!customizeOpen && (
+            apiKey ? (
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 text-[10px] font-medium">
+                <Key className="w-3 h-3" />
+                {keyType === 'pro' ? 'Pro' : 'Demo'} Key
+                <button onClick={clearApiKey} className="ml-1 hover:text-red-400 transition" title="Disconnect key">
+                  <LogOut className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onOpenKeyModal}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${st.buttonPrimary} text-xs font-medium transition`}
+              >
+                <Key className="w-3 h-3" />
+                Connect API Key
               </button>
-            </div>
-          ) : (
-            <button
-              onClick={onOpenKeyModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-medium hover:bg-emerald-600 transition"
-            >
-              <Key className="w-3 h-3" />
-              Connect API Key
-            </button>
+            )
           )}
 
-          {/* API Usage */}
-          {apiKey && <ApiUsagePill definition={definition} />}
+          {/* API Usage — hidden when customize open */}
+          {!customizeOpen && apiKey && <ApiUsagePill definition={definition} />}
 
           {/* Customize */}
           <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
 
-          {/* Export */}
-          <ExportButton dashboardName={definition.name} />
+          {/* Export — hidden when customize open */}
+          {!customizeOpen && <ExportButton dashboardName={definition.name} />}
 
-          {/* Share */}
-          <ShareButton slug={definition.slug} />
+          {/* Share — hidden when customize open */}
+          {!customizeOpen && <ShareButton slug={definition.slug} />}
 
-          {/* Auto-refresh selector */}
-          <div className="flex items-center gap-1">
-            <div className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl border text-[10px] font-medium transition ${
-              autoRefreshInterval > 0
-                ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
-                : 'bg-white/[0.04] border-white/[0.06] text-gray-500'
-            }`}>
-              <Timer className="w-3 h-3" />
-              {autoRefreshInterval > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              )}
-              <select
-                value={autoRefreshInterval}
-                onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
-                className="bg-transparent outline-none cursor-pointer text-[10px] appearance-none pr-1"
-                title="Auto-refresh interval"
-              >
-                {AUTO_REFRESH_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="bg-gray-900 text-white">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+          {/* Auto-refresh selector — hidden when customize open */}
+          {!customizeOpen && (
+            <div className="flex items-center gap-1">
+              <div className={`relative flex items-center gap-1 px-2 py-1.5 rounded-xl border text-[10px] font-medium transition ${
+                autoRefreshInterval > 0
+                  ? 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400'
+                  : `${st.subtleBg} ${st.subtleBorder} ${st.textDim}`
+              }`}>
+                <Timer className="w-3 h-3" />
+                {autoRefreshInterval > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+                <select
+                  value={autoRefreshInterval}
+                  onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
+                  className="bg-transparent outline-none cursor-pointer text-[10px] appearance-none pr-1"
+                  title="Auto-refresh interval"
+                >
+                  {AUTO_REFRESH_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value} className={st.selectOptionBg}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Refresh button */}
           <button
             onClick={handleRefresh}
             disabled={isLoading || !apiKey}
-            className="p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white transition disabled:opacity-30 disabled:cursor-not-allowed border border-white/[0.06]"
+            className={`p-2 rounded-xl ${st.buttonSecondary} transition disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Refresh data (R)"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -202,7 +211,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm">
+        <div className={`${st.errorBg} rounded-xl px-4 py-3 text-sm`}>
           {error}
         </div>
       )}
@@ -213,20 +222,20 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       </div>
 
       {/* Footer with disclaimer + keyboard hints */}
-      <div className="flex flex-col sm:flex-row items-center justify-between text-[10px] text-gray-600 pt-4 border-t border-white/[0.06] gap-2">
+      <div className={`flex flex-col sm:flex-row items-center justify-between text-[10px] ${st.textFaint} pt-4 ${st.footerBorder} gap-2`}>
         <div className="flex items-center gap-1.5">
           <Shield className="w-3 h-3 text-emerald-600" />
           <span>Data sourced from CoinGecko via your personal API key. All exports are strictly for your personal, non-commercial use.</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-gray-700 hidden sm:inline">
-            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">R</kbd> Refresh
+          <span className={`${st.textFaint} hidden sm:inline`}>
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>R</kbd> Refresh
             <span className="mx-1.5">&middot;</span>
-            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">C</kbd> Customize
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>C</kbd> Customize
             <span className="mx-1.5">&middot;</span>
-            <kbd className="px-1 py-0.5 bg-white/[0.04] rounded text-[9px] border border-white/[0.08]">Esc</kbd> Close
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>Esc</kbd> Close
           </span>
-          <span className="text-gray-700">
+          <span className={st.textFaint}>
             {lastFetched && new Date(lastFetched).toLocaleString()} &bull; cryptoreportkit.com
           </span>
         </div>

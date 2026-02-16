@@ -2234,7 +2234,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
             <p className="text-xs text-blue-400">
               <strong>Note:</strong> {holderError || 'Distribution data shown above is sample data for layout preview.'}
               {!TOKEN_CONTRACT_MAP[coinSymbol.toUpperCase()] && ' This coin does not have an ERC20/token contract address for on-chain holder data.'}
-              {' '}In Excel, use <code className="bg-gray-800 px-1 rounded">=CRK.HOLDERS(network, address)</code> and <code className="bg-gray-800 px-1 rounded">=CRK.DISTRIBUTION(network, address)</code> with your token's contract address for real data.
+              {' '}Download our Excel templates for detailed token holder analytics with prefetched data.
             </p>
           </div>
         )}
@@ -2566,7 +2566,7 @@ export function DataPreview({ selectedCoins, timeframe, onDataLoad, defaultViewM
       {/* BYOK Note */}
       <div className="px-4 py-2 bg-emerald-900/20 border-t border-emerald-500/30">
         <p className="text-xs text-emerald-400 text-center">
-          💡 This preview shows live data. In Excel, CRK formulas will fetch the latest data using your own API key (BYOK).
+          💡 This preview shows data from CoinGecko. Download our static Excel templates for prefetched data you can analyze offline.
         </p>
       </div>
     </div>

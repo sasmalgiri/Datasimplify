@@ -34,7 +34,7 @@ export default function TemplateRequirementsPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">&bull;</span>
-              <span>For live, real-time data, use our web-based dashboards on the website</span>
+              <span>For current data, use our web-based dashboards on the website</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">&bull;</span>
@@ -135,8 +135,8 @@ export default function TemplateRequirementsPage() {
             <div className="flex items-start gap-4">
               <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold shrink-0">4</div>
               <div>
-                <h4 className="font-medium">For Live Data, Use Our Web Dashboards</h4>
-                <p className="text-gray-400 text-sm">Need real-time prices and updates? Use our live dashboards on the website for streaming data</p>
+                <h4 className="font-medium">For Current Data, Use Our Web Dashboards</h4>
+                <p className="text-gray-400 text-sm">Need current prices and updates? Use our web dashboards on the website</p>
               </div>
             </div>
           </div>
@@ -181,8 +181,8 @@ export default function TemplateRequirementsPage() {
               <p className="text-gray-400">Templates contain a data snapshot from the time they were generated. Download a fresh template from the Downloads page to get the latest data.</p>
             </div>
             <div>
-              <h4 className="font-medium text-yellow-400">Want real-time data?</h4>
-              <p className="text-gray-400">Static Excel templates are great for analysis, but if you need live prices, use our web-based dashboards which stream data in real time.</p>
+              <h4 className="font-medium text-yellow-400">Want current data?</h4>
+              <p className="text-gray-400">Static Excel templates are great for analysis, but if you need current prices, use our web-based dashboards.</p>
             </div>
             <div>
               <h4 className="font-medium text-yellow-400">Template won&apos;t open?</h4>

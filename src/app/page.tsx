@@ -165,7 +165,7 @@ export default function LandingPage() {
           <div className="text-center mb-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">
               <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
-                {isSimple ? 'Live Crypto Data in Excel' : 'Excel Templates for Crypto'}
+                {isSimple ? 'Crypto Data Templates for Excel' : 'Excel Templates for Crypto'}
               </span>
               {isPro && (
                 <>
@@ -179,8 +179,8 @@ export default function LandingPage() {
 
             <p className="text-sm md:text-base text-gray-400 mb-3 max-w-2xl mx-auto">
               {isSimple
-                ? 'Download Excel templates with prefetched crypto data, or use live dashboards on the web.'
-                : 'Excel templates with prefetched data and 20+ live web dashboards. BYOK architecture.'}
+                ? 'Download static Excel templates with prefetched crypto data. Ready to use.'
+                : 'Static Excel templates with prefetched data. BYOK architecture.'}
               <span className="text-white font-semibold"> {isSimple ? 'Data included.' : 'Works in Excel Desktop.'}</span>
             </p>
 
@@ -218,7 +218,7 @@ export default function LandingPage() {
                       <div className="font-semibold text-white flex items-center gap-1">
                         Refresh <RefreshCw className="w-3 h-3" />
                       </div>
-                      <div className="text-xs text-gray-400">Live data in Excel</div>
+                      <div className="text-xs text-gray-400">Fresh data in Excel</div>
                     </div>
                   </div>
                 </div>
@@ -268,13 +268,21 @@ export default function LandingPage() {
             )}
           </div>
 
+          {/* BYOK Architecture Notice — both modes */}
+          <div className="max-w-3xl mx-auto mb-6 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-sm text-amber-200/90">
+            <p className="font-semibold text-amber-400 mb-1">Important: BYOK Architecture</p>
+            <p className="text-xs text-gray-300 leading-relaxed">
+              Templates use your own CoinGecko API key (Bring Your Own Key). Your API key stays in your Excel file — we never see or store it. Data usage depends on your CoinGecko plan (Demo API has 10,000 calls/month free).
+            </p>
+          </div>
+
           {/* Simple Mode: 3 Feature Tiles */}
           {isSimple && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               <Link href="/downloads" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
                 <div className="text-3xl mb-2">📊</div>
                 <h3 className="font-bold text-white mb-1 group-hover:text-emerald-400">Excel Data Templates</h3>
-                <p className="text-gray-400 text-sm">Live crypto data in Excel</p>
+                <p className="text-gray-400 text-sm">Static crypto data in Excel</p>
               </Link>
               <Link href="/compare" className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-emerald-500/50 transition group text-center">
                 <div className="text-3xl mb-2">⚖️</div>
@@ -356,7 +364,7 @@ export default function LandingPage() {
 
               <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 relative">
                 <div className="absolute top-2 right-2 bg-green-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">BYOK</div>
-                <div className="text-green-400 text-xs font-medium mb-2">✓ THE CRK WAY</div>
+                <div className="text-green-400 text-xs font-medium mb-2">✓ THE CRYPTOREPORTKIT WAY</div>
                 <ul className="space-y-1 text-gray-300 text-xs">
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
@@ -364,11 +372,11 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Your API key stays in Excel</span>
+                    <span>Download &amp; analyze instantly</span>
                   </li>
                   <li className="flex items-start gap-1">
                     <span className="text-green-400">✓</span>
-                    <span>Auto-refresh + charts</span>
+                    <span>Fresh data snapshots + charts</span>
                   </li>
                 </ul>
               </div>
@@ -436,7 +444,7 @@ export default function LandingPage() {
                 BEST VALUE
               </div>
               <div className="text-xs text-emerald-400">Pro</div>
-              <div className="text-2xl font-bold mb-2">$19<span className="text-xs text-gray-400">/mo</span></div>
+              <div className="text-2xl font-bold mb-2">$9<span className="text-xs text-gray-400">/mo</span></div>
               <ul className="space-y-1 text-xs text-gray-300 mb-3">
                 <li>✓ 300 downloads/mo</li>
                 <li>✓ All 47 widgets</li>
@@ -457,10 +465,10 @@ export default function LandingPage() {
       <section className="py-6 px-4 bg-gradient-to-r from-emerald-600/20 to-blue-600/20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-xl md:text-2xl font-bold mb-2">
-            {isSimple ? 'Ready to Start?' : 'Ready to Get Live Crypto Data?'}
+            {isSimple ? 'Ready to Start?' : 'Ready to Get Crypto Data in Excel?'}
           </h2>
           <p className="text-sm text-gray-400 mb-3">
-            {isSimple ? 'Excel templates with prefetched data and live web dashboards.' : 'Download Excel templates with prefetched crypto data. BYOK architecture.'}
+            {isSimple ? 'Static Excel templates with prefetched crypto data.' : 'Download static Excel templates with prefetched crypto data. BYOK architecture.'}
           </p>
           <Link
             href="/downloads"

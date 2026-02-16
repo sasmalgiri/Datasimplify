@@ -34,7 +34,7 @@ export function WebsiteJsonLd() {
     name: 'CryptoReportKit',
     url: 'https://cryptoreportkit.com',
     description:
-      'Build refreshable crypto reports in Excel. Excel templates with CRK formulas and BYOK data for market data, portfolio tracking, and technical analysis.',
+      'Static Excel templates with prefetched crypto data for market analysis, portfolio tracking, and research. BYOK architecture.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -63,12 +63,12 @@ export function SoftwareApplicationJsonLd() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '19',
+      highPrice: '9',
       priceCurrency: 'USD',
       offerCount: '2',
     },
     featureList: [
-      'Excel templates with CRK formulas (BYOK)',
+      'Static Excel templates with prefetched data (BYOK)',
       'Market overview and watchlist reports',
       'Portfolio tracking with P/L analysis',
       'Technical indicator dashboards',
@@ -91,7 +91,7 @@ export function FAQJsonLd() {
     {
       question: 'What is CryptoReportKit?',
       answer:
-        'CryptoReportKit provides Excel templates with CRK formulas for educational crypto research and portfolio tracking. Templates use BYOK (Bring Your Own Key) - you provide your own API key for data.',
+        'CryptoReportKit provides static Excel templates with prefetched crypto data for educational research and portfolio tracking. Templates use BYOK (Bring Your Own Key) architecture.',
     },
     {
       question: 'Is CryptoReportKit free to use?',
@@ -101,7 +101,7 @@ export function FAQJsonLd() {
     {
       question: 'How do Report Kits work?',
       answer:
-        'Download the template to get prefetched crypto data. For live interactive data, use our web dashboards with BYOK.',
+        'Download the template to get prefetched crypto data. For current data, use our web dashboards with BYOK.',
     },
     {
       question: 'What is BYOK (Bring Your Own Key)?',
@@ -148,7 +148,7 @@ export function ReportKitProductJsonLd({
   tier: 'free' | 'pro';
   slug: string;
 }) {
-  const prices = { free: '0', pro: '19' };
+  const prices = { free: '0', pro: '9' };
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -184,7 +184,7 @@ export function PricingJsonLd() {
     '@type': 'Product',
     name: 'CryptoReportKit Plans',
     description:
-      'Excel templates with CRK formulas for crypto research and portfolio tracking.',
+      'Static Excel templates with prefetched data for crypto research and portfolio tracking.',
     brand: {
       '@type': 'Brand',
       name: 'CryptoReportKit',
@@ -192,7 +192,7 @@ export function PricingJsonLd() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '19',
+      highPrice: '9',
       priceCurrency: 'USD',
       offerCount: '2',
       offers: [
@@ -206,7 +206,7 @@ export function PricingJsonLd() {
         {
           '@type': 'Offer',
           name: 'Pro Plan',
-          price: '19',
+          price: '9',
           priceCurrency: 'USD',
           description: 'Advanced templates with technical indicators and portfolio tracking',
         },
@@ -263,7 +263,7 @@ export function ExcelTemplateJsonLd({
   features: string[];
   tier?: 'free' | 'pro';
 }) {
-  const prices = { free: '0', pro: '19' };
+  const prices = { free: '0', pro: '9' };
 
   const structuredData = {
     '@context': 'https://schema.org',
