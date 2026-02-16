@@ -60,6 +60,24 @@ import { DominanceAreaWidget } from './widgets/DominanceAreaWidget';
 import { DrawdownChartWidget } from './widgets/DrawdownChartWidget';
 import { HeikinAshiWidget } from './widgets/HeikinAshiWidget';
 import { ReturnHistogramWidget } from './widgets/ReturnHistogramWidget';
+// Phase 9 analytics widgets
+import { TVLIndicatorWidget } from './widgets/TVLIndicatorWidget';
+import { FundingRateWidget } from './widgets/FundingRateWidget';
+import { LiquidationEstimateWidget } from './widgets/LiquidationEstimateWidget';
+import { TechnicalScreenerWidget } from './widgets/TechnicalScreenerWidget';
+import { TokenomicsWidget } from './widgets/TokenomicsWidget';
+import { MarketCycleWidget } from './widgets/MarketCycleWidget';
+import { DEXVolumeWidget } from './widgets/DEXVolumeWidget';
+import { OpenInterestWidget } from './widgets/OpenInterestWidget';
+// Phase 10 combined intelligence widgets
+import { CryptoHealthScoreWidget } from './widgets/CryptoHealthScoreWidget';
+import { SmartSignalWidget } from './widgets/SmartSignalWidget';
+import { RiskRadarWidget } from './widgets/RiskRadarWidget';
+import { AlphaFinderWidget } from './widgets/AlphaFinderWidget';
+import { VolatilityForecastWidget } from './widgets/VolatilityForecastWidget';
+import { MarketBriefWidget } from './widgets/MarketBriefWidget';
+import { SectorRotationWidget } from './widgets/SectorRotationWidget';
+import { MoneyFlowIndexWidget } from './widgets/MoneyFlowIndexWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -109,6 +127,22 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   DrawdownChartWidget,
   HeikinAshiWidget,
   ReturnHistogramWidget,
+  TVLIndicatorWidget,
+  FundingRateWidget,
+  LiquidationEstimateWidget,
+  TechnicalScreenerWidget,
+  TokenomicsWidget,
+  MarketCycleWidget,
+  DEXVolumeWidget,
+  OpenInterestWidget,
+  CryptoHealthScoreWidget,
+  SmartSignalWidget,
+  RiskRadarWidget,
+  AlphaFinderWidget,
+  VolatilityForecastWidget,
+  MarketBriefWidget,
+  SectorRotationWidget,
+  MoneyFlowIndexWidget,
 };
 
 /** Contextual descriptions for each widget — explains what it shows and how to read it */
@@ -181,6 +215,26 @@ const WIDGET_DESCRIPTIONS: Record<string, string> = {
 
   // Derivatives
   DerivativesTableWidget: 'Futures & perpetuals data — funding rates, open interest, and volume across exchanges.',
+
+  // Phase 9 analytics
+  TVLIndicatorWidget: 'DeFi fundamentals — total DeFi market cap, DeFi/ETH ratio, dominance, and 24h trading volume.',
+  FundingRateWidget: 'Perpetual funding rates — green = longs pay shorts (bullish), red = shorts pay longs (bearish). Sorted by magnitude.',
+  LiquidationEstimateWidget: 'Leverage risk gauge — estimates market leverage by comparing derivatives open interest to spot volume. Higher = riskier.',
+  TechnicalScreenerWidget: 'Multi-coin screener — RSI(14), MA crossovers, and momentum signals. Red badge = overbought, green = oversold.',
+  TokenomicsWidget: 'Supply analysis — bar shows % of max supply released. Nx = FDV/MCap ratio. Low float and high FDV tokens flagged.',
+  MarketCycleWidget: 'Composite cycle indicator — combines ATH distance, Fear & Greed, BTC dominance, and momentum to estimate market phase.',
+  DEXVolumeWidget: 'DEX vs CEX volume split — pie shows market share. Rankings show top decentralized exchanges by estimated volume.',
+  OpenInterestWidget: 'Derivatives exchanges ranked by open interest (BTC). Longer bar = more open positions. Includes perp and futures pair counts.',
+
+  // Phase 10 combined intelligence
+  CryptoHealthScoreWidget: 'Market health grade (A-F) combining breadth, volume, sentiment, leverage, and sector balance into one score. A = strong market, F = critical.',
+  SmartSignalWidget: 'Buy/Hold/Sell signal combining trend momentum, sentiment, and leverage risk. Traffic light format with confidence %. Green = buy, red = sell.',
+  RiskRadarWidget: '5-axis risk radar — leverage, volatility, concentration, sentiment, and correlation risk. Larger area = more risk. Includes auto-generated warnings.',
+  AlphaFinderWidget: 'Hidden momentum detector — finds coins with unusual volume surges, strong price slopes, and relative strength vs market. Excludes BTC/ETH/BNB.',
+  VolatilityForecastWidget: 'Volatility storm warning — combines price compression, leverage build, sentiment extremes, and range tightening. Calm → Building → Storm.',
+  MarketBriefWidget: 'Executive summary in 6 bullet points — market direction, top mover, risk status, sector leader, trending coins, and key numbers. Urgency-coded dots.',
+  SectorRotationWidget: 'Where is money moving? Shows sectors outperforming (inflow) vs underperforming (outflow) relative to market average. Spot rotation early.',
+  MoneyFlowIndexWidget: 'Buying vs selling pressure gauge (0-100) — analyzes price×volume flow direction across top 20 coins. Detects accumulation, distribution, and divergences.',
 };
 
 interface DashboardWidgetProps {

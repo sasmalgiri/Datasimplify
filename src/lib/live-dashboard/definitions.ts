@@ -1007,6 +1007,151 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
       { id: 'top-coins', component: 'TopCoinsTable', title: 'Top 20 Coins', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 12 },
     ],
   },
+
+  // ─── PHASE 9 PRO DASHBOARDS (4) ──────────────────────────────────
+
+  {
+    slug: 'tvl-fundamentals',
+    name: 'TVL & DeFi Fundamentals',
+    description: 'DeFi fundamentals — TVL metrics, DeFi market cap, DeFi/ETH ratio, sector heatmaps, category rankings, and protocol performance.',
+    icon: '🏦',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'categories', 'fear_greed', 'trending', 'defi_global'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'DeFi Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], props: { mode: 'defi' }, mobileOrder: 1 },
+      { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'DeFi TVL Metrics', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'], mobileOrder: 2 },
+      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 3 },
+      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 4 },
+      { id: 'treemap', component: 'TreemapWidget', title: 'DeFi Market Cap Map', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 5 },
+      { id: 'area-chart', component: 'AreaChartWidget', title: 'DeFi Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 6 },
+      { id: 'radar', component: 'RadarChartWidget', title: 'DeFi Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 7 },
+      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 8 },
+      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Change Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 }, mobileOrder: 9 },
+      { id: 'pie', component: 'PieChartWidget', title: 'DeFi Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 10 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 11 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 12 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 13 },
+    ],
+  },
+
+  {
+    slug: 'technical-screener',
+    name: 'Technical Screener',
+    description: 'Multi-coin technical screener — RSI, MA crossovers, momentum signals, market cycle indicators, candlestick analysis, and risk assessment.',
+    icon: '🔎',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'fear_greed', 'trending', 'categories', 'ohlc'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Market Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], mobileOrder: 1 },
+      { id: 'screener', component: 'TechnicalScreenerWidget', title: 'Technical Signals (RSI, MA)', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 2 },
+      { id: 'cycle', component: 'MarketCycleWidget', title: 'Market Cycle Indicator', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'], mobileOrder: 3 },
+      { id: 'candlestick', component: 'CandlestickChartWidget', title: 'BTC Candlestick (30d)', gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId: 'bitcoin', days: 30 }, mobileOrder: 4 },
+      { id: 'gauge-cluster', component: 'GaugeClusterWidget', title: 'Market Health', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 5 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Fear & Greed', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 6 },
+      { id: 'boxplot', component: 'BoxPlotWidget', title: '7d Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 7 },
+      { id: 'returns-bar', component: 'ReturnsBarWidget', title: 'Returns Comparison', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 8 },
+      { id: 'correlation', component: 'CorrelationWidget', title: 'Correlation Matrix', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 9 },
+      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 10 },
+      { id: 'drawdown', component: 'DrawdownChartWidget', title: 'Drawdown from Peak', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8 }, mobileOrder: 11 },
+      { id: 'return-histogram', component: 'ReturnHistogramWidget', title: 'Return Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 50 }, mobileOrder: 12 },
+      { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 13 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Full Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 14 },
+    ],
+  },
+
+  {
+    slug: 'funding-liquidation',
+    name: 'Funding & Liquidation',
+    description: 'Derivatives analytics — perpetual funding rates, open interest rankings, liquidation risk estimates, and derivatives contract data.',
+    icon: '💰',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'derivatives', 'derivatives_exchanges', 'fear_greed', 'trending', 'categories'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Trading Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], props: { mode: 'trading' }, mobileOrder: 1 },
+      { id: 'funding-rate', component: 'FundingRateWidget', title: 'Perpetual Funding Rates', gridColumn: '1 / -1', dataEndpoints: ['derivatives'], props: { limit: 20 }, mobileOrder: 2 },
+      { id: 'open-interest', component: 'OpenInterestWidget', title: 'Open Interest Rankings', gridColumn: 'span 2', dataEndpoints: ['derivatives_exchanges'], mobileOrder: 3 },
+      { id: 'liq-estimate', component: 'LiquidationEstimateWidget', title: 'Liquidation Risk Estimate', gridColumn: 'span 2', dataEndpoints: ['derivatives', 'markets'], mobileOrder: 4 },
+      { id: 'derivatives-table', component: 'DerivativesTableWidget', title: 'Derivatives Tickers', gridColumn: '1 / -1', dataEndpoints: ['derivatives'], props: { limit: 25 }, mobileOrder: 5 },
+      { id: 'gauge-cluster', component: 'GaugeClusterWidget', title: 'Market Health', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 6 },
+      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 7 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 8 },
+      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Change Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 }, mobileOrder: 9 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Full Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 10 },
+    ],
+  },
+
+  {
+    slug: 'tokenomics-supply',
+    name: 'Tokenomics & Supply',
+    description: 'Token supply deep dive — circulating vs max supply ratios, inflation rates, FDV analysis, market cycle indicators, and supply rankings.',
+    icon: '🧬',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'fear_greed', 'trending', 'categories'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Market Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], mobileOrder: 1 },
+      { id: 'tokenomics', component: 'TokenomicsWidget', title: 'Tokenomics Overview', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 2 },
+      { id: 'supply', component: 'SupplyWidget', title: 'Circulating vs Max Supply', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 }, mobileOrder: 3 },
+      { id: 'cycle', component: 'MarketCycleWidget', title: 'Market Cycle Indicator', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'], mobileOrder: 4 },
+      { id: 'treemap', component: 'TreemapWidget', title: 'Market Cap Treemap', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 5 },
+      { id: 'pie', component: 'PieChartWidget', title: 'Market Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 6 },
+      { id: 'funnel', component: 'FunnelWidget', title: 'Market Cap Funnel', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 7 },
+      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 8 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 9 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 10 },
+      { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 11 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Supply Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 12 },
+    ],
+  },
+
+  // ─── Phase 10: Combined Intelligence Dashboards ──────────────────────────────
+  {
+    slug: 'intelligence-hub',
+    name: 'Intelligence Hub',
+    description: 'AI-powered market intelligence — health scores, smart signals, risk radar, volatility forecasts, and executive briefs in one view.',
+    icon: '🧠',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'fear_greed', 'trending', 'categories', 'derivatives', 'derivatives_exchanges'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Key Metrics', gridColumn: '1 / -1', dataEndpoints: ['global', 'markets'], props: { mode: 'trading' }, mobileOrder: 1 },
+      { id: 'brief', component: 'MarketBriefWidget', title: 'Executive Brief', gridColumn: '1 / -1', dataEndpoints: ['markets', 'global', 'fear_greed', 'derivatives', 'categories', 'trending'], mobileOrder: 2 },
+      { id: 'health', component: 'CryptoHealthScoreWidget', title: 'Market Health Grade', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed', 'derivatives', 'categories'], mobileOrder: 3 },
+      { id: 'signal', component: 'SmartSignalWidget', title: 'Smart Signal', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed', 'derivatives'], mobileOrder: 4 },
+      { id: 'risk', component: 'RiskRadarWidget', title: 'Risk Radar', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed', 'derivatives'], mobileOrder: 5 },
+      { id: 'vol-forecast', component: 'VolatilityForecastWidget', title: 'Volatility Forecast', gridColumn: 'span 2', dataEndpoints: ['markets', 'fear_greed', 'derivatives'], mobileOrder: 6 },
+      { id: 'alpha', component: 'AlphaFinderWidget', title: 'Alpha Finder', gridColumn: 'span 2', dataEndpoints: ['markets', 'trending'], mobileOrder: 7 },
+      { id: 'mfi', component: 'MoneyFlowIndexWidget', title: 'Money Flow Index', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 8 },
+      { id: 'sectors', component: 'SectorRotationWidget', title: 'Sector Rotation', gridColumn: 'span 2', dataEndpoints: ['categories', 'global'], mobileOrder: 9 },
+      { id: 'cycle', component: 'MarketCycleWidget', title: 'Market Cycle', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'], mobileOrder: 10 },
+      { id: 'altseason', component: 'AltseasonWidget', title: 'Altseason Gauge', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 11 },
+      { id: 'gauges', component: 'GaugeClusterWidget', title: 'Market Health Gauges', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 12 },
+    ],
+  },
+  {
+    slug: 'quick-pulse',
+    name: 'Quick Pulse',
+    description: 'Instant market overview — health grade, smart signal, sector rotation, and executive brief. Everything you need in 30 seconds.',
+    icon: '⚡',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'fear_greed', 'trending', 'categories'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Market Stats', gridColumn: '1 / -1', dataEndpoints: ['global', 'markets'], props: { mode: 'market' }, mobileOrder: 1 },
+      { id: 'brief', component: 'MarketBriefWidget', title: 'Executive Brief', gridColumn: '1 / -1', dataEndpoints: ['markets', 'global', 'fear_greed', 'categories', 'trending'], mobileOrder: 2 },
+      { id: 'health', component: 'CryptoHealthScoreWidget', title: 'Market Health Grade', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed', 'categories'], mobileOrder: 3 },
+      { id: 'signal', component: 'SmartSignalWidget', title: 'Smart Signal', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'], mobileOrder: 4 },
+      { id: 'sectors', component: 'SectorRotationWidget', title: 'Sector Rotation', gridColumn: 'span 2', dataEndpoints: ['categories', 'global'], mobileOrder: 5 },
+      { id: 'alpha', component: 'AlphaFinderWidget', title: 'Alpha Finder', gridColumn: 'span 2', dataEndpoints: ['markets', 'trending'], mobileOrder: 6 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Fear & Greed Index', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 7 },
+      { id: 'trending', component: 'TrendingWidget', title: 'Trending Now', gridColumn: 'span 2', dataEndpoints: ['trending'], mobileOrder: 8 },
+      { id: 'gainers', component: 'GainersLosersWidget', title: 'Top Movers', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 9 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top Cryptocurrencies', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 10 },
+    ],
+  },
 ];
 
 // ─── AUTO-AUGMENT: Ensure every dashboard has access to ALL chart types ───────
@@ -1065,6 +1210,20 @@ const AUGMENT_CATALOG: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
   { id: 'sparkline-grid', component: 'MiniSparklineGrid', title: 'Sparkline Grid', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 } },
   { id: 'top-coins', component: 'TopCoinsTable', title: 'Top Cryptocurrencies', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 } },
+  // Phase 9 universal widgets
+  { id: 'tech-screener', component: 'TechnicalScreenerWidget', title: 'Technical Signals (RSI, MA)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 15 } },
+  { id: 'tokenomics', component: 'TokenomicsWidget', title: 'Tokenomics Overview', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 } },
+  { id: 'market-cycle', component: 'MarketCycleWidget', title: 'Market Cycle Indicator', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'] },
+  { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'DeFi TVL Metrics', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'] },
+  // Phase 10 combined intelligence widgets
+  { id: 'health-score', component: 'CryptoHealthScoreWidget', title: 'Market Health Grade', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'] },
+  { id: 'smart-signal', component: 'SmartSignalWidget', title: 'Smart Signal', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'] },
+  { id: 'market-brief', component: 'MarketBriefWidget', title: 'Executive Brief', gridColumn: '1 / -1', dataEndpoints: ['markets', 'global', 'fear_greed', 'categories', 'trending'] },
+  { id: 'sector-rotation', component: 'SectorRotationWidget', title: 'Sector Rotation', gridColumn: 'span 2', dataEndpoints: ['categories', 'global'] },
+  { id: 'alpha-finder', component: 'AlphaFinderWidget', title: 'Alpha Finder', gridColumn: 'span 2', dataEndpoints: ['markets', 'trending'] },
+  { id: 'money-flow', component: 'MoneyFlowIndexWidget', title: 'Money Flow Index', gridColumn: 'span 2', dataEndpoints: ['markets'] },
+  { id: 'vol-forecast', component: 'VolatilityForecastWidget', title: 'Volatility Forecast', gridColumn: 'span 2', dataEndpoints: ['markets', 'fear_greed'] },
+  { id: 'risk-radar', component: 'RiskRadarWidget', title: 'Risk Radar', gridColumn: 'span 2', dataEndpoints: ['markets', 'global', 'fear_greed'] },
 ];
 
 /** Endpoint-specific widgets — only added where the dashboard already fetches that data */
@@ -1081,10 +1240,14 @@ const HISTORY_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
 
 const EXCHANGE_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'exchange-vol', component: 'ExchangeVolumeWidget', title: 'Exchange Volume', gridColumn: 'span 2', dataEndpoints: ['exchanges'] },
+  { id: 'dex-volume', component: 'DEXVolumeWidget', title: 'DEX Volume & Market Share', gridColumn: 'span 2', dataEndpoints: ['exchanges'] },
 ];
 
 const DERIVATIVES_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'derivatives-table', component: 'DerivativesTableWidget', title: 'Derivatives Tickers', gridColumn: '1 / -1', dataEndpoints: ['derivatives'], props: { limit: 20 } },
+  { id: 'funding-rate', component: 'FundingRateWidget', title: 'Funding Rates', gridColumn: 'span 2', dataEndpoints: ['derivatives'], props: { limit: 15 } },
+  { id: 'open-interest', component: 'OpenInterestWidget', title: 'Open Interest Rankings', gridColumn: 'span 2', dataEndpoints: ['derivatives_exchanges'] },
+  { id: 'liq-estimate', component: 'LiquidationEstimateWidget', title: 'Liquidation Risk Estimate', gridColumn: 'span 2', dataEndpoints: ['derivatives', 'markets'] },
 ];
 
 // Run augmentation on every dashboard

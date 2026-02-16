@@ -44,7 +44,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
 
   // Pro tier
   '300 downloads per month': 'Download up to 300 template packs each month.',
-  'All 47 dashboard widgets': 'Every widget: candlesticks, heatmaps, radar, waterfall, treemap, whale distribution, and 40+ more.',
+  'All 63 dashboard widgets': 'Every widget: health scores, smart signals, risk radar, alpha finder, volatility forecast, executive briefs, sector rotation, money flow, candlesticks, heatmaps, technical screener, funding rates, and 50+ more.',
   '10-coin compare + head-to-head': 'Compare up to 10 coins with 26 columns, technical indicators, visual charts, and head-to-head ratios.',
   'Full price history (all timeframes)': 'Unlimited historical data — hourly, daily, weekly, monthly, and yearly.',
   'Advanced charts & filters': 'Multi-axis charts, overlays, indicator stacks, sector/category filters, custom metrics.',
@@ -131,12 +131,12 @@ export default function PricingPage() {
     {
       name: 'Pro',
       key: 'pro',
-      monthlyPrice: 19,
-      yearlyPrice: 190,
+      monthlyPrice: 9,
+      yearlyPrice: 90,
       description: 'Full analytics suite for serious crypto research',
       features: [
         '300 downloads per month',
-        'All 47 dashboard widgets',
+        'All 63 dashboard widgets',
         '10-coin compare + head-to-head',
         'Full price history (all timeframes)',
         'Advanced charts & filters',
@@ -166,7 +166,7 @@ export default function PricingPage() {
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm text-emerald-400">
             <span>🔑</span>
             <span>
-              <strong>BYOK:</strong> You use your own API key. If you store keys in CRK, they're encrypted.
+              <strong>BYOK:</strong> You use your own API key. Your key stays in your Excel file — we never see or store it.
             </span>
           </div>
         </div>
@@ -316,11 +316,11 @@ export default function PricingPage() {
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What&apos;s included in templates?</h3>
-              <p className="text-gray-400 text-sm">Templates come with prefetched market data, professional styling, charts, and navigation. For live interactive data, use our web dashboards with your BYOK key.</p>
+              <p className="text-gray-400 text-sm">Templates come with prefetched market data, professional styling, charts, and navigation. For interactive data, use our web dashboards with your BYOK key.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
-              <h3 className="font-bold mb-2 text-white">How do live dashboards work?</h3>
-              <p className="text-gray-400 text-sm">Enter your free CoinGecko API key to unlock 20+ interactive dashboards with real-time charts, market data, and export capabilities — all in your browser.</p>
+              <h3 className="font-bold mb-2 text-white">How do web dashboards work?</h3>
+              <p className="text-gray-400 text-sm">Enter your free CoinGecko API key to unlock 20+ interactive dashboards with charts, market data, and export capabilities — all in your browser.</p>
             </div>
           </div>
         </div>
