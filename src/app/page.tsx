@@ -6,8 +6,8 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import {
-  Download, ArrowRight, BarChart3, Brain,
-  Shield, Zap, Layout, TrendingUp, Wallet, FileSpreadsheet,
+  ArrowRight, Brain,
+  Shield, Zap, Layout, TrendingUp,
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
@@ -177,7 +177,6 @@ const COMPARISON_ROWS = [
   { feature: 'Dashboard widgets', crk: '75+', others: '5-15' },
   { feature: 'Smart intelligence widgets', crk: '8 built-in', others: 'Basic alerts only' },
   { feature: 'Custom dashboard builder', crk: true, others: 'Not available' },
-  { feature: 'Excel add-in with custom functions', crk: '85+ functions', others: 'CSV export only' },
   { feature: 'BYOK — your keys stay local', crk: true, others: 'Keys stored on their servers' },
   { feature: 'Tax report with CSV export', crk: true, others: 'Separate paid tool ($49+)' },
   { feature: 'Multi-exchange portfolio', crk: '6 exchanges', others: 'Manual tracking' },
@@ -204,7 +203,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            70+ Live Dashboards &middot; 75+ Widgets &middot; 85+ Excel Functions
+            70+ Live Dashboards &middot; 75+ Widgets &middot; 8 Pro Tools
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight tracking-tight">
@@ -218,7 +217,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            70+ live dashboards, smart intelligence widgets, tax tools, DCA tracker, custom builder, and an Excel add-in with 85+ functions — all powered by{' '}
+            70+ live dashboards, smart intelligence widgets, tax tools, DCA tracker, and custom builder — all powered by{' '}
             <span className="text-white font-medium">your own API key</span>. Privacy-first. No data leaves your browser.
           </p>
 
@@ -231,11 +230,11 @@ export default function LandingPage() {
               Explore Live Dashboards
             </Link>
             <Link
-              href="/downloads"
+              href="/pricing"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.12] rounded-xl font-semibold text-base transition-all hover:border-white/[0.2]"
             >
-              <Download className="w-5 h-5" />
-              Excel Templates
+              View Pricing
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
 
@@ -261,8 +260,8 @@ export default function LandingPage() {
               <div className="text-gray-400 text-sm mt-1">Dashboard Widgets</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-purple-400">85+</div>
-              <div className="text-gray-400 text-sm mt-1">Excel Functions</div>
+              <div className="text-3xl md:text-4xl font-bold text-purple-400">8</div>
+              <div className="text-gray-400 text-sm mt-1">Pro Tools</div>
             </div>
             <div>
               <div className="text-3xl md:text-4xl font-bold text-amber-400">13</div>
@@ -397,87 +396,6 @@ export default function LandingPage() {
                 </div>
               );
             })}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ EXCEL ADD-IN + FEATURES ═══════ */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-4">
-              <FileSpreadsheet className="w-3.5 h-3.5" />
-              EXCEL ADD-IN
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              85+ Functions <span className="text-emerald-400">Right in Excel</span>
-            </h2>
-            <p className="text-gray-400 text-base max-w-2xl mx-auto">
-              Professional-grade crypto analysis inside Excel. Portfolio tracking, tax calculations, price alerts, and live data — all from custom functions.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                icon: TrendingUp,
-                title: 'Live Market Data',
-                desc: 'CRK.PRICE, CRK.MARKETCAP, CRK.VOLUME, CRK.ATH, and 30+ more functions pulling real-time data from CoinGecko',
-                color: 'text-emerald-400',
-              },
-              {
-                icon: Wallet,
-                title: 'Portfolio & Tax',
-                desc: 'Track holdings, calculate FIFO/LIFO/AVG cost basis, realized gains, and generate tax summaries — all in spreadsheet formulas',
-                color: 'text-blue-400',
-              },
-              {
-                icon: Brain,
-                title: 'Alerts & Notifications',
-                desc: 'Set price alerts with email notifications for any coin. Get notified when prices cross your target levels',
-                color: 'text-purple-400',
-              },
-              {
-                icon: BarChart3,
-                title: 'Technical Indicators',
-                desc: 'RSI, moving averages, Sharpe ratio, volatility, momentum, max drawdown — built-in technical analysis functions',
-                color: 'text-amber-400',
-              },
-              {
-                icon: Wallet,
-                title: 'Wallet & Exchange',
-                desc: 'Check ETH/BSC/Polygon wallet balances and Binance/Coinbase exchange balances directly from Excel formulas',
-                color: 'text-cyan-400',
-              },
-              {
-                icon: FileSpreadsheet,
-                title: '11 Ready Templates',
-                desc: 'Market Overview, Watchlist, Screener, Portfolio, Correlation Matrix, Risk Dashboard — download and start analyzing',
-                color: 'text-rose-400',
-              },
-            ].map((f) => {
-              const Icon = f.icon;
-              return (
-                <div
-                  key={f.title}
-                  className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-5 hover:border-gray-600/60 transition-all"
-                >
-                  <Icon className={`w-5 h-5 ${f.color} mb-3`} />
-                  <h3 className="text-sm font-bold text-white mb-1.5">{f.title}</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed">{f.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="text-center mt-8">
-            <Link
-              href="/downloads"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] hover:border-emerald-500/30 rounded-xl text-sm font-medium transition-all"
-            >
-              <Download className="w-4 h-4" />
-              Download Excel Templates <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         </div>
       </section>
@@ -668,8 +586,7 @@ export default function LandingPage() {
                     '8 intelligence widgets',
                     '300 downloads/month',
                     '10-coin compare + head-to-head',
-                    'Wallet & exchange balances',
-                    'All template packs',
+                    'Full price history (all timeframes)',
                     'Priority email support',
                   ].map((f) => (
                     <li key={f} className="flex items-start gap-2">
@@ -700,7 +617,7 @@ export default function LandingPage() {
             Start Analyzing Crypto <span className="text-emerald-400">Today</span>
           </h2>
           <p className="text-gray-400 text-base mb-8 max-w-lg mx-auto">
-            70+ dashboards, 75+ widgets, tax tools, DCA tracker, custom builder, and 85+ Excel functions. Free to start, powerful enough for professionals.
+            70+ dashboards, 75+ widgets, tax tools, DCA tracker, and custom builder. Free to start, powerful enough for professionals.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -731,7 +648,6 @@ export default function LandingPage() {
 
             <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
               <Link href="/live-dashboards" className="hover:text-white transition">Dashboards</Link>
-              <Link href="/downloads" className="hover:text-white transition">Templates</Link>
               <Link href="/compare" className="hover:text-white transition">Compare</Link>
               <Link href="/learn" className="hover:text-white transition">Learn</Link>
               <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
