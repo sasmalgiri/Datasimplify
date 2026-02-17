@@ -297,26 +297,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
 
-    // Quick connectivity check before attempting auth
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-    try {
-      console.log('[auth] Testing Supabase connectivity...');
-      const healthRes = await fetch(`${supabaseUrl}/auth/v1/health`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(10000),
-      });
-      console.log('[auth] Health check status:', healthRes.status);
-      if (!healthRes.ok) {
-        const body = await healthRes.text().catch(() => '');
-        console.error('[auth] Health check failed:', healthRes.status, body);
-        return { error: new Error(`Supabase auth service unavailable (HTTP ${healthRes.status}). The project may be paused — check your Supabase dashboard.`) };
-      }
-    } catch (healthErr) {
-      console.error('[auth] Health check error:', healthErr);
-      return { error: new Error('Cannot reach Supabase auth service. Check your Supabase dashboard — the project may be paused or the URL may be incorrect.') };
-    }
-
-    console.log('[auth] Supabase reachable, attempting sign in...');
+    console.log('[auth] Attempting sign in...');
+    const t0 = Date.now();
 
     try {
       const timeoutPromise = new Promise<never>((_, reject) => {
@@ -326,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const signInPromise = supabase.auth.signInWithPassword({ email, password });
       const result = await Promise.race([signInPromise, timeoutPromise]);
 
-      console.log('[auth] Sign in result:', result.error ? result.error.message : 'success');
+      console.log(`[auth] Sign in completed in ${Date.now() - t0}ms:`, result.error ? result.error.message : 'success');
 
       const { error } = result;
 
@@ -345,7 +327,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     } catch (error) {
       const err = error as Error;
-      console.error('[auth] Sign in exception:', err.message);
+      console.error(`[auth] Sign in exception after ${Date.now() - t0}ms:`, err.message);
       if (err.message.includes('timed out')) {
         return { error: err };
       }
