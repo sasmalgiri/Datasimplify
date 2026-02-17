@@ -14,10 +14,14 @@ import {
   LogOut,
   ArrowRight,
   Shield,
+  ShieldCheck,
+  Download,
 } from 'lucide-react';
 
+const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').filter(Boolean).map(e => e.trim().toLowerCase());
+
 export default function AccountPage() {
-  const { user, signOut, isLoading: authLoading } = useAuth();
+  const { user, profile, signOut, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const redirectedRef = useRef(false);
 
@@ -48,6 +52,8 @@ export default function AccountPage() {
     );
   }
 
+  const isAdmin = user.email ? ADMIN_EMAILS.includes(user.email.toLowerCase()) : false;
+
   const accountLinks = [
     {
       href: '/byok',
@@ -59,7 +65,9 @@ export default function AccountPage() {
     {
       href: '/pricing',
       title: 'Subscription',
-      description: 'View plans and manage your subscription (coming soon)',
+      description: profile?.subscription_tier === 'pro'
+        ? 'Pro plan active — manage your subscription'
+        : 'Free plan — upgrade to Pro for full access',
       icon: CreditCard,
       color: 'blue',
     },
@@ -70,6 +78,13 @@ export default function AccountPage() {
       icon: Settings,
       color: 'purple',
     },
+    ...(isAdmin ? [{
+      href: '/admin',
+      title: 'Admin Dashboard',
+      description: 'Manage users, subscriptions, and platform settings',
+      icon: ShieldCheck,
+      color: 'red' as const,
+    }] : []),
   ];
 
   const colorClasses: Record<string, { bg: string; icon: string; border: string }> = {
@@ -87,6 +102,11 @@ export default function AccountPage() {
       bg: 'bg-purple-500/10',
       icon: 'text-purple-600',
       border: 'border-purple-200 hover:border-purple-300',
+    },
+    red: {
+      bg: 'bg-red-500/10',
+      icon: 'text-red-600',
+      border: 'border-red-200 hover:border-red-300',
     },
   };
 
@@ -122,12 +142,61 @@ export default function AccountPage() {
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Account Information</h2>
               <p className="text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                Member since {new Date(user.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="text-sm text-gray-500">
+                  Member since {new Date(user.created_at).toLocaleDateString()}
+                </p>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  profile?.subscription_tier === 'pro'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {profile?.subscription_tier === 'pro' ? 'Pro' : 'Free Plan'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Usage Meter */}
+        {profile && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Download className="w-5 h-5 text-gray-600" />
+              <h3 className="font-semibold text-gray-900">Monthly Downloads</h3>
+            </div>
+            <div className="mb-2">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">
+                  {profile.downloads_this_month} of {profile.downloads_limit} used
+                </span>
+                <span className="text-gray-500">
+                  {Math.max(0, profile.downloads_limit - profile.downloads_this_month)} remaining
+                </span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div
+                  className={`h-2.5 rounded-full transition-all ${
+                    profile.downloads_this_month / profile.downloads_limit > 0.9
+                      ? 'bg-red-500'
+                      : profile.downloads_this_month / profile.downloads_limit > 0.7
+                        ? 'bg-yellow-500'
+                        : 'bg-emerald-500'
+                  }`}
+                  style={{ width: `${Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100)}%` }}
+                />
+              </div>
+            </div>
+            {profile.subscription_tier === 'free' && (
+              <p className="text-xs text-gray-500 mt-2">
+                Free plan: {profile.downloads_limit} downloads/month.{' '}
+                <Link href="/pricing" className="text-emerald-600 hover:text-emerald-700">
+                  Upgrade to Pro for 300/month
+                </Link>
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="space-y-4 mb-8">

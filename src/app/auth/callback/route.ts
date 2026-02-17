@@ -27,6 +27,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=no_code', requestUrl.origin));
   }
 
-  // Redirect to dashboard after successful login
-  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+  // Redirect to account page after successful verification
+  return NextResponse.redirect(new URL('/account', requestUrl.origin));
 }

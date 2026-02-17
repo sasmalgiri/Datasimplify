@@ -25,6 +25,7 @@ export interface AuthContextType {
   isConfigured: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithGoogle: () => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<{ error: Error | null }>;
@@ -115,6 +116,65 @@ function clearSessionCookies() {
   }
 }
 
+/** base64url decode */
+function fromBase64URL(str: string): string {
+  let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4 !== 0) b64 += '=';
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new TextDecoder().decode(bytes);
+}
+
+/**
+ * Read session directly from cookies as a fallback when
+ * getSession() fails or times out.
+ */
+function readSessionFromCookie(): Record<string, unknown> | null {
+  try {
+    const ref = getProjectRef();
+    if (!ref) return null;
+
+    const key = `sb-${ref}-auth-token`;
+    const cookies: Record<string, string> = {};
+    document.cookie.split(';').forEach(c => {
+      const [k, ...v] = c.trim().split('=');
+      if (k) cookies[k] = v.join('=');
+    });
+
+    // Try non-chunked cookie first
+    let encoded = cookies[key];
+
+    // Try chunked cookies
+    if (!encoded) {
+      const chunks: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const chunk = cookies[`${key}.${i}`];
+        if (!chunk) break;
+        chunks.push(chunk);
+      }
+      if (chunks.length > 0) {
+        encoded = chunks.join('');
+      }
+    }
+
+    if (!encoded) return null;
+
+    // Decode base64url
+    let decoded = encoded;
+    if (encoded.startsWith('base64-')) {
+      decoded = fromBase64URL(encoded.substring(7));
+    }
+
+    return JSON.parse(decoded);
+  } catch (e) {
+    console.warn('[auth] readSessionFromCookie failed:', e);
+    return null;
+  }
+}
+
 // ============================================
 // PROVIDER
 // ============================================
@@ -199,12 +259,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Try getSession with a 5-second timeout to avoid hanging on lock contention
+        let currentSession: Session | null = null;
 
-        if (session?.user) {
-          await fetchProfile(session.user.id, session.user.email);
+        try {
+          const { data } = await Promise.race([
+            supabase.auth.getSession(),
+            new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('getSession timeout')), 5000)
+            ),
+          ]);
+          currentSession = data.session;
+        } catch {
+          console.warn('[auth] getSession timed out, trying cookie fallback');
+        }
+
+        // Fallback: read session directly from cookies
+        if (!currentSession) {
+          const cookieData = readSessionFromCookie();
+          if (cookieData?.access_token && cookieData?.user) {
+            console.log('[auth] Using cookie fallback session');
+            currentSession = cookieData as unknown as Session;
+
+            // Try to register this session with the Supabase client (non-blocking)
+            supabase.auth.setSession({
+              access_token: cookieData.access_token as string,
+              refresh_token: cookieData.refresh_token as string,
+            }).catch(() => { /* ignore - we already have cookie data */ });
+          }
+        }
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id, currentSession.user.email);
         }
       } catch (error) {
         console.error('Auth init error:', error);
@@ -216,11 +305,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id, session.user.email);
+      async (_event, newSession) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        if (newSession?.user) {
+          await fetchProfile(newSession.user.id, newSession.user.email);
         } else {
           setProfile(null);
         }
@@ -228,6 +317,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     return () => subscription.unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
   // Sign up with email/password
@@ -265,6 +355,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data?.user) {
+        // Detect duplicate email: Supabase returns a user with empty identities
+        // when the email is already registered (instead of an error)
+        if (!data.user.identities || data.user.identities.length === 0) {
+          return { error: new Error('This email is already registered. Please sign in instead.') };
+        }
+
         try {
           const profilePromise = supabase
             .from('user_profiles')
@@ -359,6 +455,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Sign in with Google OAuth
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
+    }
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) {
+        return { error: new Error(error.message) };
+      }
+      return { error: null };
+    } catch (error) {
+      return { error: new Error('Google sign-in failed. Please try again.') };
+    }
+  };
+
   // Resend verification email
   const resendVerificationEmail = async (email: string) => {
     if (!supabase) {
@@ -440,7 +557,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user, profile, session, isLoading, isConfigured,
-        signUp, signIn, signOut, refreshProfile,
+        signUp, signIn, signInWithGoogle, signOut, refreshProfile,
         resendVerificationEmail, resetPassword,
         canDownload, remainingDownloads,
       }}

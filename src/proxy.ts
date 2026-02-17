@@ -221,7 +221,8 @@ function addSecurityHeaders(response: NextResponse, pathname: string): NextRespo
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const rawPathname = request.nextUrl.pathname;
+  const pathname = rawPathname === '/' ? '/' : rawPathname.replace(/\/+$/, '');
   const clientIp = getClientIp(request);
   const userAgent = request.headers.get('user-agent');
 

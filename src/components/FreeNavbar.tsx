@@ -19,6 +19,7 @@ import {
 
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
+import { useAuth } from '@/lib/auth';
 
 interface NavDropdownProps {
   label: string;
@@ -81,6 +82,7 @@ function NavDropdown({ label, icon, items, isActive }: NavDropdownProps) {
 export function FreeNavbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const isActive = (path: string) => pathname === path;
   const isInSection = (paths: string[]) => paths.some(p => pathname.startsWith(p));
@@ -181,12 +183,21 @@ export function FreeNavbar() {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
             <ViewModeToggle />
-            <Link
-              href="/login"
-              className="px-4 py-2 text-gray-300 hover:text-white transition"
-            >
-              Login
-            </Link>
+            {user ? (
+              <Link
+                href="/account"
+                className="px-4 py-2 text-emerald-400 hover:text-emerald-300 transition font-medium"
+              >
+                My Account
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="px-4 py-2 text-gray-300 hover:text-white transition"
+              >
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -221,13 +232,23 @@ export function FreeNavbar() {
             </div>
             <div className="flex gap-2 items-center">
               <ViewModeToggle />
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 py-2 text-center text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition"
-              >
-                Login
-              </Link>
+              {user ? (
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 py-2 text-center text-emerald-400 border border-emerald-600 rounded-lg hover:bg-emerald-700/20 transition font-medium"
+                >
+                  My Account
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 py-2 text-center text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         )}

@@ -180,8 +180,10 @@ export default function AdminPage() {
 
         {/* Search */}
         <form onSubmit={handleSearch} className="mb-6">
+          <label htmlFor="user-search" className="sr-only">Search users</label>
           <div className="flex gap-2">
             <input
+              id="user-search"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -333,10 +335,11 @@ export default function AdminPage() {
 
               <form onSubmit={handleUpdateUser} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor="subscription_tier" className="block text-sm font-medium text-gray-300 mb-1">
                     Subscription Tier
                   </label>
                   <select
+                    id="subscription_tier"
                     name="subscription_tier"
                     defaultValue={editingUser.subscription_tier}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
@@ -347,10 +350,11 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor="subscription_status" className="block text-sm font-medium text-gray-300 mb-1">
                     Subscription Status
                   </label>
                   <select
+                    id="subscription_status"
                     name="subscription_status"
                     defaultValue={editingUser.subscription_status || 'active'}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white"
@@ -364,10 +368,11 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor="downloads_limit" className="block text-sm font-medium text-gray-300 mb-1">
                     Downloads Limit
                   </label>
                   <input
+                    id="downloads_limit"
                     type="number"
                     name="downloads_limit"
                     defaultValue={editingUser.downloads_limit}
@@ -377,10 +382,11 @@ export default function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label htmlFor="reason" className="block text-sm font-medium text-gray-300 mb-1">
                     Reason for Change
                   </label>
                   <input
+                    id="reason"
                     type="text"
                     name="reason"
                     placeholder="e.g., Beta tester, Demo account, Support ticket #123"
