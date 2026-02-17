@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     email TEXT,
     subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'starter', 'pro', 'premium', 'business')),
     downloads_this_month INTEGER DEFAULT 0,
-    downloads_limit INTEGER DEFAULT 5,
+    downloads_limit INTEGER DEFAULT 30,
     stripe_customer_id TEXT,
     paddle_customer_id TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -72,7 +72,7 @@ BEGIN
         NEW.email,
         'free',
         0,
-        5,
+        30,
         NOW(),
         NOW()
     )
@@ -103,7 +103,7 @@ SELECT
     email,
     'free',
     0,
-    5
+    30
 FROM auth.users
 WHERE id NOT IN (SELECT id FROM public.user_profiles)
 ON CONFLICT (id) DO NOTHING;

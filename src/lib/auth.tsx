@@ -261,7 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               email: email,
               subscription_tier: 'free',
               downloads_this_month: 0,
-              downloads_limit: 5,
+              downloads_limit: 30,
             }, {
               onConflict: 'id',
               ignoreDuplicates: true

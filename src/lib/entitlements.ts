@@ -122,21 +122,28 @@ export async function getUserEntitlement(
   supabase: SupabaseClient,
   userId: string
 ): Promise<UserEntitlement | null> {
-  const { data: profile, error } = await supabase
+  // Query only columns guaranteed to exist; subscription_status may not exist yet
+  let profile: Record<string, unknown> | null = null;
+
+  const { data, error } = await supabase
     .from('user_profiles')
     .select(
-      'subscription_tier, subscription_status, downloads_limit, downloads_this_month'
+      'subscription_tier, downloads_limit, downloads_this_month'
     )
     .eq('id', userId)
     .maybeSingle();
 
-  if (error || !profile) {
+  if (error || !data) {
     return null;
   }
+  profile = data;
 
   const tier = (profile.subscription_tier || 'free') as SubscriptionTier;
-  const status = profile.subscription_status as SubscriptionStatus;
+  // subscription_status may not exist in DB yet — default to null (treated as active)
+  const status = (profile.subscription_status ?? null) as SubscriptionStatus;
   const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
+  const dlLimit = (profile.downloads_limit as number) || limits.downloads;
+  const dlUsed = (profile.downloads_this_month as number) || 0;
 
   const isActive = isStatusActive(status);
 
@@ -144,8 +151,8 @@ export async function getUserEntitlement(
     userId,
     tier,
     status,
-    downloadsLimit: profile.downloads_limit || limits.downloads,
-    downloadsUsed: profile.downloads_this_month || 0,
+    downloadsLimit: dlLimit,
+    downloadsUsed: dlUsed,
     scheduledExportsLimit: limits.scheduledExports,
     maxCoinsPerRequest: limits.maxCoinsPerRequest,
     maxOhlcvDays: limits.maxOhlcvDays,
@@ -154,10 +161,7 @@ export async function getUserEntitlement(
     dailyApiCallsRemaining: limits.dailyApiCalls,
     allowedFunctions: limits.allowedFunctions,
     canAccessProFeatures: isActive && limits.canAccessProFeatures,
-    canDownload:
-      isActive &&
-      (profile.downloads_this_month || 0) <
-        (profile.downloads_limit || limits.downloads),
+    canDownload: isActive && dlUsed < dlLimit,
     canScheduleExports: isActive && limits.canScheduleExports,
     canUsePacks: true, // All tiers can use packs (with limits)
     canUseFormulas: true, // All tiers can use formulas (with limits)

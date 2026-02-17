@@ -545,7 +545,7 @@ export default function LandingPage() {
                     'DCA simulator + BTC cycle comparison',
                     '60+ currency support',
                     '2-coin compare',
-                    '3 downloads/month',
+                    '30 downloads/month',
                     '30-day price history',
                     'Learn + Glossary',
                   ].map((f) => (
