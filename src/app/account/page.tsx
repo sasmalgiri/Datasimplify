@@ -267,12 +267,12 @@ export default function AccountPage() {
         {/* Support Info */}
         <div className="mt-8 pt-8 border-t border-gray-200 text-center">
           <p className="text-gray-600 text-sm mb-2">Need help with your account?</p>
-          <a
-            href="mailto:support@cryptoreportkit.com"
+          <Link
+            href="/contact"
             className="text-emerald-600 hover:text-emerald-700 font-medium"
           >
             Contact Support
-          </a>
+          </Link>
         </div>
       </main>
     </div>

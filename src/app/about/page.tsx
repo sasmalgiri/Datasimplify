@@ -193,12 +193,12 @@ export default function AboutPage() {
           <p className="text-gray-400 mb-4">
             We&apos;re happy to help with any questions about CryptoReportKit.
           </p>
-          <a
-            href="mailto:support@cryptoreportkit.com"
+          <Link
+            href="/contact"
             className="inline-block px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
           >
             Contact Us
-          </a>
+          </Link>
         </section>
 
         {/* Back Link */}
