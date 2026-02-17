@@ -297,39 +297,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
 
-    console.log('[auth] Attempting sign in...');
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+    const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+
+    console.log('[auth] Attempting sign in via direct fetch...');
     const t0 = Date.now();
 
     try {
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Login timed out after 30s. Please try again.')), 30000);
+      // Direct fetch to Supabase auth — bypasses JS client for reliability
+      const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(30000),
       });
 
-      const signInPromise = supabase.auth.signInWithPassword({ email, password });
-      const result = await Promise.race([signInPromise, timeoutPromise]);
+      const data = await res.json();
+      console.log(`[auth] Response in ${Date.now() - t0}ms, status: ${res.status}`);
 
-      console.log(`[auth] Sign in completed in ${Date.now() - t0}ms:`, result.error ? result.error.message : 'success');
+      if (!res.ok) {
+        const msg = data?.error_description || data?.msg || data?.error || 'Login failed';
+        console.error('[auth] Error:', msg);
 
-      const { error } = result;
-
-      if (error) {
-        if (error.message.includes('Invalid API key')) {
-          return { error: new Error('Server configuration error. Please contact support.') };
-        }
-        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
-          return { error: new Error('EMAIL_NOT_VERIFIED') };
-        }
-        if (error.message.includes('Invalid login credentials')) {
+        if (msg.includes('Invalid login credentials')) {
           return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
         }
-        return { error: new Error(error.message) };
+        if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
+          return { error: new Error('EMAIL_NOT_VERIFIED') };
+        }
+        return { error: new Error(msg) };
       }
+
+      // Got tokens — set the session in the Supabase client
+      if (data.access_token && data.refresh_token) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+        if (sessionError) {
+          console.error('[auth] setSession error:', sessionError.message);
+          return { error: new Error(sessionError.message) };
+        }
+      }
+
+      console.log(`[auth] Sign in success in ${Date.now() - t0}ms`);
       return { error: null };
     } catch (error) {
       const err = error as Error;
-      console.error(`[auth] Sign in exception after ${Date.now() - t0}ms:`, err.message);
-      if (err.message.includes('timed out')) {
-        return { error: err };
+      console.error(`[auth] Exception after ${Date.now() - t0}ms:`, err.message);
+      if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('timeout')) {
+        return { error: new Error('Login timed out. Supabase may be waking up — please try again in a few seconds.') };
       }
       return { error: new Error('Login failed. Please try again.') };
     }
