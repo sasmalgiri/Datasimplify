@@ -20,6 +20,7 @@ import type { NextRequest } from 'next/server';
  * Everything else redirects to /login?redirect=<path>
  */
 const PUBLIC_ROUTES = new Set([
+  // Core pages
   '/',
   '/about',
   '/byok',
@@ -38,6 +39,36 @@ const PUBLIC_ROUTES = new Set([
   '/status',
   '/template-requirements',
   '/terms',
+  // Public content pages
+  '/market',
+  '/trending',
+  '/screener',
+  '/compare',
+  '/download',
+  '/downloads',
+  '/charts',
+  '/glossary',
+  '/learn',
+  '/research',
+  '/sentiment',
+  '/heatmap',
+  '/defi',
+  '/categories',
+  '/gainers-losers',
+  '/dex-pools',
+  '/recently-added',
+  '/templates',
+  '/tools',
+  '/social',
+  '/technical',
+  '/etf',
+  '/correlation',
+  '/risk',
+  '/rwa',
+  '/smart-contract-verifier',
+  '/wizard',
+  '/builder',
+  '/analyst-hub',
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -51,6 +82,14 @@ const PUBLIC_PREFIXES = [
   '/icons/',
   '/images/',
   '/assets/',
+  // Dynamic public routes
+  '/coin/',
+  '/templates/',
+  '/excel-templates/',
+  '/live-dashboards/',
+  '/charts/',
+  '/tools/',
+  '/demo/',
 ];
 
 function isPublicRoute(pathname: string): boolean {
@@ -208,39 +247,45 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Authentication wall — require login for all non-public pages
-  if (!isPublicRoute(pathname)) {
-    let response = NextResponse.next({
-      request: { headers: request.headers },
-    });
+  // 3. Supabase session refresh — runs on ALL routes so cookies stay valid
+  let supabaseResponse = NextResponse.next({ request });
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              request.cookies.set(name, value);
-              response.cookies.set(name, value, options);
-            });
-          },
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (supabaseUrl && supabaseAnonKey) {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
         },
       },
-    );
+    });
 
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    // Authentication wall — require login for non-public pages
+    if (!isPublicRoute(pathname) && !user) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
+  } else if (!isPublicRoute(pathname)) {
+    // No Supabase configured — block protected routes
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // 4. Block suspicious paths (common attack vectors)
@@ -289,16 +334,13 @@ export async function proxy(request: NextRequest) {
   // 6. Rate limit check for downloads (simple edge-based check)
   // Note: This is supplementary to the API-level rate limiting
   if (pathname === '/api/templates/download' && request.method === 'POST') {
-    // Add custom header to track edge processing
-    const response = NextResponse.next();
-    response.headers.set('X-Edge-Processed', 'true');
-    response.headers.set('X-Client-IP', clientIp);
-    return addSecurityHeaders(response, pathname);
+    supabaseResponse.headers.set('X-Edge-Processed', 'true');
+    supabaseResponse.headers.set('X-Client-IP', clientIp);
+    return addSecurityHeaders(supabaseResponse, pathname);
   }
 
-  // 7. Add security headers to all responses
-  const response = NextResponse.next();
-  return addSecurityHeaders(response, pathname);
+  // 7. Add security headers to all responses (use supabaseResponse to preserve refreshed cookies)
+  return addSecurityHeaders(supabaseResponse, pathname);
 }
 
 // Configure which routes the middleware applies to

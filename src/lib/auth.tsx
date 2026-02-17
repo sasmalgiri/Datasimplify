@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
+import { type SupabaseClient, type User, type Session } from '@supabase/supabase-js';
+import { createClient as createBrowserClient } from '@/lib/supabase/client';
 
 // ============================================
 // TYPES
@@ -39,43 +40,11 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // ============================================
-// SUPABASE CLIENT (with trimmed env vars)
+// SUPABASE CLIENT (SSR-compatible, cookie-based)
 // ============================================
 
-// Module-level singleton — ensures only ONE GoTrueClient exists in the browser
-let _cachedClient: SupabaseClient | null | undefined;
-
 const getSupabaseClient = (): SupabaseClient | null => {
-  if (_cachedClient !== undefined) return _cachedClient;
-
-  // Trim whitespace from env vars (common issue when copying to Vercel)
-  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-  const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
-
-  // Validate
-  if (!url || !key) {
-    _cachedClient = null;
-    return null;
-  }
-
-  if (!url.includes('supabase.co')) {
-    _cachedClient = null;
-    return null;
-  }
-
-  if (!key.startsWith('eyJ')) {
-    _cachedClient = null;
-    return null;
-  }
-
-  try {
-    _cachedClient = createClient(url, key);
-    return _cachedClient;
-  } catch (error) {
-    console.error('Failed to create Supabase client:', error);
-    _cachedClient = null;
-    return null;
-  }
+  return createBrowserClient() as SupabaseClient | null;
 };
 
 // ============================================
@@ -297,58 +266,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
 
-    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-    const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
-
-    console.log('[auth] Attempting sign in via direct fetch...');
-    const t0 = Date.now();
-
     try {
-      // Direct fetch to Supabase auth — bypasses JS client for reliability
-      const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ email, password }),
-        signal: AbortSignal.timeout(30000),
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-      const data = await res.json();
-      console.log(`[auth] Response in ${Date.now() - t0}ms, status: ${res.status}`);
-
-      if (!res.ok) {
-        const msg = data?.error_description || data?.msg || data?.error || 'Login failed';
-        console.error('[auth] Error:', msg);
-
-        if (msg.includes('Invalid login credentials')) {
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
           return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
         }
-        if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
+        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
           return { error: new Error('EMAIL_NOT_VERIFIED') };
         }
-        return { error: new Error(msg) };
+        return { error: new Error(error.message) };
       }
 
-      // Got tokens — set the session in the Supabase client
-      if (data.access_token && data.refresh_token) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        if (sessionError) {
-          console.error('[auth] setSession error:', sessionError.message);
-          return { error: new Error(sessionError.message) };
-        }
-      }
-
-      console.log(`[auth] Sign in success in ${Date.now() - t0}ms`);
       return { error: null };
     } catch (error) {
       const err = error as Error;
-      console.error(`[auth] Exception after ${Date.now() - t0}ms:`, err.message);
       if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('timeout')) {
         return { error: new Error('Login timed out. Supabase may be waking up — please try again in a few seconds.') };
       }

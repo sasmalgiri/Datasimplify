@@ -19,7 +19,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const redirect = searchParams.get('redirect') || '/account';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
