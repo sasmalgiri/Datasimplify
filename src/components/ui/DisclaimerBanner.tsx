@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { FEATURES } from '@/lib/featureFlags';
 
@@ -14,12 +14,16 @@ export default function DisclaimerBanner() {
     ...(FEATURES.whales ? ['Etherscan', 'Blockchair'] : []),
   ];
 
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const accepted = window.localStorage.getItem(DISCLAIMER_KEY);
-    return !accepted;
-  });
+  // Start hidden (matches server render) — show after mount if not accepted
+  const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    const accepted = window.localStorage.getItem(DISCLAIMER_KEY);
+    if (!accepted) {
+      setIsVisible(true);
+    }
+  }, []);
 
   const handleAccept = () => {
     setIsClosing(true);

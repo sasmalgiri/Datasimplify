@@ -21,17 +21,17 @@ function readConsent(): CookieConsent | null {
 }
 
 export default function AnalyticsGate() {
-  const [enabled, setEnabled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const consent = readConsent();
-    return Boolean(consent?.analytics);
-  });
+  // Start disabled (matches server render) — read consent in useEffect
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     const sync = () => {
       const updated = readConsent();
       setEnabled(Boolean(updated?.analytics));
     };
+
+    // Initial read
+    sync();
 
     const onStorage = (e: StorageEvent) => {
       if (e.key !== 'cookie-consent') return;

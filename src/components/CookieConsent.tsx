@@ -7,35 +7,31 @@ import Link from 'next/link';
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
-  const [preferences, setPreferences] = useState(() => {
-    if (typeof window === 'undefined') {
-      return { necessary: true, analytics: false, marketing: false };
-    }
-    const consent = window.localStorage.getItem('cookie-consent');
-    if (!consent) return { necessary: true, analytics: false, marketing: false };
-
-    try {
-      return JSON.parse(consent) as { necessary: boolean; analytics: boolean; marketing: boolean };
-    } catch {
-      return { necessary: true, analytics: false, marketing: false };
-    }
-  });
+  // Start with server-safe defaults — read localStorage in useEffect to avoid hydration mismatch
+  const [preferences, setPreferences] = useState({ necessary: true, analytics: false, marketing: false });
 
   useEffect(() => {
-    // Show banner only if no consent exists; delay to avoid layout shift.
+    // Read saved preferences from localStorage
     const consent = window.localStorage.getItem('cookie-consent');
+    if (consent) {
+      try {
+        setPreferences(JSON.parse(consent) as { necessary: boolean; analytics: boolean; marketing: boolean });
+      } catch {
+        // keep defaults
+      }
+    }
+
+    // Show banner only if no consent exists; delay to avoid layout shift.
     if (!consent) {
       const timeout = setTimeout(() => setShowBanner(true), 1000);
       return () => clearTimeout(timeout);
     }
 
     // Make showCookieSettings function globally available
-    if (typeof window !== 'undefined') {
-      (window as any).showCookieSettings = () => {
-        setShowPreferences(true);
-        setShowBanner(true);
-      };
-    }
+    (window as any).showCookieSettings = () => {
+      setShowPreferences(true);
+      setShowBanner(true);
+    };
   }, []);
 
   const broadcastConsentChange = () => {

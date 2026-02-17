@@ -42,31 +42,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // SUPABASE CLIENT (with trimmed env vars)
 // ============================================
 
+// Module-level singleton — ensures only ONE GoTrueClient exists in the browser
+let _cachedClient: SupabaseClient | null | undefined;
+
 const getSupabaseClient = (): SupabaseClient | null => {
+  if (_cachedClient !== undefined) return _cachedClient;
+
   // Trim whitespace from env vars (common issue when copying to Vercel)
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
   const key = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
-  
+
   // Validate
   if (!url || !key) {
-    console.log('Supabase not configured: missing URL or key');
+    _cachedClient = null;
     return null;
   }
-  
+
   if (!url.includes('supabase.co')) {
-    console.log('Supabase not configured: invalid URL');
+    _cachedClient = null;
     return null;
   }
-  
+
   if (!key.startsWith('eyJ')) {
-    console.log('Supabase not configured: invalid key format');
+    _cachedClient = null;
     return null;
   }
-  
+
   try {
-    return createClient(url, key);
+    _cachedClient = createClient(url, key);
+    return _cachedClient;
   } catch (error) {
     console.error('Failed to create Supabase client:', error);
+    _cachedClient = null;
     return null;
   }
 };
