@@ -147,10 +147,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Timeout getSession to prevent blocking the UI if Supabase is slow
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 5000)
+        );
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
           await fetchProfile(session.user.id, session.user.email);
         }
@@ -261,27 +267,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Sign in with email/password
+  // Uses direct fetch (with timeout) then sets session on SSR client (cookies)
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+    const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
 
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+    console.log('[auth] signIn: starting direct fetch...');
+    const t0 = Date.now();
+
+    try {
+      // Direct fetch with explicit timeout — avoids Supabase client lock contention
+      const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ email, password }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      const data = await res.json();
+      console.log(`[auth] signIn: response ${res.status} in ${Date.now() - t0}ms`);
+
+      if (!res.ok) {
+        const msg = data?.error_description || data?.msg || data?.error || 'Login failed';
+
+        if (msg.includes('Invalid login credentials')) {
           return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
         }
-        if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+        if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
           return { error: new Error('EMAIL_NOT_VERIFIED') };
         }
-        return { error: new Error(error.message) };
+        return { error: new Error(msg) };
       }
 
+      // Set session on SSR-compatible client — stores in cookies for proxy.ts
+      if (data.access_token && data.refresh_token) {
+        console.log('[auth] signIn: setting session on SSR client...');
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+        });
+        if (sessionError) {
+          console.error('[auth] signIn: setSession error:', sessionError.message);
+          return { error: new Error(sessionError.message) };
+        }
+      }
+
+      console.log(`[auth] signIn: complete in ${Date.now() - t0}ms`);
       return { error: null };
     } catch (error) {
       const err = error as Error;
+      console.error(`[auth] signIn: exception after ${Date.now() - t0}ms:`, err.message);
       if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('timeout')) {
         return { error: new Error('Login timed out. Supabase may be waking up — please try again in a few seconds.') };
       }
