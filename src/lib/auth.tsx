@@ -297,23 +297,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
 
-    const attemptSignIn = async () => {
+    // Quick connectivity check before attempting auth
+    const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+    try {
+      console.log('[auth] Testing Supabase connectivity...');
+      const healthRes = await fetch(`${supabaseUrl}/auth/v1/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000),
+      });
+      console.log('[auth] Health check status:', healthRes.status);
+      if (!healthRes.ok) {
+        const body = await healthRes.text().catch(() => '');
+        console.error('[auth] Health check failed:', healthRes.status, body);
+        return { error: new Error(`Supabase auth service unavailable (HTTP ${healthRes.status}). The project may be paused — check your Supabase dashboard.`) };
+      }
+    } catch (healthErr) {
+      console.error('[auth] Health check error:', healthErr);
+      return { error: new Error('Cannot reach Supabase auth service. Check your Supabase dashboard — the project may be paused or the URL may be incorrect.') };
+    }
+
+    console.log('[auth] Supabase reachable, attempting sign in...');
+
+    try {
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Login timed out. Please check your connection and try again.')), 30000);
+        setTimeout(() => reject(new Error('Login timed out after 30s. Please try again.')), 30000);
       });
 
       const signInPromise = supabase.auth.signInWithPassword({ email, password });
-      return Promise.race([signInPromise, timeoutPromise]);
-    };
+      const result = await Promise.race([signInPromise, timeoutPromise]);
 
-    try {
-      let result;
-      try {
-        result = await attemptSignIn();
-      } catch (firstErr) {
-        // First attempt timed out — Supabase may be waking from cold start; retry once
-        result = await attemptSignIn();
-      }
+      console.log('[auth] Sign in result:', result.error ? result.error.message : 'success');
 
       const { error } = result;
 
@@ -332,6 +345,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     } catch (error) {
       const err = error as Error;
+      console.error('[auth] Sign in exception:', err.message);
       if (err.message.includes('timed out')) {
         return { error: err };
       }
