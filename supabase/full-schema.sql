@@ -33,12 +33,13 @@ CREATE TABLE IF NOT EXISTS profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Subscriptions (Paddle)
+-- Subscriptions (FastSpring)
 CREATE TABLE IF NOT EXISTS subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    paddle_subscription_id TEXT UNIQUE,
-    paddle_customer_id TEXT,
+    payment_subscription_id TEXT UNIQUE,
+    payment_customer_id TEXT,
+    payment_provider TEXT DEFAULT 'fastspring',
     status TEXT DEFAULT 'inactive' CHECK (status IN ('active', 'cancelled', 'paused', 'past_due', 'inactive')),
     tier TEXT NOT NULL,
     price_id TEXT,

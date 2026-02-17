@@ -10,8 +10,9 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'starter', 'pro', 'premium', 'business')),
     downloads_this_month INTEGER DEFAULT 0,
     downloads_limit INTEGER DEFAULT 30,
-    stripe_customer_id TEXT,
-    paddle_customer_id TEXT,
+    payment_customer_id TEXT,
+    payment_subscription_id TEXT,
+    payment_provider TEXT,  -- e.g. 'fastspring'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

@@ -20,9 +20,10 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     downloads_this_month INTEGER DEFAULT 0,
     downloads_limit INTEGER DEFAULT 5,
     
-    -- Stripe
-    stripe_customer_id TEXT,
-    stripe_subscription_id TEXT,
+    -- Payment provider (FastSpring)
+    payment_customer_id TEXT,
+    payment_subscription_id TEXT,
+    payment_provider TEXT,  -- e.g. 'fastspring'
     
     -- Metadata
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

@@ -97,7 +97,7 @@ missing_cols AS (
   FROM unnest(ARRAY[
     'id', 'email', 'subscription_tier', 'subscription_status',
     'downloads_this_month', 'downloads_limit',
-    'stripe_customer_id', 'paddle_customer_id',
+    'payment_customer_id', 'payment_subscription_id', 'payment_provider',
     'created_at', 'updated_at'
   ]) AS col
 ),

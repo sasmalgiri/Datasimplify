@@ -25,15 +25,16 @@ CREATE TABLE IF NOT EXISTS report_recipes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Subscription State (synced from Paddle)
+-- Subscription State (synced from FastSpring)
 -- Note: profiles table already exists with plan column
--- This table adds Paddle-specific fields for detailed tracking
+-- This table adds payment-provider fields for detailed tracking
 CREATE TABLE IF NOT EXISTS subscription_state (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'premium')),
-  paddle_subscription_id TEXT,
-  paddle_customer_id TEXT,
+  payment_subscription_id TEXT,
+  payment_customer_id TEXT,
+  payment_provider TEXT DEFAULT 'fastspring',
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'past_due', 'cancelled', 'paused', 'trialing')),
   current_period_end TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),

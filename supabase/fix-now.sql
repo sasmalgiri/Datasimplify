@@ -18,14 +18,76 @@ LEFT JOIN public.user_profiles p ON u.id = p.id
 WHERE p.id IS NULL
 ON CONFLICT (id) DO NOTHING;
 
--- 2. ADD MISSING paddle_customer_id COLUMN
+-- 2. RENAME STRIPE/PADDLE COLUMNS TO GENERIC PAYMENT COLUMNS
+-- (We use FastSpring — column names should be provider-agnostic)
 DO $$
 BEGIN
+  -- Rename stripe_customer_id → payment_customer_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'stripe_customer_id'
+  ) THEN
+    ALTER TABLE public.user_profiles RENAME COLUMN stripe_customer_id TO payment_customer_id;
+  ELSIF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'payment_customer_id'
+  ) THEN
+    ALTER TABLE public.user_profiles ADD COLUMN payment_customer_id TEXT DEFAULT NULL;
+  END IF;
+
+  -- Rename stripe_subscription_id → payment_subscription_id
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'stripe_subscription_id'
+  ) THEN
+    ALTER TABLE public.user_profiles RENAME COLUMN stripe_subscription_id TO payment_subscription_id;
+  ELSIF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'payment_subscription_id'
+  ) THEN
+    ALTER TABLE public.user_profiles ADD COLUMN payment_subscription_id TEXT DEFAULT NULL;
+  END IF;
+
+  -- Add payment_provider column (e.g. 'fastspring')
   IF NOT EXISTS (
     SELECT 1 FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'paddle_customer_id'
+    WHERE table_schema = 'public' AND table_name = 'user_profiles' AND column_name = 'payment_provider'
   ) THEN
-    ALTER TABLE public.user_profiles ADD COLUMN paddle_customer_id TEXT DEFAULT NULL;
+    ALTER TABLE public.user_profiles ADD COLUMN payment_provider TEXT DEFAULT NULL;
+  END IF;
+END $$;
+
+-- Also fix subscriptions table if it has paddle-specific columns
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'subscriptions' AND column_name = 'paddle_subscription_id'
+  ) THEN
+    ALTER TABLE public.subscriptions RENAME COLUMN paddle_subscription_id TO payment_subscription_id;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'subscriptions' AND column_name = 'paddle_customer_id'
+  ) THEN
+    ALTER TABLE public.subscriptions RENAME COLUMN paddle_customer_id TO payment_customer_id;
+  END IF;
+END $$;
+
+-- Also fix subscription_state table if it has paddle-specific columns
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'subscription_state' AND column_name = 'paddle_subscription_id'
+  ) THEN
+    ALTER TABLE public.subscription_state RENAME COLUMN paddle_subscription_id TO payment_subscription_id;
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'subscription_state' AND column_name = 'paddle_customer_id'
+  ) THEN
+    ALTER TABLE public.subscription_state RENAME COLUMN paddle_customer_id TO payment_customer_id;
   END IF;
 END $$;
 
