@@ -217,9 +217,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
-      // Add timeout to prevent hanging
+      // Add timeout to prevent hanging (30s for Supabase cold start)
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 15000);
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 30000);
       });
 
       const signUpPromise = supabase.auth.signUp({
@@ -296,28 +296,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
+
+    const attemptSignIn = async () => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Login timed out. Please check your connection and try again.')), 30000);
+      });
+
+      const signInPromise = supabase.auth.signInWithPassword({ email, password });
+      return Promise.race([signInPromise, timeoutPromise]);
+    };
+
     try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<{ error: Error }>((_, reject) => {
-        setTimeout(() => reject(new Error('Login timed out. Please check your connection and try again.')), 15000);
-      });
-
-      const signInPromise = supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      const result = await Promise.race([signInPromise, timeoutPromise]);
-
-      // Check if it was the timeout
-      if ('error' in result && result.error instanceof Error && result.error.message.includes('timed out')) {
-        return { error: result.error };
+      let result;
+      try {
+        result = await attemptSignIn();
+      } catch (firstErr) {
+        // First attempt timed out — Supabase may be waking from cold start; retry once
+        result = await attemptSignIn();
       }
 
-      const { error } = result as Awaited<typeof signInPromise>;
+      const { error } = result;
 
       if (error) {
-        // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
           return { error: new Error('Server configuration error. Please contact support.') };
         }
