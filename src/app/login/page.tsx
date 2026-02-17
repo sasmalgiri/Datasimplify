@@ -38,11 +38,12 @@ function LoginForm() {
       }
       setIsLoading(false);
     } else {
-      // Redirect to checkout if plan selected, otherwise dashboard
+      // Full page redirect after login (more reliable than client-side router.push
+      // since auth state needs to propagate to server components)
       if (plan) {
-        router.push(`/pricing?plan=${plan}&checkout=true`);
+        window.location.href = `/pricing?plan=${plan}&checkout=true`;
       } else {
-        router.push(redirect);
+        window.location.href = redirect;
       }
     }
   };
