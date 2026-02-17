@@ -4,23 +4,12 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
-import { BarChart3, Lock, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield } from 'lucide-react';
+import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield } from 'lucide-react';
 import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
 
 function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
-  const isFree = dashboard.tier === 'free';
-
   return (
     <div className={`group relative ${GLOW_CARD_CLASSES} p-6 flex flex-col`}>
-      {/* Tier badge */}
-      <div className="absolute top-4 right-4">
-        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-          isFree ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 'bg-purple-400/10 text-purple-400 border border-purple-400/20'
-        }`}>
-          {dashboard.tier}
-        </span>
-      </div>
-
       {/* Icon */}
       <div className="text-4xl mb-4">{dashboard.icon}</div>
 
@@ -38,30 +27,18 @@ function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
       </div>
 
       {/* Action button */}
-      {isFree ? (
-        <Link
-          href={`/live-dashboards/${dashboard.slug}`}
-          className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/20 text-emerald-400 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
-        >
-          Launch Dashboard
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      ) : (
-        <Link
-          href={`/live-dashboards/${dashboard.slug}`}
-          className="w-full bg-purple-500/10 hover:bg-purple-500/20 border border-purple-400/20 text-purple-400 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
-        >
-          <Lock className="w-3 h-3" />
-          Preview (Pro)
-        </Link>
-      )}
+      <Link
+        href={`/live-dashboards/${dashboard.slug}`}
+        className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/20 text-emerald-400 font-medium py-2.5 rounded-xl transition flex items-center justify-center gap-2 text-sm"
+      >
+        Launch Dashboard
+        <ArrowRight className="w-4 h-4" />
+      </Link>
     </div>
   );
 }
 
 export default function LiveDashboardsPage() {
-  const freeDashboards = LIVE_DASHBOARDS.filter((d) => d.tier === 'free');
-  const proDashboards = LIVE_DASHBOARDS.filter((d) => d.tier === 'pro');
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -107,39 +84,21 @@ export default function LiveDashboardsPage() {
           ))}
         </div>
 
-        {/* Free dashboards */}
+        {/* All dashboards */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 bg-emerald-400 rounded-full" />
             <div>
-              <h2 className="text-xl font-bold text-white">Free Dashboards</h2>
-              <p className="text-gray-600 text-sm">{freeDashboards.length} dashboards available with any CoinGecko API key</p>
+              <h2 className="text-xl font-bold text-white">All Dashboards</h2>
+              <p className="text-gray-600 text-sm">{LIVE_DASHBOARDS.length} dashboards available with any CoinGecko API key</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {freeDashboards.map((d) => (
+            {LIVE_DASHBOARDS.map((d) => (
               <DashboardCard key={d.slug} dashboard={d} />
             ))}
           </div>
         </section>
-
-        {/* Pro dashboards */}
-        {proDashboards.length > 0 && (
-          <section className="mb-16">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-1 h-8 bg-purple-400 rounded-full" />
-              <div>
-                <h2 className="text-xl font-bold text-white">Pro Dashboards</h2>
-                <p className="text-gray-600 text-sm">{proDashboards.length} advanced dashboards for deeper analysis</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {proDashboards.map((d) => (
-                <DashboardCard key={d.slug} dashboard={d} />
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Bottom CTA */}
         <div className="text-center py-10 border-t border-white/[0.04]">

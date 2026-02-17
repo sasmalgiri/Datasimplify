@@ -292,12 +292,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
+        // IMPORTANT: Set loading false BEFORE profile fetch so pages render immediately.
+        // Profile loads in the background — pages that need it can check profile != null.
+        setIsLoading(false);
+
         if (currentSession?.user) {
-          await fetchProfile(currentSession.user.id, currentSession.user.email);
+          // Non-blocking profile fetch with timeout
+          Promise.race([
+            fetchProfile(currentSession.user.id, currentSession.user.email),
+            new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+          ]).catch(() => {});
         }
       } catch (error) {
         console.error('Auth init error:', error);
-      } finally {
         setIsLoading(false);
       }
     };

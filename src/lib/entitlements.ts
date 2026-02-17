@@ -57,24 +57,24 @@ export interface EntitlementCheckResult {
 export const PLAN_LIMITS = {
   free: {
     dailyApiCalls: 100,
-    dailyAiQueries: 0,
-    maxAlerts: 0,
+    dailyAiQueries: 100,
+    maxAlerts: 10,
     downloads: 30,
-    scheduledExports: 0,
-    maxCoinsPerRequest: 10,
-    maxOhlcvDays: 30,         // 30-day history cap
-    maxDashboardWidgets: 5,   // KPI, PriceChart, TopCoins, FearGreed, Trending
-    maxCompareCoins: 2,       // Simple mode only
-    canAccessProFeatures: false,
-    canScheduleExports: false,
-    canUseAdvancedCharts: false,
-    canUseDeepFilters: false,
-    allowedFunctions: 'basic' as const,
-    allowedExportFormats: ['png'] as ExportFormat[],
-    exportScale: 1,
-    exportWatermark: true,
-    exportCustomization: false,
-    bulkExport: false,
+    scheduledExports: 5,
+    maxCoinsPerRequest: 100,
+    maxOhlcvDays: 730,
+    maxDashboardWidgets: 999, // All widgets accessible
+    maxCompareCoins: 10,
+    canAccessProFeatures: true,
+    canScheduleExports: true,
+    canUseAdvancedCharts: true,
+    canUseDeepFilters: true,
+    allowedFunctions: 'all' as const,
+    allowedExportFormats: ['pdf', 'png', 'excel', 'csv'] as ExportFormat[],
+    exportScale: 2,
+    exportWatermark: false,
+    exportCustomization: true,
+    bulkExport: false,        // Only Pro gets bulk export
   },
   pro: {
     dailyApiCalls: 10000,

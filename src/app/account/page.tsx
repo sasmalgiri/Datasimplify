@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -24,29 +24,34 @@ export default function AccountPage() {
   const { user, profile, signOut, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const redirectedRef = useRef(false);
+  const [timedOut, setTimedOut] = useState(false);
+
+  // Hard timeout: if auth takes more than 4 seconds, stop waiting
+  useEffect(() => {
+    const timer = setTimeout(() => setTimedOut(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
-    // Only redirect if auth is done loading and there's no user
-    if (!authLoading && !user && !redirectedRef.current) {
+    // Redirect if auth is done (or timed out) and there's no user
+    if ((!authLoading || timedOut) && !user && !redirectedRef.current) {
       redirectedRef.current = true;
       router.push('/login');
     }
-  }, [user, authLoading, router]);
-
-  const isLoading = authLoading;
+  }, [user, authLoading, timedOut, router]);
 
   const handleSignOut = async () => {
     await signOut();
     router.push('/');
   };
 
-  if (isLoading || !user) {
+  if ((authLoading && !timedOut) || !user) {
     return (
       <div className="min-h-screen bg-gray-50">
         <FreeNavbar />
         <Breadcrumb />
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">Loading...</div>
+          <div className="text-gray-600">{timedOut ? 'Redirecting to login...' : 'Loading...'}</div>
         </div>
       </div>
     );
