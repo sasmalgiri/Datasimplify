@@ -48,6 +48,74 @@ const getSupabaseClient = (): SupabaseClient | null => {
 };
 
 // ============================================
+// COOKIE HELPERS — write auth cookies directly
+// so the Edge proxy can read them without
+// needing setSession (which acquires a lock).
+// ============================================
+
+function getProjectRef(): string {
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  try {
+    return new URL(url).hostname.split('.')[0];
+  } catch {
+    return '';
+  }
+}
+
+/** base64url encode (no padding) */
+function toBase64URL(str: string): string {
+  const b64 = btoa(
+    new Uint8Array(new TextEncoder().encode(str)).reduce(
+      (s, b) => s + String.fromCharCode(b), ''
+    )
+  );
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+const CHUNK_SIZE = 3180;
+
+/**
+ * Write Supabase auth session cookies in the exact format
+ * that @supabase/ssr createServerClient reads.
+ */
+function writeSessionCookies(sessionJson: string) {
+  const ref = getProjectRef();
+  if (!ref) return;
+
+  const key = `sb-${ref}-auth-token`;
+  const encoded = `base64-${toBase64URL(sessionJson)}`;
+  const maxAge = 400 * 24 * 60 * 60; // ~400 days
+  const opts = `path=/;max-age=${maxAge};SameSite=Lax`;
+
+  // Remove any old chunks first (up to 10)
+  for (let i = 0; i < 10; i++) {
+    document.cookie = `${key}.${i}=;path=/;max-age=0`;
+  }
+  document.cookie = `${key}=;path=/;max-age=0`;
+
+  if (encoded.length <= CHUNK_SIZE) {
+    document.cookie = `${key}=${encoded};${opts}`;
+  } else {
+    // Chunk it
+    const chunks = Math.ceil(encoded.length / CHUNK_SIZE);
+    for (let i = 0; i < chunks; i++) {
+      const chunk = encoded.substring(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+      document.cookie = `${key}.${i}=${chunk};${opts}`;
+    }
+  }
+}
+
+function clearSessionCookies() {
+  const ref = getProjectRef();
+  if (!ref) return;
+  const key = `sb-${ref}-auth-token`;
+  document.cookie = `${key}=;path=/;max-age=0`;
+  for (let i = 0; i < 10; i++) {
+    document.cookie = `${key}.${i}=;path=/;max-age=0`;
+  }
+}
+
+// ============================================
 // PROVIDER
 // ============================================
 
@@ -70,69 +138,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
 
     try {
-      // Use maybeSingle() to avoid 406 error when no row exists
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
       if (data) {
-        // Profile exists — use it
         setProfile(data);
         return;
       }
 
-      // Profile doesn't exist (data is null) or there was an error — try to create it
-      if (!data) {
-        try {
-          const { data: newProfile, error: insertError } = await supabase
-            .from('user_profiles')
-            .upsert({
-              id: userId,
-              email: userEmail || '',
-              subscription_tier: 'free',
-              downloads_this_month: 0,
-              downloads_limit: downloadLimits.free,
-            }, { onConflict: 'id' })
-            .select()
-            .maybeSingle();
-
-          if (newProfile) {
-            setProfile(newProfile);
-          } else if (insertError) {
-            console.warn('Could not create profile:', insertError.message);
-            // Set a minimal local profile so the app still works
-            setProfile({
-              id: userId,
-              email: userEmail || '',
-              subscription_tier: 'free',
-              downloads_this_month: 0,
-              downloads_limit: downloadLimits.free,
-              created_at: new Date().toISOString(),
-            } as UserProfile);
-          }
-        } catch {
-          // Fallback: set minimal profile to avoid blocking the UI
-          setProfile({
+      // Profile doesn't exist — try to create it
+      try {
+        const { data: newProfile, error: insertError } = await supabase
+          .from('user_profiles')
+          .upsert({
             id: userId,
             email: userEmail || '',
             subscription_tier: 'free',
             downloads_this_month: 0,
             downloads_limit: downloadLimits.free,
+          }, { onConflict: 'id' })
+          .select()
+          .maybeSingle();
+
+        if (newProfile) {
+          setProfile(newProfile);
+        } else if (insertError) {
+          console.warn('Could not create profile:', insertError.message);
+          setProfile({
+            id: userId, email: userEmail || '', subscription_tier: 'free',
+            downloads_this_month: 0, downloads_limit: downloadLimits.free,
             created_at: new Date().toISOString(),
           } as UserProfile);
         }
+      } catch {
+        setProfile({
+          id: userId, email: userEmail || '', subscription_tier: 'free',
+          downloads_this_month: 0, downloads_limit: downloadLimits.free,
+          created_at: new Date().toISOString(),
+        } as UserProfile);
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
-      // Still set a minimal profile so login isn't blocked
       setProfile({
-        id: userId,
-        email: userEmail || '',
-        subscription_tier: 'free',
-        downloads_this_month: 0,
-        downloads_limit: downloadLimits.free,
+        id: userId, email: userEmail || '', subscription_tier: 'free',
+        downloads_this_month: 0, downloads_limit: downloadLimits.free,
         created_at: new Date().toISOString(),
       } as UserProfile);
     }
@@ -147,13 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // Timeout getSession to prevent blocking the UI if Supabase is slow
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null } }), 5000)
-        );
-
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        const { data: { session } } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -169,12 +215,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
         if (session?.user) {
           await fetchProfile(session.user.id, session.user.email);
         } else {
@@ -192,7 +236,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
     }
     try {
-      // Add timeout to prevent hanging (30s for Supabase cold start)
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), 30000);
       });
@@ -208,15 +251,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await Promise.race([signUpPromise, timeoutPromise]);
 
       if (error) {
-        // Make error messages more user-friendly
         if (error.message.includes('Invalid API key')) {
           return { error: new Error('Server configuration error. Please contact support.') };
         }
-        // Handle database trigger errors gracefully
         if (error.message.includes('Database error saving new user') ||
             error.message.includes('Database error')) {
-          // The auth user was likely created, but the profile trigger failed
-          console.error('Profile creation trigger failed:', error.message);
           return { error: new Error('Account creation is temporarily unavailable. Please try again in a few minutes or contact support.') };
         }
         if (error.message.includes('User already registered')) {
@@ -225,9 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error(error.message) };
       }
 
-      // If signup succeeded but we need to ensure profile exists
       if (data?.user) {
-        // Try to create profile if trigger didn't work (with short timeout)
         try {
           const profilePromise = supabase
             .from('user_profiles')
@@ -237,17 +274,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               subscription_tier: 'free',
               downloads_this_month: 0,
               downloads_limit: 30,
-            }, {
-              onConflict: 'id',
-              ignoreDuplicates: true
-            });
+            }, { onConflict: 'id', ignoreDuplicates: true });
 
           const profileTimeout = new Promise<{ error: { message: string } }>((resolve) => {
             setTimeout(() => resolve({ error: { message: 'Profile creation timed out' } }), 5000);
           });
 
           const { error: profileError } = await Promise.race([profilePromise, profileTimeout]);
-
           if (profileError) {
             console.warn('Could not create user profile:', profileError.message);
           }
@@ -266,21 +299,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Sign in with email/password
-  // Uses direct fetch (with timeout) then sets session on SSR client (cookies)
+  // ──────────────────────────────────────────────
+  // Sign in — direct fetch + manual cookie write
+  // Bypasses Supabase client entirely to avoid
+  // navigator-lock contention with getSession.
+  // ──────────────────────────────────────────────
   const signIn = async (email: string, password: string) => {
-    if (!supabase) {
-      return { error: new Error('Please configure Supabase in Vercel environment variables') };
-    }
-
     const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
     const supabaseKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
 
-    console.log('[auth] signIn: starting direct fetch...');
+    if (!supabaseUrl || !supabaseKey) {
+      return { error: new Error('Please configure Supabase in Vercel environment variables') };
+    }
+
+    console.log('[auth] signIn: starting...');
     const t0 = Date.now();
 
     try {
-      // Direct fetch with explicit timeout — avoids Supabase client lock contention
       const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
         method: 'POST',
         headers: {
@@ -293,11 +328,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const data = await res.json();
-      console.log(`[auth] signIn: response ${res.status} in ${Date.now() - t0}ms`);
+      console.log(`[auth] signIn: ${res.status} in ${Date.now() - t0}ms`);
 
       if (!res.ok) {
         const msg = data?.error_description || data?.msg || data?.error || 'Login failed';
-
         if (msg.includes('Invalid login credentials')) {
           return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
         }
@@ -307,24 +341,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error(msg) };
       }
 
-      // Set session on SSR-compatible client — stores in cookies for proxy.ts
-      if (data.access_token && data.refresh_token) {
-        console.log('[auth] signIn: setting session on SSR client...');
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        if (sessionError) {
-          console.error('[auth] signIn: setSession error:', sessionError.message);
-          return { error: new Error(sessionError.message) };
-        }
+      // Write cookies directly — no Supabase client lock involved
+      if (data.access_token) {
+        console.log('[auth] signIn: writing session cookies...');
+        writeSessionCookies(JSON.stringify(data));
+        console.log(`[auth] signIn: done in ${Date.now() - t0}ms`);
       }
 
-      console.log(`[auth] signIn: complete in ${Date.now() - t0}ms`);
       return { error: null };
     } catch (error) {
       const err = error as Error;
-      console.error(`[auth] signIn: exception after ${Date.now() - t0}ms:`, err.message);
+      console.error(`[auth] signIn: error after ${Date.now() - t0}ms:`, err.message);
       if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('timeout')) {
         return { error: new Error('Login timed out. Supabase may be waking up — please try again in a few seconds.') };
       }
@@ -354,7 +381,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Reset password (send reset email)
+  // Reset password
   const resetPassword = async (email: string) => {
     if (!supabase) {
       return { error: new Error('Please configure Supabase in Vercel environment variables') };
@@ -369,7 +396,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       const { error } = await Promise.race([resetPromise, timeoutPromise]);
-
       if (error) {
         return { error: new Error(error.message) };
       }
@@ -386,6 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign out
   const signOut = async () => {
     if (!supabase) return;
+    clearSessionCookies();
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
@@ -399,13 +426,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Check if user can download
   const canDownload = () => {
     if (!profile) return true;
     return profile.downloads_this_month < profile.downloads_limit;
   };
 
-  // Get remaining downloads
   const remainingDownloads = () => {
     if (!profile) return 30;
     return Math.max(0, profile.downloads_limit - profile.downloads_this_month);
@@ -414,19 +439,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        profile,
-        session,
-        isLoading,
-        isConfigured,
-        signUp,
-        signIn,
-        signOut,
-        refreshProfile,
-        resendVerificationEmail,
-        resetPassword,
-        canDownload,
-        remainingDownloads,
+        user, profile, session, isLoading, isConfigured,
+        signUp, signIn, signOut, refreshProfile,
+        resendVerificationEmail, resetPassword,
+        canDownload, remainingDownloads,
       }}
     >
       {children}
