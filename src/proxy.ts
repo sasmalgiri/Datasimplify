@@ -31,6 +31,7 @@ const PUBLIC_ROUTES = new Set([
   '/faq',
   '/forgot-password',
   '/login',
+  '/reset-password',
   '/pricing',
   '/privacy',
   '/refund',

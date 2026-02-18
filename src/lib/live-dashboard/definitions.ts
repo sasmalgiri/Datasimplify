@@ -1315,8 +1315,8 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   },
 
   {
-    slug: 'social-sentiment',
-    name: 'Social Sentiment',
+    slug: 'sentiment-pulse',
+    name: 'Sentiment Pulse',
     description: 'Gauge crypto market sentiment — Fear & Greed Index, trending coins, smart signals, and an executive market brief all in one place.',
     icon: '📡',
     tier: 'pro',
