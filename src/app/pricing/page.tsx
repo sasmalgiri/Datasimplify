@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+
+interface GeoInfo {
+  country: string;
+  currency: string;
+  symbol: string;
+  rate: number;
+}
 
 
 // Help Icon with tooltip for explanations
@@ -60,7 +67,16 @@ export default function PricingPage() {
   const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
-  // Single pricing type - subscription only (add-in removed)
+  const [geo, setGeo] = useState<GeoInfo | null>(null);
+
+  useEffect(() => {
+    fetch('/api/geo')
+      .then((r) => r.json())
+      .then((data: GeoInfo) => {
+        if (data.currency && data.currency !== 'USD') setGeo(data);
+      })
+      .catch(() => {});
+  }, []);
 
   if (!pricingEnabled) {
     return (
@@ -108,6 +124,12 @@ export default function PricingPage() {
       // Replace with your FastSpring store URL
       window.location.assign(`https://cryptoreportkit.onfastspring.com/${productPath}`);
     }
+  };
+
+  const formatLocal = (usd: number): string => {
+    if (!geo || usd === 0) return '';
+    const converted = Math.round(usd * geo.rate);
+    return `${geo.symbol}${converted.toLocaleString()}`;
   };
 
   const tiers = [
@@ -234,9 +256,15 @@ export default function PricingPage() {
                       <span className="text-gray-400">forever</span>
                     )}
                   </div>
+                  {geo && price > 0 && (
+                    <p className="text-gray-400 text-sm mt-1">
+                      ≈ {formatLocal(price)}/{billingPeriod === 'monthly' ? 'mo' : 'yr'}
+                    </p>
+                  )}
                   {billingPeriod === 'yearly' && price > 0 && (
                     <p className="text-emerald-400 text-sm mt-1">
                       ${perMonth}/mo billed annually
+                      {geo && <span className="text-gray-500"> ({formatLocal(perMonth)}/mo)</span>}
                     </p>
                   )}
                 </div>
