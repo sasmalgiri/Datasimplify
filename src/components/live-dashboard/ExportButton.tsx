@@ -120,7 +120,7 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 bg-[#0a0a0f] border border-white/[0.1] rounded-xl shadow-2xl overflow-hidden z-50 min-w-[240px]">
+        <div className="absolute right-0 bottom-full mb-2 bg-[#0a0a0f] border border-white/[0.1] rounded-xl shadow-2xl overflow-hidden z-50 min-w-[240px]">
           {/* Header */}
           <div className="px-4 py-2.5 border-b border-white/[0.06]">
             <div className="text-xs font-medium text-white">Export Dashboard</div>
