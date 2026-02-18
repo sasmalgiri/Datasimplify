@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors } from '@/lib/live-dashboard/theme';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
@@ -143,11 +144,11 @@ function CustomTooltip({ active, payload, siteTheme }: any) {
 const TypedTreemap = Treemap as any;
 
 export function DefiTVLChartWidget() {
-  const { siteTheme, colorTheme, data } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, data } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     data: s.data,
-  }));
+  })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);
 

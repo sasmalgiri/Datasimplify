@@ -12,6 +12,7 @@ import {
   MarkPointComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import {
   getEchartsTheme,
@@ -40,13 +41,13 @@ function daysSince2024Halving(): number {
 
 export function CycleComparisonWidget() {
   const { siteTheme, colorTheme, chartHeight, data, customization } =
-    useLiveDashboardStore((s) => ({
+    useLiveDashboardStore(useShallow((s) => ({
       siteTheme: s.siteTheme,
       colorTheme: s.customization.colorTheme,
       chartHeight: s.customization.chartHeight,
       data: s.data,
       customization: s.customization,
-    }));
+    })));
 
   const theme = getSiteThemeClasses(siteTheme);
   const echartsTheme = getEchartsTheme(siteTheme);

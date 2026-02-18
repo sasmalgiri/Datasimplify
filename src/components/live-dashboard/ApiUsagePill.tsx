@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Activity, X } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore, calculateApiCallsForDefinition } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 
@@ -14,7 +15,14 @@ interface ApiUsagePillProps {
 const PLAN_LIMITS = { pro: 500000, demo: 10000 } as const;
 
 export function ApiUsagePill({ definition }: ApiUsagePillProps) {
-  const { apiUsage, autoRefreshInterval, keyType, customization } = useLiveDashboardStore();
+  const { apiUsage, autoRefreshInterval, keyType, customization } = useLiveDashboardStore(
+    useShallow((s) => ({
+      apiUsage: s.apiUsage,
+      autoRefreshInterval: s.autoRefreshInterval,
+      keyType: s.keyType,
+      customization: s.customization,
+    })),
+  );
   const [open, setOpen] = useState(false);
 
   const callsPerRefresh = calculateApiCallsForDefinition(

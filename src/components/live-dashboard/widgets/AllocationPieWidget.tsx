@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import {
   getSiteThemeClasses,
@@ -27,14 +28,14 @@ interface PortfolioHolding {
 
 export function AllocationPieWidget() {
   const { siteTheme, colorTheme, chartHeight, vsCurrency, data, showAnimations } =
-    useLiveDashboardStore((s) => ({
+    useLiveDashboardStore(useShallow((s) => ({
       siteTheme: s.siteTheme,
       colorTheme: s.customization.colorTheme,
       chartHeight: s.customization.chartHeight,
       vsCurrency: s.customization.vsCurrency,
       data: s.data,
       showAnimations: s.customization.showAnimations,
-    }));
+    })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);
   const echartsTheme = getEchartsTheme(siteTheme);

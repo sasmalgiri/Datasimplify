@@ -6,6 +6,7 @@ import * as echarts from 'echarts/core';
 import { LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import {
   getSiteThemeClasses,
@@ -74,12 +75,12 @@ function priceAtDate(
 
 export function DCASimulatorWidget() {
   const data = useLiveDashboardStore((s) => s.data);
-  const { siteTheme, colorTheme, chartHeight, vsCurrency } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, chartHeight, vsCurrency } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     chartHeight: s.customization.chartHeight,
     vsCurrency: s.customization.vsCurrency,
-  }));
+  })));
   const showAnimations = useLiveDashboardStore((s) => s.customization.showAnimations);
   const chartStyle = useLiveDashboardStore((s) => s.customization.chartStyle);
 

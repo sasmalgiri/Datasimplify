@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import {
   getSiteThemeClasses,
@@ -44,13 +45,13 @@ interface GroupedCoin {
 /* ---------- component ---------- */
 
 export function PLSummaryWidget() {
-  const { siteTheme, colorTheme, chartHeight, vsCurrency, data } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, chartHeight, vsCurrency, data } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     chartHeight: s.customization.chartHeight,
     vsCurrency: s.customization.vsCurrency,
     data: s.data,
-  }));
+  })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);
 

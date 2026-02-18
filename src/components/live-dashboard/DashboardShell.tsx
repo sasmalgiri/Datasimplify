@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
@@ -28,7 +29,20 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme } = useLiveDashboardStore();
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme } = useLiveDashboardStore(
+    useShallow((s) => ({
+      apiKey: s.apiKey,
+      keyType: s.keyType,
+      clearApiKey: s.clearApiKey,
+      fetchData: s.fetchData,
+      isLoading: s.isLoading,
+      lastFetched: s.lastFetched,
+      error: s.error,
+      autoRefreshInterval: s.autoRefreshInterval,
+      setAutoRefreshInterval: s.setAutoRefreshInterval,
+      siteTheme: s.siteTheme,
+    })),
+  );
   const st = getSiteThemeClasses(siteTheme);
   useInitCredits();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);

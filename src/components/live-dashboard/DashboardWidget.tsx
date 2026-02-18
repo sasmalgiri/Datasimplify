@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, type ComponentType } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { AlertCircle, Code } from 'lucide-react';
 import { getThemeColors, getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
@@ -339,7 +340,8 @@ interface DashboardWidgetProps {
 
 export function DashboardWidget({ component, title, gridColumn, gridRow, props }: DashboardWidgetProps) {
   const Component = WIDGET_REGISTRY[component];
-  const { colorTheme, siteTheme } = useLiveDashboardStore((s) => ({ colorTheme: s.customization.colorTheme, siteTheme: s.siteTheme }));
+  const colorTheme = useLiveDashboardStore((s) => s.customization.colorTheme);
+  const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
   const themeColors = getThemeColors(colorTheme);
   const st = getSiteThemeClasses(siteTheme);
   const description = WIDGET_DESCRIPTIONS[component];

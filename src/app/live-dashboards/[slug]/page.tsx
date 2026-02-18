@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { getDashboardBySlug } from '@/lib/live-dashboard/definitions';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore, isKeyFreeEndpoints } from '@/lib/live-dashboard/store';
 import { DashboardShell } from '@/components/live-dashboard/DashboardShell';
 import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
@@ -17,7 +18,9 @@ export default function LiveDashboardPage() {
   const slug = params.slug as string;
   const definition = getDashboardBySlug(slug);
 
-  const { apiKey, fetchData, siteTheme } = useLiveDashboardStore();
+  const { apiKey, fetchData, siteTheme } = useLiveDashboardStore(
+    useShallow((s) => ({ apiKey: s.apiKey, fetchData: s.fetchData, siteTheme: s.siteTheme })),
+  );
   const st = getSiteThemeClasses(siteTheme);
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);

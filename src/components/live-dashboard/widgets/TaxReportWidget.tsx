@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { useUserPrefsStore } from '@/lib/live-dashboard/user-prefs-store';
 import { getSiteThemeClasses, getThemeColors, formatCompact } from '@/lib/live-dashboard/theme';
@@ -46,11 +47,11 @@ function formatDate(iso: string): string {
 /* ---------- component ---------- */
 
 export function TaxReportWidget() {
-  const { customization, siteTheme, keyType } = useLiveDashboardStore((s) => ({
+  const { customization, siteTheme, keyType } = useLiveDashboardStore(useShallow((s) => ({
     customization: s.customization,
     siteTheme: s.siteTheme,
     keyType: s.keyType,
-  }));
+  })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(customization.colorTheme);
 

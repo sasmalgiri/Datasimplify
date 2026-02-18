@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
@@ -18,11 +19,11 @@ function formatTVL(n: number): string {
 /* ---------- component ---------- */
 
 export function ProtocolInfoWidget() {
-  const { data, siteTheme, customization } = useLiveDashboardStore((s) => ({
+  const { data, siteTheme, customization } = useLiveDashboardStore(useShallow((s) => ({
     data: s.data,
     siteTheme: s.siteTheme,
     customization: s.customization,
-  }));
+  })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(customization.colorTheme);
   const isLight = siteTheme === 'light-blue';

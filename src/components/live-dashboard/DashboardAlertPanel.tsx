@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Bell, BellRing, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors } from '@/lib/live-dashboard/theme';
@@ -174,15 +174,15 @@ interface DashboardAlertPanelProps {
 }
 
 export default function DashboardAlertPanel({ isOpen, onClose }: DashboardAlertPanelProps) {
-  const { data, siteTheme } = useLiveDashboardStore((s) => ({
-    data: s.data,
-    siteTheme: s.siteTheme,
-  }));
+  const data = useLiveDashboardStore((s) => s.data);
+  const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
   const st = getSiteThemeClasses(siteTheme);
 
   // ── Alert state ──
   const [alerts, setAlerts] = useState<DashboardAlert[]>([]);
   const [triggeredIds, setTriggeredIds] = useState<Set<string>>(new Set());
+  const alertsRef = useRef<DashboardAlert[]>([]);
+  alertsRef.current = alerts;
 
   // ── Form state ──
   const [formType, setFormType] = useState<DashboardAlert['type']>('price_above');
@@ -202,10 +202,11 @@ export default function DashboardAlertPanel({ isOpen, onClose }: DashboardAlertP
     saveAlerts(next);
   }, []);
 
-  // Check alerts against current data
+  // Check alerts against current data — use ref for alerts to break dependency cycle
   useEffect(() => {
     if (!data) return;
-    const active = alerts.filter((a) => a.isActive);
+    const currentAlerts = alertsRef.current;
+    const active = currentAlerts.filter((a) => a.isActive);
     if (active.length === 0) return;
 
     const triggered = checkAlerts(active, data);
@@ -215,7 +216,7 @@ export default function DashboardAlertPanel({ isOpen, onClose }: DashboardAlertP
     const cooldown = 60_000; // 1 minute cooldown between re-triggers
     const newTriggeredIds = new Set<string>();
 
-    const updated = alerts.map((a) => {
+    const updated = currentAlerts.map((a) => {
       const match = triggered.find((t) => t.id === a.id);
       if (match && (!a.lastTriggered || now - a.lastTriggered > cooldown)) {
         sendNotification(a);
@@ -231,7 +232,7 @@ export default function DashboardAlertPanel({ isOpen, onClose }: DashboardAlertP
       // Clear flash after 2 seconds
       setTimeout(() => setTriggeredIds(new Set()), 2000);
     }
-  }, [data, alerts, updateAlerts]);
+  }, [data, updateAlerts]);
 
   // ── Handlers ──
 

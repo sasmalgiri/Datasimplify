@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors, TABLE_DENSITY_MAP } from '@/lib/live-dashboard/theme';
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
@@ -64,11 +65,11 @@ function formatPnl(n: number): string {
 
 export function DCATrackerWidget() {
   const data = useLiveDashboardStore((s) => s.data);
-  const { siteTheme, colorTheme, tableDensity } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, tableDensity } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     tableDensity: s.customization.tableDensity,
-  }));
+  })));
 
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);

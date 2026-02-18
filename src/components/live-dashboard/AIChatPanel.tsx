@@ -95,7 +95,9 @@ function buildDashboardContext(store: ReturnType<typeof useLiveDashboardStore.ge
 // ─── Component ───
 
 export default function AIChatPanel({ isOpen, onClose, dashboardName }: AIChatPanelProps) {
-  const { data, siteTheme, customization } = useLiveDashboardStore();
+  const data = useLiveDashboardStore((s) => s.data);
+  const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
+  const customization = useLiveDashboardStore((s) => s.customization);
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(customization.colorTheme);
   const canAfford = useCreditStore((s) => s.canAfford);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
 import { Wallet } from 'lucide-react';
@@ -34,7 +35,7 @@ function parseTokenBalance(raw: string): number {
 
 export function WalletAllocationWidget() {
   const { data, alchemyKey, walletAddress, alchemyChain, siteTheme, colorTheme, chartHeight, showAnimations } =
-    useLiveDashboardStore((s) => ({
+    useLiveDashboardStore(useShallow((s) => ({
       data: s.data,
       alchemyKey: s.alchemyKey,
       walletAddress: s.walletAddress,
@@ -43,7 +44,7 @@ export function WalletAllocationWidget() {
       colorTheme: s.customization.colorTheme,
       chartHeight: s.customization.chartHeight,
       showAnimations: s.customization.showAnimations,
-    }));
+    })));
 
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);

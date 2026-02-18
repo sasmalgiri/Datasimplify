@@ -7,6 +7,7 @@ import {
   Activity, TrendingUp, Wrench, CandlestickChart, PieChart,
   Moon, Sun, Wallet,
 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore, DEFAULT_VISIBLE_WIDGET_COUNT } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization, SiteTheme } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
@@ -285,7 +286,7 @@ interface CustomizeButtonProps {
 }
 
 export function CustomizeButton({ isOpen, onToggle }: CustomizeButtonProps) {
-  const { customization, siteTheme } = useLiveDashboardStore((s) => ({ customization: s.customization, siteTheme: s.siteTheme }));
+  const { customization, siteTheme } = useLiveDashboardStore(useShallow((s) => ({ customization: s.customization, siteTheme: s.siteTheme })));
   const st = getSiteThemeClasses(siteTheme);
 
   const hasCustomization =
@@ -319,7 +320,17 @@ interface CustomizeBarProps {
 }
 
 export function CustomizeBar({ definition, onApply, onClose }: CustomizeBarProps) {
-  const { customization, setCustomization, resetCustomization, enabledWidgets, setEnabledWidgets, siteTheme, setSiteTheme } = useLiveDashboardStore();
+  const { customization, setCustomization, resetCustomization, enabledWidgets, setEnabledWidgets, siteTheme, setSiteTheme } = useLiveDashboardStore(
+    useShallow((s) => ({
+      customization: s.customization,
+      setCustomization: s.setCustomization,
+      resetCustomization: s.resetCustomization,
+      enabledWidgets: s.enabledWidgets,
+      setEnabledWidgets: s.setEnabledWidgets,
+      siteTheme: s.siteTheme,
+      setSiteTheme: s.setSiteTheme,
+    })),
+  );
   const st = getSiteThemeClasses(siteTheme);
   const [local, setLocal] = useState<DashboardCustomization>(customization);
   const [showMore, setShowMore] = useState(false);

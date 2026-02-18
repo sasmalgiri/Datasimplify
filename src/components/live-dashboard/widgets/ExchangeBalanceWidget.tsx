@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors, formatCompact, TABLE_DENSITY_MAP } from '@/lib/live-dashboard/theme';
 import { RefreshCw, Link2, Unlink, Eye, EyeOff, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
@@ -88,11 +89,11 @@ function getExchangeInitial(exchange: string): string {
 
 export function ExchangeBalanceWidget() {
   const data = useLiveDashboardStore((s) => s.data);
-  const { siteTheme, colorTheme, tableDensity } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, tableDensity } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     tableDensity: s.customization.tableDensity,
-  }));
+  })));
 
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);

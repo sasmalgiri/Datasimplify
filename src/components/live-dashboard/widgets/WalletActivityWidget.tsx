@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors } from '@/lib/live-dashboard/theme';
 import { ArrowDownLeft, ArrowUpRight, Wallet, ExternalLink } from 'lucide-react';
@@ -46,14 +47,14 @@ function blockNumToApprox(blockNum: string): string {
 
 export function WalletActivityWidget() {
   const { data, alchemyKey, walletAddress, alchemyChain, siteTheme, colorTheme } =
-    useLiveDashboardStore((s) => ({
+    useLiveDashboardStore(useShallow((s) => ({
       data: s.data,
       alchemyKey: s.alchemyKey,
       walletAddress: s.walletAddress,
       alchemyChain: s.alchemyChain,
       siteTheme: s.siteTheme,
       colorTheme: s.customization.colorTheme,
-    }));
+    })));
 
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);

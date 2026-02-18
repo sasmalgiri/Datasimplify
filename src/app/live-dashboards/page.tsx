@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
-import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap } from 'lucide-react';
+import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap, GitBranch } from 'lucide-react';
 import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
 
 function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
@@ -204,7 +204,7 @@ export default function LiveDashboardsPage() {
             </Link>
           </div>
 
-          <div className="mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
             <Link
               href="/live-dashboards/custom/builder"
               className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
@@ -217,6 +217,19 @@ export default function LiveDashboardsPage() {
                 <p className="text-gray-500 text-sm">Pick widgets manually to create your own dashboard layout</p>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-teal-400 transition shrink-0" />
+            </Link>
+            <Link
+              href="/live-dashboards/taxonomy"
+              className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center shrink-0">
+                <GitBranch className="w-6 h-6 text-cyan-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold group-hover:text-cyan-400 transition">Crypto Taxonomy</h3>
+                <p className="text-gray-500 text-sm">Interactive tree showing the full crypto ecosystem and every dashboard</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-cyan-400 transition shrink-0" />
             </Link>
           </div>
         </section>

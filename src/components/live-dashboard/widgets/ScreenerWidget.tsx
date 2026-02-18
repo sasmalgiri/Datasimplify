@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors, formatCompact, formatPercent, percentColor } from '@/lib/live-dashboard/theme';
 import {
@@ -48,11 +49,11 @@ function nextId(): string {
 
 export function ScreenerWidget() {
   const data = useLiveDashboardStore((s) => s.data);
-  const { siteTheme, colorTheme, vsCurrency } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, vsCurrency } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     vsCurrency: s.customization.vsCurrency,
-  }));
+  })));
 
   const tc = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);

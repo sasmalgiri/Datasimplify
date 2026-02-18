@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses, getThemeColors } from '@/lib/live-dashboard/theme';
 import {
@@ -62,11 +63,11 @@ function CustomTooltip({ active, payload, label, siteTheme }: any) {
 /* ---------- component ---------- */
 
 export function ChainCompareWidget() {
-  const { siteTheme, colorTheme, data } = useLiveDashboardStore((s) => ({
+  const { siteTheme, colorTheme, data } = useLiveDashboardStore(useShallow((s) => ({
     siteTheme: s.siteTheme,
     colorTheme: s.customization.colorTheme,
     data: s.data,
-  }));
+  })));
   const st = getSiteThemeClasses(siteTheme);
   const themeColors = getThemeColors(colorTheme);
 
