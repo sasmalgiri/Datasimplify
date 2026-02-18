@@ -1,9 +1,10 @@
 'use client';
 
-import { Suspense, type ComponentType } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { Suspense, useState, type ComponentType } from 'react';
+import { AlertCircle, Code } from 'lucide-react';
 import { getThemeColors, getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { EmbedCodeModal } from './EmbedCodeModal';
 
 // Widget registry — maps component name strings to actual components
 import { KPICards } from './widgets/KPICards';
@@ -89,6 +90,24 @@ import { PLSummaryWidget } from './widgets/PLSummaryWidget';
 import { PLChartWidget } from './widgets/PLChartWidget';
 import { AllocationPieWidget } from './widgets/AllocationPieWidget';
 import { ExchangeBalanceWidget } from './widgets/ExchangeBalanceWidget';
+// Phase 12 DeFi Llama widgets
+import { DefiTVLRankingWidget } from './widgets/DefiTVLRankingWidget';
+import { DefiChainTVLWidget } from './widgets/DefiChainTVLWidget';
+import { DefiYieldTableWidget } from './widgets/DefiYieldTableWidget';
+import { StablecoinDominanceWidget } from './widgets/StablecoinDominanceWidget';
+import { DefiTVLChartWidget } from './widgets/DefiTVLChartWidget';
+import { ChainCompareWidget } from './widgets/ChainCompareWidget';
+// Phase 12 Alchemy wallet widgets
+import { WalletPortfolioWidget } from './widgets/WalletPortfolioWidget';
+import { WalletActivityWidget } from './widgets/WalletActivityWidget';
+import { WalletAllocationWidget } from './widgets/WalletAllocationWidget';
+// Phase 13 Protocol DeFi Llama widgets
+import { ProtocolTVLHistoryWidget } from './widgets/ProtocolTVLHistoryWidget';
+import { ProtocolInfoWidget } from './widgets/ProtocolInfoWidget';
+import { ProtocolChainBreakdownWidget } from './widgets/ProtocolChainBreakdownWidget';
+import { DexVolumeOverviewWidget } from './widgets/DexVolumeOverviewWidget';
+import { ProtocolFeesWidget } from './widgets/ProtocolFeesWidget';
+import { TopProtocolsCompareWidget } from './widgets/TopProtocolsCompareWidget';
 
 const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   KPICards,
@@ -165,6 +184,24 @@ const WIDGET_REGISTRY: Record<string, ComponentType<any>> = {
   PLChartWidget,
   AllocationPieWidget,
   ExchangeBalanceWidget,
+  // Phase 12 DeFi Llama
+  DefiTVLRankingWidget,
+  DefiChainTVLWidget,
+  DefiYieldTableWidget,
+  StablecoinDominanceWidget,
+  DefiTVLChartWidget,
+  ChainCompareWidget,
+  // Phase 12 Alchemy
+  WalletPortfolioWidget,
+  WalletActivityWidget,
+  WalletAllocationWidget,
+  // Phase 13 Protocol DeFi Llama
+  ProtocolTVLHistoryWidget,
+  ProtocolInfoWidget,
+  ProtocolChainBreakdownWidget,
+  DexVolumeOverviewWidget,
+  ProtocolFeesWidget,
+  TopProtocolsCompareWidget,
 };
 
 /** Contextual descriptions for each widget — explains what it shows and how to read it */
@@ -269,6 +306,27 @@ export const WIDGET_DESCRIPTIONS: Record<string, string> = {
   PLChartWidget: 'P&L bar chart — visual comparison of gains and losses per holding. Green = profit, Red = loss.',
   AllocationPieWidget: 'Portfolio allocation pie — see how your holdings are distributed by current market value.',
   ExchangeBalanceWidget: 'Multi-exchange balances — connect Binance, Coinbase, Kraken, KuCoin, Bybit, OKX with read-only API keys. Unified balance view.',
+
+  // Phase 12 DeFi Llama (free, no key needed)
+  DefiTVLRankingWidget: 'Top DeFi protocols ranked by Total Value Locked (TVL). Green/red shows 24h and 7d TVL changes. Data from DeFi Llama (free).',
+  DefiChainTVLWidget: 'Blockchain TVL comparison — see which chains hold the most DeFi capital. Longer bar = more TVL locked on that chain.',
+  DefiYieldTableWidget: 'Best DeFi yield pools sorted by TVL. Shows APY breakdown (base + reward). Stablecoin pools marked for lower risk.',
+  StablecoinDominanceWidget: 'Stablecoin market share — see which stablecoins dominate by circulating supply. Total market shown above chart.',
+  DefiTVLChartWidget: 'DeFi protocol TVL treemap — block size = TVL share. Color shows 24h change direction (green = growing, red = declining).',
+  ChainCompareWidget: 'Multi-chain TVL radar — compare top blockchains on a normalized scale. Larger area = more TVL relative to others.',
+
+  // Phase 12 Alchemy wallet (BYOK)
+  WalletPortfolioWidget: 'On-chain wallet balances — ETH balance + all ERC-20 tokens. Connect Alchemy key to view. Data from Alchemy (BYOK).',
+  WalletActivityWidget: 'Recent wallet transactions — inbound (green) and outbound (red) transfers. Shows asset, value, and transaction hash.',
+  WalletAllocationWidget: 'Wallet token allocation pie chart — see how your on-chain holdings are distributed across ETH and ERC-20 tokens.',
+
+  // Phase 13 Protocol DeFi Llama
+  ProtocolTVLHistoryWidget: 'Protocol TVL over time — 90-day history showing how total value locked has changed. Rising TVL = growing confidence.',
+  ProtocolInfoWidget: 'Protocol overview card — name, category, chains, TVL, market cap, and description. Quick snapshot of any DeFi protocol.',
+  ProtocolChainBreakdownWidget: 'TVL by chain — pie chart showing how a protocol distributes its TVL across different blockchains.',
+  DexVolumeOverviewWidget: 'DEX volume rankings — top decentralized exchanges by 24h trading volume with 1d and 7d change indicators.',
+  ProtocolFeesWidget: 'Protocol fees & revenue — ranking of DeFi protocols by fees generated (24h, 7d, 30d). Higher fees = more usage.',
+  TopProtocolsCompareWidget: 'Multi-protocol TVL comparison — overlay top DeFi protocols on one chart to compare TVL growth trends.',
 };
 
 interface DashboardWidgetProps {
@@ -285,6 +343,7 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
   const themeColors = getThemeColors(colorTheme);
   const st = getSiteThemeClasses(siteTheme);
   const description = WIDGET_DESCRIPTIONS[component];
+  const [embedOpen, setEmbedOpen] = useState(false);
 
   // KPI cards and market pulse get no wrapper card (they are their own cards)
   if (component === 'KPICards' || component === 'MarketPulseWidget') {
@@ -297,13 +356,20 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
 
   return (
     <div
-      className={`${st.cardClasses} ${st.cardHover} p-5 flex flex-col`}
+      className={`group ${st.cardClasses} ${st.cardHover} p-5 flex flex-col`}
       style={{ gridColumn, gridRow }}
     >
       <div className="mb-4">
         <h3 className={`text-xs font-semibold ${st.textMuted} uppercase tracking-widest flex items-center gap-2`}>
           <div className="w-1 h-3.5 rounded-full" style={{ backgroundColor: themeColors.primary }} />
           {title}
+          <button
+            onClick={() => setEmbedOpen(true)}
+            className={`ml-auto p-1 rounded ${st.textDim} hover:${st.textMuted} transition opacity-0 group-hover:opacity-100`}
+            title="Embed widget"
+          >
+            <Code className="w-3 h-3" />
+          </button>
         </h3>
         {description && (
           <p className={`text-[10px] ${st.textDim} mt-1 ml-3 leading-relaxed`}>{description}</p>
@@ -314,6 +380,7 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
           {Component ? <Component {...(props || {})} /> : <UnknownWidget name={component} />}
         </Suspense>
       </div>
+      <EmbedCodeModal isOpen={embedOpen} onClose={() => setEmbedOpen(false)} widgetName={component} widgetTitle={title} />
     </div>
   );
 }

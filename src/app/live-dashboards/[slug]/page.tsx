@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { getDashboardBySlug } from '@/lib/live-dashboard/definitions';
-import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { useLiveDashboardStore, isKeyFreeEndpoints } from '@/lib/live-dashboard/store';
 import { DashboardShell } from '@/components/live-dashboard/DashboardShell';
 import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
-import { ArrowLeft, Key, Shield } from 'lucide-react';
+import { ArrowLeft, Key, Shield, Zap } from 'lucide-react';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 
 export default function LiveDashboardPage() {
@@ -22,8 +22,12 @@ export default function LiveDashboardPage() {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
 
+  // Check if this dashboard can run without a CoinGecko key (DeFi Llama only)
+  const isKeyFree = definition ? isKeyFreeEndpoints(definition.requiredEndpoints) : false;
+  const canLoad = isKeyFree || !!apiKey;
+
   const loadData = useCallback(() => {
-    if (!definition || !apiKey) return;
+    if (!definition || !canLoad) return;
     const c = useLiveDashboardStore.getState().customization;
     const params: Record<string, any> = {};
 
@@ -54,22 +58,29 @@ export default function LiveDashboardPage() {
       const detailWidget = definition.widgets.find((w) => w.props?.coinId);
       params.detailCoinId = c.coinId || detailWidget?.props?.coinId || 'bitcoin';
     }
+    const needsProtocol = definition.requiredEndpoints.includes('defillama_protocol_tvl');
+    if (needsProtocol) {
+      const protocolWidget = definition.widgets.find((w) => w.props?.protocolSlug);
+      params.protocolSlug = protocolWidget?.props?.protocolSlug || definition.slug.replace('protocol-', '');
+    }
     fetchData(definition.requiredEndpoints, params);
     setInitialLoaded(true);
-  }, [definition, apiKey, fetchData]);
+  }, [definition, canLoad, fetchData]);
 
+  // Auto-load for key-free dashboards immediately, or when API key is available
   useEffect(() => {
-    if (apiKey && !initialLoaded) {
+    if (canLoad && !initialLoaded) {
       loadData();
     }
-  }, [apiKey, initialLoaded, loadData]);
+  }, [canLoad, initialLoaded, loadData]);
 
+  // Auto-show key modal for dashboards that need a CoinGecko key
   useEffect(() => {
-    if (!apiKey && !showKeyModal) {
+    if (!isKeyFree && !apiKey && !showKeyModal) {
       const timer = setTimeout(() => setShowKeyModal(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [apiKey, showKeyModal]);
+  }, [isKeyFree, apiKey, showKeyModal]);
 
   // Dashboard not found — client-friendly 404
   if (!definition) {
@@ -107,8 +118,8 @@ export default function LiveDashboardPage() {
           All Dashboards
         </Link>
 
-        {/* No API key state */}
-        {!apiKey && (
+        {/* No API key state — only for dashboards that need CoinGecko key */}
+        {!canLoad && (
           <div className="text-center py-24">
             <div className="text-6xl mb-6">{definition.icon}</div>
             <h2 className={`text-3xl font-bold ${st.textPrimary} mb-3 tracking-tight`}>{definition.name}</h2>
@@ -132,8 +143,16 @@ export default function LiveDashboardPage() {
           </div>
         )}
 
+        {/* Key-free badge for DeFi Llama dashboards */}
+        {isKeyFree && !apiKey && (
+          <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 text-xs">
+            <Zap className="w-3.5 h-3.5" />
+            <span>This dashboard uses free DeFi Llama data — no API key required!</span>
+          </div>
+        )}
+
         {/* Dashboard with data */}
-        {apiKey && (
+        {canLoad && (
           <DashboardShell
             definition={definition}
             onOpenKeyModal={() => setShowKeyModal(true)}

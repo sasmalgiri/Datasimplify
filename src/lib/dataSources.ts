@@ -45,10 +45,12 @@ export const DATA_SOURCES: Record<string, DataSource> = {
 
   defillama: {
     id: 'defillama',
-    name: 'DeFiLlama',
+    name: 'DeFi Llama',
     license: 'redistributable',
+    attribution: 'Data by DeFi Llama',
+    attributionUrl: 'https://defillama.com',
     refreshInterval: 300,
-    description: 'DeFi protocol data (open data)',
+    description: 'DeFi TVL, yields, DEX volumes (open source, free API)',
   },
 
   blockchaininfo: {
@@ -86,6 +88,36 @@ export const DATA_SOURCES: Record<string, DataSource> = {
     attributionUrl: 'https://www.coingecko.com/en/api',
     refreshInterval: 60,
     description: 'Comprehensive crypto data (commercial license with attribution)',
+  },
+
+  etherscan: {
+    id: 'etherscan',
+    name: 'Etherscan',
+    license: 'display-only',
+    attribution: 'Powered by Etherscan.io APIs',
+    attributionUrl: 'https://etherscan.io',
+    refreshInterval: 15,
+    description: 'Ethereum blockchain data (BYOK, attribution required)',
+  },
+
+  bscscan: {
+    id: 'bscscan',
+    name: 'BscScan',
+    license: 'display-only',
+    attribution: 'Powered by BscScan.com APIs',
+    attributionUrl: 'https://bscscan.com',
+    refreshInterval: 15,
+    description: 'BNB Chain blockchain data (BYOK, attribution required)',
+  },
+
+  polygonscan: {
+    id: 'polygonscan',
+    name: 'PolygonScan',
+    license: 'display-only',
+    attribution: 'Powered by PolygonScan.com APIs',
+    attributionUrl: 'https://polygonscan.com',
+    refreshInterval: 15,
+    description: 'Polygon blockchain data (BYOK, attribution required)',
   },
 };
 

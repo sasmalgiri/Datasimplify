@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
-import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield } from 'lucide-react';
+import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap } from 'lucide-react';
 import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
 
 function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
@@ -47,10 +47,10 @@ export default function LiveDashboardsPage() {
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Hero */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-400/5 border border-emerald-400/10 text-emerald-400 text-sm mb-6">
             <Sparkles className="w-4 h-4" />
-            BYOK — Your Key, Your Data
+            5,000+ Dashboards — No SQL Required
           </div>
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-5 tracking-tight">
             Interactive Live{' '}
@@ -59,10 +59,63 @@ export default function LiveDashboardsPage() {
             </span>
           </h1>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto leading-relaxed">
-            Beautiful crypto dashboards powered by your CoinGecko API key.
-            Real-time data, stunning charts, and instant insights — all in your browser.
+            {LIVE_DASHBOARDS.length} curated dashboards + auto-generated analytics for every DeFi protocol and cryptocurrency.
+            No SQL. No code. Just data.
           </p>
         </div>
+
+        {/* Stats bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-12">
+          {[
+            { value: `${LIVE_DASHBOARDS.length}+`, label: 'Curated Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
+            { value: '4,000+', label: 'Protocol Dashboards', icon: <Globe className="w-4 h-4" /> },
+            { value: '500+', label: 'Coin Dashboards', icon: <Coins className="w-4 h-4" /> },
+            { value: '90+', label: 'Widget Types', icon: <TrendingUp className="w-4 h-4" /> },
+          ].map((s) => (
+            <div key={s.label} className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <div className="flex items-center justify-center gap-1.5 text-emerald-400 mb-1">
+                {s.icon}
+                <span className="text-2xl font-bold">{s.value}</span>
+              </div>
+              <p className="text-gray-600 text-xs">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Explore CTA — the big feature */}
+        <section className="mb-16">
+          <Link
+            href="/live-dashboards/explore"
+            className="block relative overflow-hidden rounded-2xl border border-emerald-400/20 bg-gradient-to-br from-emerald-400/5 via-transparent to-teal-400/5 p-8 group hover:border-emerald-400/40 transition-all duration-300"
+          >
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/10 text-emerald-400 text-xs font-medium mb-4">
+                  <Zap className="w-3 h-3" />
+                  NEW — Auto-Generated Dashboards
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                  Explore 5,000+ Dashboards
+                </h2>
+                <p className="text-gray-400 max-w-lg leading-relaxed">
+                  Auto-generated analytics for every DeFi protocol tracked by DeFi Llama and every major cryptocurrency on CoinGecko. Protocol dashboards are 100% free — no API key needed.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex -space-x-2">
+                  {['🦄', '👻', '🌊', '🏛️', '🟢', '🔷'].map((emoji, i) => (
+                    <span key={i} className="w-10 h-10 rounded-full bg-white/[0.05] border-2 border-[#0a0a0f] flex items-center justify-center text-lg">
+                      {emoji}
+                    </span>
+                  ))}
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/30 transition">
+                  <Search className="w-6 h-6 text-emerald-400" />
+                </div>
+              </div>
+            </div>
+          </Link>
+        </section>
 
         {/* Features row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-16">
@@ -84,19 +137,87 @@ export default function LiveDashboardsPage() {
           ))}
         </div>
 
-        {/* All dashboards */}
+        {/* Curated dashboards */}
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 bg-emerald-400 rounded-full" />
             <div>
-              <h2 className="text-xl font-bold text-white">All Dashboards</h2>
-              <p className="text-gray-600 text-sm">{LIVE_DASHBOARDS.length} dashboards available with any CoinGecko API key</p>
+              <h2 className="text-xl font-bold text-white">Curated Dashboards</h2>
+              <p className="text-gray-600 text-sm">{LIVE_DASHBOARDS.length} hand-crafted dashboards with optimized layouts</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {LIVE_DASHBOARDS.map((d) => (
               <DashboardCard key={d.slug} dashboard={d} />
             ))}
+          </div>
+        </section>
+
+        {/* Tools Section: Community, Builder, AI */}
+        <section className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-1 h-8 bg-purple-400 rounded-full" />
+            <div>
+              <h2 className="text-xl font-bold text-white">Dashboard Tools</h2>
+              <p className="text-gray-600 text-sm">Create, share, and explore</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <Link
+              href="/live-dashboards/explore"
+              className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Search className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold group-hover:text-emerald-400 transition">Explore All</h3>
+                <p className="text-gray-500 text-sm">Browse 5,000+ auto-generated dashboards</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-emerald-400 transition shrink-0" />
+            </Link>
+            <Link
+              href="/live-dashboards/ai-builder"
+              className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
+                <Brain className="w-6 h-6 text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold group-hover:text-purple-400 transition">AI Builder</h3>
+                <p className="text-gray-500 text-sm">Describe what you want, AI builds it</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-purple-400 transition shrink-0" />
+            </Link>
+            <Link
+              href="/live-dashboards/community"
+              className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <Users className="w-6 h-6 text-amber-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold group-hover:text-amber-400 transition">Community</h3>
+                <p className="text-gray-500 text-sm">Browse and fork shared dashboards</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-amber-400 transition shrink-0" />
+            </Link>
+          </div>
+
+          <div className="mt-5">
+            <Link
+              href="/live-dashboards/custom/builder"
+              className={`${GLOW_CARD_CLASSES} p-6 flex items-center gap-4 group`}
+            >
+              <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
+                <Wrench className="w-6 h-6 text-teal-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold group-hover:text-teal-400 transition">Custom Builder</h3>
+                <p className="text-gray-500 text-sm">Pick widgets manually to create your own dashboard layout</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-gray-600 group-hover:text-teal-400 transition shrink-0" />
+            </Link>
           </div>
         </section>
 

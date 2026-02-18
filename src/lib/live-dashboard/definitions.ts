@@ -401,29 +401,22 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   {
     slug: 'defi-tracker',
     name: 'DeFi Tracker',
-    description: 'DeFi protocols — heatmaps, category bars, area charts, waterfall, bubble, radar, box plots, returns, supply, volume, treemap, and full rankings.',
+    description: 'DeFi protocols — real TVL rankings, chain comparison, yield pools, heatmaps, and full rankings. Powered by DeFi Llama + CoinGecko.',
     icon: '🌐',
     tier: 'pro',
     gridColumns: 4,
-    requiredEndpoints: ['markets', 'global', 'categories', 'fear_greed'],
+    requiredEndpoints: ['markets', 'global', 'categories', 'fear_greed', 'defillama_protocols', 'defillama_chains'],
     widgets: [
       { id: 'kpis', component: 'KPICards', title: 'DeFi Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], props: { mode: 'defi' }, mobileOrder: 1 },
-      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 2 },
-      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 3 },
-      { id: 'area-vol', component: 'AreaChartWidget', title: 'Stacked Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 4 },
-      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 5 },
-      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 6 },
-      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 7 },
-      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 8 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 2 },
+      { id: 'chain-tvl', component: 'DefiChainTVLWidget', title: 'Chain TVL', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'], mobileOrder: 3 },
+      { id: 'chain-radar', component: 'ChainCompareWidget', title: 'Chain Compare', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'], mobileOrder: 4 },
+      { id: 'tvl-treemap', component: 'DefiTVLChartWidget', title: 'TVL Treemap', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 5 },
+      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 6 },
+      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 7 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 8 },
       { id: 'dominance', component: 'DominanceWidget', title: 'DeFi vs Market', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 9 },
-      { id: 'boxplot', component: 'BoxPlotWidget', title: '7d Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 10 },
-      { id: 'returns-bar', component: 'ReturnsBarWidget', title: 'Returns Comparison', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 11 },
-      { id: 'pie', component: 'PieChartWidget', title: 'Volume Share', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'volume' }, mobileOrder: 12 },
-      { id: 'supply', component: 'SupplyWidget', title: 'Supply Analysis', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 13 },
-      { id: 'volume', component: 'VolumeChartWidget', title: 'Volume Rankings', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 14 },
-      { id: 'treemap', component: 'TreemapWidget', title: 'Market Cap Treemap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 15 },
-      { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 16 },
-      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 17 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 10 },
     ],
   },
 
@@ -713,30 +706,24 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   {
     slug: 'defi-deep-dive',
     name: 'DeFi Deep Dive',
-    description: 'DeFi analytics — heatmaps, category bars, area charts, waterfall, bubble, radar, box plots, returns, correlation, supply, volume, treemap, and rankings.',
+    description: 'DeFi analytics — real TVL rankings, yield pools, chain comparison, heatmaps, category bars, bubble, radar, and full rankings. Powered by DeFi Llama + CoinGecko.',
     icon: '🔮',
     tier: 'pro',
     gridColumns: 4,
-    requiredEndpoints: ['markets', 'global', 'defi_global', 'categories', 'fear_greed'],
+    requiredEndpoints: ['markets', 'global', 'defi_global', 'categories', 'fear_greed', 'defillama_protocols', 'defillama_yields'],
     widgets: [
       { id: 'kpis', component: 'KPICards', title: 'DeFi Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], props: { mode: 'defi' }, mobileOrder: 1 },
-      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 2 },
-      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 3 },
-      { id: 'area-vol', component: 'AreaChartWidget', title: 'Stacked Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 4 },
-      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 }, mobileOrder: 5 },
-      { id: 'pie', component: 'PieChartWidget', title: 'DeFi Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 6 },
-      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 7 },
-      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 8 },
-      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 9 },
-      { id: 'boxplot', component: 'BoxPlotWidget', title: '7d Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 10 },
-      { id: 'returns-bar', component: 'ReturnsBarWidget', title: 'Returns Comparison', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 11 },
-      { id: 'correlation', component: 'CorrelationWidget', title: 'Correlation Matrix', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 12 },
-      { id: 'dominance', component: 'DominanceWidget', title: 'Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 13 },
-      { id: 'supply', component: 'SupplyWidget', title: 'Supply Analysis', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 14 },
-      { id: 'volume', component: 'VolumeChartWidget', title: 'Volume Rankings', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 15 },
-      { id: 'treemap', component: 'TreemapWidget', title: 'Market Cap Treemap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 16 },
-      { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 17 },
-      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 18 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 2 },
+      { id: 'yield-table', component: 'DefiYieldTableWidget', title: 'Top Yield Pools', gridColumn: '1 / -1', dataEndpoints: ['defillama_yields'], mobileOrder: 3 },
+      { id: 'tvl-treemap', component: 'DefiTVLChartWidget', title: 'TVL Treemap', gridColumn: 'span 2', dataEndpoints: ['defillama_protocols'], mobileOrder: 4 },
+      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 5 },
+      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 6 },
+      { id: 'pie', component: 'PieChartWidget', title: 'DeFi Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 7 },
+      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 8 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 9 },
+      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 10 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 11 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 12 },
     ],
   },
 
@@ -1013,25 +1000,24 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   {
     slug: 'tvl-fundamentals',
     name: 'TVL & DeFi Fundamentals',
-    description: 'DeFi fundamentals — TVL metrics, DeFi market cap, DeFi/ETH ratio, sector heatmaps, category rankings, and protocol performance.',
+    description: 'DeFi fundamentals — real TVL by protocol & chain, chain comparison radar, sector heatmaps, category rankings, and market context. Powered by DeFi Llama + CoinGecko.',
     icon: '🏦',
     tier: 'pro',
     gridColumns: 4,
-    requiredEndpoints: ['markets', 'global', 'categories', 'fear_greed', 'trending', 'defi_global'],
+    requiredEndpoints: ['markets', 'global', 'categories', 'fear_greed', 'trending', 'defi_global', 'defillama_protocols', 'defillama_chains'],
     widgets: [
       { id: 'kpis', component: 'KPICards', title: 'DeFi Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], props: { mode: 'defi' }, mobileOrder: 1 },
-      { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'DeFi TVL Metrics', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'], mobileOrder: 2 },
-      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 3 },
-      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 4 },
-      { id: 'treemap', component: 'TreemapWidget', title: 'DeFi Market Cap Map', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 5 },
-      { id: 'area-chart', component: 'AreaChartWidget', title: 'DeFi Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 6 },
-      { id: 'radar', component: 'RadarChartWidget', title: 'DeFi Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 7 },
-      { id: 'bubble', component: 'BubbleChartWidget', title: 'Cap vs Performance', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 8 },
-      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Change Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 12 }, mobileOrder: 9 },
-      { id: 'pie', component: 'PieChartWidget', title: 'DeFi Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 10 },
-      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 11 },
-      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 12 },
-      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 13 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 2 },
+      { id: 'chain-tvl', component: 'DefiChainTVLWidget', title: 'Chain TVL', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'], mobileOrder: 3 },
+      { id: 'chain-radar', component: 'ChainCompareWidget', title: 'Chain Comparison', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'], mobileOrder: 4 },
+      { id: 'tvl-treemap', component: 'DefiTVLChartWidget', title: 'TVL Treemap', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 5 },
+      { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'CoinGecko DeFi TVL', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'], mobileOrder: 6 },
+      { id: 'heatmap', component: 'HeatmapWidget', title: 'DeFi Sector Heatmap', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 7 },
+      { id: 'category-bar', component: 'CategoryBarWidget', title: 'Category Performance', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 8 },
+      { id: 'pie', component: 'PieChartWidget', title: 'DeFi Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 9 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 10 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 11 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Top DeFi Tokens', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 12 },
     ],
   },
 
@@ -1428,22 +1414,23 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   },
 
   {
-    slug: 'stablecoin-monitor',
+    slug: 'stablecoin-capital',
     name: 'Stablecoin Capital Monitor',
-    description: 'Free stablecoin tracker — monitor dominance shifts, supply metrics, stacked area trends, and capital allocation across stablecoins.',
+    description: 'Stablecoin tracker — real supply data from DeFi Llama, dominance shifts, market share pie, area trends, and capital allocation.',
     icon: '💵',
     tier: 'free',
     gridColumns: 4,
-    requiredEndpoints: ['markets', 'global'],
+    requiredEndpoints: ['markets', 'global', 'defillama_stablecoins'],
     widgets: [
       { id: 'kpis', component: 'KPICards', title: 'Market Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], mobileOrder: 1 },
-      { id: 'dominance-area', component: 'DominanceAreaWidget', title: 'Dominance Trends', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 2 },
-      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 3 },
-      { id: 'supply', component: 'SupplyWidget', title: 'Stablecoin Supply', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 4 },
-      { id: 'area-chart', component: 'AreaChartWidget', title: 'Volume Trends', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 5 },
-      { id: 'pie', component: 'PieChartWidget', title: 'Market Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 6 },
-      { id: 'radial-bar', component: 'RadialBarWidget', title: 'Cap Comparison', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10, mode: 'market_cap' }, mobileOrder: 7 },
-      { id: 'top-coins', component: 'TopCoinsTable', title: 'Stablecoin Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 8 },
+      { id: 'stablecoin-dominance', component: 'StablecoinDominanceWidget', title: 'Stablecoin Market Share', gridColumn: '1 / -1', dataEndpoints: ['defillama_stablecoins'], mobileOrder: 2 },
+      { id: 'dominance-area', component: 'DominanceAreaWidget', title: 'Dominance Trends', gridColumn: 'span 2', dataEndpoints: ['markets', 'global'], mobileOrder: 3 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 4 },
+      { id: 'supply', component: 'SupplyWidget', title: 'Stablecoin Supply', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 5 },
+      { id: 'area-chart', component: 'AreaChartWidget', title: 'Volume Trends', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8, mode: 'volume' }, mobileOrder: 6 },
+      { id: 'pie', component: 'PieChartWidget', title: 'Market Allocation', gridColumn: 'span 2', dataEndpoints: ['global'], props: { mode: 'dominance' }, mobileOrder: 7 },
+      { id: 'radial-bar', component: 'RadialBarWidget', title: 'Cap Comparison', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10, mode: 'market_cap' }, mobileOrder: 8 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Stablecoin Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 9 },
     ],
   },
 
@@ -1469,20 +1456,22 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
   {
     slug: 'defi-yield-explorer',
     name: 'DeFi Yield Explorer',
-    description: 'Explore DeFi ecosystem — TVL metrics, DEX volume market share, category rankings, and bubble charts for DeFi token analysis.',
+    description: 'Explore DeFi yields — real yield pool rankings from DeFi Llama, TVL metrics, DEX volume, category rankings, and token analysis.',
     icon: '🌾',
     tier: 'pro',
     gridColumns: 4,
-    requiredEndpoints: ['markets', 'global', 'categories', 'exchanges', 'defi_global'],
+    requiredEndpoints: ['markets', 'global', 'categories', 'exchanges', 'defi_global', 'defillama_yields', 'defillama_protocols'],
     widgets: [
       { id: 'kpis', component: 'KPICards', title: 'DeFi Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], mobileOrder: 1 },
-      { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'DeFi TVL Metrics', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'], mobileOrder: 2 },
-      { id: 'dex-volume', component: 'DEXVolumeWidget', title: 'DEX Volume & Share', gridColumn: 'span 2', dataEndpoints: ['exchanges'], mobileOrder: 3 },
-      { id: 'category-bar', component: 'CategoryBarWidget', title: 'DeFi Category Perf', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 4 },
-      { id: 'bubble', component: 'BubbleChartWidget', title: 'DeFi Cap vs Yield', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 5 },
-      { id: 'category-badges', component: 'CategoryBadgesWidget', title: 'DeFi Sectors', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 6 },
-      { id: 'treemap', component: 'TreemapWidget', title: 'DeFi Market Map', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 30 }, mobileOrder: 7 },
-      { id: 'top-coins', component: 'TopCoinsTable', title: 'DeFi Token Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 8 },
+      { id: 'yield-table', component: 'DefiYieldTableWidget', title: 'Top Yield Pools', gridColumn: '1 / -1', dataEndpoints: ['defillama_yields'], mobileOrder: 2 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 3 },
+      { id: 'tvl-treemap', component: 'DefiTVLChartWidget', title: 'TVL Treemap', gridColumn: 'span 2', dataEndpoints: ['defillama_protocols'], mobileOrder: 4 },
+      { id: 'tvl-indicator', component: 'TVLIndicatorWidget', title: 'DeFi TVL Metrics', gridColumn: 'span 2', dataEndpoints: ['defi_global', 'markets'], mobileOrder: 5 },
+      { id: 'dex-volume', component: 'DEXVolumeWidget', title: 'DEX Volume & Share', gridColumn: 'span 2', dataEndpoints: ['exchanges'], mobileOrder: 6 },
+      { id: 'category-bar', component: 'CategoryBarWidget', title: 'DeFi Category Perf', gridColumn: 'span 2', dataEndpoints: ['categories'], props: { limit: 12 }, mobileOrder: 7 },
+      { id: 'bubble', component: 'BubbleChartWidget', title: 'DeFi Cap vs Yield', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 8 },
+      { id: 'category-badges', component: 'CategoryBadgesWidget', title: 'DeFi Sectors', gridColumn: 'span 2', dataEndpoints: ['categories'], mobileOrder: 9 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'DeFi Token Rankings', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 10 },
     ],
   },
 
@@ -1847,6 +1836,127 @@ export const LIVE_DASHBOARDS: LiveDashboardDefinition[] = [
       { id: 'top-coins', component: 'TopCoinsTable', title: 'Whale Watch List', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 25 }, mobileOrder: 10 },
     ],
   },
+
+  // ─── PROTOCOL DEFI LLAMA DASHBOARDS (6) ──────────────────────────────
+
+  {
+    slug: 'protocol-aave',
+    name: 'Aave Analytics',
+    description: 'Aave protocol deep dive — TVL history, chain breakdown, fees & revenue, and market context. Powered by DeFi Llama (free).',
+    icon: '👻',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_protocol_tvl', 'defillama_fees_overview', 'markets'],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'Aave Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug: 'aave' }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 4 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 5 },
+    ],
+  },
+  {
+    slug: 'protocol-uniswap',
+    name: 'Uniswap Analytics',
+    description: 'Uniswap protocol deep dive — TVL, DEX volume rankings, chain breakdown, fees, and market context. Powered by DeFi Llama (free).',
+    icon: '🦄',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'markets'],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'Uniswap Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug: 'uniswap' }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'dex-volumes', component: 'DexVolumeOverviewWidget', title: 'DEX Volume Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_dex_overview'], mobileOrder: 4 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 5 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 6 },
+    ],
+  },
+  {
+    slug: 'protocol-lido',
+    name: 'Lido Analytics',
+    description: 'Lido staking protocol deep dive — TVL history, chain breakdown, fees & revenue, and market context. Powered by DeFi Llama (free).',
+    icon: '🌊',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_protocol_tvl', 'defillama_fees_overview', 'markets'],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'Lido Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug: 'lido' }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 4 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 5 },
+    ],
+  },
+  {
+    slug: 'protocol-makerdao',
+    name: 'MakerDAO Analytics',
+    description: 'MakerDAO protocol deep dive — TVL history, chain breakdown, fees & revenue, and market context. Powered by DeFi Llama (free).',
+    icon: '🏛️',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_protocol_tvl', 'defillama_fees_overview', 'markets'],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'MakerDAO Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug: 'makerdao' }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 4 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 5 },
+    ],
+  },
+  {
+    slug: 'protocol-compound',
+    name: 'Compound Analytics',
+    description: 'Compound protocol deep dive — TVL history, chain breakdown, fees & revenue, and market context. Powered by DeFi Llama (free).',
+    icon: '🟢',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_protocol_tvl', 'defillama_fees_overview', 'markets'],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'Compound Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug: 'compound-finance' }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 4 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 5 },
+    ],
+  },
+  {
+    slug: 'dex-analytics',
+    name: 'DEX Analytics',
+    description: 'Decentralized exchange analytics — DEX volume rankings, protocol fees, TVL comparison, and DeFi protocol data. Powered by DeFi Llama (free).',
+    icon: '🔄',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['defillama_dex_overview', 'defillama_fees_overview', 'defillama_protocols', 'markets'],
+    widgets: [
+      { id: 'dex-volumes', component: 'DexVolumeOverviewWidget', title: 'DEX Volume Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_dex_overview'], mobileOrder: 1 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 2 },
+      { id: 'top-protocols', component: 'TopProtocolsCompareWidget', title: 'Top Protocol TVL Comparison', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 3 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 4 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 5 },
+    ],
+  },
+
+  // ─── WALLET & ON-CHAIN DASHBOARD ──────────────────────────────
+
+  {
+    slug: 'wallet-tracker',
+    name: 'Wallet Tracker',
+    description: 'On-chain wallet analytics — token balances, transfer history, portfolio allocation, and market context. Powered by Alchemy.',
+    icon: '👛',
+    tier: 'pro',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'alchemy_balances', 'alchemy_transfers'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: 'Market Stats', gridColumn: '1 / -1', dataEndpoints: ['global'], mobileOrder: 1 },
+      { id: 'wallet-portfolio', component: 'WalletPortfolioWidget', title: 'Wallet Portfolio', gridColumn: '1 / -1', dataEndpoints: ['alchemy_balances'], mobileOrder: 2 },
+      { id: 'wallet-allocation', component: 'WalletAllocationWidget', title: 'Token Allocation', gridColumn: 'span 2', dataEndpoints: ['alchemy_balances'], mobileOrder: 3 },
+      { id: 'wallet-activity', component: 'WalletActivityWidget', title: 'Recent Transfers', gridColumn: 'span 2', dataEndpoints: ['alchemy_transfers'], mobileOrder: 4 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 5 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 6 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 20 }, mobileOrder: 7 },
+    ],
+  },
 ];
 
 // ─── AUTO-AUGMENT: Ensure every dashboard has access to ALL chart types ───────
@@ -1956,6 +2066,33 @@ const DERIVATIVES_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
   { id: 'liq-estimate', component: 'LiquidationEstimateWidget', title: 'Liquidation Risk Estimate', gridColumn: 'span 2', dataEndpoints: ['derivatives', 'markets'] },
 ];
 
+/** DeFi Llama widgets — added to dashboards that already fetch defillama_* endpoints */
+const DEFILLAMA_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'] },
+  { id: 'chain-tvl', component: 'DefiChainTVLWidget', title: 'Chain TVL', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'] },
+  { id: 'chain-radar', component: 'ChainCompareWidget', title: 'Chain Compare', gridColumn: 'span 2', dataEndpoints: ['defillama_chains'] },
+  { id: 'tvl-treemap', component: 'DefiTVLChartWidget', title: 'TVL Treemap', gridColumn: 'span 2', dataEndpoints: ['defillama_protocols'] },
+  { id: 'yield-table', component: 'DefiYieldTableWidget', title: 'Top Yield Pools', gridColumn: '1 / -1', dataEndpoints: ['defillama_yields'] },
+  { id: 'stablecoin-dominance', component: 'StablecoinDominanceWidget', title: 'Stablecoin Market Share', gridColumn: 'span 2', dataEndpoints: ['defillama_stablecoins'] },
+];
+
+/** Protocol DeFi Llama widgets — added to dashboards that fetch defillama_protocol_tvl, defillama_dex_overview, or defillama_fees_overview */
+const PROTOCOL_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'protocol-info', component: 'ProtocolInfoWidget', title: 'Protocol Overview', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'] },
+  { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'] },
+  { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'] },
+  { id: 'dex-volumes', component: 'DexVolumeOverviewWidget', title: 'DEX Volume Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_dex_overview'] },
+  { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'] },
+  { id: 'top-protocols', component: 'TopProtocolsCompareWidget', title: 'Top Protocol TVL Comparison', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'] },
+];
+
+/** Alchemy wallet widgets — added to dashboards that already fetch alchemy_* endpoints */
+const ALCHEMY_AUGMENT: Omit<WidgetConfig, 'mobileOrder'>[] = [
+  { id: 'wallet-portfolio', component: 'WalletPortfolioWidget', title: 'Wallet Portfolio', gridColumn: '1 / -1', dataEndpoints: ['alchemy_balances'] },
+  { id: 'wallet-allocation', component: 'WalletAllocationWidget', title: 'Token Allocation', gridColumn: 'span 2', dataEndpoints: ['alchemy_balances'] },
+  { id: 'wallet-activity', component: 'WalletActivityWidget', title: 'Recent Transfers', gridColumn: 'span 2', dataEndpoints: ['alchemy_transfers'] },
+];
+
 // Run augmentation on every dashboard
 LIVE_DASHBOARDS.forEach((dashboard) => {
   // 1. Ensure universal endpoints are present (cheap lightweight calls)
@@ -1993,8 +2130,116 @@ LIVE_DASHBOARDS.forEach((dashboard) => {
   if (dashboard.requiredEndpoints.includes('derivatives') || dashboard.requiredEndpoints.includes('derivatives_exchanges')) {
     DERIVATIVES_AUGMENT.forEach(addIfMissing);
   }
+  if (dashboard.requiredEndpoints.some((ep: string) => ep.startsWith('defillama_'))) {
+    DEFILLAMA_AUGMENT.filter((w) =>
+      w.dataEndpoints.every((dep) => dashboard.requiredEndpoints.includes(dep))
+    ).forEach(addIfMissing);
+    PROTOCOL_AUGMENT.filter((w) =>
+      w.dataEndpoints.every((dep) => dashboard.requiredEndpoints.includes(dep))
+    ).forEach(addIfMissing);
+  }
+  if (dashboard.requiredEndpoints.some((ep: string) => ep.startsWith('alchemy_'))) {
+    ALCHEMY_AUGMENT.filter((w) =>
+      w.dataEndpoints.every((dep) => dashboard.requiredEndpoints.includes(dep))
+    ).forEach(addIfMissing);
+  }
 });
 
 export function getDashboardBySlug(slug: string): LiveDashboardDefinition | undefined {
   return LIVE_DASHBOARDS.find((d) => d.slug === slug);
 }
+
+// ─── DYNAMIC DASHBOARD GENERATORS (for auto-generated 5000+ dashboards) ───
+
+function prettifySlug(slug: string): string {
+  return slug
+    .split(/[-_]+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
+
+/** Generate a dashboard definition for any DeFi Llama protocol (100% free, no API key). */
+export function generateProtocolDashboard(protocolSlug: string): LiveDashboardDefinition {
+  const name = prettifySlug(protocolSlug);
+  return {
+    slug: `protocol-${protocolSlug}`,
+    name: `${name} Analytics`,
+    description: `Auto-generated analytics for ${name} — TVL history, chain breakdown, fees & revenue, DEX volumes, and protocol comparison. Powered by DeFi Llama (free).`,
+    icon: '🔬',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: [
+      'defillama_protocol_tvl',
+      'defillama_fees_overview',
+      'defillama_dex_overview',
+      'defillama_protocols',
+    ],
+    widgets: [
+      { id: 'protocol-info', component: 'ProtocolInfoWidget', title: `${name} Overview`, gridColumn: '1 / -1', dataEndpoints: ['defillama_protocol_tvl'], props: { protocolSlug }, mobileOrder: 1 },
+      { id: 'tvl-history', component: 'ProtocolTVLHistoryWidget', title: 'TVL History (90d)', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 2 },
+      { id: 'chain-breakdown', component: 'ProtocolChainBreakdownWidget', title: 'TVL by Chain', gridColumn: 'span 2', dataEndpoints: ['defillama_protocol_tvl'], mobileOrder: 3 },
+      { id: 'dex-volumes', component: 'DexVolumeOverviewWidget', title: 'DEX Volume Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_dex_overview'], mobileOrder: 4 },
+      { id: 'protocol-fees', component: 'ProtocolFeesWidget', title: 'Protocol Fees & Revenue', gridColumn: '1 / -1', dataEndpoints: ['defillama_fees_overview'], mobileOrder: 5 },
+      { id: 'top-protocols', component: 'TopProtocolsCompareWidget', title: 'Top Protocol TVL Comparison', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 6 },
+      { id: 'tvl-ranking', component: 'DefiTVLRankingWidget', title: 'Protocol TVL Rankings', gridColumn: '1 / -1', dataEndpoints: ['defillama_protocols'], mobileOrder: 7 },
+    ],
+  };
+}
+
+/** Generate a dashboard definition for any CoinGecko coin (requires API key). */
+export function generateCoinDashboard(coinId: string): LiveDashboardDefinition {
+  const name = prettifySlug(coinId);
+  return {
+    slug: `coin-${coinId}`,
+    name: `${name} Dashboard`,
+    description: `Auto-generated dashboard for ${name} — candlestick, price history, volume analysis, market context, and technical indicators.`,
+    icon: '🪙',
+    tier: 'free',
+    gridColumns: 4,
+    requiredEndpoints: ['markets', 'global', 'fear_greed', 'ohlc', 'coin_history'],
+    widgets: [
+      { id: 'kpis', component: 'KPICards', title: `${name} Stats`, gridColumn: '1 / -1', dataEndpoints: ['markets', 'global'], props: { mode: 'bitcoin' }, mobileOrder: 1 },
+      { id: 'candlestick', component: 'CandlestickChartWidget', title: `${name} Candlestick (30d)`, gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId, days: 30 }, mobileOrder: 2 },
+      { id: 'historical', component: 'HistoricalPriceWidget', title: `${name} Historical (90d)`, gridColumn: 'span 2', dataEndpoints: ['coin_history'], props: { coinId, days: 90 }, mobileOrder: 3 },
+      { id: 'price-chart', component: 'PriceChartWidget', title: `${name} Price Trend (30d)`, gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId, days: 30 }, mobileOrder: 4 },
+      { id: 'mcap-timeline', component: 'MarketCapTimelineWidget', title: `${name} Market Cap (30d)`, gridColumn: 'span 2', dataEndpoints: ['ohlc'], props: { coinId, days: 30 }, mobileOrder: 5 },
+      { id: 'area-vol', component: 'AreaChartWidget', title: 'Stacked Volume (7d)', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 6, mode: 'volume' }, mobileOrder: 6 },
+      { id: 'waterfall', component: 'WaterfallChartWidget', title: '24h Change Waterfall', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 7 },
+      { id: 'fear-greed', component: 'FearGreedWidget', title: 'Market Sentiment', gridColumn: 'span 2', dataEndpoints: ['fear_greed'], mobileOrder: 8 },
+      { id: 'dominance', component: 'DominanceWidget', title: 'Market Dominance', gridColumn: 'span 2', dataEndpoints: ['global'], mobileOrder: 9 },
+      { id: 'radar', component: 'RadarChartWidget', title: 'Metric Radar', gridColumn: 'span 2', dataEndpoints: ['markets'], mobileOrder: 10 },
+      { id: 'boxplot', component: 'BoxPlotWidget', title: '7d Distribution', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 8 }, mobileOrder: 11 },
+      { id: 'supply', component: 'SupplyWidget', title: 'Supply Analysis', gridColumn: 'span 2', dataEndpoints: ['markets'], props: { limit: 10 }, mobileOrder: 12 },
+      { id: 'perf-heatmap', component: 'PerformanceHeatmapWidget', title: 'Performance Heatmap', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 13 },
+      { id: 'top-coins', component: 'TopCoinsTable', title: 'Market Context', gridColumn: '1 / -1', dataEndpoints: ['markets'], props: { limit: 15 }, mobileOrder: 14 },
+    ],
+  };
+}
+
+/** Pre-set popular coins for the explore page */
+export const POPULAR_COINS = [
+  { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', icon: '₿' },
+  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', icon: '🔷' },
+  { id: 'solana', name: 'Solana', symbol: 'SOL', icon: '🟣' },
+  { id: 'cardano', name: 'Cardano', symbol: 'ADA', icon: '🔵' },
+  { id: 'polkadot', name: 'Polkadot', symbol: 'DOT', icon: '⚪' },
+  { id: 'avalanche-2', name: 'Avalanche', symbol: 'AVAX', icon: '🔺' },
+  { id: 'chainlink', name: 'Chainlink', symbol: 'LINK', icon: '🔗' },
+  { id: 'matic-network', name: 'Polygon', symbol: 'MATIC', icon: '🟪' },
+  { id: 'cosmos', name: 'Cosmos', symbol: 'ATOM', icon: '⚛️' },
+  { id: 'uniswap', name: 'Uniswap', symbol: 'UNI', icon: '🦄' },
+  { id: 'aave', name: 'Aave', symbol: 'AAVE', icon: '👻' },
+  { id: 'litecoin', name: 'Litecoin', symbol: 'LTC', icon: '🪙' },
+  { id: 'near', name: 'NEAR Protocol', symbol: 'NEAR', icon: '🌐' },
+  { id: 'arbitrum', name: 'Arbitrum', symbol: 'ARB', icon: '🔵' },
+  { id: 'optimism', name: 'Optimism', symbol: 'OP', icon: '🔴' },
+  { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', icon: '🐕' },
+  { id: 'shiba-inu', name: 'Shiba Inu', symbol: 'SHIB', icon: '🐕' },
+  { id: 'pepe', name: 'Pepe', symbol: 'PEPE', icon: '🐸' },
+  { id: 'sui', name: 'Sui', symbol: 'SUI', icon: '💧' },
+  { id: 'aptos', name: 'Aptos', symbol: 'APT', icon: '🏔️' },
+  { id: 'ripple', name: 'XRP', symbol: 'XRP', icon: '💠' },
+  { id: 'tron', name: 'TRON', symbol: 'TRX', icon: '⚡' },
+  { id: 'binancecoin', name: 'BNB', symbol: 'BNB', icon: '🟡' },
+  { id: 'the-open-network', name: 'Toncoin', symbol: 'TON', icon: '💎' },
+];

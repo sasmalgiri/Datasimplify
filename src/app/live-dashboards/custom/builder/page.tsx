@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { ArrowLeft, Plus, Trash2, GripVertical, Save, Layout, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, GripVertical, Save, Layout, ChevronDown, Upload, Loader2, CheckCircle, X } from 'lucide-react';
 
 // ─── Data Model ───
 interface CustomDashboardWidget {
@@ -38,6 +38,9 @@ const WIDGET_CATEGORIES: Record<string, string[]> = {
   'Intelligence': ['CryptoHealthScoreWidget', 'SmartSignalWidget', 'RiskRadarWidget', 'AlphaFinderWidget', 'MarketBriefWidget'],
   'Utilities': ['PriceConverterWidget', 'WatchlistWidget', 'PriceAlertWidget'],
   'Portfolio & Tax': ['TaxReportWidget', 'DCASimulatorWidget', 'DCATrackerWidget', 'PortfolioInputWidget', 'PLSummaryWidget', 'PLChartWidget', 'AllocationPieWidget', 'ScreenerWidget', 'ExchangeBalanceWidget', 'CycleComparisonWidget'],
+  'DeFi Llama': ['DefiTVLRankingWidget', 'DefiChainTVLWidget', 'DefiYieldTableWidget', 'StablecoinDominanceWidget', 'DefiTVLChartWidget', 'ChainCompareWidget'],
+  'Protocol Analytics': ['ProtocolTVLHistoryWidget', 'ProtocolInfoWidget', 'ProtocolChainBreakdownWidget', 'DexVolumeOverviewWidget', 'ProtocolFeesWidget', 'TopProtocolsCompareWidget'],
+  'Wallet (Alchemy)': ['WalletPortfolioWidget', 'WalletActivityWidget', 'WalletAllocationWidget'],
 };
 
 // Human-readable names for widget components
@@ -167,6 +170,44 @@ function BuilderContent() {
     });
   }, []);
 
+  // Publish to community state
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishAuthor, setPublishAuthor] = useState('');
+  const [publishDesc, setPublishDesc] = useState('');
+  const [publishTags, setPublishTags] = useState<string[]>([]);
+  const [publishing, setPublishing] = useState(false);
+  const [publishSuccess, setPublishSuccess] = useState(false);
+
+  const PUBLISH_TAGS = ['DeFi', 'Bitcoin', 'Portfolio', 'Trading', 'Whale', 'Meme', 'NFT', 'Analytics', 'Staking', 'Layer 2'];
+
+  const handlePublish = async () => {
+    if (!name.trim() || widgets.length === 0) return;
+    setPublishing(true);
+    try {
+      const res = await fetch('/api/live-dashboard/community', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authorName: publishAuthor.trim() || 'Anonymous',
+          authorAvatar: '👤',
+          dashboardName: name.trim(),
+          icon: icon || '📊',
+          description: publishDesc.trim() || `A custom dashboard with ${widgets.length} widgets.`,
+          widgetConfig: widgets,
+          gridColumns,
+          tags: publishTags,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to publish');
+      setPublishSuccess(true);
+      setTimeout(() => { setPublishOpen(false); setPublishSuccess(false); }, 2000);
+    } catch {
+      // Silently handle — user can retry
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   // Save dashboard
   const handleSave = useCallback(() => {
     if (!name.trim()) return;
@@ -210,18 +251,32 @@ function BuilderContent() {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleSave}
-            disabled={!canSave}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition ${
-              canSave
-                ? `${st.buttonPrimary}`
-                : 'bg-gray-700/30 text-gray-600 cursor-not-allowed'
-            }`}
-          >
-            <Save className="w-4 h-4" />
-            {isEditing ? 'Update' : 'Save'} Dashboard
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPublishOpen(true)}
+              disabled={!canSave}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition ${
+                canSave
+                  ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500/20'
+                  : 'bg-gray-700/30 text-gray-600 cursor-not-allowed'
+              }`}
+            >
+              <Upload className="w-4 h-4" />
+              Publish
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!canSave}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-sm transition ${
+                canSave
+                  ? `${st.buttonPrimary}`
+                  : 'bg-gray-700/30 text-gray-600 cursor-not-allowed'
+              }`}
+            >
+              <Save className="w-4 h-4" />
+              {isEditing ? 'Update' : 'Save'} Dashboard
+            </button>
+          </div>
         </div>
 
         {/* ─── Dashboard Settings ─── */}
@@ -462,6 +517,91 @@ function BuilderContent() {
                 <Save className="w-4 h-4" />
                 {isEditing ? 'Update' : 'Save'} Dashboard
               </button>
+            </div>
+          </div>
+        )}
+        {/* ─── Publish to Community Modal ─── */}
+        {publishOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setPublishOpen(false)} />
+            <div className="relative bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+              <button type="button" onClick={() => setPublishOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-white transition" title="Close">
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-xl bg-purple-500/10">
+                  <Upload className="w-6 h-6 text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">Publish to Community</h2>
+                  <p className="text-sm text-gray-400">Share your dashboard with the CRK community</p>
+                </div>
+              </div>
+
+              {publishSuccess ? (
+                <div className="flex flex-col items-center py-8 text-center">
+                  <CheckCircle className="w-12 h-12 text-emerald-400 mb-3" />
+                  <p className="text-white font-medium">Published successfully!</p>
+                  <p className="text-gray-400 text-sm mt-1">Your dashboard is now available in the community gallery.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Author Name <span className="text-gray-600">(optional)</span></label>
+                      <input
+                        type="text"
+                        value={publishAuthor}
+                        onChange={(e) => setPublishAuthor(e.target.value)}
+                        placeholder="Anonymous"
+                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">Description <span className="text-gray-600">(optional)</span></label>
+                      <textarea
+                        value={publishDesc}
+                        onChange={(e) => setPublishDesc(e.target.value)}
+                        placeholder="A brief description of your dashboard..."
+                        rows={2}
+                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-purple-500 resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-2">Tags</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {PUBLISH_TAGS.map((tag) => (
+                          <button
+                            type="button"
+                            key={tag}
+                            onClick={() => setPublishTags((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition ${
+                              publishTags.includes(tag)
+                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                : 'bg-gray-700/50 text-gray-400 border border-gray-600 hover:border-gray-500'
+                            }`}
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    className="w-full mt-5 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2"
+                  >
+                    {publishing ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Publishing...</>
+                    ) : (
+                      <><Upload className="w-4 h-4" /> Publish Dashboard</>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -1,10 +1,18 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Download, FileImage, FileText, FileSpreadsheet, FileDown, Loader2, CheckCircle, AlertCircle, Lock, Crown } from 'lucide-react';
+import { Download, FileImage, FileText, FileSpreadsheet, FileDown, Loader2, CheckCircle, AlertCircle, Lock, Crown, Zap } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { useExportGating } from '@/lib/live-dashboard/useExportGating';
+import { useCreditStore, CREDIT_COSTS, type CreditAction } from '@/lib/live-dashboard/credits';
 import type { ExportFormat } from '@/lib/entitlements';
+
+const FORMAT_TO_CREDIT: Record<ExportFormat, CreditAction> = {
+  png: 'export_png',
+  pdf: 'export_pdf',
+  excel: 'export_excel',
+  csv: 'export_csv',
+};
 
 interface ExportButtonProps {
   dashboardName: string;
@@ -24,6 +32,8 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const data = useLiveDashboardStore((s) => s.data);
   const { entitlement, trackExport } = useExportGating();
+  const canAfford = useCreditStore((s) => s.canAfford);
+  const creditUse = useCreditStore((s) => s.useCredits);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -55,6 +65,14 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
       return;
     }
 
+    // Check credit balance
+    const creditAction = FORMAT_TO_CREDIT[format];
+    if (!canAfford(creditAction)) {
+      setToast({ type: 'info', message: `Not enough credits (need ${CREDIT_COSTS[creditAction]}). Buy more credits.` });
+      setOpen(false);
+      return;
+    }
+
     setExporting(true);
     setOpen(false);
 
@@ -75,6 +93,7 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
       }
 
       await trackExport(format);
+      creditUse(creditAction, `Exported ${dashboardName} as ${format.toUpperCase()}`);
       setToast({ type: 'success', message: `${format.toUpperCase()} exported successfully` });
     } catch (err: any) {
       setToast({ type: 'error', message: err.message || 'Export failed' });
@@ -136,6 +155,12 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
                   <span className="flex items-center gap-1 text-[10px] text-amber-500/70 font-medium">
                     <Crown className="w-3 h-3" />
                     PRO
+                  </span>
+                )}
+                {allowed && (
+                  <span className="flex items-center gap-0.5 text-[10px] text-amber-400/70 font-medium">
+                    <Zap className="w-2.5 h-2.5" />
+                    {CREDIT_COSTS[FORMAT_TO_CREDIT[format]]}
                   </span>
                 )}
                 {allowed && format === 'png' && isFree && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw, Key, LogOut, Clock, Shield, Timer } from 'lucide-react';
+import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
@@ -9,6 +9,10 @@ import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
 import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
+import AIChatPanel from './AIChatPanel';
+import DashboardAlertPanel, { useAlertCount } from './DashboardAlertPanel';
+import { CreditBalancePill } from './CreditBalance';
+import { useInitCredits } from '@/lib/live-dashboard/credits';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 
 const AUTO_REFRESH_OPTIONS = [
@@ -26,8 +30,12 @@ interface DashboardShellProps {
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
   const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme } = useLiveDashboardStore();
   const st = getSiteThemeClasses(siteTheme);
+  useInitCredits();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [customizeOpen, setCustomizeOpen] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [alertPanelOpen, setAlertPanelOpen] = useState(false);
+  const alertCount = useAlertCount();
 
   const handleRefresh = useCallback(() => {
     // Read customization fresh from store to avoid stale closure
@@ -62,6 +70,11 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       const detailWidget = definition.widgets.find((w) => w.props?.coinId);
       params.detailCoinId = c.coinId || detailWidget?.props?.coinId || 'bitcoin';
     }
+    const needsProtocol = definition.requiredEndpoints.includes('defillama_protocol_tvl');
+    if (needsProtocol) {
+      const protocolWidget = definition.widgets.find((w) => w.props?.protocolSlug);
+      params.protocolSlug = protocolWidget?.props?.protocolSlug || definition.slug.replace('protocol-', '');
+    }
     fetchData(definition.requiredEndpoints, params);
   }, [definition, fetchData]);
 
@@ -93,8 +106,16 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         case 'c':
           if (!e.metaKey && !e.ctrlKey) setCustomizeOpen((v) => !v);
           break;
+        case 'a':
+          if (!e.metaKey && !e.ctrlKey) setAiPanelOpen((v) => !v);
+          break;
+        case 'l':
+          if (!e.metaKey && !e.ctrlKey) setAlertPanelOpen((v) => !v);
+          break;
         case 'escape':
           setCustomizeOpen(false);
+          setAiPanelOpen(false);
+          setAlertPanelOpen(false);
           break;
       }
     };
@@ -154,6 +175,36 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
           {/* API Usage — hidden when customize open */}
           {!customizeOpen && apiKey && <ApiUsagePill definition={definition} />}
+
+          {/* Credits pill — hidden when customize open */}
+          {!customizeOpen && <CreditBalancePill />}
+
+          {/* AI Chat */}
+          {!customizeOpen && (
+            <button
+              onClick={() => setAiPanelOpen((v) => !v)}
+              className={`p-2 rounded-xl ${aiPanelOpen ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : `${st.buttonSecondary}`} transition`}
+              title="AI Chat (A)"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Alerts */}
+          {!customizeOpen && (
+            <button
+              onClick={() => setAlertPanelOpen((v) => !v)}
+              className={`relative p-2 rounded-xl ${alertPanelOpen ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : `${st.buttonSecondary}`} transition`}
+              title="Alerts (L)"
+            >
+              <Bell className="w-4 h-4" />
+              {alertCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-[9px] font-bold text-black flex items-center justify-center">
+                  {alertCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Customize */}
           <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
@@ -221,17 +272,29 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         <DashboardGrid definition={definition} />
       </div>
 
-      {/* Footer with disclaimer + keyboard hints */}
+      {/* Footer with attribution + disclaimer + keyboard hints */}
       <div className={`flex flex-col sm:flex-row items-center justify-between text-[10px] ${st.textFaint} pt-4 ${st.footerBorder} gap-2`}>
         <div className="flex items-center gap-1.5">
           <Shield className="w-3 h-3 text-emerald-600" />
-          <span>Data sourced from CoinGecko via your personal API key. All exports are strictly for your personal, non-commercial use.</span>
+          <span>
+            Data provided by{' '}
+            <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer" className="hover:underline">CoinGecko</a>
+            {' · '}
+            <a href="https://defillama.com" target="_blank" rel="noopener noreferrer" className="hover:underline">DeFi Llama</a>
+            {' · Powered by '}
+            <a href="https://etherscan.io" target="_blank" rel="noopener noreferrer" className="hover:underline">Etherscan.io APIs</a>
+            . All data via your personal API keys. Exports for personal, non-commercial use.
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <span className={`${st.textFaint} hidden sm:inline`}>
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>R</kbd> Refresh
             <span className="mx-1.5">&middot;</span>
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>C</kbd> Customize
+            <span className="mx-1.5">&middot;</span>
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>A</kbd> AI Chat
+            <span className="mx-1.5">&middot;</span>
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>L</kbd> Alerts
             <span className="mx-1.5">&middot;</span>
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>Esc</kbd> Close
           </span>
@@ -240,6 +303,12 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           </span>
         </div>
       </div>
+
+      {/* AI Chat Panel */}
+      <AIChatPanel isOpen={aiPanelOpen} onClose={() => setAiPanelOpen(false)} dashboardName={definition.name} />
+
+      {/* Alert Panel */}
+      <DashboardAlertPanel isOpen={alertPanelOpen} onClose={() => setAlertPanelOpen(false)} />
     </div>
   );
 }

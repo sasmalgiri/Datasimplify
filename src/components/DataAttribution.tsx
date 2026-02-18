@@ -16,28 +16,46 @@ interface DataSource {
 
 const DATA_SOURCES: DataSource[] = [
   {
+    name: 'CoinGecko',
+    url: 'https://www.coingecko.com/en/api',
+    license: 'Display only (BYOK, attribution required)',
+    note: 'Market prices, charts, and coin data',
+  },
+  {
+    name: 'DeFi Llama',
+    url: 'https://defillama.com',
+    license: 'Open source (free, no key needed)',
+    note: 'DeFi TVL, yields, DEX volumes, protocol fees',
+  },
+  {
     name: 'CoinLore',
     url: 'https://www.coinlore.com',
     license: 'Public API (terms apply)',
     note: 'Market prices and rankings',
   },
   {
-    name: 'DefiLlama',
-    url: 'https://defillama.com',
-    license: 'Public data (terms apply)',
-    note: 'DeFi TVL and protocol data',
+    name: 'Etherscan',
+    url: 'https://etherscan.io',
+    license: 'Display only (BYOK, attribution required)',
+    note: 'Powered by Etherscan.io APIs',
+  },
+  {
+    name: 'BscScan',
+    url: 'https://bscscan.com',
+    license: 'Display only (BYOK, attribution required)',
+    note: 'Powered by BscScan.com APIs',
+  },
+  {
+    name: 'PolygonScan',
+    url: 'https://polygonscan.com',
+    license: 'Display only (BYOK, attribution required)',
+    note: 'Powered by PolygonScan.com APIs',
   },
   {
     name: 'Finnhub',
     url: 'https://finnhub.io',
     license: 'Provider API (terms apply)',
     note: 'News and sentiment data',
-  },
-  {
-    name: 'Etherscan',
-    url: 'https://etherscan.io',
-    license: 'Provider API (terms apply)',
-    note: 'Ethereum blockchain data',
   },
   {
     name: 'Alternative.me',
@@ -52,7 +70,7 @@ export function DataAttributionInline() {
   return (
     <div className="text-xs text-gray-500 dark:text-gray-400">
       Data from{' '}
-      {DATA_SOURCES.slice(0, 4).map((source, i) => (
+      {DATA_SOURCES.slice(0, 5).map((source, i) => (
         <span key={source.name}>
           <a
             href={source.url}
@@ -62,7 +80,7 @@ export function DataAttributionInline() {
           >
             {source.name}
           </a>
-          {i < 3 ? ', ' : ''}
+          {i < 4 ? ', ' : ''}
         </span>
       ))}
       {' & others'}

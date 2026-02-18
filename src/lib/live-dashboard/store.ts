@@ -84,6 +84,117 @@ export interface DerivativesExchange {
   number_of_futures_pairs: number;
 }
 
+// ── DeFi Llama types ──
+export interface DefiProtocol {
+  rank: number;
+  name: string;
+  slug: string;
+  symbol: string;
+  tvl: number;
+  change_1h: number;
+  change_1d: number;
+  change_7d: number;
+  category: string;
+  chains: string[];
+  logo: string;
+  mcap: number;
+}
+
+export interface DefiChain {
+  rank: number;
+  name: string;
+  tvl: number;
+  tokenSymbol: string;
+  gecko_id: string;
+}
+
+export interface DefiYield {
+  pool: string;
+  project: string;
+  chain: string;
+  symbol: string;
+  tvlUsd: number;
+  apy: number;
+  apyBase: number;
+  apyReward: number;
+  stablecoin: boolean;
+}
+
+export interface DefiStablecoin {
+  rank: number;
+  name: string;
+  symbol: string;
+  pegType: string;
+  circulating: number;
+  chains: string[];
+  price: number;
+  gecko_id: string;
+}
+
+// ── DeFi Llama protocol-specific types ──
+export interface DefiProtocolDetail {
+  name: string;
+  slug: string;
+  tvl: number;
+  chainTvls: Record<string, number>;
+  tvlHistory: { date: number; tvl: number }[];
+  chains: string[];
+  category: string;
+  url: string;
+  logo: string;
+  description: string;
+  symbol: string;
+  mcap: number;
+}
+
+export interface DefiDexItem {
+  rank: number;
+  name: string;
+  slug: string;
+  totalVolume24h: number;
+  totalVolume7d: number;
+  change_1d: number;
+  change_7d: number;
+  chains: string[];
+  logo: string;
+}
+
+export interface DefiFeeItem {
+  rank: number;
+  name: string;
+  slug: string;
+  total24h: number;
+  total7d: number;
+  total30d: number;
+  change_1d: number;
+  chains: string[];
+  logo: string;
+  category: string;
+}
+
+// ── Alchemy wallet types ──
+export interface WalletBalances {
+  address: string;
+  ethBalance: number;
+  tokens: { contractAddress: string; balance: string }[];
+}
+
+export interface WalletTransfer {
+  hash: string;
+  from: string;
+  to: string;
+  value: number;
+  asset: string;
+  category: string;
+  blockNum: string;
+  direction: 'in' | 'out';
+}
+
+export interface WalletTransfers {
+  address: string;
+  transfers: WalletTransfer[];
+}
+
 export interface DashboardData {
   markets: MarketCoin[] | null;
   global: GlobalData | null;
@@ -97,6 +208,18 @@ export interface DashboardData {
   defiGlobal: DefiGlobalData | null;
   derivatives: DerivativeTicker[] | null;
   derivativesExchanges: DerivativesExchange[] | null;
+  // DeFi Llama data (no key needed)
+  defiProtocols: DefiProtocol[] | null;
+  defiChains: DefiChain[] | null;
+  defiYields: DefiYield[] | null;
+  defiStablecoins: DefiStablecoin[] | null;
+  // DeFi Llama protocol-specific data (no key needed)
+  defiProtocolDetail: DefiProtocolDetail | null;
+  defiDexOverview: DefiDexItem[] | null;
+  defiFeeOverview: DefiFeeItem[] | null;
+  // Alchemy wallet data (BYOK)
+  walletBalances: WalletBalances | null;
+  walletTransfers: WalletTransfers | null;
 }
 
 export type ChartHeight = 'compact' | 'normal' | 'tall';
@@ -152,7 +275,10 @@ export function calculateApiCallsForDefinition(
 ): number {
   let calls = 0;
   for (const ep of requiredEndpoints) {
-    if (ep === 'fear_greed') continue; // External API, not counted
+    // External & free APIs don't count toward CoinGecko usage
+    if (ep === 'fear_greed') continue;
+    if (ep.startsWith('defillama_')) continue;
+    if (ep.startsWith('alchemy_')) continue;
     if (ep === 'ohlc_multi') {
       calls += params?.coinIds ? Math.min(params.coinIds.length, 5) : 2;
     } else {
@@ -160,6 +286,12 @@ export function calculateApiCallsForDefinition(
     }
   }
   return calls;
+}
+
+/** Check if all endpoints are key-free (DeFi Llama only, no CoinGecko key needed) */
+export function isKeyFreeEndpoints(endpoints: string[]): boolean {
+  const KEY_FREE = new Set(['defillama_protocols', 'defillama_chains', 'defillama_yields', 'defillama_stablecoins', 'defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'fear_greed']);
+  return endpoints.every((ep) => KEY_FREE.has(ep));
 }
 
 const DEFAULT_API_USAGE: ApiUsageStats = {
@@ -174,6 +306,15 @@ interface LiveDashboardStore {
   keyType: 'pro' | 'demo' | null;
   setApiKey: (key: string, type: 'pro' | 'demo') => void;
   clearApiKey: () => void;
+
+  // Alchemy BYOK
+  alchemyKey: string | null;
+  walletAddress: string | null;
+  alchemyChain: string;
+  setAlchemyKey: (key: string) => void;
+  setWalletAddress: (address: string) => void;
+  setAlchemyChain: (chain: string) => void;
+  clearAlchemyKey: () => void;
 
   data: DashboardData;
   isLoading: boolean;
@@ -215,6 +356,15 @@ const emptyData: DashboardData = {
   defiGlobal: null,
   derivatives: null,
   derivativesExchanges: null,
+  defiProtocols: null,
+  defiChains: null,
+  defiYields: null,
+  defiStablecoins: null,
+  defiProtocolDetail: null,
+  defiDexOverview: null,
+  defiFeeOverview: null,
+  walletBalances: null,
+  walletTransfers: null,
 };
 
 export const useLiveDashboardStore = create<LiveDashboardStore>()(
@@ -224,6 +374,14 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       keyType: null,
       setApiKey: (key, type) => set({ apiKey: key, keyType: type }),
       clearApiKey: () => set({ apiKey: null, keyType: null, data: emptyData, lastFetched: null }),
+
+      alchemyKey: null,
+      walletAddress: null,
+      alchemyChain: 'eth-mainnet',
+      setAlchemyKey: (key) => set({ alchemyKey: key }),
+      setWalletAddress: (address) => set({ walletAddress: address }),
+      setAlchemyChain: (chain) => set({ alchemyChain: chain }),
+      clearAlchemyKey: () => set({ alchemyKey: null, walletAddress: null, alchemyChain: 'eth-mainnet', data: { ...emptyData, walletBalances: null, walletTransfers: null } }),
 
       data: emptyData,
       isLoading: false,
@@ -259,14 +417,17 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       resetApiUsage: () => set({ apiUsage: { ...DEFAULT_API_USAGE, sessionStartTime: Date.now() } }),
 
       fetchData: async (endpoints, params) => {
-        const { apiKey } = get();
-        if (!apiKey) {
+        const { apiKey, alchemyKey, walletAddress, alchemyChain } = get();
+        const keyFree = isKeyFreeEndpoints(endpoints);
+
+        // Only require CoinGecko key if non-key-free endpoints are present
+        if (!keyFree && !apiKey) {
           set({ error: 'No API key provided' });
           return;
         }
 
         const callCount = calculateApiCallsForDefinition(endpoints, params);
-        get().incrementApiCalls(callCount);
+        if (callCount > 0) get().incrementApiCalls(callCount);
 
         set({ isLoading: true, error: null });
 
@@ -274,7 +435,14 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
           const res = await fetch('/api/live-dashboard/data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ apiKey, endpoints, params }),
+            body: JSON.stringify({
+              apiKey: apiKey || undefined,
+              alchemyKey: alchemyKey || undefined,
+              walletAddress: walletAddress || undefined,
+              alchemyChain: alchemyChain || 'eth-mainnet',
+              endpoints,
+              params,
+            }),
           });
 
           if (!res.ok) {
@@ -299,6 +467,17 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
               defiGlobal: result.defiGlobal ?? currentData.defiGlobal,
               derivatives: result.derivatives ?? currentData.derivatives,
               derivativesExchanges: result.derivativesExchanges ?? currentData.derivativesExchanges,
+              // DeFi Llama
+              defiProtocols: result.defiProtocols ?? currentData.defiProtocols,
+              defiChains: result.defiChains ?? currentData.defiChains,
+              defiYields: result.defiYields ?? currentData.defiYields,
+              defiStablecoins: result.defiStablecoins ?? currentData.defiStablecoins,
+              defiProtocolDetail: result.defiProtocolDetail ?? currentData.defiProtocolDetail,
+              defiDexOverview: result.defiDexOverview ?? currentData.defiDexOverview,
+              defiFeeOverview: result.defiFeeOverview ?? currentData.defiFeeOverview,
+              // Alchemy
+              walletBalances: result.walletBalances ?? currentData.walletBalances,
+              walletTransfers: result.walletTransfers ?? currentData.walletTransfers,
             },
             isLoading: false,
             lastFetched: Date.now(),
@@ -322,6 +501,9 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       partialize: (state) => ({
         apiKey: state.apiKey,
         keyType: state.keyType,
+        alchemyKey: state.alchemyKey,
+        walletAddress: state.walletAddress,
+        alchemyChain: state.alchemyChain,
         autoRefreshInterval: state.autoRefreshInterval,
         customization: state.customization,
         siteTheme: state.siteTheme,
