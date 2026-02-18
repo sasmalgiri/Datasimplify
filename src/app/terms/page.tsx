@@ -105,7 +105,7 @@ export default function TermsPage() {
               <li><strong>Not for Redistribution:</strong> You may not scrape, export, or redistribute this data commercially</li>
               <li><strong>Attribution Provided:</strong> Required attribution (e.g., &quot;Powered by CoinGecko API&quot;)
                 is displayed in-product wherever provider data is shown, including loading states. See our{' '}
-                <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page for the full list of providers.</li>
+                <Link href="/data-sources" className="underline text-blue-700">Data Sources</Link> page for the full list of providers.</li>
             </ul>
 
             <h3 className="text-xl font-semibold text-blue-900 mb-3 mt-4">5.3 BYOK (Bring Your Own Keys) Excel Templates</h3>
@@ -129,7 +129,7 @@ export default function TermsPage() {
               <strong>Provider Ownership & Rights:</strong> All market data displayed on our platform or accessed via
               Excel templates is sourced from third-party data providers, including but not limited to{' '}
               <strong>CoinGecko</strong> (cryptocurrency market data) and others listed on our{' '}
-              <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
+              <Link href="/data-sources" className="underline text-blue-700">Data Sources</Link> page.
               This data remains the <strong>intellectual property of the respective providers</strong>.
               CryptoReportKit does not claim ownership of provider data.
             </p>
@@ -146,7 +146,7 @@ export default function TermsPage() {
               <strong>Required Provider Attribution:</strong> We display required attribution (e.g., &quot;Powered by
               CoinGecko API&quot;) <strong>in-product wherever provider data is shown</strong>, including in loading states,
               error states, and data displays. This ensures compliance with provider terms of service. A full list of data
-              providers is available on our <a href="/data-sources" className="underline text-blue-700">Data Sources</a> page.
+              providers is available on our <Link href="/data-sources" className="underline text-blue-700">Data Sources</Link> page.
             </p>
 
             <p className="mb-4">
@@ -154,7 +154,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
               <li>Review and comply with each provider&apos;s terms of service (see{' '}
-                <a href="/data-sources" className="underline text-blue-700">Data Sources</a>)</li>
+                <Link href="/data-sources" className="underline text-blue-700">Data Sources</Link>)</li>
               <li>Respect rate limits and usage restrictions of your API tier (free, pro, etc.)</li>
               <li>Not violate provider policies (e.g., no unauthorized resale of data obtained via your keys)</li>
               <li>Understand that CryptoReportKit is not liable for provider API downtime, data accuracy, or policy changes</li>
@@ -180,8 +180,8 @@ export default function TermsPage() {
             </p>
 
             <p className="text-blue-800 font-semibold">
-              See our <a href="/template-requirements" className="underline">Template Requirements</a> page for
-              detailed setup instructions and <a href="/disclaimer" className="underline">Disclaimer</a> for full details.
+              See our <Link href="/template-requirements" className="underline">Template Requirements</Link> page for
+              detailed setup instructions and <Link href="/disclaimer" className="underline">Disclaimer</Link> for full details.
             </p>
           </section>
 
@@ -251,7 +251,7 @@ export default function TermsPage() {
                   Fraudulent chargebacks may result in account termination.</li>
               </ul>
               <p className="text-sm text-gray-600">
-                <strong>Note:</strong> See our full <a href="/refund" className="text-green-700 underline">Refund Policy</a> for details.
+                <strong>Note:</strong> See our full <Link href="/refund" className="text-green-700 underline">Refund Policy</Link> for details.
               </p>
             </div>
           </section>

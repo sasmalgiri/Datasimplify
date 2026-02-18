@@ -11,9 +11,7 @@ import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dash
 
 echarts.use([LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
-interface DominanceAreaWidgetProps {}
-
-export function DominanceAreaWidget({}: DominanceAreaWidgetProps) {
+export function DominanceAreaWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];

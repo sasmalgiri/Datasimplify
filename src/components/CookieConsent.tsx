@@ -28,7 +28,7 @@ export default function CookieConsent() {
     }
 
     // Make showCookieSettings function globally available
-    (window as any).showCookieSettings = () => {
+    (window as unknown as Record<string, () => void>).showCookieSettings = () => {
       setShowPreferences(true);
       setShowBanner(true);
     };

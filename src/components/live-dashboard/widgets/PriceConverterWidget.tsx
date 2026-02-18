@@ -6,9 +6,7 @@ import { getThemeColors } from '@/lib/live-dashboard/theme';
 import { ArrowUpDown } from 'lucide-react';
 import Image from 'next/image';
 
-interface PriceConverterWidgetProps {}
-
-export function PriceConverterWidget({}: PriceConverterWidgetProps) {
+export function PriceConverterWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const markets = data.markets;

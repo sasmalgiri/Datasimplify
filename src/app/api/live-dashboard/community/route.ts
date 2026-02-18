@@ -260,7 +260,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Increment
-    const newValue = ((current as any)[column] || 0) + 1;
+    const newValue = ((current as Record<string, unknown>)[column] as number || 0) + 1;
 
     const { error: updateError } = await supabase
       .from('community_dashboards')

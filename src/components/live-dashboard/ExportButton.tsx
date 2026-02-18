@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { Download, FileImage, FileText, FileSpreadsheet, FileDown, Loader2, CheckCircle, AlertCircle, Lock, Crown, Zap } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { useExportGating } from '@/lib/live-dashboard/useExportGating';
@@ -175,9 +176,9 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
             {isFree && (
               <div className="text-[10px] text-gray-600">
                 Standard resolution (1x) ·{' '}
-                <a href="/pricing" className="text-emerald-500 hover:text-emerald-400">
+                <Link href="/pricing" className="text-emerald-500 hover:text-emerald-400">
                   Get HD + all formats
-                </a>
+                </Link>
               </div>
             )}
             <div className="text-[10px] text-gray-600">For personal use only</div>

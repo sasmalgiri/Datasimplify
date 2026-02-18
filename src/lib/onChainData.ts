@@ -336,12 +336,20 @@ export async function fetchBitcoinStats(): Promise<{
       };
     }
 
-    const hashRate = (data as any).hash_rate;
-    const difficulty = (data as any).difficulty;
-    const blockHeight = (data as any).n_blocks_total;
-    const avgBlockTime = (data as any).minutes_between_blocks;
-    const unconfirmedTxs = (data as any).n_tx_unconfirmed;
-    const memPoolSize = (data as any).mempool_size;
+    const stats = data as unknown as {
+      hash_rate?: number;
+      difficulty?: number;
+      n_blocks_total?: number;
+      minutes_between_blocks?: number;
+      n_tx_unconfirmed?: number;
+      mempool_size?: number;
+    };
+    const hashRate = stats.hash_rate;
+    const difficulty = stats.difficulty;
+    const blockHeight = stats.n_blocks_total;
+    const avgBlockTime = stats.minutes_between_blocks;
+    const unconfirmedTxs = stats.n_tx_unconfirmed;
+    const memPoolSize = stats.mempool_size;
 
     return {
       hashRate: typeof hashRate === 'number' && Number.isFinite(hashRate) ? hashRate : null,

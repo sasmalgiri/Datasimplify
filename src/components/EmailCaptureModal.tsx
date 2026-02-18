@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { X, Download, Mail, Check, Loader2 } from 'lucide-react';
 
 interface EmailCaptureModalProps {
@@ -156,9 +157,9 @@ export default function EmailCaptureModal({
 
           <p className="mt-4 text-xs text-center text-gray-500">
             By continuing, you agree to our{' '}
-            <a href="/terms" className="text-orange-600 hover:underline">Terms</a>
+            <Link href="/terms" className="text-orange-600 hover:underline">Terms</Link>
             {' '}and{' '}
-            <a href="/privacy" className="text-orange-600 hover:underline">Privacy Policy</a>
+            <Link href="/privacy" className="text-orange-600 hover:underline">Privacy Policy</Link>
           </p>
         </form>
       </div>

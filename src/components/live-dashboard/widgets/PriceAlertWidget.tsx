@@ -32,9 +32,7 @@ function sendBrowserNotification(title: string, body: string) {
 
 /* ---------- component ---------- */
 
-export interface PriceAlertWidgetProps {}
-
-export function PriceAlertWidget({}: PriceAlertWidgetProps) {
+export function PriceAlertWidget() {
   const { data, customization } = useLiveDashboardStore();
   const {
     priceAlerts,

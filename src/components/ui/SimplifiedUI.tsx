@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, createContext, useContext } from 'react';
+import Link from 'next/link';
 import { GLOSSARY, GlossaryTerm, getTerm, findJargonInText } from '@/lib/glossary';
 
 // ============================================
@@ -518,9 +519,9 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
         <React.Fragment key={index}>
           {index > 0 && <span>/</span>}
           {item.href ? (
-            <a href={item.href} className="hover:text-white transition-colors">
+            <Link href={item.href} className="hover:text-white transition-colors">
               {item.label}
-            </a>
+            </Link>
           ) : (
             <span className="text-white">{item.label}</span>
           )}

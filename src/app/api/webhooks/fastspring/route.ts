@@ -59,16 +59,16 @@ function pickString(value: unknown): string | null {
   return null;
 }
 
-function deepGet(obj: any, path: Array<string | number>): unknown {
-  let cur = obj;
+function deepGet(obj: Record<string, unknown>, path: Array<string | number>): unknown {
+  let cur: unknown = obj;
   for (const k of path) {
     if (!cur || typeof cur !== 'object') return null;
-    cur = cur[k as any];
+    cur = (cur as Record<string | number, unknown>)[k];
   }
   return cur;
 }
 
-function extractEmail(payload: any): string | null {
+function extractEmail(payload: Record<string, unknown>): string | null {
   const candidates: unknown[] = [
     deepGet(payload, ['customer', 'email']),
     deepGet(payload, ['account', 'email']),
@@ -84,7 +84,7 @@ function extractEmail(payload: any): string | null {
   return null;
 }
 
-function extractOrderId(payload: any): string | null {
+function extractOrderId(payload: Record<string, unknown>): string | null {
   const candidates: unknown[] = [
     deepGet(payload, ['order', 'id']),
     deepGet(payload, ['order', 'reference']),

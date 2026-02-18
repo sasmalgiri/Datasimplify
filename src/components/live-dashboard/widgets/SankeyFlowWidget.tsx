@@ -11,8 +11,6 @@ import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP, formatCompact } from '
 
 echarts.use([SankeyChart, TooltipComponent, CanvasRenderer]);
 
-interface SankeyFlowWidgetProps {}
-
 const CAP_TIERS = [
   { label: 'Mega Cap (>$100B)', min: 100e9 },
   { label: 'Large Cap ($10B–$100B)', min: 10e9 },
@@ -38,7 +36,7 @@ function getBucket(change: number) {
   return PERF_BUCKETS[3].label;
 }
 
-export function SankeyFlowWidget({}: SankeyFlowWidgetProps) {
+export function SankeyFlowWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];

@@ -347,9 +347,9 @@ export default function MarketPage() {
                 Powered by CoinGecko
               </a>
               • See{' '}
-              <a href="/data-sources" className="text-emerald-400 hover:text-emerald-300 underline">
+              <Link href="/data-sources" className="text-emerald-400 hover:text-emerald-300 underline">
                 Data Sources
-              </a>{' '}
+              </Link>{' '}
               for full attribution
             </p>
           </div>

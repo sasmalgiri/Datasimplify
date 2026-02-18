@@ -26,7 +26,7 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
 
     // Try coin_history data first
     if (data.coinHistory) {
-      const history = data.coinHistory as any;
+      const history = data.coinHistory as Record<string, [number, number][]>;
       const mcaps = history.market_caps;
       if (mcaps && Array.isArray(mcaps)) {
         dates = mcaps.map((d: [number, number]) =>

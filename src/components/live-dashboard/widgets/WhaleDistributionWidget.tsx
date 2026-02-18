@@ -11,8 +11,6 @@ import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP, formatCompact } from '
 
 echarts.use([TreemapChart, TooltipComponent, CanvasRenderer]);
 
-interface WhaleDistributionWidgetProps {}
-
 const TIERS = [
   { label: 'Humpback', range: '>$100B', emoji: '\u{1F40B}', min: 100e9, color: '#34d399' },
   { label: 'Whale', range: '$50B–$100B', emoji: '\u{1F433}', min: 50e9, color: '#2dd4bf' },
@@ -27,7 +25,7 @@ function getTier(mcap: number) {
   return TIERS[5];
 }
 
-export function WhaleDistributionWidget({}: WhaleDistributionWidgetProps) {
+export function WhaleDistributionWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = Math.max(300, CHART_HEIGHT_MAP[customization.chartHeight]);

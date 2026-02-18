@@ -242,7 +242,7 @@ export async function exportDashboardAsExcel(
     ];
     styleHeaderRow(ws, 3);
 
-    const history = data.coinHistory as any;
+    const history = data.coinHistory as Record<string, [number, number][]>;
     const prices: [number, number][] = history.prices || [];
     const mcaps: [number, number][] = history.market_caps || [];
     const vols: [number, number][] = history.total_volumes || [];
@@ -262,7 +262,7 @@ export async function exportDashboardAsExcel(
   }
 
   // ── Derivatives sheet ──
-  if ((data as any).derivatives?.length) {
+  if (data.derivatives?.length) {
     const ws = workbook.addWorksheet('Derivatives');
     addHeader(ws, `${dashboardName} — Derivatives`, date);
 
@@ -278,7 +278,7 @@ export async function exportDashboardAsExcel(
     ];
     styleHeaderRow(ws, 3);
 
-    (data as any).derivatives.forEach((d: any) => {
+    data.derivatives!.forEach((d) => {
       ws.addRow({
         market: d.market,
         symbol: d.symbol,
@@ -293,11 +293,11 @@ export async function exportDashboardAsExcel(
   }
 
   // ── DeFi Global sheet ──
-  if ((data as any).defiGlobal) {
+  if (data.defiGlobal) {
     const ws = workbook.addWorksheet('DeFi Global');
     addHeader(ws, `${dashboardName} — DeFi Global Stats`, date);
 
-    const dg = (data as any).defiGlobal;
+    const dg = data.defiGlobal;
     ws.addRow(['DeFi Market Cap', dg.defi_market_cap ?? '']);
     ws.addRow(['ETH Market Cap', dg.eth_market_cap ?? '']);
     ws.addRow(['DeFi to ETH Ratio', dg.defi_to_eth_ratio ?? '']);
@@ -444,7 +444,7 @@ export async function exportDashboardAsCsv(
 
   // Historical CSV
   if (data.coinHistory) {
-    const history = data.coinHistory as any;
+    const history = data.coinHistory as Record<string, [number, number][]>;
     const prices: [number, number][] = history.prices || [];
     if (prices.length > 0) {
       const mcaps: [number, number][] = history.market_caps || [];
@@ -459,9 +459,9 @@ export async function exportDashboardAsCsv(
   }
 
   // Derivatives CSV
-  if ((data as any).derivatives?.length) {
+  if (data.derivatives?.length) {
     const header = 'Market,Symbol,Price,24h %,Funding Rate,Open Interest,Volume 24h,Type';
-    const rows = (data as any).derivatives.map((d: any) =>
+    const rows = data.derivatives!.map((d) =>
       `${q(d.market)},${q(d.symbol)},${d.price},${d.price_percentage_change_24h},${d.funding_rate},${d.open_interest},${d.volume_24h},${q(d.contract_type)}`,
     );
     zip.file('derivatives.csv', bom + [header, ...rows].join('\n') + '\n');
@@ -469,8 +469,8 @@ export async function exportDashboardAsCsv(
   }
 
   // DeFi Global CSV
-  if ((data as any).defiGlobal) {
-    const dg = (data as any).defiGlobal;
+  if (data.defiGlobal) {
+    const dg = data.defiGlobal;
     const lines = [
       'Metric,Value',
       `DeFi Market Cap,${dg.defi_market_cap ?? ''}`,
@@ -533,7 +533,7 @@ function isoDate() {
   return new Date().toISOString().split('T')[0];
 }
 
-function downloadBlob(data: any, filename: string, mimeType: string) {
+function downloadBlob(data: Blob | BlobPart, filename: string, mimeType: string) {
   const blob = data instanceof Blob ? data : new Blob([data], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

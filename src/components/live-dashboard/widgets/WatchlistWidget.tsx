@@ -49,9 +49,7 @@ function MiniSparkline({ prices }: { prices: number[] }) {
 
 /* ---------- component ---------- */
 
-export interface WatchlistWidgetProps {}
-
-export function WatchlistWidget({}: WatchlistWidgetProps) {
+export function WatchlistWidget() {
   const { data, customization } = useLiveDashboardStore();
   const { watchlist, toggleWatchlist, isInWatchlist } = useUserPrefsStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];

@@ -19,7 +19,7 @@ export function VolatilityForecastWidget() {
     if (!markets || markets.length < 10) return { score: null, zone: null, triggers: null, insight: null };
 
     // 1. Price Compression (30%) — Bollinger Band width proxy from sparkline
-    let compressionScores: number[] = [];
+    const compressionScores: number[] = [];
     const top20 = markets.slice(0, 20);
     for (const coin of top20) {
       if (coin.sparkline_in_7d?.price && coin.sparkline_in_7d.price.length > 20) {

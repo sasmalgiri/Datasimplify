@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
 import { FEATURES } from '@/lib/featureFlags';
 
@@ -98,9 +99,9 @@ export default function DisclaimerBanner() {
 
             {/* Additional Links */}
             <div className="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap gap-4 text-xs text-gray-400">
-              <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
               <span className="text-gray-600">|</span>
-              <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <span className="text-gray-600">|</span>
               <span>We do not sell your data</span>
               <span className="text-gray-600">|</span>
@@ -147,8 +148,8 @@ export function FooterDisclaimer() {
       </p>
       <p>
         Data Sources: {sources.join(', ')} |{' '}
-        <a href="/terms" className="text-gray-400 hover:text-white">Terms</a> |{' '}
-        <a href="/privacy" className="text-gray-400 hover:text-white">Privacy</a>
+        <Link href="/terms" className="text-gray-400 hover:text-white">Terms</Link> |{' '}
+        <Link href="/privacy" className="text-gray-400 hover:text-white">Privacy</Link>
       </p>
       <p>© 2026 CryptoReportKit. All rights reserved. We do not sell your data.</p>
     </div>

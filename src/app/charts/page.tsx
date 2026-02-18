@@ -445,7 +445,7 @@ function ChartsContent() {
             ma7,
             ma30,
             volatility,
-            volume: typeof (historyData.prices[i] as any)?.volume === 'number' ? (historyData.prices[i] as any).volume : null,
+            volume: typeof (historyData.prices[i] as unknown as Record<string, unknown>)?.volume === 'number' ? (historyData.prices[i] as unknown as Record<string, number>).volume : null,
           };
         });
         setChartData(processed);
@@ -559,7 +559,7 @@ function ChartsContent() {
           setCommunityData(null);
         }
       } catch (e) {
-        if ((e as any)?.name === 'AbortError') return;
+        if (e instanceof Error && e.name === 'AbortError') return;
         console.error('Error fetching aux chart data:', e);
         setDerivativesData(null);
         setWhaleFlows(null);
@@ -1241,7 +1241,7 @@ function ChartsContent() {
 
       case 'market_dominance':
         {
-          const marketCapPct = (globalStats as any)?.market_cap_percentage as Record<string, number> | undefined;
+          const marketCapPct = globalStats?.market_cap_percentage as Record<string, number> | undefined;
           if (!marketCapPct) {
             return <div className="flex items-center justify-center h-96 text-gray-400">No market dominance data available</div>;
           }
@@ -1418,12 +1418,12 @@ function ChartsContent() {
 
       case 'funding_rate':
         {
-          const btc = (derivativesData as any)?.btc as { fundingRate: number | null; longShortRatio: number | null; volume24h: number | null } | undefined;
+          const btc = derivativesData?.btc as { fundingRate: number | null; longShortRatio: number | null; volume24h: number | null } | undefined;
           const rate = btc?.fundingRate;
           const ls = btc?.longShortRatio;
           const volume24h = btc?.volume24h;
-          const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
-          const interpretation = (derivativesData as any)?.interpretation as string | undefined;
+          const lastUpdated = derivativesData?.lastUpdated as string | undefined;
+          const interpretation = derivativesData?.interpretation as string | undefined;
 
           // Prepare historical funding rate data for chart
           const fundingChartData = fundingHistory?.map((item, idx) => {
@@ -1527,11 +1527,11 @@ function ChartsContent() {
 
       case 'open_interest':
         {
-          const btc = (derivativesData as any)?.btc as { openInterest: number | null; openInterestChange24h: number | null; volume24h: number | null } | undefined;
+          const btc = derivativesData?.btc as { openInterest: number | null; openInterestChange24h: number | null; volume24h: number | null } | undefined;
           const oi = btc?.openInterest;
           const oiChange = btc?.openInterestChange24h;
           const volume24h = btc?.volume24h;
-          const lastUpdated = (derivativesData as any)?.lastUpdated as string | undefined;
+          const lastUpdated = derivativesData?.lastUpdated as string | undefined;
 
           // Prepare historical OI data for chart
           const oiChartData = oiHistory?.map((item) => ({
@@ -1630,7 +1630,7 @@ function ChartsContent() {
           return <div className="flex items-center justify-center h-96 text-gray-400">No whale flow data available</div>;
         }
 
-        const flowRows = (whaleFlows as any[])
+        const flowRows = whaleFlows
           .map((r) => ({
             exchange: typeof r?.exchange === 'string' ? r.exchange : 'Unknown',
             inflowUsd: typeof r?.inflowUsd24h === 'number' ? r.inflowUsd24h : null,
@@ -1723,11 +1723,11 @@ function ChartsContent() {
         }
 
         const priceByDate = new Map<string, number>();
-        chartData.forEach((d: any) => {
+        chartData.forEach((d) => {
           if (typeof d?.date === 'string' && typeof d?.price === 'number') priceByDate.set(d.date, d.price);
         });
 
-        const fgData = (fearGreedHistory as any[]).map((r) => {
+        const fgData = fearGreedHistory.map((r) => {
           const d = typeof r?.timestamp === 'string' ? new Date(r.timestamp) : null;
           const date = d ? d.toLocaleDateString() : '';
           const index = typeof r?.value === 'number' ? r.value : null;
@@ -1917,7 +1917,7 @@ function ChartsContent() {
 
       case 'btc_dominance':
         {
-          const marketCapPct = (globalStats as any)?.market_cap_percentage as Record<string, number> | undefined;
+          const marketCapPct = globalStats?.market_cap_percentage as Record<string, number> | undefined;
           const btc = marketCapPct?.btc;
           const eth = marketCapPct?.eth;
           if (typeof btc !== 'number') {

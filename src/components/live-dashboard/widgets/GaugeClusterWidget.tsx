@@ -11,8 +11,6 @@ import { ECHARTS_THEME, getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dash
 
 echarts.use([GaugeChart, TooltipComponent, CanvasRenderer]);
 
-interface GaugeClusterWidgetProps {}
-
 function makeGauge(
   center: [string, string],
   value: number,
@@ -66,7 +64,7 @@ function makeGauge(
   };
 }
 
-export function GaugeClusterWidget({}: GaugeClusterWidgetProps) {
+export function GaugeClusterWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
