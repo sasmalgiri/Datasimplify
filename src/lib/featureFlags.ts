@@ -72,6 +72,9 @@ export const FEATURES = {
   dashboard: isFreeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_DASHBOARD, false),
   // onchain: On-chain analytics page (currently disabled message)
   onchain: isFreeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_ONCHAIN, false),
+
+  // Add-in V2: workspace sync, action tokens, snapshots, structured tables, refresh loop
+  addinV2: parseBool(process.env.NEXT_PUBLIC_FEATURE_ADDIN_V2, false),
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
