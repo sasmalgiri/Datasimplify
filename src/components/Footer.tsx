@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { CookieSettingsButton } from '@/components/CookieSettingsButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
-import { FEATURES } from '@/lib/featureFlags';
+import { useAuth } from '@/lib/auth';
 
 export function Footer() {
+  const { user } = useAuth();
   return (
     <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,12 +22,16 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Product - A/B/C/D only */}
+          {/* Product */}
           <div>
             <h4 className="font-semibold text-white mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link></li>
-              <li><Link href="/download" className="hover:text-white transition-colors">Customize Templates</Link></li>
+              {user && (
+                <>
+                  <li><Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link></li>
+                  <li><Link href="/download" className="hover:text-white transition-colors">Customize Templates</Link></li>
+                </>
+              )}
               <li><Link href="/live-dashboards" className="hover:text-white transition-colors">Live Dashboards</Link></li>
               <li><Link href="/compare" className="hover:text-white transition-colors">Compare Coins</Link></li>
               <li><Link href="/smart-contract-verifier" className="hover:text-white transition-colors">Verify Contracts</Link></li>

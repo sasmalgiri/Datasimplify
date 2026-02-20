@@ -98,8 +98,10 @@ export function FreeNavbar() {
       paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok', '/live-dashboards'],
       items: [
         { href: '/live-dashboards', label: 'Live Dashboards', description: 'Interactive web dashboards with your API key', icon: <BarChart3 className="w-4 h-4" /> },
-        { href: '/downloads', label: 'Downloads', description: 'Excel templates with prefetched crypto data', icon: <Download className="w-4 h-4" /> },
-        { href: '/download', label: 'Customize Templates', description: 'Customize coins/timeframe and download .xlsx', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        ...(user ? [
+          { href: '/downloads', label: 'Downloads', description: 'Excel templates with prefetched crypto data', icon: <Download className="w-4 h-4" /> },
+          { href: '/download', label: 'Customize Templates', description: 'Customize coins/timeframe and download .xlsx', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        ] : []),
         { href: '/template-requirements', label: 'Setup Guide', description: 'How to use Excel templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
       ],
@@ -145,8 +147,10 @@ export function FreeNavbar() {
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
     { href: '/live-dashboards', label: 'Live Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
-    { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
-    { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    ...(user ? [
+      { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
+      { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    ] : []),
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]

@@ -7,9 +7,7 @@
 
 'use client';
 
-import Link from 'next/link';
-import { PageId, PAGE_TEMPLATE_MAP } from '@/lib/templates/pageMapping';
-import { TEMPLATES, TemplateType } from '@/lib/templates/templateConfig';
+import type { PageId } from '@/lib/templates/pageMapping';
 
 interface DisplayOnlyBadgeProps {
   pageId: PageId;
@@ -19,14 +17,9 @@ interface DisplayOnlyBadgeProps {
 }
 
 export function DisplayOnlyBadge({
-  pageId,
-  showRecreate = true,
   className = '',
   variant = 'inline',
 }: DisplayOnlyBadgeProps) {
-  const templates = PAGE_TEMPLATE_MAP[pageId] || [];
-  const primaryTemplate = templates[0];
-  const templateConfig = primaryTemplate ? TEMPLATES[primaryTemplate] : null;
 
   if (variant === 'card') {
     return (
@@ -42,36 +35,7 @@ export function DisplayOnlyBadge({
               Educational visualization • Not investment advice
             </span>
           </div>
-
-          {showRecreate && templateConfig && (
-            <Link
-              href={`/download?template=${primaryTemplate}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg text-sm font-medium transition-colors border border-emerald-500/30"
-            >
-              <span>📊</span>
-              <span>Recreate in Excel</span>
-              <span className="text-xs opacity-70">({templateConfig.name})</span>
-            </Link>
-          )}
         </div>
-
-        {templates.length > 1 && showRecreate && (
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <span className="text-xs text-gray-500">Related templates: </span>
-            {templates.slice(1, 4).map((t) => {
-              const config = TEMPLATES[t];
-              return (
-                <Link
-                  key={t}
-                  href={`/download?template=${t}`}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 mx-1 text-xs text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 rounded transition-colors"
-                >
-                  {config?.icon} {config?.name}
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     );
   }
@@ -83,15 +47,6 @@ export function DisplayOnlyBadge({
         Display Only
       </span>
 
-      {showRecreate && templateConfig && (
-        <Link
-          href={`/download?template=${primaryTemplate}`}
-          className="inline-flex items-center gap-1 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
-        >
-          <span>📊</span>
-          <span>Recreate in Excel →</span>
-        </Link>
-      )}
     </div>
   );
 }
