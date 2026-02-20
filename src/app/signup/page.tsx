@@ -81,8 +81,11 @@ function SignupForm() {
           <span>CryptoReportKit</span>
         </Link>
         <p className="text-gray-600 mt-2">
-          {plan ? `Create account to subscribe to ${plan.charAt(0).toUpperCase() + plan.slice(1)}` : 'Create your account'}
+          {plan ? `Create account to subscribe to ${plan.charAt(0).toUpperCase() + plan.slice(1)}` : 'Create your free account'}
         </p>
+        {!plan && (
+          <p className="text-emerald-600 text-sm mt-1 font-medium">Free forever — no credit card required</p>
+        )}
       </div>
 
       {/* Selected Plan Banner */}
@@ -208,10 +211,17 @@ function SignupForm() {
         </div>
       </div>
 
+      {/* Trust signals */}
+      <div className="mt-6 flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+        <span className="flex items-center gap-1">&#128274; BYOK — keys stay local</span>
+        <span className="flex items-center gap-1">&#9989; 32+ free dashboards</span>
+        <span className="flex items-center gap-1">&#128176; Cancel anytime</span>
+      </div>
+
       {/* Back to free features */}
-      <div className="mt-6 text-center">
-        <Link href="/market" className="text-gray-600 hover:text-gray-900 text-sm">
-          ← Back to free features
+      <div className="mt-4 text-center">
+        <Link href="/live-dashboards" className="text-gray-600 hover:text-gray-900 text-sm">
+          ← Explore dashboards first
         </Link>
       </div>
 
@@ -235,7 +245,8 @@ function SignupFormFallback() {
           <span>📊</span>
           <span>CryptoReportKit</span>
         </Link>
-        <p className="text-gray-600 mt-2">Create your account</p>
+        <p className="text-gray-600 mt-2">Create your free account</p>
+        <p className="text-emerald-600 text-sm mt-1 font-medium">Free forever — no credit card required</p>
       </div>
 
       {/* Static Form Skeleton */}

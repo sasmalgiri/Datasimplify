@@ -51,7 +51,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
 
   // Pro tier
   '300 downloads per month': 'Download up to 300 template packs each month.',
-  'All 63 dashboard widgets': 'Every widget: health scores, smart signals, risk radar, alpha finder, volatility forecast, executive briefs, sector rotation, money flow, candlesticks, heatmaps, technical screener, funding rates, and 50+ more.',
+  'All 90+ dashboard widgets': 'Every widget: health scores, smart signals, risk radar, alpha finder, volatility forecast, executive briefs, sector rotation, money flow, candlesticks, heatmaps, technical screener, funding rates, and 70+ more.',
   '10-coin compare + head-to-head': 'Compare up to 10 coins with 26 columns, technical indicators, visual charts, and head-to-head ratios.',
   'Full price history (all timeframes)': 'Unlimited historical data — hourly, daily, weekly, monthly, and yearly.',
   'Advanced charts & filters': 'Multi-axis charts, overlays, indicator stacks, sector/category filters, custom metrics.',
@@ -89,7 +89,7 @@ export default function PricingPage() {
             CryptoReportKit is currently running in free mode. All features are available without payment.
           </p>
           <p className="text-gray-400 text-sm mb-6">
-            We provide Excel templates with prefetched crypto data and 20+ live interactive dashboards.
+            We provide Excel templates with prefetched crypto data and 83+ live interactive dashboards.
             All powered by BYOK (Bring Your Own Key) — your CoinGecko API key, your data.
           </p>
           <div className="mt-6 flex gap-4">
@@ -158,7 +158,7 @@ export default function PricingPage() {
       description: 'Full analytics suite for serious crypto research',
       features: [
         '300 downloads per month',
-        'All 63 dashboard widgets',
+        'All 90+ dashboard widgets',
         '10-coin compare + head-to-head',
         'Full price history (all timeframes)',
         'Advanced charts & filters',
@@ -348,7 +348,7 @@ export default function PricingPage() {
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">How do web dashboards work?</h3>
-              <p className="text-gray-400 text-sm">Enter your free CoinGecko API key to unlock 20+ interactive dashboards with charts, market data, and export capabilities — all in your browser.</p>
+              <p className="text-gray-400 text-sm">Enter your free CoinGecko API key to unlock 83+ interactive dashboards with charts, market data, and export capabilities — all in your browser.</p>
             </div>
           </div>
         </div>

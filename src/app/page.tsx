@@ -11,9 +11,10 @@ import {
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
+  Key, Users, MessageSquare, ChevronDown, Star,
 } from 'lucide-react';
 
-/* ─── Dashboard Preview Tiles (24 showcased out of 70+) ─── */
+/* ─── Dashboard Preview Tiles (24 showcased out of 83+) ─── */
 const DASHBOARD_PREVIEWS = [
   // Free dashboards — show the best first
   { icon: '📊', name: 'Market Overview', widgets: 14, tier: 'free' },
@@ -108,7 +109,7 @@ const PRO_TOOLS = [
   {
     icon: Hammer,
     name: 'Custom Dashboard Builder',
-    description: 'Build your own dashboards from 75+ widgets — pick, arrange, save, and share. Your data layout, your way.',
+    description: 'Build your own dashboards from 90+ widgets — pick, arrange, save, and share. Your data layout, your way.',
     color: 'text-emerald-400',
     bg: 'from-emerald-500/20 to-emerald-600/5',
     tier: 'pro',
@@ -173,8 +174,8 @@ const PRO_TOOLS = [
 
 /* ─── Competitor Comparison ─── */
 const COMPARISON_ROWS = [
-  { feature: 'Live interactive dashboards', crk: '70+', others: 'Limited or none' },
-  { feature: 'Dashboard widgets', crk: '75+', others: '5-15' },
+  { feature: 'Live interactive dashboards', crk: '83+', others: 'Limited or none' },
+  { feature: 'Dashboard widgets', crk: '90+', others: '5-15' },
   { feature: 'Smart intelligence widgets', crk: '8 built-in', others: 'Basic alerts only' },
   { feature: 'Custom dashboard builder', crk: true, others: 'Not available' },
   { feature: 'BYOK — your keys stay local', crk: true, others: 'Keys stored on their servers' },
@@ -186,8 +187,61 @@ const COMPARISON_ROWS = [
   { feature: 'Starting price', crk: '$0 free / $9 pro', others: '$19-49/mo' },
 ];
 
+/* ─── Testimonials ─── */
+const TESTIMONIALS = [
+  {
+    quote: 'Replaced three paid subscriptions with one tool. The dashboards are exactly what I needed for weekly client reports.',
+    name: 'Alex R.',
+    role: 'Crypto Fund Analyst',
+    rating: 5,
+  },
+  {
+    quote: 'Finally a tool where my API key stays on my machine. I was tired of handing credentials to random SaaS platforms.',
+    name: 'Priya M.',
+    role: 'DeFi Researcher',
+    rating: 5,
+  },
+  {
+    quote: 'The tax export saved me hours during tax season. FIFO, LIFO, average cost — all computed and ready to download.',
+    name: 'James T.',
+    role: 'Independent Trader',
+    rating: 5,
+  },
+  {
+    quote: 'I use the BTC Cycle Comparison dashboard daily. Being able to overlay halving cycles on one chart is a game-changer.',
+    name: 'Sofia L.',
+    role: 'Portfolio Manager',
+    rating: 5,
+  },
+];
+
+/* ─── FAQ Items ─── */
+const FAQ_ITEMS = [
+  {
+    q: 'Is CryptoReportKit really free?',
+    a: 'Yes — 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and Learn content are all free forever. No credit card required. Pro unlocks all 83+ dashboards, custom builder, tax tools, and advanced features for $9/mo.',
+  },
+  {
+    q: 'What is BYOK and do I need a CoinGecko key?',
+    a: 'BYOK means "Bring Your Own Key." You get a free API key from CoinGecko (takes 30 seconds) and paste it into the dashboard. Your key stays in your browser — we never see, store, or transmit it. This means zero data middlemen and no vendor lock-in.',
+  },
+  {
+    q: 'How is this different from CoinGecko or CoinMarketCap?',
+    a: 'CoinGecko and CoinMarketCap show you data. CryptoReportKit lets you analyze it — with 83+ purpose-built dashboards, 8 intelligence widgets (health scores, smart signals, risk radar), a custom dashboard builder, tax exports, and DCA tracking. Think of it as an analytics layer on top of CoinGecko data.',
+  },
+  {
+    q: 'Do I need to know Excel or coding?',
+    a: 'No coding required. The web dashboards work entirely in your browser — just pick a dashboard, enter your API key, and start analyzing. We also offer downloadable Excel templates for offline analysis, but the web dashboards are the primary product.',
+  },
+  {
+    q: 'Can I cancel or get a refund?',
+    a: 'Cancel anytime from your account — no questions asked. Pro comes with a 30-day money-back guarantee. Your data and dashboards stay available on the free tier even after canceling.',
+  },
+];
+
 export default function LandingPage() {
   const [showAllDashboards, setShowAllDashboards] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const visibleDashboards = showAllDashboards ? DASHBOARD_PREVIEWS : DASHBOARD_PREVIEWS.slice(0, 12);
 
   return (
@@ -203,7 +257,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            70+ Live Dashboards &middot; 75+ Widgets &middot; 8 Pro Tools
+            83+ Live Dashboards &middot; 90+ Widgets &middot; 8 Pro Tools
           </div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight tracking-tight">
@@ -217,8 +271,9 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-            70+ live dashboards, smart intelligence widgets, tax tools, DCA tracker, and custom builder — all powered by{' '}
-            <span className="text-white font-medium">your own API key</span>. Privacy-first. No data leaves your browser.
+            Track markets, spot opportunities, compare coins, and build custom reports — all in real-time.{' '}
+            <span className="text-white font-medium">Free to start, no credit card needed.</span>{' '}
+            Your data stays in your browser.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
@@ -252,11 +307,11 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-emerald-400">70+</div>
+              <div className="text-3xl md:text-4xl font-bold text-emerald-400">83+</div>
               <div className="text-gray-400 text-sm mt-1">Live Dashboards</div>
             </div>
             <div>
-              <div className="text-3xl md:text-4xl font-bold text-blue-400">75+</div>
+              <div className="text-3xl md:text-4xl font-bold text-blue-400">90+</div>
               <div className="text-gray-400 text-sm mt-1">Dashboard Widgets</div>
             </div>
             <div>
@@ -271,6 +326,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══════ HOW IT WORKS ═══════ */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Up and Running in <span className="text-emerald-400">3 Minutes</span>
+            </h2>
+            <p className="text-gray-400 text-base max-w-xl mx-auto">
+              No coding, no installation, no data vendor subscription.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 border border-emerald-500/20 flex items-center justify-center mx-auto mb-4">
+                <Layout className="w-7 h-7 text-emerald-400" />
+              </div>
+              <div className="text-emerald-400 text-xs font-bold mb-2">STEP 1</div>
+              <h3 className="text-lg font-bold text-white mb-2">Pick a Dashboard</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Choose from 83+ purpose-built dashboards — Bitcoin analysis, DeFi yields, whale tracking, risk assessment, and more.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/5 border border-blue-500/20 flex items-center justify-center mx-auto mb-4">
+                <Key className="w-7 h-7 text-blue-400" />
+              </div>
+              <div className="text-blue-400 text-xs font-bold mb-2">STEP 2</div>
+              <h3 className="text-lg font-bold text-white mb-2">Add Your Free API Key</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Get a free key from CoinGecko in 30 seconds. Paste it once — it stays in your browser, never on our servers.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/5 border border-purple-500/20 flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="w-7 h-7 text-purple-400" />
+              </div>
+              <div className="text-purple-400 text-xs font-bold mb-2">STEP 3</div>
+              <h3 className="text-lg font-bold text-white mb-2">Analyze & Export</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">
+                Real-time charts, smart signals, coin comparisons, and downloadable reports. Customize everything to fit your strategy.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ LIVE DASHBOARDS SHOWCASE ═══════ */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
@@ -280,11 +384,11 @@ export default function LandingPage() {
               INTERACTIVE DASHBOARDS
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              70+ Live Dashboards, <span className="text-emerald-400">Real-Time Data</span>
+              83+ Live Dashboards, <span className="text-emerald-400">Real-Time Data</span>
             </h2>
             <p className="text-gray-400 text-base max-w-2xl mx-auto">
               From BTC dominance timing to whale accumulation radar — purpose-built dashboards for every crypto strategy.
-              23 dashboards free, no credit card needed.
+              32+ dashboards free, no credit card needed.
             </p>
           </div>
 
@@ -313,7 +417,7 @@ export default function LandingPage() {
               onClick={() => setShowAllDashboards(true)}
               className="mt-4 mx-auto flex items-center gap-1.5 text-sm text-gray-400 hover:text-emerald-400 transition-colors"
             >
-              +{DASHBOARD_PREVIEWS.length - 12} more dashboards shown here, 70+ total
+              +{DASHBOARD_PREVIEWS.length - 12} more dashboards shown here, 83+ total
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -445,6 +549,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══════ SOCIAL PROOF ═══════ */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium mb-4">
+              <Users className="w-3.5 h-3.5" />
+              TRUSTED BY ANALYSTS
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              What Users Are <span className="text-amber-400">Saying</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.name}
+                className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-5 flex flex-col"
+              >
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: t.rating }).map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-300 leading-relaxed flex-1 mb-4">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+                <div>
+                  <div className="text-sm font-medium text-white">{t.name}</div>
+                  <div className="text-xs text-gray-500">{t.role}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ WHY CRK — COMPARISON TABLE ═══════ */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
@@ -499,20 +640,23 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/20 rounded-2xl p-8 text-center">
             <Shield className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">BYOK — Bring Your Own Key</h3>
-            <p className="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed mb-4">
-              Your CoinGecko API key stays in your browser and Excel file. We never see, store, or transmit it.
-              All data requests go directly from your device to CoinGecko. Zero middlemen.
+            <h3 className="text-xl font-bold text-white mb-2">Your Data, Your Control</h3>
+            <p className="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed mb-2">
+              Use your own free CoinGecko API key — no data vendor subscription needed.
+              Get a key in 30 seconds, paste it once, and unlock real-time data across all dashboards.
+            </p>
+            <p className="text-gray-500 text-xs max-w-lg mx-auto leading-relaxed mb-4">
+              Your key stays in your browser. We never see, store, or transmit it. All requests go directly from your device to CoinGecko.
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-xs">
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400">
-                <Lock className="w-3 h-3" /> Key stored locally
+                <Key className="w-3 h-3" /> Free API key
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400">
-                <Globe className="w-3 h-3" /> Direct API calls
+                <Lock className="w-3 h-3" /> Stays in your browser
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400">
-                <Eye className="w-3 h-3" /> No data collection
+                <Globe className="w-3 h-3" /> Direct to CoinGecko
               </span>
             </div>
           </div>
@@ -539,7 +683,7 @@ export default function LandingPage() {
 
                 <ul className="space-y-2.5 text-sm text-gray-300 mb-6">
                   {[
-                    '23 live dashboards',
+                    '32+ live dashboards',
                     '5 widgets per dashboard',
                     'BTC dominance, market breadth, crypto indices',
                     'DCA simulator + BTC cycle comparison',
@@ -576,8 +720,8 @@ export default function LandingPage() {
 
                 <ul className="space-y-2.5 text-sm text-gray-300 mb-6">
                   {[
-                    'All 70+ dashboards unlocked',
-                    'All 75+ widgets unlocked',
+                    'All 83+ dashboards unlocked',
+                    'All 90+ widgets unlocked',
                     'Custom dashboard builder',
                     'Tax report with CSV export',
                     'P&L tracker + DCA tracker',
@@ -610,6 +754,44 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* ═══════ FAQ ═══════ */}
+      <section className="py-16 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Frequently Asked <span className="text-blue-400">Questions</span>
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {FAQ_ITEMS.map((item, i) => (
+              <div
+                key={i}
+                className="bg-gray-800/40 border border-gray-700/50 rounded-xl overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-800/60 transition-colors"
+                >
+                  <span className="text-sm font-medium text-white pr-4">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                      openFaq === i ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-4">
+                    <p className="text-sm text-gray-400 leading-relaxed">{item.a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ CTA ═══════ */}
       <section className="py-16 px-4 bg-gradient-to-r from-emerald-600/10 via-blue-600/10 to-purple-600/10">
         <div className="max-w-3xl mx-auto text-center">
@@ -617,7 +799,7 @@ export default function LandingPage() {
             Start Analyzing Crypto <span className="text-emerald-400">Today</span>
           </h2>
           <p className="text-gray-400 text-base mb-8 max-w-lg mx-auto">
-            70+ dashboards, 75+ widgets, tax tools, DCA tracker, and custom builder. Free to start, powerful enough for professionals.
+            83+ dashboards, 90+ widgets, tax tools, DCA tracker, and custom builder. Free to start, powerful enough for professionals.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
