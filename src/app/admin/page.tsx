@@ -146,7 +146,10 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin/users?${params}`);
       if (res.status === 401) { router.push('/login'); return; }
       if (res.status === 403) { setError('You do not have admin access.'); return; }
-      if (!res.ok) throw new Error('Failed to fetch users');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.details || errData.error || 'Failed to fetch users');
+      }
       const data = await res.json();
       setUsers(data.users);
       setPagination(data.pagination);

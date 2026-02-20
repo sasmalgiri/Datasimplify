@@ -2,20 +2,30 @@
  * Admin API - User Management
  *
  * Protected admin endpoints for managing user subscriptions.
+ * Uses service role client to bypass RLS for admin access.
  *
  * GET /api/admin/users - List users (admin only)
  * PATCH /api/admin/users - Update user plan (admin only)
  */
 
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Admin emails that can access this endpoint
-// In production, this should come from environment variables or database
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').filter(Boolean);
 
 /**
- * Check if the current user is an admin
+ * Create a service role client that bypasses RLS
+ */
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createServiceClient(url, key);
+}
+
+/**
+ * Check if the current user is an admin (uses cookie-based auth)
  */
 async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>): Promise<{
   isAdmin: boolean;
@@ -29,9 +39,7 @@ async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>): Prom
     return { isAdmin: false, user: null };
   }
 
-  // Check if user email is in admin list
   const isAdminUser = ADMIN_EMAILS.includes(user.email.toLowerCase());
-
   return {
     isAdmin: isAdminUser,
     user: { id: user.id, email: user.email },
@@ -40,16 +48,24 @@ async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>): Prom
 
 // GET - List users with their subscription info
 export async function GET(request: NextRequest) {
+  // Auth check with cookie-based client
   const supabase = await createClient();
-
   const { isAdmin: isAdminUser, user } = await isAdmin(supabase);
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   if (!isAdminUser) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Use service role client to bypass RLS for admin data access
+  const serviceClient = getServiceClient();
+  if (!serviceClient) {
+    return NextResponse.json(
+      { error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY not set' },
+      { status: 500 }
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -58,26 +74,12 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
   const offset = (page - 1) * limit;
 
-  let query = supabase
+  let query = serviceClient
     .from('user_profiles')
-    .select(
-      `
-      id,
-      email,
-      full_name,
-      subscription_tier,
-      subscription_status,
-      downloads_limit,
-      downloads_this_month,
-      created_at,
-      updated_at
-    `,
-      { count: 'exact' }
-    )
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  // Apply search filter if provided
   if (search) {
     query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
   }
@@ -85,12 +87,28 @@ export async function GET(request: NextRequest) {
   const { data: users, count, error } = await query;
 
   if (error) {
-    console.error('Admin users fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    console.error('Admin users fetch error:', error.message, error.details, error.hint);
+    return NextResponse.json(
+      { error: 'Failed to fetch users', details: error.message },
+      { status: 500 }
+    );
   }
 
+  // Normalize rows - provide defaults for optional columns
+  const normalizedUsers = (users || []).map((u: Record<string, unknown>) => ({
+    id: u.id || '',
+    email: u.email || '',
+    full_name: u.full_name || null,
+    subscription_tier: u.subscription_tier || 'free',
+    subscription_status: u.subscription_status || null,
+    downloads_limit: u.downloads_limit ?? u.download_limit ?? 30,
+    downloads_this_month: u.downloads_this_month ?? u.download_count ?? 0,
+    created_at: u.created_at || '',
+    updated_at: u.updated_at || '',
+  }));
+
   return NextResponse.json({
-    users: users || [],
+    users: normalizedUsers,
     pagination: {
       page,
       limit,
@@ -102,16 +120,24 @@ export async function GET(request: NextRequest) {
 
 // PATCH - Update user subscription/plan
 export async function PATCH(request: NextRequest) {
+  // Auth check with cookie-based client
   const supabase = await createClient();
-
   const { isAdmin: isAdminUser, user: adminUser } = await isAdmin(supabase);
 
   if (!adminUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   if (!isAdminUser) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
+  // Use service role client to bypass RLS for admin updates
+  const serviceClient = getServiceClient();
+  if (!serviceClient) {
+    return NextResponse.json(
+      { error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY not set' },
+      { status: 500 }
+    );
   }
 
   let body;
@@ -127,7 +153,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
   }
 
-  // Validate subscription tier
   const validTiers = ['free', 'pro'];
   if (subscription_tier && !validTiers.includes(subscription_tier)) {
     return NextResponse.json(
@@ -136,7 +161,6 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  // Validate subscription status
   const validStatuses = ['active', 'cancelled', 'past_due', 'paused', 'trialing'];
   if (subscription_status && !validStatuses.includes(subscription_status)) {
     return NextResponse.json(
@@ -145,15 +169,12 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  // Build update object
   const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
 
   if (subscription_tier) {
     updates.subscription_tier = subscription_tier;
-
-    // Update downloads_limit based on tier if not explicitly set
     if (downloads_limit === undefined) {
       const tierLimits = { free: 30, pro: 300 };
       updates.downloads_limit = tierLimits[subscription_tier as keyof typeof tierLimits];
@@ -168,8 +189,7 @@ export async function PATCH(request: NextRequest) {
     updates.downloads_limit = downloads_limit;
   }
 
-  // Update the user
-  const { data: updatedUser, error: updateError } = await supabase
+  const { data: updatedUser, error: updateError } = await serviceClient
     .from('user_profiles')
     .update(updates)
     .eq('id', user_id)
@@ -178,11 +198,14 @@ export async function PATCH(request: NextRequest) {
 
   if (updateError) {
     console.error('Admin user update error:', updateError);
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update user', details: updateError.message },
+      { status: 500 }
+    );
   }
 
   // Log admin action
-  void supabase.from('usage_events').insert({
+  void serviceClient.from('usage_events').insert({
     user_id: adminUser.id,
     event_type: 'admin_plan_override',
     metadata: {
