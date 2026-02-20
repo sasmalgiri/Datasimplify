@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
-import { RequestTemplate } from '@/components/RequestTemplate';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
 import { SectorHeatmap } from '@/components/features/SectorHeatmap';
@@ -361,24 +359,6 @@ export default function MarketPage() {
             >
               🔄 Refresh
             </button>
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'market',
-                selectedCoins: filteredCoins.slice(0, 20).map(c => c.id),
-                timeframe: '24h',
-                currency: 'USD',
-                customizations: {
-                  sortBy,
-                  includeCharts: true,
-                },
-              }}
-              variant="outline"
-            />
-            <RequestTemplate
-              pagePath="/market"
-              pageTitle="Market Data"
-              suggestedCoins={filteredCoins.slice(0, 5).map(c => c.symbol.toUpperCase())}
-            />
           </div>
         </div>
 
@@ -658,7 +638,7 @@ export default function MarketPage() {
             CryptoReportKit does not redistribute or resell market data.
           </p>
           <p className="mt-2">
-            Want refreshable Excel reports? <Link href="/builder" className="text-emerald-400 hover:underline">Build a template pack</Link> with your own API keys (BYOK).
+            Want refreshable Excel reports? <Link href="/login" className="text-emerald-400 hover:underline">Sign in</Link> to access the download center.
           </p>
         </div>
       </div>

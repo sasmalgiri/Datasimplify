@@ -532,13 +532,6 @@ export default function CoinDetailPage() {
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </button>
-            <Link
-              href="/templates"
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              Get Excel Template
-            </Link>
           </div>
         </div>
 

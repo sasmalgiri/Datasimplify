@@ -140,17 +140,8 @@ export default function HeatmapPage() {
           </div>
 
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-            <h3 className="text-lg font-semibold text-white mb-3">Export Heatmap Data</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              Get sector and coin performance data as Excel templates with prefetched data.
-            </p>
+            <h3 className="text-lg font-semibold text-white mb-3">Explore More</h3>
             <div className="flex gap-3">
-              <Link
-                href="/downloads"
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition text-sm font-medium"
-              >
-                Get Excel Templates
-              </Link>
               <Link
                 href="/categories"
                 className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm font-medium"

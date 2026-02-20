@@ -213,11 +213,7 @@ export default function ResearchPage() {
         {/* Display Only Note */}
         <div className="mt-12 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
           <p className="text-sm text-blue-300 text-center">
-            All data displayed is for informational purposes only.
-            <Link href="/downloads" className="underline ml-1 hover:text-blue-200">
-              Download Excel templates
-            </Link>
-            {' '}to work with live data in Excel (BYOK).
+            All data displayed is for informational and educational purposes only.
           </p>
         </div>
       </div>

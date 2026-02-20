@@ -155,7 +155,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update downloads_limit based on tier if not explicitly set
     if (downloads_limit === undefined) {
-      const tierLimits = { free: 3, pro: 300 };
+      const tierLimits = { free: 30, pro: 300 };
       updates.downloads_limit = tierLimits[subscription_tier as keyof typeof tierLimits];
     }
   }

@@ -3,7 +3,6 @@
 import { TokenScreener } from '@/components/features/TokenScreener';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 
 export default function ScreenerPage() {
   return (
@@ -18,17 +17,6 @@ export default function ScreenerPage() {
               Filter and find cryptocurrencies that match your criteria.
             </p>
           </div>
-          <TemplateDownloadButton
-            pageContext={{
-              pageId: 'screener',
-              timeframe: '24h',
-              currency: 'USD',
-              customizations: {
-                includeCharts: true,
-              },
-            }}
-            variant="primary"
-          />
         </div>
 
         <TokenScreener showBeginnerTips={true} />

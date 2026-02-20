@@ -6,7 +6,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { GainersLosers } from '@/components/GainersLosers';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
-import { TrendingUp, TrendingDown, BarChart3, Download } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function GainersLosersPage() {
   const [activeView, setActiveView] = useState<'split' | 'gainers' | 'losers'>('split');
@@ -163,32 +163,6 @@ export default function GainersLosersPage() {
           </div>
         </div>
 
-        {/* Export Options */}
-        <div className="bg-gray-900 rounded-xl border border-gray-800 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <BarChart3 className="w-6 h-6 text-emerald-500" />
-            <h2 className="text-xl font-semibold text-white">Export to Excel</h2>
-          </div>
-          <p className="text-gray-400 mb-4">
-            Download market movers data as Excel templates with prefetched data.
-            Track gainers and losers with snapshot data. Your API key stays in Excel.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/download"
-              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition flex items-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Download Templates
-            </Link>
-            <Link
-              href="/downloads"
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
-            >
-              Excel Templates
-            </Link>
-          </div>
-        </div>
 
         {/* Attribution */}
         <div className="mt-8 text-center text-sm text-gray-500">

@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import html2canvas from 'html2canvas';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
@@ -1131,14 +1130,6 @@ function ChartsContent() {
                 <span className="text-gray-400">Showing correlation for: </span>
                 <span className="text-blue-400 font-bold">{selectedCoinData?.name || 'Bitcoin'}</span>
               </div>
-              <div className="flex gap-2">
-                <Link
-                  href="/templates"
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-                >
-                  📊 Get Excel Template
-                </Link>
-              </div>
             </div>
 
             {/* Correlation Matrix - with ID for capture */}
@@ -1998,7 +1989,6 @@ function ChartsContent() {
               <Link href="/charts/advanced" className="text-purple-400 hover:text-purple-300 font-medium">
                 Advanced Charts ✨
               </Link>
-              <Link href="/download" className="text-gray-400 hover:text-white">Downloads</Link>
               <Link href="/compare" className="text-gray-400 hover:text-white">Compare</Link>
               <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
             </div>
@@ -2013,29 +2003,6 @@ function ChartsContent() {
             <p className="text-gray-400 mt-1">Powerful visualizations for crypto analysis and market trends</p>
           </div>
 
-          {/* Download Templates */}
-          <div className="flex gap-2">
-            <Link
-              href="/templates"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition flex items-center gap-2"
-            >
-              📊 Excel Templates
-            </Link>
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'charts',
-                selectedCoin: selectedCoin,
-                chartType: selectedChart,
-                interval: timeRange,
-                timeframe: timeRange,
-                customizations: {
-                  includeCharts: true,
-                },
-              }}
-              variant="outline"
-              size="md"
-            />
-          </div>
         </div>
 
         <div className="grid grid-cols-12 gap-6">

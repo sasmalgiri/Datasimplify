@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { useViewMode } from '@/lib/viewMode';
@@ -682,20 +681,6 @@ export default function ComparePage() {
             <div className="mt-1">
               <CoinGeckoAttribution variant="compact" showIcon />
             </div>
-          </div>
-          <div className="flex gap-2 mt-3 md:mt-0">
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'compare',
-                comparedCoins: selectedIds,
-                visibleColumns,
-                timeframe: '24h',
-                currency: 'USD',
-                customizations: { sortBy, categoryFilter, includeCharts: true },
-              }}
-              variant="outline"
-              size="md"
-            />
           </div>
         </div>
 

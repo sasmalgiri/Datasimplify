@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 
 // Progress bar component using refs to avoid inline style warnings and ARIA expression warnings
@@ -417,18 +416,6 @@ export default function MonitorPage() {
             >
               {loading ? 'Refreshing...' : '🔄 Refresh'}
             </button>
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'monitor',
-                timeframe: '24h',
-                dashboardMetrics: ['market_overview', 'fear_greed', 'funding_rates', 'onchain'],
-                customizations: {
-                  includeCharts: true,
-                },
-              }}
-              variant="outline"
-              size="md"
-            />
           </div>
         </div>
 

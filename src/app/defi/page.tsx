@@ -3,7 +3,6 @@
 import { DeFiTracker } from '@/components/features/DeFiTracker';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 
 export default function DeFiPage() {
   return (
@@ -18,17 +17,6 @@ export default function DeFiPage() {
               Track decentralized finance protocols, TVL, and yield opportunities.
             </p>
           </div>
-          <TemplateDownloadButton
-            pageContext={{
-              pageId: 'defi',
-              timeframe: '24h',
-              currency: 'USD',
-              customizations: {
-                includeCharts: true,
-              },
-            }}
-            variant="primary"
-          />
         </div>
 
         <DeFiTracker showBeginnerTips={true} />

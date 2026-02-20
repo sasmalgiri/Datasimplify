@@ -1057,7 +1057,6 @@ function AdvancedChartsContent() {
               <Link href="/charts" className="text-blue-400 hover:text-blue-300">
                 ← Basic Charts
               </Link>
-              <Link href="/download" className="text-gray-400 hover:text-white">Downloads</Link>
               <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
             </div>
           </div>
@@ -1265,19 +1264,6 @@ function AdvancedChartsContent() {
                   <p className="text-gray-400 text-sm">{selectedConfig?.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Download Templates */}
-                  <div className="flex items-center gap-1 mr-2">
-                    <Link
-                      href="/templates"
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded transition flex items-center gap-1"
-                      title="Get Excel templates with prefetched crypto data"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Excel Templates
-                    </Link>
-                  </div>
                   <span className="px-3 py-1 bg-purple-600/30 text-purple-400 rounded-full text-xs font-medium">
                     ECharts
                   </span>

@@ -139,25 +139,6 @@ export default function RWAPage() {
           </div>
         </div>
 
-        {/* Excel Export CTA */}
-        <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-xl border border-indigo-500/30 p-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Track RWA in Excel</h3>
-              <p className="text-gray-300 text-sm">
-                Export RWA market data to Excel with our BYOK templates. Track tokenized treasuries,
-                private credit yields, and asset holder growth alongside your crypto portfolio.
-              </p>
-            </div>
-            <Link
-              href="/templates"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition font-medium whitespace-nowrap"
-            >
-              Get Excel Templates
-              <ExternalLink className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
       </main>
     </div>
   );

@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { RiskDashboardDemo } from '@/components/features/RiskDashboard';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { FEATURES } from '@/lib/featureFlags';
 
 // Check feature flag at build/request time - return 404 if disabled
@@ -24,18 +23,6 @@ export default function RiskPage() {
               Understand how risky different cryptocurrencies are before investing.
             </p>
           </div>
-          <TemplateDownloadButton
-            pageContext={{
-              pageId: 'risk',
-              selectedCoins: ['bitcoin', 'ethereum', 'solana', 'bnb', 'xrp'],
-              timeframe: '30d',
-              currency: 'USD',
-              customizations: {
-                includeCharts: true,
-              },
-            }}
-            variant="primary"
-          />
         </div>
 
         <RiskDashboardDemo showBeginnerTips={true} />

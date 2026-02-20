@@ -3,7 +3,6 @@
 import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 
 export default function TechnicalPage() {
@@ -18,20 +17,6 @@ export default function TechnicalPage() {
             <p className="text-gray-400">
               See what technical indicators are saying about the market.
             </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'technical',
-                selectedCoins: ['bitcoin'],
-                timeframe: '1d',
-                selectedIndicators: ['RSI', 'MACD', 'SMA', 'EMA', 'BB'],
-                customizations: {
-                  includeCharts: true,
-                },
-              }}
-              variant="outline"
-            />
           </div>
         </div>
 

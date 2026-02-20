@@ -293,23 +293,6 @@ export default function DexPoolsPage() {
           </div>
         )}
 
-        {/* Export Options */}
-        <div className="mt-8 bg-gray-900 rounded-xl border border-gray-800 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Droplets className="w-6 h-6 text-cyan-500" />
-            <h2 className="text-xl font-semibold text-white">Export DEX Data</h2>
-          </div>
-          <p className="text-gray-400 mb-4">
-            Download DEX pool data as Excel templates with prefetched data.
-          </p>
-          <Link
-            href="/downloads"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 transition"
-          >
-            Get Excel Templates
-            <ExternalLink className="w-4 h-4" />
-          </Link>
-        </div>
 
         {/* Attribution */}
         <div className="mt-8 text-center text-sm text-gray-500">

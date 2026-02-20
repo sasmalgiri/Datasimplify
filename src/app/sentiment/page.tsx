@@ -4,7 +4,6 @@ import { FearGreedIndex } from '@/components/features/FearGreedIndex';
 import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 
 export default function SentimentPage() {
@@ -19,19 +18,6 @@ export default function SentimentPage() {
             <p className="text-gray-400">
               Measure the overall mood of the crypto market.
             </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'sentiment',
-                timeframe: '30d',
-                customizations: {
-                  includeCharts: true,
-                  period: '30d',
-                },
-              }}
-              variant="outline"
-            />
           </div>
         </div>
 

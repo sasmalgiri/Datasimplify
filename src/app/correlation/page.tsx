@@ -3,7 +3,6 @@
 import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
 
 export default function CorrelationPage() {
   return (
@@ -17,19 +16,6 @@ export default function CorrelationPage() {
             <p className="text-gray-400">
               See how different cryptocurrencies move in relation to each other.
             </p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <TemplateDownloadButton
-              pageContext={{
-                pageId: 'correlation',
-                correlationCoins: ['bitcoin', 'ethereum', 'solana', 'bnb', 'xrp'],
-                period: '30d',
-                customizations: {
-                  includeCharts: true,
-                },
-              }}
-              variant="outline"
-            />
           </div>
         </div>
 
