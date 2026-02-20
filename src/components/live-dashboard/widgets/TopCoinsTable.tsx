@@ -3,16 +3,9 @@
 import { useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
 import { useUserPrefsStore } from '@/lib/live-dashboard/user-prefs-store';
-import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
+import { TABLE_DENSITY_MAP, formatCompact, formatPrice } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 import { ArrowUpRight, ArrowDownRight, Star } from 'lucide-react';
-
-function formatCompact(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  return `$${n.toLocaleString()}`;
-}
 
 function MiniSparkline({ prices }: { prices: number[] }) {
   if (!prices || prices.length < 2) return null;
@@ -45,6 +38,7 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
   const { data, customization } = useLiveDashboardStore();
   const { watchlist, toggleWatchlist } = useUserPrefsStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
+  const cur = customization.vsCurrency || 'usd';
   const coins = data.markets?.slice(0, limit) || [];
 
   const insight = useMemo(() => {
@@ -54,9 +48,8 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
     const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
     const totalVol = coins.reduce((s, c) => s + (c.total_volume || 0), 0);
     const volMcapRatio = totalMcap > 0 ? ((totalVol / totalMcap) * 100).toFixed(1) : '0';
-    const mcapStr = totalMcap >= 1e12 ? `$${(totalMcap / 1e12).toFixed(2)}T` : totalMcap >= 1e9 ? `$${(totalMcap / 1e9).toFixed(1)}B` : `$${(totalMcap / 1e6).toFixed(0)}M`;
-    return `${greenCount}/${coins.length} coins green \u00B7 Avg 24h change: ${avg24h >= 0 ? '+' : ''}${avg24h.toFixed(2)}% \u00B7 Total MCap: ${mcapStr} \u00B7 Vol/MCap ratio: ${volMcapRatio}%`;
-  }, [coins]);
+    return `${greenCount}/${coins.length} coins green \u00B7 Avg 24h change: ${avg24h >= 0 ? '+' : ''}${avg24h.toFixed(2)}% \u00B7 Total MCap: ${formatCompact(totalMcap, cur)} \u00B7 Vol/MCap ratio: ${volMcapRatio}%`;
+  }, [coins, cur]);
 
   if (!data.markets) {
     return (
@@ -111,7 +104,7 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
                 </div>
               </td>
               <td className={`${density.py} ${density.px} text-right text-white font-medium`}>
-                ${coin.current_price < 1 ? coin.current_price.toFixed(6) : coin.current_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatPrice(coin.current_price, cur)}
               </td>
               <td className={`${density.py} ${density.px} text-right`}>
                 <span className={`flex items-center justify-end gap-0.5 font-medium ${(coin.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -134,8 +127,8 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
                   <span className="text-gray-600">—</span>
                 )}
               </td>
-              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden md:table-cell`}>{formatCompact(coin.market_cap)}</td>
-              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden lg:table-cell`}>{formatCompact(coin.total_volume)}</td>
+              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden md:table-cell`}>{formatCompact(coin.market_cap, cur)}</td>
+              <td className={`${density.py} ${density.px} text-right text-gray-300 hidden lg:table-cell`}>{formatCompact(coin.total_volume, cur)}</td>
               <td className={`${density.py} ${density.px} text-center hidden lg:table-cell`}>
                 <MiniSparkline prices={coin.sparkline_in_7d?.price || []} />
               </td>

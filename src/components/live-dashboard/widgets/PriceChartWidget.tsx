@@ -1,7 +1,8 @@
 'use client';
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { getThemeColors, CHART_HEIGHT_MAP } from '@/lib/live-dashboard/theme';
+import { getThemeColors, CHART_HEIGHT_MAP, formatPrice, formatCompact } from '@/lib/live-dashboard/theme';
+import { getCurrencySymbol } from '@/lib/live-dashboard/currency';
 
 interface PriceChartWidgetProps {
   coinId?: string;
@@ -12,6 +13,8 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
+  const cur = customization.vsCurrency || 'usd';
+  const isSmooth = customization.chartStyle === 'smooth';
   const ohlcData = data.ohlc[coinId];
 
   if (!ohlcData || ohlcData.length === 0) {
@@ -56,7 +59,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
     <div>
       <div className="flex items-center justify-between mb-3">
         <div>
-          <span className="text-2xl font-bold text-white">${currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span>
+          <span className="text-2xl font-bold text-white">{formatPrice(currentPrice, cur)}</span>
           <span className={`ml-2 text-sm font-medium ${isUp ? 'text-emerald-400' : 'text-red-400'}`}>
             {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
           </span>
@@ -81,7 +84,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
             <g key={pct}>
               <line x1={padding} y1={y} x2={w - padding} y2={y} stroke="#374151" strokeWidth={0.5} />
               <text x={padding - 5} y={y + 3} fill="#6b7280" fontSize={9} textAnchor="end">
-                ${val >= 1000 ? `${(val / 1000).toFixed(1)}K` : val.toFixed(0)}
+                {formatCompact(val, cur)}
               </text>
             </g>
           );
@@ -89,7 +92,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
         {/* Area */}
         <polygon points={areaPoints} fill={`url(#grad-${coinId})`} />
         {/* Line */}
-        <polyline points={points} fill="none" stroke={lineColor} strokeWidth={2} />
+        <polyline points={points} fill="none" stroke={lineColor} strokeWidth={2} strokeLinejoin={isSmooth ? 'round' : 'miter'} strokeLinecap={isSmooth ? 'round' : 'butt'} />
       </svg>
     </div>
   );

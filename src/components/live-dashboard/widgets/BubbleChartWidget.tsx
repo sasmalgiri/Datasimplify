@@ -13,16 +13,19 @@ echarts.use([ScatterChart, GridComponent, TooltipComponent, DataZoomComponent, C
 
 interface BubbleChartWidgetProps {
   limit?: number;
+  coinIds?: string[];
 }
 
-export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
+export function BubbleChartWidget({ limit = 30, coinIds }: BubbleChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
 
   const { option, insight } = useMemo(() => {
     if (!data.markets) return { option: null, insight: '' };
 
-    const coins = data.markets.slice(0, limit);
+    const coins = coinIds?.length
+      ? data.markets.filter((c) => coinIds.includes(c.id))
+      : data.markets.slice(0, limit);
 
     // Normalize volume to bubble size (10–60 range)
     const volumes = coins.map((c) => c.total_volume);
@@ -123,7 +126,7 @@ export function BubbleChartWidget({ limit = 30 }: BubbleChartWidgetProps) {
       ],
       animationEasing: 'elasticOut' as const,
     } };
-  }, [data.markets, limit, customization]);
+  }, [data.markets, limit, coinIds, customization]);
 
   if (!option) {
     return (

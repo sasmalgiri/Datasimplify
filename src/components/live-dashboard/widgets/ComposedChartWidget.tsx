@@ -13,9 +13,10 @@ echarts.use([LineChart, BarChart, GridComponent, TooltipComponent, LegendCompone
 
 interface ComposedChartWidgetProps {
   limit?: number;
+  coinIds?: string[];
 }
 
-export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
+export function ComposedChartWidget({ limit = 15, coinIds }: ComposedChartWidgetProps) {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
   const chartHeight = CHART_HEIGHT_MAP[customization.chartHeight];
@@ -23,7 +24,9 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
   const { option, insight } = useMemo(() => {
     if (!data.markets?.length) return { option: null, insight: '' };
 
-    const coins = data.markets.slice(0, limit);
+    const coins = coinIds?.length
+      ? data.markets.filter((c) => coinIds.includes(c.id))
+      : data.markets.slice(0, limit);
     const labels = coins.map((c) => c.symbol.toUpperCase());
 
     const volumeData = coins.map((c) => c.total_volume);
@@ -123,7 +126,7 @@ export function ComposedChartWidget({ limit = 15 }: ComposedChartWidgetProps) {
         },
       ],
     } };
-  }, [data.markets, limit, themeColors, customization]);
+  }, [data.markets, limit, coinIds, themeColors, customization]);
 
   if (!data.markets) {
     return (

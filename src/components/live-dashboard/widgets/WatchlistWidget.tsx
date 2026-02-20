@@ -2,24 +2,9 @@
 
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
 import { useUserPrefsStore } from '@/lib/live-dashboard/user-prefs-store';
-import { getThemeColors, TABLE_DENSITY_MAP } from '@/lib/live-dashboard/theme';
+import { TABLE_DENSITY_MAP, formatCompact, formatPrice } from '@/lib/live-dashboard/theme';
 import { Star, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import Image from 'next/image';
-
-/* ---------- helpers ---------- */
-
-function formatCompact(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  return `$${n.toLocaleString()}`;
-}
-
-function formatPrice(price: number): string {
-  if (price < 0.01) return `$${price.toFixed(8)}`;
-  if (price < 1) return `$${price.toFixed(6)}`;
-  return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 /* ---------- mini sparkline ---------- */
 
@@ -53,7 +38,7 @@ export function WatchlistWidget() {
   const { data, customization } = useLiveDashboardStore();
   const { watchlist, toggleWatchlist, isInWatchlist } = useUserPrefsStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
-  const themeColors = getThemeColors(customization.colorTheme);
+  const cur = customization.vsCurrency || 'usd';
 
   // Filter market data to only coins in the watchlist
   const watchlistCoins: MarketCoin[] = (data.markets ?? []).filter((coin) =>
@@ -179,7 +164,7 @@ export function WatchlistWidget() {
                 <td
                   className={`${density.py} ${density.px} text-right text-white font-medium tabular-nums`}
                 >
-                  {formatPrice(coin.current_price)}
+                  {formatPrice(coin.current_price, cur)}
                 </td>
 
                 {/* 24h change */}
@@ -202,7 +187,7 @@ export function WatchlistWidget() {
                 <td
                   className={`${density.py} ${density.px} text-right text-gray-300 hidden md:table-cell`}
                 >
-                  {formatCompact(coin.market_cap)}
+                  {formatCompact(coin.market_cap, cur)}
                 </td>
 
                 {/* Mini sparkline */}

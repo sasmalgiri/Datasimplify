@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { useLiveDashboardStore, type MarketCoin } from '@/lib/live-dashboard/store';
-import { TABLE_DENSITY_MAP, getThemeColors } from '@/lib/live-dashboard/theme';
+import { TABLE_DENSITY_MAP, formatPrice } from '@/lib/live-dashboard/theme';
 import Image from 'next/image';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export function GainersLosersWidget() {
   const { data, customization } = useLiveDashboardStore();
   const density = TABLE_DENSITY_MAP[customization.tableDensity];
+  const cur = customization.vsCurrency || 'usd';
   const [tab, setTab] = useState<'gainers' | 'losers'>('gainers');
 
   const insight = useMemo(() => {
@@ -74,7 +75,7 @@ export function GainersLosersWidget() {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-gray-300 text-sm">
-                ${coin.current_price < 1 ? coin.current_price.toFixed(4) : coin.current_price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                {formatPrice(coin.current_price, cur)}
               </span>
               <span className={`text-sm font-semibold min-w-[60px] text-right ${
                 (coin.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'

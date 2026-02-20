@@ -2,19 +2,7 @@
 
 import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { getThemeColors } from '@/lib/live-dashboard/theme';
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
-function formatCompact(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
-}
+import { getThemeColors, formatCompact, formatPrice } from '@/lib/live-dashboard/theme';
 
 function formatPercent(n: number): string {
   return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
@@ -93,6 +81,7 @@ function MetricCard({ label, value, change, accentColor, extra }: MetricCardProp
 export function MarketPulseWidget() {
   const { data, customization } = useLiveDashboardStore();
   const themeColors = getThemeColors(customization.colorTheme);
+  const cur = customization.vsCurrency || 'usd';
 
   const global = data.global;
   const markets = data.markets;
@@ -102,8 +91,8 @@ export function MarketPulseWidget() {
   const btc = markets?.find((c) => c.id === 'bitcoin');
   const eth = markets?.find((c) => c.id === 'ethereum');
 
-  const totalMcap = global?.total_market_cap?.usd ?? 0;
-  const totalVol = global?.total_volume?.usd ?? 0;
+  const totalMcap = global?.total_market_cap?.[cur] ?? global?.total_market_cap?.usd ?? 0;
+  const totalVol = global?.total_volume?.[cur] ?? global?.total_volume?.usd ?? 0;
   const btcDom = global?.market_cap_percentage?.btc ?? 0;
   const mcapChange = global?.market_cap_change_percentage_24h_usd ?? null;
 
@@ -150,7 +139,7 @@ export function MarketPulseWidget() {
       {/* BTC Price */}
       <MetricCard
         label="BTC"
-        value={btc ? `$${btc.current_price.toLocaleString()}` : '--'}
+        value={btc ? formatPrice(btc.current_price, cur) : '--'}
         change={btc?.price_change_percentage_24h ?? null}
         accentColor={themeColors.primary}
       />
@@ -158,7 +147,7 @@ export function MarketPulseWidget() {
       {/* ETH Price */}
       <MetricCard
         label="ETH"
-        value={eth ? `$${eth.current_price.toLocaleString()}` : '--'}
+        value={eth ? formatPrice(eth.current_price, cur) : '--'}
         change={eth?.price_change_percentage_24h ?? null}
         accentColor={themeColors.primary}
       />
@@ -186,7 +175,7 @@ export function MarketPulseWidget() {
       {/* Total Market Cap */}
       <MetricCard
         label="Market Cap"
-        value={totalMcap ? formatCompact(totalMcap) : '--'}
+        value={totalMcap ? formatCompact(totalMcap, cur) : '--'}
         change={mcapChange}
         accentColor={themeColors.primary}
       />
@@ -214,7 +203,7 @@ export function MarketPulseWidget() {
       {/* 24h Total Volume */}
       <MetricCard
         label="24h Volume"
-        value={totalVol ? formatCompact(totalVol) : '--'}
+        value={totalVol ? formatCompact(totalVol, cur) : '--'}
         accentColor={themeColors.primary}
       />
       </div>

@@ -388,8 +388,9 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
 }
 
 function WidgetSkeleton() {
+  const showAnimations = useLiveDashboardStore((s) => s.customization.showAnimations);
   return (
-    <div className="animate-pulse space-y-3">
+    <div className={`${showAnimations ? 'animate-pulse' : ''} space-y-3`}>
       <div className="h-4 bg-gray-800/50 rounded w-3/4" />
       <div className="h-4 bg-gray-800/50 rounded w-1/2" />
       <div className="h-24 bg-gray-800/50 rounded" />
