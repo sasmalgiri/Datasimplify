@@ -15,9 +15,10 @@ import {
   GraduationCap,
   HelpCircle,
   Shield,
+  LayoutDashboard,
 } from 'lucide-react';
 
-import { isFeatureEnabled } from '@/lib/featureFlags';
+import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { useAuth } from '@/lib/auth';
 
@@ -146,6 +147,9 @@ export function FreeNavbar() {
 
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
+    ...(FEATURES.addinV2 && user
+      ? [{ href: '/command-center', label: 'Command Center', icon: <LayoutDashboard className="w-4 h-4" /> }]
+      : []),
     { href: '/live-dashboards', label: 'Live Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
     ...(user ? [
       { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
@@ -171,6 +175,19 @@ export function FreeNavbar() {
 
           {/* Desktop Nav - Mega Menu */}
           <div className="hidden lg:flex items-center gap-1">
+            {FEATURES.addinV2 && user && (
+              <Link
+                href="/command-center"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition font-medium ${
+                  isActive('/command-center')
+                    ? 'text-emerald-400 bg-emerald-500/10'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Command Center</span>
+              </Link>
+            )}
             {Object.entries(navSections)
               .filter(([, section]) => section.items.length > 0)
               .map(([key, section]) => (

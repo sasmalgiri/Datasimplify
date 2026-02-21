@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell } from 'lucide-react';
+import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell, Folder } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
@@ -15,6 +15,11 @@ import DashboardAlertPanel, { useAlertCount } from './DashboardAlertPanel';
 import { CreditBalancePill } from './CreditBalance';
 import { useInitCredits } from '@/lib/live-dashboard/credits';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
+import { FEATURES } from '@/lib/featureFlags';
+import { useWorkspaceStore, useActiveWorkspace } from '@/lib/workspaces/workspaceStore';
+import { WorkspacePanel } from '@/components/workspaces/WorkspacePanel';
+import { WorkspaceCreateModal } from '@/components/workspaces/WorkspaceCreateModal';
+import type { PositionSnapshot } from '@/lib/workspaces/types';
 
 const AUTO_REFRESH_OPTIONS = [
   { value: 0, label: 'Off' },
@@ -49,7 +54,64 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
+  const [workspacePanelOpen, setWorkspacePanelOpen] = useState(false);
+  const [workspaceCreateOpen, setWorkspaceCreateOpen] = useState(false);
   const alertCount = useAlertCount();
+
+  // Workspace integration
+  const activeWorkspace = useActiveWorkspace();
+  const createSnapshot = useWorkspaceStore((s) => s.createSnapshot);
+
+  // Auto-create snapshot after data refresh when workspace is active
+  const handleAutoSnapshot = useCallback(() => {
+    if (!FEATURES.addinV2 || !activeWorkspace) return;
+    const data = useLiveDashboardStore.getState().data;
+    if (!data.markets) return;
+
+    const workspaceCoins = activeWorkspace.config?.coins ?? [];
+    const relevantMarkets = workspaceCoins.length > 0
+      ? data.markets.filter((m) => workspaceCoins.includes(m.symbol.toUpperCase()) || workspaceCoins.includes(m.id))
+      : data.markets;
+
+    if (relevantMarkets.length === 0) return;
+
+    const totalValue = relevantMarkets.reduce((sum, m) => sum + (m.market_cap || 0), 0);
+    const totalWeight = relevantMarkets.reduce((sum, m) => sum + (m.market_cap || 0), 0);
+    const weightedReturn7d = totalWeight > 0
+      ? relevantMarkets.reduce(
+          (sum, m) => sum + (m.price_change_percentage_7d_in_currency ?? 0) * (m.market_cap || 0),
+          0,
+        ) / totalWeight
+      : null;
+
+    // Find top mover
+    let topMover = relevantMarkets[0];
+    for (const m of relevantMarkets) {
+      if (Math.abs(m.price_change_percentage_24h || 0) > Math.abs(topMover?.price_change_percentage_24h || 0)) {
+        topMover = m;
+      }
+    }
+
+    const positionsJson: PositionSnapshot[] = relevantMarkets.map((m) => ({
+      symbol: m.symbol.toUpperCase(),
+      coinId: m.id,
+      price: m.current_price,
+      change24h: m.price_change_percentage_24h || 0,
+      marketCap: m.market_cap || 0,
+    }));
+
+    createSnapshot({
+      workspace_id: activeWorkspace.id,
+      kpi_value: totalValue,
+      kpi_return_7d: weightedReturn7d != null ? Number(weightedReturn7d.toFixed(2)) : undefined,
+      asset_count: relevantMarkets.length,
+      top_mover_symbol: topMover?.symbol?.toUpperCase(),
+      top_mover_change: topMover?.price_change_percentage_24h != null
+        ? Number(topMover.price_change_percentage_24h.toFixed(2))
+        : undefined,
+      positions_json: positionsJson,
+    });
+  }, [activeWorkspace, createSnapshot]);
 
   const handleRefresh = useCallback(() => {
     // Read customization fresh from store to avoid stale closure
@@ -89,8 +151,10 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       const protocolWidget = definition.widgets.find((w) => w.props?.protocolSlug);
       params.protocolSlug = protocolWidget?.props?.protocolSlug || definition.slug.replace('protocol-', '');
     }
-    fetchData(definition.requiredEndpoints, params);
-  }, [definition, fetchData]);
+    fetchData(definition.requiredEndpoints, params).then(() => {
+      handleAutoSnapshot();
+    });
+  }, [definition, fetchData, handleAutoSnapshot]);
 
   // Auto-refresh interval
   useEffect(() => {
@@ -126,10 +190,14 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         case 'l':
           if (!e.metaKey && !e.ctrlKey) setAlertPanelOpen((v) => !v);
           break;
+        case 'w':
+          if (!e.metaKey && !e.ctrlKey && FEATURES.addinV2) setWorkspacePanelOpen((v) => !v);
+          break;
         case 'escape':
           setCustomizeOpen(false);
           setAiPanelOpen(false);
           setAlertPanelOpen(false);
+          setWorkspacePanelOpen(false);
           break;
       }
     };
@@ -151,7 +219,12 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             <h1 className={`font-bold ${st.textPrimary} ${customizeOpen ? 'text-lg' : 'text-2xl'}`}>
               {definition.name}
             </h1>
-            {!customizeOpen && (
+            {!customizeOpen && activeWorkspace && (
+              <p className={`text-xs text-emerald-400/80 mt-0.5`}>
+                {activeWorkspace.name} &middot; {activeWorkspace.config?.coins?.length ?? 0} coins
+              </p>
+            )}
+            {!customizeOpen && !activeWorkspace && (
               <p className={`${st.textDim} text-sm mt-1`}>{definition.description}</p>
             )}
           </div>
@@ -192,6 +265,17 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
           {/* Credits pill — hidden when customize open */}
           {!customizeOpen && <CreditBalancePill />}
+
+          {/* Workspace */}
+          {!customizeOpen && FEATURES.addinV2 && (
+            <button
+              onClick={() => setWorkspacePanelOpen((v) => !v)}
+              className={`p-2 rounded-xl ${workspacePanelOpen ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : `${st.buttonSecondary}`} transition`}
+              title="Workspaces (W)"
+            >
+              <Folder className="w-4 h-4" />
+            </button>
+          )}
 
           {/* AI Chat */}
           {!customizeOpen && (
@@ -323,6 +407,24 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
       {/* Alert Panel */}
       <DashboardAlertPanel isOpen={alertPanelOpen} onClose={() => setAlertPanelOpen(false)} />
+
+      {/* Workspace Panel */}
+      {FEATURES.addinV2 && (
+        <>
+          <WorkspacePanel
+            isOpen={workspacePanelOpen}
+            onClose={() => setWorkspacePanelOpen(false)}
+            onCreateNew={() => {
+              setWorkspacePanelOpen(false);
+              setWorkspaceCreateOpen(true);
+            }}
+          />
+          <WorkspaceCreateModal
+            isOpen={workspaceCreateOpen}
+            onClose={() => setWorkspaceCreateOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

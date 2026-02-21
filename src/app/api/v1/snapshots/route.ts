@@ -11,6 +11,14 @@ import { FEATURES } from '@/lib/featureFlags';
 
 const MAX_SNAPSHOTS_PER_WORKSPACE = 100;
 
+interface PositionSnapshot {
+  symbol: string;
+  coinId: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+}
+
 interface Snapshot {
   id: string;
   workspace_id: string;
@@ -21,6 +29,7 @@ interface Snapshot {
   top_mover_symbol: string | null;
   top_mover_change: number | null;
   used_cache: boolean;
+  positions_json: PositionSnapshot[] | null;
   created_at: string;
 }
 
@@ -122,6 +131,7 @@ export async function POST(req: NextRequest) {
     top_mover_symbol?: string;
     top_mover_change?: number;
     used_cache?: boolean;
+    positions_json?: PositionSnapshot[];
   };
   try {
     body = await req.json();
@@ -185,6 +195,7 @@ export async function POST(req: NextRequest) {
       top_mover_symbol: body.top_mover_symbol ?? null,
       top_mover_change: body.top_mover_change ?? null,
       used_cache: body.used_cache ?? false,
+      positions_json: body.positions_json ?? null,
     })
     .select()
     .single();

@@ -75,6 +75,9 @@ export const FEATURES = {
 
   // Add-in V2: workspace sync, action tokens, snapshots, structured tables, refresh loop
   addinV2: parseBool(process.env.NEXT_PUBLIC_FEATURE_ADDIN_V2, false),
+
+  // Report Packs: client-ready PDF + Excel + CSV deliverables
+  reportPacks: parseBool(process.env.NEXT_PUBLIC_FEATURE_REPORT_PACKS, false),
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
