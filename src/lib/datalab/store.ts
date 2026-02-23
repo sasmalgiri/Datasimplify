@@ -222,73 +222,103 @@ export const useDataLabStore = create<DataLabStore>()(
 
           // Fetch via the live dashboard store's fetchData
           const dashStore = useLiveDashboardStore.getState();
+
+          // Check if an API key is available (needed for CoinGecko endpoints)
+          const hasKey = !!dashStore.apiKey;
+          const needsKey = endpoints.some(
+            (ep) => ep !== 'fear_greed' && ep !== 'defillama_protocols' &&
+              ep !== 'defillama_chains' && ep !== 'defillama_yields',
+          );
+          if (needsKey && !hasKey) {
+            set({
+              isLoading: false,
+              error: 'CoinGecko API key required. Go to any dashboard, open Settings, and enter your free CoinGecko API key.',
+            });
+            return;
+          }
+
           await dashStore.fetchData(endpoints, {
-            coinIds: [coin],
+            coinId: coin,       // singular — API ohlc case reads params.coinId
+            coinIds: [coin],    // plural  — API ohlc_multi case reads params.coinIds
             days,
+            vsCurrency: 'usd',
           });
+
+          // Check if dashboard store encountered an error
+          const dashError = useLiveDashboardStore.getState().error;
+          if (dashError) {
+            set({ isLoading: false, error: dashError });
+            return;
+          }
 
           // Extract data from dashboard store
           const dashData = useLiveDashboardStore.getState().data;
           const ohlcData = dashData.ohlc?.[coin];
 
-          if (ohlcData && ohlcData.length > 0) {
-            const timestamps = ohlcData.map((d) => d[0]);
-            const closes = ohlcData.map((d) => d[4]);
-            const opens = ohlcData.map((d) => d[1]);
-            const volumes = ohlcData.map((d) => Math.abs(d[4] - d[1]) * 1000);
-
-            const raw: Record<string, (number | null)[]> = {
-              price: closes,
-              volume: volumes,
-              open: opens,
-            };
-
-            // Fear & Greed — align to timestamps (use last known value for missing dates)
-            if (dashData.fearGreed && dashData.fearGreed.length > 0) {
-              const fgMap = new Map<string, number>();
-              for (const fg of dashData.fearGreed) {
-                const d = new Date(Number(fg.timestamp) * 1000);
-                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                fgMap.set(key, Number(fg.value));
-              }
-              const fgAligned: (number | null)[] = timestamps.map((ts) => {
-                const d = new Date(ts);
-                const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                return fgMap.get(key) ?? null;
-              });
-              raw.fear_greed = fgAligned;
-            }
-
-            // BTC Dominance — single value (project as flat line)
-            if (dashData.global) {
-              const btcDom = dashData.global.market_cap_percentage?.btc ?? null;
-              if (btcDom != null) {
-                raw.btc_dominance = timestamps.map(() => btcDom);
-              }
-            }
-
-            // DeFi TVL — single total (project as flat line)
-            if (dashData.defiProtocols && dashData.defiProtocols.length > 0) {
-              const totalTvl = dashData.defiProtocols.reduce((sum, p) => sum + (p.tvl || 0), 0);
-              raw.defi_tvl = timestamps.map(() => totalTvl);
-            }
-
-            // Funding rate — average across derivatives
-            if (dashData.derivatives && dashData.derivatives.length > 0) {
-              const btcPerps = dashData.derivatives.filter(
-                (d) => d.symbol.toLowerCase().includes('btc') && d.contract_type === 'perpetual',
-              );
-              const avgFunding = btcPerps.length > 0
-                ? btcPerps.reduce((s, d) => s + d.funding_rate, 0) / btcPerps.length
-                : 0;
-              raw.funding_rate = timestamps.map(() => avgFunding * 100); // as percentage
-            }
-
-            set({ timestamps, rawData: raw, ohlcRaw: ohlcData });
-
-            // Recalculate derived layers
-            get().recalculateLayers();
+          if (!ohlcData || ohlcData.length === 0) {
+            set({
+              isLoading: false,
+              error: `No OHLC data returned for "${coin}". Check your API key or try a different coin.`,
+            });
+            return;
           }
+
+          const timestamps = ohlcData.map((d) => d[0]);
+          const closes = ohlcData.map((d) => d[4]);
+          const opens = ohlcData.map((d) => d[1]);
+          const volumes = ohlcData.map((d) => Math.abs(d[4] - d[1]) * 1000);
+
+          const raw: Record<string, (number | null)[]> = {
+            price: closes,
+            volume: volumes,
+            open: opens,
+          };
+
+          // Fear & Greed — align to timestamps (use last known value for missing dates)
+          if (dashData.fearGreed && dashData.fearGreed.length > 0) {
+            const fgMap = new Map<string, number>();
+            for (const fg of dashData.fearGreed) {
+              const d = new Date(Number(fg.timestamp) * 1000);
+              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+              fgMap.set(key, Number(fg.value));
+            }
+            const fgAligned: (number | null)[] = timestamps.map((ts) => {
+              const d = new Date(ts);
+              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+              return fgMap.get(key) ?? null;
+            });
+            raw.fear_greed = fgAligned;
+          }
+
+          // BTC Dominance — single value (project as flat line)
+          if (dashData.global) {
+            const btcDom = dashData.global.market_cap_percentage?.btc ?? null;
+            if (btcDom != null) {
+              raw.btc_dominance = timestamps.map(() => btcDom);
+            }
+          }
+
+          // DeFi TVL — single total (project as flat line)
+          if (dashData.defiProtocols && dashData.defiProtocols.length > 0) {
+            const totalTvl = dashData.defiProtocols.reduce((sum, p) => sum + (p.tvl || 0), 0);
+            raw.defi_tvl = timestamps.map(() => totalTvl);
+          }
+
+          // Funding rate — average across derivatives
+          if (dashData.derivatives && dashData.derivatives.length > 0) {
+            const btcPerps = dashData.derivatives.filter(
+              (d) => d.symbol.toLowerCase().includes('btc') && d.contract_type === 'perpetual',
+            );
+            const avgFunding = btcPerps.length > 0
+              ? btcPerps.reduce((s, d) => s + d.funding_rate, 0) / btcPerps.length
+              : 0;
+            raw.funding_rate = timestamps.map(() => avgFunding * 100); // as percentage
+          }
+
+          set({ timestamps, rawData: raw, ohlcRaw: ohlcData });
+
+          // Recalculate derived layers
+          get().recalculateLayers();
 
           set({ isLoading: false });
         } catch (err: any) {
