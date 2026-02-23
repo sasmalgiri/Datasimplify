@@ -15,7 +15,7 @@ import { DeltaView } from '@/components/workspaces/DeltaView';
 import { SnapshotHistory } from '@/components/workspaces/SnapshotHistory';
 import { WorkspaceCreateModal } from '@/components/workspaces/WorkspaceCreateModal';
 import { QuickStartWizard } from '@/components/workspaces/QuickStartWizard';
-import { Loader2, History, LayoutDashboard } from 'lucide-react';
+import { Loader2, History, LayoutDashboard, Pencil } from 'lucide-react';
 
 export default function CommandCenterPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -35,6 +35,7 @@ export default function CommandCenterPage() {
   const activeWorkspace = useActiveWorkspace();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editWorkspaceId, setEditWorkspaceId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
   // Auth gate
@@ -58,6 +59,21 @@ export default function CommandCenterPage() {
       fetchSnapshots(activeWorkspace.id);
     }
   }, [activeWorkspace, fetchSnapshots]);
+
+  // Auto-refresh data when active workspace changes
+  const prevWorkspaceRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (activeWorkspace && activeWorkspace.id !== prevWorkspaceRef.current) {
+      prevWorkspaceRef.current = activeWorkspace.id;
+      // Fetch market data for the workspace's coins
+      const coins = activeWorkspace.config?.coins ?? [];
+      const vsCurrency = activeWorkspace.config?.vsCurrency ?? 'usd';
+      fetchData(['markets', 'global'], {
+        vsCurrency,
+        perPage: Math.max(coins.length, 100),
+      });
+    }
+  }, [activeWorkspace, fetchData]);
 
   // Refresh data for active workspace
   const handleRefresh = useCallback(() => {
@@ -136,6 +152,14 @@ export default function CommandCenterPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => activeWorkspace && setEditWorkspaceId(activeWorkspace.id)}
+              disabled={!activeWorkspace}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${st.buttonSecondary} disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <Pencil className="w-4 h-4" />
+              Edit
+            </button>
+            <button
               onClick={() => setHistoryOpen(true)}
               disabled={!activeWorkspace}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium ${st.buttonSecondary} disabled:opacity-40 disabled:cursor-not-allowed`}
@@ -148,7 +172,10 @@ export default function CommandCenterPage() {
 
         {/* Workspace Strip */}
         <div className="mb-6">
-          <WorkspaceStrip onCreateNew={() => setCreateModalOpen(true)} />
+          <WorkspaceStrip
+            onCreateNew={() => setCreateModalOpen(true)}
+            onEdit={(id) => setEditWorkspaceId(id)}
+          />
         </div>
 
         {/* Delta View */}
@@ -244,9 +271,10 @@ export default function CommandCenterPage() {
 
       {/* Modals */}
       <WorkspaceCreateModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        isOpen={createModalOpen || !!editWorkspaceId}
+        onClose={() => { setCreateModalOpen(false); setEditWorkspaceId(null); }}
         onCreated={handleWorkspaceCreated}
+        editWorkspaceId={editWorkspaceId}
       />
       <SnapshotHistory
         isOpen={historyOpen}

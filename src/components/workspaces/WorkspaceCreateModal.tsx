@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { CoinSelector } from '@/components/CoinSelector';
 import { useWorkspaceStore } from '@/lib/workspaces/workspaceStore';
@@ -41,6 +41,24 @@ export function WorkspaceCreateModal({
 
   const isEditing = !!editWorkspaceId;
 
+  // Re-sync form state when modal opens or editWorkspaceId changes
+  useEffect(() => {
+    if (isOpen) {
+      if (editingWorkspace) {
+        setName(editingWorkspace.name);
+        setMode(editingWorkspace.mode);
+        setCoins(editingWorkspace.config?.coins ?? []);
+        setVsCurrency(editingWorkspace.config?.vsCurrency ?? 'usd');
+      } else {
+        setName('');
+        setMode('watchlist');
+        setCoins([]);
+        setVsCurrency('usd');
+      }
+      setIsSaving(false);
+    }
+  }, [isOpen, editWorkspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSubmit = async () => {
     if (!name.trim() || coins.length === 0) return;
     setIsSaving(true);
@@ -52,6 +70,7 @@ export function WorkspaceCreateModal({
 
     if (isEditing && editWorkspaceId) {
       await updateWorkspace(editWorkspaceId, { name: name.trim(), mode, config });
+      onCreated?.(editWorkspaceId); // Trigger refresh after edit
       onClose();
     } else {
       const ws = await createWorkspace(name.trim(), mode, config);

@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Folder } from 'lucide-react';
+import { Plus, Folder, Pencil } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { SITE_THEMES } from '@/lib/live-dashboard/theme';
 import { useWorkspaceStore } from '@/lib/workspaces/workspaceStore';
@@ -9,9 +9,10 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface WorkspaceStripProps {
   onCreateNew: () => void;
+  onEdit?: (workspaceId: string) => void;
 }
 
-export function WorkspaceStrip({ onCreateNew }: WorkspaceStripProps) {
+export function WorkspaceStrip({ onCreateNew, onEdit }: WorkspaceStripProps) {
   const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
   const st = SITE_THEMES[siteTheme];
 
@@ -25,6 +26,7 @@ export function WorkspaceStrip({ onCreateNew }: WorkspaceStripProps) {
           workspace={ws}
           isActive={ws.id === activeWorkspaceId}
           onSelect={() => setActiveWorkspace(ws.id)}
+          onEdit={onEdit ? () => onEdit(ws.id) : undefined}
           st={st}
         />
       ))}
@@ -46,11 +48,13 @@ function WorkspaceCard({
   workspace,
   isActive,
   onSelect,
+  onEdit,
   st,
 }: {
   workspace: Workspace;
   isActive: boolean;
   onSelect: () => void;
+  onEdit?: () => void;
   st: any;
 }) {
   const coinCount = workspace.config?.coins?.length ?? 0;
@@ -59,14 +63,28 @@ function WorkspaceCard({
   });
 
   return (
-    <button
+    <div
       onClick={onSelect}
-      className={`flex-shrink-0 w-48 h-20 rounded-xl p-3 text-left transition-all ${
+      className={`group relative flex-shrink-0 w-48 h-20 rounded-xl p-3 text-left transition-all cursor-pointer ${
         isActive
           ? `border-2 border-emerald-400/50 bg-emerald-400/5 shadow-[0_0_20px_rgba(52,211,153,0.06)]`
           : `${st.cardClasses} ${st.cardGlow}`
       }`}
     >
+      {/* Edit button — shows on hover */}
+      {onEdit && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className={`absolute top-2 right-2 p-1 rounded-md ${st.subtleBg} ${st.textDim} hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
+          title="Edit workspace"
+        >
+          <Pencil className="w-3 h-3" />
+        </button>
+      )}
       <div className="flex items-center gap-2 mb-1">
         <Folder
           className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : st.textDim}`}
@@ -92,6 +110,6 @@ function WorkspaceCard({
         <span>{coinCount} coins</span>
         <span>{updatedAgo}</span>
       </div>
-    </button>
+    </div>
   );
 }
