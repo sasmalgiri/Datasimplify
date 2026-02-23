@@ -8,6 +8,7 @@ import {
   FlaskConical,
   Briefcase,
   Building2,
+  Video,
   Check,
 } from 'lucide-react';
 import { PERSONA_LIST } from '@/lib/persona/definitions';
@@ -19,6 +20,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Layers,
   FlaskConical,
   Briefcase,
+  Video,
   Building2,
 };
 
@@ -45,9 +47,14 @@ const PERSONA_BULLETS: Record<PersonaId, string[]> = {
     'Sector analysis & intelligence',
   ],
   'freelancer-consultant': [
-    'Client-ready report packs',
-    'Excel template downloads',
-    'Workspace & snapshot management',
+    'Client-ready report kits',
+    'Consistent formatting & audit trail',
+    'Workspace snapshots & versioned exports',
+  ],
+  'content-creator': [
+    'Weekly market pack in one click',
+    'Trending coins & sentiment data',
+    'Chart exports for videos & posts',
   ],
   'fund-manager': [
     'Multi-portfolio risk metrics',

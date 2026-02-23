@@ -2,9 +2,10 @@
 
 import { Suspense, useState, type ComponentType } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { AlertCircle, Code } from 'lucide-react';
+import { AlertCircle, Code, FlaskConical } from 'lucide-react';
 import { getThemeColors, getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+import { useExperimentStore } from '@/lib/live-dashboard/experimentStore';
 import { EmbedCodeModal } from './EmbedCodeModal';
 
 // Widget registry — maps component name strings to actual components
@@ -366,8 +367,19 @@ export function DashboardWidget({ component, title, gridColumn, gridRow, props }
           <div className="w-1 h-3.5 rounded-full" style={{ backgroundColor: themeColors.primary }} />
           {title}
           <button
+            type="button"
+            onClick={() => {
+              useExperimentStore.getState().open();
+              useExperimentStore.getState().setFocusWidget(component);
+            }}
+            className={`ml-auto p-1 rounded ${st.textDim} hover:text-emerald-400 transition opacity-0 group-hover:opacity-100`}
+            title="Open in Experiment Lab"
+          >
+            <FlaskConical className="w-3 h-3" />
+          </button>
+          <button
             onClick={() => setEmbedOpen(true)}
-            className={`ml-auto p-1 rounded ${st.textDim} hover:${st.textMuted} transition opacity-0 group-hover:opacity-100`}
+            className={`p-1 rounded ${st.textDim} hover:${st.textMuted} transition opacity-0 group-hover:opacity-100`}
             title="Embed widget"
           >
             <Code className="w-3 h-3" />

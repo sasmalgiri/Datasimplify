@@ -134,6 +134,21 @@ export default function AccountPage() {
       icon: 'text-amber-600',
       border: 'border-amber-200 hover:border-amber-300',
     },
+    cyan: {
+      bg: 'bg-cyan-500/10',
+      icon: 'text-cyan-600',
+      border: 'border-cyan-200 hover:border-cyan-300',
+    },
+    pink: {
+      bg: 'bg-pink-500/10',
+      icon: 'text-pink-600',
+      border: 'border-pink-200 hover:border-pink-300',
+    },
+    rose: {
+      bg: 'bg-rose-500/10',
+      icon: 'text-rose-600',
+      border: 'border-rose-200 hover:border-rose-300',
+    },
     red: {
       bg: 'bg-red-500/10',
       icon: 'text-red-600',

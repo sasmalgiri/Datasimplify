@@ -19,6 +19,7 @@ import {
   FlaskConical,
   Briefcase,
   Building2,
+  Video,
   Loader2,
   ChevronRight,
   Star,
@@ -34,6 +35,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Layers,
   FlaskConical,
   Briefcase,
+  Video,
   Building2,
 };
 

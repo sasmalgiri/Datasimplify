@@ -4,6 +4,7 @@ export type PersonaId =
   | 'defi-explorer'
   | 'analyst-researcher'
   | 'freelancer-consultant'
+  | 'content-creator'
   | 'fund-manager';
 
 export interface QuickAction {

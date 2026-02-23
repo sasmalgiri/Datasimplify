@@ -16,6 +16,7 @@ import {
   HelpCircle,
   Shield,
   LayoutDashboard,
+  FlaskConical,
 } from 'lucide-react';
 
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
@@ -113,11 +114,12 @@ export function FreeNavbar() {
       ],
     },
     compare: {
-      label: 'Compare',
+      label: 'Tools',
       icon: <Scale className="w-4 h-4" />,
-      paths: ['/compare'],
+      paths: ['/compare', '/datalab'],
       items: [
         { href: '/compare', label: 'Coin Comparison', description: 'Compare 2-5 coins side-by-side', icon: <Scale className="w-4 h-4" /> },
+        { href: '/datalab', label: 'DataLab', description: 'Interactive overlays, edit data & experiment', icon: <FlaskConical className="w-4 h-4" /> },
       ],
     },
     verify: {
@@ -160,6 +162,7 @@ export function FreeNavbar() {
       : []),
     { href: '/live-dashboards', label: 'Live Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
     ...(user ? [
+      { href: '/datalab', label: 'DataLab', icon: <FlaskConical className="w-4 h-4" /> },
       { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
       { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
     ] : []),

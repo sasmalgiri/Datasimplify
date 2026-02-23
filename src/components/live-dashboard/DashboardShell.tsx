@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
-import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell, Folder } from 'lucide-react';
+import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell, Folder, FlaskConical } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
@@ -12,6 +12,7 @@ import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
 import AIChatPanel from './AIChatPanel';
 import DashboardAlertPanel, { useAlertCount } from './DashboardAlertPanel';
+import { ExperimentPanel } from './ExperimentPanel';
 import { CreditBalancePill } from './CreditBalance';
 import { useInitCredits } from '@/lib/live-dashboard/credits';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
@@ -19,6 +20,7 @@ import { FEATURES } from '@/lib/featureFlags';
 import { useWorkspaceStore, useActiveWorkspace } from '@/lib/workspaces/workspaceStore';
 import { WorkspacePanel } from '@/components/workspaces/WorkspacePanel';
 import { WorkspaceCreateModal } from '@/components/workspaces/WorkspaceCreateModal';
+import { useExperimentStore } from '@/lib/live-dashboard/experimentStore';
 import type { PositionSnapshot } from '@/lib/workspaces/types';
 
 const AUTO_REFRESH_OPTIONS = [
@@ -57,6 +59,9 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
   const [workspacePanelOpen, setWorkspacePanelOpen] = useState(false);
   const [workspaceCreateOpen, setWorkspaceCreateOpen] = useState(false);
   const alertCount = useAlertCount();
+  const experimentOpen = useExperimentStore((s) => s.isOpen);
+  const toggleExperiment = useExperimentStore((s) => s.toggle);
+  const closeExperiment = useExperimentStore((s) => s.close);
 
   // Workspace integration
   const activeWorkspace = useActiveWorkspace();
@@ -193,17 +198,21 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         case 'w':
           if (!e.metaKey && !e.ctrlKey && FEATURES.addinV2) setWorkspacePanelOpen((v) => !v);
           break;
+        case 'e':
+          if (!e.metaKey && !e.ctrlKey) toggleExperiment();
+          break;
         case 'escape':
           setCustomizeOpen(false);
           setAiPanelOpen(false);
           setAlertPanelOpen(false);
           setWorkspacePanelOpen(false);
+          closeExperiment();
           break;
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [apiKey, isLoading, handleRefresh]);
+  }, [apiKey, isLoading, handleRefresh, toggleExperiment, closeExperiment]);
 
   const timeAgo = lastFetched
     ? `${Math.round((Date.now() - lastFetched) / 1000)}s ago`
@@ -274,6 +283,17 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
               title="Workspaces (W)"
             >
               <Folder className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Experiment Lab */}
+          {!customizeOpen && (
+            <button
+              onClick={toggleExperiment}
+              className={`p-2 rounded-xl ${experimentOpen ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : `${st.buttonSecondary}`} transition`}
+              title="Experiment Lab (E)"
+            >
+              <FlaskConical className="w-4 h-4" />
             </button>
           )}
 
@@ -358,6 +378,11 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
         <CustomizeBar definition={definition} onApply={handleRefresh} onClose={() => setCustomizeOpen(false)} />
       )}
 
+      {/* Experiment Lab panel */}
+      {experimentOpen && (
+        <ExperimentPanel isOpen={experimentOpen} onClose={closeExperiment} />
+      )}
+
       {/* Error banner */}
       {error && (
         <div className={`${st.errorBg} rounded-xl px-4 py-3 text-sm`}>
@@ -389,6 +414,8 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>R</kbd> Refresh
             <span className="mx-1.5">&middot;</span>
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>C</kbd> Customize
+            <span className="mx-1.5">&middot;</span>
+            <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>E</kbd> Lab
             <span className="mx-1.5">&middot;</span>
             <kbd className={`px-1 py-0.5 ${st.kbdBg} rounded text-[9px] border`}>A</kbd> AI Chat
             <span className="mx-1.5">&middot;</span>
