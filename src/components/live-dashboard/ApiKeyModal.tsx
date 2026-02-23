@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Key, Eye, EyeOff, X, Shield, ExternalLink, Loader2, CheckCircle, ChevronDown, Wallet } from 'lucide-react';
+import { Key, Eye, EyeOff, X, Shield, ExternalLink, Loader2, CheckCircle, ChevronDown, Wallet, HelpCircle } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 interface ApiKeyModalProps {
@@ -16,6 +16,8 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
   const [validating, setValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Onboarding guide
+  const [showGuide, setShowGuide] = useState(false);
   // Alchemy section
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [alchemyKeyInput, setAlchemyKeyInput] = useState('');
@@ -244,17 +246,79 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
           </span>
         </div>
 
-        {/* Get a key link */}
-        <div className="mt-3 text-center">
-          <a
-            href="https://www.coingecko.com/en/api/pricing"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald-400 hover:text-emerald-300 text-sm inline-flex items-center gap-1"
+        {/* Get a key — guided onboarding */}
+        <div className="mt-4 border-t border-gray-700 pt-4">
+          <button
+            type="button"
+            onClick={() => setShowGuide(!showGuide)}
+            className="flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 transition w-full"
           >
-            Don&apos;t have a key? Get one free
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            <HelpCircle className="w-4 h-4" />
+            <span className="font-medium">Don&apos;t have a key? Get one free</span>
+            <ChevronDown className={`w-3.5 h-3.5 ml-auto transition-transform ${showGuide ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showGuide && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-gray-400">
+                CoinGecko offers a free Demo API key — no credit card required. Follow these steps:
+              </p>
+
+              <ol className="space-y-2.5 text-xs text-gray-300">
+                <li className="flex gap-2">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>
+                    Go to{' '}
+                    <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline inline-flex items-center gap-0.5">
+                      CoinGecko API Pricing <ExternalLink className="w-2.5 h-2.5" />
+                    </a>{' '}
+                    and click <strong className="text-white">Get Started</strong> under the Demo (Free) plan.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>
+                    Create an account with your email address, or sign in with Google.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">3</span>
+                  <span>
+                    Once logged in, go to the{' '}
+                    <a href="https://www.coingecko.com/en/developers/dashboard" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline inline-flex items-center gap-0.5">
+                      Developer Dashboard <ExternalLink className="w-2.5 h-2.5" />
+                    </a>{' '}
+                    and copy your API key.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">4</span>
+                  <span>
+                    Paste the key above and click <strong className="text-white">Connect & Load Data</strong>.
+                  </span>
+                </li>
+              </ol>
+
+              <div className="bg-gray-900/60 border border-gray-700 rounded-lg p-2.5 text-[11px] text-gray-400">
+                <p className="font-medium text-gray-300 mb-1">Demo plan includes:</p>
+                <ul className="space-y-0.5">
+                  <li>30 calls/min &middot; 10,000 calls/month</li>
+                  <li>Prices, OHLC, volume, market data & more</li>
+                  <li>No credit card required</li>
+                </ul>
+              </div>
+
+              <a
+                href="https://support.coingecko.com/hc/en-us/articles/21880397454233"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-300 text-[11px] inline-flex items-center gap-1"
+              >
+                Read CoinGecko&apos;s official guide
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -65,20 +65,54 @@ export function ApiKeyStep() {
             </p>
           </div>
 
-          {/* Get API Key Info */}
+          {/* Get API Key — Step-by-step guide */}
           <div className="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg mb-6">
-            <p className="text-sm text-blue-200 mb-2">
-              Don&apos;t have an API key? Get one free from CoinGecko (no credit card required).
+            <p className="text-sm text-blue-200 font-medium mb-3">
+              Don&apos;t have an API key? Get one free in 2 minutes:
             </p>
-            <a
-              href="https://www.coingecko.com/en/api/pricing"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300 font-medium"
-            >
-              Get Free CoinGecko API Key
-              <ExternalLink className="w-3 h-3" />
-            </a>
+
+            <ol className="space-y-2 text-sm text-blue-100/80 mb-3">
+              <li className="flex gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">1</span>
+                <span>
+                  Go to{' '}
+                  <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                    CoinGecko API Pricing
+                  </a>{' '}
+                  and click <strong className="text-white">Get Started</strong> under Demo (Free).
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">2</span>
+                <span>Create an account with your email or sign in with Google.</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">3</span>
+                <span>
+                  Go to the{' '}
+                  <a href="https://www.coingecko.com/en/developers/dashboard" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+                    Developer Dashboard
+                  </a>{' '}
+                  and copy your API key.
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="shrink-0 w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold">4</span>
+                <span>Paste it above and click <strong className="text-white">Validate Key</strong>.</span>
+              </li>
+            </ol>
+
+            <div className="flex items-center gap-3 text-xs">
+              <span className="text-blue-200/60">30 calls/min &middot; 10K calls/month &middot; No credit card</span>
+              <a
+                href="https://support.coingecko.com/hc/en-us/articles/21880397454233"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-0.5 ml-auto shrink-0"
+              >
+                Official guide <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            </div>
           </div>
 
           {/* API Key Input */}
