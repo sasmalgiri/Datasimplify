@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const COINGECKO_PRO_API = 'https://pro-api.coingecko.com/api/v3';
-const FEAR_GREED_API = 'https://api.alternative.me/fng/?limit=1&format=json';
+const FEAR_GREED_API = 'https://api.alternative.me/fng/?format=json';
 
 // DeFi Llama APIs (free, no key needed)
 const DEFILLAMA_API = 'https://api.llama.fi';
@@ -27,6 +27,7 @@ const KEY_FREE_ENDPOINTS = new Set([
   'defillama_protocol_tvl',
   'defillama_dex_overview',
   'defillama_fees_overview',
+  'defillama_tvl_history',
 ]);
 
 // Simple in-memory rate limiter per IP
@@ -218,14 +219,16 @@ export async function POST(req: NextRequest) {
         );
         break;
 
-      case 'fear_greed':
+      case 'fear_greed': {
+        const fgLimit = Math.min(Math.max(Number(params?.fgLimit) || 1, 1), 365);
         fetchers.push(
-          fetch(FEAR_GREED_API, { signal: AbortSignal.timeout(10000) })
+          fetch(`${FEAR_GREED_API}&limit=${fgLimit}`, { signal: AbortSignal.timeout(10000) })
             .then((r) => r.json())
             .then((data) => { result.fearGreed = data?.data || []; })
             .catch((err) => { result.fearGreedError = err.message; }),
         );
         break;
+      }
 
       case 'categories':
         fetchers.push(
@@ -398,6 +401,23 @@ export async function POST(req: NextRequest) {
             .catch((err) => { result.defiChainsError = err.message; }),
         );
         break;
+
+      case 'defillama_tvl_history': {
+        // Historical total DeFi TVL (daily time series, free)
+        const tvlChain = params?.tvlChain; // optional: 'Ethereum', 'Solana', etc.
+        const tvlUrl = tvlChain
+          ? `${DEFILLAMA_API}/v2/historicalChainTvl/${encodeURIComponent(tvlChain)}`
+          : `${DEFILLAMA_API}/v2/historicalChainTvl`;
+        fetchers.push(
+          fetchExternal(tvlUrl)
+            .then((data) => {
+              // Returns array of { date: unix_seconds, tvl: number }
+              result.defiTvlHistory = Array.isArray(data) ? data : [];
+            })
+            .catch((err) => { result.defiTvlHistoryError = err.message; }),
+        );
+        break;
+      }
 
       case 'defillama_yields':
         fetchers.push(

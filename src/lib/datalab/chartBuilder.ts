@@ -161,6 +161,43 @@ export function buildChartOption(opts: BuildOptions) {
     }
   }
 
+  // Snapshot data → dashed reference lines (BTC Dominance, Funding Rate)
+  // These are current values only — no historical API available — rendered honestly
+  for (const layer of visibleLayers) {
+    if (layer.source === 'btc_dominance' || layer.source === 'funding_rate') {
+      // Check if all values are identical (snapshot projected as flat line)
+      const vals = layer.data.filter((v) => v != null) as number[];
+      if (vals.length > 0 && vals.every((v) => v === vals[0])) {
+        // Replace the solid line/bar with a dashed reference line
+        const existing = series.find((s) => s.name === layer.label);
+        if (existing) {
+          existing.lineStyle = {
+            color: layer.color,
+            width: 2,
+            type: 'dashed',
+          };
+          existing.symbol = 'none';
+          // Override to line type for consistent rendering
+          existing.type = 'line';
+          delete existing.barMaxWidth;
+          delete existing.areaStyle;
+          // Add label showing the value
+          const val = vals[0];
+          const formatted = layer.source === 'funding_rate'
+            ? `${val.toFixed(4)}%`
+            : `${val.toFixed(1)}%`;
+          existing.name = `${layer.label} ${formatted}`;
+          existing.endLabel = {
+            show: true,
+            formatter: formatted,
+            color: layer.color,
+            fontSize: 10,
+          };
+        }
+      }
+    }
+  }
+
   // RSI reference lines (30/70 overbought/oversold)
   const hasRsi = visibleLayers.some((l) => l.source === 'rsi');
   if (hasRsi) {
@@ -219,7 +256,7 @@ export function buildChartOption(opts: BuildOptions) {
 
   // Legend
   const legend = {
-    data: visibleLayers.map((l) => l.label),
+    data: series.map((s) => s.name).filter((n) => n !== 'Overbought (70)' && n !== 'Oversold (30)'),
     textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
     top: 0,
     right: '5%',

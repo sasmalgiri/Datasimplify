@@ -217,6 +217,8 @@ export interface DashboardData {
   defiProtocolDetail: DefiProtocolDetail | null;
   defiDexOverview: DefiDexItem[] | null;
   defiFeeOverview: DefiFeeItem[] | null;
+  // DeFi Llama historical TVL (daily time series)
+  defiTvlHistory: { date: number; tvl: number }[] | null;
   // Alchemy wallet data (BYOK)
   walletBalances: WalletBalances | null;
   walletTransfers: WalletTransfers | null;
@@ -290,7 +292,7 @@ export function calculateApiCallsForDefinition(
 
 /** Check if all endpoints are key-free (DeFi Llama only, no CoinGecko key needed) */
 export function isKeyFreeEndpoints(endpoints: string[]): boolean {
-  const KEY_FREE = new Set(['defillama_protocols', 'defillama_chains', 'defillama_yields', 'defillama_stablecoins', 'defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'fear_greed']);
+  const KEY_FREE = new Set(['defillama_protocols', 'defillama_chains', 'defillama_yields', 'defillama_stablecoins', 'defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'defillama_tvl_history', 'fear_greed']);
   return endpoints.every((ep) => KEY_FREE.has(ep));
 }
 
@@ -363,6 +365,7 @@ const emptyData: DashboardData = {
   defiProtocolDetail: null,
   defiDexOverview: null,
   defiFeeOverview: null,
+  defiTvlHistory: null,
   walletBalances: null,
   walletTransfers: null,
 };
@@ -475,6 +478,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
               defiProtocolDetail: result.defiProtocolDetail ?? currentData.defiProtocolDetail,
               defiDexOverview: result.defiDexOverview ?? currentData.defiDexOverview,
               defiFeeOverview: result.defiFeeOverview ?? currentData.defiFeeOverview,
+              defiTvlHistory: result.defiTvlHistory ?? currentData.defiTvlHistory,
               // Alchemy
               walletBalances: result.walletBalances ?? currentData.walletBalances,
               walletTransfers: result.walletTransfers ?? currentData.walletTransfers,

@@ -8,7 +8,7 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
     icon: 'Target',
     defaultCoin: 'bitcoin',
     defaultDays: 90,
-    endpoints: ['ohlc'],
+    endpoints: ['ohlc', 'coin_history'],
     parameterDefs: [
       { key: 'sma_short', label: 'SMA Short', min: 5, max: 50, step: 1, defaultValue: 20, layerSource: 'sma' },
       { key: 'sma_mid', label: 'SMA Mid', min: 20, max: 100, step: 5, defaultValue: 50, layerSource: 'sma' },
@@ -32,7 +32,7 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
     icon: 'Brain',
     defaultCoin: 'bitcoin',
     defaultDays: 30,
-    endpoints: ['ohlc', 'markets'],
+    endpoints: ['ohlc', 'coin_history'],
     parameterDefs: [
       { key: 'sma_window', label: 'Price SMA', min: 5, max: 50, step: 1, defaultValue: 7, layerSource: 'sma' },
     ],
@@ -50,14 +50,14 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
     icon: 'Gauge',
     defaultCoin: 'bitcoin',
     defaultDays: 30,
-    endpoints: ['ohlc', 'derivatives'],
+    endpoints: ['ohlc', 'coin_history', 'derivatives'],
     parameterDefs: [
       { key: 'sma_window', label: 'Price SMA', min: 5, max: 50, step: 1, defaultValue: 14, layerSource: 'sma' },
     ],
     layers: [
       { label: 'Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
       { label: 'Price SMA', source: 'sma', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 14 } },
-      { label: 'Funding Rate', source: 'funding_rate', chartType: 'bar', yAxis: 'right', color: '#2dd4bf', visible: true, gridIndex: 1 },
+      { label: 'Funding Rate (now)', source: 'funding_rate', chartType: 'bar', yAxis: 'right', color: '#2dd4bf', visible: true, gridIndex: 1 },
       { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
     ],
   },
@@ -69,11 +69,11 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
     icon: 'RefreshCw',
     defaultCoin: 'bitcoin',
     defaultDays: 90,
-    endpoints: ['ohlc', 'global', 'fear_greed'],
+    endpoints: ['ohlc', 'coin_history', 'global', 'fear_greed'],
     parameterDefs: [],
     layers: [
       { label: 'BTC Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
-      { label: 'BTC Dominance %', source: 'btc_dominance', chartType: 'line', yAxis: 'right', color: '#fbbf24', visible: true, gridIndex: 0 },
+      { label: 'BTC Dominance % (now)', source: 'btc_dominance', chartType: 'line', yAxis: 'right', color: '#fbbf24', visible: true, gridIndex: 0 },
       { label: 'Fear & Greed', source: 'fear_greed', chartType: 'area', yAxis: 'right', color: '#f472b6', visible: true, gridIndex: 1 },
     ],
   },
@@ -85,7 +85,7 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
     icon: 'Layers',
     defaultCoin: 'ethereum',
     defaultDays: 90,
-    endpoints: ['ohlc', 'defillama_protocols'],
+    endpoints: ['ohlc', 'coin_history', 'defillama_tvl_history'],
     parameterDefs: [
       { key: 'sma_window', label: 'Price SMA', min: 5, max: 50, step: 1, defaultValue: 14, layerSource: 'sma' },
     ],

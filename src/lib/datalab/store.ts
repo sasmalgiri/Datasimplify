@@ -12,6 +12,40 @@ function nextLayerId(): string {
   return `layer-${++layerIdCounter}-${Date.now()}`;
 }
 
+/**
+ * Align a time series from one set of timestamps to another using nearest-neighbor.
+ * source: [[timestamp_ms, value], ...] — may have different resolution
+ * targetTimestamps: the OHLC timestamps (ms) to align to
+ * maxGapMs: max allowed gap between source & target (default 3 days)
+ */
+function alignTimeSeries(
+  source: number[][],
+  targetTimestamps: number[],
+  maxGapMs = 3 * 86400_000,
+): (number | null)[] {
+  if (source.length === 0) return targetTimestamps.map(() => null);
+  const sorted = [...source].sort((a, b) => a[0] - b[0]);
+  return targetTimestamps.map((ts) => {
+    // Binary search for closest
+    let lo = 0;
+    let hi = sorted.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (sorted[mid][0] < ts) lo = mid + 1;
+      else hi = mid;
+    }
+    let closest = sorted[lo];
+    if (lo > 0) {
+      const prev = sorted[lo - 1];
+      if (Math.abs(prev[0] - ts) < Math.abs(closest[0] - ts)) {
+        closest = prev;
+      }
+    }
+    if (Math.abs(closest[0] - ts) > maxGapMs) return null;
+    return closest[1];
+  });
+}
+
 interface DataLabStore {
   // Config
   coin: string;
@@ -197,21 +231,25 @@ export const useDataLabStore = create<DataLabStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Collect unique endpoints needed
+          // Collect unique endpoints needed based on layer sources
           const endpointsSet = new Set<string>();
-          for (const layer of layers) {
-            const src = layer.source;
-            if (src === 'price' || src === 'volume' || src === 'ohlc' || src === 'sma' || src === 'ema' || src === 'rsi') {
-              endpointsSet.add('ohlc');
-            } else if (src === 'fear_greed') {
-              endpointsSet.add('fear_greed');
-            } else if (src === 'btc_dominance') {
-              endpointsSet.add('global');
-            } else if (src === 'defi_tvl') {
-              endpointsSet.add('defillama_protocols');
-            } else if (src === 'funding_rate' || src === 'open_interest') {
-              endpointsSet.add('derivatives');
-            }
+          const sources = new Set(layers.map((l) => l.source));
+
+          // Price/OHLC/indicators always need OHLC data
+          if (sources.has('price') || sources.has('ohlc') || sources.has('sma') ||
+              sources.has('ema') || sources.has('rsi')) {
+            endpointsSet.add('ohlc');
+          }
+          // Real volume needs market_chart (coin_history endpoint)
+          if (sources.has('volume')) {
+            endpointsSet.add('ohlc');       // for timestamps
+            endpointsSet.add('coin_history'); // for real volume
+          }
+          if (sources.has('fear_greed')) endpointsSet.add('fear_greed');
+          if (sources.has('btc_dominance')) endpointsSet.add('global');
+          if (sources.has('defi_tvl')) endpointsSet.add('defillama_tvl_history');
+          if (sources.has('funding_rate') || sources.has('open_interest')) {
+            endpointsSet.add('derivatives');
           }
 
           const endpoints = Array.from(endpointsSet);
@@ -225,11 +263,10 @@ export const useDataLabStore = create<DataLabStore>()(
 
           // Check if an API key is available (needed for CoinGecko endpoints)
           const hasKey = !!dashStore.apiKey;
-          const needsKey = endpoints.some(
-            (ep) => ep !== 'fear_greed' && ep !== 'defillama_protocols' &&
-              ep !== 'defillama_chains' && ep !== 'defillama_yields',
+          const cgEndpoints = endpoints.filter(
+            (ep) => !ep.startsWith('defillama_') && ep !== 'fear_greed',
           );
-          if (needsKey && !hasKey) {
+          if (cgEndpoints.length > 0 && !hasKey) {
             set({
               isLoading: false,
               error: 'CoinGecko API key required. Go to any dashboard, open Settings, and enter your free CoinGecko API key.',
@@ -238,10 +275,15 @@ export const useDataLabStore = create<DataLabStore>()(
           }
 
           await dashStore.fetchData(endpoints, {
-            coinId: coin,       // singular — API ohlc case reads params.coinId
-            coinIds: [coin],    // plural  — API ohlc_multi case reads params.coinIds
+            coinId: coin,
+            coinIds: [coin],
             days,
             vsCurrency: 'usd',
+            // coin_history endpoint uses these param names
+            historyCoinId: coin,
+            historyDays: days,
+            // Fear & Greed: fetch full history matching our time range
+            fgLimit: Math.min(days + 10, 365),
           });
 
           // Check if dashboard store encountered an error
@@ -263,48 +305,61 @@ export const useDataLabStore = create<DataLabStore>()(
             return;
           }
 
-          const timestamps = ohlcData.map((d) => d[0]);
-          const closes = ohlcData.map((d) => d[4]);
-          const opens = ohlcData.map((d) => d[1]);
-          const volumes = ohlcData.map((d) => Math.abs(d[4] - d[1]) * 1000);
+          const timestamps = ohlcData.map((d: number[]) => d[0]);
+          const closes = ohlcData.map((d: number[]) => d[4]);
+          const opens = ohlcData.map((d: number[]) => d[1]);
 
           const raw: Record<string, (number | null)[]> = {
             price: closes,
-            volume: volumes,
             open: opens,
           };
 
-          // Fear & Greed — align to timestamps (use last known value for missing dates)
-          if (dashData.fearGreed && dashData.fearGreed.length > 0) {
-            const fgMap = new Map<string, number>();
-            for (const fg of dashData.fearGreed) {
-              const d = new Date(Number(fg.timestamp) * 1000);
-              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-              fgMap.set(key, Number(fg.value));
-            }
-            const fgAligned: (number | null)[] = timestamps.map((ts) => {
-              const d = new Date(ts);
-              const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-              return fgMap.get(key) ?? null;
-            });
-            raw.fear_greed = fgAligned;
+          // ── REAL VOLUME from market_chart (coin_history endpoint) ──
+          const marketChart = dashData.coinHistory as {
+            prices?: number[][];
+            total_volumes?: number[][];
+            market_caps?: number[][];
+          } | null;
+          if (marketChart?.total_volumes && marketChart.total_volumes.length > 0) {
+            // total_volumes: [[timestamp_ms, volume], ...]
+            // Align to OHLC timestamps using nearest-neighbor
+            raw.volume = alignTimeSeries(marketChart.total_volumes, timestamps);
+          } else {
+            // Fallback: no volume data available
+            raw.volume = timestamps.map(() => null);
           }
 
-          // BTC Dominance — single value (project as flat line)
+          // ── REAL Fear & Greed history ──
+          if (dashData.fearGreed && dashData.fearGreed.length > 0) {
+            // Convert to [[timestamp_ms, value], ...] for alignment
+            const fgPairs: number[][] = dashData.fearGreed.map((fg) => [
+              Number(fg.timestamp) * 1000, // API returns seconds, convert to ms
+              Number(fg.value),
+            ]);
+            raw.fear_greed = alignTimeSeries(fgPairs, timestamps, 2 * 86400_000);
+          }
+
+          // ── BTC Dominance — current snapshot (honest: single reference value) ──
           if (dashData.global) {
             const btcDom = dashData.global.market_cap_percentage?.btc ?? null;
             if (btcDom != null) {
+              // Stored as flat line but chartBuilder renders as reference line
               raw.btc_dominance = timestamps.map(() => btcDom);
+              raw._btc_dominance_snapshot = [btcDom] as any; // flag for chartBuilder
             }
           }
 
-          // DeFi TVL — single total (project as flat line)
-          if (dashData.defiProtocols && dashData.defiProtocols.length > 0) {
-            const totalTvl = dashData.defiProtocols.reduce((sum, p) => sum + (p.tvl || 0), 0);
-            raw.defi_tvl = timestamps.map(() => totalTvl);
+          // ── REAL DeFi TVL history from DeFi Llama ──
+          if (dashData.defiTvlHistory && dashData.defiTvlHistory.length > 0) {
+            // defiTvlHistory: [{ date: unix_seconds, tvl: number }, ...]
+            const tvlPairs: number[][] = dashData.defiTvlHistory.map((d) => [
+              d.date * 1000, // seconds → ms
+              d.tvl,
+            ]);
+            raw.defi_tvl = alignTimeSeries(tvlPairs, timestamps, 2 * 86400_000);
           }
 
-          // Funding rate — average across derivatives
+          // ── Funding Rate — current snapshot (honest: single reference value) ──
           if (dashData.derivatives && dashData.derivatives.length > 0) {
             const btcPerps = dashData.derivatives.filter(
               (d) => d.symbol.toLowerCase().includes('btc') && d.contract_type === 'perpetual',
@@ -312,12 +367,14 @@ export const useDataLabStore = create<DataLabStore>()(
             const avgFunding = btcPerps.length > 0
               ? btcPerps.reduce((s, d) => s + d.funding_rate, 0) / btcPerps.length
               : 0;
-            raw.funding_rate = timestamps.map(() => avgFunding * 100); // as percentage
+            // Stored as flat line but chartBuilder renders as reference line
+            raw.funding_rate = timestamps.map(() => avgFunding * 100);
+            raw._funding_rate_snapshot = [avgFunding * 100] as any;
           }
 
           set({ timestamps, rawData: raw, ohlcRaw: ohlcData });
 
-          // Recalculate derived layers
+          // Recalculate derived layers (SMA, EMA, RSI)
           get().recalculateLayers();
 
           set({ isLoading: false });
