@@ -5,12 +5,13 @@ export function OrganizationJsonLd() {
     '@type': 'Organization',
     name: 'CryptoReportKit',
     url: 'https://cryptoreportkit.com',
-    logo: 'https://cryptoreportkit.com/logo.png',
+    logo: 'https://cryptoreportkit.com/favicon.svg',
     description:
-      'Excel templates with BYOK data for crypto research, portfolio tracking, and market analysis.',
+      '83+ interactive crypto dashboards with real-time market data, coin comparison, DCA simulator, tax tools, and more. BYOK architecture.',
     sameAs: [
-      'https://twitter.com/cryptoreportkit',
-      'https://linkedin.com/company/cryptoreportkit',
+      'https://x.com/sasmalgiri',
+      'https://www.linkedin.com/in/shrabani-sasmal-9b80483b3/',
+      'https://github.com/sasmalgiri/Datasimplify',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -34,7 +35,7 @@ export function WebsiteJsonLd() {
     name: 'CryptoReportKit',
     url: 'https://cryptoreportkit.com',
     description:
-      'Static Excel templates with prefetched crypto data for market analysis, portfolio tracking, and research. BYOK architecture.',
+      '83+ interactive crypto dashboards, real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK.',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -59,7 +60,7 @@ export function SoftwareApplicationJsonLd() {
     '@type': 'SoftwareApplication',
     name: 'CryptoReportKit',
     applicationCategory: 'FinanceApplication',
-    operatingSystem: 'Microsoft Excel, Web Browser',
+    operatingSystem: 'Web Browser',
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
@@ -68,12 +69,13 @@ export function SoftwareApplicationJsonLd() {
       offerCount: '2',
     },
     featureList: [
-      'Static Excel templates with prefetched data (BYOK)',
-      'Market overview and watchlist reports',
-      'Portfolio tracking with P/L analysis',
-      'Technical indicator dashboards',
-      'Correlation and diversification tools',
-      'Gainers and losers tracking',
+      '83+ interactive crypto dashboards',
+      'Real-time market data with BYOK architecture',
+      'Coin comparison with 26 data columns',
+      'DCA simulator and BTC cycle comparison',
+      'Tax report export (FIFO/LIFO/AVG)',
+      'Custom dashboard builder',
+      'Multi-exchange portfolio tracking',
       'No coding required',
     ],
   };
@@ -91,27 +93,27 @@ export function FAQJsonLd() {
     {
       question: 'What is CryptoReportKit?',
       answer:
-        'CryptoReportKit provides static Excel templates with prefetched crypto data for educational research and portfolio tracking. Templates use BYOK (Bring Your Own Key) architecture.',
+        'CryptoReportKit provides 83+ interactive crypto dashboards with real-time market data, coin comparison, DCA simulator, tax tools, and more. Powered by BYOK (Bring Your Own Key) architecture — your API key stays in your browser.',
     },
     {
       question: 'Is CryptoReportKit free to use?',
       answer:
-        'Yes! CryptoReportKit offers free Report Kits for market overview and watchlist tracking. A Pro plan is available for more advanced templates.',
-    },
-    {
-      question: 'How do Report Kits work?',
-      answer:
-        'Download the template to get prefetched crypto data. For current data, use our web dashboards with BYOK.',
+        'Yes! 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and crypto glossary are all free forever. No credit card required. Pro unlocks all 83+ dashboards and advanced tools for $9/mo.',
     },
     {
       question: 'What is BYOK (Bring Your Own Key)?',
       answer:
-        'BYOK means you provide your own data provider API key (e.g., CoinGecko). Your keys are encrypted and used to fetch data directly from the provider through our proxy.',
+        'BYOK means you provide your own CoinGecko API key (free to get). Your key stays in your browser — we never see, store, or transmit it. All API calls go directly from your device to CoinGecko.',
+    },
+    {
+      question: 'How is this different from CoinGecko or CoinMarketCap?',
+      answer:
+        'CoinGecko shows data. CryptoReportKit lets you analyze it with 83+ purpose-built dashboards, smart signals, custom dashboard builder, tax exports, DCA tracking, and more.',
     },
     {
       question: 'Do you offer refunds?',
       answer:
-        'Yes! We offer a 30-day money-back guarantee. If you are not satisfied with your purchase, contact us for a full refund within 30 days.',
+        'Yes! We offer a 30-day money-back guarantee. If you are not satisfied, contact us for a full refund within 30 days.',
     },
   ];
 
@@ -184,7 +186,7 @@ export function PricingJsonLd() {
     '@type': 'Product',
     name: 'CryptoReportKit Plans',
     description:
-      'Static Excel templates with prefetched data for crypto research and portfolio tracking.',
+      '83+ interactive crypto dashboards, real-time analytics, tax tools, and custom dashboard builder. Free to start.',
     brand: {
       '@type': 'Brand',
       name: 'CryptoReportKit',
@@ -201,14 +203,14 @@ export function PricingJsonLd() {
           name: 'Free Plan',
           price: '0',
           priceCurrency: 'USD',
-          description: 'Basic templates and market overview reports',
+          description: '32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies',
         },
         {
           '@type': 'Offer',
           name: 'Pro Plan',
           price: '9',
           priceCurrency: 'USD',
-          description: 'Advanced templates with technical indicators and portfolio tracking',
+          description: 'All 83+ dashboards, custom builder, tax tools, multi-exchange portfolio',
         },
       ],
     },

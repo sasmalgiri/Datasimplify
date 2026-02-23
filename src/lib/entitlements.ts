@@ -59,7 +59,7 @@ export const PLAN_LIMITS = {
     dailyApiCalls: 100,
     dailyAiQueries: 100,
     maxAlerts: 10,
-    downloads: 30,
+    downloads: 5,
     scheduledExports: 5,
     maxCoinsPerRequest: 100,
     maxOhlcvDays: 730,
