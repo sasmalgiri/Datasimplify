@@ -14,7 +14,7 @@ import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { FlaskConical, Lock, Camera } from 'lucide-react';
 
 export default function DataLabPage() {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
   const showTable = useDataLabStore((s) => s.showTable);
   const activePreset = useDataLabStore((s) => s.activePreset);
@@ -49,8 +49,8 @@ export default function DataLabPage() {
     );
   }
 
-  // Pro tier gate
-  const isPro = profile?.subscription_tier === 'pro';
+  // Pro tier gate — admin users bypass
+  const isPro = isAdmin || profile?.subscription_tier === 'pro';
   if (!isPro) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">

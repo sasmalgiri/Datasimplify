@@ -82,7 +82,7 @@ export default function AccountPage() {
     {
       href: '/pricing',
       title: 'Subscription',
-      description: profile?.subscription_tier === 'pro'
+      description: isAdmin || profile?.subscription_tier === 'pro'
         ? 'Pro plan active — manage your subscription'
         : 'Free plan — upgrade to Pro for full access',
       icon: CreditCard,
@@ -193,11 +193,11 @@ export default function AccountPage() {
                   Member since {new Date(user.created_at).toLocaleDateString()}
                 </p>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  profile?.subscription_tier === 'pro'
+                  isAdmin || profile?.subscription_tier === 'pro'
                     ? 'bg-emerald-100 text-emerald-800'
                     : 'bg-gray-100 text-gray-600'
                 }`}>
-                  {profile?.subscription_tier === 'pro' ? 'Pro' : 'Free Plan'}
+                  {isAdmin ? 'Admin' : profile?.subscription_tier === 'pro' ? 'Pro' : 'Free Plan'}
                 </span>
                 {personaDef && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
@@ -238,7 +238,7 @@ export default function AccountPage() {
                 />
               </div>
             </div>
-            {profile.subscription_tier === 'free' && (
+            {!isAdmin && profile.subscription_tier === 'free' && (
               <p className="text-xs text-gray-500 mt-2">
                 Free plan: {profile.downloads_limit} downloads/month.{' '}
                 <Link href="/pricing" className="text-emerald-600 hover:text-emerald-700">

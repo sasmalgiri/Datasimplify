@@ -115,8 +115,18 @@ function isStatusActive(status: SubscriptionStatus): boolean {
   return status === 'active' || status === 'trialing' || status === null;
 }
 
+/** Admin emails get full Pro access regardless of their DB tier */
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || process.env.NEXT_PUBLIC_ADMIN_EMAILS || '')
+  .split(',').filter(Boolean).map(e => e.trim().toLowerCase());
+
+function isAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 /**
  * Get user's entitlement from database
+ * Admin users (by ADMIN_EMAILS env var) automatically get Pro-level access.
  */
 export async function getUserEntitlement(
   supabase: SupabaseClient,
@@ -128,7 +138,7 @@ export async function getUserEntitlement(
   const { data, error } = await supabase
     .from('user_profiles')
     .select(
-      'subscription_tier, downloads_limit, downloads_this_month'
+      'email, subscription_tier, downloads_limit, downloads_this_month'
     )
     .eq('id', userId)
     .maybeSingle();
@@ -138,14 +148,16 @@ export async function getUserEntitlement(
   }
   profile = data;
 
-  const tier = (profile.subscription_tier || 'free') as SubscriptionTier;
+  // Admin override: treat admin emails as Pro tier
+  const adminOverride = isAdminEmail(profile.email as string);
+  const tier = adminOverride ? 'pro' : ((profile.subscription_tier || 'free') as SubscriptionTier);
   // subscription_status may not exist in DB yet — default to null (treated as active)
-  const status = (profile.subscription_status ?? null) as SubscriptionStatus;
+  const status = adminOverride ? 'active' : ((profile.subscription_status ?? null) as SubscriptionStatus);
   const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
-  const dlLimit = (profile.downloads_limit as number) || limits.downloads;
+  const dlLimit = adminOverride ? 99999 : ((profile.downloads_limit as number) || limits.downloads);
   const dlUsed = (profile.downloads_this_month as number) || 0;
 
-  const isActive = isStatusActive(status);
+  const isActive = adminOverride || isStatusActive(status);
 
   return {
     userId,
@@ -156,12 +168,12 @@ export async function getUserEntitlement(
     scheduledExportsLimit: limits.scheduledExports,
     maxCoinsPerRequest: limits.maxCoinsPerRequest,
     maxOhlcvDays: limits.maxOhlcvDays,
-    dailyApiCalls: limits.dailyApiCalls,
+    dailyApiCalls: adminOverride ? 99999 : limits.dailyApiCalls,
     dailyApiCallsUsed: 0, // Populated by caller if needed
-    dailyApiCallsRemaining: limits.dailyApiCalls,
+    dailyApiCallsRemaining: adminOverride ? 99999 : limits.dailyApiCalls,
     allowedFunctions: limits.allowedFunctions,
     canAccessProFeatures: isActive && limits.canAccessProFeatures,
-    canDownload: isActive && dlUsed < dlLimit,
+    canDownload: isActive,
     canScheduleExports: isActive && limits.canScheduleExports,
     canUsePacks: true, // All tiers can use packs (with limits)
     canUseFormulas: true, // All tiers can use formulas (with limits)

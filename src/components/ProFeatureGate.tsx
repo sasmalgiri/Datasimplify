@@ -16,9 +16,9 @@ interface ProFeatureGateProps {
  * Pro users see the content normally.
  */
 export function ProFeatureGate({ children, feature }: ProFeatureGateProps) {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
 
-  if (profile?.subscription_tier === 'pro') {
+  if (isAdmin || profile?.subscription_tier === 'pro') {
     return <>{children}</>;
   }
 

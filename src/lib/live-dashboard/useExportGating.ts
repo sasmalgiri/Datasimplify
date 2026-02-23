@@ -38,7 +38,7 @@ export function useExportGating(): {
   entitlement: ExportEntitlement;
   trackExport: (format: ExportFormat) => Promise<void>;
 } {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, profile, isAdmin, refreshProfile } = useAuth();
   const [anonCount, setAnonCount] = useState(0);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function useExportGating(): {
     }
   }, [user]);
 
-  const tier: SubscriptionTier = (profile?.subscription_tier as SubscriptionTier) || 'free';
+  const tier: SubscriptionTier = isAdmin ? 'pro' : ((profile?.subscription_tier as SubscriptionTier) || 'free');
   const downloadsUsed = user ? (profile?.downloads_this_month || 0) : anonCount;
   const entitlement = getExportEntitlement(tier, downloadsUsed);
 

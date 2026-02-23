@@ -334,10 +334,10 @@ export function CustomizeBar({ definition, onApply, onClose }: CustomizeBarProps
   const st = getSiteThemeClasses(siteTheme);
   const [local, setLocal] = useState<DashboardCustomization>(customization);
   const [showMore, setShowMore] = useState(false);
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const tier = profile?.subscription_tier ?? 'free';
+  const tier = isAdmin ? 'pro' : (profile?.subscription_tier ?? 'free');
   const maxWidgets = PLAN_LIMITS[tier].maxDashboardWidgets;
   const maxDays = PLAN_LIMITS[tier].maxOhlcvDays;
   const isFree = tier === 'free';

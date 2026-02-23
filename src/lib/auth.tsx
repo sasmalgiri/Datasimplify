@@ -27,6 +27,7 @@ export interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isConfigured: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
@@ -183,6 +184,8 @@ function readSessionFromCookie(): Record<string, unknown> | null {
 // PROVIDER
 // ============================================
 
+const ADMIN_EMAILS_LIST = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').filter(Boolean).map(e => e.trim().toLowerCase());
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -190,6 +193,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [supabase] = useState<SupabaseClient | null>(() => getSupabaseClient());
   const [isConfigured] = useState(() => supabase !== null);
+
+  // Admin check — admins get full Pro access
+  const isAdmin = user?.email ? ADMIN_EMAILS_LIST.includes(user.email.toLowerCase()) : false;
 
   // Download limits by tier (Free: 30, Pro: 300)
   const downloadLimits: Record<string, number> = {
@@ -567,7 +573,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user, profile, session, isLoading, isConfigured,
+        user, profile, session, isLoading, isConfigured, isAdmin,
         signUp, signIn, signInWithGoogle, signOut, refreshProfile,
         resendVerificationEmail, resetPassword,
         canDownload, remainingDownloads,
