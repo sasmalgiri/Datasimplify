@@ -211,59 +211,69 @@ export default function CommandCenterPage() {
           </div>
         )}
 
-        {data.markets && !dataLoading && (
-          <div className={`${st.cardClasses} p-6 mb-6`}>
-            <h3 className={`text-sm font-medium mb-4 ${st.textSecondary}`}>
-              {activeWorkspace?.name} — {data.markets.length} coins loaded
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`border-b ${st.divider}`}>
-                    <th className={`text-left py-2 px-3 text-xs font-medium ${st.textDim}`}>#</th>
-                    <th className={`text-left py-2 px-3 text-xs font-medium ${st.textDim}`}>Coin</th>
-                    <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>Price</th>
-                    <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>24h</th>
-                    <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>7d</th>
-                    <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>Market Cap</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.markets.slice(0, 30).map((m, i) => {
-                    const ch24 = m.price_change_percentage_24h ?? 0;
-                    const ch7d = m.price_change_percentage_7d_in_currency ?? 0;
-                    return (
-                      <tr key={m.id} className={`border-b ${st.divider} hover:${st.subtleBg}`}>
-                        <td className={`py-2 px-3 ${st.textDim}`}>{m.market_cap_rank || i + 1}</td>
-                        <td className={`py-2 px-3 font-medium ${st.textPrimary}`}>
-                          {m.name}
-                          <span className={`ml-1 text-xs ${st.textDim}`}>{m.symbol.toUpperCase()}</span>
-                        </td>
-                        <td className={`py-2 px-3 text-right ${st.textPrimary}`}>
-                          ${m.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className={`py-2 px-3 text-right ${ch24 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {ch24 >= 0 ? '+' : ''}{ch24.toFixed(2)}%
-                        </td>
-                        <td className={`py-2 px-3 text-right ${ch7d >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {ch7d >= 0 ? '+' : ''}{ch7d.toFixed(2)}%
-                        </td>
-                        <td className={`py-2 px-3 text-right ${st.textSecondary}`}>
-                          ${(m.market_cap / 1e9).toFixed(1)}B
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {data.markets.length > 30 && (
-                <p className={`text-center text-xs py-2 ${st.textDim}`}>
-                  ... and {data.markets.length - 30} more
+        {data.markets && !dataLoading && activeWorkspace && (() => {
+          // Filter markets to only workspace coins
+          const wsCoins = activeWorkspace.config?.coins ?? [];
+          const coinSet = new Set(wsCoins.map((c) => c.toLowerCase()));
+          const filtered = data.markets!.filter(
+            (m) => coinSet.has(m.id.toLowerCase()) || coinSet.has(m.symbol.toLowerCase()),
+          );
+
+          return (
+            <div className={`${st.cardClasses} p-6 mb-6`}>
+              <h3 className={`text-sm font-medium mb-4 ${st.textSecondary}`}>
+                {activeWorkspace.name} — {filtered.length} coin{filtered.length !== 1 ? 's' : ''}
+              </h3>
+              {filtered.length === 0 ? (
+                <p className={`text-sm ${st.textMuted} py-4 text-center`}>
+                  No matching coins found. Try editing the workspace to update coin selections.
                 </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className={`border-b ${st.divider}`}>
+                        <th className={`text-left py-2 px-3 text-xs font-medium ${st.textDim}`}>#</th>
+                        <th className={`text-left py-2 px-3 text-xs font-medium ${st.textDim}`}>Coin</th>
+                        <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>Price</th>
+                        <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>24h</th>
+                        <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>7d</th>
+                        <th className={`text-right py-2 px-3 text-xs font-medium ${st.textDim}`}>Market Cap</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((m, i) => {
+                        const ch24 = m.price_change_percentage_24h ?? 0;
+                        const ch7d = m.price_change_percentage_7d_in_currency ?? 0;
+                        return (
+                          <tr key={m.id} className={`border-b ${st.divider} hover:${st.subtleBg}`}>
+                            <td className={`py-2 px-3 ${st.textDim}`}>{m.market_cap_rank || i + 1}</td>
+                            <td className={`py-2 px-3 font-medium ${st.textPrimary}`}>
+                              {m.name}
+                              <span className={`ml-1 text-xs ${st.textDim}`}>{m.symbol.toUpperCase()}</span>
+                            </td>
+                            <td className={`py-2 px-3 text-right ${st.textPrimary}`}>
+                              ${m.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                            <td className={`py-2 px-3 text-right ${ch24 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {ch24 >= 0 ? '+' : ''}{ch24.toFixed(2)}%
+                            </td>
+                            <td className={`py-2 px-3 text-right ${ch7d >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {ch7d >= 0 ? '+' : ''}{ch7d.toFixed(2)}%
+                            </td>
+                            <td className={`py-2 px-3 text-right ${st.textSecondary}`}>
+                              ${(m.market_cap / 1e9).toFixed(1)}B
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Action Bar */}
         <ActionBar onRefresh={handleRefresh} isRefreshing={dataLoading} />
