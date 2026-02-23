@@ -13,6 +13,7 @@ import { ApiUsagePill } from './ApiUsagePill';
 import AIChatPanel from './AIChatPanel';
 import DashboardAlertPanel, { useAlertCount } from './DashboardAlertPanel';
 import { ExperimentPanel } from './ExperimentPanel';
+import { WorkspaceContextBar } from './WorkspaceContextBar';
 import { CreditBalancePill } from './CreditBalance';
 import { useInitCredits } from '@/lib/live-dashboard/credits';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
@@ -66,6 +67,13 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
   // Workspace integration
   const activeWorkspace = useActiveWorkspace();
   const createSnapshot = useWorkspaceStore((s) => s.createSnapshot);
+  const setCustomization = useLiveDashboardStore((s) => s.setCustomization);
+  const [workspaceBarDismissed, setWorkspaceBarDismissed] = useState(false);
+
+  // Reset workspace bar visibility when workspace changes
+  useEffect(() => {
+    setWorkspaceBarDismissed(false);
+  }, [activeWorkspace?.id]);
 
   // Auto-create snapshot after data refresh when workspace is active
   const handleAutoSnapshot = useCallback(() => {
@@ -160,6 +168,32 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       handleAutoSnapshot();
     });
   }, [definition, fetchData, handleAutoSnapshot]);
+
+  // Sync workspace coins into dashboard customization (coinId + coinIds)
+  const handleSyncWorkspaceCoins = useCallback(() => {
+    if (!activeWorkspace) return;
+    const wsCoins = activeWorkspace.config?.coins ?? [];
+    if (wsCoins.length === 0) return;
+    const data = useLiveDashboardStore.getState().data;
+    if (!data.markets) return;
+
+    // Resolve workspace coin identifiers to CoinGecko IDs
+    const coinSet = new Set(wsCoins.map((c) => c.toLowerCase()));
+    const matched = data.markets.filter(
+      (m) => coinSet.has(m.id.toLowerCase()) || coinSet.has(m.symbol.toLowerCase()),
+    );
+    if (matched.length === 0) return;
+
+    const ids = matched.map((m) => m.id);
+    setCustomization({
+      coinId: ids[0],
+      coinIds: ids.slice(0, 5), // multi-coin charts support up to 5
+      vsCurrency: activeWorkspace.config?.vsCurrency ?? 'usd',
+    });
+
+    // Trigger a refresh with the new customization
+    setTimeout(() => handleRefresh(), 100);
+  }, [activeWorkspace, setCustomization, handleRefresh]);
 
   // Auto-refresh interval
   useEffect(() => {
@@ -381,6 +415,14 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       {/* Experiment Lab panel */}
       {experimentOpen && (
         <ExperimentPanel isOpen={experimentOpen} onClose={closeExperiment} />
+      )}
+
+      {/* Workspace context bar */}
+      {FEATURES.addinV2 && activeWorkspace && !workspaceBarDismissed && (
+        <WorkspaceContextBar
+          onSyncCoins={handleSyncWorkspaceCoins}
+          onDismiss={() => setWorkspaceBarDismissed(true)}
+        />
       )}
 
       {/* Error banner */}
