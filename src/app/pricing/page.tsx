@@ -43,7 +43,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
   // Free tier
   '5 dashboard widgets': 'Access KPI Cards, Price Chart, Top Coins, Fear & Greed, and Trending widgets.',
   '2-coin compare': 'Compare any two cryptocurrencies side by side with key metrics.',
-  '3 downloads per month': 'Download up to 3 template packs each month.',
+  '5 downloads per month': 'Download up to 5 template packs each month.',
   '30-day price history': 'View price charts and history for the last 30 days.',
   'Basic chart types': 'Line charts and simple bar charts. No multi-axis overlays or advanced layouts.',
   'Learn + Glossary': 'Full access to educational content, crypto glossary, and FAQ.',
@@ -112,8 +112,6 @@ export default function PricingPage() {
       return;
     }
 
-    // TODO: Integrate FastSpring checkout
-    // For now, redirect to FastSpring hosted checkout
     const productPaths: Record<string, string> = {
       'pro-monthly': 'pro-monthly',
       'pro-yearly': 'pro-yearly',
@@ -142,7 +140,7 @@ export default function PricingPage() {
       features: [
         '5 dashboard widgets',
         '2-coin compare',
-        '3 downloads per month',
+        '5 downloads per month',
         '30-day price history',
         'Basic chart types',
         'Learn + Glossary',
@@ -188,7 +186,7 @@ export default function PricingPage() {
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm text-emerald-400">
             <span>🔑</span>
             <span>
-              <strong>BYOK:</strong> You use your own API key. Your key stays in your Excel file — we never see or store it.
+              <strong>BYOK:</strong> You use your own API key. Your key stays in your browser — we never see or store it.
             </span>
           </div>
         </div>

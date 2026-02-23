@@ -14,17 +14,17 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'CryptoReportKit - Static Excel Templates for Crypto Data',
+    default: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
     template: '%s | CryptoReportKit'
   },
-  description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
-  keywords: ['crypto analytics', 'cryptocurrency visualization', 'bitcoin data', 'excel crypto data', 'crypto excel templates', 'fear and greed index', 'DeFi analytics', 'crypto market visualization', 'BYOK templates', 'crypto report kit'],
+  description: '83+ interactive crypto dashboards, real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK — your API key never leaves your browser.',
+  keywords: ['crypto analytics', 'crypto dashboards', 'bitcoin dashboard', 'cryptocurrency visualization', 'live crypto data', 'crypto market analysis', 'DeFi analytics', 'BYOK crypto', 'coin comparison', 'crypto tax tools', 'crypto report kit'],
 
   // Favicon & Icons
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 
   // Open Graph (Facebook, LinkedIn)
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: 'CryptoReportKit',
-    title: 'CryptoReportKit - Static Excel Templates for Crypto Data',
-    description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
+    title: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
+    description: '83+ interactive crypto dashboards, real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK.',
     images: [
       {
-        url: `${siteUrl}/og-image.png`,
+        url: `${siteUrl}/api/og`,
         width: 1200,
         height: 630,
-        alt: 'CryptoReportKit - Crypto Data Platform',
+        alt: 'CryptoReportKit - 83+ Live Crypto Dashboards',
       },
     ],
   },
@@ -48,10 +48,10 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'CryptoReportKit - Static Excel Templates for Crypto Data',
-    description: 'Static Excel templates with prefetched crypto data. BYOK architecture. Educational analytics tools.',
-    images: [`${siteUrl}/og-image.png`],
-    creator: '@cryptoreportkit',
+    title: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
+    description: '83+ interactive crypto dashboards, real-time market data, coin comparison, and more. Free to start with BYOK.',
+    images: [`${siteUrl}/api/og`],
+    creator: '@CryptoReportKit',
   },
 
   // Additional SEO

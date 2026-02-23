@@ -69,25 +69,66 @@ const REPORT_TYPE_LABELS: Record<string, string> = {
   other: 'Custom Template',
 };
 
-// Sample changelog entries (in production, fetch from API)
 const CHANGELOG = [
+  {
+    date: '2026-02-23',
+    title: 'DataLab: 4 New Indicators + 3 Presets',
+    description: 'Added MACD, Bollinger Bands, Stochastic, and ATR indicators to DataLab with Volatility Squeeze, Momentum Divergence, and Trend Strength presets.',
+    type: 'feature',
+  },
+  {
+    date: '2026-02-20',
+    title: 'DataLab Interactive Chart Overlays',
+    description: 'Pro users can now overlay technical indicators on OHLC charts with adjustable parameters and preset configurations.',
+    type: 'feature',
+  },
+  {
+    date: '2026-02-15',
+    title: 'Coin Comparison Upgrade',
+    description: 'Compare up to 10 coins side-by-side with 26 data columns, technical indicators, and head-to-head ratios.',
+    type: 'improvement',
+  },
+  {
+    date: '2026-02-10',
+    title: '83+ Live Dashboards',
+    description: 'Expanded dashboard library to 83+ interactive dashboards across 13 categories with 90+ widgets.',
+    type: 'feature',
+  },
+  {
+    date: '2026-02-05',
+    title: 'Smart Contract Verifier',
+    description: 'Verify smart contracts via Sourcify integration — free for all users.',
+    type: 'feature',
+  },
+  {
+    date: '2026-01-28',
+    title: 'DCA Simulator & BTC Cycle Comparison',
+    description: 'Simulate dollar-cost averaging strategies and overlay 2012-2024 BTC halving cycles on normalized charts.',
+    type: 'feature',
+  },
+  {
+    date: '2026-01-20',
+    title: 'Tax Report Export',
+    description: 'FIFO, LIFO, and average cost basis calculations with Form 8949 CSV export for Pro users.',
+    type: 'feature',
+  },
+  {
+    date: '2026-01-15',
+    title: 'Multi-Exchange Portfolio',
+    description: 'Connect Binance, Coinbase, and 4 more exchanges with read-only API keys for unified balance tracking.',
+    type: 'feature',
+  },
+  {
+    date: '2026-01-10',
+    title: 'BYOK Architecture & 60+ Currencies',
+    description: 'All dashboards powered by your own CoinGecko API key. Added support for 60+ fiat currencies with locale formatting.',
+    type: 'improvement',
+  },
   {
     date: '2025-01-17',
     title: 'Report Kits Launch',
-    description: '6 pre-built Report Kits now available for download.',
+    description: '6 pre-built Excel Report Kits with prefetched crypto data available for download.',
     type: 'feature',
-  },
-  {
-    date: '2025-01-15',
-    title: 'Status Page',
-    description: 'New system status page for API health monitoring.',
-    type: 'feature',
-  },
-  {
-    date: '2025-01-10',
-    title: '2000+ Coins Support',
-    description: 'Expanded market data to support over 2000 cryptocurrencies.',
-    type: 'improvement',
   },
 ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -9,9 +9,10 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { DataLabCanvas } from '@/components/datalab/DataLabCanvas';
 import { DataLabToolbar } from '@/components/datalab/DataLabToolbar';
 import { DataLabTable } from '@/components/datalab/DataLabTable';
+import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { FlaskConical, Lock } from 'lucide-react';
+import { FlaskConical, Lock, Key, ExternalLink, Shield } from 'lucide-react';
 
 export default function DataLabPage() {
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
@@ -76,7 +77,17 @@ export default function DataLabPage() {
     );
   }
 
-  // API key gate
+  // API key gate — inline onboarding with modal
+  const [showKeyModal, setShowKeyModal] = useState(false);
+
+  // Auto-open modal after a brief delay when no key is set
+  useEffect(() => {
+    if (!apiKey && isPro) {
+      const timer = setTimeout(() => setShowKeyModal(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [apiKey, isPro]);
+
   if (!apiKey) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">
@@ -85,19 +96,59 @@ export default function DataLabPage() {
         <main className="max-w-2xl mx-auto px-4 py-20 text-center">
           <div className="bg-white/[0.03] backdrop-blur-md border border-white/[0.06] rounded-2xl p-10">
             <FlaskConical className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-3">API Key Required</h1>
+            <h1 className="text-2xl font-bold text-white mb-3">Connect Your CoinGecko API Key</h1>
             <p className="text-gray-400 mb-6">
-              DataLab needs your CoinGecko API key to fetch live data.
-              Set it up in any live dashboard first.
+              DataLab fetches live market data directly from CoinGecko.
+              You need a free Demo API key to get started — no credit card required.
             </p>
-            <Link
-              href="/live-dashboards/market-overview"
-              className="inline-block px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition"
+
+            <button
+              type="button"
+              onClick={() => setShowKeyModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition mb-6"
             >
-              Go to Live Dashboards
-            </Link>
+              <Key className="w-4 h-4" />
+              Connect API Key
+            </button>
+
+            {/* Quick info cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left mt-2">
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
+                <p className="text-xs font-medium text-emerald-400 mb-1">Free Demo Plan</p>
+                <p className="text-[11px] text-gray-500">30 calls/min &middot; 10K calls/month. More than enough for personal research.</p>
+              </div>
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
+                <p className="text-xs font-medium text-emerald-400 mb-1">Your Key, Your Control</p>
+                <p className="text-[11px] text-gray-500">Key stays in your browser only. Never stored on our servers.</p>
+              </div>
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
+                <p className="text-xs font-medium text-emerald-400 mb-1">2-Minute Setup</p>
+                <p className="text-[11px] text-gray-500">
+                  Sign up at{' '}
+                  <a href="https://www.coingecko.com/en/api/pricing" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
+                    coingecko.com
+                  </a>{' '}
+                  and copy your key.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-gray-600">
+              <Shield className="w-3 h-3" />
+              <span>BYOK (Bring Your Own Key) — calls go direct to CoinGecko from your browser</span>
+            </div>
           </div>
         </main>
+
+        <ApiKeyModal
+          isOpen={showKeyModal}
+          onClose={() => setShowKeyModal(false)}
+          onSuccess={() => {
+            setShowKeyModal(false);
+            // Auto-load default preset after key is connected
+            if (!activePreset) loadPreset('confluence-zones');
+          }}
+        />
       </div>
     );
   }

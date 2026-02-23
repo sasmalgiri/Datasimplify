@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { CookieSettingsButton } from '@/components/CookieSettingsButton';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { useAuth } from '@/lib/auth';
+import { Github, Twitter, Linkedin, Youtube } from 'lucide-react';
 
 export function Footer() {
   const { user } = useAuth();
@@ -17,9 +18,38 @@ export function Footer() {
               <span className="text-2xl">📊</span>
               <span className="font-bold text-xl text-white">CryptoReportKit</span>
             </div>
-            <p className="text-sm">
+            <p className="text-sm mb-4">
               Democratizing crypto data for everyone. No coding required.
             </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://github.com/sasmalgiri/Datasimplify"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="GitHub"
+              >
+                <Github className="w-5 h-5" />
+              </a>
+              <a
+                href="https://x.com/sasmalgiri"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="X (Twitter)"
+              >
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.linkedin.com/in/shrabani-sasmal-9b80483b3/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-white transition-colors"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
+            </div>
           </div>
 
           {/* Product */}

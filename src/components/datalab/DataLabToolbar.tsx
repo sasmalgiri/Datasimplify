@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, type ReactNode } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import {
   Target, Brain, Gauge, RefreshCw, Layers,
   Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
   RotateCcw, Table2, Maximize2, Undo2,
+  Loader2, Search,
 } from 'lucide-react';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { OVERLAY_PRESETS } from '@/lib/datalab/presets';
@@ -130,6 +131,32 @@ const TIME_RANGES = [
   { label: '2y', value: 730 },
 ];
 
+// ─── Coin search cache + popular coins ──────────────────────────────
+interface CoinSearchResult {
+  id: string;
+  symbol: string;
+  name: string;
+  thumb?: string;
+  rank?: number | null;
+}
+
+const coinSearchCache = new Map<string, CoinSearchResult[]>();
+
+const POPULAR_COINS: CoinSearchResult[] = [
+  { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
+  { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
+  { id: 'solana', symbol: 'SOL', name: 'Solana' },
+  { id: 'binancecoin', symbol: 'BNB', name: 'BNB' },
+  { id: 'ripple', symbol: 'XRP', name: 'XRP' },
+  { id: 'cardano', symbol: 'ADA', name: 'Cardano' },
+  { id: 'dogecoin', symbol: 'DOGE', name: 'Dogecoin' },
+  { id: 'polkadot', symbol: 'DOT', name: 'Polkadot' },
+  { id: 'avalanche-2', symbol: 'AVAX', name: 'Avalanche' },
+  { id: 'chainlink', symbol: 'LINK', name: 'Chainlink' },
+  { id: 'tron', symbol: 'TRX', name: 'TRON' },
+  { id: 'uniswap', symbol: 'UNI', name: 'Uniswap' },
+];
+
 // ─── Main Component ────────────────────────────────────────────────
 interface DataLabToolbarProps {
   onScreenshot?: () => void;
@@ -146,6 +173,73 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
   const [showAddLayer, setShowAddLayer] = useState(false);
   const [coinInput, setCoinInput] = useState(coin);
+  const [showCoinDrop, setShowCoinDrop] = useState(false);
+  const [coinResults, setCoinResults] = useState<CoinSearchResult[]>([]);
+  const [isSearchingCoin, setIsSearchingCoin] = useState(false);
+  const coinDropRef = useRef<HTMLDivElement>(null);
+  const coinSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync coinInput when store coin changes (e.g. preset load)
+  useEffect(() => { setCoinInput(coin); }, [coin]);
+
+  // Close coin dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (coinDropRef.current && !coinDropRef.current.contains(e.target as Node)) {
+        setShowCoinDrop(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Debounced CoinGecko search
+  useEffect(() => {
+    if (coinSearchTimer.current) clearTimeout(coinSearchTimer.current);
+    const q = coinInput.trim().toLowerCase();
+    if (q.length < 2) {
+      setCoinResults([]);
+      setIsSearchingCoin(false);
+      return;
+    }
+    if (coinSearchCache.has(q)) {
+      setCoinResults(coinSearchCache.get(q)!);
+      return;
+    }
+    setIsSearchingCoin(true);
+    coinSearchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(q)}`,
+        );
+        if (!res.ok) throw new Error('Search failed');
+        const data = await res.json();
+        const coins: CoinSearchResult[] = (data.coins || []).slice(0, 20).map((c: any) => ({
+          id: c.id,
+          symbol: (c.symbol || '').toUpperCase(),
+          name: c.name || '',
+          thumb: c.thumb,
+          rank: c.market_cap_rank || null,
+        }));
+        coinSearchCache.set(q, coins);
+        setCoinResults(coins);
+      } catch {
+        setCoinResults([]);
+      } finally {
+        setIsSearchingCoin(false);
+      }
+    }, 350);
+    return () => { if (coinSearchTimer.current) clearTimeout(coinSearchTimer.current); };
+  }, [coinInput]);
+
+  const selectCoin = async (coinId: string) => {
+    setCoinInput(coinId);
+    setShowCoinDrop(false);
+    if (coinId !== coin) {
+      useDataLabStore.setState({ coin: coinId });
+      await loadData();
+    }
+  };
 
   // Collect parameter defs from the active preset
   const preset = activePreset
@@ -221,18 +315,87 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
         <div className="w-px h-5 bg-white/[0.08]" />
 
-        {/* Coin Input */}
-        <Tip text="Enter a CoinGecko coin ID (e.g. bitcoin, ethereum, solana). Press Enter to reload.">
-          <input
-            type="text"
-            value={coinInput}
-            onChange={(e) => setCoinInput(e.target.value)}
-            onBlur={handleCoinChange}
-            onKeyDown={(e) => e.key === 'Enter' && handleCoinChange()}
-            className="w-28 bg-white/[0.04] border border-white/[0.1] text-white text-xs px-2.5 py-1 rounded-lg focus:outline-none focus:border-emerald-400/40"
-            placeholder="coin id..."
-          />
-        </Tip>
+        {/* Coin Search */}
+        <div className="relative" ref={coinDropRef}>
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+            <input
+              type="text"
+              value={coinInput}
+              onChange={(e) => { setCoinInput(e.target.value); if (!showCoinDrop) setShowCoinDrop(true); }}
+              onFocus={() => setShowCoinDrop(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { handleCoinChange(); setShowCoinDrop(false); }
+                if (e.key === 'Escape') setShowCoinDrop(false);
+              }}
+              className="w-36 bg-white/[0.04] border border-white/[0.1] text-white text-xs pl-6 pr-2.5 py-1 rounded-lg focus:outline-none focus:border-emerald-400/40"
+              placeholder="Search coin..."
+            />
+          </div>
+
+          {showCoinDrop && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl w-64 max-h-72 overflow-y-auto">
+              {/* Loading indicator */}
+              {isSearchingCoin && (
+                <div className="flex items-center gap-2 px-3 py-2 text-gray-400 text-[11px]">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Searching CoinGecko...
+                </div>
+              )}
+
+              {/* CoinGecko search results (when 2+ chars typed) */}
+              {coinResults.length > 0 ? (
+                <div className="p-1">
+                  {coinResults.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => selectCoin(c.id)}
+                      className={`w-full text-left px-2.5 py-1.5 text-[11px] rounded transition flex items-center gap-2 ${
+                        c.id === coin
+                          ? 'bg-emerald-400/15 text-emerald-400'
+                          : 'text-gray-300 hover:bg-white/[0.06] hover:text-white'
+                      }`}
+                    >
+                      {c.thumb && (
+                        <img src={c.thumb} alt="" className="w-4 h-4 rounded-full flex-shrink-0" />
+                      )}
+                      <span className="font-medium">{c.symbol}</span>
+                      <span className="text-gray-500 truncate">{c.name}</span>
+                      {c.rank && (
+                        <span className="text-gray-600 text-[10px] ml-auto flex-shrink-0">#{c.rank}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : coinInput.trim().length < 2 && !isSearchingCoin ? (
+                /* Popular coins when not searching */
+                <div className="p-1">
+                  <div className="px-2.5 py-1 text-[10px] text-gray-500 uppercase tracking-wider">Popular Coins</div>
+                  {POPULAR_COINS.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => selectCoin(c.id)}
+                      className={`w-full text-left px-2.5 py-1.5 text-[11px] rounded transition flex items-center gap-2 ${
+                        c.id === coin
+                          ? 'bg-emerald-400/15 text-emerald-400'
+                          : 'text-gray-300 hover:bg-white/[0.06] hover:text-white'
+                      }`}
+                    >
+                      <span className="font-medium w-10">{c.symbol}</span>
+                      <span className="text-gray-500">{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : !isSearchingCoin && coinInput.trim().length >= 2 ? (
+                <div className="px-3 py-3 text-[11px] text-gray-500 text-center">
+                  No coins found — try a different search
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
 
         {/* Time Range Chips */}
         <Tip text="Select the time range for historical data">

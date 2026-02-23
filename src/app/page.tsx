@@ -11,7 +11,7 @@ import {
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
-  Key, Users, MessageSquare, ChevronDown, Star,
+  Key, MessageSquare, ChevronDown,
 } from 'lucide-react';
 
 /* ─── Dashboard Preview Tiles (24 showcased out of 83+) ─── */
@@ -185,34 +185,6 @@ const COMPARISON_ROWS = [
   { feature: 'Currency support', crk: '60+', others: 'USD only or 5-7' },
   { feature: 'Price alerts with email', crk: true, others: 'Pro only ($29+/mo)' },
   { feature: 'Starting price', crk: '$0 free / $9 pro', others: '$19-49/mo' },
-];
-
-/* ─── Testimonials ─── */
-const TESTIMONIALS = [
-  {
-    quote: 'Replaced three paid subscriptions with one tool. The dashboards are exactly what I needed for weekly client reports.',
-    name: 'Alex R.',
-    role: 'Crypto Fund Analyst',
-    rating: 5,
-  },
-  {
-    quote: 'Finally a tool where my API key stays on my machine. I was tired of handing credentials to random SaaS platforms.',
-    name: 'Priya M.',
-    role: 'DeFi Researcher',
-    rating: 5,
-  },
-  {
-    quote: 'The tax export saved me hours during tax season. FIFO, LIFO, average cost — all computed and ready to download.',
-    name: 'James T.',
-    role: 'Independent Trader',
-    rating: 5,
-  },
-  {
-    quote: 'I use the BTC Cycle Comparison dashboard daily. Being able to overlay halving cycles on one chart is a game-changer.',
-    name: 'Sofia L.',
-    role: 'Portfolio Manager',
-    rating: 5,
-  },
 ];
 
 /* ─── FAQ Items ─── */
@@ -549,43 +521,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════ SOCIAL PROOF ═══════ */}
-      <section className="py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-medium mb-4">
-              <Users className="w-3.5 h-3.5" />
-              TRUSTED BY ANALYSTS
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              What Users Are <span className="text-amber-400">Saying</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-5 flex flex-col"
-              >
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <p className="text-sm text-gray-300 leading-relaxed flex-1 mb-4">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <div>
-                  <div className="text-sm font-medium text-white">{t.name}</div>
-                  <div className="text-xs text-gray-500">{t.role}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ═══════ WHY CRK — COMPARISON TABLE ═══════ */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
@@ -689,7 +624,7 @@ export default function LandingPage() {
                     'DCA simulator + BTC cycle comparison',
                     '60+ currency support',
                     '2-coin compare',
-                    '30 downloads/month',
+                    '5 downloads/month',
                     '30-day price history',
                     'Learn + Glossary',
                   ].map((f) => (
@@ -819,35 +754,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════ FOOTER ═══════ */}
-      <footer className="border-t border-gray-800 py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">📊</span>
-              <span className="font-bold">CryptoReportKit</span>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
-              <Link href="/live-dashboards" className="hover:text-white transition">Dashboards</Link>
-              <Link href="/compare" className="hover:text-white transition">Compare</Link>
-              <Link href="/learn" className="hover:text-white transition">Learn</Link>
-              <Link href="/pricing" className="hover:text-white transition">Pricing</Link>
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-4 text-gray-500 text-xs">
-              <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
-              <Link href="/terms" className="hover:text-white transition">Terms</Link>
-              <Link href="/refund" className="hover:text-white transition">Refund</Link>
-              <Link href="/contact" className="hover:text-white transition">Contact</Link>
-            </div>
-          </div>
-
-          <p className="text-gray-600 text-xs text-center">
-            &copy; 2026 CryptoReportKit. Research and education tool. Not financial advice. DYOR.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }
