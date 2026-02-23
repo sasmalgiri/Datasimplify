@@ -16,7 +16,12 @@ import {
   Shield,
   ShieldCheck,
   Download,
+  UserCircle,
 } from 'lucide-react';
+import { usePersonaStore } from '@/lib/persona/personaStore';
+import { getPersonaDefinition } from '@/lib/persona/helpers';
+import { PersonaPicker } from '@/components/persona/PersonaPicker';
+import type { PersonaId } from '@/lib/persona/types';
 
 const ADMIN_EMAILS = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').filter(Boolean).map(e => e.trim().toLowerCase());
 
@@ -25,6 +30,11 @@ export default function AccountPage() {
   const router = useRouter();
   const redirectedRef = useRef(false);
   const [timedOut, setTimedOut] = useState(false);
+  const [showPersonaPicker, setShowPersonaPicker] = useState(false);
+  const persona = usePersonaStore((s) => s.persona);
+  const setPersona = usePersonaStore((s) => s.setPersona);
+  const syncToSupabase = usePersonaStore((s) => s.syncToSupabase);
+  const personaDef = getPersonaDefinition(persona);
 
   // Hard timeout: if auth takes more than 4 seconds, stop waiting
   useEffect(() => {
@@ -79,6 +89,15 @@ export default function AccountPage() {
       color: 'blue',
     },
     {
+      href: '#persona',
+      title: 'Your Persona',
+      description: personaDef
+        ? `${personaDef.name} — ${personaDef.tagline}`
+        : 'Set your persona for personalized content',
+      icon: UserCircle,
+      color: 'amber',
+    },
+    {
       href: '#settings',
       title: 'Settings',
       description: 'Account preferences and notifications (coming soon)',
@@ -109,6 +128,11 @@ export default function AccountPage() {
       bg: 'bg-purple-500/10',
       icon: 'text-purple-600',
       border: 'border-purple-200 hover:border-purple-300',
+    },
+    amber: {
+      bg: 'bg-amber-500/10',
+      icon: 'text-amber-600',
+      border: 'border-amber-200 hover:border-amber-300',
     },
     red: {
       bg: 'bg-red-500/10',
@@ -160,6 +184,11 @@ export default function AccountPage() {
                 }`}>
                   {profile?.subscription_tier === 'pro' ? 'Pro' : 'Free Plan'}
                 </span>
+                {personaDef && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    {personaDef.name}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -222,7 +251,10 @@ export default function AccountPage() {
                     : 'hover:shadow-md'
                 }`}
                 onClick={(e) => {
-                  if (isComingSoon) {
+                  if (link.href === '#persona') {
+                    e.preventDefault();
+                    setShowPersonaPicker(!showPersonaPicker);
+                  } else if (isComingSoon) {
                     e.preventDefault();
                   }
                 }}
@@ -247,6 +279,24 @@ export default function AccountPage() {
             );
           })}
         </div>
+
+        {/* Persona Picker (inline) */}
+        {showPersonaPicker && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8" id="persona">
+            <h3 className="font-semibold text-gray-900 mb-4">Change Your Persona</h3>
+            <PersonaPicker
+              selected={persona}
+              onSelect={async (id: PersonaId) => {
+                setPersona(id);
+                await syncToSupabase();
+                setShowPersonaPicker(false);
+              }}
+              compact
+              title=""
+              subtitle=""
+            />
+          </div>
+        )}
 
         {/* BYOK Info */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">

@@ -6,19 +6,25 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { PersonaPicker } from '@/components/persona/PersonaPicker';
+import { usePersonaStore } from '@/lib/persona/personaStore';
+import type { PersonaId } from '@/lib/persona/types';
 
 function SignupForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<'form' | 'persona' | 'success'>('form');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaId | null>(null);
+  const [personaSaving, setPersonaSaving] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const _router = useRouter(); // Available for post-signup redirect
   const [googleLoading, setGoogleLoading] = useState(false);
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
+  const setPersona = usePersonaStore((s) => s.setPersona);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,11 +48,41 @@ function SignupForm() {
       setError(error.message);
       setIsLoading(false);
     } else {
-      setSuccess(true);
+      setStep('persona');
     }
   };
 
-  if (success) {
+  const handlePersonaSelect = async (persona: PersonaId) => {
+    setSelectedPersona(persona);
+  };
+
+  const handlePersonaConfirm = async () => {
+    if (!selectedPersona) return;
+    setPersonaSaving(true);
+    // Save to local store immediately
+    setPersona(selectedPersona);
+    // Try to sync to Supabase (non-blocking — user might not be verified yet)
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preferences: { persona: selectedPersona },
+        }),
+      });
+    } catch {
+      // Non-blocking — localStorage is the primary store until verified
+    }
+    setPersonaSaving(false);
+    setStep('success');
+  };
+
+  const handlePersonaSkip = () => {
+    setStep('success');
+  };
+
+  // Step 3: Success / Check email
+  if (step === 'success') {
     return (
       <div className="max-w-md w-full text-center">
         <div className="bg-white rounded-lg p-8 border border-gray-200 shadow-sm">
@@ -72,8 +108,71 @@ function SignupForm() {
     );
   }
 
+  // Step 2: Persona selection
+  if (step === 'persona') {
+    return (
+      <div className="max-w-3xl w-full">
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-medium">1</div>
+            <span className="text-xs text-gray-400 hidden sm:inline">Account</span>
+          </div>
+          <div className="w-8 h-px bg-emerald-400"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-medium">2</div>
+            <span className="text-xs text-emerald-600 font-medium hidden sm:inline">Your Profile</span>
+          </div>
+          <div className="w-8 h-px bg-gray-200"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-medium">3</div>
+            <span className="text-xs text-gray-400 hidden sm:inline">Verify</span>
+          </div>
+        </div>
+
+        <PersonaPicker
+          selected={selectedPersona}
+          onSelect={handlePersonaSelect}
+          onSkip={handlePersonaSkip}
+        />
+
+        {selectedPersona && (
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={handlePersonaConfirm}
+              disabled={personaSaving}
+              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition"
+            >
+              {personaSaving ? 'Saving...' : 'Continue'}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Step 1: Email + password form
   return (
     <div className="max-w-md w-full">
+      {/* Step indicator */}
+      <div className="flex items-center justify-center gap-2 mb-6">
+        <div className="flex items-center gap-1.5">
+          <div className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center font-medium">1</div>
+          <span className="text-xs text-emerald-600 font-medium hidden sm:inline">Account</span>
+        </div>
+        <div className="w-8 h-px bg-gray-200"></div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-medium">2</div>
+          <span className="text-xs text-gray-400 hidden sm:inline">Your Profile</span>
+        </div>
+        <div className="w-8 h-px bg-gray-200"></div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-400 text-xs flex items-center justify-center font-medium">3</div>
+          <span className="text-xs text-gray-400 hidden sm:inline">Verify</span>
+        </div>
+      </div>
+
       {/* Logo */}
       <div className="text-center mb-8">
         <Link href="/" className="inline-flex items-center gap-2 text-3xl font-bold text-emerald-600">

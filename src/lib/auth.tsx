@@ -15,6 +15,10 @@ export interface UserProfile {
   downloads_this_month: number;
   downloads_limit: number;
   created_at: string;
+  preferences?: {
+    persona?: string;
+    onboardingCompleted?: boolean;
+  };
 }
 
 export interface AuthContextType {

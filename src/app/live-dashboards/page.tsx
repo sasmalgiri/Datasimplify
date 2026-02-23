@@ -4,12 +4,22 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
-import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap, GitBranch } from 'lucide-react';
+import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap, GitBranch, Star } from 'lucide-react';
 import { GLOW_CARD_CLASSES } from '@/lib/live-dashboard/theme';
+import { usePersonaStore } from '@/lib/persona/personaStore';
+import { sortDashboardsByPersona, isDashboardRecommended } from '@/lib/persona/helpers';
 
-function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
+function DashboardCard({ dashboard, recommended }: { dashboard: LiveDashboardDefinition; recommended?: boolean }) {
   return (
     <div className={`group relative ${GLOW_CARD_CLASSES} p-6 flex flex-col`}>
+      {/* Recommended badge */}
+      {recommended && (
+        <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/10 border border-amber-400/20">
+          <Star className="w-3 h-3 text-amber-400" />
+          <span className="text-[9px] text-amber-400 font-medium">Recommended</span>
+        </div>
+      )}
+
       {/* Icon */}
       <div className="text-4xl mb-4">{dashboard.icon}</div>
 
@@ -39,6 +49,8 @@ function DashboardCard({ dashboard }: { dashboard: LiveDashboardDefinition }) {
 }
 
 export default function LiveDashboardsPage() {
+  const persona = usePersonaStore((s) => s.persona);
+  const sortedDashboards = sortDashboardsByPersona(LIVE_DASHBOARDS, persona);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -147,8 +159,12 @@ export default function LiveDashboardsPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {LIVE_DASHBOARDS.map((d) => (
-              <DashboardCard key={d.slug} dashboard={d} />
+            {sortedDashboards.map((d) => (
+              <DashboardCard
+                key={d.slug}
+                dashboard={d}
+                recommended={isDashboardRecommended(d.slug, persona)}
+              />
             ))}
           </div>
         </section>

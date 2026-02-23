@@ -21,6 +21,9 @@ import {
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { useAuth } from '@/lib/auth';
+import { usePersonaStore } from '@/lib/persona/personaStore';
+import { getPersonaDefinition } from '@/lib/persona/helpers';
+import { Star } from 'lucide-react';
 
 interface NavDropdownProps {
   label: string;
@@ -84,6 +87,8 @@ export function FreeNavbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
+  const persona = usePersonaStore((s) => s.persona);
+  const personaDef = getPersonaDefinition(persona);
 
   const isActive = (path: string) => pathname === path;
   const isInSection = (paths: string[]) => paths.some(p => pathname.startsWith(p));
@@ -147,6 +152,9 @@ export function FreeNavbar() {
 
   // Mobile links - focused on A/B/C features only
   const mobileLinks = [
+    ...(user
+      ? [{ href: '/home', label: 'Home', icon: <Star className="w-4 h-4" /> }]
+      : []),
     ...(FEATURES.addinV2 && user
       ? [{ href: '/command-center', label: 'Command Center', icon: <LayoutDashboard className="w-4 h-4" /> }]
       : []),
@@ -187,6 +195,19 @@ export function FreeNavbar() {
                 <LayoutDashboard className="w-4 h-4" />
                 <span>Command Center</span>
               </Link>
+            )}
+            {user && personaDef && (
+              <NavDropdown
+                label="For You"
+                icon={<Star className="w-4 h-4" />}
+                items={personaDef.quickActions.map((a) => ({
+                  href: a.href,
+                  label: a.label,
+                  description: a.description,
+                  icon: <Star className="w-4 h-4" />,
+                }))}
+                isActive={false}
+              />
             )}
             {Object.entries(navSections)
               .filter(([, section]) => section.items.length > 0)

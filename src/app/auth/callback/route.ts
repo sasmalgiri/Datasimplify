@@ -27,9 +27,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?error=no_code', requestUrl.origin));
   }
 
-  // Redirect to the `next` param (e.g. /reset-password) or default to /account
-  const next = requestUrl.searchParams.get('next') || '/account';
+  // Redirect to the `next` param (e.g. /reset-password) or default to /home
+  const next = requestUrl.searchParams.get('next') || '/home';
   // Prevent open-redirect: only allow relative paths starting with /
-  const safePath = next.startsWith('/') ? next : '/account';
+  const safePath = next.startsWith('/') ? next : '/home';
   return NextResponse.redirect(new URL(safePath, requestUrl.origin));
 }
