@@ -157,6 +157,11 @@ export function buildChartOption(opts: BuildOptions) {
         };
       }
 
+      // Bollinger Bands → dashed lines for visual distinction
+      if (layer.source === 'bollinger_upper' || layer.source === 'bollinger_lower') {
+        seriesConfig.lineStyle = { ...seriesConfig.lineStyle, type: 'dashed' };
+      }
+
       series.push(seriesConfig);
     }
   }
@@ -226,6 +231,34 @@ export function buildChartOption(opts: BuildOptions) {
     });
   }
 
+  // Stochastic reference lines (80/20 overbought/oversold)
+  const hasStoch = visibleLayers.some((l) => l.source === 'stochastic_k' || l.source === 'stochastic_d');
+  if (hasStoch) {
+    const stochLayer = visibleLayers.find((l) => l.source === 'stochastic_k' || l.source === 'stochastic_d')!;
+    const stochYKey = `${stochLayer.gridIndex}-${stochLayer.yAxis}`;
+    const stochYAxisIndex = yAxisMap[stochYKey];
+    series.push({
+      name: 'Overbought (80)',
+      type: 'line',
+      data: timestamps.map(() => 80),
+      xAxisIndex: stochLayer.gridIndex,
+      yAxisIndex: stochYAxisIndex,
+      lineStyle: { color: '#ef444460', type: 'dashed', width: 1 },
+      symbol: 'none',
+      silent: true,
+    });
+    series.push({
+      name: 'Oversold (20)',
+      type: 'line',
+      data: timestamps.map(() => 20),
+      xAxisIndex: stochLayer.gridIndex,
+      yAxisIndex: stochYAxisIndex,
+      lineStyle: { color: '#34d39960', type: 'dashed', width: 1 },
+      symbol: 'none',
+      silent: true,
+    });
+  }
+
   // DataZoom (spans all grids)
   const dataZoom = [
     {
@@ -256,7 +289,10 @@ export function buildChartOption(opts: BuildOptions) {
 
   // Legend
   const legend = {
-    data: series.map((s) => s.name).filter((n) => n !== 'Overbought (70)' && n !== 'Oversold (30)'),
+    data: series.map((s) => s.name).filter((n) =>
+      n !== 'Overbought (70)' && n !== 'Oversold (30)' &&
+      n !== 'Overbought (80)' && n !== 'Oversold (20)'
+    ),
     textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
     top: 0,
     right: '5%',

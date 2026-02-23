@@ -96,6 +96,73 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#34d399', visible: true, gridIndex: 1 },
     ],
   },
+
+  {
+    id: 'volatility-squeeze',
+    name: 'Volatility Squeeze',
+    description: 'Bollinger Band squeeze + low ATR = explosive move imminent',
+    icon: 'Activity',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc', 'coin_history'],
+    parameterDefs: [
+      { key: 'bb_period', label: 'BB Period', min: 5, max: 50, step: 1, defaultValue: 20, layerSource: 'bollinger_upper' },
+      { key: 'bb_mult', label: 'BB Mult', min: 1, max: 4, step: 0.5, defaultValue: 2, layerSource: 'bollinger_upper' },
+      { key: 'atr_period', label: 'ATR Period', min: 5, max: 30, step: 1, defaultValue: 14, layerSource: 'atr' },
+    ],
+    layers: [
+      { label: 'Price (OHLC)', source: 'ohlc', chartType: 'candlestick', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'BB Upper', source: 'bollinger_upper', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 20, multiplier: 2 } },
+      { label: 'SMA 20', source: 'sma', chartType: 'line', yAxis: 'left', color: '#60a5fa', visible: true, gridIndex: 0, params: { window: 20 } },
+      { label: 'BB Lower', source: 'bollinger_lower', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 20, multiplier: 2 } },
+      { label: 'ATR', source: 'atr', chartType: 'line', yAxis: 'right', color: '#a3e635', visible: true, gridIndex: 1, params: { period: 14 } },
+      { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+    ],
+  },
+
+  {
+    id: 'momentum-divergence',
+    name: 'Momentum Divergence',
+    description: 'Price at high but MACD declining = reversal warning',
+    icon: 'TrendingUp',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc'],
+    parameterDefs: [
+      { key: 'macd_fast', label: 'MACD Fast', min: 5, max: 20, step: 1, defaultValue: 12, layerSource: 'macd' },
+      { key: 'macd_slow', label: 'MACD Slow', min: 15, max: 50, step: 1, defaultValue: 26, layerSource: 'macd' },
+      { key: 'macd_signal_period', label: 'Signal', min: 3, max: 15, step: 1, defaultValue: 9, layerSource: 'macd' },
+    ],
+    layers: [
+      { label: 'Price (OHLC)', source: 'ohlc', chartType: 'candlestick', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'MACD', source: 'macd', chartType: 'line', yAxis: 'right', color: '#ec4899', visible: true, gridIndex: 1, params: { fast: 12, slow: 26, signal: 9 } },
+      { label: 'Signal', source: 'macd_signal', chartType: 'line', yAxis: 'right', color: '#f97316', visible: true, gridIndex: 1, params: { fast: 12, slow: 26, signal: 9 } },
+      { label: 'Histogram', source: 'macd_histogram', chartType: 'bar', yAxis: 'right', color: '#6366f1', visible: true, gridIndex: 1, params: { fast: 12, slow: 26, signal: 9 } },
+    ],
+  },
+
+  {
+    id: 'trend-strength',
+    name: 'Trend Strength',
+    description: 'EMA alignment + Stochastic crossover = strong trend confirmation',
+    icon: 'Zap',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc', 'coin_history'],
+    parameterDefs: [
+      { key: 'stoch_k', label: 'Stoch K', min: 5, max: 30, step: 1, defaultValue: 14, layerSource: 'stochastic_k' },
+      { key: 'stoch_d', label: 'Stoch D', min: 1, max: 10, step: 1, defaultValue: 3, layerSource: 'stochastic_d' },
+      { key: 'stoch_smooth', label: 'Smooth', min: 1, max: 5, step: 1, defaultValue: 3, layerSource: 'stochastic_k' },
+    ],
+    layers: [
+      { label: 'Price (OHLC)', source: 'ohlc', chartType: 'candlestick', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'EMA 12', source: 'ema', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 12 } },
+      { label: 'EMA 26', source: 'ema', chartType: 'line', yAxis: 'left', color: '#ef4444', visible: true, gridIndex: 0, params: { window: 26 } },
+      { label: 'Stochastic %K', source: 'stochastic_k', chartType: 'line', yAxis: 'right', color: '#06b6d4', visible: true, gridIndex: 1, params: { kPeriod: 14, dPeriod: 3, smooth: 3 } },
+      { label: 'Stochastic %D', source: 'stochastic_d', chartType: 'line', yAxis: 'right', color: '#f472b6', visible: true, gridIndex: 1, params: { kPeriod: 14, dPeriod: 3, smooth: 3 } },
+      { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+    ],
+  },
 ];
 
 export function getPresetById(id: string): OverlayPreset | undefined {

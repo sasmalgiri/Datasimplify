@@ -3,6 +3,7 @@
 import { useState, useRef, type ReactNode } from 'react';
 import {
   Target, Brain, Gauge, RefreshCw, Layers,
+  Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
   RotateCcw, Table2, Maximize2, Undo2,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ function Tip({ children, text, position = 'bottom' }: {
 // ─── Icon map ──────────────────────────────────────────────────────
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Target, Brain, Gauge, RefreshCw, Layers,
+  Activity, TrendingUp, Zap,
 };
 
 // ─── Preset tooltip text ───────────────────────────────────────────
@@ -65,6 +67,18 @@ const PRESET_META: Record<string, { short: string; tip: string }> = {
     short: 'DeFi Value',
     tip: 'DeFi Value Play: DeFi TVL growing faster than ETH price = undervalued ecosystem.\nLoads: ETH Price, SMA, DeFi TVL, Volume',
   },
+  'volatility-squeeze': {
+    short: 'Vol Squeeze',
+    tip: 'Volatility Squeeze: Bollinger Bands narrowing + low ATR = explosive breakout imminent.\nLoads: Candlestick, BB Upper/Lower, SMA 20, ATR, Volume',
+  },
+  'momentum-divergence': {
+    short: 'Momentum',
+    tip: 'Momentum Divergence: Price at highs but MACD declining = potential reversal warning.\nLoads: Candlestick, MACD Line, Signal, Histogram',
+  },
+  'trend-strength': {
+    short: 'Trend',
+    tip: 'Trend Strength: EMA 12/26 alignment + Stochastic crossover = strong trend confirmation.\nLoads: Candlestick, EMA 12/26, Stochastic %K/%D, Volume',
+  },
 };
 
 // ─── Data source tooltips ──────────────────────────────────────────
@@ -79,6 +93,14 @@ const SOURCE_TIPS: Record<string, string> = {
   btc_dominance: 'BTC market cap as % of total crypto market (current snapshot)',
   funding_rate: 'Perpetual futures funding rate across exchanges (current snapshot)',
   defi_tvl: 'Total Value Locked across all DeFi protocols (DeFiLlama)',
+  macd: 'MACD Line — difference between fast and slow EMA. Crosses above signal = bullish',
+  macd_signal: 'MACD Signal Line — EMA of the MACD line. Crossovers indicate momentum shifts',
+  macd_histogram: 'MACD Histogram — visual gap between MACD and signal. Growing bars = strengthening trend',
+  bollinger_upper: 'Bollinger Upper Band — SMA + 2× standard deviation. Price touching = potentially overbought',
+  bollinger_lower: 'Bollinger Lower Band — SMA − 2× standard deviation. Price touching = potentially oversold',
+  stochastic_k: 'Stochastic %K — momentum oscillator (0-100). <20 oversold, >80 overbought',
+  stochastic_d: 'Stochastic %D — smoothed %K signal line. %K crossing above %D = bullish signal',
+  atr: 'Average True Range — measures volatility in price terms. Low ATR = quiet market, high ATR = volatile',
 };
 
 // ─── Parameter tooltips ────────────────────────────────────────────
@@ -88,6 +110,15 @@ const PARAM_TIPS: Record<string, string> = {
   sma_long: 'Long-term moving average window — averages the last N prices',
   sma_window: 'Moving average window — averages the last N closing prices to smooth trends',
   rsi_period: 'RSI period — measures momentum; <30 = oversold, >70 = overbought',
+  macd_fast: 'MACD fast EMA period — shorter period reacts faster to price changes',
+  macd_slow: 'MACD slow EMA period — longer period smooths out noise',
+  macd_signal_period: 'MACD signal line period — EMA of the MACD for crossover signals',
+  bb_period: 'Bollinger Band period — number of bars for the moving average center line',
+  bb_mult: 'Bollinger Band multiplier — standard deviations from center (2 = ~95% of price action)',
+  stoch_k: 'Stochastic %K lookback — higher = smoother, lower = more responsive',
+  stoch_d: 'Stochastic %D smoothing — signal line averaging period',
+  stoch_smooth: 'Stochastic smoothing — applied to raw %K before %D calculation',
+  atr_period: 'ATR period — number of bars to average true range over',
 };
 
 // ─── Time range options ────────────────────────────────────────────
@@ -353,6 +384,7 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
               <Tip text="Reset all parameters to defaults">
                 <button
                   type="button"
+                  title="Reset Parameters"
                   onClick={() => { resetParameters(); recalculateLayers(); }}
                   className="text-gray-600 hover:text-gray-400 transition p-0.5"
                 >

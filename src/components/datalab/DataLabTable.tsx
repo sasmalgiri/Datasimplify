@@ -51,7 +51,8 @@ export function DataLabTable() {
 
   const formatValue = (v: number | null, source: string): string => {
     if (v == null) return '—';
-    if (source === 'rsi' || source === 'fear_greed' || source === 'btc_dominance') return v.toFixed(1);
+    if (source === 'rsi' || source === 'fear_greed' || source === 'btc_dominance'
+        || source === 'stochastic_k' || source === 'stochastic_d') return v.toFixed(1);
     if (source === 'funding_rate') return v.toFixed(4);
     if (v >= 1e6) return `${(v / 1e6).toFixed(2)}M`;
     if (v >= 1e3) return v.toFixed(0);

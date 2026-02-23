@@ -19,6 +19,14 @@ export type DataSource =
   | 'sma'
   | 'ema'
   | 'rsi'
+  | 'macd'
+  | 'macd_signal'
+  | 'macd_histogram'
+  | 'bollinger_upper'
+  | 'bollinger_lower'
+  | 'stochastic_k'
+  | 'stochastic_d'
+  | 'atr'
   | 'normalized'
   // User-edited / ratio
   | 'ratio'
@@ -82,6 +90,14 @@ export const DATA_SOURCE_OPTIONS: {
   { source: 'sma', label: 'SMA (Moving Average)', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#f59e0b', endpoints: ['ohlc'] },
   { source: 'ema', label: 'EMA (Exponential MA)', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#fb923c', endpoints: ['ohlc'] },
   { source: 'rsi', label: 'RSI', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#a78bfa', endpoints: ['ohlc'] },
+  { source: 'macd', label: 'MACD Line', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#ec4899', endpoints: ['ohlc'] },
+  { source: 'macd_signal', label: 'MACD Signal', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f97316', endpoints: ['ohlc'] },
+  { source: 'macd_histogram', label: 'MACD Histogram', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#6366f1', endpoints: ['ohlc'] },
+  { source: 'bollinger_upper', label: 'Bollinger Upper', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#f59e0b', endpoints: ['ohlc'] },
+  { source: 'bollinger_lower', label: 'Bollinger Lower', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#f59e0b', endpoints: ['ohlc'] },
+  { source: 'stochastic_k', label: 'Stochastic %K', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#06b6d4', endpoints: ['ohlc'] },
+  { source: 'stochastic_d', label: 'Stochastic %D', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f472b6', endpoints: ['ohlc'] },
+  { source: 'atr', label: 'ATR (Avg True Range)', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#a3e635', endpoints: ['ohlc'] },
   { source: 'fear_greed', label: 'Fear & Greed Index', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#f472b6', endpoints: ['fear_greed'] },
   { source: 'btc_dominance', label: 'BTC Dominance % (Current)', chartType: 'line', yAxis: 'right', gridIndex: 0, color: '#fbbf24', endpoints: ['global'] },
   { source: 'funding_rate', label: 'Funding Rate (Current)', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#2dd4bf', endpoints: ['derivatives'] },

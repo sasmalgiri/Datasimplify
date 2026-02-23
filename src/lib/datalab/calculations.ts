@@ -99,6 +99,168 @@ export function computeRatio(a: (number | null)[], b: (number | null)[]): (numbe
   return out;
 }
 
+/** MACD (Moving Average Convergence Divergence) */
+export function computeMACD(
+  values: number[],
+  fast: number = 12,
+  slow: number = 26,
+  signalPeriod: number = 9,
+): { macd: (number | null)[]; signal: (number | null)[]; histogram: (number | null)[] } {
+  const len = values.length;
+  const macd: (number | null)[] = new Array(len).fill(null);
+  const signal: (number | null)[] = new Array(len).fill(null);
+  const histogram: (number | null)[] = new Array(len).fill(null);
+
+  if (len < slow) return { macd, signal, histogram };
+
+  const emaFast = computeEMA(values, fast);
+  const emaSlow = computeEMA(values, slow);
+
+  // MACD line = EMA(fast) - EMA(slow)
+  const macdValues: number[] = [];
+  for (let i = 0; i < len; i++) {
+    if (emaFast[i] != null && emaSlow[i] != null) {
+      macd[i] = emaFast[i]! - emaSlow[i]!;
+      macdValues.push(macd[i]!);
+    }
+  }
+
+  // Signal line = EMA(signalPeriod) of MACD values
+  if (macdValues.length >= signalPeriod) {
+    const signalEma = computeEMA(macdValues, signalPeriod);
+    let si = 0;
+    for (let i = 0; i < len; i++) {
+      if (macd[i] != null) {
+        if (signalEma[si] != null) {
+          signal[i] = signalEma[si]!;
+          histogram[i] = macd[i]! - signalEma[si]!;
+        }
+        si++;
+      }
+    }
+  }
+
+  return { macd, signal, histogram };
+}
+
+/** Bollinger Bands */
+export function computeBollingerBands(
+  values: number[],
+  period: number = 20,
+  multiplier: number = 2,
+): { upper: (number | null)[]; lower: (number | null)[] } {
+  const len = values.length;
+  const upper: (number | null)[] = new Array(len).fill(null);
+  const lower: (number | null)[] = new Array(len).fill(null);
+
+  if (period <= 0 || len < period) return { upper, lower };
+
+  const sma = computeSMA(values, period);
+
+  for (let i = period - 1; i < len; i++) {
+    // Rolling standard deviation
+    let sumSq = 0;
+    const mean = sma[i]!;
+    for (let j = i - period + 1; j <= i; j++) {
+      const diff = values[j] - mean;
+      sumSq += diff * diff;
+    }
+    const stdDev = Math.sqrt(sumSq / period);
+    upper[i] = mean + multiplier * stdDev;
+    lower[i] = mean - multiplier * stdDev;
+  }
+
+  return { upper, lower };
+}
+
+/** Stochastic Oscillator (Slow) */
+export function computeStochastic(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  kPeriod: number = 14,
+  dPeriod: number = 3,
+  smooth: number = 3,
+): { k: (number | null)[]; d: (number | null)[] } {
+  const len = closes.length;
+  const k: (number | null)[] = new Array(len).fill(null);
+  const d: (number | null)[] = new Array(len).fill(null);
+
+  if (len < kPeriod || highs.length < len || lows.length < len) return { k, d };
+
+  // Raw %K
+  const rawK: number[] = [];
+  for (let i = kPeriod - 1; i < len; i++) {
+    let highestHigh = -Infinity;
+    let lowestLow = Infinity;
+    for (let j = i - kPeriod + 1; j <= i; j++) {
+      if (highs[j] > highestHigh) highestHigh = highs[j];
+      if (lows[j] < lowestLow) lowestLow = lows[j];
+    }
+    const range = highestHigh - lowestLow;
+    rawK.push(range === 0 ? 50 : ((closes[i] - lowestLow) / range) * 100);
+  }
+
+  // Slow %K = SMA(smooth) of Raw %K
+  const slowK = computeSMA(rawK, smooth);
+
+  // %D = SMA(dPeriod) of slow %K
+  const nonNullSlowK = slowK.filter((v) => v != null) as number[];
+  const dLine = computeSMA(nonNullSlowK, dPeriod);
+
+  // Map back to original indices
+  const startK = kPeriod - 1;
+  let ski = 0;
+  let di = 0;
+  for (let i = 0; i < slowK.length; i++) {
+    if (slowK[i] != null) {
+      k[startK + i] = slowK[i];
+      if (dLine[di] != null) {
+        d[startK + i] = dLine[di];
+      }
+      di++;
+    }
+  }
+
+  return { k, d };
+}
+
+/** Average True Range (Wilder's smoothing) */
+export function computeATR(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  period: number = 14,
+): (number | null)[] {
+  const len = closes.length;
+  const out: (number | null)[] = new Array(len).fill(null);
+
+  if (len < period + 1 || highs.length < len || lows.length < len) return out;
+
+  // True Range for each bar (starting from index 1)
+  const tr: number[] = [];
+  for (let i = 1; i < len; i++) {
+    const hl = highs[i] - lows[i];
+    const hc = Math.abs(highs[i] - closes[i - 1]);
+    const lc = Math.abs(lows[i] - closes[i - 1]);
+    tr.push(Math.max(hl, hc, lc));
+  }
+
+  // Initial ATR = simple average of first `period` TRs
+  let sum = 0;
+  for (let i = 0; i < period; i++) sum += tr[i];
+  let atr = sum / period;
+  out[period] = atr; // TR starts at index 1, so ATR at period (0-based)
+
+  // Wilder's smoothing
+  for (let i = period; i < tr.length; i++) {
+    atr = (atr * (period - 1) + tr[i]) / period;
+    out[i + 1] = atr; // offset by 1 because TR starts at index 1
+  }
+
+  return out;
+}
+
 /** Apply user edits on top of raw data (sparse override) */
 export function applyEdits(
   data: (number | null)[],

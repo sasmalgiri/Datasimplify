@@ -4,7 +4,10 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OverlayLayer, EditHistoryEntry, DataSource } from './types';
 import { getPresetById } from './presets';
-import { computeSMA, computeEMA, computeRSI } from './calculations';
+import {
+  computeSMA, computeEMA, computeRSI,
+  computeMACD, computeBollingerBands, computeStochastic, computeATR,
+} from './calculations';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 let layerIdCounter = 0;
@@ -236,8 +239,13 @@ export const useDataLabStore = create<DataLabStore>()(
           const sources = new Set(layers.map((l) => l.source));
 
           // Price/OHLC/indicators always need OHLC data
-          if (sources.has('price') || sources.has('ohlc') || sources.has('sma') ||
-              sources.has('ema') || sources.has('rsi')) {
+          const ohlcSources: DataSource[] = [
+            'price', 'ohlc', 'sma', 'ema', 'rsi',
+            'macd', 'macd_signal', 'macd_histogram',
+            'bollinger_upper', 'bollinger_lower',
+            'stochastic_k', 'stochastic_d', 'atr',
+          ];
+          if (ohlcSources.some((s) => sources.has(s))) {
             endpointsSet.add('ohlc');
           }
           // Real volume needs market_chart (coin_history endpoint)
@@ -309,9 +317,14 @@ export const useDataLabStore = create<DataLabStore>()(
           const closes = ohlcData.map((d: number[]) => d[4]);
           const opens = ohlcData.map((d: number[]) => d[1]);
 
+          const highs = ohlcData.map((d: number[]) => d[2]);
+          const lows = ohlcData.map((d: number[]) => d[3]);
+
           const raw: Record<string, (number | null)[]> = {
             price: closes,
             open: opens,
+            high: highs,
+            low: lows,
           };
 
           // ── REAL VOLUME from market_chart (coin_history endpoint) ──
@@ -415,6 +428,44 @@ export const useDataLabStore = create<DataLabStore>()(
             case 'rsi': {
               const period = layer.params?.period ?? parameters.rsi_period ?? 14;
               data = computeRSI(closes, period);
+              break;
+            }
+            case 'macd':
+            case 'macd_signal':
+            case 'macd_histogram': {
+              const fast = layer.params?.fast ?? parameters.macd_fast ?? 12;
+              const slow = layer.params?.slow ?? parameters.macd_slow ?? 26;
+              const sig = layer.params?.signal ?? parameters.macd_signal_period ?? 9;
+              const result = computeMACD(closes, fast, slow, sig);
+              data = layer.source === 'macd' ? result.macd
+                : layer.source === 'macd_signal' ? result.signal
+                : result.histogram;
+              break;
+            }
+            case 'bollinger_upper':
+            case 'bollinger_lower': {
+              const bbPeriod = layer.params?.window ?? parameters.bb_period ?? 20;
+              const bbMult = layer.params?.multiplier ?? parameters.bb_mult ?? 2;
+              const result = computeBollingerBands(closes, bbPeriod, bbMult);
+              data = layer.source === 'bollinger_upper' ? result.upper : result.lower;
+              break;
+            }
+            case 'stochastic_k':
+            case 'stochastic_d': {
+              const sHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const sLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const kP = layer.params?.kPeriod ?? parameters.stoch_k ?? 14;
+              const dP = layer.params?.dPeriod ?? parameters.stoch_d ?? 3;
+              const sm = layer.params?.smooth ?? parameters.stoch_smooth ?? 3;
+              const stochResult = computeStochastic(sHighs, sLows, closes, kP, dP, sm);
+              data = layer.source === 'stochastic_k' ? stochResult.k : stochResult.d;
+              break;
+            }
+            case 'atr': {
+              const aHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const aLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const atrPeriod = layer.params?.period ?? parameters.atr_period ?? 14;
+              data = computeATR(aHighs, aLows, closes, atrPeriod);
               break;
             }
             case 'fear_greed':
