@@ -11,7 +11,7 @@ import { DataLabToolbar } from '@/components/datalab/DataLabToolbar';
 import { DataLabTable } from '@/components/datalab/DataLabTable';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
-import { FlaskConical, Lock, Camera } from 'lucide-react';
+import { FlaskConical, Lock } from 'lucide-react';
 
 export default function DataLabPage() {
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
@@ -124,38 +124,12 @@ export default function DataLabPage() {
       <FreeNavbar />
       <Breadcrumb />
 
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-white/[0.06]">
-        <div className="max-w-[1800px] mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FlaskConical className="w-5 h-5 text-emerald-400" />
-            <div>
-              <h1 className="text-sm font-bold text-white">DataLab</h1>
-              <p className="text-[10px] text-gray-500">
-                Interactive chart overlays &middot; Edit data &middot; Tweak parameters &middot; Research experiments
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleScreenshot}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] transition"
-          >
-            <Camera className="w-3.5 h-3.5" />
-            Screenshot
-          </button>
-        </div>
-      </div>
+      {/* Compact horizontal toolbar (replaces sidebar + header) */}
+      <DataLabToolbar onScreenshot={handleScreenshot} />
 
-      {/* Main Layout */}
+      {/* Chart + optional Table (full width) */}
       <div className="flex-1 flex min-h-0 max-w-[1800px] mx-auto w-full" ref={chartRef}>
-        {/* Left: Toolbar */}
-        <DataLabToolbar />
-
-        {/* Center: Chart Canvas */}
         <DataLabCanvas />
-
-        {/* Right: Data Table (collapsible) */}
         {showTable && <DataLabTable />}
       </div>
     </div>

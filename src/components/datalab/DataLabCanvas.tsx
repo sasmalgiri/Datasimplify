@@ -12,7 +12,7 @@ import { CanvasRenderer } from 'echarts/renderers';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { buildChartOption } from '@/lib/datalab/chartBuilder';
-import { Loader2 } from 'lucide-react';
+import { Loader2, FlaskConical } from 'lucide-react';
 
 echarts.use([
   LineChart, BarChart, CandlestickChart, ScatterChart,
@@ -64,9 +64,14 @@ export function DataLabCanvas() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md">
-          <p className="text-gray-300 text-lg font-medium mb-2">Select a preset to begin</p>
-          <p className="text-gray-500 text-sm">
-            Choose an overlay preset from the toolbar, or add individual layers to build your own analysis.
+          <FlaskConical className="w-10 h-10 text-emerald-400/30 mx-auto mb-4" />
+          <p className="text-gray-300 text-lg font-medium mb-2">Choose a preset to get started</p>
+          <p className="text-gray-500 text-sm mb-1">
+            Click one of the preset buttons above to load a pre-configured analysis,
+            or use the <span className="text-emerald-400">+ Add</span> button to build your own.
+          </p>
+          <p className="text-gray-600 text-xs">
+            Hover over any element for an explanation of what it does.
           </p>
         </div>
       </div>

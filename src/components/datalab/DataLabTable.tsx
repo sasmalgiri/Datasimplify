@@ -61,14 +61,14 @@ export function DataLabTable() {
 
   if (timestamps.length === 0) {
     return (
-      <div className="w-96 border-l border-white/[0.06] bg-white/[0.02] flex items-center justify-center">
+      <div className="w-80 border-l border-white/[0.06] bg-white/[0.02] flex items-center justify-center">
         <p className="text-gray-500 text-xs">Load data to see the table</p>
       </div>
     );
   }
 
   return (
-    <div className="w-96 flex-shrink-0 border-l border-white/[0.06] bg-white/[0.02] flex flex-col">
+    <div className="w-80 flex-shrink-0 border-l border-white/[0.06] bg-white/[0.02] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
@@ -108,6 +108,11 @@ export function DataLabTable() {
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
+      </div>
+
+      {/* Help banner */}
+      <div className="px-3 py-1 border-b border-white/[0.04] text-[9px] text-gray-600">
+        Click any cell to edit &middot; Enter to confirm &middot; Esc to cancel
       </div>
 
       {/* Table */}
