@@ -182,7 +182,7 @@ export const TEMPLATE_LANDING_PAGES: TemplateLandingPage[] = [
     title: 'Crypto Technical Analysis Excel Template - Indicators Dashboard',
     h1: 'Technical Analysis Excel Template',
     description:
-      'Analyze cryptocurrencies with technical indicators in Excel. RSI, MACD, Moving Averages, and more in a refreshable spreadsheet template.',
+      'Analyze cryptocurrencies with technical indicators in Excel. RSI, MACD, Moving Averages, and more in a ready-to-use spreadsheet template.',
     keywords: [
       'crypto technical analysis excel',
       'bitcoin indicators spreadsheet',

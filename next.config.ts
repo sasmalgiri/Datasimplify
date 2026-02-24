@@ -75,6 +75,12 @@ const nextConfig: NextConfig = {
         destination: '/coming-soon?feature=nft',
         permanent: false,
       },
+      // Dead wizard page - backend API removed
+      {
+        source: '/wizard',
+        destination: '/tools',
+        permanent: true,
+      },
     ];
   },
 };

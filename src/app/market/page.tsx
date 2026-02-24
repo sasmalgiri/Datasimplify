@@ -638,7 +638,7 @@ export default function MarketPage() {
             CryptoReportKit does not redistribute or resell market data.
           </p>
           <p className="mt-2">
-            Want refreshable Excel reports? <Link href="/login" className="text-emerald-400 hover:underline">Sign in</Link> to access the download center.
+            Want Excel templates with this data? <Link href="/login" className="text-emerald-400 hover:underline">Sign in</Link> to access the download center.
           </p>
         </div>
       </div>
