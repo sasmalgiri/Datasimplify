@@ -10,9 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/live-dashboards`, lastModified: now, changeFrequency: 'daily', priority: 0.95 },
     { url: `${BASE_URL}/pricing`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${BASE_URL}/compare`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
-    { url: `${BASE_URL}/templates`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
-    { url: `${BASE_URL}/download`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
-    { url: `${BASE_URL}/downloads`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${BASE_URL}/datalab`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
   ];
 
   const featurePages: MetadataRoute.Sitemap = [

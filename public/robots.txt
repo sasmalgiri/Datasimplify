@@ -1,6 +1,6 @@
 # CryptoReportKit Robots.txt
 # https://cryptoreportkit.com
-# Refreshable Crypto Excel Templates
+# 83+ Live Crypto Dashboards & Analytics
 
 User-agent: *
 Allow: /
@@ -30,28 +30,35 @@ Disallow: /addin-auth/
 # Disallow utility/app pages
 Disallow: /builder/
 Disallow: /monitor/
-Disallow: /status/
 
 # Allow main product pages (explicit for clarity)
-Allow: /excel-templates/
-Allow: /templates
+Allow: /live-dashboards
 Allow: /pricing
 Allow: /market
 Allow: /compare
+Allow: /datalab
 Allow: /screener
 Allow: /sentiment
 Allow: /technical
 Allow: /correlation
+Allow: /heatmap
 Allow: /etf
 Allow: /portfolio
 Allow: /charts
 Allow: /coin/
+Allow: /trending
+Allow: /gainers-losers
+Allow: /global-market
+Allow: /categories
 Allow: /glossary
 Allow: /learn
 Allow: /faq
 Allow: /contact
 Allow: /roadmap
 Allow: /tools
+Allow: /about
+Allow: /byok
+Allow: /status
 
 # Crawl delay for rate limiting
 Crawl-delay: 1

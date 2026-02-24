@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     title: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
     description: '83+ interactive crypto dashboards, real-time market data, coin comparison, and more. Free to start with BYOK.',
     images: [`${siteUrl}/api/og`],
-    creator: '@CryptoReportKit',
+    creator: '@sasmalgiri',
   },
 
   // Additional SEO
