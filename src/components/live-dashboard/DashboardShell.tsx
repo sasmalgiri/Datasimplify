@@ -37,7 +37,7 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellProps) {
-  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme } = useLiveDashboardStore(
+  const { apiKey, keyType, clearApiKey, fetchData, isLoading, lastFetched, error, autoRefreshInterval, setAutoRefreshInterval, siteTheme, isUsingServerKey } = useLiveDashboardStore(
     useShallow((s) => ({
       apiKey: s.apiKey,
       keyType: s.keyType,
@@ -49,6 +49,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       autoRefreshInterval: s.autoRefreshInterval,
       setAutoRefreshInterval: s.setAutoRefreshInterval,
       siteTheme: s.siteTheme,
+      isUsingServerKey: s.isUsingServerKey,
     })),
   );
   const st = getSiteThemeClasses(siteTheme);
@@ -201,13 +202,13 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    if (autoRefreshInterval > 0 && apiKey) {
+    if (autoRefreshInterval > 0) {
       intervalRef.current = setInterval(handleRefresh, autoRefreshInterval * 1000);
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoRefreshInterval, apiKey, handleRefresh]);
+  }, [autoRefreshInterval, handleRefresh]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -218,7 +219,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
 
       switch (e.key.toLowerCase()) {
         case 'r':
-          if (!e.metaKey && !e.ctrlKey && apiKey && !isLoading) handleRefresh();
+          if (!e.metaKey && !e.ctrlKey && !isLoading) handleRefresh();
           break;
         case 'c':
           if (!e.metaKey && !e.ctrlKey) setCustomizeOpen((v) => !v);
@@ -246,7 +247,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [apiKey, isLoading, handleRefresh, toggleExperiment, closeExperiment]);
+  }, [isLoading, handleRefresh, toggleExperiment, closeExperiment]);
 
   const timeAgo = lastFetched
     ? `${Math.round((Date.now() - lastFetched) / 1000)}s ago`
@@ -295,16 +296,17 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             ) : (
               <button
                 onClick={onOpenKeyModal}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${st.buttonPrimary} text-xs font-medium transition`}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-400/10 border border-blue-400/20 text-blue-300 text-[10px] font-medium hover:bg-blue-400/20 transition"
+                title="Add your own CoinGecko key for faster refreshes"
               >
                 <Key className="w-3 h-3" />
-                Connect API Key
+                Shared Key
               </button>
             )
           )}
 
           {/* API Usage — hidden when customize open */}
-          {!customizeOpen && apiKey && <ApiUsagePill definition={definition} />}
+          {!customizeOpen && <ApiUsagePill definition={definition} />}
 
           {/* Credits pill — hidden when customize open */}
           {!customizeOpen && <CreditBalancePill />}
@@ -398,7 +400,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           {/* Refresh button */}
           <button
             onClick={handleRefresh}
-            disabled={isLoading || !apiKey}
+            disabled={isLoading}
             className={`p-2 rounded-xl ${st.buttonSecondary} transition disabled:opacity-30 disabled:cursor-not-allowed`}
             title="Refresh data (R)"
           >
@@ -448,7 +450,10 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
             <a href="https://defillama.com" target="_blank" rel="noopener noreferrer" className="hover:underline">DeFi Llama</a>
             {' · Powered by '}
             <a href="https://etherscan.io" target="_blank" rel="noopener noreferrer" className="hover:underline">Etherscan.io APIs</a>
-            . All data via your personal API keys. Exports for personal, non-commercial use.
+            {apiKey
+              ? '. All data via your personal API keys.'
+              : '. Shared API key — add your own for higher limits.'}
+            {' '}Exports for personal, non-commercial use.
           </span>
         </div>
         <div className="flex items-center gap-3">

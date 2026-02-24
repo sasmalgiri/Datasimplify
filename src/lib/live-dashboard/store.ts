@@ -337,6 +337,8 @@ interface LiveDashboardStore {
   enabledWidgets: Record<string, string[]>;
   setEnabledWidgets: (slug: string, widgetIds: string[]) => void;
 
+  isUsingServerKey: boolean;
+
   apiUsage: ApiUsageStats;
   incrementApiCalls: (count: number) => void;
   resetApiUsage: () => void;
@@ -390,6 +392,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       isLoading: false,
       error: null,
       lastFetched: null,
+      isUsingServerKey: false,
 
       customization: DEFAULT_CUSTOMIZATION,
       setCustomization: (updates) => set((state) => ({
@@ -421,13 +424,6 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
 
       fetchData: async (endpoints, params) => {
         const { apiKey, alchemyKey, walletAddress, alchemyChain } = get();
-        const keyFree = isKeyFreeEndpoints(endpoints);
-
-        // Only require CoinGecko key if non-key-free endpoints are present
-        if (!keyFree && !apiKey) {
-          set({ error: 'No API key provided' });
-          return;
-        }
 
         const callCount = calculateApiCallsForDefinition(endpoints, params);
         if (callCount > 0) get().incrementApiCalls(callCount);
@@ -485,6 +481,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
             },
             isLoading: false,
             lastFetched: Date.now(),
+            isUsingServerKey: result._usingSharedKey === true,
           });
         } catch (err: any) {
           set({ isLoading: false, error: err.message || 'Failed to fetch data' });
@@ -496,7 +493,7 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
     {
       name: 'crk-live-dashboard',
       storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? sessionStorage : {
+        typeof window !== 'undefined' ? localStorage : {
           getItem: () => null,
           setItem: () => {},
           removeItem: () => {},

@@ -27,10 +27,9 @@ export default function LiveDashboardPage() {
 
   // Check if this dashboard can run without a CoinGecko key (DeFi Llama only)
   const isKeyFree = definition ? isKeyFreeEndpoints(definition.requiredEndpoints) : false;
-  const canLoad = isKeyFree || !!apiKey;
 
   const loadData = useCallback(() => {
-    if (!definition || !canLoad) return;
+    if (!definition) return;
     const c = useLiveDashboardStore.getState().customization;
     const params: Record<string, any> = {};
 
@@ -68,22 +67,14 @@ export default function LiveDashboardPage() {
     }
     fetchData(definition.requiredEndpoints, params);
     setInitialLoaded(true);
-  }, [definition, canLoad, fetchData]);
+  }, [definition, fetchData]);
 
-  // Auto-load for key-free dashboards immediately, or when API key is available
+  // Auto-load on mount
   useEffect(() => {
-    if (canLoad && !initialLoaded) {
+    if (!initialLoaded) {
       loadData();
     }
-  }, [canLoad, initialLoaded, loadData]);
-
-  // Auto-show key modal for dashboards that need a CoinGecko key
-  useEffect(() => {
-    if (!isKeyFree && !apiKey && !showKeyModal) {
-      const timer = setTimeout(() => setShowKeyModal(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isKeyFree, apiKey, showKeyModal]);
+  }, [initialLoaded, loadData]);
 
   // Dashboard not found — client-friendly 404
   if (!definition) {
@@ -121,31 +112,6 @@ export default function LiveDashboardPage() {
           All Dashboards
         </Link>
 
-        {/* No API key state — only for dashboards that need CoinGecko key */}
-        {!canLoad && (
-          <div className="text-center py-24">
-            <div className="text-6xl mb-6">{definition.icon}</div>
-            <h2 className={`text-3xl font-bold ${st.textPrimary} mb-3 tracking-tight`}>{definition.name}</h2>
-            <p className={`${st.textDim} mb-8 max-w-md mx-auto leading-relaxed`}>{definition.description}</p>
-
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(true)}
-                className={`${st.cardClasses} ${st.cardGlow} bg-emerald-500/10 border-emerald-400/20 hover:border-emerald-400/40 text-emerald-400 font-medium px-8 py-4 transition flex items-center gap-2 mx-auto text-lg`}
-              >
-                <Key className="w-5 h-5" />
-                Connect API Key to Start
-              </button>
-            </div>
-
-            <div className={`mt-6 flex items-center justify-center gap-1.5 text-[11px] ${st.textFaint}`}>
-              <Shield className="w-3 h-3" />
-              Your key stays in your browser. Data is for personal use only.
-            </div>
-          </div>
-        )}
-
         {/* Key-free badge for DeFi Llama dashboards */}
         {isKeyFree && !apiKey && (
           <div className="mb-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 text-xs">
@@ -154,13 +120,27 @@ export default function LiveDashboardPage() {
           </div>
         )}
 
-        {/* Dashboard with data */}
-        {canLoad && (
-          <DashboardShell
-            definition={definition}
-            onOpenKeyModal={() => setShowKeyModal(true)}
-          />
+        {/* Shared key notice — browsing without personal key */}
+        {!isKeyFree && !apiKey && (
+          <div className="mb-4 flex items-center justify-between px-3 py-2 rounded-lg bg-blue-400/10 border border-blue-400/20 text-blue-300 text-xs">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Browsing with shared API — add your own key for faster refreshes and higher limits.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowKeyModal(true)}
+              className="ml-3 px-3 py-1 rounded-md bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition whitespace-nowrap"
+            >
+              Add Key
+            </button>
+          </div>
         )}
+
+        <DashboardShell
+          definition={definition}
+          onOpenKeyModal={() => setShowKeyModal(true)}
+        />
       </main>
 
       <ApiKeyModal

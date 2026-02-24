@@ -238,7 +238,7 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
         <div className="mt-4 flex items-start gap-2 text-xs text-gray-500">
           <Shield className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
           <span>
-            Your keys stay in your browser session only. They are never stored on our servers.
+            Your keys stay in your browser&apos;s local storage. They are never stored on our servers.
             By connecting, you agree to{' '}
             <a href="https://www.coingecko.com/en/api_terms" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
               CoinGecko&apos;s API Terms

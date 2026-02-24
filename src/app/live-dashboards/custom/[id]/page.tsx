@@ -10,7 +10,7 @@ import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
-import { ArrowLeft, Key, Lock, Shield, Pencil } from 'lucide-react';
+import { ArrowLeft, Lock, Shield, Pencil } from 'lucide-react';
 
 // ─── Data Model ───
 interface CustomDashboardWidget {
@@ -86,7 +86,7 @@ export default function CustomDashboardPage() {
   const definition = dashboard ? toDefinition(dashboard) : null;
 
   const loadData = useCallback(() => {
-    if (!definition || !apiKey) return;
+    if (!definition) return;
     const c = useLiveDashboardStore.getState().customization;
     const fetchParams: Record<string, any> = {};
 
@@ -124,22 +124,14 @@ export default function CustomDashboardPage() {
 
     fetchData(definition.requiredEndpoints, fetchParams);
     setInitialLoaded(true);
-  }, [definition, apiKey, fetchData]);
+  }, [definition, fetchData]);
 
-  // Auto-fetch on mount if key exists
+  // Auto-fetch on mount
   useEffect(() => {
-    if (apiKey && !initialLoaded && definition) {
+    if (!initialLoaded && definition) {
       loadData();
     }
-  }, [apiKey, initialLoaded, definition, loadData]);
-
-  // Show key modal if no key
-  useEffect(() => {
-    if (!apiKey && !showKeyModal && dashboard) {
-      const timer = setTimeout(() => setShowKeyModal(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [apiKey, showKeyModal, dashboard]);
+  }, [initialLoaded, definition, loadData]);
 
   // 404 state
   if (notFound) {
@@ -216,40 +208,27 @@ export default function CustomDashboardPage() {
           </Link>
         </div>
 
-        {/* No API key state */}
+        {/* Shared key notice — browsing without personal key */}
         {!apiKey && (
-          <div className="text-center py-24">
-            <div className="text-6xl mb-6">{definition.icon}</div>
-            <h2 className={`text-3xl font-bold ${st.textPrimary} mb-3 tracking-tight`}>
-              {definition.name}
-            </h2>
-            <p className={`${st.textDim} mb-8 max-w-md mx-auto leading-relaxed`}>
-              {definition.description}
-            </p>
-            <div>
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(true)}
-                className={`${st.cardClasses} ${st.cardGlow} bg-emerald-500/10 border-emerald-400/20 hover:border-emerald-400/40 text-emerald-400 font-medium px-8 py-4 transition flex items-center gap-2 mx-auto text-lg`}
-              >
-                <Key className="w-5 h-5" />
-                Connect API Key to Start
-              </button>
+          <div className="mb-4 flex items-center justify-between px-3 py-2 rounded-lg bg-blue-400/10 border border-blue-400/20 text-blue-300 text-xs">
+            <div className="flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Browsing with shared API — add your own key for faster refreshes and higher limits.</span>
             </div>
-            <div className={`mt-6 flex items-center justify-center gap-1.5 text-[11px] ${st.textFaint}`}>
-              <Shield className="w-3 h-3" />
-              Your key stays in your browser. Data is for personal use only.
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowKeyModal(true)}
+              className="ml-3 px-3 py-1 rounded-md bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-medium transition whitespace-nowrap"
+            >
+              Add Key
+            </button>
           </div>
         )}
 
-        {/* Dashboard with data */}
-        {apiKey && (
-          <DashboardShell
-            definition={definition}
-            onOpenKeyModal={() => setShowKeyModal(true)}
-          />
-        )}
+        <DashboardShell
+          definition={definition}
+          onOpenKeyModal={() => setShowKeyModal(true)}
+        />
       </main>
 
       {/* API Key Modal */}

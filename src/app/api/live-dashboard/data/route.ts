@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildCacheKey, getCached, setCache } from './response-cache';
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const COINGECKO_PRO_API = 'https://pro-api.coingecko.com/api/v3';
@@ -30,17 +31,19 @@ const KEY_FREE_ENDPOINTS = new Set([
   'defillama_tvl_history',
 ]);
 
-// Simple in-memory rate limiter per IP
+// Tiered in-memory rate limiter per IP
+// BYOK users: 30 req/min — Server (shared) key users: 10 req/min
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(ip: string, isServerKey: boolean): boolean {
+  const limit = isServerKey ? 10 : 30;
   const now = Date.now();
   const entry = rateLimits.get(ip);
   if (!entry || now > entry.resetAt) {
     rateLimits.set(ip, { count: 1, resetAt: now + 60_000 });
     return true;
   }
-  if (entry.count >= 30) return false;
+  if (entry.count >= limit) return false;
   entry.count++;
   return true;
 }
@@ -147,12 +150,6 @@ async function fetchAlchemy(
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    return NextResponse.json(
-      { error: 'Rate limit exceeded. Please wait a moment.' },
-      { status: 429 },
-    );
-  }
 
   let body: any;
   try {
@@ -167,13 +164,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'At least one endpoint required' }, { status: 400 });
   }
 
-  // Check if CoinGecko key is needed (any non-key-free endpoint requested)
+  // Determine which key to use: user BYOK → server fallback
   const needsCoinGeckoKey = endpoints.some((ep: string) => !KEY_FREE_ENDPOINTS.has(ep) && ep !== 'fear_greed' && !ep.startsWith('alchemy_'));
-  if (needsCoinGeckoKey && (!apiKey || typeof apiKey !== 'string' || apiKey.length < 8)) {
+  const userProvidedKey = apiKey && typeof apiKey === 'string' && apiKey.length >= 8;
+  const serverKey = process.env.COINGECKO_API_KEY;
+  const usingServerKey = needsCoinGeckoKey && !userProvidedKey;
+
+  if (usingServerKey && !serverKey) {
     return NextResponse.json({ error: 'Valid CoinGecko API key required' }, { status: 400 });
   }
 
-  const keyType = apiKey ? detectKeyType(apiKey) : 'demo';
+  // Tiered rate limit: stricter for shared server key, relaxed for BYOK users
+  if (!checkRateLimit(ip, usingServerKey)) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Please wait a moment.' },
+      { status: 429 },
+    );
+  }
+
+  const effectiveKey = userProvidedKey ? apiKey : (serverKey || '');
+  const effectiveKeyType = detectKeyType(effectiveKey);
   const result: Record<string, any> = {};
 
   // Sanitize coin IDs to prevent path traversal
@@ -188,36 +198,55 @@ export async function POST(req: NextRequest) {
   for (const ep of endpoints) {
     switch (ep) {
       // ── CoinGecko endpoints ──
-      case 'markets':
-        fetchers.push(
-          fetchCoinGecko('/coins/markets', apiKey, keyType, {
-            vs_currency: params?.vsCurrency || 'usd',
-            order: params?.sortOrder || 'market_cap_desc',
-            per_page: String(params?.perPage || 100),
-            page: '1',
-            sparkline: 'true',
-            price_change_percentage: '24h,7d',
-          })
-            .then((data) => { result.markets = data; })
-            .catch((err) => { result.marketsError = err.message; }),
-        );
+      case 'markets': {
+        const marketParams = {
+          vs_currency: params?.vsCurrency || 'usd',
+          order: params?.sortOrder || 'market_cap_desc',
+          per_page: String(params?.perPage || 100),
+          page: '1',
+          sparkline: 'true',
+          price_change_percentage: '24h,7d',
+        };
+        const mKey = buildCacheKey('markets', marketParams);
+        const mCached = usingServerKey ? getCached(mKey) : null;
+        if (mCached) { result.markets = mCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/coins/markets', effectiveKey, effectiveKeyType, marketParams)
+              .then((data) => { result.markets = data; if (usingServerKey) setCache(mKey, data, 'markets'); })
+              .catch((err) => { result.marketsError = err.message; }),
+          );
+        }
         break;
+      }
 
-      case 'global':
-        fetchers.push(
-          fetchCoinGecko('/global', apiKey, keyType)
-            .then((data) => { result.global = data?.data || data; })
-            .catch((err) => { result.globalError = err.message; }),
-        );
+      case 'global': {
+        const gKey = buildCacheKey('global', {});
+        const gCached = usingServerKey ? getCached(gKey) : null;
+        if (gCached) { result.global = gCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/global', effectiveKey, effectiveKeyType)
+              .then((data) => { const d = data?.data || data; result.global = d; if (usingServerKey) setCache(gKey, d, 'global'); })
+              .catch((err) => { result.globalError = err.message; }),
+          );
+        }
         break;
+      }
 
-      case 'trending':
-        fetchers.push(
-          fetchCoinGecko('/search/trending', apiKey, keyType)
-            .then((data) => { result.trending = data?.coins || data; })
-            .catch((err) => { result.trendingError = err.message; }),
-        );
+      case 'trending': {
+        const tKey = buildCacheKey('trending', {});
+        const tCached = usingServerKey ? getCached(tKey) : null;
+        if (tCached) { result.trending = tCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/search/trending', effectiveKey, effectiveKeyType)
+              .then((data) => { const d = data?.coins || data; result.trending = d; if (usingServerKey) setCache(tKey, d, 'trending'); })
+              .catch((err) => { result.trendingError = err.message; }),
+          );
+        }
         break;
+      }
 
       case 'fear_greed': {
         const fgLimit = Math.min(Math.max(Number(params?.fgLimit) || 1, 1), 365);
@@ -230,29 +259,34 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case 'categories':
-        fetchers.push(
-          fetchCoinGecko('/coins/categories', apiKey, keyType, {
-            order: 'market_cap_desc',
-          })
-            .then((data) => { result.categories = data; })
-            .catch((err) => { result.categoriesError = err.message; }),
-        );
+      case 'categories': {
+        const catKey = buildCacheKey('categories', {});
+        const catCached = usingServerKey ? getCached(catKey) : null;
+        if (catCached) { result.categories = catCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/coins/categories', effectiveKey, effectiveKeyType, { order: 'market_cap_desc' })
+              .then((data) => { result.categories = data; if (usingServerKey) setCache(catKey, data, 'categories'); })
+              .catch((err) => { result.categoriesError = err.message; }),
+          );
+        }
         break;
+      }
 
       case 'ohlc': {
         const coinId = safeCoinId(params?.coinId);
         if (coinId) {
-          fetchers.push(
-            fetchCoinGecko(`/coins/${coinId}/ohlc`, apiKey, keyType, {
-              vs_currency: params?.vsCurrency || 'usd',
-              days: String(params?.days || 30),
-            })
-              .then((data) => {
-                result.ohlc = { ...(result.ohlc || {}), [coinId]: data };
-              })
-              .catch((err) => { result.ohlcError = err.message; }),
-          );
+          const ohlcParams = { vs_currency: params?.vsCurrency || 'usd', days: String(params?.days || 30) };
+          const oKey = buildCacheKey(`ohlc:${coinId}`, ohlcParams);
+          const oCached = usingServerKey ? getCached(oKey) : null;
+          if (oCached) { result.ohlc = { ...(result.ohlc || {}), [coinId]: oCached }; }
+          else {
+            fetchers.push(
+              fetchCoinGecko(`/coins/${coinId}/ohlc`, effectiveKey, effectiveKeyType, ohlcParams)
+                .then((data) => { result.ohlc = { ...(result.ohlc || {}), [coinId]: data }; if (usingServerKey) setCache(oKey, data, 'ohlc'); })
+                .catch((err) => { result.ohlcError = err.message; }),
+            );
+          }
         }
         break;
       }
@@ -261,45 +295,49 @@ export async function POST(req: NextRequest) {
         if (params?.coinIds && Array.isArray(params.coinIds)) {
           const validIds = params.coinIds.map(safeCoinId).filter(Boolean).slice(0, 5) as string[];
           for (const cid of validIds) {
-            fetchers.push(
-              fetchCoinGecko(`/coins/${cid}/ohlc`, apiKey, keyType, {
-                vs_currency: params?.vsCurrency || 'usd',
-                days: String(params?.days || 30),
-              })
-                .then((data) => {
-                  result.ohlc = { ...(result.ohlc || {}), [cid]: data };
-                })
-                .catch((err) => {
-                  if (!result.ohlcMultiErrors) result.ohlcMultiErrors = {};
-                  result.ohlcMultiErrors[cid] = err.message;
-                }),
-            );
+            const omParams = { vs_currency: params?.vsCurrency || 'usd', days: String(params?.days || 30) };
+            const omKey = buildCacheKey(`ohlc:${cid}`, omParams);
+            const omCached = usingServerKey ? getCached(omKey) : null;
+            if (omCached) { result.ohlc = { ...(result.ohlc || {}), [cid]: omCached }; }
+            else {
+              fetchers.push(
+                fetchCoinGecko(`/coins/${cid}/ohlc`, effectiveKey, effectiveKeyType, omParams)
+                  .then((data) => { result.ohlc = { ...(result.ohlc || {}), [cid]: data }; if (usingServerKey) setCache(omKey, data, 'ohlc'); })
+                  .catch((err) => { if (!result.ohlcMultiErrors) result.ohlcMultiErrors = {}; result.ohlcMultiErrors[cid] = err.message; }),
+              );
+            }
           }
         }
         break;
 
-      case 'exchanges':
-        fetchers.push(
-          fetchCoinGecko('/exchanges', apiKey, keyType, {
-            per_page: '20',
-            page: '1',
-          })
-            .then((data) => { result.exchanges = data; })
-            .catch((err) => { result.exchangesError = err.message; }),
-        );
+      case 'exchanges': {
+        const exKey = buildCacheKey('exchanges', {});
+        const exCached = usingServerKey ? getCached(exKey) : null;
+        if (exCached) { result.exchanges = exCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/exchanges', effectiveKey, effectiveKeyType, { per_page: '20', page: '1' })
+              .then((data) => { result.exchanges = data; if (usingServerKey) setCache(exKey, data, 'exchanges'); })
+              .catch((err) => { result.exchangesError = err.message; }),
+          );
+        }
         break;
+      }
 
       case 'coin_history': {
         const histCoinId = safeCoinId(params?.historyCoinId);
         if (histCoinId) {
-          fetchers.push(
-            fetchCoinGecko(`/coins/${histCoinId}/market_chart`, apiKey, keyType, {
-              vs_currency: params?.vsCurrency || 'usd',
-              days: String(params?.historyDays || 90),
-            })
-              .then((data) => { result.coinHistory = data; })
-              .catch((err) => { result.coinHistoryError = err.message; }),
-          );
+          const chParams = { vs_currency: params?.vsCurrency || 'usd', days: String(params?.historyDays || 90) };
+          const chKey = buildCacheKey(`coin_history:${histCoinId}`, chParams);
+          const chCached = usingServerKey ? getCached(chKey) : null;
+          if (chCached) { result.coinHistory = chCached; }
+          else {
+            fetchers.push(
+              fetchCoinGecko(`/coins/${histCoinId}/market_chart`, effectiveKey, effectiveKeyType, chParams)
+                .then((data) => { result.coinHistory = data; if (usingServerKey) setCache(chKey, data, 'coin_history'); })
+                .catch((err) => { result.coinHistoryError = err.message; }),
+            );
+          }
         }
         break;
       }
@@ -307,49 +345,63 @@ export async function POST(req: NextRequest) {
       case 'coin_detail': {
         const detailId = safeCoinId(params?.detailCoinId);
         if (detailId) {
-          fetchers.push(
-            fetchCoinGecko(`/coins/${detailId}`, apiKey, keyType, {
-              localization: 'false',
-              tickers: 'false',
-              community_data: 'true',
-              developer_data: 'true',
-              sparkline: 'false',
-            })
-              .then((data) => {
-                result.coinDetail = { ...(result.coinDetail || {}), [detailId]: data };
+          const cdKey = buildCacheKey(`coin_detail:${detailId}`, {});
+          const cdCached = usingServerKey ? getCached(cdKey) : null;
+          if (cdCached) { result.coinDetail = { ...(result.coinDetail || {}), [detailId]: cdCached }; }
+          else {
+            fetchers.push(
+              fetchCoinGecko(`/coins/${detailId}`, effectiveKey, effectiveKeyType, {
+                localization: 'false', tickers: 'false', community_data: 'true', developer_data: 'true', sparkline: 'false',
               })
-              .catch((err) => { result.coinDetailError = err.message; }),
+                .then((data) => { result.coinDetail = { ...(result.coinDetail || {}), [detailId]: data }; if (usingServerKey) setCache(cdKey, data, 'coin_detail'); })
+                .catch((err) => { result.coinDetailError = err.message; }),
+            );
+          }
+        }
+        break;
+      }
+
+      case 'defi_global': {
+        const dgKey = buildCacheKey('defi_global', {});
+        const dgCached = usingServerKey ? getCached(dgKey) : null;
+        if (dgCached) { result.defiGlobal = dgCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/global/decentralized_finance_defi', effectiveKey, effectiveKeyType)
+              .then((data) => { const d = data?.data || data; result.defiGlobal = d; if (usingServerKey) setCache(dgKey, d, 'defi_global'); })
+              .catch((err) => { result.defiGlobalError = err.message; }),
           );
         }
         break;
       }
 
-      case 'defi_global':
-        fetchers.push(
-          fetchCoinGecko('/global/decentralized_finance_defi', apiKey, keyType)
-            .then((data) => { result.defiGlobal = data?.data || data; })
-            .catch((err) => { result.defiGlobalError = err.message; }),
-        );
+      case 'derivatives': {
+        const drKey = buildCacheKey('derivatives', {});
+        const drCached = usingServerKey ? getCached(drKey) : null;
+        if (drCached) { result.derivatives = drCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/derivatives', effectiveKey, effectiveKeyType)
+              .then((data) => { const d = Array.isArray(data) ? data.slice(0, 50) : data; result.derivatives = d; if (usingServerKey) setCache(drKey, d, 'derivatives'); })
+              .catch((err) => { result.derivativesError = err.message; }),
+          );
+        }
         break;
+      }
 
-      case 'derivatives':
-        fetchers.push(
-          fetchCoinGecko('/derivatives', apiKey, keyType)
-            .then((data) => { result.derivatives = Array.isArray(data) ? data.slice(0, 50) : data; })
-            .catch((err) => { result.derivativesError = err.message; }),
-        );
+      case 'derivatives_exchanges': {
+        const deKey = buildCacheKey('derivatives_exchanges', {});
+        const deCached = usingServerKey ? getCached(deKey) : null;
+        if (deCached) { result.derivativesExchanges = deCached; }
+        else {
+          fetchers.push(
+            fetchCoinGecko('/derivatives/exchanges', effectiveKey, effectiveKeyType, { order: 'open_interest_btc_desc', per_page: '20' })
+              .then((data) => { result.derivativesExchanges = data; if (usingServerKey) setCache(deKey, data, 'derivatives_exchanges'); })
+              .catch((err) => { result.derivativesExchangesError = err.message; }),
+          );
+        }
         break;
-
-      case 'derivatives_exchanges':
-        fetchers.push(
-          fetchCoinGecko('/derivatives/exchanges', apiKey, keyType, {
-            order: 'open_interest_btc_desc',
-            per_page: '20',
-          })
-            .then((data) => { result.derivativesExchanges = data; })
-            .catch((err) => { result.derivativesExchangesError = err.message; }),
-        );
-        break;
+      }
 
       // ── DeFi Llama endpoints (no API key needed) ──
       case 'defillama_protocols':
@@ -657,6 +709,10 @@ export async function POST(req: NextRequest) {
 
   if (errors.length > 0) {
     result._partialErrors = errors;
+  }
+
+  if (usingServerKey) {
+    result._usingSharedKey = true;
   }
 
   return NextResponse.json(result);
