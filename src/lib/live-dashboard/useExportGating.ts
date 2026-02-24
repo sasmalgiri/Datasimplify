@@ -8,6 +8,7 @@ import {
   type ExportFormat,
   type SubscriptionTier,
 } from '@/lib/entitlements';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 const ANON_STORAGE_KEY = 'crk_export_count';
 const ANON_STORAGE_MONTH_KEY = 'crk_export_month';
@@ -47,8 +48,8 @@ export function useExportGating(): {
     }
   }, [user]);
 
-  const tier: SubscriptionTier = isAdmin ? 'pro' : ((profile?.subscription_tier as SubscriptionTier) || 'free');
-  const downloadsUsed = user ? (profile?.downloads_this_month || 0) : anonCount;
+  const tier: SubscriptionTier = IS_BETA_MODE ? 'pro' : (isAdmin ? 'pro' : ((profile?.subscription_tier as SubscriptionTier) || 'free'));
+  const downloadsUsed = IS_BETA_MODE ? 0 : (user ? (profile?.downloads_this_month || 0) : anonCount);
   const entitlement = getExportEntitlement(tier, downloadsUsed);
 
   const trackExport = useCallback(

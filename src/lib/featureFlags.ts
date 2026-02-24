@@ -8,9 +8,13 @@ function parseBool(value: string | undefined, defaultValue: boolean): boolean {
   return defaultValue;
 }
 
-export const APP_MODE: AppMode = ((process.env.NEXT_PUBLIC_APP_MODE || 'full').trim().toLowerCase() as AppMode) || 'full';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
-const isFreeMode = APP_MODE === 'free';
+export const APP_MODE: AppMode = IS_BETA_MODE
+  ? 'full'
+  : (((process.env.NEXT_PUBLIC_APP_MODE || 'full').trim().toLowerCase() as AppMode) || 'full');
+
+const isFreeMode = IS_BETA_MODE ? false : APP_MODE === 'free';
 
 const defaultAdvancedEnabled = APP_MODE !== 'free';
 

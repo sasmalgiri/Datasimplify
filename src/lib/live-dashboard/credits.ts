@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { useEffect } from 'react';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 // ---------------------------------------------------------------------------
 // Credit costs — Dune-style pay-per-action, no subscription required
@@ -103,6 +104,7 @@ export const useCreditStore = create<CreditStore>()(
       },
 
       useCredits: (action, description) => {
+        if (IS_BETA_MODE) return true;
         const cost = CREDIT_COSTS[action];
         const { balance } = get();
 
@@ -130,6 +132,7 @@ export const useCreditStore = create<CreditStore>()(
       },
 
       canAfford: (action) => {
+        if (IS_BETA_MODE) return true;
         const cost = CREDIT_COSTS[action];
         if (cost === 0) return true;
         return get().balance >= cost;

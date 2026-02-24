@@ -12,6 +12,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 export type SubscriptionTier = 'free' | 'pro';
 export type ExportFormat = 'pdf' | 'png' | 'excel' | 'csv';
@@ -132,6 +133,30 @@ export async function getUserEntitlement(
   supabase: SupabaseClient,
   userId: string
 ): Promise<UserEntitlement | null> {
+  // Beta mode: full pro access for everyone, skip DB
+  if (IS_BETA_MODE) {
+    const limits = PLAN_LIMITS.pro;
+    return {
+      userId,
+      tier: 'pro',
+      status: 'active',
+      downloadsLimit: 99999,
+      downloadsUsed: 0,
+      scheduledExportsLimit: limits.scheduledExports,
+      maxCoinsPerRequest: limits.maxCoinsPerRequest,
+      maxOhlcvDays: limits.maxOhlcvDays,
+      dailyApiCalls: 99999,
+      dailyApiCallsUsed: 0,
+      dailyApiCallsRemaining: 99999,
+      allowedFunctions: 'all',
+      canAccessProFeatures: true,
+      canDownload: true,
+      canScheduleExports: true,
+      canUsePacks: true,
+      canUseFormulas: true,
+    };
+  }
+
   // Query only columns guaranteed to exist; subscription_status may not exist yet
   let profile: Record<string, unknown> | null = null;
 

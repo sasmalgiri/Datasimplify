@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Zap, Check, Coins, Crown } from 'lucide-react';
 import { useCreditStore, CREDIT_PACKAGES, CREDIT_COSTS, formatCreditCost, type CreditAction } from '@/lib/live-dashboard/credits';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 /* ------------------------------------------------------------------ */
 /*  CreditBalancePill                                                  */
@@ -10,6 +11,7 @@ import { useCreditStore, CREDIT_PACKAGES, CREDIT_COSTS, formatCreditCost, type C
 /* ------------------------------------------------------------------ */
 
 export function CreditBalancePill() {
+  if (IS_BETA_MODE) return null;
   const balance = useCreditStore((s) => s.balance);
   const [modalOpen, setModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);

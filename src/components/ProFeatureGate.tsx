@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { Lock } from 'lucide-react';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 interface ProFeatureGateProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ interface ProFeatureGateProps {
 export function ProFeatureGate({ children, feature }: ProFeatureGateProps) {
   const { profile, isAdmin } = useAuth();
 
-  if (isAdmin || profile?.subscription_tier === 'pro') {
+  if (IS_BETA_MODE || isAdmin || profile?.subscription_tier === 'pro') {
     return <>{children}</>;
   }
 

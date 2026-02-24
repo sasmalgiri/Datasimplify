@@ -27,11 +27,13 @@ import { TEMPLATES, type TemplateType } from '@/lib/templates/templateConfig';
 import { supabaseAdmin, isSupabaseConfigured } from '@/lib/supabase';
 import { checkRateLimit, getClientIp, getRateLimitHeaders } from '@/lib/security/apiRateLimit';
 import { isValidEmail, sanitizeEmail, validateCoinSymbols, detectBotBehavior } from '@/lib/security/validation';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 const FREE_DOWNLOAD_LIMIT = 5;
 
 // Check download limits for a user
 async function checkDownloadLimit(email: string): Promise<{ allowed: boolean; remaining: number; error?: string }> {
+  if (IS_BETA_MODE) return { allowed: true, remaining: 99999 };
   if (!isSupabaseConfigured || !supabaseAdmin) {
     // If Supabase not configured, allow downloads but warn
     console.warn('[Templates] Supabase not configured - download limits not enforced');
@@ -172,7 +174,7 @@ export async function POST(request: Request) {
     // 5. Tier check - gate pro templates
     const templateType = body.templateType as string;
     const templateConfig = TEMPLATES[templateType as TemplateType];
-    if (templateConfig && templateConfig.tier === 'pro') {
+    if (templateConfig && templateConfig.tier === 'pro' && !IS_BETA_MODE) {
       // Check if user has pro plan
       let isPro = false;
       if (isSupabaseConfigured && supabaseAdmin) {

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { type SupabaseClient, type User, type Session } from '@supabase/supabase-js';
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 // ============================================
 // TYPES
@@ -561,11 +562,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const canDownload = () => {
+    if (IS_BETA_MODE) return true;
     if (!profile) return true;
     return profile.downloads_this_month < profile.downloads_limit;
   };
 
   const remainingDownloads = () => {
+    if (IS_BETA_MODE) return 99999;
     if (!profile) return 30;
     return Math.max(0, profile.downloads_limit - profile.downloads_this_month);
   };
