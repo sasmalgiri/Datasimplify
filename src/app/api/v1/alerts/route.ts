@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const tier = entitlement?.tier || 'free';
     if (tier === 'free') {
       return NextResponse.json({
-        error: 'Price alerts require Pro plan. Upgrade at cryptoreportkit.com/pricing',
+        error: `Price alerts require Pro plan. Upgrade at ${process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'}/pricing`,
         code: 'SUBSCRIPTION_REQUIRED',
       }, { status: 402 });
     }

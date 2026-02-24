@@ -59,11 +59,11 @@ export default function AccountPage() {
 
   if ((authLoading && !timedOut) || !user) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
         <FreeNavbar />
         <Breadcrumb />
         <div className="flex items-center justify-center py-12">
-          <div className="text-gray-600">{timedOut ? 'Redirecting to login...' : 'Loading...'}</div>
+          <div className="text-gray-400">{timedOut ? 'Redirecting to login...' : 'Loading...'}</div>
         </div>
       </div>
     );
@@ -116,48 +116,48 @@ export default function AccountPage() {
   const colorClasses: Record<string, { bg: string; icon: string; border: string }> = {
     emerald: {
       bg: 'bg-emerald-500/10',
-      icon: 'text-emerald-600',
-      border: 'border-emerald-200 hover:border-emerald-300',
+      icon: 'text-emerald-400',
+      border: 'border-emerald-500/30 hover:border-emerald-400/50',
     },
     blue: {
       bg: 'bg-blue-500/10',
-      icon: 'text-blue-600',
-      border: 'border-blue-200 hover:border-blue-300',
+      icon: 'text-blue-400',
+      border: 'border-blue-500/30 hover:border-blue-400/50',
     },
     purple: {
       bg: 'bg-purple-500/10',
-      icon: 'text-purple-600',
-      border: 'border-purple-200 hover:border-purple-300',
+      icon: 'text-purple-400',
+      border: 'border-purple-500/30 hover:border-purple-400/50',
     },
     amber: {
       bg: 'bg-amber-500/10',
-      icon: 'text-amber-600',
-      border: 'border-amber-200 hover:border-amber-300',
+      icon: 'text-amber-400',
+      border: 'border-amber-500/30 hover:border-amber-400/50',
     },
     cyan: {
       bg: 'bg-cyan-500/10',
-      icon: 'text-cyan-600',
-      border: 'border-cyan-200 hover:border-cyan-300',
+      icon: 'text-cyan-400',
+      border: 'border-cyan-500/30 hover:border-cyan-400/50',
     },
     pink: {
       bg: 'bg-pink-500/10',
-      icon: 'text-pink-600',
-      border: 'border-pink-200 hover:border-pink-300',
+      icon: 'text-pink-400',
+      border: 'border-pink-500/30 hover:border-pink-400/50',
     },
     rose: {
       bg: 'bg-rose-500/10',
-      icon: 'text-rose-600',
-      border: 'border-rose-200 hover:border-rose-300',
+      icon: 'text-rose-400',
+      border: 'border-rose-500/30 hover:border-rose-400/50',
     },
     red: {
       bg: 'bg-red-500/10',
-      icon: 'text-red-600',
-      border: 'border-red-200 hover:border-red-300',
+      icon: 'text-red-400',
+      border: 'border-red-500/30 hover:border-red-400/50',
     },
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
 
@@ -165,42 +165,42 @@ export default function AccountPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">My Account</h1>
+            <h1 className="text-3xl font-bold text-white">My Account</h1>
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
+              className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
             </button>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-400">
             Manage your account settings, API keys, and subscription
           </p>
         </div>
 
         {/* User Info Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+        <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-100 rounded-full">
-              <User className="w-8 h-8 text-emerald-600" />
+            <div className="p-3 bg-emerald-500/10 rounded-full">
+              <User className="w-8 h-8 text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Account Information</h2>
-              <p className="text-gray-600">{user.email}</p>
+              <h2 className="text-lg font-semibold text-white">Account Information</h2>
+              <p className="text-gray-400">{user.email}</p>
               <div className="flex items-center gap-3 mt-1">
                 <p className="text-sm text-gray-500">
                   Member since {new Date(user.created_at).toLocaleDateString()}
                 </p>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                   isAdmin || profile?.subscription_tier === 'pro'
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-gray-100 text-gray-600'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-gray-700 text-gray-400'
                 }`}>
                   {isAdmin ? 'Admin' : profile?.subscription_tier === 'pro' ? 'Pro' : 'Free Plan'}
                 </span>
                 {personaDef && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
                     {personaDef.name}
                   </span>
                 )}
@@ -211,21 +211,21 @@ export default function AccountPage() {
 
         {/* Usage Meter */}
         {profile && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 mb-8">
             <div className="flex items-center gap-3 mb-4">
-              <Download className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-gray-900">Monthly Downloads</h3>
+              <Download className="w-5 h-5 text-gray-400" />
+              <h3 className="font-semibold text-white">Monthly Downloads</h3>
             </div>
             <div className="mb-2">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">
+                <span className="text-gray-400">
                   {profile.downloads_this_month} of {profile.downloads_limit} used
                 </span>
                 <span className="text-gray-500">
                   {Math.max(0, profile.downloads_limit - profile.downloads_this_month)} remaining
                 </span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2.5">
+              <div className="w-full bg-gray-700 rounded-full h-2.5">
                 <div
                   className={`h-2.5 rounded-full transition-all ${
                     profile.downloads_this_month / profile.downloads_limit > 0.9
@@ -241,7 +241,7 @@ export default function AccountPage() {
             {!isAdmin && profile.subscription_tier === 'free' && (
               <p className="text-xs text-gray-500 mt-2">
                 Free plan: {profile.downloads_limit} downloads/month.{' '}
-                <Link href="/pricing" className="text-emerald-600 hover:text-emerald-700">
+                <Link href="/pricing" className="text-emerald-400 hover:text-emerald-300">
                   Upgrade to Pro for 300/month
                 </Link>
               </p>
@@ -260,10 +260,10 @@ export default function AccountPage() {
               <Link
                 key={link.href}
                 href={isComingSoon ? '#' : link.href}
-                className={`block group bg-white rounded-lg border ${colors.border} p-6 transition-all ${
+                className={`block group bg-gray-800/50 rounded-lg border ${colors.border} p-6 transition-all ${
                   isComingSoon
                     ? 'cursor-not-allowed opacity-60'
-                    : 'hover:shadow-md'
+                    : 'hover:shadow-md hover:shadow-emerald-500/5'
                 }`}
                 onClick={(e) => {
                   if (link.href === '#persona') {
@@ -280,10 +280,10 @@ export default function AccountPage() {
                       <Icon className={`w-6 h-6 ${colors.icon}`} />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-white">
                         {link.title}
                       </h3>
-                      <p className="text-sm text-gray-600">{link.description}</p>
+                      <p className="text-sm text-gray-400">{link.description}</p>
                     </div>
                   </div>
                   {!isComingSoon && (
@@ -297,8 +297,8 @@ export default function AccountPage() {
 
         {/* Persona Picker (inline) */}
         {showPersonaPicker && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8" id="persona">
-            <h3 className="font-semibold text-gray-900 mb-4">Change Your Persona</h3>
+          <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 mb-8" id="persona">
+            <h3 className="font-semibold text-white mb-4">Change Your Persona</h3>
             <PersonaPicker
               selected={persona}
               onSelect={async (id: PersonaId) => {
@@ -314,21 +314,21 @@ export default function AccountPage() {
         )}
 
         {/* BYOK Info */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-6">
           <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+            <Shield className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-emerald-900 mb-2">
+              <h3 className="font-semibold text-emerald-300 mb-2">
                 BYOK (Bring Your Own Key) Architecture
               </h3>
-              <p className="text-emerald-800 text-sm mb-3">
+              <p className="text-emerald-200/80 text-sm mb-3">
                 CryptoReportKit uses a true BYOK architecture. Your CoinGecko API key stays in your
-                Excel file - we never see, store, or transmit your keys. You maintain full control
+                browser - we never see, store, or transmit your keys. You maintain full control
                 and privacy over your data access.
               </p>
               <Link
                 href="/byok"
-                className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                className="text-emerald-400 hover:text-emerald-300 text-sm font-medium"
               >
                 View BYOK Setup Guide →
               </Link>
@@ -337,11 +337,11 @@ export default function AccountPage() {
         </div>
 
         {/* Support Info */}
-        <div className="mt-8 pt-8 border-t border-gray-200 text-center">
-          <p className="text-gray-600 text-sm mb-2">Need help with your account?</p>
+        <div className="mt-8 pt-8 border-t border-gray-700 text-center">
+          <p className="text-gray-500 text-sm mb-2">Need help with your account?</p>
           <Link
             href="/contact"
-            className="text-emerald-600 hover:text-emerald-700 font-medium"
+            className="text-emerald-400 hover:text-emerald-300 font-medium"
           >
             Contact Support
           </Link>

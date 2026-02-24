@@ -21,12 +21,15 @@ const ALLOWED_HOSTNAMES = new Set([
   'localhost',
   '127.0.0.1',
 
-  // Production domains - UPDATE THESE FOR YOUR DEPLOYMENT
-  'cryptoreportkit.com',
-  'www.cryptoreportkit.com',
-
-  // Vercel preview deployments (if using Vercel)
-  // Add your specific preview hostnames or use pattern matching below
+  // Production domains — derived from NEXT_PUBLIC_APP_URL env var
+  ...(process.env.NEXT_PUBLIC_APP_URL
+    ? (() => {
+        try {
+          const h = new URL(process.env.NEXT_PUBLIC_APP_URL).hostname;
+          return h.startsWith('www.') ? [h, h.slice(4)] : [h, `www.${h}`];
+        } catch { return []; }
+      })()
+    : ['cryptoreportkit.com', 'www.cryptoreportkit.com']),
 ]);
 
 /**
