@@ -67,10 +67,9 @@ export const metadata: Metadata = {
     },
   },
 
-  // Canonical & Alternates
-  alternates: {
-    canonical: siteUrl,
-  },
+  // Canonical URLs are set per-page via route layouts/generateMetadata.
+  // Do NOT set a root canonical here — it cascades to all routes and
+  // tells Google every page's canonical is the homepage.
 
   // Search Engine Verification
   // Get codes from: Google Search Console (search.google.com/search-console)

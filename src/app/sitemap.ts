@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { LIVE_DASHBOARDS } from '@/lib/live-dashboard/definitions';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -12,6 +13,28 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/compare`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
     { url: `${BASE_URL}/datalab`, lastModified: now, changeFrequency: 'daily', priority: 0.85 },
   ];
+
+  // Dynamic dashboard pages — generated from definitions
+  const dashboardPages: MetadataRoute.Sitemap = LIVE_DASHBOARDS.map((d) => ({
+    url: `${BASE_URL}/live-dashboards/${d.slug}`,
+    lastModified: now,
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }));
+
+  // Top coin pages — static list of highest-traffic coins
+  const topCoins = [
+    'bitcoin', 'ethereum', 'solana', 'ripple', 'cardano', 'dogecoin',
+    'polkadot', 'avalanche-2', 'chainlink', 'litecoin', 'stellar',
+    'uniswap', 'cosmos', 'near', 'internet-computer', 'polygon-ecosystem-token',
+    'tron', 'shiba-inu', 'sui', 'aptos',
+  ];
+  const coinPages: MetadataRoute.Sitemap = topCoins.map((id) => ({
+    url: `${BASE_URL}/coin/${id}`,
+    lastModified: now,
+    changeFrequency: 'daily' as const,
+    priority: 0.65,
+  }));
 
   const featurePages: MetadataRoute.Sitemap = [
     { url: `${BASE_URL}/market`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
@@ -57,5 +80,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/refund`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
-  return [...mainPages, ...featurePages, ...infoPages, ...legalPages];
+  return [...mainPages, ...dashboardPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];
 }

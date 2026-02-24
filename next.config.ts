@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 import path from 'path';
 
 const nextConfig: NextConfig = {
+  // Normalise URLs so /market and /market/ aren't treated as two pages
+  trailingSlash: false,
   turbopack: {
     root: path.join(__dirname),
   },
