@@ -1,0 +1,16 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'DeFi Analytics — TVL, Yield, Protocol Rankings',
+  description:
+    'Explore DeFi protocols ranked by total value locked (TVL), yield opportunities, and market activity. Auto-generated dashboards for 4,000+ protocols.',
+  openGraph: {
+    title: 'DeFi Analytics — TVL, Yield & Rankings | CryptoReportKit',
+    description:
+      'Explore DeFi protocols ranked by TVL, yield opportunities, and market activity.',
+  },
+};
+
+export default function DefiLayout({ children }: { children: React.ReactNode }) {
+  return children;
+}

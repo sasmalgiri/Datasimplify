@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'About CryptoReportKit — Crypto Analytics Platform',
+  title: 'About CryptoReportKit — Free Crypto Analytics for Everyone',
   description:
-    'CryptoReportKit provides 83+ interactive crypto dashboards with real-time market data. BYOK architecture — your API key stays in your browser.',
+    'CryptoReportKit offers 83+ live dashboards, AI-powered signals, tax tools, a DCA simulator, screener, and portfolio builder — all starting free. Your API keys never leave your browser.',
   openGraph: {
-    title: 'About CryptoReportKit — Crypto Analytics Platform',
+    title: 'About CryptoReportKit — Free Crypto Analytics for Everyone',
     description:
-      'Professional crypto analytics with 83+ dashboards. BYOK architecture — your API key stays in your browser.',
+      '83+ live dashboards, AI-powered signals, tax tools, DCA simulator, and more — all starting free.',
   },
 };
 

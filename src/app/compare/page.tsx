@@ -7,6 +7,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import { useViewMode } from '@/lib/viewMode';
+import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { useAuth } from '@/lib/auth';
 import { PLAN_LIMITS } from '@/lib/entitlements';
 import { ChevronDown, ChevronUp, Search, TrendingUp, DollarSign, BarChart3, Target, Percent, Zap, Info, Lock } from 'lucide-react';
@@ -681,6 +682,9 @@ export default function ComparePage() {
             <div className="mt-1">
               <CoinGeckoAttribution variant="compact" showIcon />
             </div>
+          </div>
+          <div className="mt-3 md:mt-0">
+            <ViewModeToggle />
           </div>
         </div>
 

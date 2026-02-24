@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Pricing — Free & Pro Plans | CryptoReportKit',
+  title: 'Pricing — Free Forever + Pro from $9/mo',
   description:
-    'Start free with 32+ dashboards, DCA simulator, and crypto glossary. Upgrade to Pro for all 83+ dashboards, custom builder, tax tools, and more.',
+    'Free: 32+ dashboards, DCA simulator, heatmap, screener, and glossary. Pro ($9/mo): all 83+ dashboards, AI signals, tax reports, custom builder, price alerts, multi-exchange portfolio, and 300 downloads/mo.',
   openGraph: {
-    title: 'Pricing — Free & Pro Plans | CryptoReportKit',
+    title: 'Pricing — Free Forever + Pro from $9/mo | CryptoReportKit',
     description:
-      'Start free with 32+ dashboards. Upgrade to Pro for all 83+ dashboards, custom builder, and tax tools.',
+      'Free: 32+ dashboards and tools. Pro ($9/mo): 83+ dashboards, AI signals, tax reports, price alerts, and more.',
   },
 };
 

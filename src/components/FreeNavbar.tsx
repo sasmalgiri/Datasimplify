@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
-import { ViewModeToggle } from '@/components/ViewModeToggle';
 import { useAuth } from '@/lib/auth';
 import { usePersonaStore } from '@/lib/persona/personaStore';
 import { getPersonaDefinition } from '@/lib/persona/helpers';
@@ -227,7 +226,6 @@ export function FreeNavbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <ViewModeToggle />
             {user ? (
               <Link
                 href="/account"
@@ -276,7 +274,6 @@ export function FreeNavbar() {
               ))}
             </div>
             <div className="flex gap-2 items-center">
-              <ViewModeToggle />
               {user ? (
                 <Link
                   href="/account"

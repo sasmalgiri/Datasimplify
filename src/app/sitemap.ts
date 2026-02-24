@@ -57,7 +57,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/rwa`, lastModified: now, changeFrequency: 'daily', priority: 0.55 },
     { url: `${BASE_URL}/risk`, lastModified: now, changeFrequency: 'daily', priority: 0.55 },
     { url: `${BASE_URL}/social`, lastModified: now, changeFrequency: 'daily', priority: 0.55 },
-    { url: `${BASE_URL}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${BASE_URL}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${BASE_URL}/analyst-hub`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
+    { url: `${BASE_URL}/research`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
+    { url: `${BASE_URL}/templates`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${BASE_URL}/command-center`, lastModified: now, changeFrequency: 'weekly', priority: 0.55 },
   ];
 
   const infoPages: MetadataRoute.Sitemap = [
@@ -72,7 +76,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const legalPages: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.65 },
     { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/privacy`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${BASE_URL}/terms`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },

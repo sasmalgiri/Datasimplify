@@ -1,0 +1,16 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Crypto Heatmap — Visualize Market Movements',
+  description:
+    'Interactive crypto heatmap showing 500+ coins by market cap and 24h performance. Spot sector trends, find outperformers, and drill into any category — updated in real time.',
+  openGraph: {
+    title: 'Crypto Heatmap — Visualize Market Movements | CryptoReportKit',
+    description:
+      'Interactive crypto heatmap showing 500+ coins by market cap and 24h performance. Spot trends, find outperformers.',
+  },
+};
+
+export default function HeatmapLayout({ children }: { children: React.ReactNode }) {
+  return children;
+}
