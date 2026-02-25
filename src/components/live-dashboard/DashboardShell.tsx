@@ -8,7 +8,6 @@ import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
 import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
-import { UniversalExport } from '@/components/UniversalExport';
 import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
 import AIChatPanel from './AIChatPanel';
@@ -365,7 +364,6 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
 
           {/* Export — hidden when customize open */}
-          {!customizeOpen && <UniversalExport name={definition.name} compact />}
           {!customizeOpen && <ExportButton dashboardName={definition.name} onOpenKeyModal={onOpenKeyModal} />}
 
           {/* Share — hidden when customize open */}
