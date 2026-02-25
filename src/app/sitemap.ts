@@ -46,7 +46,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/technical`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/portfolio`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/smart-contract-verifier`, lastModified: now, changeFrequency: 'weekly', priority: 0.65 },
-    { url: `${BASE_URL}/global-market`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/trending`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/gainers-losers`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/recently-added`, lastModified: now, changeFrequency: 'daily', priority: 0.6 },
