@@ -4,6 +4,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { SectorHeatmap } from '@/components/features/SectorHeatmap';
 import { Treemap } from '@/components/features/Treemap';
+import { UniversalExport } from '@/components/UniversalExport';
 import { useState, useEffect, useCallback } from 'react';
 import { Grid3X3, Layers, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
@@ -64,8 +65,9 @@ export default function HeatmapPage() {
             </p>
           </div>
 
-          {/* View Toggle */}
-          <div className="flex items-center gap-2">
+          {/* View Toggle + Export */}
+          <div className="flex items-center gap-3">
+            <UniversalExport name="Market-Heatmaps" compact />
             <div className="flex rounded-lg overflow-hidden border border-gray-700">
               <button
                 onClick={() => setView('sectors')}

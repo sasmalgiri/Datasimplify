@@ -1,6 +1,5 @@
 # CryptoReportKit Robots.txt
 # https://cryptoreportkit.com
-# 83+ Live Crypto Dashboards & Analytics
 
 User-agent: *
 Allow: /
@@ -33,6 +32,7 @@ Disallow: /monitor/
 
 # Allow main product pages (explicit for clarity)
 Allow: /live-dashboards
+Allow: /templates
 Allow: /pricing
 Allow: /market
 Allow: /compare

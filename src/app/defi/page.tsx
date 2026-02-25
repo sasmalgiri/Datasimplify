@@ -3,6 +3,7 @@
 import { DeFiTracker } from '@/components/features/DeFiTracker';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { UniversalExport } from '@/components/UniversalExport';
 
 export default function DeFiPage() {
   return (
@@ -17,6 +18,7 @@ export default function DeFiPage() {
               Track decentralized finance protocols, TVL, and yield opportunities.
             </p>
           </div>
+          <UniversalExport name="DeFi-Dashboard" compact />
         </div>
 
         <DeFiTracker showBeginnerTips={true} />

@@ -5,6 +5,7 @@ import { BeginnerTip } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
+import { UniversalExport } from '@/components/UniversalExport';
 
 export default function SentimentPage() {
   return (
@@ -19,6 +20,7 @@ export default function SentimentPage() {
               Measure the overall mood of the crypto market.
             </p>
           </div>
+          <UniversalExport name="Market-Sentiment" compact />
         </div>
 
         {/* Display Only Badge */}

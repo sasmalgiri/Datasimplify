@@ -261,6 +261,75 @@ export function computeATR(
   return out;
 }
 
+/** Bollinger Band Width: (upper − lower) / SMA as percentage */
+export function computeBBWidth(
+  values: number[],
+  period: number = 20,
+  multiplier: number = 2,
+): (number | null)[] {
+  const bb = computeBollingerBands(values, period, multiplier);
+  const sma = computeSMA(values, period);
+  const out: (number | null)[] = new Array(values.length).fill(null);
+  for (let i = 0; i < values.length; i++) {
+    if (bb.upper[i] != null && bb.lower[i] != null && sma[i] != null && sma[i]! !== 0) {
+      out[i] = ((bb.upper[i]! - bb.lower[i]!) / sma[i]!) * 100;
+    }
+  }
+  return out;
+}
+
+/** Daily return as percentage: (close[i] − close[i−1]) / close[i−1] × 100 */
+export function computeDailyReturn(values: number[]): (number | null)[] {
+  const out: (number | null)[] = [null];
+  for (let i = 1; i < values.length; i++) {
+    if (values[i - 1] !== 0) {
+      out.push(((values[i] - values[i - 1]) / values[i - 1]) * 100);
+    } else {
+      out.push(null);
+    }
+  }
+  return out;
+}
+
+/** Drawdown from rolling all-time high (always ≤ 0) */
+export function computeDrawdown(values: number[]): (number | null)[] {
+  const out: (number | null)[] = [];
+  let peak = -Infinity;
+  for (let i = 0; i < values.length; i++) {
+    if (values[i] > peak) peak = values[i];
+    out.push(peak > 0 ? ((values[i] - peak) / peak) * 100 : 0);
+  }
+  return out;
+}
+
+/** Rolling annualized volatility: std(daily returns) × √365 */
+export function computeRollingVolatility(
+  values: number[],
+  window: number = 30,
+): (number | null)[] {
+  const returns = computeDailyReturn(values);
+  const out: (number | null)[] = new Array(values.length).fill(null);
+  if (values.length < window + 1) return out;
+  for (let i = window; i < returns.length; i++) {
+    let sum = 0;
+    let count = 0;
+    for (let j = i - window + 1; j <= i; j++) {
+      if (returns[j] != null) { sum += returns[j]!; count++; }
+    }
+    if (count < window * 0.8) continue;
+    const mean = sum / count;
+    let sumSq = 0;
+    for (let j = i - window + 1; j <= i; j++) {
+      if (returns[j] != null) {
+        const diff = returns[j]! - mean;
+        sumSq += diff * diff;
+      }
+    }
+    out[i] = Math.sqrt(sumSq / count) * Math.sqrt(365);
+  }
+  return out;
+}
+
 /** Apply user edits on top of raw data (sparse override) */
 export function applyEdits(
   data: (number | null)[],

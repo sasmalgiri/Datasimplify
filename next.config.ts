@@ -78,7 +78,25 @@ const nextConfig: NextConfig = {
       // Dead wizard page - backend API removed
       {
         source: '/wizard',
-        destination: '/tools',
+        destination: '/templates',
+        permanent: true,
+      },
+      // Old download center → templates hub
+      {
+        source: '/download',
+        destination: '/templates',
+        permanent: true,
+      },
+      // Old template gallery → templates hub
+      {
+        source: '/templates/gallery',
+        destination: '/templates',
+        permanent: true,
+      },
+      // Old excel-templates → templates hub
+      {
+        source: '/excel-templates/:slug',
+        destination: '/templates',
         permanent: true,
       },
     ];

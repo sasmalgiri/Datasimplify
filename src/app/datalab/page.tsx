@@ -14,6 +14,7 @@ import { useDataLabStore } from '@/lib/datalab/store';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { FlaskConical, Lock, Key, ExternalLink, Shield } from 'lucide-react';
 import { IS_BETA_MODE } from '@/lib/betaMode';
+import { UniversalExport } from '@/components/UniversalExport';
 
 export default function DataLabPage() {
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
@@ -177,7 +178,10 @@ export default function DataLabPage() {
       <Breadcrumb />
 
       {/* Compact horizontal toolbar (replaces sidebar + header) */}
-      <DataLabToolbar onScreenshot={handleScreenshot} />
+      <div className="flex items-center justify-between max-w-[1800px] mx-auto w-full px-4">
+        <DataLabToolbar onScreenshot={handleScreenshot} />
+        <UniversalExport name="DataLab" captureRef={chartRef} compact />
+      </div>
 
       {/* Chart + optional Table (full width) */}
       <div className="flex-1 flex min-h-0 max-w-[1800px] mx-auto w-full" ref={chartRef}>

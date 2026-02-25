@@ -6,10 +6,12 @@ import {
   Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
   RotateCcw, Table2, Maximize2, Undo2,
-  Loader2, Search,
+  Loader2, Search, ChevronDown,
+  HeartPulse, ShieldAlert, PiggyBank,
+  Orbit, Scale, BarChart3, Layers3,
 } from 'lucide-react';
 import { useDataLabStore } from '@/lib/datalab/store';
-import { OVERLAY_PRESETS } from '@/lib/datalab/presets';
+import { OVERLAY_PRESETS, PRESET_CATEGORIES } from '@/lib/datalab/presets';
 import { DATA_SOURCE_OPTIONS } from '@/lib/datalab/types';
 import type { ParameterDef } from '@/lib/datalab/types';
 
@@ -32,7 +34,7 @@ function Tip({ children, text, position = 'bottom' }: {
       {show && text && (
         <span className={`absolute z-[100] ${
           position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
-        } left-1/2 -translate-x-1/2 px-3 py-2 text-[11px] leading-relaxed text-gray-200 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl max-w-xs whitespace-normal pointer-events-none`}>
+        } left-1/2 -translate-x-1/2 px-3 py-2 text-[11px] leading-relaxed text-gray-200 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl max-w-sm whitespace-normal pointer-events-none`}>
           {text}
         </span>
       )}
@@ -44,6 +46,8 @@ function Tip({ children, text, position = 'bottom' }: {
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Target, Brain, Gauge, RefreshCw, Layers,
   Activity, TrendingUp, Zap,
+  HeartPulse, ShieldAlert, PiggyBank, Undo2,
+  Orbit, Scale, BarChart3, Layers3,
 };
 
 // ─── Preset tooltip text ───────────────────────────────────────────
@@ -80,6 +84,38 @@ const PRESET_META: Record<string, { short: string; tip: string }> = {
     short: 'Trend',
     tip: 'Trend Strength: EMA 12/26 alignment + Stochastic crossover = strong trend confirmation.\nLoads: Candlestick, EMA 12/26, Stochastic %K/%D, Volume',
   },
+  'sentiment-contrarian': {
+    short: 'Sentiment',
+    tip: 'Sentiment Contrarian: Extreme fear + RSI oversold + price at MA support = high-probability bounce.\nLoads: Price, SMA 50, Fear & Greed, RSI, Volume',
+  },
+  'risk-regime': {
+    short: 'Risk',
+    tip: 'Risk Regime: Drawdown depth + rising volatility + BB expansion = risk-off environment.\nLoads: Price, SMA 50, Drawdown %, Rolling Volatility, BB Width',
+  },
+  'dca-accumulator': {
+    short: 'DCA',
+    tip: 'DCA Accumulator: Deep drawdown + extreme fear + price below 200 SMA = optimal accumulation zone.\nLoads: Price, SMA 200, Drawdown %, Fear & Greed, Volume',
+  },
+  'mean-reversion': {
+    short: 'Mean Rev',
+    tip: 'Mean Reversion: Price at Bollinger extremes + RSI/Stochastic divergence = snap-back trade.\nLoads: Candlestick, BB Upper/Lower, SMA 20, RSI, Stochastic %K',
+  },
+  'market-cycle': {
+    short: 'Cycle',
+    tip: 'Market Cycle: SMA 50/200 crossovers (golden/death cross) + market cap trend = macro phase.\nLoads: Price, SMA 50/200, Market Cap, DeFi TVL, Volume',
+  },
+  'funding-arbitrage': {
+    short: 'Funding',
+    tip: 'Funding Arbitrage: Extreme funding rate + RSI divergence = opportunity to fade the crowd.\nLoads: Candlestick, EMA 21, Funding Rate, RSI, Volume',
+  },
+  'volume-profile': {
+    short: 'Volume',
+    tip: 'Volume Profile: Volume spikes vs SMA + relative volume ratio = institutional interest detection.\nLoads: Candlestick, EMA 20, Volume, Vol SMA, Vol Ratio, Daily Return',
+  },
+  'multi-timeframe': {
+    short: 'Multi-TF',
+    tip: 'Multi-Timeframe: EMA 9 + SMA 21/50 alignment + RSI + ATR = trend confirmation across timeframes.\nLoads: Candlestick, EMA 9, SMA 21/50, RSI, ATR',
+  },
 };
 
 // ─── Data source tooltips ──────────────────────────────────────────
@@ -102,6 +138,14 @@ const SOURCE_TIPS: Record<string, string> = {
   stochastic_k: 'Stochastic %K — momentum oscillator (0-100). <20 oversold, >80 overbought',
   stochastic_d: 'Stochastic %D — smoothed %K signal line. %K crossing above %D = bullish signal',
   atr: 'Average True Range — measures volatility in price terms. Low ATR = quiet market, high ATR = volatile',
+  bb_width: 'Bollinger Band Width % — measures squeeze/expansion. Narrow = breakout imminent, wide = volatile',
+  volume_sma: 'Volume SMA — moving average of volume. Compare against raw volume to spot unusual activity',
+  volume_ratio: 'Volume Ratio — current volume / SMA. >1.5x = high interest, <0.5x = low interest',
+  daily_return: 'Daily Return % — percentage change from previous close. Tracks daily momentum',
+  drawdown: 'Drawdown % — decline from rolling all-time high. Shows risk severity and recovery progress',
+  market_cap: 'Market Cap — total market capitalization from CoinGecko. Tracks overall value trend',
+  rolling_volatility: 'Rolling Volatility — annualized standard deviation of daily returns. Higher = more risk',
+  rsi_sma: 'RSI Smoothed — SMA of RSI values. Reduces noise for cleaner overbought/oversold signals',
 };
 
 // ─── Parameter tooltips ────────────────────────────────────────────
@@ -120,6 +164,10 @@ const PARAM_TIPS: Record<string, string> = {
   stoch_d: 'Stochastic %D smoothing — signal line averaging period',
   stoch_smooth: 'Stochastic smoothing — applied to raw %K before %D calculation',
   atr_period: 'ATR period — number of bars to average true range over',
+  vol_window: 'Volatility window — number of daily returns used for annualized volatility',
+  vol_sma: 'Volume SMA window — moving average period for volume smoothing',
+  ema_fast: 'Fast EMA period — shorter period for quick trend detection',
+  rsi_sma_window: 'RSI smoothing window — SMA period applied to RSI for noise reduction',
 };
 
 // ─── Time range options ────────────────────────────────────────────
@@ -172,6 +220,8 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   } = useDataLabStore();
 
   const [showAddLayer, setShowAddLayer] = useState(false);
+  const [showAllPresets, setShowAllPresets] = useState(false);
+  const presetsDropRef = useRef<HTMLDivElement>(null);
   const [coinInput, setCoinInput] = useState(coin);
   const [showCoinDrop, setShowCoinDrop] = useState(false);
   const [coinResults, setCoinResults] = useState<CoinSearchResult[]>([]);
@@ -182,11 +232,14 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   // Sync coinInput when store coin changes (e.g. preset load)
   useEffect(() => { setCoinInput(coin); }, [coin]);
 
-  // Close coin dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (coinDropRef.current && !coinDropRef.current.contains(e.target as Node)) {
         setShowCoinDrop(false);
+      }
+      if (presetsDropRef.current && !presetsDropRef.current.contains(e.target as Node)) {
+        setShowAllPresets(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -290,27 +343,83 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
         <div className="w-px h-5 bg-white/[0.08]" />
 
-        {/* Preset Chips */}
+        {/* Preset Chips — top 4 inline + "All Strategies" dropdown */}
         <div className="flex items-center gap-1">
-          {OVERLAY_PRESETS.map((p) => {
-            const Icon = ICON_MAP[p.icon];
-            const isActive = activePreset === p.id;
-            const meta = PRESET_META[p.id];
-            return (
-              <Tip key={p.id} text={meta?.tip ?? p.description}>
-                <button
-                  type="button"
-                  onClick={() => loadPreset(p.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
-                    isActive ? chipActive : chipInactive
-                  }`}
-                >
-                  {Icon && <Icon className="w-3 h-3" />}
-                  {meta?.short ?? p.name}
-                </button>
-              </Tip>
-            );
-          })}
+          {(() => {
+            // Show active preset first, then fill up to 4 from first category
+            const topIds = PRESET_CATEGORIES[0]?.presetIds.slice(0, 4) ?? [];
+            const shown = activePreset && !topIds.includes(activePreset)
+              ? [activePreset, ...topIds.slice(0, 3)]
+              : topIds;
+            return shown.map((pId) => {
+              const p = OVERLAY_PRESETS.find((pr) => pr.id === pId);
+              if (!p) return null;
+              const Icon = ICON_MAP[p.icon];
+              const isActive = activePreset === p.id;
+              const meta = PRESET_META[p.id];
+              return (
+                <Tip key={p.id} text={meta?.tip ?? p.description}>
+                  <button
+                    type="button"
+                    onClick={() => loadPreset(p.id)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${
+                      isActive ? chipActive : chipInactive
+                    }`}
+                  >
+                    {Icon && <Icon className="w-3 h-3" />}
+                    {meta?.short ?? p.name}
+                  </button>
+                </Tip>
+              );
+            });
+          })()}
+
+          {/* All Strategies Dropdown */}
+          <div className="relative" ref={presetsDropRef}>
+            <button
+              type="button"
+              onClick={() => setShowAllPresets(!showAllPresets)}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition ${chipInactive}`}
+            >
+              All Strategies
+              <ChevronDown className={`w-3 h-3 transition-transform ${showAllPresets ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showAllPresets && (
+              <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl p-3 min-w-[480px]">
+                <div className="grid grid-cols-2 gap-3">
+                  {PRESET_CATEGORIES.map((cat) => (
+                    <div key={cat.label}>
+                      <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 px-1">
+                        {cat.label}
+                      </div>
+                      {cat.presetIds.map((pId) => {
+                        const p = OVERLAY_PRESETS.find((pr) => pr.id === pId);
+                        if (!p) return null;
+                        const Icon = ICON_MAP[p.icon];
+                        const isActive = activePreset === p.id;
+                        const meta = PRESET_META[p.id];
+                        return (
+                          <Tip key={p.id} text={meta?.tip ?? p.description} position="top">
+                            <button
+                              type="button"
+                              onClick={() => { loadPreset(p.id); setShowAllPresets(false); }}
+                              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] font-medium transition mb-0.5 ${
+                                isActive ? chipActive : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
+                              }`}
+                            >
+                              {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" />}
+                              <span>{meta?.short ?? p.name}</span>
+                            </button>
+                          </Tip>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="w-px h-5 bg-white/[0.08]" />

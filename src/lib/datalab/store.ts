@@ -7,6 +7,8 @@ import { getPresetById } from './presets';
 import {
   computeSMA, computeEMA, computeRSI,
   computeMACD, computeBollingerBands, computeStochastic, computeATR,
+  computeBBWidth, computeDailyReturn, computeDrawdown, computeRollingVolatility,
+  computeRatio,
 } from './calculations';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
@@ -244,14 +246,21 @@ export const useDataLabStore = create<DataLabStore>()(
             'macd', 'macd_signal', 'macd_histogram',
             'bollinger_upper', 'bollinger_lower',
             'stochastic_k', 'stochastic_d', 'atr',
+            'bb_width', 'daily_return', 'drawdown',
+            'rolling_volatility', 'rsi_sma',
           ];
           if (ohlcSources.some((s) => sources.has(s))) {
             endpointsSet.add('ohlc');
           }
           // Real volume needs market_chart (coin_history endpoint)
-          if (sources.has('volume')) {
+          if (sources.has('volume') || sources.has('volume_sma') || sources.has('volume_ratio')) {
             endpointsSet.add('ohlc');       // for timestamps
             endpointsSet.add('coin_history'); // for real volume
+          }
+          // Market cap needs coin_history endpoint
+          if (sources.has('market_cap')) {
+            endpointsSet.add('ohlc');       // for timestamps
+            endpointsSet.add('coin_history');
           }
           if (sources.has('fear_greed')) endpointsSet.add('fear_greed');
           if (sources.has('btc_dominance')) endpointsSet.add('global');
@@ -340,6 +349,11 @@ export const useDataLabStore = create<DataLabStore>()(
           } else {
             // Fallback: no volume data available
             raw.volume = timestamps.map(() => null);
+          }
+
+          // ── Market Cap from coin_history ──
+          if (marketChart?.market_caps && marketChart.market_caps.length > 0) {
+            raw.market_cap = alignTimeSeries(marketChart.market_caps, timestamps);
           }
 
           // ── REAL Fear & Greed history ──
@@ -480,6 +494,53 @@ export const useDataLabStore = create<DataLabStore>()(
             case 'funding_rate':
               data = rawData.funding_rate ? [...rawData.funding_rate] : [];
               break;
+            case 'bb_width': {
+              const bbwPeriod = layer.params?.window ?? parameters.bb_period ?? 20;
+              const bbwMult = layer.params?.multiplier ?? parameters.bb_mult ?? 2;
+              data = computeBBWidth(closes, bbwPeriod, bbwMult);
+              break;
+            }
+            case 'volume_sma': {
+              const vol = rawData.volume as number[] ?? [];
+              const volWindow = layer.params?.window ?? parameters.vol_sma ?? 20;
+              data = vol.length > 0 ? computeSMA(vol.map(v => v ?? 0), volWindow) : [];
+              break;
+            }
+            case 'volume_ratio': {
+              const volData = rawData.volume ?? [];
+              const vrWindow = layer.params?.window ?? parameters.vol_sma ?? 20;
+              const volNums = volData.map(v => v ?? 0);
+              const volSma = computeSMA(volNums, vrWindow);
+              data = computeRatio(volData, volSma);
+              break;
+            }
+            case 'daily_return':
+              data = computeDailyReturn(closes);
+              break;
+            case 'drawdown':
+              data = computeDrawdown(closes);
+              break;
+            case 'market_cap':
+              data = rawData.market_cap ? [...rawData.market_cap] : [];
+              break;
+            case 'rolling_volatility': {
+              const rvWindow = layer.params?.window ?? parameters.vol_window ?? 30;
+              data = computeRollingVolatility(closes, rvWindow);
+              break;
+            }
+            case 'rsi_sma': {
+              const rsiPeriod = layer.params?.period ?? parameters.rsi_period ?? 14;
+              const rsiWindow = layer.params?.window ?? parameters.rsi_sma_window ?? 10;
+              const rsiValues = computeRSI(closes, rsiPeriod);
+              // SMA of non-null RSI values, then map back
+              const rsiNums = rsiValues.map(v => v ?? 0);
+              data = computeSMA(rsiNums, rsiWindow);
+              // Zero out the leading nulls where RSI itself is null
+              for (let i = 0; i < rsiValues.length; i++) {
+                if (rsiValues[i] == null) data[i] = null;
+              }
+              break;
+            }
             default:
               data = layer.data;
           }

@@ -28,6 +28,15 @@ export type DataSource =
   | 'stochastic_d'
   | 'atr'
   | 'normalized'
+  // Derived indicators
+  | 'bb_width'
+  | 'volume_sma'
+  | 'volume_ratio'
+  | 'daily_return'
+  | 'drawdown'
+  | 'market_cap'
+  | 'rolling_volatility'
+  | 'rsi_sma'
   // User-edited / ratio
   | 'ratio'
   | 'custom';
@@ -102,4 +111,13 @@ export const DATA_SOURCE_OPTIONS: {
   { source: 'btc_dominance', label: 'BTC Dominance % (Current)', chartType: 'line', yAxis: 'right', gridIndex: 0, color: '#fbbf24', endpoints: ['global'] },
   { source: 'funding_rate', label: 'Funding Rate (Current)', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#2dd4bf', endpoints: ['derivatives'] },
   { source: 'defi_tvl', label: 'DeFi TVL', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#818cf8', endpoints: ['defillama_tvl_history'] },
+  // Derived indicators
+  { source: 'bb_width', label: 'BB Width %', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f59e0b', endpoints: ['ohlc'] },
+  { source: 'volume_sma', label: 'Volume SMA', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#38bdf8', endpoints: ['ohlc', 'coin_history'] },
+  { source: 'volume_ratio', label: 'Volume Ratio', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#c084fc', endpoints: ['ohlc', 'coin_history'] },
+  { source: 'daily_return', label: 'Daily Return %', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#fb7185', endpoints: ['ohlc'] },
+  { source: 'drawdown', label: 'Drawdown %', chartType: 'area', yAxis: 'right', gridIndex: 1, color: '#ef4444', endpoints: ['ohlc'] },
+  { source: 'market_cap', label: 'Market Cap', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#818cf8', endpoints: ['coin_history'] },
+  { source: 'rolling_volatility', label: 'Volatility (Ann.)', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f97316', endpoints: ['ohlc'] },
+  { source: 'rsi_sma', label: 'RSI Smoothed', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#d946ef', endpoints: ['ohlc'] },
 ];

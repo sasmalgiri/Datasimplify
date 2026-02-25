@@ -6,6 +6,7 @@ import Link from 'next/link';
 import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
+import { UniversalExport } from '@/components/UniversalExport';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
 import {
   areAllSourcesRedistributableClient,
@@ -2002,7 +2003,7 @@ function ChartsContent() {
             <h1 className="text-3xl font-bold">Interactive Charts</h1>
             <p className="text-gray-400 mt-1">Powerful visualizations for crypto analysis and market trends</p>
           </div>
-
+          <UniversalExport name="Interactive-Charts" compact />
         </div>
 
         <div className="grid grid-cols-12 gap-6">

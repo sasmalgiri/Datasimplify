@@ -3,6 +3,7 @@ import { RiskDashboardDemo } from '@/components/features/RiskDashboard';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FEATURES } from '@/lib/featureFlags';
+import { UniversalExport } from '@/components/UniversalExport';
 
 // Check feature flag at build/request time - return 404 if disabled
 export default function RiskPage() {
@@ -23,6 +24,7 @@ export default function RiskPage() {
               Understand how risky different cryptocurrencies are before investing.
             </p>
           </div>
+          <UniversalExport name="Risk-Analysis" compact />
         </div>
 
         <RiskDashboardDemo showBeginnerTips={true} />

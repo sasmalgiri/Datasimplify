@@ -101,12 +101,12 @@ export function FreeNavbar() {
     reports: {
       label: 'Templates',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/download', '/downloads', '/template-requirements', '/byok', '/live-dashboards'],
+      paths: ['/templates', '/downloads', '/template-requirements', '/byok', '/live-dashboards'],
       items: [
         { href: '/live-dashboards', label: 'Live Dashboards', description: 'Interactive web dashboards with your API key', icon: <BarChart3 className="w-4 h-4" /> },
+        { href: '/templates', label: 'Template Hub', description: 'Browse & experiment with dashboard layouts', icon: <FlaskConical className="w-4 h-4" /> },
         ...(user ? [
-          { href: '/downloads', label: 'Downloads', description: 'Excel templates with prefetched crypto data', icon: <Download className="w-4 h-4" /> },
-          { href: '/download', label: 'Customize Templates', description: 'Customize coins/timeframe and download .xlsx', icon: <FileSpreadsheet className="w-4 h-4" /> },
+          { href: '/downloads', label: 'Excel Downloads', description: 'Pre-built Excel files for offline analysis', icon: <Download className="w-4 h-4" /> },
         ] : []),
         { href: '/template-requirements', label: 'Setup Guide', description: 'How to use Excel templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
@@ -160,10 +160,10 @@ export function FreeNavbar() {
       ? [{ href: '/command-center', label: 'Command Center', icon: <LayoutDashboard className="w-4 h-4" /> }]
       : []),
     { href: '/live-dashboards', label: 'Live Dashboards', icon: <BarChart3 className="w-4 h-4" /> },
+    { href: '/templates', label: 'Templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
     ...(user ? [
       { href: '/datalab', label: 'DataLab', icon: <FlaskConical className="w-4 h-4" /> },
-      { href: '/downloads', label: 'Templates', icon: <Download className="w-4 h-4" /> },
-      { href: '/download', label: 'Customize', icon: <FileSpreadsheet className="w-4 h-4" /> },
+      { href: '/downloads', label: 'Excel Downloads', icon: <Download className="w-4 h-4" /> },
     ] : []),
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')

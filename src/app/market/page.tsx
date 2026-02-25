@@ -8,6 +8,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
+import { UniversalExport } from '@/components/UniversalExport';
 import { SectorHeatmap } from '@/components/features/SectorHeatmap';
 import { getClientCache, setClientCache, CACHE_TTL } from '@/lib/clientCache';
 
@@ -352,6 +353,7 @@ export default function MarketPage() {
             </p>
           </div>
           <div className="flex items-center gap-3 mt-4 md:mt-0">
+            <UniversalExport name="Crypto-Market" compact />
             <button
               type="button"
               onClick={() => fetchData(true)}

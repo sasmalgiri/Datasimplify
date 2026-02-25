@@ -5,6 +5,7 @@ import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelp
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TemplateDownloadButton } from '@/components/TemplateDownloadButton';
+import { UniversalExport } from '@/components/UniversalExport';
 
 // Color dot component using ref to avoid inline style warnings
 function ColorDot({ color, className = '' }: { color: string; className?: string }) {
@@ -208,11 +209,14 @@ https://cryptoreportkit.com
       <Breadcrumb />
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">💼 Portfolio Builder</h1>
-          <p className="text-xl text-blue-100">
-            Build your first crypto portfolio in 3 easy steps
-          </p>
+        <div className="max-w-4xl mx-auto px-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-4xl font-bold mb-4">💼 Portfolio Builder</h1>
+            <p className="text-xl text-blue-100">
+              Build your first crypto portfolio in 3 easy steps
+            </p>
+          </div>
+          <UniversalExport name="Portfolio-Builder" compact />
         </div>
       </div>
 

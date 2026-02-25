@@ -162,6 +162,22 @@ export function buildChartOption(opts: BuildOptions) {
         seriesConfig.lineStyle = { ...seriesConfig.lineStyle, type: 'dashed' };
       }
 
+      // Drawdown area → always red gradient (negative values)
+      if (layer.source === 'drawdown' && layer.chartType === 'area') {
+        seriesConfig.areaStyle = {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: '#ef444450' },
+              { offset: 1, color: '#ef444408' },
+            ],
+          },
+        };
+        seriesConfig.lineStyle = { color: '#ef4444', width: 1.5 };
+        seriesConfig.itemStyle = { color: '#ef4444' };
+      }
+
       series.push(seriesConfig);
     }
   }
@@ -259,6 +275,24 @@ export function buildChartOption(opts: BuildOptions) {
     });
   }
 
+  // Volume Ratio reference line at 1.0 (normal volume baseline)
+  const hasVolRatio = visibleLayers.some((l) => l.source === 'volume_ratio');
+  if (hasVolRatio) {
+    const vrLayer = visibleLayers.find((l) => l.source === 'volume_ratio')!;
+    const vrYKey = `${vrLayer.gridIndex}-${vrLayer.yAxis}`;
+    const vrYAxisIndex = yAxisMap[vrYKey];
+    series.push({
+      name: 'Normal Volume (1x)',
+      type: 'line',
+      data: timestamps.map(() => 1),
+      xAxisIndex: vrLayer.gridIndex,
+      yAxisIndex: vrYAxisIndex,
+      lineStyle: { color: '#ffffff40', type: 'dashed', width: 1 },
+      symbol: 'none',
+      silent: true,
+    });
+  }
+
   // DataZoom (spans all grids)
   const dataZoom = [
     {
@@ -291,7 +325,8 @@ export function buildChartOption(opts: BuildOptions) {
   const legend = {
     data: series.map((s) => s.name).filter((n) =>
       n !== 'Overbought (70)' && n !== 'Oversold (30)' &&
-      n !== 'Overbought (80)' && n !== 'Oversold (20)'
+      n !== 'Overbought (80)' && n !== 'Oversold (20)' &&
+      n !== 'Normal Volume (1x)'
     ),
     textStyle: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
     top: 0,

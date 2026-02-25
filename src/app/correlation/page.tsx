@@ -3,6 +3,7 @@
 import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { UniversalExport } from '@/components/UniversalExport';
 
 export default function CorrelationPage() {
   return (
@@ -17,6 +18,7 @@ export default function CorrelationPage() {
               See how different cryptocurrencies move in relation to each other.
             </p>
           </div>
+          <UniversalExport name="Correlation-Analysis" compact />
         </div>
 
         <CorrelationHeatmapDemo showBeginnerTips={true} />

@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { X, FileSpreadsheet, ChevronRight, Check, ExternalLink } from 'lucide-react';
-import { PageContext, getTemplatesForPage, mergeWithDefaults, PAGE_META } from '@/lib/templates/pageMapping';
+import { PageContext, getTemplatesForPage, PAGE_META } from '@/lib/templates/pageMapping';
 import { TEMPLATES, TemplateType } from '@/lib/templates/templateConfig';
-import { TemplateDownloadModal } from './TemplateDownloadModal';
 
 interface TemplateSelectionModalProps {
   isOpen: boolean;
@@ -15,66 +13,23 @@ interface TemplateSelectionModalProps {
 /**
  * TemplateSelectionModal
  *
- * Shows available templates for the current page with preview and customization options.
- * Allows users to select a template and proceed to download configuration.
+ * Shows available templates for the current page with preview info.
+ * Links to the /templates hub for experimentation.
  */
 export function TemplateSelectionModal({
   isOpen,
   onClose,
   pageContext,
 }: TemplateSelectionModalProps) {
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType | null>(null);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-
   if (!isOpen) return null;
 
   const availableTemplates = getTemplatesForPage(pageContext.pageId);
-  const mergedContext = mergeWithDefaults(pageContext);
   const pageMeta = PAGE_META[pageContext.pageId];
 
   const handleTemplateSelect = (templateType: TemplateType) => {
-    setSelectedTemplate(templateType);
-    setShowDownloadModal(true);
+    // Navigate to the experiment page for this template
+    window.location.href = `/templates/${templateType}/experiment`;
   };
-
-  const handleDownloadClose = () => {
-    setShowDownloadModal(false);
-    setSelectedTemplate(null);
-  };
-
-  const handleFullClose = () => {
-    setShowDownloadModal(false);
-    setSelectedTemplate(null);
-    onClose();
-  };
-
-  // If download modal is open, show that instead
-  if (showDownloadModal && selectedTemplate) {
-    const template = TEMPLATES[selectedTemplate];
-    return (
-      <TemplateDownloadModal
-        isOpen={true}
-        onClose={handleDownloadClose}
-        templateType={selectedTemplate}
-        templateName={template?.name || selectedTemplate}
-        userConfig={{
-          coins: mergedContext.selectedCoins || [],
-          timeframe: mergedContext.timeframe || '24h',
-          currency: mergedContext.currency || 'USD',
-          customizations: {
-            includeCharts: true,
-            ...(mergedContext.customizations || {}),
-            // Pass page-specific context
-            comparedCoins: mergedContext.comparedCoins,
-            selectedIndicators: mergedContext.selectedIndicators,
-            correlationCoins: mergedContext.correlationCoins,
-            period: mergedContext.period,
-            holdings: mergedContext.holdings,
-          },
-        }}
-      />
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">

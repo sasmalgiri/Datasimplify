@@ -4,6 +4,7 @@ import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
+import { UniversalExport } from '@/components/UniversalExport';
 
 export default function TechnicalPage() {
   return (
@@ -18,6 +19,7 @@ export default function TechnicalPage() {
               See what technical indicators are saying about the market.
             </p>
           </div>
+          <UniversalExport name="Technical-Analysis" compact />
         </div>
 
         {/* Display Only Badge */}
