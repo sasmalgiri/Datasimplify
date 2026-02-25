@@ -70,6 +70,10 @@ const PUBLIC_ROUTES = new Set([
   '/wizard',
   '/builder',
   '/analyst-hub',
+  '/datalab',
+  '/portfolio',
+  '/global-market',
+  '/command-center',
 
   // Ensure base listing route is public (prefix below only covers /live-dashboards/*)
   '/live-dashboards',

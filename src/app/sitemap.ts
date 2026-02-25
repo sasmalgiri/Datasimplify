@@ -45,7 +45,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/heatmap`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/technical`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/portfolio`, lastModified: now, changeFrequency: 'daily', priority: 0.7 },
-    { url: `${BASE_URL}/etf`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/smart-contract-verifier`, lastModified: now, changeFrequency: 'weekly', priority: 0.65 },
     { url: `${BASE_URL}/global-market`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/trending`, lastModified: now, changeFrequency: 'daily', priority: 0.65 },
