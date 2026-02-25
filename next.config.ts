@@ -87,6 +87,12 @@ const nextConfig: NextConfig = {
         destination: '/templates',
         permanent: true,
       },
+      // Old downloads portal → templates hub
+      {
+        source: '/downloads',
+        destination: '/templates',
+        permanent: true,
+      },
       // Old template gallery → templates hub
       {
         source: '/templates/gallery',

@@ -7,7 +7,6 @@ import {
   ChevronDown,
   BarChart3,
   BookOpen,
-  Download,
   Menu,
   X,
   Scale,
@@ -101,13 +100,10 @@ export function FreeNavbar() {
     reports: {
       label: 'Templates',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/downloads', '/byok', '/live-dashboards'],
+      paths: ['/templates', '/byok', '/live-dashboards'],
       items: [
         { href: '/live-dashboards', label: 'Live Dashboards', description: 'Interactive web dashboards with your API key', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/templates', label: 'Template Hub', description: 'Browse & experiment with dashboard layouts', icon: <FlaskConical className="w-4 h-4" /> },
-        ...(user ? [
-          { href: '/downloads', label: 'Excel Downloads', description: 'Pre-built Excel files for offline analysis', icon: <Download className="w-4 h-4" /> },
-        ] : []),
         { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
       ],
     },
@@ -162,7 +158,6 @@ export function FreeNavbar() {
     { href: '/templates', label: 'Templates', icon: <FileSpreadsheet className="w-4 h-4" /> },
     ...(user ? [
       { href: '/datalab', label: 'DataLab', icon: <FlaskConical className="w-4 h-4" /> },
-      { href: '/downloads', label: 'Excel Downloads', icon: <Download className="w-4 h-4" /> },
     ] : []),
     { href: '/compare', label: 'Compare Coins', icon: <Scale className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')
