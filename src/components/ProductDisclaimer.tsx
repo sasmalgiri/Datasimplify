@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Info, FileSpreadsheet, Shield, Key } from 'lucide-react';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 interface ProductDisclaimerProps {
   variant?: 'default' | 'compact' | 'banner';
@@ -14,6 +15,8 @@ export function ProductDisclaimer({
   showRefundLink = true,
   className = ''
 }: ProductDisclaimerProps) {
+  const showRefund = showRefundLink && !IS_BETA_MODE;
+
   if (variant === 'banner') {
     return (
       <div className={`bg-blue-50 border-b border-blue-100 ${className}`}>
@@ -31,7 +34,7 @@ export function ProductDisclaimer({
             <span className="text-blue-400">•</span>
             <span className="flex items-center gap-1.5">
               <Shield className="w-4 h-4" />
-              30-day refund
+              {IS_BETA_MODE ? 'Free beta' : '30-day refund'}
             </span>
           </div>
         </div>
@@ -46,7 +49,7 @@ export function ProductDisclaimer({
         <p className="text-gray-600">
           <strong className="text-gray-800">Templates + BYOK:</strong> We sell Excel template software.
           Data is fetched using your own API key (e.g., CoinGecko free tier available).
-          {showRefundLink && (
+          {showRefund && (
             <> <Link href="/refund" className="text-blue-600 hover:underline">30-day refund policy</Link></>
           )}
         </p>
@@ -85,7 +88,7 @@ export function ProductDisclaimer({
               <Shield className="w-4 h-4 text-blue-600 mt-1 flex-shrink-0" />
               <div>
                 <p className="font-medium text-gray-800 text-sm">Risk-Free</p>
-                <p className="text-xs text-gray-600">30-day money-back guarantee</p>
+                <p className="text-xs text-gray-600">{IS_BETA_MODE ? 'Free beta (no payments)' : '30-day money-back guarantee'}</p>
               </div>
             </div>
           </div>
@@ -104,7 +107,7 @@ export function ProductDisclaimer({
             >
               Get CoinGecko API Key
             </a>
-            {showRefundLink && (
+            {showRefund && (
               <>
                 <span className="text-gray-300">|</span>
                 <Link href="/refund" className="text-blue-600 hover:text-blue-800">
@@ -128,9 +131,13 @@ export function ProductDisclaimerInline({ className = '' }: { className?: string
   return (
     <p className={`text-xs text-gray-500 ${className}`}>
       Static templates with prefetched data. BYOK architecture.{' '}
-      <Link href="/refund" className="underline hover:text-gray-700">
-        30-day refund
-      </Link>
+      {IS_BETA_MODE ? (
+        <span>Free beta (no payments).</span>
+      ) : (
+        <Link href="/refund" className="underline hover:text-gray-700">
+          30-day refund
+        </Link>
+      )}
     </p>
   );
 }

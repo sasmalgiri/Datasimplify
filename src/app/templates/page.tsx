@@ -392,7 +392,7 @@ export default function TemplatesPage() {
           <span>•</span>
           <Link href="/disclaimer" className="hover:text-gray-300">Disclaimer</Link>
           <span>•</span>
-          <span>Templates contain formulas only</span>
+          <span>Templates include prefetched snapshot data + formulas</span>
         </div>
       </div>
 

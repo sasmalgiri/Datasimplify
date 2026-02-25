@@ -1,4 +1,7 @@
 // JSON-LD Structured Data for SEO
+import { IS_BETA_MODE } from '@/lib/betaMode';
+import { isFeatureEnabled } from '@/lib/featureFlags';
+
 export function OrganizationJsonLd() {
   const structuredData = {
     '@context': 'https://schema.org',
@@ -55,19 +58,39 @@ export function WebsiteJsonLd() {
 }
 
 export function SoftwareApplicationJsonLd() {
+  const pricingEnabled = isFeatureEnabled('pricing');
+
+  const offers = IS_BETA_MODE
+    ? {
+        '@type': 'AggregateOffer',
+        lowPrice: '0',
+        highPrice: '0',
+        priceCurrency: 'USD',
+        offerCount: '1',
+      }
+    : pricingEnabled
+      ? {
+          '@type': 'AggregateOffer',
+          lowPrice: '0',
+          highPrice: '9',
+          priceCurrency: 'USD',
+          offerCount: '2',
+        }
+      : {
+          '@type': 'AggregateOffer',
+          lowPrice: '0',
+          highPrice: '0',
+          priceCurrency: 'USD',
+          offerCount: '1',
+        };
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'CryptoReportKit',
     applicationCategory: 'FinanceApplication',
     operatingSystem: 'Web Browser',
-    offers: {
-      '@type': 'AggregateOffer',
-      lowPrice: '0',
-      highPrice: '9',
-      priceCurrency: 'USD',
-      offerCount: '2',
-    },
+    offers,
     featureList: [
       '83+ interactive crypto dashboards',
       'Real-time market data with BYOK architecture',
@@ -98,7 +121,9 @@ export function FAQJsonLd() {
     {
       question: 'Is CryptoReportKit free to use?',
       answer:
-        'Yes! 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and crypto glossary are all free forever. No credit card required. Pro unlocks all 83+ dashboards and advanced tools for $9/mo.',
+        IS_BETA_MODE
+          ? 'Yes — the current beta is free. No credit card required, and you can access dashboards and tools while the beta is running.'
+          : 'Yes! 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and crypto glossary are all free forever. No credit card required. Pro unlocks all 83+ dashboards and advanced tools for $9/mo.',
     },
     {
       question: 'What is BYOK (Bring Your Own Key)?',
@@ -113,7 +138,9 @@ export function FAQJsonLd() {
     {
       question: 'Do you offer refunds?',
       answer:
-        'Yes! We offer a 30-day money-back guarantee. If you are not satisfied, contact us for a full refund within 30 days.',
+        IS_BETA_MODE
+          ? 'There are no payments during the free beta, so refunds are not applicable. If paid plans launch later, we will publish clear refund terms before billing begins.'
+          : 'Yes! We offer a 30-day money-back guarantee. If you are not satisfied, contact us for a full refund within 30 days.',
     },
   ];
 
@@ -150,7 +177,7 @@ export function ReportKitProductJsonLd({
   tier: 'free' | 'pro';
   slug: string;
 }) {
-  const prices = { free: '0', pro: '9' };
+  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '9' };
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -181,6 +208,63 @@ export function ReportKitProductJsonLd({
 
 // Pricing page schema with aggregate offers
 export function PricingJsonLd() {
+  const pricingEnabled = isFeatureEnabled('pricing');
+
+  if (IS_BETA_MODE) {
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'CryptoReportKit (Free Beta)',
+      description:
+        'Free beta access to crypto dashboards and tools. No credit card required during the beta.',
+      brand: {
+        '@type': 'Brand',
+        name: 'CryptoReportKit',
+      },
+      offers: {
+        '@type': 'Offer',
+        name: 'Free Beta',
+        price: '0',
+        priceCurrency: 'USD',
+        description: 'Free beta access (pricing not active during beta).',
+      },
+    };
+
+    return (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+    );
+  }
+
+  if (!pricingEnabled) {
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: 'CryptoReportKit (Free Mode)',
+      description:
+        'CryptoReportKit is running in free mode. Pricing is not currently enabled.',
+      brand: {
+        '@type': 'Brand',
+        name: 'CryptoReportKit',
+      },
+      offers: {
+        '@type': 'Offer',
+        name: 'Free',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    };
+
+    return (
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+    );
+  }
+
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -265,7 +349,7 @@ export function ExcelTemplateJsonLd({
   features: string[];
   tier?: 'free' | 'pro';
 }) {
-  const prices = { free: '0', pro: '9' };
+  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '9' };
 
   const structuredData = {
     '@context': 'https://schema.org',

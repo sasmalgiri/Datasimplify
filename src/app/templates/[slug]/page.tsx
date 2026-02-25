@@ -28,6 +28,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { ReportKitProductJsonLd } from '@/components/JsonLd';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 function TierBadge({ tier }: { tier: ReportKit['tier'] }) {
   const colors = {
@@ -372,18 +373,20 @@ export default function ReportKitPage() {
         )}
 
         {/* 30-Day Guarantee */}
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
-          <Shield className="w-10 h-10 text-emerald-600 mx-auto mb-3" />
-          <h3 className="font-semibold text-emerald-800 text-lg mb-2">
-            30-Day Money-Back Guarantee
-          </h3>
-          <p className="text-emerald-700 text-sm mb-3">
-            Not satisfied? Get a full refund within 30 days, no questions asked.
-          </p>
-          <Link href="/refund" className="text-emerald-600 hover:text-emerald-800 text-sm underline">
-            View refund policy
-          </Link>
-        </div>
+        {!IS_BETA_MODE && (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 text-center">
+            <Shield className="w-10 h-10 text-emerald-600 mx-auto mb-3" />
+            <h3 className="font-semibold text-emerald-800 text-lg mb-2">
+              30-Day Money-Back Guarantee
+            </h3>
+            <p className="text-emerald-700 text-sm mb-3">
+              Not satisfied? Get a full refund within 30 days, no questions asked.
+            </p>
+            <Link href="/refund" className="text-emerald-600 hover:text-emerald-800 text-sm underline">
+              View refund policy
+            </Link>
+          </div>
+        )}
       </main>
 
       {/* Download Modal */}

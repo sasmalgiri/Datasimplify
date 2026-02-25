@@ -18,6 +18,10 @@ const isFreeMode = IS_BETA_MODE ? false : APP_MODE === 'free';
 
 const defaultAdvancedEnabled = APP_MODE !== 'free';
 
+// Free beta: keep product features usable, but disable monetization surfaces by default.
+// You can still force-enable via env vars if needed.
+const defaultMonetizationEnabled = IS_BETA_MODE ? false : defaultAdvancedEnabled;
+
 export const FEATURES = {
   // Data providers
   // CoinGecko: DISPLAY-ONLY mode (UI charts/dashboards only, NO downloads)
@@ -45,8 +49,8 @@ export const FEATURES = {
   publicRpc: parseBool(process.env.NEXT_PUBLIC_FEATURE_PUBLIC_RPC, isFreeMode ? true : false),
 
   // Monetization
-  payments: parseBool(process.env.NEXT_PUBLIC_FEATURE_PAYMENTS, defaultAdvancedEnabled),
-  pricing: parseBool(process.env.NEXT_PUBLIC_FEATURE_PRICING, defaultAdvancedEnabled),
+  payments: parseBool(process.env.NEXT_PUBLIC_FEATURE_PAYMENTS, defaultMonetizationEnabled),
+  pricing: parseBool(process.env.NEXT_PUBLIC_FEATURE_PRICING, defaultMonetizationEnabled),
 
   // Product modules
   predictions: isFreeMode ? false : parseBool(process.env.NEXT_PUBLIC_FEATURE_PREDICTIONS, defaultAdvancedEnabled),

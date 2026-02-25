@@ -13,6 +13,7 @@ import { ApiKeyModal } from '@/components/live-dashboard/ApiKeyModal';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { FlaskConical, Lock, Key, ExternalLink, Shield } from 'lucide-react';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 export default function DataLabPage() {
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
@@ -51,7 +52,7 @@ export default function DataLabPage() {
   }
 
   // Pro tier gate — admin users bypass
-  const isPro = isAdmin || profile?.subscription_tier === 'pro';
+  const isPro = IS_BETA_MODE || isAdmin || profile?.subscription_tier === 'pro';
   if (!isPro) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">

@@ -70,6 +70,9 @@ const PUBLIC_ROUTES = new Set([
   '/wizard',
   '/builder',
   '/analyst-hub',
+
+  // Ensure base listing route is public (prefix below only covers /live-dashboards/*)
+  '/live-dashboards',
 ]);
 
 const PUBLIC_PREFIXES = [

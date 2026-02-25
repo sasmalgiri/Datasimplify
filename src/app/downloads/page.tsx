@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 type Release = {
   slug: string;
@@ -163,13 +164,15 @@ export default function DownloadsPage() {
               <div className="p-5 bg-gradient-to-r from-emerald-900/20 to-gray-800/40 border border-emerald-500/20 rounded-xl">
                 <h2 className="text-lg font-semibold mb-1">Want more?</h2>
                 <p className="text-gray-400 text-sm mb-3">
-                  Pro members get 300 downloads/month, all 63+ dashboard widgets, advanced charts, and full history.
+                  {IS_BETA_MODE
+                    ? 'The beta is free — explore live dashboards and download templates without a credit card.'
+                    : 'Pro members get 300 downloads/month, all 63+ dashboard widgets, advanced charts, and full history.'}
                 </p>
                 <Link
-                  href="/pricing"
+                  href={IS_BETA_MODE ? '/live-dashboards' : '/pricing'}
                   className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition"
                 >
-                  View Pro Plan — $9/mo
+                  {IS_BETA_MODE ? 'Explore Live Dashboards' : 'View Pro Plan — $9/mo'}
                 </Link>
               </div>
             </>

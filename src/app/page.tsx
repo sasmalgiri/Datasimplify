@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 import {
   ArrowRight, Brain,
   Shield, Zap, Layout, TrendingUp,
@@ -184,14 +185,16 @@ const COMPARISON_ROWS = [
   { feature: 'DCA simulator + tracker', crk: true, others: 'Basic or none' },
   { feature: 'Currency support', crk: '60+', others: 'USD only or 5-7' },
   { feature: 'Price alerts with email', crk: true, others: 'Pro only ($29+/mo)' },
-  { feature: 'Starting price', crk: '$0 free / $9 pro', others: '$19-49/mo' },
+  { feature: 'Starting price', crk: IS_BETA_MODE ? 'Free beta' : '$0 free / $9 pro', others: '$19-49/mo' },
 ];
 
 /* ─── FAQ Items ─── */
 const FAQ_ITEMS = [
   {
     q: 'Is CryptoReportKit really free?',
-    a: 'Yes — 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and Learn content are all free forever. No credit card required. Pro unlocks all 83+ dashboards, custom builder, tax tools, and advanced features for $9/mo.',
+    a: IS_BETA_MODE
+      ? 'Yes — this is a free beta. No credit card required, and you can access all dashboards and tools while the beta is running.'
+      : 'Yes — 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and Learn content are all free forever. No credit card required. Pro unlocks all 83+ dashboards, custom builder, tax tools, and advanced features for $9/mo.',
   },
   {
     q: 'What is BYOK and do I need a CoinGecko key?',
@@ -207,7 +210,9 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Can I cancel or get a refund?',
-    a: 'Cancel anytime from your account — no questions asked. Pro comes with a 30-day money-back guarantee. Your data and dashboards stay available on the free tier even after canceling.',
+    a: IS_BETA_MODE
+      ? 'There are no payments during the free beta, so there’s nothing to cancel or refund. If we introduce paid plans later, we’ll publish clear billing and refund terms before launch.'
+      : 'Cancel anytime from your account — no questions asked. Pro comes with a 30-day money-back guarantee. Your data and dashboards stay available on the free tier even after canceling.',
   },
 ];
 
@@ -451,7 +456,8 @@ export default function LandingPage() {
               8 Powerful Tools <span className="text-emerald-400">Built In</span>
             </h2>
             <p className="text-gray-400 text-base max-w-2xl mx-auto">
-              Tax reports, DCA tracking, custom dashboards, multi-exchange portfolio, and more — features that competitors charge $30-50/month for, included in your $9 plan.
+              Tax reports, DCA tracking, custom dashboards, multi-exchange portfolio, and more — features that competitors charge $30-50/month for,
+              {IS_BETA_MODE ? ' included during the free beta.' : ' included in your $9 plan.'}
             </p>
           </div>
 
@@ -599,7 +605,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════ PRICING ═══════ */}
-      {isFeatureEnabled('pricing') && (
+      {!IS_BETA_MODE && isFeatureEnabled('pricing') && (
         <section id="pricing" className="py-16 px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-10">

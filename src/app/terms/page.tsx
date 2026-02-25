@@ -1,8 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { IS_BETA_MODE } from '@/lib/betaMode';
+import { isFeatureEnabled } from '@/lib/featureFlags';
 
 export default function TermsPage() {
+  const paymentsEnabled = isFeatureEnabled('payments');
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
       <div className="max-w-4xl mx-auto">
@@ -31,7 +35,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Definitions</h2>
             <ul className="list-disc list-inside space-y-2">
-              <li><strong>&quot;Services&quot;</strong> means the CryptoReportKit platform, website, Excel templates (containing formulas only), analytics tools, and all related features.</li>
+              <li><strong>&quot;Services&quot;</strong> means the CryptoReportKit platform, website, Excel templates (including prefetched snapshot data + formulas), analytics tools, and all related features.</li>
               <li><strong>&quot;User&quot;</strong> or <strong>&quot;you&quot;</strong> means any individual or entity accessing or using our Services.</li>
               <li><strong>&quot;Content&quot;</strong> means all analytics visualizations, templates, charts, and educational information provided through our Services.</li>
               <li><strong>&quot;Templates&quot;</strong> means Excel files containing prefetched cryptocurrency data, ready to use. Live web dashboards are also available using BYOK architecture.</li>
@@ -210,7 +214,9 @@ export default function TermsPage() {
             <p className="mb-4">
               Paid Subscriptions are billed in advance on a monthly or annual basis, depending on your
               selected plan. Payments are processed securely through our payment provider.
-              <strong className="text-amber-600"> Note: Paid plans and payment processing are coming soon.</strong>
+              {!paymentsEnabled && (
+                <strong className="text-amber-600"> Note: Paid plans and payment processing are coming soon.</strong>
+              )}
             </p>
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.2 Automatic Renewal</h3>
@@ -228,31 +234,40 @@ export default function TermsPage() {
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.4 Refund Policy</h3>
             <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-              <p className="mb-2 text-sm text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-                <strong>Note:</strong> Payments are not currently enabled. This refund policy will apply when paid plans become available.
-              </p>
-              <p className="mb-3">
-                <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> When paid plans launch, we will offer a full refund
-                within 30 days of your initial subscription purchase, no questions asked.
-              </p>
-              <ul className="list-disc list-inside space-y-2 text-sm mb-3">
-                <li><strong>Eligibility:</strong> Refunds are available within 30 days from the date of your first payment.</li>
-                <li><strong>How to Request:</strong> Contact us at support@cryptoreportkit.com or use your payment receipt
-                  to request a refund directly.</li>
-                <li><strong>Processing:</strong> Refunds are typically processed within 5-10 business days and
-                  appear in your account depending on your payment method.</li>
-                <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
-                  required by applicable law. Your statutory rights are not affected by this policy.</li>
-                <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
-                  After 30 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
-                <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template
-                  purchases follow the same 30-day policy as subscriptions.</li>
-                <li><strong>Chargebacks:</strong> We encourage you to request refunds directly rather than filing chargebacks.
-                  Fraudulent chargebacks may result in account termination.</li>
-              </ul>
-              <p className="text-sm text-gray-600">
-                <strong>Note:</strong> See our full <Link href="/refund" className="text-green-700 underline">Refund Policy</Link> for details.
-              </p>
+              {IS_BETA_MODE || !paymentsEnabled ? (
+                <p className="text-sm text-gray-700">
+                  <strong>{IS_BETA_MODE ? 'Free beta:' : 'Payments not enabled:'}</strong> We are not processing payments currently, so refunds are not applicable.
+                  If/when paid plans launch, we’ll publish clear billing and refund terms before charging anyone.
+                </p>
+              ) : (
+                <>
+                  <p className="mb-2 text-sm text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                    <strong>Note:</strong> For full details, see our <Link href="/refund" className="text-green-700 underline">Refund Policy</Link>.
+                  </p>
+                  <p className="mb-3">
+                    <strong className="text-green-800">30-Day Money-Back Guarantee:</strong> We offer a full refund
+                    within 30 days of your initial subscription purchase, no questions asked.
+                  </p>
+                  <ul className="list-disc list-inside space-y-2 text-sm mb-3">
+                    <li><strong>Eligibility:</strong> Refunds are available within 30 days from the date of your first payment.</li>
+                    <li><strong>How to Request:</strong> Contact us at support@cryptoreportkit.com or use your payment receipt
+                      to request a refund directly.</li>
+                    <li><strong>Processing:</strong> Refunds are typically processed within 5-10 business days and
+                      appear in your account depending on your payment method.</li>
+                    <li><strong>After 30 Days:</strong> Payments are non-refundable after the 30-day window, except where
+                      required by applicable law. Your statutory rights are not affected by this policy.</li>
+                    <li><strong>Annual Plans:</strong> For annual subscriptions cancelled within 30 days, you receive a full refund.
+                      After 30 days, cancellation stops future billing but no refund is provided for the remaining period.</li>
+                    <li><strong>Templates:</strong> Excel templates are formula-based tools, not data products. Refunds for template
+                      purchases follow the same 30-day policy as subscriptions.</li>
+                    <li><strong>Chargebacks:</strong> We encourage you to request refunds directly rather than filing chargebacks.
+                      Fraudulent chargebacks may result in account termination.</li>
+                  </ul>
+                  <p className="text-sm text-gray-600">
+                    <strong>Note:</strong> See our full <Link href="/refund" className="text-green-700 underline">Refund Policy</Link> for details.
+                  </p>
+                </>
+              )}
             </div>
           </section>
 
