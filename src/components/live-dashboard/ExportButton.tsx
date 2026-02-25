@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Download, FileImage, FileText, FileSpreadsheet, FileDown, Loader2, CheckCircle, AlertCircle, Lock, Crown, Zap, ChevronDown } from 'lucide-react';
+import { Download, FileImage, FileText, FileSpreadsheet, FileDown, Loader2, CheckCircle, AlertCircle, Lock, Crown, Zap } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { useExportGating } from '@/lib/live-dashboard/useExportGating';
 import { useCreditStore, CREDIT_COSTS, type CreditAction } from '@/lib/live-dashboard/credits';
@@ -20,40 +20,40 @@ interface ExportButtonProps {
   onOpenKeyModal?: () => void;
 }
 
-const EXPORT_GROUPS = [
-  {
-    key: 'image',
-    label: 'Image',
-    icon: FileImage,
-    iconColor: 'text-blue-400',
-    formats: [
-      { format: 'png' as ExportFormat, label: 'PNG Image', icon: FileImage, iconColor: 'text-blue-400' },
-      { format: 'pdf' as ExportFormat, label: 'PDF Document', icon: FileText, iconColor: 'text-emerald-400' },
-    ],
-  },
-  {
-    key: 'data',
-    label: 'Data',
-    icon: FileSpreadsheet,
-    iconColor: 'text-green-400',
-    formats: [
-      { format: 'excel' as ExportFormat, label: 'Excel (.xlsx)', icon: FileSpreadsheet, iconColor: 'text-green-400' },
-      { format: 'csv' as ExportFormat, label: 'CSV (.zip)', icon: FileDown, iconColor: 'text-yellow-400' },
-    ],
-  },
+const ALL_FORMATS = [
+  { group: 'Image', format: 'png' as ExportFormat, label: 'PNG Image', icon: FileImage, iconColor: 'text-blue-400' },
+  { group: 'Image', format: 'pdf' as ExportFormat, label: 'PDF Document', icon: FileText, iconColor: 'text-emerald-400' },
+  { group: 'Data', format: 'excel' as ExportFormat, label: 'Excel (.xlsx)', icon: FileSpreadsheet, iconColor: 'text-green-400' },
+  { group: 'Data', format: 'csv' as ExportFormat, label: 'CSV (.zip)', icon: FileDown, iconColor: 'text-yellow-400' },
 ];
 
 export function ExportButton({ dashboardName, onOpenKeyModal }: ExportButtonProps) {
   const [open, setOpen] = useState(false);
-  const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null);
   const data = useLiveDashboardStore((s) => s.data);
   const apiKey = useLiveDashboardStore((s) => s.apiKey);
   const { entitlement, trackExport } = useExportGating();
   const canAfford = useCreditStore((s) => s.canAfford);
   const creditUse = useCreditStore((s) => s.useCredits);
+
+  // Calculate fixed position when opening
+  const updatePosition = useCallback(() => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open) updatePosition();
+  }, [open, updatePosition]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -69,11 +69,6 @@ export function ExportButton({ dashboardName, onOpenKeyModal }: ExportButtonProp
     const timer = setTimeout(() => setToast(null), 4000);
     return () => clearTimeout(timer);
   }, [toast]);
-
-  // Reset expanded group when dropdown closes
-  useEffect(() => {
-    if (!open) setExpandedGroup(null);
-  }, [open]);
 
   const handleExport = async (format: ExportFormat) => {
     // Require user's own API key for exports
@@ -140,9 +135,13 @@ export function ExportButton({ dashboardName, onOpenKeyModal }: ExportButtonProp
   const remaining = Math.max(0, entitlement.downloadsLimit - entitlement.downloadsUsed);
   const isFree = entitlement.tier === 'free';
 
+  // Group formats by category
+  const groups = ['Image', 'Data'] as const;
+
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(!open)}
         disabled={exporting}
@@ -152,99 +151,83 @@ export function ExportButton({ dashboardName, onOpenKeyModal }: ExportButtonProp
         {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
       </button>
 
-      {open && (
-        <div className="absolute right-0 bottom-full mb-2 bg-[#0a0a0f] border border-white/[0.1] rounded-xl shadow-2xl overflow-hidden z-50 min-w-[220px]">
+      {open && dropdownPos && (
+        <div
+          className="fixed bg-[#0a0a0f] border border-white/[0.1] rounded-xl shadow-2xl z-[60] w-[280px]"
+          style={{ top: dropdownPos.top, right: dropdownPos.right }}
+        >
           {/* Header */}
-          <div className="px-3 py-2 border-b border-white/[0.06]">
-            <div className="text-xs font-medium text-white">Export Dashboard</div>
-            <div className="text-[10px] text-gray-500 mt-0.5">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <div className="text-sm font-semibold text-white">Export Dashboard</div>
+            <div className="text-xs text-gray-500 mt-0.5">
               {remaining} of {entitlement.downloadsLimit} exports remaining
             </div>
           </div>
 
-          {/* Collapsible groups */}
-          {EXPORT_GROUPS.map((group) => {
-            const isExpanded = expandedGroup === group.key;
-            const GroupIcon = group.icon;
+          {/* All formats — grouped but always expanded */}
+          <div className="py-2">
+            {groups.map((groupName) => (
+              <div key={groupName}>
+                <div className="px-4 py-1.5 text-[10px] uppercase tracking-wider text-gray-600 font-semibold">
+                  {groupName}
+                </div>
+                {ALL_FORMATS.filter((f) => f.group === groupName).map(({ format, label, icon: Icon, iconColor }) => {
+                  const allowed = entitlement.allowedFormats.includes(format);
+                  const needsData = (format === 'excel' || format === 'csv') && !hasData;
+                  const disabled = !allowed || needsData;
 
-            return (
-              <div key={group.key}>
-                {/* Group header — clickable toggle */}
-                <button
-                  type="button"
-                  onClick={() => setExpandedGroup(isExpanded ? null : group.key)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-gray-300 hover:bg-white/[0.04] transition"
-                >
-                  <GroupIcon className={`w-3.5 h-3.5 ${group.iconColor}`} />
-                  <span className="flex-1 text-left">{group.label}</span>
-                  <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                </button>
-
-                {/* Expanded format options */}
-                {isExpanded && (
-                  <div className="border-t border-white/[0.04]">
-                    {group.formats.map(({ format, label, icon: Icon, iconColor }) => {
-                      const allowed = entitlement.allowedFormats.includes(format);
-                      const needsData = (format === 'excel' || format === 'csv') && !hasData;
-                      const disabled = !allowed || needsData;
-
-                      return (
-                        <button
-                          key={format}
-                          type="button"
-                          onClick={() => !disabled && handleExport(format)}
-                          className={`w-full flex items-center gap-2 pl-8 pr-3 py-2 text-xs transition ${
-                            disabled
-                              ? 'text-gray-600 cursor-not-allowed'
-                              : 'text-gray-300 hover:bg-white/[0.05] hover:text-white'
-                          }`}
-                        >
-                          {allowed ? (
-                            <Icon className={`w-3.5 h-3.5 ${disabled ? 'text-gray-700' : iconColor}`} />
-                          ) : (
-                            <Lock className="w-3.5 h-3.5 text-gray-600" />
-                          )}
-                          <span className="flex-1 text-left">{label}</span>
-                          {!allowed && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-amber-500/70 font-medium">
-                              <Crown className="w-2.5 h-2.5" /> PRO
-                            </span>
-                          )}
-                          {allowed && (
-                            <span className="flex items-center gap-0.5 text-[10px] text-amber-400/70 font-medium">
-                              <Zap className="w-2.5 h-2.5" />
-                              {CREDIT_COSTS[FORMAT_TO_CREDIT[format]]}
-                            </span>
-                          )}
-                          {allowed && format === 'png' && isFree && (
-                            <span className="text-[9px] text-gray-600">1x</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                  return (
+                    <button
+                      key={format}
+                      type="button"
+                      onClick={() => !disabled && handleExport(format)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${
+                        disabled
+                          ? 'text-gray-600 cursor-not-allowed'
+                          : 'text-gray-300 hover:bg-white/[0.05] hover:text-white'
+                      }`}
+                    >
+                      {allowed ? (
+                        <Icon className={`w-4 h-4 ${disabled ? 'text-gray-700' : iconColor}`} />
+                      ) : (
+                        <Lock className="w-4 h-4 text-gray-600" />
+                      )}
+                      <span className="flex-1 text-left font-medium">{label}</span>
+                      {!allowed && (
+                        <span className="flex items-center gap-0.5 text-[10px] text-amber-500/70 font-medium">
+                          <Crown className="w-3 h-3" /> PRO
+                        </span>
+                      )}
+                      {allowed && (
+                        <span className="flex items-center gap-0.5 text-[11px] text-amber-400/70 font-medium">
+                          <Zap className="w-3 h-3" />
+                          {CREDIT_COSTS[FORMAT_TO_CREDIT[format]]}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })}
+            ))}
+          </div>
 
           {/* Footer */}
-          <div className="px-3 py-1.5 border-t border-white/[0.06]">
+          <div className="px-4 py-2.5 border-t border-white/[0.06]">
             {isFree && (
-              <div className="text-[10px] text-gray-600">
+              <div className="text-xs text-gray-600 mb-1">
                 <Link href="/pricing" className="text-emerald-500 hover:text-emerald-400">
                   Upgrade for HD + all formats
                 </Link>
               </div>
             )}
-            <div className="text-[10px] text-gray-600">For personal use only</div>
+            <div className="text-xs text-gray-600">For personal use only</div>
           </div>
         </div>
       )}
 
       {/* Toast notification */}
       {toast && (
-        <div className={`absolute right-0 top-full mt-2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium whitespace-nowrap ${
+        <div className={`fixed right-4 top-16 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium whitespace-nowrap ${
           toast.type === 'success'
             ? 'bg-emerald-500/10 border border-emerald-400/20 text-emerald-400'
             : toast.type === 'info'
