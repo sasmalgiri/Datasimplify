@@ -17,6 +17,7 @@ const FORMAT_TO_CREDIT: Record<ExportFormat, CreditAction> = {
 
 interface ExportButtonProps {
   dashboardName: string;
+  onOpenKeyModal?: () => void;
 }
 
 const EXPORT_GROUPS = [
@@ -42,13 +43,14 @@ const EXPORT_GROUPS = [
   },
 ];
 
-export function ExportButton({ dashboardName }: ExportButtonProps) {
+export function ExportButton({ dashboardName, onOpenKeyModal }: ExportButtonProps) {
   const [open, setOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const data = useLiveDashboardStore((s) => s.data);
+  const apiKey = useLiveDashboardStore((s) => s.apiKey);
   const { entitlement, trackExport } = useExportGating();
   const canAfford = useCreditStore((s) => s.canAfford);
   const creditUse = useCreditStore((s) => s.useCredits);
@@ -74,6 +76,14 @@ export function ExportButton({ dashboardName }: ExportButtonProps) {
   }, [open]);
 
   const handleExport = async (format: ExportFormat) => {
+    // Require user's own API key for exports
+    if (!apiKey) {
+      setToast({ type: 'info', message: 'Add your free CoinGecko API key to export dashboards.' });
+      setOpen(false);
+      onOpenKeyModal?.();
+      return;
+    }
+
     // Check if format is allowed
     if (!entitlement.allowedFormats.includes(format)) {
       setToast({ type: 'info', message: `${format.toUpperCase()} export requires Pro. Upgrade at /pricing` });

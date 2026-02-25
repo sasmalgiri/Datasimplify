@@ -364,7 +364,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
 
           {/* Export — hidden when customize open */}
-          {!customizeOpen && <ExportButton dashboardName={definition.name} />}
+          {!customizeOpen && <ExportButton dashboardName={definition.name} onOpenKeyModal={onOpenKeyModal} />}
 
           {/* Share — hidden when customize open */}
           {!customizeOpen && <ShareButton slug={definition.slug} />}
