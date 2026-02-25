@@ -30,30 +30,32 @@ export const SITE_THEMES = {
     divider: 'border-white/[0.04]',
     linkText: 'text-gray-600 hover:text-white',
   },
+  // Light theme inspired by CoinMarketCap / TradingView / CoinGecko
+  // Page: #F8FAFD, Cards: #FFFFFF, Text: #0D1421, Accent: #3861FB
   'light-blue': {
-    pageBg: 'bg-[#f0f4ff]',
-    cardClasses: 'bg-white border border-blue-200/40 rounded-2xl shadow-sm',
-    cardHover: 'hover:border-blue-300/60 hover:shadow-md transition-all duration-300',
-    cardGlow: 'hover:border-blue-400/40 hover:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all duration-300',
-    textPrimary: 'text-slate-800',
-    textSecondary: 'text-slate-700',
-    textMuted: 'text-slate-600',
-    textDim: 'text-slate-500',
-    textFaint: 'text-slate-400',
-    subtleBg: 'bg-blue-50/50',
-    subtleBorder: 'border-blue-200/30',
-    panelBg: 'bg-white/80 border border-blue-200/30',
-    inputBg: 'bg-white border border-blue-200/50 text-slate-800',
+    pageBg: 'bg-[#F8FAFD]',
+    cardClasses: 'bg-white border border-[#EFF2F5] rounded-2xl shadow-[0_1px_2px_rgba(88,102,126,0.12),0_4px_24px_rgba(88,102,126,0.08)]',
+    cardHover: 'hover:border-[#CFD6E4] hover:shadow-[0_1px_2px_rgba(88,102,126,0.16),0_8px_32px_rgba(88,102,126,0.12)] transition-all duration-300',
+    cardGlow: 'hover:border-[#3861FB]/20 hover:shadow-[0_0_20px_rgba(56,97,251,0.08)] transition-all duration-300',
+    textPrimary: 'text-[#0D1421]',
+    textSecondary: 'text-[#616E85]',
+    textMuted: 'text-[#808A9D]',
+    textDim: 'text-[#A6B0C3]',
+    textFaint: 'text-[#CFD6E4]',
+    subtleBg: 'bg-[#F8FAFD]',
+    subtleBorder: 'border-[#EFF2F5]',
+    panelBg: 'bg-white border border-[#EFF2F5]',
+    inputBg: 'bg-[#EFF2F5] border border-[#CFD6E4] text-[#0D1421]',
     selectOptionBg: 'bg-white',
-    chipActive: 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/25',
-    chipInactive: 'bg-blue-50/50 text-slate-500 border border-blue-200/30 hover:bg-blue-100/50',
-    buttonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-white',
-    buttonSecondary: 'bg-blue-50/50 hover:bg-blue-100/60 text-slate-500 hover:text-slate-700 border border-blue-200/30',
-    errorBg: 'bg-red-50 border border-red-200 text-red-600',
-    footerBorder: 'border-t border-blue-200/30',
-    kbdBg: 'bg-blue-50 border-blue-200/40',
-    divider: 'border-blue-200/20',
-    linkText: 'text-slate-400 hover:text-slate-700',
+    chipActive: 'bg-[#DEFBF0] text-[#16C784] border border-[#16C784]/25',
+    chipInactive: 'bg-[#F8FAFD] text-[#616E85] border border-[#EFF2F5] hover:bg-[#EFF2F5]',
+    buttonPrimary: 'bg-[#3861FB] hover:bg-[#2952E0] text-white',
+    buttonSecondary: 'bg-[#F8FAFD] hover:bg-[#EFF2F5] text-[#616E85] hover:text-[#0D1421] border border-[#EFF2F5]',
+    errorBg: 'bg-[#FCE6E8] border border-[#EA3943]/20 text-[#EA3943]',
+    footerBorder: 'border-t border-[#EFF2F5]',
+    kbdBg: 'bg-[#EFF2F5] border-[#CFD6E4]',
+    divider: 'border-[#EFF2F5]',
+    linkText: 'text-[#A6B0C3] hover:text-[#0D1421]',
   },
 } as const;
 
@@ -138,10 +140,10 @@ export const ECHARTS_THEME = {
   },
 } as const;
 
-// ECharts theme for light-blue site theme
+// ECharts theme for light site theme (CMC/TradingView-inspired)
 export const ECHARTS_THEME_LIGHT = {
   backgroundColor: 'transparent',
-  textStyle: { color: 'rgba(30,41,59,0.6)', fontFamily: 'inherit' },
+  textStyle: { color: '#808A9D', fontFamily: 'inherit' },
   grid: {
     left: '3%',
     right: '3%',
@@ -150,21 +152,22 @@ export const ECHARTS_THEME_LIGHT = {
     containLabel: true,
   },
   xAxis: {
-    axisLine: { lineStyle: { color: 'rgba(59,130,246,0.15)' } },
+    axisLine: { lineStyle: { color: '#EFF2F5' } },
     axisTick: { show: false },
-    axisLabel: { color: 'rgba(30,41,59,0.5)', fontSize: 10 },
-    splitLine: { lineStyle: { color: 'rgba(59,130,246,0.08)' } },
+    axisLabel: { color: '#808A9D', fontSize: 10 },
+    splitLine: { lineStyle: { color: '#EFF2F5' } },
   },
   yAxis: {
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { color: 'rgba(30,41,59,0.5)', fontSize: 10 },
-    splitLine: { lineStyle: { color: 'rgba(59,130,246,0.08)' } },
+    axisLabel: { color: '#808A9D', fontSize: 10 },
+    splitLine: { lineStyle: { color: '#EFF2F5' } },
   },
   tooltip: {
-    backgroundColor: 'rgba(255,255,255,0.97)',
-    borderColor: 'rgba(59,130,246,0.15)',
-    textStyle: { color: '#1e293b', fontSize: 12 },
+    backgroundColor: '#FFFFFF',
+    borderColor: '#EFF2F5',
+    textStyle: { color: '#0D1421', fontSize: 12 },
+    extraCssText: 'box-shadow: 0px 1px 2px rgba(88,102,126,0.12), 0px 4px 24px rgba(88,102,126,0.08);',
   },
 } as const;
 
