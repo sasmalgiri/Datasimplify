@@ -101,14 +101,13 @@ export function FreeNavbar() {
     reports: {
       label: 'Templates',
       icon: <FileSpreadsheet className="w-4 h-4" />,
-      paths: ['/templates', '/downloads', '/template-requirements', '/byok', '/live-dashboards'],
+      paths: ['/templates', '/downloads', '/byok', '/live-dashboards'],
       items: [
         { href: '/live-dashboards', label: 'Live Dashboards', description: 'Interactive web dashboards with your API key', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/templates', label: 'Template Hub', description: 'Browse & experiment with dashboard layouts', icon: <FlaskConical className="w-4 h-4" /> },
         ...(user ? [
           { href: '/downloads', label: 'Excel Downloads', description: 'Pre-built Excel files for offline analysis', icon: <Download className="w-4 h-4" /> },
         ] : []),
-        { href: '/template-requirements', label: 'Setup Guide', description: 'How to use Excel templates', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/byok', label: 'BYOK Explained', description: 'Your API key stays in Excel', icon: <Shield className="w-4 h-4" /> },
       ],
     },
