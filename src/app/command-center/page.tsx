@@ -16,6 +16,7 @@ import { SnapshotHistory } from '@/components/workspaces/SnapshotHistory';
 import { WorkspaceCreateModal } from '@/components/workspaces/WorkspaceCreateModal';
 import { QuickStartWizard } from '@/components/workspaces/QuickStartWizard';
 import { Loader2, History, LayoutDashboard, Pencil } from 'lucide-react';
+import { IS_BETA_MODE } from '@/lib/betaMode';
 
 export default function CommandCenterPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -38,9 +39,9 @@ export default function CommandCenterPage() {
   const [editWorkspaceId, setEditWorkspaceId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Auth gate
+  // Auth gate (skip in beta mode — everything is free)
   useEffect(() => {
-    if (!authLoading && !user && !redirectedRef.current) {
+    if (!IS_BETA_MODE && !authLoading && !user && !redirectedRef.current) {
       redirectedRef.current = true;
       router.push('/login');
     }

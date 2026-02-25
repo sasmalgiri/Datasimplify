@@ -25,9 +25,9 @@ export default function DataLabPage() {
   const chartRef = useRef<HTMLDivElement>(null);
   const hasInitRef = useRef(false);
 
-  // Auth gate
+  // Auth gate (skip in beta mode — everything is free)
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!IS_BETA_MODE && !authLoading && !user) {
       router.push('/login?redirect=/datalab');
     }
   }, [authLoading, user, router]);
