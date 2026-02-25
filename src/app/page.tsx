@@ -185,7 +185,7 @@ const COMPARISON_ROWS = [
   { feature: 'DCA simulator + tracker', crk: true, others: 'Basic or none' },
   { feature: 'Currency support', crk: '60+', others: 'USD only or 5-7' },
   { feature: 'Price alerts with email', crk: true, others: 'Pro only ($29+/mo)' },
-  { feature: 'Starting price', crk: IS_BETA_MODE ? 'Free beta' : '$0 free / $9 pro', others: '$19-49/mo' },
+  { feature: 'Starting price', crk: IS_BETA_MODE ? 'Free beta' : '$0 free / $19 pro', others: '$19-49/mo' },
 ];
 
 /* ─── FAQ Items ─── */
@@ -194,7 +194,7 @@ const FAQ_ITEMS = [
     q: 'Is CryptoReportKit really free?',
     a: IS_BETA_MODE
       ? 'Yes — this is a free beta. No credit card required, and you can access all dashboards and tools while the beta is running.'
-      : 'Yes — 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and Learn content are all free forever. No credit card required. Pro unlocks all 83+ dashboards, custom builder, tax tools, and advanced features for $9/mo.',
+      : 'Yes — 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and Learn content are all free forever. No credit card required. Pro unlocks all 83+ dashboards, custom builder, tax tools, and advanced features for $19/mo.',
   },
   {
     q: 'What is BYOK and do I need a CoinGecko key?',
@@ -457,7 +457,7 @@ export default function LandingPage() {
             </h2>
             <p className="text-gray-400 text-base max-w-2xl mx-auto">
               Tax reports, DCA tracking, custom dashboards, multi-exchange portfolio, and more — features that competitors charge $30-50/month for,
-              {IS_BETA_MODE ? ' included during the free beta.' : ' included in your $9 plan.'}
+              {IS_BETA_MODE ? ' included during the free beta.' : ' included in your $19 plan.'}
             </p>
           </div>
 
@@ -656,8 +656,8 @@ export default function LandingPage() {
                 </div>
 
                 <div className="text-sm text-emerald-400 font-medium mb-1">Pro</div>
-                <div className="text-4xl font-bold mb-1">$9<span className="text-base text-gray-400 font-normal">/mo</span></div>
-                <div className="text-xs text-gray-500 mb-5">$90/year (save 17%)</div>
+                <div className="text-4xl font-bold mb-1">$19<span className="text-base text-gray-400 font-normal">/mo</span></div>
+                <div className="text-xs text-gray-500 mb-5">$190/year (save 17%)</div>
 
                 <ul className="space-y-2.5 text-sm text-gray-300 mb-6">
                   {[

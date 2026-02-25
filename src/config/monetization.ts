@@ -37,7 +37,7 @@ PROJECTED REVENUE (Conservative):
 Template Sales:     100 sales/mo × $29 avg  = $2,900/mo
 Subscriptions:      200 users × $5/mo       = $1,000/mo
 Affiliates:         50 signups/mo × $10 avg = $500/mo
-Dashboard SaaS:     100 users × $9/mo       = $900/mo
+Dashboard SaaS:     100 users × $19/mo      = $1,900/mo
 ─────────────────────────────────────────────────────────
 TOTAL:                                        $5,300/mo
 
@@ -134,7 +134,7 @@ export const PRICING_TIERS = {
     },
     pro: {
       name: "Dashboard Pro",
-      price: 9,
+      price: 19,
       interval: "month",
       features: [
         "Unlimited API keys",

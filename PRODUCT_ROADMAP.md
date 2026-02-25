@@ -1088,7 +1088,7 @@ export async function POST(request: Request) {
 **3. Billing Page: `/account/billing`**
 ```
 Current Plan: Pro
-├── Price: $29/month
+├── Price: $19/month
 ├── Renewal: Feb 15, 2026
 └── Status: Active
 
@@ -1096,7 +1096,7 @@ Current Plan: Pro
 
 Recent Invoices
 ┌────────────────────────────────────┐
-│ Jan 15, 2026 - $29.00 (Paid)     │
+│ Jan 15, 2026 - $19.00 (Paid)     │
 │ [Download PDF] [View Receipt]     │
 └────────────────────────────────────┘
 ```

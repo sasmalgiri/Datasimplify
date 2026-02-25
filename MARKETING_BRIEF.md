@@ -2,7 +2,7 @@
 
 **Product URL:** https://cryptoreportkit.com
 **Tagline:** The Complete Crypto Analytics Toolkit
-**Price:** Free tier ($0) + Pro tier ($9/mo or $90/year)
+**Price:** Free tier ($0) + Pro tier ($19/mo or $190/year)
 **Category:** Crypto analytics SaaS (web dashboards)
 **Target Market:** Crypto traders, investors, analysts, portfolio managers, DeFi users
 
@@ -64,7 +64,7 @@ This is the hook. Users get genuine value without paying:
 
 ---
 
-## 4. Pro Tier — $9/month ($90/year)
+## 4. Pro Tier — $19/month ($190/year)
 
 The upgrade pitch focuses on unlocking everything + exclusive pro tools:
 
@@ -134,12 +134,12 @@ Use this table in comparison content, landing pages, and ads:
 | DCA simulator + tracker | Yes | Basic or none |
 | Currency support | 60+ | USD only or 5-7 |
 | Price alerts with email | Yes (free + pro) | Pro only ($29+/mo) |
-| Price | $0 free / $9 pro | $19-49/mo |
+| Price | $0 free / $19 pro | $19-49/mo |
 
 **Key messaging:**
 - "More features at 1/3 the price"
 - "Your keys never leave your device"
-- "71 dashboards, 75+ widgets, 8 pro tools — for $9/month"
+- "71 dashboards, 75+ widgets, 8 pro tools — for $19/month"
 
 ---
 
@@ -158,7 +158,7 @@ Use this table in comparison content, landing pages, and ads:
 ### Segment 3: Crypto Tax Filers
 **Pain:** Cost basis calculation is confusing and expensive tools exist
 **Hook tools:** Tax Report Export (FIFO/LIFO/AVG), Form 8949 CSV
-**Message:** "Calculate your crypto taxes in 5 minutes. Export Form 8949 CSV. Free cost basis preview, $9 for full export."
+**Message:** "Calculate your crypto taxes in 5 minutes. Export Form 8949 CSV. Free cost basis preview, $19 for full export."
 
 ### Segment 4: DeFi / Multi-Chain Users
 **Pain:** Track TVL, DEX volumes, and cross-chain activity
@@ -202,7 +202,7 @@ Use this table in comparison content, landing pages, and ads:
 3. Day 5: "Try the DCA Simulator — see what $100/week into BTC would return" (tool showcase)
 4. Day 7: "What Pro users are doing: Custom dashboards, tax exports, whale tracking" (soft upgrade)
 5. Day 14: "Your free trial of Pro features" (if offering trial)
-6. Day 21: "$9/month vs $50/month elsewhere — here's the comparison" (upgrade push)
+6. Day 21: "$19/month vs $50/month elsewhere — here's the comparison" (upgrade push)
 
 ---
 
@@ -210,23 +210,23 @@ Use this table in comparison content, landing pages, and ads:
 
 ### Google Ads
 **Headline 1:** Free Crypto Dashboard — 71+ Live Dashboards
-**Headline 2:** Crypto Analytics for $9/mo | 23 Dashboards Free
+**Headline 2:** Crypto Analytics for $19/mo | 23 Dashboards Free
 **Headline 3:** Tax Tools + DCA Tracker | Built-In
-**Description:** 71 live dashboards, 75+ widgets, tax tools, DCA tracker, custom builder. BYOK — your API keys never leave your device. Start free, upgrade for $9/mo.
+**Description:** 71 live dashboards, 75+ widgets, tax tools, DCA tracker, custom builder. BYOK — your API keys never leave your device. Start free, upgrade for $19/mo.
 
 ### Facebook/Instagram Ads
 **Hook:** "Stop paying $50/month for basic crypto charts."
-**Body:** CryptoReportKit gives you 71 interactive dashboards, a tax calculator, DCA tracker, whale radar, and custom dashboard builder — for $9/month. Or start with 23 free dashboards. No credit card needed.
+**Body:** CryptoReportKit gives you 71 interactive dashboards, a tax calculator, DCA tracker, whale radar, and custom dashboard builder — for $19/month. Or start with 23 free dashboards. No credit card needed.
 **CTA:** Explore Free Dashboards
 
 ### Twitter/X Promoted
-"I use 71 crypto dashboards daily. BTC dominance timer, accumulation zone finder, whale tracker, divergence spotter. 23 of them are completely free. The rest are $9/mo. My API keys never leave my device. cryptoreportkit.com"
+"I use 71 crypto dashboards daily. BTC dominance timer, accumulation zone finder, whale tracker, divergence spotter. 23 of them are completely free. The rest are $19/mo. My API keys never leave my device. cryptoreportkit.com"
 
 ---
 
 ## 9. Key Selling Points (rank by impact)
 
-1. **Price** — $9/mo vs $19-49/mo competitors (undercuts everyone)
+1. **Price** — $19/mo vs $19-49/mo competitors (undercuts many)
 2. **Free tier** — 23 genuine dashboards, not a trial (builds trust, drives word of mouth)
 3. **BYOK privacy** — API keys never leave the device (unique differentiator)
 4. **Volume** — 71 dashboards, 75+ widgets, 8 pro tools (overwhelms competitors on quantity)

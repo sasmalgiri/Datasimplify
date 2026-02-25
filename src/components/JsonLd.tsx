@@ -72,7 +72,7 @@ export function SoftwareApplicationJsonLd() {
       ? {
           '@type': 'AggregateOffer',
           lowPrice: '0',
-          highPrice: '9',
+          highPrice: '19',
           priceCurrency: 'USD',
           offerCount: '2',
         }
@@ -123,7 +123,7 @@ export function FAQJsonLd() {
       answer:
         IS_BETA_MODE
           ? 'Yes — the current beta is free. No credit card required, and you can access dashboards and tools while the beta is running.'
-          : 'Yes! 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and crypto glossary are all free forever. No credit card required. Pro unlocks all 83+ dashboards and advanced tools for $9/mo.',
+          : 'Yes! 32+ dashboards, DCA simulator, BTC cycle comparison, 60+ currencies, and crypto glossary are all free forever. No credit card required. Pro unlocks all 83+ dashboards and advanced tools for $19/mo.',
     },
     {
       question: 'What is BYOK (Bring Your Own Key)?',
@@ -177,7 +177,7 @@ export function ReportKitProductJsonLd({
   tier: 'free' | 'pro';
   slug: string;
 }) {
-  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '9' };
+  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '19' };
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -278,7 +278,7 @@ export function PricingJsonLd() {
     offers: {
       '@type': 'AggregateOffer',
       lowPrice: '0',
-      highPrice: '9',
+      highPrice: '19',
       priceCurrency: 'USD',
       offerCount: '2',
       offers: [
@@ -292,7 +292,7 @@ export function PricingJsonLd() {
         {
           '@type': 'Offer',
           name: 'Pro Plan',
-          price: '9',
+          price: '19',
           priceCurrency: 'USD',
           description: 'All 83+ dashboards, custom builder, tax tools, multi-exchange portfolio',
         },
@@ -349,7 +349,7 @@ export function ExcelTemplateJsonLd({
   features: string[];
   tier?: 'free' | 'pro';
 }) {
-  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '9' };
+  const prices = IS_BETA_MODE ? { free: '0', pro: '0' } : { free: '0', pro: '19' };
 
   const structuredData = {
     '@context': 'https://schema.org',

@@ -151,8 +151,8 @@ export default function PricingPage() {
     {
       name: 'Pro',
       key: 'pro',
-      monthlyPrice: 9,
-      yearlyPrice: 90,
+      monthlyPrice: 19,
+      yearlyPrice: 190,
       description: 'Full analytics suite for serious crypto research',
       features: [
         '300 downloads per month',

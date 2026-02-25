@@ -198,7 +198,7 @@ If a feature isn't listed here, it cannot be shipped to production.
 - Basic Excel functions
 - Web display access
 
-### Pro Tier ($29/mo)
+### Pro Tier ($19/mo)
 - All Free features
 - BYOK with premium providers (Etherscan, Reddit)
 - 50 template downloads/month

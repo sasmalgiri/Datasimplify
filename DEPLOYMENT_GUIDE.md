@@ -201,7 +201,7 @@ Before applying for Paddle approval, ensure:
 2. Complete business verification
 3. Add your website URL
 4. Configure products:
-   - **Pro Plan**: $29/month
+   - **Pro Plan**: $19/month
    - **Premium Plan**: $79/month
 5. Set up webhooks:
    - URL: `https://cryptoreportkit.com/api/paddle/webhook`
