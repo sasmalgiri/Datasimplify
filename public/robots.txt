@@ -42,13 +42,11 @@ Allow: /sentiment
 Allow: /technical
 Allow: /correlation
 Allow: /heatmap
-Allow: /etf
 Allow: /portfolio
 Allow: /charts
 Allow: /coin/
 Allow: /trending
 Allow: /gainers-losers
-Allow: /global-market
 Allow: /categories
 Allow: /glossary
 Allow: /learn
