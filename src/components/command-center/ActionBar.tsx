@@ -11,9 +11,10 @@ import { UniversalExport } from '@/components/UniversalExport';
 interface ActionBarProps {
   onRefresh: () => void;
   isRefreshing: boolean;
+  getData?: () => Record<string, any>;
 }
 
-export function ActionBar({ onRefresh, isRefreshing }: ActionBarProps) {
+export function ActionBar({ onRefresh, isRefreshing, getData }: ActionBarProps) {
   const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
   const st = SITE_THEMES[siteTheme];
   const lastFetched = useLiveDashboardStore((s) => s.lastFetched);
@@ -58,7 +59,7 @@ export function ActionBar({ onRefresh, isRefreshing }: ActionBarProps) {
         {FEATURES.reportPacks && <ReportPackExportButton />}
 
         {/* Quick Export */}
-        <UniversalExport name={activeWorkspace?.name ?? 'Dashboard'} compact />
+        <UniversalExport name={activeWorkspace?.name ?? 'Dashboard'} compact getData={getData} />
       </div>
     </div>
   );

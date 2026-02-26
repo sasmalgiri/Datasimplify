@@ -6,7 +6,7 @@ import { CoinSelector } from '@/components/CoinSelector';
 import { useWorkspaceStore } from '@/lib/workspaces/workspaceStore';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { SITE_THEMES } from '@/lib/live-dashboard/theme';
-import type { WorkspaceConfig } from '@/lib/workspaces/types';
+import type { WorkspaceConfig, HoldingEntry } from '@/lib/workspaces/types';
 
 interface WorkspaceCreateModalProps {
   isOpen: boolean;
@@ -37,9 +37,22 @@ export function WorkspaceCreateModal({
   const [vsCurrency, setVsCurrency] = useState(
     editingWorkspace?.config?.vsCurrency ?? 'usd',
   );
+  const [holdings, setHoldings] = useState<Record<string, HoldingEntry>>(
+    editingWorkspace?.config?.holdings ?? {},
+  );
   const [isSaving, setIsSaving] = useState(false);
 
   const isEditing = !!editWorkspaceId;
+
+  const updateHolding = (symbol: string, field: 'quantity' | 'avgBuyPrice', value: number) => {
+    setHoldings((prev) => ({
+      ...prev,
+      [symbol]: {
+        ...(prev[symbol] || { quantity: 0, avgBuyPrice: 0 }),
+        [field]: value,
+      },
+    }));
+  };
 
   // Re-sync form state when modal opens or editWorkspaceId changes
   useEffect(() => {
@@ -49,11 +62,13 @@ export function WorkspaceCreateModal({
         setMode(editingWorkspace.mode);
         setCoins(editingWorkspace.config?.coins ?? []);
         setVsCurrency(editingWorkspace.config?.vsCurrency ?? 'usd');
+        setHoldings(editingWorkspace.config?.holdings ?? {});
       } else {
         setName('');
         setMode('watchlist');
         setCoins([]);
         setVsCurrency('usd');
+        setHoldings({});
       }
       setIsSaving(false);
     }
@@ -66,6 +81,7 @@ export function WorkspaceCreateModal({
     const config: WorkspaceConfig = {
       coins,
       vsCurrency,
+      ...(mode === 'holdings' && Object.keys(holdings).length > 0 ? { holdings } : {}),
     };
 
     if (isEditing && editWorkspaceId) {
@@ -169,6 +185,58 @@ export function WorkspaceCreateModal({
           </label>
           <CoinSelector selected={coins} onChange={setCoins} maxCoins={50} />
         </div>
+
+        {/* Holdings Inputs — shown only in holdings mode */}
+        {mode === 'holdings' && coins.length > 0 && (
+          <div className="mb-6">
+            <label className={`block text-sm font-medium mb-1.5 ${st.textSecondary}`}>
+              Holdings ({coins.length} coins)
+            </label>
+            <div className="overflow-x-auto max-h-60 overflow-y-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className={`border-b ${st.divider}`}>
+                    <th className={`text-left py-1.5 px-2 text-xs font-medium ${st.textDim}`}>Coin</th>
+                    <th className={`text-right py-1.5 px-2 text-xs font-medium ${st.textDim}`}>Quantity</th>
+                    <th className={`text-right py-1.5 px-2 text-xs font-medium ${st.textDim}`}>Avg Buy ($)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coins.map((symbol) => {
+                    const key = symbol.toUpperCase();
+                    return (
+                      <tr key={key} className={`border-b ${st.divider}`}>
+                        <td className={`py-1.5 px-2 font-medium ${st.textPrimary}`}>{key}</td>
+                        <td className="py-1.5 px-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step="any"
+                            value={holdings[key]?.quantity ?? ''}
+                            onChange={(e) => updateHolding(key, 'quantity', parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            className={`w-full text-right px-2 py-1 rounded text-sm ${st.inputBg}`}
+                          />
+                        </td>
+                        <td className="py-1.5 px-2">
+                          <input
+                            type="number"
+                            min={0}
+                            step="any"
+                            value={holdings[key]?.avgBuyPrice ?? ''}
+                            onChange={(e) => updateHolding(key, 'avgBuyPrice', parseFloat(e.target.value) || 0)}
+                            placeholder="0.00"
+                            className={`w-full text-right px-2 py-1 rounded text-sm ${st.inputBg}`}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3">

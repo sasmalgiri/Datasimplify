@@ -5,12 +5,19 @@
  * Used by the workspace Zustand store and all workspace-related components.
  */
 
+export interface HoldingEntry {
+  quantity: number;
+  avgBuyPrice: number;
+}
+
 export interface WorkspaceConfig {
   coins: string[];
   vsCurrency: string;
   dashboardType?: string;
   reportPackId?: string;
   customWidgets?: string[];
+  /** Per-coin holdings for 'holdings' mode. Key is uppercase symbol (e.g. "BTC"). */
+  holdings?: Record<string, HoldingEntry>;
 }
 
 export interface Workspace {
