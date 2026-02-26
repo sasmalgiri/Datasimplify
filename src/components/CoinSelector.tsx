@@ -323,19 +323,26 @@ export function CoinSelector({
               >
                 All
               </button>
-              {categories.map(([key, name]) => (
-                <button
-                  key={key}
-                  onClick={() => setActiveCategory(key)}
-                  className={`px-2 py-1 text-xs rounded transition ${
-                    activeCategory === key
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {name.split(' ')[0]}
-                </button>
-              ))}
+              {categories.map(([key, name]) => {
+                // Show "Layer 1" / "Layer 2" instead of just "Layer" for both
+                const shortName = key === 'layer1' ? 'Layer 1'
+                  : key === 'layer2' ? 'Layer 2'
+                  : key === 'stablecoin' ? 'Stable'
+                  : name.split(' ')[0];
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveCategory(key)}
+                    className={`px-2 py-1 text-xs rounded transition ${
+                      activeCategory === key
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600'
+                    }`}
+                  >
+                    {shortName}
+                  </button>
+                );
+              })}
             </div>
           )}
 
