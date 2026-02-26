@@ -546,16 +546,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign out
   const signOut = async () => {
-    // Always clear local state + cookies first so the redirect works
-    // even if the Supabase API call fails or hangs.
-    clearSessionCookies();
+    // 1. Clear React state immediately
     setUser(null);
     setProfile(null);
     setSession(null);
+
+    // 2. Clear cookies
+    clearSessionCookies();
+
+    // 3. Clear Supabase session from localStorage (where the SDK persists it)
+    const ref = getProjectRef();
+    if (ref) {
+      try {
+        localStorage.removeItem(`sb-${ref}-auth-token`);
+      } catch { /* SSR or storage blocked */ }
+    }
+
+    // 4. Call Supabase signOut with a 3s timeout to avoid hanging forever
     try {
-      if (supabase) await supabase.auth.signOut();
+      if (supabase) {
+        await Promise.race([
+          supabase.auth.signOut(),
+          new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+      }
     } catch {
-      // Ignore — cookies and state are already cleared
+      // Ignore — everything is already cleared
     }
   };
 

@@ -50,14 +50,11 @@ export default function AccountPage() {
     }
   }, [user, authLoading, timedOut, router]);
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch {
-      // Ignore — redirect regardless
-    }
-    // Hard redirect — soft router.push doesn't reload through middleware,
-    // so the page stays stuck with stale React auth state.
+  const handleSignOut = () => {
+    // Fire-and-forget: signOut clears state/cookies/localStorage synchronously
+    // first, then calls Supabase API (async, non-blocking).
+    signOut();
+    // Hard redirect immediately — don't wait for the Supabase API call.
     window.location.href = '/login';
   };
 
