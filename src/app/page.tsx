@@ -231,7 +231,7 @@ export default function LandingPage() {
               : 'Free for 30 days — no credit card required.'}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link
               href="/live-dashboards"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-semibold text-base shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02]"
@@ -245,6 +245,36 @@ export default function LandingPage() {
             >
               See Pricing
               <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+
+          {/* Product teasers — Experiment Lab + DataLab */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+            <Link
+              href="/templates"
+              className="flex items-center gap-3 px-4 py-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-emerald-500/30 rounded-xl transition-all group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+                <FlaskConical className="w-4.5 h-4.5 text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">Experiment Lab</p>
+                <p className="text-[11px] text-gray-500">Try templates with live data</p>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-emerald-400 transition-colors ml-auto flex-shrink-0" />
+            </Link>
+            <Link
+              href="/datalab"
+              className="flex items-center gap-3 px-4 py-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-blue-500/30 rounded-xl transition-all group"
+            >
+              <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-4.5 h-4.5 text-blue-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">DataLab</p>
+                <p className="text-[11px] text-gray-500">Chart overlays & research tools</p>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-blue-400 transition-colors ml-auto flex-shrink-0" />
             </Link>
           </div>
         </div>

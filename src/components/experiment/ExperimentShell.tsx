@@ -11,7 +11,6 @@ import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { DashboardCustomization, ColorTheme, SiteTheme } from '@/lib/live-dashboard/store';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { UniversalExport } from '@/components/UniversalExport';
-import { ExportButton } from '@/components/live-dashboard/ExportButton';
 import { ExperimentPanel } from '@/components/live-dashboard/ExperimentPanel';
 import { useExperimentStore } from '@/lib/live-dashboard/experimentStore';
 import { ALL_CURRENCIES } from '@/lib/live-dashboard/currency';
@@ -315,7 +314,6 @@ export function ExperimentShell({ templateName, templateIcon, layoutType }: Expe
             getData={() => data}
             compact
           />
-          <ExportButton dashboardName={`${templateName}-${coin}`} />
         </div>
       </div>
 
