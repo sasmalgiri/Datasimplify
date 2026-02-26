@@ -259,7 +259,7 @@ export default function LandingPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">Experiment Lab</p>
-                <p className="text-[11px] text-gray-500">Try templates with live data</p>
+                <p className="text-[11px] text-gray-500">Edit values & test templates with live data</p>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-emerald-400 transition-colors ml-auto flex-shrink-0" />
             </Link>
@@ -272,7 +272,7 @@ export default function LandingPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">DataLab</p>
-                <p className="text-[11px] text-gray-500">Chart overlays & research tools</p>
+                <p className="text-[11px] text-gray-500">Edit, overlay & manipulate chart data freely</p>
               </div>
               <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-blue-400 transition-colors ml-auto flex-shrink-0" />
             </Link>
@@ -405,7 +405,7 @@ export default function LandingPage() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">Experiment Lab</h3>
-              <p className="text-xs text-gray-500">Try any dashboard template with live data before committing.</p>
+              <p className="text-xs text-gray-500">Edit values, tweak parameters & test any template with live data — no other tool lets you do this.</p>
             </div>
             <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors flex-shrink-0" />
           </Link>

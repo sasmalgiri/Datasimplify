@@ -6,7 +6,7 @@ import { SITE_THEMES } from '@/lib/live-dashboard/theme';
 import { FEATURES } from '@/lib/featureFlags';
 import { useActiveWorkspace } from '@/lib/workspaces/workspaceStore';
 import { ReportPackExportButton } from '@/components/report-packs/ReportPackExportButton';
-import { ExportButton } from '@/components/live-dashboard/ExportButton';
+import { UniversalExport } from '@/components/UniversalExport';
 
 interface ActionBarProps {
   onRefresh: () => void;
@@ -58,7 +58,7 @@ export function ActionBar({ onRefresh, isRefreshing }: ActionBarProps) {
         {FEATURES.reportPacks && <ReportPackExportButton />}
 
         {/* Quick Export */}
-        <ExportButton dashboardName={activeWorkspace?.name ?? 'Dashboard'} />
+        <UniversalExport name={activeWorkspace?.name ?? 'Dashboard'} compact />
       </div>
     </div>
   );

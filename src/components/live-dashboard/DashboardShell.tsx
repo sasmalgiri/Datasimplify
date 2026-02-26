@@ -6,7 +6,6 @@ import { RefreshCw, Key, LogOut, Clock, Shield, Timer, Sparkles, Bell, Folder, F
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import type { LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { DashboardGrid } from './DashboardGrid';
-import { ExportButton } from './ExportButton';
 import { ShareButton } from './ShareButton';
 import { CustomizeButton, CustomizeBar } from './CustomizePanel';
 import { ApiUsagePill } from './ApiUsagePill';
@@ -21,6 +20,7 @@ import { FEATURES } from '@/lib/featureFlags';
 import { useWorkspaceStore, useActiveWorkspace } from '@/lib/workspaces/workspaceStore';
 import { WorkspacePanel } from '@/components/workspaces/WorkspacePanel';
 import { WorkspaceCreateModal } from '@/components/workspaces/WorkspaceCreateModal';
+import { UniversalExport } from '@/components/UniversalExport';
 import { useExperimentStore } from '@/lib/live-dashboard/experimentStore';
 import type { PositionSnapshot } from '@/lib/workspaces/types';
 
@@ -364,7 +364,7 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
           <CustomizeButton isOpen={customizeOpen} onToggle={() => setCustomizeOpen((v) => !v)} />
 
           {/* Export — hidden when customize open */}
-          {!customizeOpen && <ExportButton dashboardName={definition.name} onOpenKeyModal={onOpenKeyModal} />}
+          {!customizeOpen && <UniversalExport name={definition.name} compact />}
 
           {/* Share — hidden when customize open */}
           {!customizeOpen && <ShareButton slug={definition.slug} />}
