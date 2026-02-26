@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { AuthGate } from '@/components/AuthGate';
 import { FEATURES } from '@/lib/featureFlags';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { SITE_THEMES } from '@/lib/live-dashboard/theme';
@@ -39,13 +40,7 @@ export default function CommandCenterPage() {
   const [editWorkspaceId, setEditWorkspaceId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  // Auth gate (skip in beta mode — everything is free)
-  useEffect(() => {
-    if (!IS_BETA_MODE && !authLoading && !user && !redirectedRef.current) {
-      redirectedRef.current = true;
-      router.push('/login');
-    }
-  }, [authLoading, user, router]);
+  // Auth gate handled by AuthGate component below
 
   // Fetch workspaces on mount
   useEffect(() => {
@@ -122,8 +117,10 @@ export default function CommandCenterPage() {
     );
   }
 
-  // No user
-  if (!user) return null;
+  // No user — show sign-in required message
+  if (!user) {
+    return <AuthGate redirectPath="/command-center" featureName="Command Center"><></></AuthGate>;
+  }
 
   // Quick Start Wizard for first-time users
   if (workspaces.length === 0) {

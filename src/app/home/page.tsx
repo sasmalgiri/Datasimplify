@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { AuthGate } from '@/components/AuthGate';
 import { usePersonaStore } from '@/lib/persona/personaStore';
 import { getPersonaDefinition } from '@/lib/persona/helpers';
 import { PERSONA_DEFINITIONS } from '@/lib/persona/definitions';
@@ -55,8 +55,6 @@ const TOOL_NAMES: Record<string, { name: string; icon: string }> = {
 
 export default function HomePage() {
   const { user, profile, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-  const redirectedRef = useRef(false);
 
   const persona = usePersonaStore((s) => s.persona);
   const onboardingCompleted = usePersonaStore((s) => s.onboardingCompleted);
@@ -66,14 +64,6 @@ export default function HomePage() {
   );
   const syncToSupabase = usePersonaStore((s) => s.syncToSupabase);
   const loadFromSupabase = usePersonaStore((s) => s.loadFromSupabase);
-
-  // Auth gate
-  useEffect(() => {
-    if (!authLoading && !user && !redirectedRef.current) {
-      redirectedRef.current = true;
-      router.push('/login');
-    }
-  }, [authLoading, user, router]);
 
   // Hydrate persona from Supabase on mount (if profile has it but store doesn't)
   useEffect(() => {
@@ -87,6 +77,7 @@ export default function HomePage() {
     }
   }, [user, persona, profile, setPersona, setOnboardingCompleted, loadFromSupabase]);
 
+  // Auth gate — shows "Sign in required" message if not logged in
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -94,8 +85,9 @@ export default function HomePage() {
       </div>
     );
   }
-
-  if (!user) return null;
+  if (!user) {
+    return <AuthGate redirectPath="/home" featureName="your personalized Home"><></></AuthGate>;
+  }
 
   const personaDef = getPersonaDefinition(persona);
 

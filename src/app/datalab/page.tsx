@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
+import { AuthGate } from '@/components/AuthGate';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DataLabCanvas } from '@/components/datalab/DataLabCanvas';
@@ -26,13 +27,6 @@ export default function DataLabPage() {
   const chartRef = useRef<HTMLDivElement>(null);
   const hasInitRef = useRef(false);
 
-  // Auth gate (skip in beta mode — everything is free)
-  useEffect(() => {
-    if (!IS_BETA_MODE && !authLoading && !user) {
-      router.push('/login?redirect=/datalab');
-    }
-  }, [authLoading, user, router]);
-
   // Auto-load default preset on first visit
   useEffect(() => {
     if (!hasInitRef.current && apiKey && !activePreset) {
@@ -41,6 +35,7 @@ export default function DataLabPage() {
     }
   }, [apiKey, activePreset, loadPreset]);
 
+  // Auth gate — show sign-in message if not logged in
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">
@@ -50,6 +45,9 @@ export default function DataLabPage() {
         </div>
       </div>
     );
+  }
+  if (!IS_BETA_MODE && !user) {
+    return <AuthGate redirectPath="/datalab" featureName="DataLab"><></></AuthGate>;
   }
 
   // Pro tier gate — admin users bypass
