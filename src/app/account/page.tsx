@@ -51,7 +51,11 @@ export default function AccountPage() {
   }, [user, authLoading, timedOut, router]);
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch {
+      // Ignore — redirect regardless
+    }
     // Hard redirect — soft router.push doesn't reload through middleware,
     // so the page stays stuck with stale React auth state.
     window.location.href = '/login';

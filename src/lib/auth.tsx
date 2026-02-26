@@ -546,12 +546,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign out
   const signOut = async () => {
-    if (!supabase) return;
+    // Always clear local state + cookies first so the redirect works
+    // even if the Supabase API call fails or hangs.
     clearSessionCookies();
-    await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     setSession(null);
+    try {
+      if (supabase) await supabase.auth.signOut();
+    } catch {
+      // Ignore — cookies and state are already cleared
+    }
   };
 
   // Refresh profile
