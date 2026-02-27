@@ -14,6 +14,7 @@ import { useDataLabStore } from '@/lib/datalab/store';
 import { OVERLAY_PRESETS, PRESET_CATEGORIES } from '@/lib/datalab/presets';
 import { DATA_SOURCE_OPTIONS } from '@/lib/datalab/types';
 import type { ParameterDef } from '@/lib/datalab/types';
+import { inferLayerParamKey, inferTargetSources } from '@/lib/datalab/parameterBinding';
 
 // ─── Dark-theme hover tooltip ──────────────────────────────────────
 function Tip({ children, text, position = 'bottom' }: {
@@ -317,15 +318,32 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     const current = parameters[pd.key] ?? pd.defaultValue;
     const newVal = Math.max(pd.min, Math.min(pd.max, current + delta * pd.step));
     setParameter(pd.key, newVal);
-    // Update matching layer params and recalculate
+
+    const areClose = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+    const paramKey = inferLayerParamKey(pd.key);
+    const targetSources = inferTargetSources(pd);
+
+    // Update matching layer params and recalculate.
+    // Important: only update the layer(s) whose existing param matches the current value
+    // (prevents SMA short/mid/long from all being overwritten to the same number).
     const { layers: currentLayers } = useDataLabStore.getState();
     const updated = currentLayers.map((l) => {
-      if (l.source !== pd.layerSource) return l;
-      const paramKey = pd.key.includes('rsi') ? 'period' : 'window';
+      if (!targetSources.includes(l.source)) return l;
+      const existing = l.params?.[paramKey];
+      if (existing == null) return l;
+      if (!areClose(existing, current)) return l;
       return { ...l, params: { ...(l.params || {}), [paramKey]: newVal } };
     });
     useDataLabStore.setState({ layers: updated });
     recalculateLayers();
+  };
+
+  const blurActiveEditable = () => {
+    if (typeof document === 'undefined') return;
+    const active = document.activeElement as HTMLElement | null;
+    if (active && (active as any).isContentEditable) {
+      active.blur();
+    }
   };
 
   const chipActive = 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30';
@@ -653,11 +671,11 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                   </Tip>
                 );
               })}
-              <Tip text="Reset all parameters to defaults">
+              <Tip text="Reset preset state (layers + parameters + edits)">
                 <button
                   type="button"
-                  title="Reset Parameters"
-                  onClick={() => { resetParameters(); recalculateLayers(); }}
+                  title="Reset Preset"
+                  onClick={() => { resetParameters(); }}
                   className="text-gray-600 hover:text-gray-400 transition p-0.5"
                 >
                   <RotateCcw className="w-3 h-3" />
@@ -700,7 +718,10 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             <button
               type="button"
               title="Reset All Edits"
-              onClick={() => resetEdits()}
+              onClick={() => {
+                blurActiveEditable();
+                setTimeout(() => resetEdits(), 0);
+              }}
               className={`p-1.5 rounded-lg transition ${chipInactive}`}
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -711,7 +732,10 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             <button
               type="button"
               title="Undo"
-              onClick={undoLastEdit}
+              onClick={() => {
+                blurActiveEditable();
+                setTimeout(() => undoLastEdit(), 0);
+              }}
               disabled={editHistory.length === 0}
               className={`p-1.5 rounded-lg transition ${chipInactive} disabled:opacity-30`}
             >

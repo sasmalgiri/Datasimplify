@@ -389,6 +389,7 @@ export function AllJsonLd() {
       <OrganizationJsonLd />
       <WebsiteJsonLd />
       <SoftwareApplicationJsonLd />
+      <FAQJsonLd />
     </>
   );
 }

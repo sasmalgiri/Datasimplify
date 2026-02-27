@@ -186,7 +186,43 @@ export const useDataLabStore = create<DataLabStore>()(
       setParameter: (key, value) => set((s) => ({
         parameters: { ...s.parameters, [key]: value },
       })),
-      resetParameters: () => set({ parameters: {} }),
+      resetParameters: () => {
+        const { activePreset } = get();
+        if (!activePreset) {
+          set({ parameters: {} });
+          return;
+        }
+
+        const preset = getPresetById(activePreset);
+        if (!preset) {
+          set({ parameters: {} });
+          return;
+        }
+
+        // Fully reset the preset state (more reliable than trying to surgically
+        // map each parameter back), without refetching.
+        const defaultParameters: Record<string, number> = {};
+        for (const pd of preset.parameterDefs) {
+          defaultParameters[pd.key] = pd.defaultValue;
+        }
+
+        const rebuiltLayers: OverlayLayer[] = preset.layers.map((l) => ({
+          ...l,
+          id: nextLayerId(),
+          data: [],
+        }));
+
+        // Keep coin/days + raw data as-is (no network), but reset everything else.
+        set({
+          parameters: defaultParameters,
+          layers: rebuiltLayers,
+          editedCells: {},
+          editHistory: [],
+        });
+
+        // Populate derived series from already-loaded rawData/ohlcRaw.
+        get().recalculateLayers();
+      },
 
       normalizeMode: false,
       toggleNormalize: () => set((s) => ({ normalizeMode: !s.normalizeMode })),

@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
+
 export const metadata: Metadata = {
   title: 'About CryptoReportKit — Free Crypto Analytics for Everyone',
   description:
     'CryptoReportKit offers 83+ live dashboards, AI-powered signals, tax tools, a DCA simulator, screener, and portfolio builder — all starting free. Your API keys never leave your browser.',
+  alternates: { canonical: `${siteUrl}/about` },
   openGraph: {
     title: 'About CryptoReportKit — Free Crypto Analytics for Everyone',
     description:

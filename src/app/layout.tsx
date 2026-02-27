@@ -17,14 +17,19 @@ export const metadata: Metadata = {
     default: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
     template: '%s | CryptoReportKit'
   },
-  description: '83+ interactive crypto dashboards, real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK — your API key never leaves your browser.',
-  keywords: ['crypto analytics', 'crypto dashboards', 'bitcoin dashboard', 'cryptocurrency visualization', 'live crypto data', 'crypto market analysis', 'DeFi analytics', 'BYOK crypto', 'coin comparison', 'crypto tax tools', 'crypto report kit'],
+  description: '83+ live crypto dashboards with real-time data, coin comparison, DCA simulator, tax tools & more. Free BYOK — your API key never leaves your browser.',
+  keywords: ['crypto analytics', 'crypto dashboards', 'bitcoin dashboard', 'cryptocurrency visualization', 'live crypto data', 'crypto market analysis', 'DeFi analytics', 'BYOK crypto', 'coin comparison', 'crypto tax tools', 'crypto report kit', 'crypto data download', 'crypto report', 'cryptocurrency analysis tool', 'bitcoin analysis'],
 
   // Favicon & Icons
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
+  },
+
+  // Canonical for homepage
+  alternates: {
+    canonical: siteUrl,
   },
 
   // Open Graph (Facebook, LinkedIn)
@@ -67,16 +72,12 @@ export const metadata: Metadata = {
     },
   },
 
-  // Canonical URLs are set per-page via route layouts/generateMetadata.
-  // Do NOT set a root canonical here — it cascades to all routes and
-  // tells Google every page's canonical is the homepage.
+  // Canonical URLs: homepage canonical is set above via alternates.canonical.
+  // Child routes override this via their own layout.tsx exports.
 
   // Search Engine Verification
-  // Get codes from: Google Search Console (search.google.com/search-console)
-  // Bing Webmaster Tools (bing.com/webmasters)
-  // After adding property, copy the meta tag content value here
   verification: {
-    // google: 'paste-your-google-site-verification-code-here',
+    google: 'S3oX0IGvPW8WVVNjMqyTo5HqWe19iMLr9jzG-LjpcM4',
     // bing: 'paste-your-bing-verification-code-here',
   },
 

@@ -17,6 +17,14 @@ export function DataLabTable() {
 
   const visibleLayers = layers.filter((l) => l.visible);
 
+  const blurActiveEditable = () => {
+    if (typeof document === 'undefined') return;
+    const active = document.activeElement as HTMLElement | null;
+    if (active && (active as any).isContentEditable) {
+      active.blur();
+    }
+  };
+
   const handleCellBlur = useCallback(
     (layerId: string, index: number, el: HTMLTableCellElement) => {
       const text = el.textContent?.trim() ?? '';
@@ -85,7 +93,10 @@ export function DataLabTable() {
         <div className="flex items-center gap-1">
           <button
             type="button"
-            onClick={undoLastEdit}
+            onClick={() => {
+              blurActiveEditable();
+              setTimeout(() => undoLastEdit(), 0);
+            }}
             disabled={editHistory.length === 0}
             className="text-gray-500 hover:text-white disabled:text-gray-700 transition p-1"
             title="Undo last edit"
@@ -94,7 +105,10 @@ export function DataLabTable() {
           </button>
           <button
             type="button"
-            onClick={() => resetEdits()}
+            onClick={() => {
+              blurActiveEditable();
+              setTimeout(() => resetEdits(), 0);
+            }}
             disabled={editHistory.length === 0}
             className="text-gray-500 hover:text-white disabled:text-gray-700 transition p-1"
             title="Reset all edits"
@@ -135,7 +149,10 @@ export function DataLabTable() {
                     {editedCells[layer.id] && Object.keys(editedCells[layer.id]).length > 0 && (
                       <button
                         type="button"
-                        onClick={() => resetEdits(layer.id)}
+                        onClick={() => {
+                          blurActiveEditable();
+                          setTimeout(() => resetEdits(layer.id), 0);
+                        }}
                         className="text-amber-400 hover:text-amber-300 ml-0.5"
                         title={`Reset ${layer.label} edits`}
                       >

@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
+
 export const metadata: Metadata = {
   title: 'Trending Cryptocurrencies — Most Searched Coins Today',
   description:
     'See which cryptocurrencies are trending right now. Live rankings of the most searched coins, top gainers, and top losers — powered by CoinGecko data.',
+  alternates: { canonical: `${siteUrl}/trending` },
   openGraph: {
     title: 'Trending Cryptocurrencies Today | CryptoReportKit',
     description:
