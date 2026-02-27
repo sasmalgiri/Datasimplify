@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { OverlayLayer, EditHistoryEntry, DataSource } from './types';
+import type { Drawing, DrawingType } from './drawingTypes';
 import { getPresetById } from './presets';
 import {
   computeSMA, computeEMA, computeRSI,
@@ -10,6 +11,7 @@ import {
   computeBBWidth, computeDailyReturn, computeDrawdown, computeRollingVolatility,
   computeRatio,
 } from './calculations';
+import { evaluateFormula } from './formulaEngine';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 let layerIdCounter = 0;
@@ -87,6 +89,14 @@ interface DataLabStore {
   normalizeMode: boolean;
   toggleNormalize: () => void;
 
+  // Log scale (for price axes)
+  logScale: boolean;
+  toggleLogScale: () => void;
+
+  // Currency
+  vsCurrency: string;
+  setVsCurrency: (currency: string) => void;
+
   // Loading
   isLoading: boolean;
   error: string | null;
@@ -95,6 +105,20 @@ interface DataLabStore {
   loadPreset: (presetId: string) => Promise<void>;
   loadData: () => Promise<void>;
   recalculateLayers: () => void;
+
+  // Drawings
+  drawings: Drawing[];
+  activeDrawingTool: DrawingType | null;
+  pendingPoints: { x: number; y: number }[];
+  addDrawing: (drawing: Drawing) => void;
+  removeDrawing: (id: string) => void;
+  clearDrawings: () => void;
+  setActiveDrawingTool: (tool: DrawingType | null) => void;
+  addPendingPoint: (point: { x: number; y: number }) => void;
+  clearPendingPoints: () => void;
+
+  // Formula layers
+  addFormulaLayer: (expression: string, label: string) => void;
 
   // UI
   showTable: boolean;
@@ -227,8 +251,45 @@ export const useDataLabStore = create<DataLabStore>()(
       normalizeMode: false,
       toggleNormalize: () => set((s) => ({ normalizeMode: !s.normalizeMode })),
 
+      logScale: false,
+      toggleLogScale: () => set((s) => ({ logScale: !s.logScale })),
+
+      vsCurrency: 'usd',
+      setVsCurrency: (currency) => set({ vsCurrency: currency }),
+
+      drawings: [],
+      activeDrawingTool: null,
+      pendingPoints: [],
+      addDrawing: (drawing) => set((s) => ({ drawings: [...s.drawings, drawing] })),
+      removeDrawing: (id) => set((s) => ({ drawings: s.drawings.filter((d) => d.id !== id) })),
+      clearDrawings: () => set({ drawings: [], pendingPoints: [] }),
+      setActiveDrawingTool: (tool) => set({ activeDrawingTool: tool, pendingPoints: [] }),
+      addPendingPoint: (point) => set((s) => ({ pendingPoints: [...s.pendingPoints, point] })),
+      clearPendingPoints: () => set({ pendingPoints: [] }),
+
       isLoading: false,
       error: null,
+
+      addFormulaLayer: (expression, label) => {
+        const id = nextLayerId();
+        const FORMULA_COLORS = ['#f472b6', '#22d3ee', '#a3e635', '#fb923c', '#c084fc'];
+        const colorIdx = get().layers.filter((l) => l.source === 'formula').length;
+        set((s) => ({
+          layers: [...s.layers, {
+            id,
+            label: label || `f(x): ${expression}`,
+            source: 'formula' as const,
+            chartType: 'line' as const,
+            yAxis: 'right' as const,
+            color: FORMULA_COLORS[colorIdx % FORMULA_COLORS.length],
+            visible: true,
+            gridIndex: 0,
+            data: [],
+            formula: expression,
+          }],
+        }));
+        get().recalculateLayers();
+      },
 
       showTable: false,
       toggleTable: () => set((s) => ({ showTable: !s.showTable })),
@@ -331,7 +392,7 @@ export const useDataLabStore = create<DataLabStore>()(
             coinId: coin,
             coinIds: [coin],
             days,
-            vsCurrency: 'usd',
+            vsCurrency: get().vsCurrency || 'usd',
             // coin_history endpoint uses these param names
             historyCoinId: coin,
             historyDays: days,
@@ -577,6 +638,19 @@ export const useDataLabStore = create<DataLabStore>()(
               }
               break;
             }
+            case 'formula': {
+              if (layer.formula) {
+                try {
+                  data = evaluateFormula(layer.formula, {
+                    price: closes,
+                    volume: rawData.volume ?? [],
+                  });
+                } catch {
+                  data = closes.map(() => null);
+                }
+              }
+              break;
+            }
             default:
               data = layer.data;
           }
@@ -602,6 +676,8 @@ export const useDataLabStore = create<DataLabStore>()(
         activePreset: state.activePreset,
         parameters: state.parameters,
         normalizeMode: state.normalizeMode,
+        logScale: state.logScale,
+        vsCurrency: state.vsCurrency,
         showTable: state.showTable,
       }),
     },

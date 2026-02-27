@@ -1,4 +1,4 @@
-import type { OverlayPreset } from './types';
+import type { OverlayPreset, ZoneRule } from './types';
 
 export const OVERLAY_PRESETS: OverlayPreset[] = [
   {
@@ -22,6 +22,10 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'SMA 200', source: 'sma', chartType: 'line', yAxis: 'left', color: '#ef4444', visible: true, gridIndex: 0, params: { window: 200 } },
       { label: 'RSI', source: 'rsi', chartType: 'line', yAxis: 'right', color: '#a78bfa', visible: true, gridIndex: 1, params: { period: 14 } },
       { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+    ],
+    zones: [
+      { source: 'rsi', condition: 'below', threshold: 30, color: '#34d399', opacity: 0.08, label: 'Oversold' },
+      { source: 'rsi', condition: 'above', threshold: 70, color: '#ef4444', opacity: 0.08, label: 'Overbought' },
     ],
   },
 
@@ -118,6 +122,9 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'ATR', source: 'atr', chartType: 'line', yAxis: 'right', color: '#a3e635', visible: true, gridIndex: 1, params: { period: 14 } },
       { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
     ],
+    zones: [
+      { source: 'bb_width', condition: 'below', threshold: 10, color: '#fbbf24', opacity: 0.08, label: 'Squeeze' },
+    ],
   },
 
   {
@@ -184,6 +191,10 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'RSI', source: 'rsi', chartType: 'line', yAxis: 'right', color: '#a78bfa', visible: true, gridIndex: 1, params: { period: 14 } },
       { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
     ],
+    zones: [
+      { source: 'fear_greed', condition: 'below', threshold: 20, color: '#34d399', opacity: 0.08, label: 'Extreme Fear' },
+      { source: 'fear_greed', condition: 'above', threshold: 80, color: '#ef4444', opacity: 0.08, label: 'Extreme Greed' },
+    ],
   },
 
   {
@@ -204,6 +215,9 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'Drawdown %', source: 'drawdown', chartType: 'area', yAxis: 'right', color: '#ef4444', visible: true, gridIndex: 0 },
       { label: 'Rolling Volatility', source: 'rolling_volatility', chartType: 'line', yAxis: 'right', color: '#f97316', visible: true, gridIndex: 1, params: { window: 30 } },
       { label: 'BB Width %', source: 'bb_width', chartType: 'line', yAxis: 'right', color: '#a78bfa', visible: true, gridIndex: 1, params: { window: 20, multiplier: 2 } },
+    ],
+    zones: [
+      { source: 'drawdown', condition: 'below', threshold: -20, color: '#ef4444', opacity: 0.08, label: 'Deep Drawdown' },
     ],
   },
 

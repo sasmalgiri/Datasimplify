@@ -1,6 +1,8 @@
 // Builds a multi-axis ECharts option from DataLab store state
 
-import type { OverlayLayer } from './types';
+import type { OverlayLayer, ZoneRule } from './types';
+import type { Drawing } from './drawingTypes';
+import { computeFibLevels } from './drawingTypes';
 import { normalizeToBase100, applyEdits } from './calculations';
 import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
 import type { SiteTheme } from '@/lib/live-dashboard/store';
@@ -12,7 +14,28 @@ interface BuildOptions {
   ohlcRaw: number[][] | null;
   editedCells: Record<string, Record<number, number>>;
   normalizeMode: boolean;
+  logScale?: boolean;
+  vsCurrency?: string;
+  zones?: ZoneRule[];
+  drawings?: Drawing[];
   siteTheme?: SiteTheme;
+}
+
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  usd: '$', eur: '€', gbp: '£', jpy: '¥', btc: '₿', eth: 'Ξ',
+  aud: 'A$', cad: 'C$', chf: 'CHF', cny: '¥', inr: '₹', krw: '₩',
+};
+
+function fmtNum(v: number, currency?: string): string {
+  const sym = currency ? (CURRENCY_SYMBOLS[currency] ?? '') : '';
+  const abs = Math.abs(v);
+  if (abs >= 1e12) return `${sym}${(v / 1e12).toFixed(1)}T`;
+  if (abs >= 1e9) return `${sym}${(v / 1e9).toFixed(1)}B`;
+  if (abs >= 1e6) return `${sym}${(v / 1e6).toFixed(1)}M`;
+  if (abs >= 1e3) return `${sym}${(v / 1e3).toFixed(1)}K`;
+  if (abs >= 1) return `${sym}${v.toFixed(2)}`;
+  if (abs >= 0.01) return `${sym}${v.toFixed(4)}`;
+  return `${sym}${v.toFixed(6)}`;
 }
 
 function formatDate(ts: number): string {
@@ -21,7 +44,7 @@ function formatDate(ts: number): string {
 }
 
 export function buildChartOption(opts: BuildOptions) {
-  const { layers, timestamps, ohlcRaw, editedCells, normalizeMode, siteTheme = 'dark' } = opts;
+  const { layers, timestamps, ohlcRaw, editedCells, normalizeMode, logScale = false, vsCurrency = 'usd', zones = [], drawings = [], siteTheme = 'dark' } = opts;
   const theme = getEchartsTheme(siteTheme);
 
   if (timestamps.length === 0 || layers.length === 0) return null;
@@ -60,20 +83,27 @@ export function buildChartOption(opts: BuildOptions) {
     if (!(key in yAxisMap)) {
       const idx = yAxes.length;
       yAxisMap[key] = idx;
+      // Apply log scale only to price axes (gridIndex 0, left side)
+      const isPriceAxis = layer.gridIndex === 0 && layer.yAxis === 'left';
+      const axisType = logScale && isPriceAxis ? 'log' as const : 'value' as const;
+      const sym = CURRENCY_SYMBOLS[vsCurrency] ?? '';
+
       yAxes.push({
-        type: 'value' as const,
+        type: axisType,
         ...theme.yAxis,
         gridIndex: layer.gridIndex,
         position: layer.yAxis,
         scale: true,
+        ...(axisType === 'log' ? { logBase: 10 } : {}),
         axisLabel: {
           ...theme.yAxis.axisLabel,
           formatter: (v: number) => {
-            if (Math.abs(v) >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
-            if (Math.abs(v) >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
-            if (Math.abs(v) >= 1e3) return `${(v / 1e3).toFixed(1)}K`;
-            if (Math.abs(v) < 1) return v.toFixed(4);
-            return v.toFixed(0);
+            const prefix = isPriceAxis ? sym : '';
+            if (Math.abs(v) >= 1e9) return `${prefix}${(v / 1e9).toFixed(1)}B`;
+            if (Math.abs(v) >= 1e6) return `${prefix}${(v / 1e6).toFixed(1)}M`;
+            if (Math.abs(v) >= 1e3) return `${prefix}${(v / 1e3).toFixed(1)}K`;
+            if (Math.abs(v) < 1) return `${prefix}${v.toFixed(4)}`;
+            return `${prefix}${v.toFixed(0)}`;
           },
         },
         splitLine: {
@@ -293,6 +323,155 @@ export function buildChartOption(opts: BuildOptions) {
     });
   }
 
+  // Zone Shading (markArea on matching series)
+  if (zones.length > 0) {
+    for (const zone of zones) {
+      // Find the layer that provides this zone's data source
+      const sourceLayer = visibleLayers.find((l) => l.source === zone.source);
+      if (!sourceLayer) continue;
+
+      // Find the series for this layer
+      const targetSeries = series.find((s) => s.name === sourceLayer.label);
+      if (!targetSeries) continue;
+
+      // Build contiguous ranges where condition is met
+      const data = sourceLayer.data;
+      const areas: any[] = [];
+      let start: number | null = null;
+
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i];
+        const meets = v != null && (
+          (zone.condition === 'below' && v < zone.threshold) ||
+          (zone.condition === 'above' && v > zone.threshold)
+        );
+        if (meets && start === null) {
+          start = i;
+        } else if (!meets && start !== null) {
+          areas.push([
+            { xAxis: dates[start], name: zone.label || '' },
+            { xAxis: dates[i - 1] },
+          ]);
+          start = null;
+        }
+      }
+      if (start !== null) {
+        areas.push([
+          { xAxis: dates[start], name: zone.label || '' },
+          { xAxis: dates[data.length - 1] },
+        ]);
+      }
+
+      if (areas.length > 0) {
+        if (!targetSeries.markArea) {
+          targetSeries.markArea = { silent: true, data: [] };
+        }
+        for (const area of areas) {
+          targetSeries.markArea.data.push(area);
+        }
+        targetSeries.markArea.itemStyle = {
+          color: zone.color,
+          opacity: zone.opacity,
+        };
+        targetSeries.markArea.label = {
+          show: true,
+          position: 'insideTop',
+          color: zone.color,
+          fontSize: 9,
+          opacity: 0.7,
+        };
+      }
+    }
+  }
+
+  // Drawing Tools → rendered as markLine on a dedicated hidden series
+  const graphicElements: any[] = [];
+  if (drawings.length > 0) {
+    // Find the price series (first series on gridIndex 0, left yAxis)
+    const priceSeriesIdx = series.findIndex((s) => {
+      const layer = visibleLayers.find((l) => l.label === s.name);
+      return layer && layer.gridIndex === 0 && layer.yAxis === 'left';
+    });
+    const targetSeries = priceSeriesIdx >= 0 ? series[priceSeriesIdx] : series[0];
+
+    if (targetSeries) {
+      if (!targetSeries.markLine) {
+        targetSeries.markLine = {
+          silent: true,
+          symbol: 'none',
+          data: [],
+          label: { show: true, position: 'end', fontSize: 10 },
+        };
+      }
+
+      for (const drawing of drawings) {
+        if (drawing.type === 'hline') {
+          // Horizontal line at y value
+          const y = drawing.points[0]?.y;
+          if (y != null) {
+            targetSeries.markLine.data.push({
+              yAxis: y,
+              name: drawing.label || `H-Line ${fmtNum(y)}`,
+              lineStyle: { color: drawing.color, type: 'dashed', width: 1.5 },
+              label: {
+                show: true,
+                formatter: drawing.label || fmtNum(y),
+                color: drawing.color,
+                fontSize: 10,
+              },
+            });
+          }
+        } else if (drawing.type === 'trendline') {
+          // Trendline between two data points → use graphic line
+          if (drawing.points.length >= 2) {
+            const [p1, p2] = drawing.points;
+            graphicElements.push({
+              type: 'line',
+              shape: {
+                x1: 0, y1: 0, x2: 0, y2: 0, // Will be computed via position
+              },
+              position: [0, 0],
+              // Use invisible rect to declare coordinate mapping
+              $action: 'merge',
+              style: {
+                stroke: drawing.color,
+                lineWidth: 2,
+                lineDash: [6, 4],
+              },
+              // Store data coords for conversion
+              _dataCoords: [p1, p2],
+            });
+          }
+        } else if (drawing.type === 'fibonacci') {
+          // Fibonacci retracement from two anchor points
+          if (drawing.points.length >= 2) {
+            const high = Math.max(drawing.points[0].y, drawing.points[1].y);
+            const low = Math.min(drawing.points[0].y, drawing.points[1].y);
+            const fibs = computeFibLevels(high, low);
+            for (const fib of fibs) {
+              targetSeries.markLine.data.push({
+                yAxis: fib.value,
+                name: `Fib ${(fib.level * 100).toFixed(1)}%`,
+                lineStyle: {
+                  color: drawing.color,
+                  type: fib.level === 0 || fib.level === 1 ? 'solid' : 'dashed',
+                  width: fib.level === 0.5 ? 1.5 : 1,
+                  opacity: 0.7,
+                },
+                label: {
+                  show: true,
+                  formatter: `${(fib.level * 100).toFixed(1)}% (${fmtNum(fib.value)})`,
+                  color: drawing.color,
+                  fontSize: 9,
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
   // DataZoom (spans all grids)
   const dataZoom = [
     {
@@ -314,11 +493,65 @@ export function buildChartOption(opts: BuildOptions) {
     },
   ];
 
-  // Tooltip
+  // Rich Tooltip with formatted values and % change
+  const refLineNames = new Set([
+    'Overbought (70)', 'Oversold (30)', 'Overbought (80)', 'Oversold (20)', 'Normal Volume (1x)',
+  ]);
+  // Cache first non-null value per series for % change calculation
+  const seriesFirstValues: Record<string, number> = {};
+  for (const s of series) {
+    if (refLineNames.has(s.name)) continue;
+    const arr = s.data;
+    if (Array.isArray(arr)) {
+      for (const v of arr) {
+        const num = Array.isArray(v) ? v[1] : v; // candlestick [o,c,l,h] → use close (idx 1)
+        if (num != null && typeof num === 'number' && isFinite(num)) {
+          seriesFirstValues[s.name] = num;
+          break;
+        }
+      }
+    }
+  }
   const tooltip = {
     ...theme.tooltip,
     trigger: 'axis' as const,
     axisPointer: { type: 'cross' as const, crossStyle: { color: '#999' } },
+    backgroundColor: 'rgba(15,23,42,0.95)',
+    borderColor: 'rgba(255,255,255,0.1)',
+    padding: [12, 16],
+    textStyle: { fontSize: 12, color: '#e2e8f0' },
+    formatter: (params: any) => {
+      if (!Array.isArray(params) || params.length === 0) return '';
+      const dateIdx = params[0]?.dataIndex ?? 0;
+      const ts = timestamps[dateIdx];
+      const dateStr = ts ? new Date(ts).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+      }) : dates[dateIdx] ?? '';
+      let html = `<div style="font-weight:600;margin-bottom:8px;color:#94a3b8;font-size:11px">${dateStr}</div>`;
+      for (const p of params) {
+        if (refLineNames.has(p.seriesName)) continue;
+        const val = Array.isArray(p.value)
+          ? p.value[1] // candlestick close
+          : p.value;
+        if (val == null) continue;
+        const numVal = Number(val);
+        const formatted = fmtNum(numVal, undefined);
+        const first = seriesFirstValues[p.seriesName];
+        let pctStr = '';
+        if (first != null && first !== 0) {
+          const pct = ((numVal - first) / Math.abs(first)) * 100;
+          const pctColor = pct >= 0 ? '#34d399' : '#ef4444';
+          pctStr = `<span style="color:${pctColor};margin-left:6px;font-size:10px">${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%</span>`;
+        }
+        html += `<div style="display:flex;align-items:center;gap:6px;margin:3px 0">`;
+        html += `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>`;
+        html += `<span style="color:#94a3b8;flex:1">${p.seriesName}</span>`;
+        html += `<span style="font-weight:600;font-variant-numeric:tabular-nums">${formatted}</span>`;
+        html += pctStr;
+        html += `</div>`;
+      }
+      return html;
+    },
   };
 
   // Legend
@@ -345,6 +578,7 @@ export function buildChartOption(opts: BuildOptions) {
     dataZoom,
     tooltip,
     legend,
+    ...(graphicElements.length > 0 ? { graphic: graphicElements } : {}),
     animation: true,
     color: CHART_COLORS,
   };

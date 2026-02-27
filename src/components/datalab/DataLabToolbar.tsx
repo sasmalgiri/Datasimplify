@@ -6,10 +6,14 @@ import {
   Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
   RotateCcw, Table2, Maximize2, Undo2,
-  Loader2, Search, ChevronDown,
+  Loader2, Search, ChevronDown, Download, Share2, Check,
+  Pencil, Minus, TrendingDown, X,
   HeartPulse, ShieldAlert, PiggyBank,
   Orbit, Scale, BarChart3, Layers3,
 } from 'lucide-react';
+import { generateCSV, downloadCSV } from '@/lib/datalab/csvExport';
+import { buildShareURL } from '@/lib/datalab/urlState';
+import { validateFormula } from '@/lib/datalab/formulaEngine';
 import { useDataLabStore } from '@/lib/datalab/store';
 import { OVERLAY_PRESETS, PRESET_CATEGORIES } from '@/lib/datalab/presets';
 import { DATA_SOURCE_OPTIONS } from '@/lib/datalab/types';
@@ -213,15 +217,25 @@ interface DataLabToolbarProps {
 
 export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   const {
-    coin, days, activePreset, layers, parameters, normalizeMode, showTable,
-    editHistory,
+    coin, days, activePreset, layers, parameters, normalizeMode, logScale, vsCurrency,
+    showTable, editHistory, timestamps, editedCells,
+    drawings, activeDrawingTool,
     setCoin, setDays, loadPreset, loadData, recalculateLayers,
     toggleLayer, removeLayer, addLayer, setParameter,
-    toggleNormalize, toggleTable, resetEdits, resetParameters, undoLastEdit,
+    toggleNormalize, toggleLogScale, toggleTable,
+    setVsCurrency, resetEdits, resetParameters, undoLastEdit,
+    setActiveDrawingTool, clearDrawings, addFormulaLayer,
   } = useDataLabStore();
 
   const [showAddLayer, setShowAddLayer] = useState(false);
   const [showAllPresets, setShowAllPresets] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [showDrawTools, setShowDrawTools] = useState(false);
+  const drawDropRef = useRef<HTMLDivElement>(null);
+  const [showFormulaModal, setShowFormulaModal] = useState(false);
+  const [formulaInput, setFormulaInput] = useState('');
+  const [formulaLabel, setFormulaLabel] = useState('');
+  const [formulaError, setFormulaError] = useState<string | null>(null);
   const presetsDropRef = useRef<HTMLDivElement>(null);
   const [coinInput, setCoinInput] = useState(coin);
   const [showCoinDrop, setShowCoinDrop] = useState(false);
@@ -241,6 +255,9 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
       }
       if (presetsDropRef.current && !presetsDropRef.current.contains(e.target as Node)) {
         setShowAllPresets(false);
+      }
+      if (drawDropRef.current && !drawDropRef.current.contains(e.target as Node)) {
+        setShowDrawTools(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -545,6 +562,65 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Currency Selector */}
+        <Tip text="Change the quote currency for price data">
+          <select
+            aria-label="Quote currency"
+            value={vsCurrency}
+            onChange={async (e) => {
+              setVsCurrency(e.target.value);
+              await loadData();
+            }}
+            className="bg-white/[0.04] border border-white/[0.06] text-gray-300 text-[11px] px-2 py-1 rounded-lg focus:outline-none focus:border-emerald-400/40 cursor-pointer"
+          >
+            <option value="usd">USD ($)</option>
+            <option value="eur">EUR (€)</option>
+            <option value="gbp">GBP (£)</option>
+            <option value="jpy">JPY (¥)</option>
+            <option value="inr">INR (₹)</option>
+            <option value="btc">BTC (₿)</option>
+            <option value="eth">ETH (Ξ)</option>
+          </select>
+        </Tip>
+
+        {/* CSV Download */}
+        <Tip text="Download visible chart data as CSV">
+          <button
+            type="button"
+            onClick={() => {
+              const csv = generateCSV(timestamps, layers, editedCells);
+              if (csv) downloadCSV(csv, `datalab-${coin}-${days}d.csv`);
+            }}
+            disabled={timestamps.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] transition disabled:opacity-30"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">CSV</span>
+          </button>
+        </Tip>
+
+        {/* Share URL */}
+        <Tip text="Copy shareable link with current chart state">
+          <button
+            type="button"
+            onClick={() => {
+              const url = buildShareURL({
+                coin, days, preset: activePreset ?? undefined,
+                vsCurrency, logScale, normalizeMode, params: parameters,
+              });
+              navigator.clipboard.writeText(url).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              });
+            }}
+            disabled={!activePreset}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] transition disabled:opacity-30"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
+          </button>
+        </Tip>
+
         {/* Screenshot */}
         {onScreenshot && (
           <Tip text="Download the current chart as a PNG image">
@@ -635,6 +711,17 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
               </div>
             )}
           </div>
+
+          {/* Formula Layer Button */}
+          <Tip text="Add a custom formula layer (e.g. price / sma(200))">
+            <button
+              type="button"
+              onClick={() => setShowFormulaModal(true)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 hover:bg-cyan-400/20 transition"
+            >
+              f(x)
+            </button>
+          </Tip>
         </div>
 
         {/* Divider (only show if we have params or always for toggles) */}
@@ -688,6 +775,19 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
         {/* Toggle Buttons (icon-only) */}
         <div className="flex items-center gap-1">
+          <Tip text="Switch price axis to logarithmic scale (useful for long time ranges)">
+            <button
+              type="button"
+              title="Log Scale"
+              onClick={toggleLogScale}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
+                logScale ? chipActive : chipInactive
+              }`}
+            >
+              LOG
+            </button>
+          </Tip>
+
           <Tip text="Rebase all series to 100 at start for easy visual comparison">
             <button
               type="button"
@@ -743,7 +843,200 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             </button>
           </Tip>
         </div>
+
+        <div className="w-px h-4 bg-white/[0.08]" />
+
+        {/* Drawing Tools */}
+        <div className="relative" ref={drawDropRef}>
+          <Tip text="Draw on chart: horizontal lines, trendlines, fibonacci retracement">
+            <button
+              type="button"
+              onClick={() => setShowDrawTools(!showDrawTools)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                activeDrawingTool ? chipActive : chipInactive
+              }`}
+            >
+              <Pencil className="w-3 h-3" />
+              Draw
+              {drawings.length > 0 && (
+                <span className="bg-emerald-400/20 text-emerald-400 text-[9px] px-1 rounded-full">{drawings.length}</span>
+              )}
+            </button>
+          </Tip>
+
+          {showDrawTools && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-1.5 shadow-xl min-w-[180px]">
+              <button
+                type="button"
+                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'hline' ? null : 'hline'); setShowDrawTools(false); }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
+                  activeDrawingTool === 'hline' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
+                }`}
+              >
+                <Minus className="w-3.5 h-3.5" />
+                Horizontal Line
+                <span className="text-gray-600 text-[9px] ml-auto">1 click</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'trendline' ? null : 'trendline'); setShowDrawTools(false); }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
+                  activeDrawingTool === 'trendline' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
+                }`}
+              >
+                <TrendingDown className="w-3.5 h-3.5" />
+                Trendline
+                <span className="text-gray-600 text-[9px] ml-auto">2 clicks</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'fibonacci' ? null : 'fibonacci'); setShowDrawTools(false); }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
+                  activeDrawingTool === 'fibonacci' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                Fibonacci
+                <span className="text-gray-600 text-[9px] ml-auto">2 clicks</span>
+              </button>
+              {drawings.length > 0 && (
+                <>
+                  <div className="border-t border-white/[0.06] my-1" />
+                  <button
+                    type="button"
+                    onClick={() => { clearDrawings(); setShowDrawTools(false); }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-red-400 hover:bg-red-400/10 transition"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    Clear All ({drawings.length})
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Active Drawing Tool indicator */}
+        {activeDrawingTool && (
+          <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+            Click chart to place {activeDrawingTool === 'hline' ? 'line' : activeDrawingTool}
+            <button
+              type="button"
+              title="Cancel drawing"
+              onClick={() => setActiveDrawingTool(null)}
+              className="text-gray-500 hover:text-white"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        )}
       </div>
+
+      {/* Formula Builder Modal */}
+      {showFormulaModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-gray-900 border border-white/[0.1] rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+                <span className="text-cyan-400 font-mono text-lg">f(x)</span>
+                Custom Formula
+              </h3>
+              <button
+                type="button"
+                title="Close formula modal"
+                onClick={() => { setShowFormulaModal(false); setFormulaError(null); }}
+                className="text-gray-500 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] text-gray-500 mb-1 block">Formula Expression</label>
+                <input
+                  type="text"
+                  value={formulaInput}
+                  onChange={(e) => { setFormulaInput(e.target.value); setFormulaError(null); }}
+                  placeholder="e.g. price / sma(200)"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-400/40 font-mono"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const err = validateFormula(formulaInput);
+                      if (err) { setFormulaError(err); return; }
+                      addFormulaLayer(formulaInput, formulaLabel);
+                      setShowFormulaModal(false);
+                      setFormulaInput('');
+                      setFormulaLabel('');
+                      setFormulaError(null);
+                    }
+                  }}
+                />
+                {formulaError && (
+                  <p className="text-red-400 text-[10px] mt-1">{formulaError}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-[11px] text-gray-500 mb-1 block">Label (optional)</label>
+                <input
+                  type="text"
+                  value={formulaLabel}
+                  onChange={(e) => setFormulaLabel(e.target.value)}
+                  placeholder="e.g. Price/SMA Ratio"
+                  className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-400/40"
+                />
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
+                <p className="text-[10px] text-gray-500 font-medium mb-2">Available References</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['price', 'volume', 'sma(N)', 'ema(N)', 'rsi(N)'].map((ref) => (
+                    <span key={ref} className="text-[10px] font-mono text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded">
+                      {ref}
+                    </span>
+                  ))}
+                  {['+', '-', '*', '/', '(', ')'].map((op) => (
+                    <span key={op} className="text-[10px] font-mono text-gray-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
+                      {op}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-2 space-y-1">
+                  <p className="text-[10px] text-gray-600">Examples:</p>
+                  {['price / sma(200)', 'rsi(14) - 50', '(price - ema(20)) / ema(20) * 100'].map((ex) => (
+                    <button
+                      key={ex}
+                      type="button"
+                      onClick={() => setFormulaInput(ex)}
+                      className="block text-[10px] font-mono text-gray-500 hover:text-cyan-400 transition cursor-pointer"
+                    >
+                      {ex}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!formulaInput.trim()) return;
+                  const err = validateFormula(formulaInput);
+                  if (err) { setFormulaError(err); return; }
+                  addFormulaLayer(formulaInput, formulaLabel);
+                  setShowFormulaModal(false);
+                  setFormulaInput('');
+                  setFormulaLabel('');
+                  setFormulaError(null);
+                }}
+                className="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded-lg transition"
+              >
+                Add Formula Layer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

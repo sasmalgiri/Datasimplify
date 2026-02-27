@@ -39,7 +39,9 @@ export type DataSource =
   | 'rsi_sma'
   // User-edited / ratio
   | 'ratio'
-  | 'custom';
+  | 'custom'
+  // User formula
+  | 'formula';
 
 export interface OverlayLayer {
   id: string;
@@ -52,6 +54,7 @@ export interface OverlayLayer {
   gridIndex: number; // 0 = main chart, 1 = bottom sub-grid (volume/RSI)
   data: (number | null)[];
   params?: Record<string, number>; // e.g. { window: 20 } for SMA
+  formula?: string; // User-defined formula expression (for source: 'formula')
 }
 
 export interface OverlayPreset {
@@ -64,6 +67,7 @@ export interface OverlayPreset {
   defaultCoin: string;
   defaultDays: number;
   parameterDefs: ParameterDef[];
+  zones?: ZoneRule[];
 }
 
 export interface ParameterDef {
@@ -81,6 +85,16 @@ export interface EditHistoryEntry {
   layerId: string;
   index: number;
   oldValue: number;
+}
+
+/** Zone shading rule: highlights regions where a source crosses a threshold */
+export interface ZoneRule {
+  source: DataSource;
+  condition: 'above' | 'below';
+  threshold: number;
+  color: string;
+  opacity: number;
+  label?: string;
 }
 
 /** Available data source options for "Add Layer" dropdown */

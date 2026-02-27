@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { AuthGate } from '@/components/AuthGate';
@@ -16,24 +16,60 @@ import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { FlaskConical, Lock, Key, ExternalLink, Shield } from 'lucide-react';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import { UniversalExport } from '@/components/UniversalExport';
+import { decodeStateFromURL } from '@/lib/datalab/urlState';
 
-export default function DataLabPage() {
+export default function DataLabPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <DataLabPage />
+    </Suspense>
+  );
+}
+
+function DataLabPage() {
   const { user, profile, isLoading: authLoading, isAdmin } = useAuth();
   const router = useRouter();
   const showTable = useDataLabStore((s) => s.showTable);
   const activePreset = useDataLabStore((s) => s.activePreset);
   const loadPreset = useDataLabStore((s) => s.loadPreset);
   const apiKey = useLiveDashboardStore((s) => s.apiKey);
+  const searchParams = useSearchParams();
   const chartRef = useRef<HTMLDivElement>(null);
   const hasInitRef = useRef(false);
 
-  // Auto-load default preset on first visit
+  // Hydrate from URL params or auto-load default preset
   useEffect(() => {
-    if (!hasInitRef.current && apiKey && !activePreset) {
-      hasInitRef.current = true;
+    if (hasInitRef.current || !apiKey) return;
+    hasInitRef.current = true;
+
+    const urlState = decodeStateFromURL(searchParams.toString());
+    if (urlState?.preset) {
+      // Load the shared preset, then apply overrides
+      loadPreset(urlState.preset).then(() => {
+        const store = useDataLabStore.getState();
+        const overrides: Record<string, any> = {};
+        if (urlState.coin && urlState.coin !== store.coin) overrides.coin = urlState.coin;
+        if (urlState.days && urlState.days !== store.days) overrides.days = urlState.days;
+        if (urlState.vsCurrency) overrides.vsCurrency = urlState.vsCurrency;
+        if (urlState.logScale != null) overrides.logScale = urlState.logScale;
+        if (urlState.normalizeMode != null) overrides.normalizeMode = urlState.normalizeMode;
+        if (urlState.params) overrides.parameters = { ...store.parameters, ...urlState.params };
+        if (Object.keys(overrides).length > 0) {
+          useDataLabStore.setState(overrides);
+          // Refetch if coin/days/currency changed
+          if (urlState.coin || urlState.days || urlState.vsCurrency) {
+            useDataLabStore.getState().loadData();
+          }
+        }
+      });
+    } else if (!activePreset) {
       loadPreset('confluence-zones');
     }
-  }, [apiKey, activePreset, loadPreset]);
+  }, [apiKey, activePreset, loadPreset, searchParams]);
 
   // Auth gate — show sign-in message if not logged in
   if (authLoading) {
