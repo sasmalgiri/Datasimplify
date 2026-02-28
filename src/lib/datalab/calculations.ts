@@ -330,6 +330,214 @@ export function computeRollingVolatility(
   return out;
 }
 
+/** VWAP (Volume-Weighted Average Price) — cumulative reset daily */
+export function computeVWAP(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  volumes: (number | null)[],
+): (number | null)[] {
+  const len = closes.length;
+  const out: (number | null)[] = new Array(len).fill(null);
+  let cumVolPrice = 0;
+  let cumVol = 0;
+  for (let i = 0; i < len; i++) {
+    const v = volumes[i] ?? 0;
+    const tp = (highs[i] + lows[i] + closes[i]) / 3;
+    cumVolPrice += tp * v;
+    cumVol += v;
+    out[i] = cumVol > 0 ? cumVolPrice / cumVol : null;
+  }
+  return out;
+}
+
+/** OBV (On-Balance Volume) — cumulative volume direction */
+export function computeOBV(
+  closes: number[],
+  volumes: (number | null)[],
+): (number | null)[] {
+  const out: (number | null)[] = new Array(closes.length).fill(null);
+  if (closes.length === 0) return out;
+  let obv = 0;
+  out[0] = 0;
+  for (let i = 1; i < closes.length; i++) {
+    const vol = volumes[i] ?? 0;
+    if (closes[i] > closes[i - 1]) obv += vol;
+    else if (closes[i] < closes[i - 1]) obv -= vol;
+    out[i] = obv;
+  }
+  return out;
+}
+
+/** Ichimoku Cloud — returns tenkan, kijun, senkou_a, senkou_b, chikou */
+export function computeIchimoku(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  tenkanPeriod = 9,
+  kijunPeriod = 26,
+  senkouBPeriod = 52,
+): {
+  tenkan: (number | null)[];
+  kijun: (number | null)[];
+  senkouA: (number | null)[];
+  senkouB: (number | null)[];
+  chikou: (number | null)[];
+} {
+  const len = closes.length;
+  const tenkan: (number | null)[] = new Array(len).fill(null);
+  const kijun: (number | null)[] = new Array(len).fill(null);
+  const senkouA: (number | null)[] = new Array(len).fill(null);
+  const senkouB: (number | null)[] = new Array(len).fill(null);
+  const chikou: (number | null)[] = new Array(len).fill(null);
+
+  const midpoint = (arr: number[], start: number, period: number): number => {
+    let hi = -Infinity, lo = Infinity;
+    for (let j = start; j < start + period && j < arr.length; j++) {
+      if (arr[j] > hi) hi = arr[j];
+      if (arr[j] < lo) lo = arr[j];
+    }
+    return (hi + lo) / 2;
+  };
+
+  for (let i = 0; i < len; i++) {
+    if (i >= tenkanPeriod - 1) {
+      tenkan[i] = midpoint(highs, i - tenkanPeriod + 1, tenkanPeriod);
+    }
+    if (i >= kijunPeriod - 1) {
+      kijun[i] = midpoint(highs, i - kijunPeriod + 1, kijunPeriod);
+    }
+    // Senkou A/B shifted forward by kijunPeriod
+    if (i >= kijunPeriod - 1 && tenkan[i] != null && kijun[i] != null) {
+      const futureIdx = i + kijunPeriod;
+      if (futureIdx < len) {
+        senkouA[futureIdx] = (tenkan[i]! + kijun[i]!) / 2;
+      }
+    }
+    if (i >= senkouBPeriod - 1) {
+      const mid = midpoint(highs, i - senkouBPeriod + 1, senkouBPeriod);
+      const futureIdx = i + kijunPeriod;
+      if (futureIdx < len) {
+        senkouB[futureIdx] = mid;
+      }
+    }
+    // Chikou shifted back by kijunPeriod
+    if (i >= kijunPeriod) {
+      chikou[i - kijunPeriod] = closes[i];
+    }
+  }
+  return { tenkan, kijun, senkouA, senkouB, chikou };
+}
+
+/** ADX (Average Directional Index) — trend strength 0-100 */
+export function computeADX(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  period = 14,
+): (number | null)[] {
+  const len = closes.length;
+  const out: (number | null)[] = new Array(len).fill(null);
+  if (len < period + 1) return out;
+
+  // Step 1: True Range and Directional Movement
+  const tr: number[] = [];
+  const plusDM: number[] = [];
+  const minusDM: number[] = [];
+  for (let i = 1; i < len; i++) {
+    const hl = highs[i] - lows[i];
+    const hc = Math.abs(highs[i] - closes[i - 1]);
+    const lc = Math.abs(lows[i] - closes[i - 1]);
+    tr.push(Math.max(hl, hc, lc));
+    const upMove = highs[i] - highs[i - 1];
+    const downMove = lows[i - 1] - lows[i];
+    plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
+    minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
+  }
+
+  // Step 2: Smoothed averages
+  let atr = 0, aPlusDM = 0, aMinusDM = 0;
+  for (let i = 0; i < period; i++) {
+    atr += tr[i]; aPlusDM += plusDM[i]; aMinusDM += minusDM[i];
+  }
+  atr /= period; aPlusDM /= period; aMinusDM /= period;
+
+  const dx: number[] = [];
+  for (let i = period; i < tr.length; i++) {
+    if (i > period) {
+      atr = (atr * (period - 1) + tr[i]) / period;
+      aPlusDM = (aPlusDM * (period - 1) + plusDM[i]) / period;
+      aMinusDM = (aMinusDM * (period - 1) + minusDM[i]) / period;
+    }
+    const plusDI = atr > 0 ? (aPlusDM / atr) * 100 : 0;
+    const minusDI = atr > 0 ? (aMinusDM / atr) * 100 : 0;
+    const diSum = plusDI + minusDI;
+    dx.push(diSum > 0 ? (Math.abs(plusDI - minusDI) / diSum) * 100 : 0);
+  }
+
+  // Step 3: ADX = smoothed DX
+  if (dx.length >= period) {
+    let adx = 0;
+    for (let i = 0; i < period; i++) adx += dx[i];
+    adx /= period;
+    out[2 * period] = adx;
+    for (let i = period; i < dx.length; i++) {
+      adx = (adx * (period - 1) + dx[i]) / period;
+      out[i + period + 1] = adx;
+    }
+  }
+  return out;
+}
+
+/** Williams %R — momentum oscillator (-100 to 0) */
+export function computeWilliamsR(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  period = 14,
+): (number | null)[] {
+  const len = closes.length;
+  const out: (number | null)[] = new Array(len).fill(null);
+  if (len < period) return out;
+  for (let i = period - 1; i < len; i++) {
+    let hh = -Infinity, ll = Infinity;
+    for (let j = i - period + 1; j <= i; j++) {
+      if (highs[j] > hh) hh = highs[j];
+      if (lows[j] < ll) ll = lows[j];
+    }
+    const range = hh - ll;
+    out[i] = range === 0 ? -50 : ((hh - closes[i]) / range) * -100;
+  }
+  return out;
+}
+
+/** CCI (Commodity Channel Index) */
+export function computeCCI(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  period = 20,
+): (number | null)[] {
+  const len = closes.length;
+  const out: (number | null)[] = new Array(len).fill(null);
+  if (len < period) return out;
+  // Typical Price
+  const tp: number[] = [];
+  for (let i = 0; i < len; i++) {
+    tp.push((highs[i] + lows[i] + closes[i]) / 3);
+  }
+  for (let i = period - 1; i < len; i++) {
+    let sum = 0;
+    for (let j = i - period + 1; j <= i; j++) sum += tp[j];
+    const mean = sum / period;
+    let meanDev = 0;
+    for (let j = i - period + 1; j <= i; j++) meanDev += Math.abs(tp[j] - mean);
+    meanDev /= period;
+    out[i] = meanDev === 0 ? 0 : (tp[i] - mean) / (0.015 * meanDev);
+  }
+  return out;
+}
+
 /** Apply user edits on top of raw data (sparse override) */
 export function applyEdits(
   data: (number | null)[],

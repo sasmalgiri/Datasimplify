@@ -7,6 +7,10 @@ import { normalizeToBase100, applyEdits } from './calculations';
 import { ECHARTS_THEME, CHART_COLORS } from '@/lib/live-dashboard/theme';
 import type { SiteTheme } from '@/lib/live-dashboard/store';
 import { getEchartsTheme } from '@/lib/live-dashboard/theme';
+import type { MarketRegime } from './regimeDetection';
+import { REGIME_COLORS, REGIME_LABELS, segmentRegimes } from './regimeDetection';
+import type { EventCategory, MarketEvent } from './eventMarkers';
+import { getEventsInRange, findNearestIndex, EVENT_CATEGORY_COLORS } from './eventMarkers';
 
 interface BuildOptions {
   layers: OverlayLayer[];
@@ -19,6 +23,12 @@ interface BuildOptions {
   zones?: ZoneRule[];
   drawings?: Drawing[];
   siteTheme?: SiteTheme;
+  // New features
+  regimes?: MarketRegime[];
+  showRegimes?: boolean;
+  showEvents?: boolean;
+  eventCategories?: EventCategory[];
+  customEvents?: MarketEvent[];
 }
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -44,7 +54,12 @@ function formatDate(ts: number): string {
 }
 
 export function buildChartOption(opts: BuildOptions) {
-  const { layers, timestamps, ohlcRaw, editedCells, normalizeMode, logScale = false, vsCurrency = 'usd', zones = [], drawings = [], siteTheme = 'dark' } = opts;
+  const {
+    layers, timestamps, ohlcRaw, editedCells, normalizeMode,
+    logScale = false, vsCurrency = 'usd', zones = [], drawings = [],
+    siteTheme = 'dark', regimes = [], showRegimes = false,
+    showEvents = false, eventCategories = [], customEvents = [],
+  } = opts;
   const theme = getEchartsTheme(siteTheme);
 
   if (timestamps.length === 0 || layers.length === 0) return null;
@@ -384,8 +399,7 @@ export function buildChartOption(opts: BuildOptions) {
     }
   }
 
-  // Drawing Tools → rendered as markLine on a dedicated hidden series
-  const graphicElements: any[] = [];
+  // Drawing Tools → rendered as markLine on the price series
   if (drawings.length > 0) {
     // Find the price series (first series on gridIndex 0, left yAxis)
     const priceSeriesIdx = series.findIndex((s) => {
@@ -406,7 +420,6 @@ export function buildChartOption(opts: BuildOptions) {
 
       for (const drawing of drawings) {
         if (drawing.type === 'hline') {
-          // Horizontal line at y value
           const y = drawing.points[0]?.y;
           if (y != null) {
             targetSeries.markLine.data.push({
@@ -422,28 +435,64 @@ export function buildChartOption(opts: BuildOptions) {
             });
           }
         } else if (drawing.type === 'trendline') {
-          // Trendline between two data points → use graphic line
+          // Trendline: use markLine with coord pairs (fixes broken graphic elements)
           if (drawing.points.length >= 2) {
             const [p1, p2] = drawing.points;
-            graphicElements.push({
-              type: 'line',
-              shape: {
-                x1: 0, y1: 0, x2: 0, y2: 0, // Will be computed via position
-              },
-              position: [0, 0],
-              // Use invisible rect to declare coordinate mapping
-              $action: 'merge',
-              style: {
-                stroke: drawing.color,
-                lineWidth: 2,
-                lineDash: [6, 4],
-              },
-              // Store data coords for conversion
-              _dataCoords: [p1, p2],
-            });
+            // Find nearest date indices for the two points
+            const idx1 = findNearestTimestampIdx(timestamps, p1.x);
+            const idx2 = findNearestTimestampIdx(timestamps, p2.x);
+            if (idx1 >= 0 && idx2 >= 0) {
+              targetSeries.markLine.data.push([
+                {
+                  coord: [idx1, p1.y],
+                  lineStyle: { color: drawing.color, type: 'dashed', width: 2 },
+                  label: { show: false },
+                  symbol: 'circle',
+                  symbolSize: 6,
+                },
+                {
+                  coord: [idx2, p2.y],
+                  symbol: 'circle',
+                  symbolSize: 6,
+                },
+              ]);
+            }
+          }
+        } else if (drawing.type === 'text') {
+          if (drawing.points.length >= 1 && drawing.label) {
+            const p = drawing.points[0];
+            const idx = findNearestTimestampIdx(timestamps, p.x);
+            if (idx >= 0) {
+              if (!targetSeries.markPoint) {
+                targetSeries.markPoint = {
+                  symbol: 'pin',
+                  symbolSize: 0,
+                  data: [],
+                  label: { show: true },
+                };
+              }
+              targetSeries.markPoint.data.push({
+                coord: [idx, p.y],
+                value: '',
+                symbol: 'circle',
+                symbolSize: 6,
+                itemStyle: { color: drawing.color },
+                label: {
+                  show: true,
+                  formatter: drawing.label,
+                  color: drawing.color,
+                  fontSize: 11,
+                  fontWeight: 'bold',
+                  position: 'top',
+                  distance: 8,
+                  backgroundColor: 'rgba(15,23,42,0.8)',
+                  padding: [2, 6],
+                  borderRadius: 3,
+                },
+              });
+            }
           }
         } else if (drawing.type === 'fibonacci') {
-          // Fibonacci retracement from two anchor points
           if (drawing.points.length >= 2) {
             const high = Math.max(drawing.points[0].y, drawing.points[1].y);
             const low = Math.min(drawing.points[0].y, drawing.points[1].y);
@@ -468,6 +517,78 @@ export function buildChartOption(opts: BuildOptions) {
             }
           }
         }
+      }
+    }
+  }
+
+  // Regime Detection Overlay → markArea on the first price series
+  if (showRegimes && regimes.length > 0) {
+    const priceSeries = series.find((s) => {
+      const layer = visibleLayers.find((l) => l.label === s.name);
+      return layer && layer.gridIndex === 0 && layer.yAxis === 'left';
+    }) ?? series[0];
+    if (priceSeries) {
+      const segments = segmentRegimes(regimes);
+      if (!priceSeries.markArea) {
+        priceSeries.markArea = { silent: true, data: [] };
+      }
+      for (const seg of segments) {
+        if (seg.regime === 'trend') continue; // Skip trend (default) to reduce visual noise
+        priceSeries.markArea.data.push([
+          {
+            xAxis: dates[seg.startIdx],
+            name: REGIME_LABELS[seg.regime],
+            itemStyle: { color: REGIME_COLORS[seg.regime], opacity: 0.06 },
+          },
+          { xAxis: dates[seg.endIdx] },
+        ]);
+      }
+      priceSeries.markArea.label = {
+        show: true,
+        position: 'insideTop',
+        fontSize: 9,
+        color: 'rgba(255,255,255,0.4)',
+      };
+    }
+  }
+
+  // Event Markers → vertical markLine on first price series
+  if (showEvents && timestamps.length >= 2) {
+    const priceSeries = series.find((s) => {
+      const layer = visibleLayers.find((l) => l.label === s.name);
+      return layer && layer.gridIndex === 0 && layer.yAxis === 'left';
+    }) ?? series[0];
+    if (priceSeries) {
+      const startMs = timestamps[0];
+      const endMs = timestamps[timestamps.length - 1];
+      const events = getEventsInRange(startMs, endMs, eventCategories, customEvents);
+
+      if (!priceSeries.markLine) {
+        priceSeries.markLine = { silent: true, symbol: 'none', data: [], label: { show: true, position: 'end', fontSize: 10 } };
+      }
+
+      for (const evt of events) {
+        const idx = findNearestIndex(timestamps, evt.date);
+        if (idx < 0) continue;
+        priceSeries.markLine.data.push({
+          xAxis: dates[idx],
+          name: evt.label,
+          lineStyle: {
+            color: EVENT_CATEGORY_COLORS[evt.category],
+            type: 'dashed',
+            width: 1,
+            opacity: 0.6,
+          },
+          label: {
+            show: true,
+            formatter: evt.label,
+            color: EVENT_CATEGORY_COLORS[evt.category],
+            fontSize: 9,
+            position: 'start',
+            rotate: 90,
+            offset: [10, 0],
+          },
+        });
       }
     }
   }
@@ -527,7 +648,13 @@ export function buildChartOption(opts: BuildOptions) {
       const dateStr = ts ? new Date(ts).toLocaleDateString('en-US', {
         month: 'short', day: 'numeric', year: 'numeric',
       }) : dates[dateIdx] ?? '';
-      let html = `<div style="font-weight:600;margin-bottom:8px;color:#94a3b8;font-size:11px">${dateStr}</div>`;
+      let html = `<div style="font-weight:600;margin-bottom:8px;color:#94a3b8;font-size:11px">${dateStr}`;
+      // Show regime label in tooltip if active
+      if (showRegimes && regimes[dateIdx]) {
+        const r = regimes[dateIdx];
+        html += ` <span style="color:${REGIME_COLORS[r]};font-size:10px;margin-left:6px">${REGIME_LABELS[r]}</span>`;
+      }
+      html += `</div>`;
       for (const p of params) {
         if (refLineNames.has(p.seriesName)) continue;
         const val = Array.isArray(p.value)
@@ -578,8 +705,21 @@ export function buildChartOption(opts: BuildOptions) {
     dataZoom,
     tooltip,
     legend,
-    ...(graphicElements.length > 0 ? { graphic: graphicElements } : {}),
     animation: true,
     color: CHART_COLORS,
   };
+}
+
+/** Find nearest timestamp index for a given ms value */
+function findNearestTimestampIdx(timestamps: number[], targetMs: number): number {
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < timestamps.length; i++) {
+    const dist = Math.abs(timestamps[i] - targetMs);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  }
+  return bestDist < 5 * 86400_000 ? best : -1;
 }

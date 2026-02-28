@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbJsonLd } from '@/components/JsonLd';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -15,5 +16,15 @@ export const metadata: Metadata = {
 };
 
 export default function HeatmapLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://cryptoreportkit.com' },
+          { name: 'Heatmap', url: 'https://cryptoreportkit.com/heatmap' },
+        ]}
+      />
+      {children}
+    </>
+  );
 }

@@ -62,7 +62,7 @@ export function MarketTableLayout({ coin }: LayoutProps) {
                     <td className="px-3 py-2 text-gray-500">{c.market_cap_rank}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        {c.image && <img src={c.image} alt="" className="w-5 h-5 rounded-full" />}
+                        {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
                         <span className="text-white font-medium">{c.name}</span>
                         <span className="text-gray-500 uppercase">{c.symbol}</span>
                       </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { BreadcrumbJsonLd } from '@/components/JsonLd';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -47,5 +48,15 @@ export default function MarketLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://cryptoreportkit.com' },
+          { name: 'Market', url: 'https://cryptoreportkit.com/market' },
+        ]}
+      />
+      {children}
+    </>
+  );
 }

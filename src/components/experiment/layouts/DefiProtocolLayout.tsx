@@ -70,7 +70,7 @@ export function DefiProtocolLayout({}: LayoutProps) {
                     <td className="px-3 py-2 text-gray-500">{i + 1}</td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
-                        {p.logo && <img src={p.logo} alt="" className="w-5 h-5 rounded-full" />}
+                        {p.logo && <img src={p.logo} alt={`${p.name} logo`} className="w-5 h-5 rounded-full" />}
                         <span className="text-white font-medium">{p.name}</span>
                       </div>
                     </td>

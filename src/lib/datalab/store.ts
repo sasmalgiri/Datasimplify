@@ -2,17 +2,30 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { OverlayLayer, EditHistoryEntry, DataSource } from './types';
+import type { OverlayLayer, EditHistoryEntry, DataSource, DataLabMode, DivergenceSignal, DataQualityWarning, DetectedPattern, Anomaly } from './types';
 import type { Drawing, DrawingType } from './drawingTypes';
+import type { MarketRegime } from './regimeDetection';
+import type { EventCategory, MarketEvent } from './eventMarkers';
 import { getPresetById } from './presets';
 import {
   computeSMA, computeEMA, computeRSI,
   computeMACD, computeBollingerBands, computeStochastic, computeATR,
   computeBBWidth, computeDailyReturn, computeDrawdown, computeRollingVolatility,
-  computeRatio,
+  computeRatio, computeVWAP, computeOBV, computeIchimoku,
+  computeADX, computeWilliamsR, computeCCI,
 } from './calculations';
 import { evaluateFormula } from './formulaEngine';
+import { detectRegimes } from './regimeDetection';
+import { analyzeDataQuality } from './dataQuality';
+import { detectDivergences } from './divergenceDetection';
+import { recognizePatterns } from './patternRecognition';
+import { detectAnomalies } from './anomalyDetection';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
+
+/** Data sources that only work for Bitcoin (Blockchain.com on-chain data) */
+export const BTC_ONLY_SOURCES: Set<string> = new Set([
+  'hashrate', 'difficulty', 'active_addresses', 'tx_count', 'miners_revenue',
+]);
 
 let layerIdCounter = 0;
 function nextLayerId(): string {
@@ -120,9 +133,88 @@ interface DataLabStore {
   // Formula layers
   addFormulaLayer: (expression: string, label: string) => void;
 
+  // Regime detection
+  showRegimes: boolean;
+  toggleRegimes: () => void;
+  regimes: MarketRegime[];
+
+  // Event markers
+  showEvents: boolean;
+  toggleEvents: () => void;
+  eventCategories: EventCategory[];
+  setEventCategories: (cats: EventCategory[]) => void;
+
+  // What-if simulator
+  whatIfActive: boolean;
+  whatIfParam: string;    // parameter key being simulated
+  whatIfDelta: number;    // % change from current value
+  setWhatIf: (param: string, delta: number) => void;
+  clearWhatIf: () => void;
+
+  // Custom event markers
+  customEvents: MarketEvent[];
+  addCustomEvent: (event: MarketEvent) => void;
+  removeCustomEvent: (date: number) => void;
+
+  // Lab Notebook
+  labNotes: LabNote[];
+  addLabNote: (note: Omit<LabNote, 'id' | 'timestamp'>) => void;
+  removeLabNote: (id: string) => void;
+
   // UI
   showTable: boolean;
   toggleTable: () => void;
+
+  // Mode system
+  dataLabMode: DataLabMode;
+  setDataLabMode: (mode: DataLabMode) => void;
+
+  // Divergence detection
+  divergenceSignals: DivergenceSignal[];
+  showDivergences: boolean;
+  toggleDivergences: () => void;
+
+  // Data quality warnings
+  dataQualityWarnings: DataQualityWarning[];
+
+  // Auto-refresh
+  autoRefreshEnabled: boolean;
+  autoRefreshInterval: number;
+  toggleAutoRefresh: () => void;
+  setAutoRefreshInterval: (ms: number) => void;
+
+  // Multi-chart (advanced)
+  multiChartEnabled: boolean;
+  chartCount: 2 | 3 | 4;
+  activeChartIndex: number;
+  toggleMultiChart: () => void;
+  setChartCount: (n: 2 | 3 | 4) => void;
+  setActiveChartIndex: (i: number) => void;
+
+  // Annotations timeline
+  showAnnotationsTimeline: boolean;
+  toggleAnnotationsTimeline: () => void;
+
+  // Chart patterns
+  detectedPatterns: DetectedPattern[];
+  showPatterns: boolean;
+  togglePatterns: () => void;
+
+  // AI anomalies
+  detectedAnomalies: Anomaly[];
+  showAnomalies: boolean;
+  toggleAnomalies: () => void;
+}
+
+interface LabNote {
+  id: string;
+  timestamp: number;
+  hypothesis: string;
+  evidence: string;
+  verdict: 'confirmed' | 'rejected' | 'pending';
+  presetId: string | null;
+  coin: string;
+  days: number;
 }
 
 export const useDataLabStore = create<DataLabStore>()(
@@ -267,6 +359,46 @@ export const useDataLabStore = create<DataLabStore>()(
       addPendingPoint: (point) => set((s) => ({ pendingPoints: [...s.pendingPoints, point] })),
       clearPendingPoints: () => set({ pendingPoints: [] }),
 
+      // Regime detection
+      showRegimes: false,
+      toggleRegimes: () => set((s) => ({ showRegimes: !s.showRegimes })),
+      regimes: [],
+
+      // Event markers
+      showEvents: false,
+      toggleEvents: () => set((s) => ({ showEvents: !s.showEvents })),
+      eventCategories: ['halving', 'etf', 'crash', 'macro', 'regulation', 'upgrade'] as EventCategory[],
+      setEventCategories: (cats) => set({ eventCategories: cats }),
+
+      // What-if simulator
+      whatIfActive: false,
+      whatIfParam: '',
+      whatIfDelta: 0,
+      setWhatIf: (param, delta) => set({ whatIfActive: true, whatIfParam: param, whatIfDelta: delta }),
+      clearWhatIf: () => set({ whatIfActive: false, whatIfParam: '', whatIfDelta: 0 }),
+
+      // Custom event markers
+      customEvents: [],
+      addCustomEvent: (event) => set((s) => ({
+        customEvents: [...s.customEvents, event],
+      })),
+      removeCustomEvent: (date) => set((s) => ({
+        customEvents: s.customEvents.filter((e) => e.date !== date),
+      })),
+
+      // Lab Notebook
+      labNotes: [],
+      addLabNote: (note) => set((s) => ({
+        labNotes: [...s.labNotes, {
+          ...note,
+          id: `note-${Date.now()}`,
+          timestamp: Date.now(),
+        }],
+      })),
+      removeLabNote: (id) => set((s) => ({
+        labNotes: s.labNotes.filter((n) => n.id !== id),
+      })),
+
       isLoading: false,
       error: null,
 
@@ -293,6 +425,46 @@ export const useDataLabStore = create<DataLabStore>()(
 
       showTable: false,
       toggleTable: () => set((s) => ({ showTable: !s.showTable })),
+
+      // Mode system
+      dataLabMode: 'intermediate' as DataLabMode,
+      setDataLabMode: (mode) => set({ dataLabMode: mode }),
+
+      // Divergence detection
+      divergenceSignals: [],
+      showDivergences: false,
+      toggleDivergences: () => set((s) => ({ showDivergences: !s.showDivergences })),
+
+      // Data quality warnings
+      dataQualityWarnings: [],
+
+      // Auto-refresh
+      autoRefreshEnabled: false,
+      autoRefreshInterval: 300_000, // 5 min default
+      toggleAutoRefresh: () => set((s) => ({ autoRefreshEnabled: !s.autoRefreshEnabled })),
+      setAutoRefreshInterval: (ms) => set({ autoRefreshInterval: ms }),
+
+      // Multi-chart (advanced)
+      multiChartEnabled: false,
+      chartCount: 2 as 2 | 3 | 4,
+      activeChartIndex: 0,
+      toggleMultiChart: () => set((s) => ({ multiChartEnabled: !s.multiChartEnabled })),
+      setChartCount: (n) => set({ chartCount: n }),
+      setActiveChartIndex: (i) => set({ activeChartIndex: i }),
+
+      // Annotations timeline
+      showAnnotationsTimeline: false,
+      toggleAnnotationsTimeline: () => set((s) => ({ showAnnotationsTimeline: !s.showAnnotationsTimeline })),
+
+      // Chart patterns
+      detectedPatterns: [],
+      showPatterns: false,
+      togglePatterns: () => set((s) => ({ showPatterns: !s.showPatterns })),
+
+      // AI anomalies
+      detectedAnomalies: [],
+      showAnomalies: false,
+      toggleAnomalies: () => set((s) => ({ showAnomalies: !s.showAnomalies })),
 
       loadPreset: async (presetId) => {
         const preset = getPresetById(presetId);
@@ -345,12 +517,14 @@ export const useDataLabStore = create<DataLabStore>()(
             'stochastic_k', 'stochastic_d', 'atr',
             'bb_width', 'daily_return', 'drawdown',
             'rolling_volatility', 'rsi_sma',
+            'vwap', 'obv', 'ichimoku_tenkan', 'ichimoku_kijun',
+            'ichimoku_senkou_a', 'ichimoku_senkou_b', 'adx', 'williams_r', 'cci',
           ];
           if (ohlcSources.some((s) => sources.has(s))) {
             endpointsSet.add('ohlc');
           }
           // Real volume needs market_chart (coin_history endpoint)
-          if (sources.has('volume') || sources.has('volume_sma') || sources.has('volume_ratio')) {
+          if (sources.has('volume') || sources.has('volume_sma') || sources.has('volume_ratio') || sources.has('vwap') || sources.has('obv')) {
             endpointsSet.add('ohlc');       // for timestamps
             endpointsSet.add('coin_history'); // for real volume
           }
@@ -365,6 +539,15 @@ export const useDataLabStore = create<DataLabStore>()(
           if (sources.has('funding_rate') || sources.has('open_interest')) {
             endpointsSet.add('derivatives');
           }
+          // On-chain data (Blockchain.com — free, no key)
+          const onchainSources: DataSource[] = ['hashrate', 'difficulty', 'active_addresses', 'tx_count', 'miners_revenue'];
+          if (onchainSources.some((s) => sources.has(s))) {
+            endpointsSet.add('blockchain_onchain');
+          }
+          // Stablecoin supply (DeFi Llama)
+          if (sources.has('stablecoin_mcap')) {
+            endpointsSet.add('defillama_stablecoin_history');
+          }
 
           const endpoints = Array.from(endpointsSet);
           if (endpoints.length === 0) {
@@ -378,7 +561,7 @@ export const useDataLabStore = create<DataLabStore>()(
           // Check if an API key is available (needed for CoinGecko endpoints)
           const hasKey = !!dashStore.apiKey;
           const cgEndpoints = endpoints.filter(
-            (ep) => !ep.startsWith('defillama_') && ep !== 'fear_greed',
+            (ep) => !ep.startsWith('defillama_') && !ep.startsWith('blockchain_') && ep !== 'fear_greed',
           );
           if (cgEndpoints.length > 0 && !hasKey) {
             set({
@@ -388,17 +571,31 @@ export const useDataLabStore = create<DataLabStore>()(
             return;
           }
 
-          await dashStore.fetchData(endpoints, {
+          // Build params — blockchain_onchain needs chart names based on requested sources
+          const fetchParams: Record<string, any> = {
             coinId: coin,
             coinIds: [coin],
             days,
             vsCurrency: get().vsCurrency || 'usd',
-            // coin_history endpoint uses these param names
             historyCoinId: coin,
             historyDays: days,
-            // Fear & Greed: fetch full history matching our time range
             fgLimit: Math.min(days + 10, 365),
-          });
+          };
+          if (endpointsSet.has('blockchain_onchain')) {
+            const chartMap: Record<string, string> = {
+              hashrate: 'hash-rate',
+              difficulty: 'difficulty',
+              active_addresses: 'n-unique-addresses',
+              tx_count: 'n-transactions',
+              miners_revenue: 'miners-revenue',
+            };
+            fetchParams.blockchainCharts = onchainSources
+              .filter((s) => sources.has(s))
+              .map((s) => chartMap[s])
+              .filter(Boolean);
+          }
+
+          await dashStore.fetchData(endpoints, fetchParams);
 
           // Check if dashboard store encountered an error
           const dashError = useLiveDashboardStore.getState().error;
@@ -481,6 +678,31 @@ export const useDataLabStore = create<DataLabStore>()(
               d.tvl,
             ]);
             raw.defi_tvl = alignTimeSeries(tvlPairs, timestamps, 2 * 86400_000);
+          }
+
+          // ── Blockchain.com on-chain data ──
+          const bcData = dashData.blockchainOnchain as Record<string, { x: number; y: number }[]> | null;
+          if (bcData) {
+            const bcChartMap: Record<string, string> = {
+              'hash-rate': 'hashrate',
+              'difficulty': 'difficulty',
+              'n-unique-addresses': 'active_addresses',
+              'n-transactions': 'tx_count',
+              'miners-revenue': 'miners_revenue',
+            };
+            for (const [chartName, rawKey] of Object.entries(bcChartMap)) {
+              if (bcData[chartName] && bcData[chartName].length > 0) {
+                const pairs: number[][] = bcData[chartName].map((d) => [d.x * 1000, d.y]);
+                raw[rawKey] = alignTimeSeries(pairs, timestamps, 2 * 86400_000);
+              }
+            }
+          }
+
+          // ── Stablecoin supply history (DeFi Llama) ──
+          const stablecoinHist = dashData.defiStablecoinHistory as { date: number; totalUSD: number }[] | null;
+          if (stablecoinHist && stablecoinHist.length > 0) {
+            const scPairs: number[][] = stablecoinHist.map((d) => [d.date * 1000, d.totalUSD]);
+            raw.stablecoin_mcap = alignTimeSeries(scPairs, timestamps, 2 * 86400_000);
           }
 
           // ── Funding Rate — current snapshot (honest: single reference value) ──
@@ -591,6 +813,24 @@ export const useDataLabStore = create<DataLabStore>()(
             case 'funding_rate':
               data = rawData.funding_rate ? [...rawData.funding_rate] : [];
               break;
+            case 'hashrate':
+              data = rawData.hashrate ? [...rawData.hashrate] : [];
+              break;
+            case 'difficulty':
+              data = rawData.difficulty ? [...rawData.difficulty] : [];
+              break;
+            case 'active_addresses':
+              data = rawData.active_addresses ? [...rawData.active_addresses] : [];
+              break;
+            case 'tx_count':
+              data = rawData.tx_count ? [...rawData.tx_count] : [];
+              break;
+            case 'miners_revenue':
+              data = rawData.miners_revenue ? [...rawData.miners_revenue] : [];
+              break;
+            case 'stablecoin_mcap':
+              data = rawData.stablecoin_mcap ? [...rawData.stablecoin_mcap] : [];
+              break;
             case 'bb_width': {
               const bbwPeriod = layer.params?.window ?? parameters.bb_period ?? 20;
               const bbwMult = layer.params?.multiplier ?? parameters.bb_mult ?? 2;
@@ -638,6 +878,52 @@ export const useDataLabStore = create<DataLabStore>()(
               }
               break;
             }
+            case 'vwap': {
+              const vHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const vLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const vVols = rawData.volume ?? [];
+              data = computeVWAP(vHighs, vLows, closes, vVols);
+              break;
+            }
+            case 'obv': {
+              const obvVols = rawData.volume ?? [];
+              data = computeOBV(closes, obvVols);
+              break;
+            }
+            case 'ichimoku_tenkan':
+            case 'ichimoku_kijun':
+            case 'ichimoku_senkou_a':
+            case 'ichimoku_senkou_b': {
+              const iHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const iLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const ich = computeIchimoku(iHighs, iLows, closes);
+              data = layer.source === 'ichimoku_tenkan' ? ich.tenkan
+                : layer.source === 'ichimoku_kijun' ? ich.kijun
+                : layer.source === 'ichimoku_senkou_a' ? ich.senkouA
+                : ich.senkouB;
+              break;
+            }
+            case 'adx': {
+              const adxHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const adxLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const adxPeriod = layer.params?.period ?? parameters.adx_period ?? 14;
+              data = computeADX(adxHighs, adxLows, closes, adxPeriod);
+              break;
+            }
+            case 'williams_r': {
+              const wrHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const wrLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const wrPeriod = layer.params?.period ?? parameters.wr_period ?? 14;
+              data = computeWilliamsR(wrHighs, wrLows, closes, wrPeriod);
+              break;
+            }
+            case 'cci': {
+              const cciHighs = rawData.high as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[2]) : []);
+              const cciLows = rawData.low as number[] ?? (ohlcRaw ? ohlcRaw.map((d) => d[3]) : []);
+              const cciPeriod = layer.params?.period ?? parameters.cci_period ?? 20;
+              data = computeCCI(cciHighs, cciLows, closes, cciPeriod);
+              break;
+            }
             case 'formula': {
               if (layer.formula) {
                 try {
@@ -658,7 +944,36 @@ export const useDataLabStore = create<DataLabStore>()(
           return { ...layer, data };
         });
 
-        set({ layers: updatedLayers });
+        // Compute regime detection (always computed for chart overlay)
+        const sma50 = computeSMA(closes, 50);
+        const bbWidth = computeBBWidth(closes, 20, 2);
+        const rollingVol = computeRollingVolatility(closes, 30);
+        const drawdownArr = computeDrawdown(closes);
+        const regimes = detectRegimes({
+          closes,
+          sma50,
+          bbWidth,
+          rollingVol,
+          drawdown: drawdownArr,
+        });
+
+        // Compute divergence signals
+        const rsiData = computeRSI(closes, parameters.rsi_period ?? 14);
+        const macdData = computeMACD(closes, parameters.macd_fast ?? 12, parameters.macd_slow ?? 26, parameters.macd_signal_period ?? 9);
+        const divergenceSignals = detectDivergences(closes, rsiData, macdData.macd);
+
+        // Compute chart patterns
+        const detectedPatterns = recognizePatterns(closes);
+
+        // Compute anomalies
+        const { timestamps } = get();
+        const volumes = rawData.volume as number[] | undefined;
+        const detectedAnomalies = detectAnomalies(closes, volumes ?? [], timestamps);
+
+        // Compute data quality warnings
+        const dataQualityWarnings = analyzeDataQuality(timestamps, updatedLayers);
+
+        set({ layers: updatedLayers, regimes, divergenceSignals, dataQualityWarnings, detectedPatterns, detectedAnomalies });
       },
     }),
     {
@@ -679,6 +994,16 @@ export const useDataLabStore = create<DataLabStore>()(
         logScale: state.logScale,
         vsCurrency: state.vsCurrency,
         showTable: state.showTable,
+        drawings: state.drawings,
+        showRegimes: state.showRegimes,
+        showEvents: state.showEvents,
+        eventCategories: state.eventCategories,
+        labNotes: state.labNotes,
+        customEvents: state.customEvents,
+        dataLabMode: state.dataLabMode,
+        autoRefreshEnabled: state.autoRefreshEnabled,
+        autoRefreshInterval: state.autoRefreshInterval,
+        showDivergences: state.showDivergences,
       }),
     },
   ),

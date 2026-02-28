@@ -158,7 +158,7 @@ export function DerivativesLayout({}: LayoutProps) {
             {[btc, eth].filter(Boolean).map((asset) => (
               <div key={asset!.id} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {asset!.image && <img src={asset!.image} alt="" className="w-8 h-8 rounded-full" />}
+                  {asset!.image && <img src={asset!.image} alt={`${asset!.name} logo`} className="w-8 h-8 rounded-full" />}
                   <div>
                     <div className="text-sm font-medium text-white">{asset!.name}</div>
                     <div className="text-[10px] text-gray-500 uppercase">{asset!.symbol}</div>

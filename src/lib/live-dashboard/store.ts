@@ -219,6 +219,10 @@ export interface DashboardData {
   defiFeeOverview: DefiFeeItem[] | null;
   // DeFi Llama historical TVL (daily time series)
   defiTvlHistory: { date: number; tvl: number }[] | null;
+  // DeFi Llama stablecoin supply history
+  defiStablecoinHistory: { date: number; totalUSD: number }[] | null;
+  // Blockchain.com on-chain data (keyed by chart name)
+  blockchainOnchain: Record<string, { x: number; y: number }[]> | null;
   // Alchemy wallet data (BYOK)
   walletBalances: WalletBalances | null;
   walletTransfers: WalletTransfers | null;
@@ -281,6 +285,7 @@ export function calculateApiCallsForDefinition(
     if (ep === 'fear_greed') continue;
     if (ep.startsWith('defillama_')) continue;
     if (ep.startsWith('alchemy_')) continue;
+    if (ep.startsWith('blockchain_')) continue;
     if (ep === 'ohlc_multi') {
       calls += params?.coinIds ? Math.min(params.coinIds.length, 5) : 2;
     } else {
@@ -292,7 +297,7 @@ export function calculateApiCallsForDefinition(
 
 /** Check if all endpoints are key-free (DeFi Llama only, no CoinGecko key needed) */
 export function isKeyFreeEndpoints(endpoints: string[]): boolean {
-  const KEY_FREE = new Set(['defillama_protocols', 'defillama_chains', 'defillama_yields', 'defillama_stablecoins', 'defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'defillama_tvl_history', 'fear_greed']);
+  const KEY_FREE = new Set(['defillama_protocols', 'defillama_chains', 'defillama_yields', 'defillama_stablecoins', 'defillama_protocol_tvl', 'defillama_dex_overview', 'defillama_fees_overview', 'defillama_tvl_history', 'defillama_stablecoin_history', 'blockchain_onchain', 'fear_greed']);
   return endpoints.every((ep) => KEY_FREE.has(ep));
 }
 
@@ -368,6 +373,8 @@ const emptyData: DashboardData = {
   defiDexOverview: null,
   defiFeeOverview: null,
   defiTvlHistory: null,
+  defiStablecoinHistory: null,
+  blockchainOnchain: null,
   walletBalances: null,
   walletTransfers: null,
 };
@@ -475,6 +482,8 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
               defiDexOverview: result.defiDexOverview ?? currentData.defiDexOverview,
               defiFeeOverview: result.defiFeeOverview ?? currentData.defiFeeOverview,
               defiTvlHistory: result.defiTvlHistory ?? currentData.defiTvlHistory,
+              defiStablecoinHistory: result.defiStablecoinHistory ?? currentData.defiStablecoinHistory,
+              blockchainOnchain: result.blockchainOnchain ?? currentData.blockchainOnchain,
               // Alchemy
               walletBalances: result.walletBalances ?? currentData.walletBalances,
               walletTransfers: result.walletTransfers ?? currentData.walletTransfers,

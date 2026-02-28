@@ -10,6 +10,9 @@ const DEFILLAMA_API = 'https://api.llama.fi';
 const DEFILLAMA_YIELDS_API = 'https://yields.llama.fi';
 const DEFILLAMA_STABLECOINS_API = 'https://stablecoins.llama.fi';
 
+// Blockchain.com Charts API (free, no key needed)
+const BLOCKCHAIN_CHARTS_API = 'https://api.blockchain.info/charts';
+
 // Alchemy JSON-RPC — multi-chain support
 const ALCHEMY_CHAINS: Record<string, { label: string; url: string; explorer: string }> = {
   'eth-mainnet':     { label: 'Ethereum',  url: 'https://eth-mainnet.g.alchemy.com/v2',     explorer: 'https://etherscan.io' },
@@ -29,6 +32,8 @@ const KEY_FREE_ENDPOINTS = new Set([
   'defillama_dex_overview',
   'defillama_fees_overview',
   'defillama_tvl_history',
+  'defillama_stablecoin_history',
+  'blockchain_onchain',
 ]);
 
 // Tiered in-memory rate limiter per IP
@@ -607,6 +612,44 @@ export async function POST(req: NextRequest) {
               result.defiFeeOverview = protocols;
             })
             .catch((err) => { result.defiFeeOverviewError = err.message; }),
+        );
+        break;
+
+      // ── Blockchain.com on-chain data (free, no key needed) ──
+      case 'blockchain_onchain': {
+        const timespan = `${Math.min(Number(params?.days) || 365, 2000)}days`;
+        const defaultCharts = ['hash-rate', 'difficulty', 'n-unique-addresses', 'n-transactions', 'miners-revenue'];
+        const requestedCharts: string[] = params?.blockchainCharts || defaultCharts;
+        for (const chart of requestedCharts) {
+          const safeName = /^[a-z0-9-]+$/.test(chart) ? chart : '';
+          if (!safeName) continue;
+          fetchers.push(
+            fetchExternal(`${BLOCKCHAIN_CHARTS_API}/${safeName}?timespan=${timespan}&format=json`)
+              .then((data) => {
+                if (!result.blockchainOnchain) result.blockchainOnchain = {};
+                result.blockchainOnchain[safeName] = data?.values || [];
+              })
+              .catch((err) => {
+                if (!result.blockchainOnchainErrors) result.blockchainOnchainErrors = {};
+                result.blockchainOnchainErrors[safeName] = err.message;
+              }),
+          );
+        }
+        break;
+      }
+
+      case 'defillama_stablecoin_history':
+        fetchers.push(
+          fetchExternal(`${DEFILLAMA_STABLECOINS_API}/stablecoincharts/all`)
+            .then((data) => {
+              result.defiStablecoinHistory = Array.isArray(data)
+                ? data.map((d: any) => ({
+                    date: Number(d.date),
+                    totalUSD: d.totalCirculatingUSD?.peggedUSD || 0,
+                  }))
+                : [];
+            })
+            .catch((err) => { result.defiStablecoinHistoryError = err.message; }),
         );
         break;
 

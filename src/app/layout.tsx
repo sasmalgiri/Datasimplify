@@ -86,6 +86,9 @@ export const metadata: Metadata = {
   category: 'Finance',
   creator: 'CryptoReportKit',
   publisher: 'CryptoReportKit',
+
+  // PWA Manifest
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

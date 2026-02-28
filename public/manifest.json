@@ -1,0 +1,17 @@
+{
+  "name": "CryptoReportKit",
+  "short_name": "CryptoReportKit",
+  "description": "83+ interactive crypto dashboards with real-time market data, coin comparison, DCA simulator, tax tools, and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["finance", "utilities"]
+}

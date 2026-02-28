@@ -3,6 +3,144 @@
 export type ChartType = 'line' | 'bar' | 'area' | 'scatter' | 'candlestick';
 export type YAxisSide = 'left' | 'right';
 
+// ── 3-Mode System ──────────────────────────────────────────────────────────
+
+export type DataLabMode = 'simple' | 'intermediate' | 'advanced';
+
+export interface ModeFeatures {
+  formulaEngine: boolean;
+  powerCombos: boolean;
+  regimeDetection: boolean;
+  eventMarkers: boolean;
+  whatIfSimulator: boolean;
+  labNotebook: boolean;
+  signalReliability: boolean;
+  normalizeMode: boolean;
+  logScale: boolean;
+  dataTable: boolean;
+  // Phase 2: Simple mode features
+  dataQualityWarnings: boolean;
+  autoRefresh: boolean;
+  // Phase 3: Intermediate features
+  keyboardShortcuts: boolean;
+  commandPalette: boolean;
+  autoDivergence: boolean;
+  rollingCorrelation: boolean;
+  advancedDrawings: boolean;
+  annotationsTimeline: boolean;
+  tableVirtualization: boolean;
+  fullUndoRedo: boolean;
+  pineScriptExport: boolean;
+  // Phase 4: Advanced features
+  multiChart: boolean;
+  strategyBacktester: boolean;
+  alertWebhooks: boolean;
+  chartPatterns: boolean;
+  persistentNotebooks: boolean;
+  aiAnomalyDetection: boolean;
+  naturalLanguageQuery: boolean;
+  liquidationHeatmap: boolean;
+  whaleWalletTracking: boolean;
+}
+
+export interface ModeConfig {
+  mode: DataLabMode;
+  label: string;
+  description: string;
+  allowedPresetIds: string[] | 'all';
+  allowedDataSources: DataSource[] | 'all';
+  allowedDrawingTools: string[] | 'all';
+  features: ModeFeatures;
+}
+
+// ── Divergence Detection ───────────────────────────────────────────────────
+
+export interface DivergenceSignal {
+  type: 'bullish' | 'bearish';
+  indicator: 'rsi' | 'macd';
+  startIdx: number;
+  endIdx: number;
+  priceStart: number;
+  priceEnd: number;
+  indicatorStart: number;
+  indicatorEnd: number;
+  strength: 'strong' | 'moderate' | 'weak';
+}
+
+// ── Data Quality ───────────────────────────────────────────────────────────
+
+export interface DataQualityWarning {
+  type: 'stale_data' | 'data_gaps' | 'insufficient_candles' | 'zero_volume' | 'flat_price';
+  severity: 'info' | 'warning' | 'error';
+  message: string;
+  affectedLayer?: string;
+}
+
+// ── Anomaly Detection ──────────────────────────────────────────────────────
+
+export interface Anomaly {
+  index: number;
+  timestamp: number;
+  type: 'volume_spike' | 'volatility_spike' | 'price_gap' | 'unusual_candle';
+  severity: 'low' | 'medium' | 'high';
+  description: string;
+  zScore: number;
+}
+
+// ── Chart Pattern Recognition ──────────────────────────────────────────────
+
+export type PatternType =
+  | 'head_and_shoulders' | 'inverse_head_and_shoulders'
+  | 'double_top' | 'double_bottom'
+  | 'ascending_wedge' | 'descending_wedge'
+  | 'ascending_triangle' | 'descending_triangle'
+  | 'cup_and_handle';
+
+export interface DetectedPattern {
+  type: PatternType;
+  startIdx: number;
+  endIdx: number;
+  keyPoints: { idx: number; value: number; label: string }[];
+  confidence: number;
+  implication: 'bullish' | 'bearish';
+  targetPrice?: number;
+}
+
+// ── Backtest ───────────────────────────────────────────────────────────────
+
+export interface BacktestResult {
+  trades: { entryIdx: number; exitIdx: number; returnPct: number }[];
+  equity: number[];
+  totalReturn: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  winRate: number;
+  avgWin: number;
+  avgLoss: number;
+}
+
+// ── Undo/Redo ──────────────────────────────────────────────────────────────
+
+export type UndoableActionType =
+  | 'cell_edit'
+  | 'add_layer'
+  | 'remove_layer'
+  | 'toggle_layer'
+  | 'add_drawing'
+  | 'remove_drawing'
+  | 'clear_drawings'
+  | 'param_change'
+  | 'add_note'
+  | 'remove_note';
+
+export interface UndoableAction {
+  type: UndoableActionType;
+  timestamp: number;
+  description: string;
+  undo: () => void;
+  redo: () => void;
+}
+
 export type DataSource =
   // Fetched from CoinGecko
   | 'price'
@@ -37,11 +175,31 @@ export type DataSource =
   | 'market_cap'
   | 'rolling_volatility'
   | 'rsi_sma'
+  // Additional indicators
+  | 'vwap'
+  | 'obv'
+  | 'ichimoku_tenkan'
+  | 'ichimoku_kijun'
+  | 'ichimoku_senkou_a'
+  | 'ichimoku_senkou_b'
+  | 'adx'
+  | 'williams_r'
+  | 'cci'
+  // On-chain data (Blockchain.com — free, no key)
+  | 'hashrate'
+  | 'difficulty'
+  | 'active_addresses'
+  | 'tx_count'
+  | 'miners_revenue'
+  // Stablecoin supply (DeFi Llama — free)
+  | 'stablecoin_mcap'
   // User-edited / ratio
   | 'ratio'
   | 'custom'
   // User formula
-  | 'formula';
+  | 'formula'
+  // Rolling correlation (intermediate mode)
+  | 'rolling_correlation';
 
 export interface OverlayLayer {
   id: string;
@@ -121,10 +279,26 @@ export const DATA_SOURCE_OPTIONS: {
   { source: 'stochastic_k', label: 'Stochastic %K', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#06b6d4', endpoints: ['ohlc'] },
   { source: 'stochastic_d', label: 'Stochastic %D', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f472b6', endpoints: ['ohlc'] },
   { source: 'atr', label: 'ATR (Avg True Range)', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#a3e635', endpoints: ['ohlc'] },
+  { source: 'vwap', label: 'VWAP', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#e879f9', endpoints: ['ohlc', 'coin_history'] },
+  { source: 'obv', label: 'OBV (On-Balance Volume)', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#38bdf8', endpoints: ['ohlc', 'coin_history'] },
+  { source: 'ichimoku_tenkan', label: 'Ichimoku Tenkan', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#22d3ee', endpoints: ['ohlc'] },
+  { source: 'ichimoku_kijun', label: 'Ichimoku Kijun', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#f472b6', endpoints: ['ohlc'] },
+  { source: 'ichimoku_senkou_a', label: 'Ichimoku Senkou A', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#34d399', endpoints: ['ohlc'] },
+  { source: 'ichimoku_senkou_b', label: 'Ichimoku Senkou B', chartType: 'line', yAxis: 'left', gridIndex: 0, color: '#ef4444', endpoints: ['ohlc'] },
+  { source: 'adx', label: 'ADX (Trend Strength)', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#fb923c', endpoints: ['ohlc'] },
+  { source: 'williams_r', label: 'Williams %R', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#c084fc', endpoints: ['ohlc'] },
+  { source: 'cci', label: 'CCI', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#fbbf24', endpoints: ['ohlc'] },
   { source: 'fear_greed', label: 'Fear & Greed Index', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#f472b6', endpoints: ['fear_greed'] },
   { source: 'btc_dominance', label: 'BTC Dominance % (Current)', chartType: 'line', yAxis: 'right', gridIndex: 0, color: '#fbbf24', endpoints: ['global'] },
   { source: 'funding_rate', label: 'Funding Rate (Current)', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#2dd4bf', endpoints: ['derivatives'] },
   { source: 'defi_tvl', label: 'DeFi TVL', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#818cf8', endpoints: ['defillama_tvl_history'] },
+  // On-chain data (free, no API key needed — BTC only)
+  { source: 'hashrate', label: 'BTC Hashrate', chartType: 'line', yAxis: 'right', gridIndex: 0, color: '#f97316', endpoints: ['blockchain_onchain'] },
+  { source: 'difficulty', label: 'BTC Difficulty', chartType: 'line', yAxis: 'right', gridIndex: 0, color: '#ef4444', endpoints: ['blockchain_onchain'] },
+  { source: 'active_addresses', label: 'Active Addresses', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#22d3ee', endpoints: ['blockchain_onchain'] },
+  { source: 'tx_count', label: 'Transaction Count', chartType: 'bar', yAxis: 'right', gridIndex: 1, color: '#a78bfa', endpoints: ['blockchain_onchain'] },
+  { source: 'miners_revenue', label: 'Miners Revenue ($)', chartType: 'area', yAxis: 'right', gridIndex: 1, color: '#fbbf24', endpoints: ['blockchain_onchain'] },
+  { source: 'stablecoin_mcap', label: 'Stablecoin Supply', chartType: 'area', yAxis: 'right', gridIndex: 0, color: '#2dd4bf', endpoints: ['defillama_stablecoin_history'] },
   // Derived indicators
   { source: 'bb_width', label: 'BB Width %', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#f59e0b', endpoints: ['ohlc'] },
   { source: 'volume_sma', label: 'Volume SMA', chartType: 'line', yAxis: 'right', gridIndex: 1, color: '#38bdf8', endpoints: ['ohlc', 'coin_history'] },

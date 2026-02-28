@@ -48,7 +48,7 @@ export function CoinCompareWidget({ coinIds = ['bitcoin', 'ethereum'] }: CoinCom
               <th key={coin.id} className="text-right text-[10px] text-gray-500 uppercase tracking-wider py-2 px-2">
                 <div className="flex items-center justify-end gap-1.5">
                   {coin.image && (
-                    <img src={coin.image} alt="" className="w-4 h-4 rounded-full" />
+                    <img src={coin.image} alt={`${coin.symbol.toUpperCase()} logo`} className="w-4 h-4 rounded-full" />
                   )}
                   {coin.symbol.toUpperCase()}
                 </div>

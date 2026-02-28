@@ -10,15 +10,37 @@ import {
   Pencil, Minus, TrendingDown, X,
   HeartPulse, ShieldAlert, PiggyBank,
   Orbit, Scale, BarChart3, Layers3,
+  Radar, MapPin, Combine, BookOpen, Sliders, Calendar,
+  Type, AlertTriangle, BarChart2, Code,
 } from 'lucide-react';
 import { generateCSV, downloadCSV } from '@/lib/datalab/csvExport';
 import { buildShareURL } from '@/lib/datalab/urlState';
 import { validateFormula } from '@/lib/datalab/formulaEngine';
-import { useDataLabStore } from '@/lib/datalab/store';
+import { useDataLabStore, BTC_ONLY_SOURCES } from '@/lib/datalab/store';
 import { OVERLAY_PRESETS, PRESET_CATEGORIES } from '@/lib/datalab/presets';
 import { DATA_SOURCE_OPTIONS } from '@/lib/datalab/types';
 import type { ParameterDef } from '@/lib/datalab/types';
+import { isFeatureAvailable, isPresetAllowed, getFilteredDataSources, getFilteredDrawingTools } from '@/lib/datalab/modeConfig';
+import { ModeToggle } from './toolbar/ModeToggle';
+import { DataQualityBar } from './toolbar/DataQualityBar';
+import { AutoRefreshIndicator } from './toolbar/AutoRefreshIndicator';
+import { DRAWING_CLICK_COUNT, type DrawingType } from '@/lib/datalab/drawingTypes';
 import { inferLayerParamKey, inferTargetSources } from '@/lib/datalab/parameterBinding';
+import { POWER_COMBOS } from '@/lib/datalab/powerCombos';
+import { REGIME_COLORS, REGIME_LABELS, type MarketRegime } from '@/lib/datalab/regimeDetection';
+import { EVENT_CATEGORY_LABELS, type EventCategory } from '@/lib/datalab/eventMarkers';
+import { computeSignalReliability, LOOKFORWARD_DAYS, LOOKFORWARD_LABELS, type SignalResult } from '@/lib/datalab/signalReliability';
+import { computeSMA, computeRSI, computeMACD, computeBollingerBands } from '@/lib/datalab/calculations';
+import { exportToPineScript, exportToPython } from '@/lib/datalab/codeExport';
+import { CommandPalette } from './CommandPalette';
+import { KeyboardShortcutHandler } from './KeyboardShortcutHandler';
+import { AnnotationsTimeline } from './toolbar/AnnotationsTimeline';
+import { NaturalLanguageBar } from './NaturalLanguageBar';
+import { LiquidationHeatmap } from './LiquidationHeatmap';
+import { DataLabBacktester } from './DataLabBacktester';
+import { WhaleWalletPanel } from './WhaleWalletPanel';
+import { MultiChartLayout } from './MultiChartLayout';
+import { AlertWebhookPanel } from './AlertWebhookPanel';
 
 // ─── Dark-theme hover tooltip ──────────────────────────────────────
 function Tip({ children, text, position = 'bottom' }: {
@@ -52,7 +74,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Target, Brain, Gauge, RefreshCw, Layers,
   Activity, TrendingUp, Zap,
   HeartPulse, ShieldAlert, PiggyBank, Undo2,
-  Orbit, Scale, BarChart3, Layers3,
+  Orbit, Scale, BarChart3, Layers3, TrendingDown,
 };
 
 // ─── Preset tooltip text ───────────────────────────────────────────
@@ -121,6 +143,27 @@ const PRESET_META: Record<string, { short: string; tip: string }> = {
     short: 'Multi-TF',
     tip: 'Multi-Timeframe: EMA 9 + SMA 21/50 alignment + RSI + ATR = trend confirmation across timeframes.\nLoads: Candlestick, EMA 9, SMA 21/50, RSI, ATR',
   },
+  // Simple mode presets
+  'simple-price-trends': {
+    short: 'Trends',
+    tip: 'Price Trends: See where the price is heading with 50-day and 200-day moving averages.\nLoads: Price, MA 50, MA 200',
+  },
+  'simple-market-mood': {
+    short: 'Mood',
+    tip: 'Market Mood: Price + Fear & Greed Index — see when the crowd is greedy or fearful.\nLoads: Price, Fear & Greed',
+  },
+  'simple-value-zones': {
+    short: 'Value',
+    tip: 'Value Zones: RSI shows when price is oversold (cheap) or overbought (expensive).\nLoads: Price, RSI, Volume',
+  },
+  'simple-volume-watch': {
+    short: 'Volume',
+    tip: 'Volume Watch: Candlesticks with volume — spot big buying/selling days at a glance.\nLoads: Candlestick, Volume, Volume Ratio',
+  },
+  'simple-risk-check': {
+    short: 'Risk',
+    tip: 'Risk Check: Track drawdowns and volatility to understand current risk levels.\nLoads: Price, Drawdown %, Volatility',
+  },
 };
 
 // ─── Data source tooltips ──────────────────────────────────────────
@@ -138,8 +181,8 @@ const SOURCE_TIPS: Record<string, string> = {
   macd: 'MACD Line — difference between fast and slow EMA. Crosses above signal = bullish',
   macd_signal: 'MACD Signal Line — EMA of the MACD line. Crossovers indicate momentum shifts',
   macd_histogram: 'MACD Histogram — visual gap between MACD and signal. Growing bars = strengthening trend',
-  bollinger_upper: 'Bollinger Upper Band — SMA + 2× standard deviation. Price touching = potentially overbought',
-  bollinger_lower: 'Bollinger Lower Band — SMA − 2× standard deviation. Price touching = potentially oversold',
+  bollinger_upper: 'Bollinger Upper Band — SMA + 2x standard deviation. Price touching = potentially overbought',
+  bollinger_lower: 'Bollinger Lower Band — SMA - 2x standard deviation. Price touching = potentially oversold',
   stochastic_k: 'Stochastic %K — momentum oscillator (0-100). <20 oversold, >80 overbought',
   stochastic_d: 'Stochastic %D — smoothed %K signal line. %K crossing above %D = bullish signal',
   atr: 'Average True Range — measures volatility in price terms. Low ATR = quiet market, high ATR = volatile',
@@ -218,14 +261,31 @@ interface DataLabToolbarProps {
 export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   const {
     coin, days, activePreset, layers, parameters, normalizeMode, logScale, vsCurrency,
-    showTable, editHistory, timestamps, editedCells,
+    showTable, editHistory, timestamps, editedCells, rawData,
     drawings, activeDrawingTool,
+    showRegimes, showEvents, eventCategories, customEvents,
+    whatIfActive, whatIfParam, whatIfDelta,
+    labNotes,
+    dataLabMode,
+    showDivergences, divergenceSignals, toggleDivergences,
+    detectedPatterns, showPatterns, togglePatterns,
+    detectedAnomalies, showAnomalies, toggleAnomalies,
+    showAnnotationsTimeline,
     setCoin, setDays, loadPreset, loadData, recalculateLayers,
     toggleLayer, removeLayer, addLayer, setParameter,
     toggleNormalize, toggleLogScale, toggleTable,
     setVsCurrency, resetEdits, resetParameters, undoLastEdit,
     setActiveDrawingTool, clearDrawings, addFormulaLayer,
+    toggleRegimes, toggleEvents, setEventCategories,
+    addCustomEvent, removeCustomEvent,
+    setWhatIf, clearWhatIf,
+    addLabNote, removeLabNote,
   } = useDataLabStore();
+
+  // Mode-aware filtering
+  const feat = (f: keyof import('@/lib/datalab/types').ModeFeatures) => isFeatureAvailable(dataLabMode, f);
+  const filteredDataSources = getFilteredDataSources(dataLabMode);
+  const filteredDrawingTools = getFilteredDrawingTools(dataLabMode);
 
   const [showAddLayer, setShowAddLayer] = useState(false);
   const [showAllPresets, setShowAllPresets] = useState(false);
@@ -244,7 +304,49 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   const coinDropRef = useRef<HTMLDivElement>(null);
   const coinSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync coinInput when store coin changes (e.g. preset load)
+  // New feature state
+  const [showCombosDrop, setShowCombosDrop] = useState(false);
+  const combosDropRef = useRef<HTMLDivElement>(null);
+  const [showEventsDrop, setShowEventsDrop] = useState(false);
+  const eventsDropRef = useRef<HTMLDivElement>(null);
+  const [showLabNotebook, setShowLabNotebook] = useState(false);
+  const [noteHypothesis, setNoteHypothesis] = useState('');
+  const [noteEvidence, setNoteEvidence] = useState('');
+
+  // What-If simulator
+  const [showWhatIf, setShowWhatIf] = useState(false);
+  const [whatIfLocalDelta, setWhatIfLocalDelta] = useState(0);
+  const [whatIfLocalParam, setWhatIfLocalParam] = useState('');
+
+  // Indicator search filter
+  const [layerSearch, setLayerSearch] = useState('');
+
+  // Custom event form
+  const [customEventDate, setCustomEventDate] = useState('');
+  const [customEventLabel, setCustomEventLabel] = useState('');
+
+  // Signal reliability heatmap
+  const [showSignalHeatmap, setShowSignalHeatmap] = useState(false);
+  const [signalResults, setSignalResults] = useState<SignalResult[]>([]);
+
+  // Command palette
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+
+  // Code export dropdown
+  const [showCodeExport, setShowCodeExport] = useState(false);
+  const codeExportRef = useRef<HTMLDivElement>(null);
+
+  // Advanced mode panels
+  const [showBacktester, setShowBacktester] = useState(false);
+  const [showLiquidation, setShowLiquidation] = useState(false);
+  const [showWhalePanel, setShowWhalePanel] = useState(false);
+  const [showMultiChart, setShowMultiChart] = useState(false);
+  const [showAlertWebhook, setShowAlertWebhook] = useState(false);
+
+  // Debounce timer for parameter changes
+  const paramDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync coinInput when store coin changes
   useEffect(() => { setCoinInput(coin); }, [coin]);
 
   // Close dropdowns on outside click
@@ -259,10 +361,63 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
       if (drawDropRef.current && !drawDropRef.current.contains(e.target as Node)) {
         setShowDrawTools(false);
       }
+      if (combosDropRef.current && !combosDropRef.current.contains(e.target as Node)) {
+        setShowCombosDrop(false);
+      }
+      if (eventsDropRef.current && !eventsDropRef.current.contains(e.target as Node)) {
+        setShowEventsDrop(false);
+      }
+      if (codeExportRef.current && !codeExportRef.current.contains(e.target as Node)) {
+        setShowCodeExport(false);
+      }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  // ESC key closes all dropdowns
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAllPresets(false);
+        setShowAddLayer(false);
+        setShowDrawTools(false);
+        setShowCombosDrop(false);
+        setShowEventsDrop(false);
+        setShowCoinDrop(false);
+        setShowCodeExport(false);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  // Compute signal reliability when heatmap panel opened
+  useEffect(() => {
+    if (!showSignalHeatmap || !rawData.price || rawData.price.length === 0) return;
+    const closes = rawData.price as number[];
+    const rsi = computeRSI(closes, 14);
+    const macd = computeMACD(closes, 12, 26, 9);
+    const bb = computeBollingerBands(closes, 20, 2);
+    const sma50 = computeSMA(closes, 50);
+    const sma200 = computeSMA(closes, 200);
+    const vol = rawData.volume ?? [];
+    const volNums = vol.map((v) => v ?? 0);
+    const volSma = computeSMA(volNums, 20);
+    const results = computeSignalReliability({
+      closes,
+      rsi,
+      macdLine: macd.macd,
+      macdSignal: macd.signal,
+      bbUpper: bb.upper,
+      bbLower: bb.lower,
+      sma50,
+      sma200,
+      volume: vol,
+      volumeSma: volSma,
+    });
+    setSignalResults(results);
+  }, [showSignalHeatmap, rawData]);
 
   // Debounced CoinGecko search
   useEffect(() => {
@@ -312,7 +467,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     }
   };
 
-  // Collect parameter defs from the active preset
   const preset = activePreset
     ? OVERLAY_PRESETS.find((p) => p.id === activePreset)
     : null;
@@ -340,9 +494,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     const paramKey = inferLayerParamKey(pd.key);
     const targetSources = inferTargetSources(pd);
 
-    // Update matching layer params and recalculate.
-    // Important: only update the layer(s) whose existing param matches the current value
-    // (prevents SMA short/mid/long from all being overwritten to the same number).
     const { layers: currentLayers } = useDataLabStore.getState();
     const updated = currentLayers.map((l) => {
       if (!targetSources.includes(l.source)) return l;
@@ -352,7 +503,37 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
       return { ...l, params: { ...(l.params || {}), [paramKey]: newVal } };
     });
     useDataLabStore.setState({ layers: updated });
+
+    // Debounce recalculation
+    if (paramDebounceRef.current) clearTimeout(paramDebounceRef.current);
+    paramDebounceRef.current = setTimeout(() => {
+      recalculateLayers();
+    }, 150);
+  };
+
+  const loadPowerCombo = async (comboId: string) => {
+    const combo = POWER_COMBOS.find((c) => c.id === comboId);
+    if (!combo) return;
+
+    for (const layer of combo.layers) {
+      const alreadyExists = layers.some(
+        (l) => l.source === layer.source && l.chartType === layer.chartType,
+      );
+      if (!alreadyExists) {
+        useDataLabStore.getState().addLayer({
+          label: layer.label,
+          source: layer.source,
+          chartType: layer.chartType,
+          yAxis: layer.yAxis,
+          color: layer.color,
+          visible: true,
+          gridIndex: layer.gridIndex,
+          params: layer.params,
+        });
+      }
+    }
     recalculateLayers();
+    setShowCombosDrop(false);
   };
 
   const blurActiveEditable = () => {
@@ -370,20 +551,20 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     <div className="border-b border-white/[0.06] bg-white/[0.02]">
       {/* ── Row 1: Title + Presets + Coin + Time + Screenshot ────── */}
       <div className="px-4 py-2 flex items-center gap-2 flex-wrap max-w-[1800px] mx-auto">
-        {/* Brand */}
         <div className="flex items-center gap-2 mr-1">
           <FlaskConical className="w-4 h-4 text-emerald-400" />
           <span className="text-sm font-bold text-white">DataLab</span>
         </div>
 
+        <ModeToggle />
+
         <div className="w-px h-5 bg-white/[0.08]" />
 
-        {/* Preset Chips — top 4 inline + "All Strategies" dropdown */}
+        {/* Preset Chips */}
         <div className="flex items-center gap-1">
           {(() => {
-            // Show active preset first, then fill up to 4 from first category
-            const topIds = PRESET_CATEGORIES[0]?.presetIds.slice(0, 4) ?? [];
-            const shown = activePreset && !topIds.includes(activePreset)
+            const topIds = (PRESET_CATEGORIES[0]?.presetIds ?? []).filter((id) => isPresetAllowed(dataLabMode, id)).slice(0, 4);
+            const shown = activePreset && !topIds.includes(activePreset) && isPresetAllowed(dataLabMode, activePreset)
               ? [activePreset, ...topIds.slice(0, 3)]
               : topIds;
             return shown.map((pId) => {
@@ -409,7 +590,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             });
           })()}
 
-          {/* All Strategies Dropdown */}
           <div className="relative" ref={presetsDropRef}>
             <button
               type="button"
@@ -423,12 +603,15 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             {showAllPresets && (
               <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl p-3 min-w-[480px]">
                 <div className="grid grid-cols-2 gap-3">
-                  {PRESET_CATEGORIES.map((cat) => (
+                  {PRESET_CATEGORIES.map((cat) => {
+                    const allowedIds = cat.presetIds.filter((id) => isPresetAllowed(dataLabMode, id));
+                    if (allowedIds.length === 0) return null;
+                    return (
                     <div key={cat.label}>
                       <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5 px-1">
                         {cat.label}
                       </div>
-                      {cat.presetIds.map((pId) => {
+                      {allowedIds.map((pId) => {
                         const p = OVERLAY_PRESETS.find((pr) => pr.id === pId);
                         if (!p) return null;
                         const Icon = ICON_MAP[p.icon];
@@ -450,7 +633,8 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                         );
                       })}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -479,7 +663,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
           {showCoinDrop && (
             <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl w-64 max-h-72 overflow-y-auto">
-              {/* Loading indicator */}
               {isSearchingCoin && (
                 <div className="flex items-center gap-2 px-3 py-2 text-gray-400 text-[11px]">
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -487,7 +670,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                 </div>
               )}
 
-              {/* CoinGecko search results (when 2+ chars typed) */}
               {coinResults.length > 0 ? (
                 <div className="p-1">
                   {coinResults.map((c) => (
@@ -502,7 +684,7 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                       }`}
                     >
                       {c.thumb && (
-                        <img src={c.thumb} alt="" className="w-4 h-4 rounded-full flex-shrink-0" />
+                        <img src={c.thumb} alt={`${c.symbol} logo`} className="w-4 h-4 rounded-full flex-shrink-0" />
                       )}
                       <span className="font-medium">{c.symbol}</span>
                       <span className="text-gray-500 truncate">{c.name}</span>
@@ -513,7 +695,6 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                   ))}
                 </div>
               ) : coinInput.trim().length < 2 && !isSearchingCoin ? (
-                /* Popular coins when not searching */
                 <div className="p-1">
                   <div className="px-2.5 py-1 text-[10px] text-gray-500 uppercase tracking-wider">Popular Coins</div>
                   {POPULAR_COINS.map((c) => (
@@ -559,8 +740,10 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           </div>
         </Tip>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        <div className="flex-1">
+          {/* Natural Language Query Bar (advanced mode) */}
+          {feat('naturalLanguageQuery') && <NaturalLanguageBar />}
+        </div>
 
         {/* Currency Selector */}
         <Tip text="Change the quote currency for price data">
@@ -574,14 +757,17 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             className="bg-white/[0.04] border border-white/[0.06] text-gray-300 text-[11px] px-2 py-1 rounded-lg focus:outline-none focus:border-emerald-400/40 cursor-pointer"
           >
             <option value="usd">USD ($)</option>
-            <option value="eur">EUR (€)</option>
-            <option value="gbp">GBP (£)</option>
-            <option value="jpy">JPY (¥)</option>
-            <option value="inr">INR (₹)</option>
-            <option value="btc">BTC (₿)</option>
-            <option value="eth">ETH (Ξ)</option>
+            <option value="eur">EUR (&#8364;)</option>
+            <option value="gbp">GBP (&#163;)</option>
+            <option value="jpy">JPY (&#165;)</option>
+            <option value="inr">INR (&#8377;)</option>
+            <option value="btc">BTC (&#8383;)</option>
+            <option value="eth">ETH (&#926;)</option>
           </select>
         </Tip>
+
+        {/* Auto-Refresh */}
+        <AutoRefreshIndicator />
 
         {/* CSV Download */}
         <Tip text="Download visible chart data as CSV">
@@ -634,7 +820,68 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             </button>
           </Tip>
         )}
+
+        {/* Code Export (intermediate+) */}
+        {feat('pineScriptExport') && (
+          <div className="relative" ref={codeExportRef}>
+            <Tip text="Export current chart setup to Pine Script or Python code">
+              <button
+                type="button"
+                onClick={() => setShowCodeExport(!showCodeExport)}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] transition"
+              >
+                <Code className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+            </Tip>
+
+            {showCodeExport && (
+              <div className="absolute top-full right-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-1.5 shadow-xl min-w-[180px]">
+                <button type="button"
+                  onClick={() => {
+                    const code = exportToPineScript(layers, coin);
+                    navigator.clipboard.writeText(code);
+                    setShowCodeExport(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-gray-400 hover:bg-white/[0.06] hover:text-white transition">
+                  Pine Script v5
+                </button>
+                <button type="button"
+                  onClick={() => {
+                    const code = exportToPython(layers, coin, days);
+                    navigator.clipboard.writeText(code);
+                    setShowCodeExport(false);
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-gray-400 hover:bg-white/[0.06] hover:text-white transition">
+                  Python (pandas + plotly)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Keyboard shortcuts + command palette (intermediate+) */}
+      {feat('keyboardShortcuts') && (
+        <KeyboardShortcutHandler onOpenCommandPalette={() => setShowCommandPalette(true)} />
+      )}
+      {feat('commandPalette') && (
+        <CommandPalette open={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+      )}
+
+      {/* ── BTC-only source guard warning ─────────────────────────── */}
+      {coin !== 'bitcoin' && layers.some((l) => BTC_ONLY_SOURCES.has(l.source)) && (
+        <div className="px-4 py-1.5 flex items-center gap-2 border-t border-amber-500/20 bg-amber-500/[0.05] max-w-[1800px] mx-auto">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+          <span className="text-[11px] text-amber-400">
+            On-chain layers ({layers.filter((l) => BTC_ONLY_SOURCES.has(l.source)).map((l) => l.label).join(', ')}) only work for Bitcoin.
+            Switch to BTC or remove them for accurate data.
+          </span>
+        </div>
+      )}
+
+      {/* ── Data Quality Warnings (simple + intermediate modes) ──── */}
+      <DataQualityBar />
 
       {/* ── Row 2: Layers + Params + Toggles ─────────────────────── */}
       <div className="px-4 py-1.5 flex items-center gap-2 flex-wrap border-t border-white/[0.04] max-w-[1800px] mx-auto">
@@ -675,8 +922,26 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             </Tip>
 
             {showAddLayer && (
-              <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-1.5 shadow-xl min-w-[220px]">
-                {DATA_SOURCE_OPTIONS.map((opt) => {
+              <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg shadow-xl min-w-[260px] max-h-96 flex flex-col">
+                <div className="p-1.5 border-b border-white/[0.06]">
+                  <div className="relative">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={layerSearch}
+                      onChange={(e) => setLayerSearch(e.target.value)}
+                      placeholder="Filter indicators..."
+                      className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-[10px] pl-6 pr-2 py-1 rounded-md focus:outline-none focus:border-emerald-400/40"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="p-1.5 overflow-y-auto flex-1">
+                {filteredDataSources.filter((opt) => {
+                  if (!layerSearch.trim()) return true;
+                  const q = layerSearch.toLowerCase();
+                  return opt.label.toLowerCase().includes(q) || opt.source.toLowerCase().includes(q);
+                }).map((opt) => {
                   const alreadyAdded = layers.some((l) => l.source === opt.source && l.chartType === opt.chartType);
                   return (
                     <Tip key={`${opt.source}-${opt.chartType}`} text={SOURCE_TIPS[opt.source] ?? ''} position="top">
@@ -708,26 +973,66 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                     </Tip>
                   );
                 })}
+                </div>
               </div>
             )}
           </div>
 
-          {/* Formula Layer Button */}
-          <Tip text="Add a custom formula layer (e.g. price / sma(200))">
-            <button
-              type="button"
-              onClick={() => setShowFormulaModal(true)}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 hover:bg-cyan-400/20 transition"
-            >
-              f(x)
-            </button>
-          </Tip>
+          {/* Formula Layer (intermediate+) */}
+          {feat('formulaEngine') && (
+            <Tip text="Add a custom formula layer (e.g. price / sma(200))">
+              <button
+                type="button"
+                onClick={() => setShowFormulaModal(true)}
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 hover:bg-cyan-400/20 transition"
+              >
+                f(x)
+              </button>
+            </Tip>
+          )}
+
+          {/* Power Combos (intermediate+) */}
+          {feat('powerCombos') && (
+            <div className="relative" ref={combosDropRef}>
+              <Tip text="Quick-add pre-built layer combinations for specific market conditions">
+                <button
+                  type="button"
+                  onClick={() => setShowCombosDrop(!showCombosDrop)}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 hover:bg-amber-400/20 transition"
+                >
+                  <Combine className="w-3 h-3" />
+                  Combos
+                </button>
+              </Tip>
+
+              {showCombosDrop && (
+                <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-1.5 shadow-xl min-w-[280px]">
+                  {POWER_COMBOS.map((combo) => {
+                    const Icon = ICON_MAP[combo.icon];
+                    return (
+                      <button
+                        key={combo.id}
+                        type="button"
+                        onClick={() => loadPowerCombo(combo.id)}
+                        className="w-full text-left px-2.5 py-2 rounded-lg text-[11px] transition hover:bg-white/[0.06] mb-0.5"
+                      >
+                        <div className="flex items-center gap-2 text-gray-300 font-medium">
+                          {Icon && <Icon className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />}
+                          {combo.name}
+                        </div>
+                        <p className="text-[10px] text-gray-500 mt-0.5 ml-5">{combo.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Divider (only show if we have params or always for toggles) */}
         <div className="w-px h-4 bg-white/[0.08]" />
 
-        {/* Compact Param Controls */}
+        {/* Param Controls */}
         {paramDefs.length > 0 && (
           <>
             <div className="flex items-center gap-2">
@@ -773,72 +1078,223 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           </>
         )}
 
-        {/* Toggle Buttons (icon-only) */}
+        {/* Toggle Buttons */}
         <div className="flex items-center gap-1">
-          <Tip text="Switch price axis to logarithmic scale (useful for long time ranges)">
-            <button
-              type="button"
-              title="Log Scale"
-              onClick={toggleLogScale}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${
-                logScale ? chipActive : chipInactive
-              }`}
-            >
-              LOG
-            </button>
-          </Tip>
+          {feat('logScale') && (
+            <Tip text="Switch price axis to logarithmic scale">
+              <button type="button" title="Log Scale" onClick={toggleLogScale}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition ${logScale ? chipActive : chipInactive}`}>
+                LOG
+              </button>
+            </Tip>
+          )}
 
-          <Tip text="Rebase all series to 100 at start for easy visual comparison">
-            <button
-              type="button"
-              title="Normalize (Base 100)"
-              onClick={toggleNormalize}
-              className={`p-1.5 rounded-lg transition ${
-                normalizeMode ? chipActive : chipInactive
-              }`}
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
-          </Tip>
+          {feat('normalizeMode') && (
+            <Tip text="Rebase all series to 100 at start for easy comparison">
+              <button type="button" title="Normalize (Base 100)" onClick={toggleNormalize}
+                className={`p-1.5 rounded-lg transition ${normalizeMode ? chipActive : chipInactive}`}>
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </Tip>
+          )}
 
-          <Tip text="Show/hide the editable data table panel">
-            <button
-              type="button"
-              title="Data Table"
-              onClick={toggleTable}
-              className={`p-1.5 rounded-lg transition ${
-                showTable ? chipActive : chipInactive
-              }`}
-            >
-              <Table2 className="w-3.5 h-3.5" />
-            </button>
-          </Tip>
+          {feat('dataTable') && (
+            <Tip text="Show/hide the editable data table panel">
+              <button type="button" title="Data Table" onClick={toggleTable}
+                className={`p-1.5 rounded-lg transition ${showTable ? chipActive : chipInactive}`}>
+                <Table2 className="w-3.5 h-3.5" />
+              </button>
+            </Tip>
+          )}
+
+          {feat('regimeDetection') && (
+            <Tip text="Auto-detect market regimes (trend/chop/high-vol/risk-off)">
+              <button type="button" title="Regime Detection" onClick={toggleRegimes}
+                className={`p-1.5 rounded-lg transition ${showRegimes ? chipActive : chipInactive}`}>
+                <Radar className="w-3.5 h-3.5" />
+              </button>
+            </Tip>
+          )}
+
+          {/* Auto-Divergence Detection (intermediate+) */}
+          {feat('autoDivergence') && (
+            <Tip text="Detect bullish/bearish divergences between price and RSI/MACD">
+              <button type="button" title="Divergence Detection" onClick={toggleDivergences}
+                className={`flex items-center gap-1 p-1.5 rounded-lg transition ${showDivergences ? chipActive : chipInactive}`}>
+                <Activity className="w-3.5 h-3.5" />
+                {divergenceSignals.length > 0 && (
+                  <span className="bg-emerald-400/20 text-emerald-400 text-[9px] px-1 rounded-full">{divergenceSignals.length}</span>
+                )}
+              </button>
+            </Tip>
+          )}
+
+          {/* Chart Pattern Recognition (advanced) */}
+          {feat('chartPatterns') && (
+            <Tip text="Detect chart patterns: H&S, double top/bottom, wedges">
+              <button type="button" title="Chart Patterns" onClick={togglePatterns}
+                className={`flex items-center gap-1 p-1.5 rounded-lg transition ${showPatterns ? chipActive : chipInactive}`}>
+                <Target className="w-3.5 h-3.5" />
+                {detectedPatterns.length > 0 && (
+                  <span className="bg-purple-400/20 text-purple-400 text-[9px] px-1 rounded-full">{detectedPatterns.length}</span>
+                )}
+              </button>
+            </Tip>
+          )}
+
+          {/* AI Anomaly Detection (advanced) */}
+          {feat('aiAnomalyDetection') && (
+            <Tip text="Detect anomalies: volume spikes, volatility, price gaps">
+              <button type="button" title="Anomaly Detection" onClick={toggleAnomalies}
+                className={`flex items-center gap-1 p-1.5 rounded-lg transition ${showAnomalies ? chipActive : chipInactive}`}>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {detectedAnomalies.length > 0 && (
+                  <span className="bg-amber-400/20 text-amber-400 text-[9px] px-1 rounded-full">{detectedAnomalies.length}</span>
+                )}
+              </button>
+            </Tip>
+          )}
+
+          {/* Event Markers (intermediate+) */}
+          {feat('eventMarkers') && (
+          <div className="relative" ref={eventsDropRef}>
+            <Tip text="Show key market events as vertical markers">
+              <button type="button" title="Event Markers"
+                onClick={() => {
+                  if (!showEvents) { toggleEvents(); }
+                  else { setShowEventsDrop(!showEventsDrop); }
+                }}
+                onContextMenu={(e) => { e.preventDefault(); setShowEventsDrop(!showEventsDrop); }}
+                className={`p-1.5 rounded-lg transition ${showEvents ? chipActive : chipInactive}`}>
+                <Calendar className="w-3.5 h-3.5" />
+              </button>
+            </Tip>
+
+            {showEventsDrop && (
+              <div className="absolute top-full right-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-2 shadow-xl min-w-[180px]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-gray-500 font-semibold uppercase">Event Categories</span>
+                  <button type="button" title="Toggle events"
+                    onClick={() => { toggleEvents(); setShowEventsDrop(false); }}
+                    className="text-[10px] text-gray-500 hover:text-red-400">
+                    {showEvents ? 'Hide All' : 'Show All'}
+                  </button>
+                </div>
+                {(['halving', 'etf', 'crash', 'regulation', 'macro', 'upgrade', 'custom'] as EventCategory[]).map((cat) => {
+                  const isChecked = eventCategories.includes(cat);
+                  return (
+                    <label key={cat} className="flex items-center gap-2 px-1 py-1 text-[11px] text-gray-400 hover:text-white cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {
+                          const newCats = isChecked
+                            ? eventCategories.filter((c) => c !== cat)
+                            : [...eventCategories, cat];
+                          setEventCategories(newCats);
+                          if (!showEvents) toggleEvents();
+                        }}
+                        className="rounded border-gray-600 bg-transparent text-emerald-400 focus:ring-0 w-3 h-3"
+                      />
+                      {EVENT_CATEGORY_LABELS[cat]}
+                      {cat === 'custom' && customEvents.length > 0 && (
+                        <span className="text-[9px] text-emerald-400 ml-auto">{customEvents.length}</span>
+                      )}
+                    </label>
+                  );
+                })}
+
+                {/* Custom event form */}
+                <div className="border-t border-white/[0.06] mt-1.5 pt-1.5">
+                  <span className="text-[10px] text-gray-500 font-semibold uppercase px-1">Add Custom Event</span>
+                  <div className="flex flex-col gap-1 mt-1">
+                    <input
+                      type="date"
+                      title="Event date"
+                      value={customEventDate}
+                      onChange={(e) => setCustomEventDate(e.target.value)}
+                      className="bg-white/[0.04] border border-white/[0.1] text-white text-[10px] px-2 py-1 rounded focus:outline-none focus:border-emerald-400/40"
+                    />
+                    <input
+                      type="text"
+                      value={customEventLabel}
+                      onChange={(e) => setCustomEventLabel(e.target.value)}
+                      placeholder="Event label..."
+                      className="bg-white/[0.04] border border-white/[0.1] text-white text-[10px] px-2 py-1 rounded focus:outline-none focus:border-emerald-400/40"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && customEventDate && customEventLabel.trim()) {
+                          addCustomEvent({
+                            date: new Date(customEventDate).getTime(),
+                            label: customEventLabel.trim(),
+                            category: 'custom',
+                            description: customEventLabel.trim(),
+                          });
+                          setCustomEventDate('');
+                          setCustomEventLabel('');
+                          if (!showEvents) toggleEvents();
+                          if (!eventCategories.includes('custom')) {
+                            setEventCategories([...eventCategories, 'custom']);
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      disabled={!customEventDate || !customEventLabel.trim()}
+                      onClick={() => {
+                        addCustomEvent({
+                          date: new Date(customEventDate).getTime(),
+                          label: customEventLabel.trim(),
+                          category: 'custom',
+                          description: customEventLabel.trim(),
+                        });
+                        setCustomEventDate('');
+                        setCustomEventLabel('');
+                        if (!showEvents) toggleEvents();
+                        if (!eventCategories.includes('custom')) {
+                          setEventCategories([...eventCategories, 'custom']);
+                        }
+                      }}
+                      className="text-[10px] text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded px-2 py-1 hover:bg-emerald-400/20 transition disabled:opacity-30"
+                    >
+                      + Add Event
+                    </button>
+                  </div>
+
+                  {/* List custom events with delete */}
+                  {customEvents.length > 0 && (
+                    <div className="mt-1.5 space-y-0.5 max-h-24 overflow-y-auto">
+                      {customEvents.map((evt) => (
+                        <div key={evt.date} className="flex items-center gap-1 text-[10px] text-gray-400 px-1">
+                          <span className="text-gray-500">{new Date(evt.date).toLocaleDateString()}</span>
+                          <span className="truncate flex-1">{evt.label}</span>
+                          <button type="button" title="Remove event" onClick={() => removeCustomEvent(evt.date)}
+                            className="text-gray-600 hover:text-red-400 flex-shrink-0">
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          )}
 
           <Tip text="Revert all edited data points back to original values">
-            <button
-              type="button"
-              title="Reset All Edits"
-              onClick={() => {
-                blurActiveEditable();
-                setTimeout(() => resetEdits(), 0);
-              }}
-              className={`p-1.5 rounded-lg transition ${chipInactive}`}
-            >
+            <button type="button" title="Reset All Edits"
+              onClick={() => { blurActiveEditable(); setTimeout(() => resetEdits(), 0); }}
+              className={`p-1.5 rounded-lg transition ${chipInactive}`}>
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </Tip>
 
           <Tip text="Undo the last data edit">
-            <button
-              type="button"
-              title="Undo"
-              onClick={() => {
-                blurActiveEditable();
-                setTimeout(() => undoLastEdit(), 0);
-              }}
+            <button type="button" title="Undo"
+              onClick={() => { blurActiveEditable(); setTimeout(() => undoLastEdit(), 0); }}
               disabled={editHistory.length === 0}
-              className={`p-1.5 rounded-lg transition ${chipInactive} disabled:opacity-30`}
-            >
+              className={`p-1.5 rounded-lg transition ${chipInactive} disabled:opacity-30`}>
               <Undo2 className="w-3.5 h-3.5" />
             </button>
           </Tip>
@@ -849,13 +1305,11 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
         {/* Drawing Tools */}
         <div className="relative" ref={drawDropRef}>
           <Tip text="Draw on chart: horizontal lines, trendlines, fibonacci retracement">
-            <button
-              type="button"
+            <button type="button"
               onClick={() => setShowDrawTools(!showDrawTools)}
               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
                 activeDrawingTool ? chipActive : chipInactive
-              }`}
-            >
+              }`}>
               <Pencil className="w-3 h-3" />
               Draw
               {drawings.length > 0 && (
@@ -866,49 +1320,37 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
           {showDrawTools && (
             <div className="absolute top-full left-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-1.5 shadow-xl min-w-[180px]">
-              <button
-                type="button"
-                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'hline' ? null : 'hline'); setShowDrawTools(false); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
-                  activeDrawingTool === 'hline' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
-                }`}
-              >
-                <Minus className="w-3.5 h-3.5" />
-                Horizontal Line
-                <span className="text-gray-600 text-[9px] ml-auto">1 click</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'trendline' ? null : 'trendline'); setShowDrawTools(false); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
-                  activeDrawingTool === 'trendline' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
-                }`}
-              >
-                <TrendingDown className="w-3.5 h-3.5" />
-                Trendline
-                <span className="text-gray-600 text-[9px] ml-auto">2 clicks</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setActiveDrawingTool(activeDrawingTool === 'fibonacci' ? null : 'fibonacci'); setShowDrawTools(false); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
-                  activeDrawingTool === 'fibonacci' ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
-                }`}
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                Fibonacci
-                <span className="text-gray-600 text-[9px] ml-auto">2 clicks</span>
-              </button>
+              {filteredDrawingTools.map((tool) => {
+                const TOOL_LABELS: Record<DrawingType, string> = {
+                  hline: 'Horizontal Line', trendline: 'Trendline', fibonacci: 'Fibonacci',
+                  text: 'Text Note', pitchfork: 'Pitchfork', regression_channel: 'Regression Channel',
+                  measurement: 'Measurement',
+                };
+                const TOOL_ICONS: Record<DrawingType, React.ComponentType<{ className?: string }>> = {
+                  hline: Minus, trendline: TrendingDown, fibonacci: BarChart3,
+                  text: Type, pitchfork: Activity, regression_channel: TrendingUp,
+                  measurement: Maximize2,
+                };
+                const Icon = TOOL_ICONS[tool];
+                const clicks = DRAWING_CLICK_COUNT[tool];
+                return (
+                  <button key={tool} type="button"
+                    onClick={() => { setActiveDrawingTool(activeDrawingTool === tool ? null : tool); setShowDrawTools(false); }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition ${
+                      activeDrawingTool === tool ? 'bg-emerald-400/15 text-emerald-400' : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
+                    }`}>
+                    <Icon className="w-3.5 h-3.5" /> {TOOL_LABELS[tool]}
+                    <span className="text-gray-600 text-[9px] ml-auto">{clicks} click{clicks > 1 ? 's' : ''}</span>
+                  </button>
+                );
+              })}
               {drawings.length > 0 && (
                 <>
                   <div className="border-t border-white/[0.06] my-1" />
-                  <button
-                    type="button"
+                  <button type="button"
                     onClick={() => { clearDrawings(); setShowDrawTools(false); }}
-                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-red-400 hover:bg-red-400/10 transition"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    Clear All ({drawings.length})
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-red-400 hover:bg-red-400/10 transition">
+                    <X className="w-3.5 h-3.5" /> Clear All ({drawings.length})
                   </button>
                 </>
               )}
@@ -916,21 +1358,475 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           )}
         </div>
 
-        {/* Active Drawing Tool indicator */}
         {activeDrawingTool && (
           <span className="text-[10px] text-emerald-400 flex items-center gap-1">
-            Click chart to place {activeDrawingTool === 'hline' ? 'line' : activeDrawingTool}
-            <button
-              type="button"
-              title="Cancel drawing"
-              onClick={() => setActiveDrawingTool(null)}
-              className="text-gray-500 hover:text-white"
-            >
+            Click chart to place {activeDrawingTool === 'hline' ? 'line' : activeDrawingTool} (ESC to cancel)
+            <button type="button" title="Cancel drawing" onClick={() => setActiveDrawingTool(null)}
+              className="text-gray-500 hover:text-white">
               <X className="w-3 h-3" />
             </button>
           </span>
         )}
+
+        <div className="w-px h-4 bg-white/[0.08]" />
+
+        {/* Lab Notebook (intermediate+) */}
+        {feat('labNotebook') && (
+          <Tip text="Research notebook: record hypotheses and track outcomes">
+            <button type="button"
+              onClick={() => setShowLabNotebook(!showLabNotebook)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showLabNotebook ? 'bg-purple-400/20 text-purple-400 border border-purple-400/30' : chipInactive
+              }`}>
+              <BookOpen className="w-3 h-3" />
+              Lab Notes
+              {labNotes.length > 0 && (
+                <span className="bg-purple-400/20 text-purple-400 text-[9px] px-1 rounded-full">{labNotes.length}</span>
+              )}
+            </button>
+          </Tip>
+        )}
+
+        {/* What-If Simulator (intermediate+) */}
+        {feat('whatIfSimulator') && (
+          <Tip text="Simulate parameter changes: adjust indicators and see impact on chart">
+            <button type="button"
+              onClick={() => setShowWhatIf(!showWhatIf)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showWhatIf ? 'bg-orange-400/20 text-orange-400 border border-orange-400/30' : chipInactive
+              }`}>
+              <Sliders className="w-3 h-3" />
+              What-If
+            </button>
+          </Tip>
+        )}
+
+        {/* Signal Reliability Heatmap (intermediate+) */}
+        {feat('signalReliability') && (
+          <Tip text="View historical hit-rate of common trading signals on current data">
+            <button type="button"
+              onClick={() => setShowSignalHeatmap(!showSignalHeatmap)}
+              disabled={!rawData.price || rawData.price.length === 0}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showSignalHeatmap ? 'bg-rose-400/20 text-rose-400 border border-rose-400/30' : chipInactive
+              } disabled:opacity-30`}>
+              <BarChart2 className="w-3 h-3" />
+              Signals
+            </button>
+          </Tip>
+        )}
+
+        {/* Annotations Timeline (intermediate+) */}
+        {feat('annotationsTimeline') && (
+          <Tip text="View all annotations (drawings, events, notes) in a timeline">
+            <button type="button"
+              onClick={() => useDataLabStore.setState({ showAnnotationsTimeline: !showAnnotationsTimeline })}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showAnnotationsTimeline ? 'bg-cyan-400/20 text-cyan-400 border border-cyan-400/30' : chipInactive
+              }`}>
+              <MapPin className="w-3 h-3" />
+              Timeline
+            </button>
+          </Tip>
+        )}
+
+        {/* Strategy Backtester (advanced) */}
+        {feat('strategyBacktester') && (
+          <Tip text="Run strategy backtests on current data">
+            <button type="button"
+              onClick={() => setShowBacktester(!showBacktester)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showBacktester ? 'bg-blue-400/20 text-blue-400 border border-blue-400/30' : chipInactive
+              }`}>
+              <TrendingUp className="w-3 h-3" />
+              Backtest
+            </button>
+          </Tip>
+        )}
+
+        {/* Liquidation Heatmap (advanced) */}
+        {feat('liquidationHeatmap') && (
+          <Tip text="View estimated liquidation levels at common leverage ratios">
+            <button type="button"
+              onClick={() => setShowLiquidation(!showLiquidation)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showLiquidation ? 'bg-orange-400/20 text-orange-400 border border-orange-400/30' : chipInactive
+              }`}>
+              <Layers className="w-3 h-3" />
+              Liquidation
+            </button>
+          </Tip>
+        )}
+
+        {/* Multi-Chart (advanced) */}
+        {feat('multiChart') && (
+          <Tip text="Compare multiple coins side-by-side">
+            <button type="button"
+              onClick={() => setShowMultiChart(!showMultiChart)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showMultiChart ? 'bg-cyan-400/20 text-cyan-400 border border-cyan-400/30' : chipInactive
+              }`}>
+              <Combine className="w-3 h-3" />
+              Multi-Chart
+            </button>
+          </Tip>
+        )}
+
+        {/* Alert Webhooks (advanced) */}
+        {feat('alertWebhooks') && (
+          <Tip text="Set up price alerts with webhook notifications">
+            <button type="button"
+              onClick={() => setShowAlertWebhook(!showAlertWebhook)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showAlertWebhook ? 'bg-amber-400/20 text-amber-400 border border-amber-400/30' : chipInactive
+              }`}>
+              <Radar className="w-3 h-3" />
+              Alerts
+            </button>
+          </Tip>
+        )}
+
+        {/* Whale Wallet Tracking (advanced) */}
+        {feat('whaleWalletTracking') && (
+          <Tip text="Track large whale transactions and exchange flows">
+            <button type="button"
+              onClick={() => setShowWhalePanel(!showWhalePanel)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition ${
+                showWhalePanel ? 'bg-blue-400/20 text-blue-400 border border-blue-400/30' : chipInactive
+              }`}>
+              <Scale className="w-3 h-3" />
+              Whales
+            </button>
+          </Tip>
+        )}
       </div>
+
+      {/* ── Row 3 (conditional): Regime Legend ──────────────────────── */}
+      {showRegimes && (
+        <div className="px-4 py-1 flex items-center gap-3 border-t border-white/[0.04] max-w-[1800px] mx-auto">
+          <span className="text-[10px] text-gray-500 font-medium">Regimes:</span>
+          {(['trend', 'chop', 'high-vol', 'risk-off'] as MarketRegime[]).map((r) => (
+            <span key={r} className="flex items-center gap-1 text-[10px]">
+              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: REGIME_COLORS[r], opacity: 0.7 }} />
+              <span style={{ color: REGIME_COLORS[r] }}>{REGIME_LABELS[r]}</span>
+            </span>
+          ))}
+          <span className="text-[9px] text-gray-600 ml-2">
+            Based on BB width, rolling vol, drawdown, SMA 50
+          </span>
+        </div>
+      )}
+
+      {/* ── Annotations Timeline Panel ──────────────────────────────── */}
+      <AnnotationsTimeline />
+
+      {/* ── Lab Notebook Panel ──────────────────────────────────────── */}
+      {showLabNotebook && (
+        <div className="border-t border-white/[0.04] bg-white/[0.01] max-w-[1800px] mx-auto">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-semibold text-white flex items-center gap-2">
+                <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                Lab Notebook
+              </h4>
+              <button type="button" title="Close notebook" onClick={() => setShowLabNotebook(false)}
+                className="text-gray-500 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <input type="text" value={noteHypothesis} onChange={(e) => setNoteHypothesis(e.target.value)}
+                placeholder="Hypothesis: e.g. RSI < 30 + Fear < 20 = bounce within 7 days"
+                className="flex-1 bg-white/[0.04] border border-white/[0.1] text-white text-[11px] px-3 py-1.5 rounded-lg focus:outline-none focus:border-purple-400/40" />
+              <input type="text" value={noteEvidence} onChange={(e) => setNoteEvidence(e.target.value)}
+                placeholder="Evidence / observations"
+                className="flex-1 bg-white/[0.04] border border-white/[0.1] text-white text-[11px] px-3 py-1.5 rounded-lg focus:outline-none focus:border-purple-400/40" />
+              <button type="button"
+                onClick={() => {
+                  if (!noteHypothesis.trim()) return;
+                  addLabNote({
+                    hypothesis: noteHypothesis,
+                    evidence: noteEvidence,
+                    verdict: 'pending',
+                    presetId: activePreset,
+                    coin,
+                    days,
+                  });
+                  setNoteHypothesis('');
+                  setNoteEvidence('');
+                }}
+                disabled={!noteHypothesis.trim()}
+                className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-[11px] font-medium rounded-lg transition disabled:opacity-30">
+                Add
+              </button>
+            </div>
+
+            {labNotes.length === 0 ? (
+              <p className="text-[11px] text-gray-600 text-center py-2">
+                No notes yet. Record hypotheses and track outcomes as you analyze.
+              </p>
+            ) : (
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                {labNotes.map((note) => (
+                  <div key={note.id} className="flex items-start gap-2 bg-white/[0.02] border border-white/[0.04] rounded-lg px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
+                          note.verdict === 'confirmed' ? 'bg-emerald-400/20 text-emerald-400'
+                          : note.verdict === 'rejected' ? 'bg-red-400/20 text-red-400'
+                          : 'bg-amber-400/20 text-amber-400'
+                        }`}>
+                          {note.verdict.toUpperCase()}
+                        </span>
+                        <span className="text-[10px] text-gray-500">{note.coin} &middot; {note.days}d</span>
+                        <span className="text-[10px] text-gray-600">{new Date(note.timestamp).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 mt-1">{note.hypothesis}</p>
+                      {note.evidence && (
+                        <p className="text-[10px] text-gray-500 mt-0.5">{note.evidence}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button type="button" title="Mark confirmed"
+                        onClick={() => {
+                          const updated = labNotes.map((n) =>
+                            n.id === note.id ? { ...n, verdict: 'confirmed' as const } : n,
+                          );
+                          useDataLabStore.setState({ labNotes: updated });
+                        }}
+                        className="text-[9px] text-gray-500 hover:text-emerald-400 px-1">
+                        &#10003;
+                      </button>
+                      <button type="button" title="Mark rejected"
+                        onClick={() => {
+                          const updated = labNotes.map((n) =>
+                            n.id === note.id ? { ...n, verdict: 'rejected' as const } : n,
+                          );
+                          useDataLabStore.setState({ labNotes: updated });
+                        }}
+                        className="text-[9px] text-gray-500 hover:text-red-400 px-1">
+                        &#10007;
+                      </button>
+                      <button type="button" title="Delete note" onClick={() => removeLabNote(note.id)}
+                        className="text-gray-600 hover:text-red-400 transition">
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── What-If Simulator Panel ──────────────────────────────── */}
+      {showWhatIf && (
+        <div className="border-t border-white/[0.04] bg-white/[0.01] max-w-[1800px] mx-auto">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-semibold text-white flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-orange-400" />
+                What-If Simulator
+              </h4>
+              <button type="button" title="Close what-if panel" onClick={() => { setShowWhatIf(false); clearWhatIf(); }}
+                className="text-gray-500 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {paramDefs.length === 0 ? (
+              <p className="text-[11px] text-gray-600 text-center py-2">
+                Load a preset with adjustable parameters to use the What-If simulator.
+              </p>
+            ) : (
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-gray-500">Parameter:</span>
+                  <select
+                    title="Select parameter to simulate"
+                    value={whatIfLocalParam || (paramDefs[0]?.key ?? '')}
+                    onChange={(e) => setWhatIfLocalParam(e.target.value)}
+                    className="bg-white/[0.04] border border-white/[0.06] text-gray-300 text-[11px] px-2 py-1 rounded-lg focus:outline-none focus:border-orange-400/40"
+                  >
+                    {paramDefs.map((pd) => (
+                      <option key={pd.key} value={pd.key}>{pd.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <span className="text-[11px] text-gray-500">Delta:</span>
+                  <input
+                    type="range"
+                    title="Parameter delta percentage"
+                    min={-50}
+                    max={50}
+                    step={5}
+                    value={whatIfLocalDelta}
+                    onChange={(e) => setWhatIfLocalDelta(Number(e.target.value))}
+                    className="flex-1 accent-orange-400 h-1"
+                  />
+                  <span className={`text-[11px] font-mono w-12 text-center ${
+                    whatIfLocalDelta > 0 ? 'text-emerald-400' : whatIfLocalDelta < 0 ? 'text-red-400' : 'text-gray-400'
+                  }`}>
+                    {whatIfLocalDelta > 0 ? '+' : ''}{whatIfLocalDelta}%
+                  </span>
+                </div>
+
+                {(() => {
+                  const paramKey = whatIfLocalParam || (paramDefs[0]?.key ?? '');
+                  const pd = paramDefs.find((p) => p.key === paramKey);
+                  const currentVal = pd ? (parameters[pd.key] ?? pd.defaultValue) : 0;
+                  const newVal = Math.round(currentVal * (1 + whatIfLocalDelta / 100));
+                  return (
+                    <span className="text-[11px] text-gray-400">
+                      {currentVal} <span className="text-gray-600">&rarr;</span>{' '}
+                      <span className="text-orange-400 font-medium">{newVal}</span>
+                    </span>
+                  );
+                })()}
+
+                <button
+                  type="button"
+                  disabled={whatIfLocalDelta === 0}
+                  onClick={() => {
+                    const paramKey = whatIfLocalParam || (paramDefs[0]?.key ?? '');
+                    const pd = paramDefs.find((p) => p.key === paramKey);
+                    if (!pd) return;
+                    const currentVal = parameters[pd.key] ?? pd.defaultValue;
+                    const newVal = Math.max(pd.min, Math.min(pd.max, Math.round(currentVal * (1 + whatIfLocalDelta / 100))));
+                    setParameter(pd.key, newVal);
+                    setWhatIf(pd.key, whatIfLocalDelta);
+                    recalculateLayers();
+                  }}
+                  className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-medium rounded-lg transition disabled:opacity-30"
+                >
+                  Apply
+                </button>
+
+                {whatIfActive && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearWhatIf();
+                      resetParameters();
+                      setWhatIfLocalDelta(0);
+                    }}
+                    className="px-3 py-1 bg-white/[0.04] border border-white/[0.06] text-gray-400 text-[11px] rounded-lg hover:text-white transition"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Signal Reliability Heatmap Panel ──────────────────────── */}
+      {showSignalHeatmap && (
+        <div className="border-t border-white/[0.04] bg-white/[0.01] max-w-[1800px] mx-auto">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs font-semibold text-white flex items-center gap-2">
+                <BarChart2 className="w-3.5 h-3.5 text-rose-400" />
+                Signal Reliability Heatmap
+                <span className="text-[10px] text-gray-500 font-normal ml-2">
+                  {coin} &middot; {days}d &middot; {signalResults.reduce((s, r) => s + r.occurrences, 0)} total signals
+                </span>
+              </h4>
+              <button type="button" title="Close heatmap" onClick={() => setShowSignalHeatmap(false)}
+                className="text-gray-500 hover:text-white">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {signalResults.length === 0 ? (
+              <p className="text-[11px] text-gray-600 text-center py-2">
+                No signal data available. Load a preset with price data first.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-[10px]">
+                  <thead>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-left text-gray-500 font-medium py-1 px-2 w-36">Signal</th>
+                      <th className="text-center text-gray-500 font-medium py-1 px-2 w-12">#</th>
+                      {LOOKFORWARD_DAYS.map((d) => (
+                        <th key={d} className="text-center text-gray-500 font-medium py-1 px-2 w-16">
+                          {LOOKFORWARD_LABELS[d]}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {signalResults.map((sig) => (
+                      <tr key={sig.name} className="border-b border-white/[0.03] hover:bg-white/[0.02]">
+                        <td className="py-1.5 px-2">
+                          <Tip text={sig.description} position="top">
+                            <span className="text-gray-300 cursor-help">{sig.name}</span>
+                          </Tip>
+                        </td>
+                        <td className="text-center text-gray-500 py-1.5 px-2">{sig.occurrences}</td>
+                        {LOOKFORWARD_DAYS.map((d) => {
+                          const rate = sig.hitRates[d] ?? 0;
+                          const pct = Math.round(rate * 100);
+                          const bg = rate >= 0.65 ? 'bg-emerald-400/20 text-emerald-400'
+                            : rate >= 0.5 ? 'bg-amber-400/15 text-amber-400'
+                            : rate >= 0.35 ? 'bg-orange-400/15 text-orange-400'
+                            : 'bg-red-400/15 text-red-400';
+                          return (
+                            <td key={d} className="text-center py-1.5 px-2">
+                              {sig.occurrences > 0 ? (
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${bg}`}>
+                                  {pct}%
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-[9px] text-gray-600 mt-2">
+                  Hit rate = % of signal occurrences followed by price moving in expected direction within N days.
+                  Green ≥65%, Yellow ≥50%, Orange ≥35%, Red &lt;35%.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Strategy Backtester Panel ──────────────────────────── */}
+      {feat('strategyBacktester') && (
+        <DataLabBacktester show={showBacktester} onClose={() => setShowBacktester(false)} />
+      )}
+
+      {/* ── Liquidation Heatmap Panel ──────────────────────────── */}
+      {feat('liquidationHeatmap') && (
+        <LiquidationHeatmap show={showLiquidation} onClose={() => setShowLiquidation(false)} />
+      )}
+
+      {/* ── Multi-Chart Layout Panel ──────────────────────────── */}
+      {feat('multiChart') && (
+        <MultiChartLayout show={showMultiChart} onClose={() => setShowMultiChart(false)} />
+      )}
+
+      {/* ── Alert Webhook Panel ──────────────────────────────── */}
+      {feat('alertWebhooks') && (
+        <AlertWebhookPanel show={showAlertWebhook} onClose={() => setShowAlertWebhook(false)} />
+      )}
+
+      {/* ── Whale Wallet Panel ───────────────────────────────── */}
+      {feat('whaleWalletTracking') && (
+        <WhaleWalletPanel show={showWhalePanel} onClose={() => setShowWhalePanel(false)} />
+      )}
 
       {/* Formula Builder Modal */}
       {showFormulaModal && (
@@ -941,12 +1837,9 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                 <span className="text-cyan-400 font-mono text-lg">f(x)</span>
                 Custom Formula
               </h3>
-              <button
-                type="button"
-                title="Close formula modal"
+              <button type="button" title="Close formula modal"
                 onClick={() => { setShowFormulaModal(false); setFormulaError(null); }}
-                className="text-gray-500 hover:text-white transition"
-              >
+                className="text-gray-500 hover:text-white transition">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -954,9 +1847,7 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             <div className="space-y-3">
               <div>
                 <label className="text-[11px] text-gray-500 mb-1 block">Formula Expression</label>
-                <input
-                  type="text"
-                  value={formulaInput}
+                <input type="text" value={formulaInput}
                   onChange={(e) => { setFormulaInput(e.target.value); setFormulaError(null); }}
                   placeholder="e.g. price / sma(200)"
                   className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-400/40 font-mono"
@@ -966,71 +1857,52 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                       if (err) { setFormulaError(err); return; }
                       addFormulaLayer(formulaInput, formulaLabel);
                       setShowFormulaModal(false);
-                      setFormulaInput('');
-                      setFormulaLabel('');
-                      setFormulaError(null);
+                      setFormulaInput(''); setFormulaLabel(''); setFormulaError(null);
                     }
+                    if (e.key === 'Escape') { setShowFormulaModal(false); setFormulaError(null); }
                   }}
                 />
-                {formulaError && (
-                  <p className="text-red-400 text-[10px] mt-1">{formulaError}</p>
-                )}
+                {formulaError && <p className="text-red-400 text-[10px] mt-1">{formulaError}</p>}
               </div>
 
               <div>
                 <label className="text-[11px] text-gray-500 mb-1 block">Label (optional)</label>
-                <input
-                  type="text"
-                  value={formulaLabel}
-                  onChange={(e) => setFormulaLabel(e.target.value)}
+                <input type="text" value={formulaLabel} onChange={(e) => setFormulaLabel(e.target.value)}
                   placeholder="e.g. Price/SMA Ratio"
-                  className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-400/40"
-                />
+                  className="w-full bg-white/[0.04] border border-white/[0.1] text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:border-cyan-400/40" />
               </div>
 
               <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
                 <p className="text-[10px] text-gray-500 font-medium mb-2">Available References</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['price', 'volume', 'sma(N)', 'ema(N)', 'rsi(N)'].map((ref) => (
-                    <span key={ref} className="text-[10px] font-mono text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded">
-                      {ref}
-                    </span>
+                    <span key={ref} className="text-[10px] font-mono text-cyan-400 bg-cyan-400/10 px-1.5 py-0.5 rounded">{ref}</span>
                   ))}
                   {['+', '-', '*', '/', '(', ')'].map((op) => (
-                    <span key={op} className="text-[10px] font-mono text-gray-400 bg-white/[0.04] px-1.5 py-0.5 rounded">
-                      {op}
-                    </span>
+                    <span key={op} className="text-[10px] font-mono text-gray-400 bg-white/[0.04] px-1.5 py-0.5 rounded">{op}</span>
                   ))}
                 </div>
                 <div className="mt-2 space-y-1">
                   <p className="text-[10px] text-gray-600">Examples:</p>
                   {['price / sma(200)', 'rsi(14) - 50', '(price - ema(20)) / ema(20) * 100'].map((ex) => (
-                    <button
-                      key={ex}
-                      type="button"
-                      onClick={() => setFormulaInput(ex)}
-                      className="block text-[10px] font-mono text-gray-500 hover:text-cyan-400 transition cursor-pointer"
-                    >
+                    <button key={ex} type="button" onClick={() => setFormulaInput(ex)}
+                      className="block text-[10px] font-mono text-gray-500 hover:text-cyan-400 transition cursor-pointer">
                       {ex}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <button
-                type="button"
+              <button type="button"
                 onClick={() => {
                   if (!formulaInput.trim()) return;
                   const err = validateFormula(formulaInput);
                   if (err) { setFormulaError(err); return; }
                   addFormulaLayer(formulaInput, formulaLabel);
                   setShowFormulaModal(false);
-                  setFormulaInput('');
-                  setFormulaLabel('');
-                  setFormulaError(null);
+                  setFormulaInput(''); setFormulaLabel(''); setFormulaError(null);
                 }}
-                className="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded-lg transition"
-              >
+                className="w-full py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-medium rounded-lg transition">
                 Add Formula Layer
               </button>
             </div>

@@ -129,7 +129,7 @@ export function SentimentGaugeLayout({}: LayoutProps) {
               {topGainers.map((c) => (
                 <div key={c.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {c.image && <img src={c.image} alt="" className="w-4 h-4 rounded-full" />}
+                    {c.image && <img src={c.image} alt={`${c.symbol?.toUpperCase()} logo`} className="w-4 h-4 rounded-full" />}
                     <span className="text-xs text-white font-medium">{c.symbol?.toUpperCase()}</span>
                   </div>
                   <span className="text-xs text-emerald-400 font-mono">
@@ -151,7 +151,7 @@ export function SentimentGaugeLayout({}: LayoutProps) {
               {topLosers.map((c) => (
                 <div key={c.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {c.image && <img src={c.image} alt="" className="w-4 h-4 rounded-full" />}
+                    {c.image && <img src={c.image} alt={`${c.symbol?.toUpperCase()} logo`} className="w-4 h-4 rounded-full" />}
                     <span className="text-xs text-white font-medium">{c.symbol?.toUpperCase()}</span>
                   </div>
                   <span className="text-xs text-red-400 font-mono">

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { IS_BETA_MODE } from '@/lib/betaMode';
+import { PricingJsonLd, BreadcrumbJsonLd } from '@/components/JsonLd';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -29,5 +30,16 @@ export const metadata: Metadata = {
 };
 
 export default function PricingLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <PricingJsonLd />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: 'https://cryptoreportkit.com' },
+          { name: 'Pricing', url: 'https://cryptoreportkit.com/pricing' },
+        ]}
+      />
+      {children}
+    </>
+  );
 }

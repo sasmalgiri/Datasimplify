@@ -125,7 +125,7 @@ export function AlphaFinderWidget() {
             {/* Coin info */}
             <div className="flex items-center gap-1.5 w-24">
               {coin.image && (
-                <img src={coin.image} alt="" className="w-4 h-4 rounded-full" />
+                <img src={coin.image} alt={`${coin.symbol} logo`} className="w-4 h-4 rounded-full" />
               )}
               <span className="text-white font-medium truncate">{coin.symbol}</span>
               {coin.isTrending && <TrendingUp className="w-3 h-3 text-amber-400 flex-shrink-0" />}

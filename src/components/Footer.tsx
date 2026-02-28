@@ -11,7 +11,7 @@ export function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -63,9 +63,30 @@ export function Footer() {
                 </>
               )}
               <li><Link href="/live-dashboards" className="hover:text-white transition-colors">Live Dashboards</Link></li>
+              <li><Link href="/templates" className="hover:text-white transition-colors">Excel Templates</Link></li>
               <li><Link href="/compare" className="hover:text-white transition-colors">Compare Coins</Link></li>
+              <li><Link href="/tools" className="hover:text-white transition-colors">All Tools</Link></li>
               <li><Link href="/smart-contract-verifier" className="hover:text-white transition-colors">Verify Contracts</Link></li>
               <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+            </ul>
+          </div>
+
+          {/* Explore */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Explore</h4>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/market" className="hover:text-white transition-colors">Market Data</Link></li>
+              <li><Link href="/screener" className="hover:text-white transition-colors">Screener</Link></li>
+              <li><Link href="/heatmap" className="hover:text-white transition-colors">Heatmap</Link></li>
+              <li><Link href="/trending" className="hover:text-white transition-colors">Trending</Link></li>
+              <li><Link href="/sentiment" className="hover:text-white transition-colors">Sentiment</Link></li>
+              <li><Link href="/charts" className="hover:text-white transition-colors">Charts</Link></li>
+              <li><Link href="/defi" className="hover:text-white transition-colors">DeFi Analytics</Link></li>
+              <li><Link href="/etf" className="hover:text-white transition-colors">ETF Tracker</Link></li>
+              <li><Link href="/correlation" className="hover:text-white transition-colors">Correlation</Link></li>
+              <li><Link href="/portfolio" className="hover:text-white transition-colors">Portfolio Builder</Link></li>
+              <li><Link href="/categories" className="hover:text-white transition-colors">Categories</Link></li>
+              <li><Link href="/global-market" className="hover:text-white transition-colors">Global Market</Link></li>
             </ul>
           </div>
 

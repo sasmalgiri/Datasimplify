@@ -354,14 +354,165 @@ export const OVERLAY_PRESETS: OverlayPreset[] = [
       { label: 'ATR', source: 'atr', chartType: 'line', yAxis: 'right', color: '#a3e635', visible: true, gridIndex: 1, params: { period: 14 } },
     ],
   },
+  // ── On-chain & supply presets ──
+
+  {
+    id: 'onchain-health',
+    name: 'On-Chain Health',
+    description: 'Hashrate + difficulty + active addresses = network health & security assessment',
+    icon: 'Server',
+    defaultCoin: 'bitcoin',
+    defaultDays: 365,
+    endpoints: ['ohlc', 'coin_history', 'blockchain_onchain'],
+    parameterDefs: [
+      { key: 'sma_window', label: 'Price SMA', min: 20, max: 200, step: 10, defaultValue: 50, layerSource: 'sma' },
+    ],
+    layers: [
+      { label: 'BTC Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'SMA 50', source: 'sma', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 50 } },
+      { label: 'Hashrate', source: 'hashrate', chartType: 'line', yAxis: 'right', color: '#f97316', visible: true, gridIndex: 0 },
+      { label: 'Active Addresses', source: 'active_addresses', chartType: 'bar', yAxis: 'right', color: '#22d3ee', visible: true, gridIndex: 1 },
+      { label: 'Tx Count', source: 'tx_count', chartType: 'bar', yAxis: 'right', color: '#a78bfa', visible: true, gridIndex: 1 },
+    ],
+  },
+
+  {
+    id: 'miner-economics',
+    name: 'Miner Economics',
+    description: 'Miner revenue + hashrate + difficulty = mining profitability & capitulation detection',
+    icon: 'Pickaxe',
+    defaultCoin: 'bitcoin',
+    defaultDays: 365,
+    endpoints: ['ohlc', 'blockchain_onchain'],
+    parameterDefs: [],
+    layers: [
+      { label: 'BTC Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'Difficulty', source: 'difficulty', chartType: 'line', yAxis: 'right', color: '#ef4444', visible: true, gridIndex: 0 },
+      { label: 'Hashrate', source: 'hashrate', chartType: 'line', yAxis: 'right', color: '#f97316', visible: true, gridIndex: 1 },
+      { label: 'Miners Revenue ($)', source: 'miners_revenue', chartType: 'area', yAxis: 'right', color: '#fbbf24', visible: true, gridIndex: 1 },
+    ],
+  },
+
+  {
+    id: 'liquidity-supply',
+    name: 'Liquidity & Supply',
+    description: 'Stablecoin supply + DeFi TVL + BTC price = overall crypto liquidity conditions',
+    icon: 'Droplets',
+    defaultCoin: 'bitcoin',
+    defaultDays: 365,
+    endpoints: ['ohlc', 'coin_history', 'defillama_tvl_history', 'defillama_stablecoin_history'],
+    parameterDefs: [],
+    layers: [
+      { label: 'BTC Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'Stablecoin Supply', source: 'stablecoin_mcap', chartType: 'area', yAxis: 'right', color: '#2dd4bf', visible: true, gridIndex: 0 },
+      { label: 'DeFi TVL', source: 'defi_tvl', chartType: 'area', yAxis: 'right', color: '#818cf8', visible: true, gridIndex: 1 },
+      { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+    ],
+  },
+
+  // ── Simple Mode Presets ──────────────────────────────────────────────────
+
+  {
+    id: 'simple-price-trends',
+    name: 'Price Trends',
+    description: 'See where the price is heading with two key moving averages',
+    icon: 'TrendingUp',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc'],
+    parameterDefs: [
+      { key: 'sma_mid', label: 'Short MA', min: 10, max: 100, step: 5, defaultValue: 50, layerSource: 'sma' },
+      { key: 'sma_long', label: 'Long MA', min: 100, max: 300, step: 10, defaultValue: 200, layerSource: 'sma' },
+    ],
+    layers: [
+      { label: 'Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'MA 50', source: 'sma', chartType: 'line', yAxis: 'left', color: '#f59e0b', visible: true, gridIndex: 0, params: { window: 50 } },
+      { label: 'MA 200', source: 'sma', chartType: 'line', yAxis: 'left', color: '#ef4444', visible: true, gridIndex: 0, params: { window: 200 } },
+    ],
+  },
+
+  {
+    id: 'simple-market-mood',
+    name: 'Market Mood',
+    description: 'Price plus the Fear & Greed Index — see when the crowd is greedy or fearful',
+    icon: 'HeartPulse',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc', 'fear_greed'],
+    parameterDefs: [],
+    layers: [
+      { label: 'Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'Fear & Greed', source: 'fear_greed', chartType: 'area', yAxis: 'right', color: '#f472b6', visible: true, gridIndex: 0 },
+    ],
+    zones: [
+      { source: 'fear_greed', condition: 'below', threshold: 25, color: '#ef4444', opacity: 0.06, label: 'Extreme Fear' },
+      { source: 'fear_greed', condition: 'above', threshold: 75, color: '#34d399', opacity: 0.06, label: 'Extreme Greed' },
+    ],
+  },
+
+  {
+    id: 'simple-value-zones',
+    name: 'Value Zones',
+    description: 'RSI shows when the price is oversold (cheap) or overbought (expensive)',
+    icon: 'Target',
+    defaultCoin: 'bitcoin',
+    defaultDays: 90,
+    endpoints: ['ohlc', 'coin_history'],
+    parameterDefs: [
+      { key: 'rsi_period', label: 'RSI Period', min: 5, max: 30, step: 1, defaultValue: 14, layerSource: 'rsi' },
+    ],
+    layers: [
+      { label: 'Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'RSI', source: 'rsi', chartType: 'line', yAxis: 'right', color: '#a78bfa', visible: true, gridIndex: 1, params: { period: 14 } },
+      { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+    ],
+    zones: [
+      { source: 'rsi', condition: 'below', threshold: 30, color: '#34d399', opacity: 0.08, label: 'Oversold' },
+      { source: 'rsi', condition: 'above', threshold: 70, color: '#ef4444', opacity: 0.08, label: 'Overbought' },
+    ],
+  },
+
+  {
+    id: 'simple-volume-watch',
+    name: 'Volume Watch',
+    description: 'Candlesticks with volume — spot big buying/selling days at a glance',
+    icon: 'BarChart3',
+    defaultCoin: 'bitcoin',
+    defaultDays: 30,
+    endpoints: ['ohlc', 'coin_history'],
+    parameterDefs: [],
+    layers: [
+      { label: 'Candlestick', source: 'ohlc', chartType: 'candlestick', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'Volume', source: 'volume', chartType: 'bar', yAxis: 'right', color: '#60a5fa', visible: true, gridIndex: 1 },
+      { label: 'Vol Ratio', source: 'volume_ratio', chartType: 'bar', yAxis: 'right', color: '#c084fc', visible: true, gridIndex: 1 },
+    ],
+  },
+
+  {
+    id: 'simple-risk-check',
+    name: 'Risk Check',
+    description: 'Track drawdowns and volatility to understand current risk levels',
+    icon: 'ShieldAlert',
+    defaultCoin: 'bitcoin',
+    defaultDays: 365,
+    endpoints: ['ohlc'],
+    parameterDefs: [],
+    layers: [
+      { label: 'Price', source: 'price', chartType: 'line', yAxis: 'left', color: '#34d399', visible: true, gridIndex: 0 },
+      { label: 'Drawdown %', source: 'drawdown', chartType: 'area', yAxis: 'right', color: '#ef4444', visible: true, gridIndex: 1 },
+      { label: 'Volatility', source: 'rolling_volatility', chartType: 'line', yAxis: 'right', color: '#f97316', visible: true, gridIndex: 1 },
+    ],
+  },
 ];
 
 /** Preset categories for organized toolbar UI */
 export const PRESET_CATEGORIES: { label: string; presetIds: string[] }[] = [
+  { label: 'Getting Started', presetIds: ['simple-price-trends', 'simple-market-mood', 'simple-value-zones', 'simple-volume-watch', 'simple-risk-check'] },
   { label: 'Trend & Entry', presetIds: ['confluence-zones', 'trend-strength', 'mean-reversion', 'multi-timeframe'] },
   { label: 'Momentum & Volatility', presetIds: ['momentum-divergence', 'volatility-squeeze', 'volume-profile', 'risk-regime'] },
   { label: 'Sentiment & Macro', presetIds: ['sentiment-contrarian', 'market-rotation', 'market-cycle', 'dca-accumulator'] },
   { label: 'Derivatives & DeFi', presetIds: ['derivatives-pressure', 'funding-arbitrage', 'smart-money', 'defi-value'] },
+  { label: 'On-Chain & Supply', presetIds: ['onchain-health', 'miner-economics', 'liquidity-supply'] },
 ];
 
 export function getPresetById(id: string): OverlayPreset | undefined {

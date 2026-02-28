@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useRef, useCallback } from 'react';
+import { useMemo, useRef, useCallback, useEffect } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { LineChart, BarChart, CandlestickChart, ScatterChart } from 'echarts/charts';
 import {
   GridComponent, TooltipComponent, DataZoomComponent,
-  LegendComponent, MarkLineComponent, MarkAreaComponent,
+  LegendComponent, MarkLineComponent, MarkAreaComponent, MarkPointComponent,
 } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import { useDataLabStore } from '@/lib/datalab/store';
@@ -18,7 +18,7 @@ import { Loader2, FlaskConical } from 'lucide-react';
 echarts.use([
   LineChart, BarChart, CandlestickChart, ScatterChart,
   GridComponent, TooltipComponent, DataZoomComponent,
-  LegendComponent, MarkLineComponent, MarkAreaComponent, CanvasRenderer,
+  LegendComponent, MarkLineComponent, MarkAreaComponent, MarkPointComponent, CanvasRenderer,
 ]);
 
 export function DataLabCanvas() {
@@ -26,9 +26,21 @@ export function DataLabCanvas() {
     layers, timestamps, ohlcRaw, editedCells, normalizeMode, logScale, vsCurrency,
     activePreset, drawings, activeDrawingTool, addDrawing, addPendingPoint, pendingPoints,
     clearPendingPoints, setActiveDrawingTool,
+    regimes, showRegimes, showEvents, eventCategories, customEvents,
     isLoading, error,
   } = useDataLabStore();
   const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
+
+  // ESC key cancels active drawing tool
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeDrawingTool) {
+        setActiveDrawingTool(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeDrawingTool, setActiveDrawingTool]);
 
   const option = useMemo(() => {
     if (timestamps.length === 0 || layers.length === 0) return null;
@@ -44,8 +56,85 @@ export function DataLabCanvas() {
       zones: preset?.zones,
       drawings,
       siteTheme,
+      regimes,
+      showRegimes,
+      showEvents,
+      eventCategories,
+      customEvents,
     });
-  }, [layers, timestamps, ohlcRaw, editedCells, normalizeMode, logScale, vsCurrency, activePreset, drawings, siteTheme]);
+  }, [layers, timestamps, ohlcRaw, editedCells, normalizeMode, logScale, vsCurrency, activePreset, drawings, siteTheme, regimes, showRegimes, showEvents, eventCategories, customEvents]);
+
+  const chartInstanceRef = useRef<any>(null);
+
+  const onChartReady = useCallback((instance: any) => {
+    chartInstanceRef.current = instance;
+  }, []);
+
+  const onChartClick = useCallback((params: any) => {
+    if (!activeDrawingTool || !chartInstanceRef.current) return;
+
+    const instance = chartInstanceRef.current;
+    const pointInPixel = [params.event?.offsetX, params.event?.offsetY];
+    if (!pointInPixel[0] || !pointInPixel[1]) return;
+
+    const pointInData = instance.convertFromPixel({ gridIndex: 0 }, pointInPixel);
+    if (!pointInData) return;
+
+    const xIdx = Math.round(pointInData[0]);
+    const yVal = pointInData[1];
+    const ts = timestamps[xIdx] ?? xIdx;
+
+    if (activeDrawingTool === 'hline') {
+      addDrawing({
+        id: `draw-${Date.now()}`,
+        type: 'hline',
+        points: [{ x: ts, y: yVal }],
+        color: '#fbbf24',
+        label: '',
+      });
+      setActiveDrawingTool(null);
+    } else if (activeDrawingTool === 'trendline') {
+      const newPoints = [...pendingPoints, { x: ts, y: yVal }];
+      if (newPoints.length >= 2) {
+        addDrawing({
+          id: `draw-${Date.now()}`,
+          type: 'trendline',
+          points: newPoints.slice(0, 2),
+          color: '#60a5fa',
+        });
+        clearPendingPoints();
+        setActiveDrawingTool(null);
+      } else {
+        addPendingPoint({ x: ts, y: yVal });
+      }
+    } else if (activeDrawingTool === 'fibonacci') {
+      const newPoints = [...pendingPoints, { x: ts, y: yVal }];
+      if (newPoints.length >= 2) {
+        addDrawing({
+          id: `draw-${Date.now()}`,
+          type: 'fibonacci',
+          points: newPoints.slice(0, 2),
+          color: '#a78bfa',
+        });
+        clearPendingPoints();
+        setActiveDrawingTool(null);
+      } else {
+        addPendingPoint({ x: ts, y: yVal });
+      }
+    } else if (activeDrawingTool === 'text') {
+      const label = window.prompt('Enter annotation text:');
+      if (label) {
+        addDrawing({
+          id: `draw-${Date.now()}`,
+          type: 'text',
+          points: [{ x: ts, y: yVal }],
+          color: '#f472b6',
+          label,
+        });
+      }
+      setActiveDrawingTool(null);
+    }
+  }, [activeDrawingTool, timestamps, pendingPoints, addDrawing, addPendingPoint, clearPendingPoints, setActiveDrawingTool]);
 
   if (isLoading) {
     return (
@@ -86,69 +175,6 @@ export function DataLabCanvas() {
       </div>
     );
   }
-
-  const chartInstanceRef = useRef<any>(null);
-
-  const onChartReady = useCallback((instance: any) => {
-    chartInstanceRef.current = instance;
-  }, []);
-
-  const onChartClick = useCallback((params: any) => {
-    if (!activeDrawingTool || !chartInstanceRef.current) return;
-
-    // Get the y-value from the click (data coordinate)
-    const instance = chartInstanceRef.current;
-    const pointInPixel = [params.event?.offsetX, params.event?.offsetY];
-    if (!pointInPixel[0] || !pointInPixel[1]) return;
-
-    // Convert pixel to data coordinate (use first yAxis on grid 0)
-    const pointInData = instance.convertFromPixel({ gridIndex: 0 }, pointInPixel);
-    if (!pointInData) return;
-
-    const xIdx = Math.round(pointInData[0]);
-    const yVal = pointInData[1];
-    const ts = timestamps[xIdx] ?? xIdx;
-
-    if (activeDrawingTool === 'hline') {
-      // Single click → add horizontal line
-      addDrawing({
-        id: `draw-${Date.now()}`,
-        type: 'hline',
-        points: [{ x: ts, y: yVal }],
-        color: '#fbbf24',
-        label: '',
-      });
-      setActiveDrawingTool(null);
-    } else if (activeDrawingTool === 'trendline') {
-      const newPoints = [...pendingPoints, { x: ts, y: yVal }];
-      if (newPoints.length >= 2) {
-        addDrawing({
-          id: `draw-${Date.now()}`,
-          type: 'trendline',
-          points: newPoints.slice(0, 2),
-          color: '#60a5fa',
-        });
-        clearPendingPoints();
-        setActiveDrawingTool(null);
-      } else {
-        addPendingPoint({ x: ts, y: yVal });
-      }
-    } else if (activeDrawingTool === 'fibonacci') {
-      const newPoints = [...pendingPoints, { x: ts, y: yVal }];
-      if (newPoints.length >= 2) {
-        addDrawing({
-          id: `draw-${Date.now()}`,
-          type: 'fibonacci',
-          points: newPoints.slice(0, 2),
-          color: '#a78bfa',
-        });
-        clearPendingPoints();
-        setActiveDrawingTool(null);
-      } else {
-        addPendingPoint({ x: ts, y: yVal });
-      }
-    }
-  }, [activeDrawingTool, timestamps, pendingPoints, addDrawing, addPendingPoint, clearPendingPoints, setActiveDrawingTool]);
 
   return (
     <div className={`flex-1 min-h-0 ${activeDrawingTool ? 'cursor-crosshair' : ''}`}>
