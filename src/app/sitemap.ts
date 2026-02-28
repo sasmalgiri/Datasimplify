@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { LIVE_DASHBOARDS } from '@/lib/live-dashboard/definitions';
+import { getAllPosts } from '@/lib/blog/posts';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -87,5 +88,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/refund`, lastModified: LAST_UPDATED, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
-  return [...mainPages, ...dashboardPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];
+  const blogPages: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/blog`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.75 },
+    ...getAllPosts().map((post) => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: post.updatedDate ?? post.publishDate,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+  ];
+
+  return [...mainPages, ...blogPages, ...dashboardPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];
 }

@@ -16,6 +16,7 @@ import {
   Shield,
   LayoutDashboard,
   FlaskConical,
+  FileText,
 } from 'lucide-react';
 
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
@@ -136,9 +137,10 @@ export function FreeNavbar() {
     more: {
       label: 'Learn',
       icon: <BookOpen className="w-4 h-4" />,
-      paths: ['/learn', '/glossary', '/faq', '/data-sources'],
+      paths: ['/learn', '/glossary', '/faq', '/data-sources', '/blog'],
       items: [
         { href: '/learn', label: 'Academy', description: 'Crypto education & guides', icon: <GraduationCap className="w-4 h-4" /> },
+        { href: '/blog', label: 'Blog', description: 'Crypto guides & market insights', icon: <FileText className="w-4 h-4" /> },
         { href: '/glossary', label: 'Glossary', description: 'Crypto terms explained', icon: <BookOpen className="w-4 h-4" /> },
         { href: '/faq', label: 'FAQ', description: 'Common questions answered', icon: <HelpCircle className="w-4 h-4" /> },
         { href: '/data-sources', label: 'Data Sources', description: 'CoinGecko attribution & info', icon: <BarChart3 className="w-4 h-4" /> },
@@ -164,6 +166,7 @@ export function FreeNavbar() {
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]
       : []),
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
+    { href: '/blog', label: 'Blog', icon: <FileText className="w-4 h-4" /> },
     { href: '/faq', label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },
   ];
 

@@ -113,6 +113,7 @@ export function Footer() {
               <li><Link href="/template-requirements" className="hover:text-white transition-colors">Setup Guide</Link></li>
               <li><Link href="/byok" className="hover:text-white transition-colors">BYOK Guide</Link></li>
               <li><Link href="/learn" className="hover:text-white transition-colors">Crypto Academy</Link></li>
+              <li><Link href="/blog" className="hover:text-white transition-colors">Blog</Link></li>
               <li><Link href="/glossary" className="hover:text-white transition-colors">Glossary</Link></li>
               <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
