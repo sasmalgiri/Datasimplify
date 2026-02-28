@@ -1,6 +1,7 @@
 'use client';
 
-import { Plus, Folder, Pencil } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Folder, Pencil, Copy, Trash2 } from 'lucide-react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { SITE_THEMES } from '@/lib/live-dashboard/theme';
 import { useWorkspaceStore } from '@/lib/workspaces/workspaceStore';
@@ -16,7 +17,23 @@ export function WorkspaceStrip({ onCreateNew, onEdit }: WorkspaceStripProps) {
   const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
   const st = SITE_THEMES[siteTheme];
 
-  const { workspaces, activeWorkspaceId, setActiveWorkspace } = useWorkspaceStore();
+  const { workspaces, activeWorkspaceId, setActiveWorkspace, createWorkspace, deleteWorkspace } = useWorkspaceStore();
+
+  const handleDuplicate = async (ws: Workspace) => {
+    await createWorkspace(`${ws.name} (copy)`, ws.mode, { ...ws.config });
+  };
+
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const handleDelete = async (wsId: string) => {
+    if (confirmDelete === wsId) {
+      await deleteWorkspace(wsId);
+      setConfirmDelete(null);
+    } else {
+      setConfirmDelete(wsId);
+      setTimeout(() => setConfirmDelete(null), 3000);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
@@ -27,12 +44,16 @@ export function WorkspaceStrip({ onCreateNew, onEdit }: WorkspaceStripProps) {
           isActive={ws.id === activeWorkspaceId}
           onSelect={() => setActiveWorkspace(ws.id)}
           onEdit={onEdit ? () => onEdit(ws.id) : undefined}
+          onDuplicate={() => handleDuplicate(ws)}
+          onDelete={() => handleDelete(ws.id)}
+          isConfirmingDelete={confirmDelete === ws.id}
           st={st}
         />
       ))}
 
       {workspaces.length < 10 && (
         <button
+          type="button"
           onClick={onCreateNew}
           className={`flex-shrink-0 w-40 h-20 rounded-xl border-2 border-dashed ${st.subtleBorder} flex flex-col items-center justify-center gap-1 ${st.textDim} hover:text-emerald-400 hover:border-emerald-400/30 transition-colors`}
         >
@@ -49,12 +70,18 @@ function WorkspaceCard({
   isActive,
   onSelect,
   onEdit,
+  onDuplicate,
+  onDelete,
+  isConfirmingDelete,
   st,
 }: {
   workspace: Workspace;
   isActive: boolean;
   onSelect: () => void;
   onEdit?: () => void;
+  onDuplicate: () => void;
+  onDelete: () => void;
+  isConfirmingDelete: boolean;
   st: any;
 }) {
   const coinCount = workspace.config?.coins?.length ?? 0;
@@ -62,29 +89,49 @@ function WorkspaceCard({
     addSuffix: false,
   });
 
+  const modeBorder = workspace.mode === 'holdings'
+    ? 'border-l-emerald-400/60'
+    : 'border-l-blue-400/60';
+
   return (
     <div
       onClick={onSelect}
-      className={`group relative flex-shrink-0 w-48 h-20 rounded-xl p-3 text-left transition-all cursor-pointer ${
+      className={`group relative flex-shrink-0 w-48 h-20 rounded-xl p-3 text-left transition-all cursor-pointer border-l-[3px] ${modeBorder} ${
         isActive
-          ? `border-2 border-emerald-400/50 bg-emerald-400/5 shadow-[0_0_20px_rgba(52,211,153,0.06)]`
+          ? `border-2 border-l-[3px] border-emerald-400/50 ${modeBorder} bg-emerald-400/5 shadow-[0_0_20px_rgba(52,211,153,0.06)]`
           : `${st.cardClasses} ${st.cardGlow}`
       }`}
     >
-      {/* Edit button — shows on hover */}
-      {onEdit && (
+      {/* Hover action buttons */}
+      <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        {onEdit && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className={`p-1 rounded-md ${st.subtleBg} ${st.textDim} hover:text-emerald-400`}
+            title="Edit workspace"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
+        )}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
-          className={`absolute top-2 right-2 p-1 rounded-md ${st.subtleBg} ${st.textDim} hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
-          title="Edit workspace"
+          onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+          className={`p-1 rounded-md ${st.subtleBg} ${st.textDim} hover:text-blue-400`}
+          title="Duplicate workspace"
         >
-          <Pencil className="w-3 h-3" />
+          <Copy className="w-3 h-3" />
         </button>
-      )}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className={`p-1 rounded-md ${st.subtleBg} ${isConfirmingDelete ? 'text-red-400' : st.textDim} hover:text-red-400`}
+          title={isConfirmingDelete ? 'Click again to confirm delete' : 'Delete workspace'}
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
+      </div>
+
       <div className="flex items-center gap-2 mb-1">
         <Folder
           className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : st.textDim}`}
