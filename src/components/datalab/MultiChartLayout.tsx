@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import * as echarts from 'echarts/core';
 import { LineChart, BarChart } from 'echarts/charts';
@@ -46,9 +46,6 @@ export function MultiChartLayout({ show, onClose }: MultiChartLayoutProps) {
     { id: 1, coin: DEFAULT_COINS[0], data: [], timestamps: [], loading: false, error: null },
   ]);
 
-  if (!isFeatureAvailable(dataLabMode, 'multiChart')) return null;
-  if (!show) return null;
-
   const primaryCloses = primaryData.price as number[] | undefined;
 
   const fetchCoinData = useCallback(async (coin: string): Promise<{ prices: number[]; timestamps: number[] }> => {
@@ -78,14 +75,18 @@ export function MultiChartLayout({ show, onClose }: MultiChartLayoutProps) {
     );
   }, [fetchCoinData]);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
+    if (!show) return;
     for (const chart of charts) {
       if (chart.data.length === 0 && !chart.loading && !chart.error) {
         loadChart(chart.id, chart.coin);
       }
     }
-  }, [charts, loadChart]);
+  }, [charts, loadChart, show]);
+
+  // All hooks above — conditional returns below
+  if (!isFeatureAvailable(dataLabMode, 'multiChart')) return null;
+  if (!show) return null;
 
   const addChart = () => {
     if (charts.length >= 3) return;

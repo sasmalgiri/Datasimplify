@@ -22,9 +22,6 @@ export function LiquidationHeatmap({ show, onClose }: LiquidationHeatmapProps) {
   const dataLabMode = useDataLabStore((s) => s.dataLabMode);
   const rawData = useDataLabStore((s) => s.rawData);
 
-  if (!isFeatureAvailable(dataLabMode, 'liquidationHeatmap')) return null;
-  if (!show) return null;
-
   const closes = rawData.price as number[] | undefined;
   const currentPrice = closes && closes.length > 0 ? closes[closes.length - 1] : null;
 
@@ -32,11 +29,14 @@ export function LiquidationHeatmap({ show, onClose }: LiquidationHeatmapProps) {
     if (!currentPrice) return [];
     return LEVERAGES.map((lev) => ({
       leverage: lev,
-      longLiq: currentPrice * (1 - 1 / lev), // Long liquidation = price * (1 - 1/leverage)
-      shortLiq: currentPrice * (1 + 1 / lev), // Short liquidation = price * (1 + 1/leverage)
+      longLiq: currentPrice * (1 - 1 / lev),
+      shortLiq: currentPrice * (1 + 1 / lev),
     }));
   }, [currentPrice]);
 
+  // All hooks above — conditional returns below
+  if (!isFeatureAvailable(dataLabMode, 'liquidationHeatmap')) return null;
+  if (!show) return null;
   if (!currentPrice || levels.length === 0) return null;
 
   const formatPrice = (p: number) =>

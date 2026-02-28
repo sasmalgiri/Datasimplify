@@ -20,6 +20,38 @@ interface WhaleWalletPanelProps {
   onClose: () => void;
 }
 
+/** Generate simulated whale data for fallback */
+function generateSimulatedWhaleData(): WhaleTransaction[] {
+  const now = Date.now();
+  const types: ('buy' | 'sell' | 'transfer')[] = ['buy', 'sell', 'transfer', 'buy', 'sell'];
+  return Array.from({ length: 8 }, (_, i) => {
+    const type = types[i % types.length];
+    const amount = Math.round(50 + Math.random() * 500);
+    const price = 85000 + Math.random() * 10000;
+    return {
+      id: `sim-${i}`,
+      timestamp: now - i * 3600000 * (2 + Math.random() * 10),
+      type,
+      amount,
+      valueUsd: amount * price,
+      signal: type === 'buy' ? 'bullish' : type === 'sell' ? 'bearish' : 'neutral',
+      label: `${type} ${amount} BTC ($${((amount * price) / 1e6).toFixed(1)}M)`,
+    };
+  });
+}
+
+const SIGNAL_COLORS = {
+  bullish: { bg: 'bg-emerald-400/10', text: 'text-emerald-400', border: 'border-emerald-400/20' },
+  bearish: { bg: 'bg-red-400/10', text: 'text-red-400', border: 'border-red-400/20' },
+  neutral: { bg: 'bg-gray-400/10', text: 'text-gray-400', border: 'border-gray-400/20' },
+};
+
+const SIGNAL_ICON = {
+  bullish: TrendingUp,
+  bearish: TrendingDown,
+  neutral: Minus,
+};
+
 export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
   const dataLabMode = useDataLabStore((s) => s.dataLabMode);
   const coin = useDataLabStore((s) => s.coin);
@@ -27,9 +59,6 @@ export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
   const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!isFeatureAvailable(dataLabMode, 'whaleWalletTracking')) return null;
-  if (!show) return null;
 
   const fetchWhaleData = useCallback(async () => {
     setLoading(true);
@@ -52,29 +81,22 @@ export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
       setTransactions(txs);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error fetching whale data');
-      // Use simulated data as fallback
       setTransactions(generateSimulatedWhaleData());
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    fetchWhaleData();
-  }, [fetchWhaleData]);
+    if (!show) return;
+    if (transactions.length === 0 && !loading) {
+      fetchWhaleData();
+    }
+  }, [show, fetchWhaleData, transactions.length, loading]);
 
-  const SIGNAL_COLORS = {
-    bullish: { bg: 'bg-emerald-400/10', text: 'text-emerald-400', border: 'border-emerald-400/20' },
-    bearish: { bg: 'bg-red-400/10', text: 'text-red-400', border: 'border-red-400/20' },
-    neutral: { bg: 'bg-gray-400/10', text: 'text-gray-400', border: 'border-gray-400/20' },
-  };
-
-  const SIGNAL_ICON = {
-    bullish: TrendingUp,
-    bearish: TrendingDown,
-    neutral: Minus,
-  };
+  // All hooks above — conditional returns below
+  if (!isFeatureAvailable(dataLabMode, 'whaleWalletTracking')) return null;
+  if (!show) return null;
 
   return (
     <div className="border-t border-white/[0.04] bg-white/[0.01] max-w-[1800px] mx-auto">
@@ -139,24 +161,4 @@ export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
       </div>
     </div>
   );
-}
-
-/** Generate simulated whale data for fallback */
-function generateSimulatedWhaleData(): WhaleTransaction[] {
-  const now = Date.now();
-  const types: ('buy' | 'sell' | 'transfer')[] = ['buy', 'sell', 'transfer', 'buy', 'sell'];
-  return Array.from({ length: 8 }, (_, i) => {
-    const type = types[i % types.length];
-    const amount = Math.round(50 + Math.random() * 500);
-    const price = 85000 + Math.random() * 10000;
-    return {
-      id: `sim-${i}`,
-      timestamp: now - i * 3600000 * (2 + Math.random() * 10),
-      type,
-      amount,
-      valueUsd: amount * price,
-      signal: type === 'buy' ? 'bullish' : type === 'sell' ? 'bearish' : 'neutral',
-      label: `${type} ${amount} BTC ($${((amount * price) / 1e6).toFixed(1)}M)`,
-    };
-  });
 }
