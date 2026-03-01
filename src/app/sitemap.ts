@@ -77,6 +77,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/roadmap`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.55 },
     { url: `${BASE_URL}/data-sources`, lastModified: LAST_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE_URL}/status`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.4 },
+    { url: `${BASE_URL}/community`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
   ];
 
   const legalPages: MetadataRoute.Sitemap = [
