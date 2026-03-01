@@ -4,7 +4,7 @@
 // Instead of hitting external APIs every time
 // ============================================
 
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, supabaseAdmin, isSupabaseConfigured } from './supabase';
 
 // Helper to check if Supabase is ready
 function checkSupabase() {
@@ -1674,5 +1674,393 @@ export async function getTrendingCoinsByCommunity(limit: number = 10): Promise<A
       .slice(0, limit);
   } catch {
     return [];
+  }
+}
+
+// ============================================
+// FORUM DATA SERVICE
+// ============================================
+
+export interface ForumThread {
+  id: string;
+  user_id: string;
+  category: string;
+  title: string;
+  body: string;
+  likes: number;
+  dislikes: number;
+  reply_count: number;
+  view_count: number;
+  is_pinned: boolean;
+  is_locked: boolean;
+  last_activity_at: string;
+  created_at: string;
+  updated_at: string;
+  author?: UserPredictionStats;
+}
+
+export interface ForumReply {
+  id: string;
+  thread_id: string;
+  user_id: string;
+  body: string;
+  likes: number;
+  dislikes: number;
+  created_at: string;
+  updated_at: string;
+  author?: UserPredictionStats;
+}
+
+export interface ForumCategorySummary {
+  category: string;
+  thread_count: number;
+  reply_count: number;
+  latest_thread?: {
+    id: string;
+    title: string;
+    last_activity_at: string;
+    author_display_name: string;
+  };
+}
+
+const FORUM_AUTHOR_SELECT = `
+  *,
+  author:user_prediction_stats(user_id, display_name, avatar_emoji, is_verified, points, rank)
+`;
+
+// Get forum threads for a category
+export async function getForumThreads(options: {
+  category?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: 'latest' | 'popular' | 'most_replied';
+}): Promise<ForumThread[]> {
+  try {
+    const db = checkSupabase();
+    const limit = options.limit || 20;
+    const offset = options.offset || 0;
+
+    let query = (db.from('forum_threads') as any)
+      .select(FORUM_AUTHOR_SELECT)
+      .order('is_pinned', { ascending: false });
+
+    if (options.category) {
+      query = query.eq('category', options.category);
+    }
+
+    if (options.sortBy === 'popular') {
+      query = query.order('likes', { ascending: false });
+    } else if (options.sortBy === 'most_replied') {
+      query = query.order('reply_count', { ascending: false });
+    } else {
+      query = query.order('last_activity_at', { ascending: false });
+    }
+
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching forum threads:', error);
+      return [];
+    }
+
+    return (data || []) as ForumThread[];
+  } catch {
+    return [];
+  }
+}
+
+// Get a single forum thread
+export async function getForumThread(threadId: string): Promise<ForumThread | null> {
+  try {
+    const db = checkSupabase();
+
+    const { data, error } = await (db.from('forum_threads') as any)
+      .select(FORUM_AUTHOR_SELECT)
+      .eq('id', threadId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      console.error('Error fetching forum thread:', error);
+      return null;
+    }
+
+    return data as ForumThread;
+  } catch {
+    return null;
+  }
+}
+
+// Get replies for a thread
+export async function getForumReplies(threadId: string, options?: {
+  limit?: number;
+  offset?: number;
+}): Promise<ForumReply[]> {
+  try {
+    const db = checkSupabase();
+    const limit = options?.limit || 50;
+    const offset = options?.offset || 0;
+
+    const { data, error } = await (db.from('forum_replies') as any)
+      .select(FORUM_AUTHOR_SELECT)
+      .eq('thread_id', threadId)
+      .order('created_at', { ascending: true })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Error fetching forum replies:', error);
+      return [];
+    }
+
+    return (data || []) as ForumReply[];
+  } catch {
+    return [];
+  }
+}
+
+// Create a forum thread
+export async function createForumThread(params: {
+  userId: string;
+  category: string;
+  title: string;
+  body: string;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    // Ensure user has a prediction stats row (for author display join)
+    await (db.from('user_prediction_stats') as any).upsert(
+      { user_id: params.userId, display_name: 'Community Member', avatar_emoji: '👤' },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    );
+
+    const { data, error } = await (db.from('forum_threads') as any)
+      .insert({
+        user_id: params.userId,
+        category: params.category,
+        title: params.title,
+        body: params.body,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating forum thread:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Create a forum reply
+export async function createForumReply(params: {
+  threadId: string;
+  userId: string;
+  body: string;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    // Ensure user has a prediction stats row
+    await (db.from('user_prediction_stats') as any).upsert(
+      { user_id: params.userId, display_name: 'Community Member', avatar_emoji: '👤' },
+      { onConflict: 'user_id', ignoreDuplicates: true }
+    );
+
+    const { data, error } = await (db.from('forum_replies') as any)
+      .insert({
+        thread_id: params.threadId,
+        user_id: params.userId,
+        body: params.body,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating forum reply:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data?.id };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Vote on a forum thread or reply (toggle pattern)
+export async function voteForumItem(params: {
+  userId: string;
+  threadId?: string;
+  replyId?: string;
+  voteType: 'like' | 'dislike';
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const db = checkSupabase();
+
+    // Find existing vote
+    let existingQuery = (db.from('forum_thread_votes') as any)
+      .select('id, vote_type')
+      .eq('user_id', params.userId);
+
+    if (params.threadId) {
+      existingQuery = existingQuery.eq('thread_id', params.threadId);
+    } else if (params.replyId) {
+      existingQuery = existingQuery.eq('reply_id', params.replyId);
+    } else {
+      return { success: false, error: 'threadId or replyId required' };
+    }
+
+    const { data: existing } = await existingQuery.single();
+
+    if (existing) {
+      if (existing.vote_type === params.voteType) {
+        // Remove vote (toggle off)
+        await (db.from('forum_thread_votes') as any)
+          .delete()
+          .eq('id', existing.id);
+      } else {
+        // Switch vote type
+        await (db.from('forum_thread_votes') as any)
+          .update({ vote_type: params.voteType })
+          .eq('id', existing.id);
+      }
+    } else {
+      // New vote
+      const insert: Record<string, string> = {
+        user_id: params.userId,
+        vote_type: params.voteType,
+      };
+      if (params.threadId) insert.thread_id = params.threadId;
+      if (params.replyId) insert.reply_id = params.replyId;
+
+      const { error } = await (db.from('forum_thread_votes') as any).insert(insert);
+      if (error) return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: String(err) };
+  }
+}
+
+// Increment thread view count via RPC
+export async function incrementThreadViewCount(threadId: string): Promise<void> {
+  try {
+    const db = checkSupabase();
+    await db.rpc('increment_thread_views', { p_thread_id: threadId });
+  } catch {
+    // fire-and-forget
+  }
+}
+
+// Pin/unpin a forum thread (admin only, uses service role)
+export async function pinForumThread(threadId: string, pin: boolean): Promise<boolean> {
+  try {
+    if (!supabaseAdmin) return false;
+    const { error } = await (supabaseAdmin.from('forum_threads') as any)
+      .update({ is_pinned: pin, updated_at: new Date().toISOString() })
+      .eq('id', threadId);
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+// Get category summaries for the forum listing page
+export async function getForumCategorySummaries(): Promise<ForumCategorySummary[]> {
+  try {
+    const db = checkSupabase();
+
+    const { data: threads, error } = await (db.from('forum_threads') as any)
+      .select(`
+        id, category, title, reply_count, last_activity_at,
+        author:user_prediction_stats(display_name)
+      `)
+      .order('last_activity_at', { ascending: false });
+
+    if (error || !threads) {
+      console.error('Error fetching forum summaries:', error);
+      return [];
+    }
+
+    const categoryMap = new Map<string, ForumCategorySummary>();
+
+    for (const t of threads as any[]) {
+      const existing = categoryMap.get(t.category);
+      if (existing) {
+        existing.thread_count++;
+        existing.reply_count += t.reply_count || 0;
+      } else {
+        categoryMap.set(t.category, {
+          category: t.category,
+          thread_count: 1,
+          reply_count: t.reply_count || 0,
+          latest_thread: {
+            id: t.id,
+            title: t.title,
+            last_activity_at: t.last_activity_at,
+            author_display_name: t.author?.display_name || 'Anonymous',
+          },
+        });
+      }
+    }
+
+    return Array.from(categoryMap.values());
+  } catch {
+    return [];
+  }
+}
+
+// Get user's votes for a thread and its replies
+export async function getUserForumVotes(
+  userId: string,
+  threadId: string
+): Promise<{ threadVote?: string; replyVotes: Record<string, string> }> {
+  try {
+    const db = checkSupabase();
+
+    // Get all reply IDs for this thread
+    const { data: replies } = await (db.from('forum_replies') as any)
+      .select('id')
+      .eq('thread_id', threadId);
+
+    const replyIds = (replies || []).map((r: any) => r.id);
+
+    // Get user's votes for this thread and its replies
+    let query = (db.from('forum_thread_votes') as any)
+      .select('thread_id, reply_id, vote_type')
+      .eq('user_id', userId);
+
+    // Get thread vote
+    const { data: threadVoteData } = await (db.from('forum_thread_votes') as any)
+      .select('vote_type')
+      .eq('user_id', userId)
+      .eq('thread_id', threadId)
+      .maybeSingle();
+
+    // Get reply votes
+    const replyVotes: Record<string, string> = {};
+    if (replyIds.length > 0) {
+      const { data: replyVoteData } = await query
+        .in('reply_id', replyIds);
+
+      for (const v of (replyVoteData || []) as any[]) {
+        if (v.reply_id) {
+          replyVotes[v.reply_id] = v.vote_type;
+        }
+      }
+    }
+
+    return {
+      threadVote: threadVoteData?.vote_type,
+      replyVotes,
+    };
+  } catch {
+    return { replyVotes: {} };
   }
 }
