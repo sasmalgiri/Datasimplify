@@ -5,6 +5,7 @@ import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 interface LayoutProps {
   coin: string;
   days: number;
+  templateId?: string;
 }
 
 export function SentimentGaugeLayout({}: LayoutProps) {

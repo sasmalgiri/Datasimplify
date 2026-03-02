@@ -64,7 +64,7 @@ interface ExperimentShellProps {
   layoutType: ExperimentLayoutType;
 }
 
-export function ExperimentShell({ templateName, templateIcon, layoutType }: ExperimentShellProps) {
+export function ExperimentShell({ templateId, templateName, templateIcon, layoutType }: ExperimentShellProps) {
   const [coin, setCoin] = useState('bitcoin');
   const [coinInput, setCoinInput] = useState('bitcoin');
   const [days, setDays] = useState(90);
@@ -361,7 +361,7 @@ export function ExperimentShell({ templateName, templateIcon, layoutType }: Expe
         )}
 
         {!isLoading && !error && (
-          <LayoutComponent coin={coin} days={days} />
+          <LayoutComponent coin={coin} days={days} templateId={templateId} />
         )}
       </div>
 
