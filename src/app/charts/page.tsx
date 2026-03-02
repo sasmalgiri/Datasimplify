@@ -907,11 +907,21 @@ function ChartsContent() {
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
               <XAxis dataKey="date" stroke="#9CA3AF" tick={{ fill: '#9CA3AF' }} />
               <YAxis
+                yAxisId="price"
                 stroke="#9CA3AF"
                 tick={{ fill: '#9CA3AF' }}
                 domain={['auto', 'auto']}
                 tickFormatter={(v) => formatValue(v)}
               />
+              {showVolume && (
+                <YAxis
+                  yAxisId="volume"
+                  orientation="right"
+                  stroke="#6b7280"
+                  tick={{ fill: '#6b7280', fontSize: 10 }}
+                  tickFormatter={(v) => formatValue(v)}
+                />
+              )}
               <Tooltip
                 contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: '8px' }}
                 labelStyle={{ color: '#F3F4F6' }}
@@ -919,10 +929,10 @@ function ChartsContent() {
               />
               <Legend />
               {/* Candlestick body simulation using bars */}
-              <Bar dataKey="high" fill="#10B981" name="High" />
-              <Bar dataKey="low" fill="#EF4444" name="Low" />
-              <Line type="monotone" dataKey="open" stroke="#F59E0B" dot={false} name="Open" />
-              <Line type="monotone" dataKey="close" stroke="#3B82F6" dot={false} name="Close" />
+              <Bar dataKey="high" fill="#10B981" name="High" yAxisId="price" />
+              <Bar dataKey="low" fill="#EF4444" name="Low" yAxisId="price" />
+              <Line type="monotone" dataKey="open" stroke="#F59E0B" dot={false} name="Open" yAxisId="price" />
+              <Line type="monotone" dataKey="close" stroke="#3B82F6" dot={false} name="Close" yAxisId="price" />
               {showVolume && (
                 <Bar dataKey="volume" fill="#6366F1" opacity={0.3} name="Volume" yAxisId="volume" />
               )}
@@ -1191,7 +1201,8 @@ function ChartsContent() {
 
       case 'racing_bar':
         const currentFrame = racingData[racingFrame] || { coins: [], date: '' };
-        const maxCap = Math.max(...((currentFrame.coins as { marketCap: number }[])?.map(c => c.marketCap) || [1]));
+        const cappedCoins = (currentFrame.coins as { marketCap: number }[])?.map(c => c.marketCap) || [];
+        const maxCap = cappedCoins.length > 0 ? Math.max(...cappedCoins) : 1;
 
         return (
           <div className="p-4">
@@ -1298,7 +1309,10 @@ function ChartsContent() {
 
       case 'fibonacci':
         // Fibonacci retracement levels
-        const priceData = chartData.map(d => d.price as number).filter(p => p > 0);
+        const priceData = chartData.map(d => d.price as number).filter(p => typeof p === 'number' && p > 0);
+        if (priceData.length === 0) {
+          return <div className="flex items-center justify-center h-96 text-gray-400">Insufficient price data for Fibonacci analysis</div>;
+        }
         const high = Math.max(...priceData);
         const low = Math.min(...priceData);
         const diff = high - low;

@@ -138,15 +138,8 @@ export default function ProtocolDashboardPage() {
 
   // Auto-load immediately — all endpoints are key-free (DeFi Llama)
   useEffect(() => {
-    if (!initialLoaded) {
-      loadData();
-    }
-  }, [initialLoaded, loadData]);
-
-  // Reset loaded state when slug changes so we re-fetch for the new protocol
-  useEffect(() => {
-    setInitialLoaded(false);
-  }, [slug]);
+    loadData();
+  }, [loadData]);
 
   return (
     <div className={`min-h-screen ${st.pageBg}`} data-dashboard-theme={siteTheme}>

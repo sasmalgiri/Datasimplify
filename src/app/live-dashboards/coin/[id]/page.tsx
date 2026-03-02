@@ -74,12 +74,10 @@ export default function CoinDashboardPage() {
     setInitialLoaded(true);
   }, [fetchData, definition.requiredEndpoints, id]);
 
-  // Auto-load on mount
+  // Auto-load on mount and when coin id changes
   useEffect(() => {
-    if (!initialLoaded) {
-      loadData();
-    }
-  }, [initialLoaded, loadData]);
+    loadData();
+  }, [loadData]);
 
   return (
     <div className={`min-h-screen ${st.pageBg}`} data-dashboard-theme={siteTheme}>

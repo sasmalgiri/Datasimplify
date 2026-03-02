@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -83,7 +83,7 @@ export default function CustomDashboardPage() {
     }
   }, [id]);
 
-  const definition = dashboard ? toDefinition(dashboard) : null;
+  const definition = useMemo(() => dashboard ? toDefinition(dashboard) : null, [dashboard]);
 
   const loadData = useCallback(() => {
     if (!definition) return;

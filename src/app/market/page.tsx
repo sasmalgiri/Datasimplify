@@ -270,16 +270,16 @@ export default function MarketPage() {
       let aVal, bVal;
       switch (sortBy) {
         case 'price_change':
-          aVal = a.price_change_percentage_24h;
-          bVal = b.price_change_percentage_24h;
+          aVal = a.price_change_percentage_24h ?? 0;
+          bVal = b.price_change_percentage_24h ?? 0;
           break;
         case 'volume':
-          aVal = a.total_volume;
-          bVal = b.total_volume;
+          aVal = a.total_volume ?? 0;
+          bVal = b.total_volume ?? 0;
           break;
         default:
-          aVal = a.market_cap;
-          bVal = b.market_cap;
+          aVal = a.market_cap ?? 0;
+          bVal = b.market_cap ?? 0;
       }
       return sortOrder === 'desc' ? bVal - aVal : aVal - bVal;
     });

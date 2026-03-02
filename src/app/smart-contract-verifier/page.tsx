@@ -288,6 +288,12 @@ export default function SmartContractVerifierPage() {
       return;
     }
 
+    const parsedChainId = Number(chainId);
+    if (isNaN(parsedChainId) || parsedChainId <= 0) {
+      setResult({ success: false, error: 'Please enter a valid chain ID (e.g. 1 for Ethereum)' });
+      return;
+    }
+
     setIsVerifying(true);
     setResult(null);
 
@@ -296,7 +302,7 @@ export default function SmartContractVerifierPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chainId: Number(chainId),
+          chainId: parsedChainId,
           address: address.trim()
         })
       });

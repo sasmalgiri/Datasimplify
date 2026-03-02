@@ -68,7 +68,7 @@ export default function DexPoolsPage() {
         throw new Error(result.error || 'Failed to fetch pools');
       }
 
-      setPools(result.data);
+      setPools(Array.isArray(result.data) ? result.data : []);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching pools:', err);
@@ -259,14 +259,14 @@ export default function DexPoolsPage() {
                       <td className="py-3 px-4 text-right">
                         <span
                           className={`flex items-center justify-end gap-1 font-medium ${
-                            pool.price_change_24h >= 0 ? 'text-emerald-400' : 'text-red-400'
+                            pool.price_change_24h != null && pool.price_change_24h >= 0 ? 'text-emerald-400' : pool.price_change_24h != null ? 'text-red-400' : 'text-gray-400'
                           }`}
                         >
-                          {pool.price_change_24h >= 0 ? (
+                          {pool.price_change_24h != null ? (pool.price_change_24h >= 0 ? (
                             <TrendingUp className="w-3 h-3" />
                           ) : (
                             <TrendingDown className="w-3 h-3" />
-                          )}
+                          )) : null}
                           {formatChange(pool.price_change_24h)}
                         </span>
                       </td>
@@ -277,7 +277,7 @@ export default function DexPoolsPage() {
                         {formatVolume(pool.volume_24h)}
                       </td>
                       <td className="py-3 px-4 text-right text-gray-400 hidden lg:table-cell">
-                        {pool.transactions_24h.toLocaleString()}
+                        {typeof pool.transactions_24h === 'number' ? pool.transactions_24h.toLocaleString() : '—'}
                       </td>
                       <td className="py-3 px-4 text-center hidden lg:table-cell">
                         <span className="text-xs text-gray-500 flex items-center justify-center gap-1">

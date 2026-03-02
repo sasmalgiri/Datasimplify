@@ -570,13 +570,13 @@ export default function CoinDetailPage() {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">24h Volume/MCap</span>
                 <span className="text-white font-medium">
-                  {coin.market_cap ? ((coin.total_volume / coin.market_cap) * 100).toFixed(2) : '0.00'}%
+                  {coin.market_cap && coin.total_volume != null ? ((coin.total_volume / coin.market_cap) * 100).toFixed(2) : '0.00'}%
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Volatility (24h)</span>
                 <span className="text-white font-medium">
-                  {coin.current_price ? ((Math.abs(coin.high_24h - coin.low_24h) / coin.current_price) * 100).toFixed(2) : '0.00'}%
+                  {coin.current_price && typeof coin.high_24h === 'number' && typeof coin.low_24h === 'number' ? ((Math.abs(coin.high_24h - coin.low_24h) / coin.current_price) * 100).toFixed(2) : '0.00'}%
                 </span>
               </div>
             </div>

@@ -290,8 +290,8 @@ export default function MonitorPage() {
 
           setStablecoins({
             totalMarketCap: total,
-            usdtDominance: usdt ? (usdt.circulating?.peggedUSD / total) * 100 : 0,
-            usdcDominance: usdc ? (usdc.circulating?.peggedUSD / total) * 100 : 0,
+            usdtDominance: usdt && total > 0 ? ((usdt.circulating?.peggedUSD ?? 0) / total) * 100 : 0,
+            usdcDominance: usdc && total > 0 ? ((usdc.circulating?.peggedUSD ?? 0) / total) * 100 : 0,
             change24h: 0
           });
         }

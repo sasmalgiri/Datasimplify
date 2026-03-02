@@ -31,9 +31,12 @@ export async function GET(request: NextRequest) {
     switch (action) {
       case 'threads': {
         const category = searchParams.get('category') || undefined;
-        const limit = parseInt(searchParams.get('limit') || '20');
-        const offset = parseInt(searchParams.get('offset') || '0');
-        const sortBy = (searchParams.get('sortBy') || 'latest') as 'latest' | 'popular' | 'most_replied';
+        const rawLimit = parseInt(searchParams.get('limit') || '20');
+        const limit = Number.isNaN(rawLimit) || rawLimit < 1 ? 20 : Math.min(rawLimit, 100);
+        const rawOffset = parseInt(searchParams.get('offset') || '0');
+        const offset = Number.isNaN(rawOffset) || rawOffset < 0 ? 0 : rawOffset;
+        const rawSortBy = searchParams.get('sortBy') || 'latest';
+        const sortBy = (['latest', 'popular', 'most_replied'] as const).includes(rawSortBy as any) ? rawSortBy as 'latest' | 'popular' | 'most_replied' : 'latest';
 
         const threads = await getForumThreads({ category, limit, offset, sortBy });
         return NextResponse.json({ success: true, data: threads, count: threads.length, source: 'supabase' });

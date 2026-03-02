@@ -55,12 +55,14 @@ export default function RecentlyAddedPage() {
   );
 
   const formatPrice = (price: number) => {
+    if (price == null || isNaN(price)) return '$0.00';
     if (price >= 1) return `$${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
     if (price >= 0.01) return `$${price.toFixed(4)}`;
     return `$${price.toFixed(8)}`;
   };
 
   const formatMarketCap = (cap: number) => {
+    if (cap == null || isNaN(cap)) return 'N/A';
     if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
     if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
     if (cap >= 1e3) return `$${(cap / 1e3).toFixed(2)}K`;
@@ -178,17 +180,17 @@ export default function RecentlyAddedPage() {
                   </div>
                   <div
                     className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium ${
-                      coin.price_change_percentage_24h >= 0
+                      (coin.price_change_percentage_24h ?? 0) >= 0
                         ? 'text-green-400 bg-green-500/20'
                         : 'text-red-400 bg-red-500/20'
                     }`}
                   >
-                    {coin.price_change_percentage_24h >= 0 ? (
+                    {(coin.price_change_percentage_24h ?? 0) >= 0 ? (
                       <TrendingUp className="w-3 h-3" />
                     ) : (
                       <TrendingDown className="w-3 h-3" />
                     )}
-                    {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
+                    {Math.abs(coin.price_change_percentage_24h ?? 0).toFixed(2)}%
                   </div>
                 </div>
 

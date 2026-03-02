@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { getSiteThemeClasses } from '@/lib/live-dashboard/theme';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 import { ArrowLeft, Plus, Trash2, GripVertical, Save, Layout, ChevronDown, Upload, Loader2, CheckCircle, X } from 'lucide-react';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // ─── Data Model ───
 interface CustomDashboardWidget {
@@ -232,6 +234,8 @@ function BuilderContent() {
 
   return (
     <div className={`min-h-screen ${st.pageBg}`} data-dashboard-theme={siteTheme}>
+      <FreeNavbar />
+      <Breadcrumb />
       <main className="max-w-5xl mx-auto px-4 py-8">
         {/* ─── Header ─── */}
         <div className="flex items-center justify-between mb-8">

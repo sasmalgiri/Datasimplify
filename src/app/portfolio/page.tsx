@@ -130,7 +130,9 @@ export default function PortfolioBuilderPage() {
     );
     // Normalize to 100%
     const total = updated.reduce((sum, a) => sum + a.percentage, 0);
-    if (total !== 100) {
+    if (total === 0) {
+      setAllocations(updated);
+    } else if (total !== 100) {
       const factor = 100 / total;
       setAllocations(updated.map(a => ({ ...a, percentage: Math.round(a.percentage * factor) })));
     } else {

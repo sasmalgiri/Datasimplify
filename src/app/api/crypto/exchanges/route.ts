@@ -63,8 +63,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const page = parseInt(searchParams.get('page') || '1');
+    const rawLimit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(Number.isNaN(rawLimit) ? 20 : rawLimit, 100);
+    const rawPage = parseInt(searchParams.get('page') || '1');
+    const page = Number.isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
 
     // Check cache first
     const now = Date.now();

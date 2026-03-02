@@ -98,9 +98,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const coin = searchParams.get('coin') || 'bitcoin';
+    const rawCoin = searchParams.get('coin') || 'bitcoin';
+    const coin = /^[a-z0-9_-]+$/i.test(rawCoin) ? rawCoin.toLowerCase() : 'bitcoin';
     // Limit to Analyst plan max (2 years = 730 days)
-    const days = Math.min(parseInt(searchParams.get('days') || '30'), MAX_HISTORICAL_DAYS);
+    const rawDays = parseInt(searchParams.get('days') || '30');
+    const days = Math.min(Number.isNaN(rawDays) ? 30 : rawDays, MAX_HISTORICAL_DAYS);
 
     if (!isFeatureEnabled('coingecko')) {
       return NextResponse.json({

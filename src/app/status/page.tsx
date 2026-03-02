@@ -228,7 +228,7 @@ export default function StatusPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    {service.latency && (
+                    {service.latency != null && (
                       <div className="flex items-center gap-1 text-sm text-gray-500">
                         <Clock className="w-4 h-4" />
                         <span>{service.latency}ms</span>

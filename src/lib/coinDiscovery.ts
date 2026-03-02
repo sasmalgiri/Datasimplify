@@ -179,7 +179,7 @@ function mapGeckoCoin(coin: GeckoMarketCoin): DiscoveredCoin {
 
 /**
  * Discover all available coins from CoinGecko
- * Fetches top coins by market cap (up to 500)
+ * Fetches top coins by market cap (up to 1500)
  */
 export async function discoverCoins(): Promise<DiscoveredCoin[]> {
   // Return cached data if still valid
@@ -189,13 +189,17 @@ export async function discoverCoins(): Promise<DiscoveredCoin[]> {
 
   console.log('[CoinDiscovery] Fetching coins from CoinGecko...');
 
-  // Fetch first two pages (500 coins total) to cover major coins
-  const [page1, page2] = await Promise.all([
+  // Fetch 6 pages (1500 coins) to cover the vast majority of actively traded coins
+  const [page1, page2, page3, page4, page5, page6] = await Promise.all([
     fetchGeckoMarkets(1, 250),
-    fetchGeckoMarkets(2, 250)
+    fetchGeckoMarkets(2, 250),
+    fetchGeckoMarkets(3, 250),
+    fetchGeckoMarkets(4, 250),
+    fetchGeckoMarkets(5, 250),
+    fetchGeckoMarkets(6, 250),
   ]);
 
-  const allCoins = [...page1, ...page2];
+  const allCoins = [...page1, ...page2, ...page3, ...page4, ...page5, ...page6];
 
   if (allCoins.length === 0) {
     if (discoveredCoins) {

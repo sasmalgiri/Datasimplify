@@ -275,7 +275,7 @@ export default function ThreadDetailPage() {
             />
             <div className="flex items-center gap-4 text-xs text-gray-500">
               <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {thread.reply_count}</span>
-              <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {thread.view_count.toLocaleString()}</span>
+              <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {(thread.view_count ?? 0).toLocaleString()}</span>
               {isAdmin && (
                 <button
                   type="button"

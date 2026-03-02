@@ -229,13 +229,13 @@ export default function AccountPage() {
               <div className="w-full bg-gray-700 rounded-full h-2.5">
                 <div
                   className={`h-2.5 rounded-full transition-all ${
-                    profile.downloads_this_month / profile.downloads_limit > 0.9
+                    profile.downloads_limit > 0 && profile.downloads_this_month / profile.downloads_limit > 0.9
                       ? 'bg-red-500'
-                      : profile.downloads_this_month / profile.downloads_limit > 0.7
+                      : profile.downloads_limit > 0 && profile.downloads_this_month / profile.downloads_limit > 0.7
                         ? 'bg-yellow-500'
                         : 'bg-emerald-500'
                   }`}
-                  style={{ width: `${Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100)}%` }}
+                  style={{ width: `${profile.downloads_limit > 0 ? Math.min(100, (profile.downloads_this_month / profile.downloads_limit) * 100) : 0}%` }}
                 />
               </div>
             </div>

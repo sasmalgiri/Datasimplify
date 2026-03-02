@@ -146,8 +146,8 @@ export default function GlobalMarketPage() {
                         <td className="px-4 py-2.5 text-right text-white font-mono">
                           ${c.current_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: c.current_price >= 1 ? 2 : 6 })}
                         </td>
-                        <td className={`px-4 py-2.5 text-right font-mono flex items-center justify-end gap-1 ${change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        <td className={`px-4 py-2.5 text-right font-mono flex items-center justify-end gap-1 ${change != null && change >= 0 ? 'text-emerald-400' : change != null ? 'text-red-400' : 'text-gray-400'}`}>
+                          {change != null ? (change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />) : null}
                           {change != null ? `${change >= 0 ? '+' : ''}${change.toFixed(2)}%` : '—'}
                         </td>
                         <td className="px-4 py-2.5 text-right text-gray-300 font-mono">{formatLarge(c.market_cap)}</td>

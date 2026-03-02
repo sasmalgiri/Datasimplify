@@ -168,6 +168,9 @@ export async function POST(req: NextRequest) {
   if (!endpoints || !Array.isArray(endpoints) || endpoints.length === 0) {
     return NextResponse.json({ error: 'At least one endpoint required' }, { status: 400 });
   }
+  if (endpoints.length > 15) {
+    return NextResponse.json({ error: 'Maximum 15 endpoints per request' }, { status: 400 });
+  }
 
   // Determine which key to use: user BYOK → server fallback
   const needsCoinGeckoKey = endpoints.some((ep: string) => !KEY_FREE_ENDPOINTS.has(ep) && ep !== 'fear_greed' && !ep.startsWith('alchemy_'));
@@ -619,7 +622,7 @@ export async function POST(req: NextRequest) {
       case 'blockchain_onchain': {
         const timespan = `${Math.min(Number(params?.days) || 365, 2000)}days`;
         const defaultCharts = ['hash-rate', 'difficulty', 'n-unique-addresses', 'n-transactions', 'miners-revenue'];
-        const requestedCharts: string[] = params?.blockchainCharts || defaultCharts;
+        const requestedCharts: string[] = (params?.blockchainCharts || defaultCharts).slice(0, 10);
         for (const chart of requestedCharts) {
           const safeName = /^[a-z0-9-]+$/.test(chart) ? chart : '';
           if (!safeName) continue;

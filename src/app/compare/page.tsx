@@ -225,7 +225,7 @@ function HeadToHead({ coins, formatPrice, formatLargeNumber }: {
       aVal: a.market_cap > 0 ? (a.total_volume / a.market_cap).toFixed(3) : 'N/A',
       bVal: b.market_cap > 0 ? (b.total_volume / b.market_cap).toFixed(3) : 'N/A',
       ratio: null,
-      winner: (a.total_volume / a.market_cap) > (b.total_volume / b.market_cap) ? 'a' : 'b',
+      winner: (a.market_cap > 0 ? a.total_volume / a.market_cap : 0) > (b.market_cap > 0 ? b.total_volume / b.market_cap : 0) ? 'a' : 'b',
       explain: 'Volume relative to market cap. Higher ratio = more trading activity relative to size',
     },
   ];
@@ -610,7 +610,7 @@ export default function ComparePage() {
   };
 
   const formatPercent = (pct: number | undefined) => {
-    if (pct === undefined || pct === null) return 'N/A';
+    if (pct === undefined || pct === null || isNaN(pct)) return 'N/A';
     const sign = pct >= 0 ? '+' : '';
     return `${sign}${pct.toFixed(2)}%`;
   };

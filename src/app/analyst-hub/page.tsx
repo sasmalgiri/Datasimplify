@@ -176,14 +176,14 @@ export default function AnalystHubPage() {
   }, [fetchAllData]);
 
   const formatPrice = (price: number | undefined) => {
-    if (!price) return '—';
+    if (price == null) return '—';
     if (price < 0.01) return `$${price.toFixed(4)}`;
     if (price < 1) return `$${price.toFixed(3)}`;
     return `$${price.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
   };
 
   const formatMarketCap = (cap: number | undefined) => {
-    if (!cap) return '—';
+    if (cap == null) return '—';
     if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
     if (cap >= 1e9) return `$${(cap / 1e9).toFixed(1)}B`;
     if (cap >= 1e6) return `$${(cap / 1e6).toFixed(1)}M`;

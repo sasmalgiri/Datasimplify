@@ -40,6 +40,17 @@ function DataLabPage() {
   const searchParams = useSearchParams();
   const chartRef = useRef<HTMLDivElement>(null);
   const hasInitRef = useRef(false);
+  const [showKeyModal, setShowKeyModal] = useState(false);
+
+  const isPro = IS_BETA_MODE || isAdmin || profile?.subscription_tier === 'pro';
+
+  // Auto-open modal after a brief delay when no key is set
+  useEffect(() => {
+    if (!apiKey && isPro) {
+      const timer = setTimeout(() => setShowKeyModal(true), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [apiKey, isPro]);
 
   // Hydrate from URL params or auto-load default preset
   useEffect(() => {
@@ -87,7 +98,6 @@ function DataLabPage() {
   }
 
   // Pro tier gate — admin users bypass
-  const isPro = IS_BETA_MODE || isAdmin || profile?.subscription_tier === 'pro';
   if (!isPro) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">
@@ -114,16 +124,6 @@ function DataLabPage() {
   }
 
   // API key gate — inline onboarding with modal
-  const [showKeyModal, setShowKeyModal] = useState(false);
-
-  // Auto-open modal after a brief delay when no key is set
-  useEffect(() => {
-    if (!apiKey && isPro) {
-      const timer = setTimeout(() => setShowKeyModal(true), 600);
-      return () => clearTimeout(timer);
-    }
-  }, [apiKey, isPro]);
-
   if (!apiKey) {
     return (
       <div className="min-h-screen bg-[#0a0a0f]">

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, GitFork, Eye, ArrowLeft, Loader2, LayoutGrid } from 'lucide-react';
+import { FreeNavbar } from '@/components/FreeNavbar';
+import { Breadcrumb } from '@/components/Breadcrumb';
 
 // ─── Types ───
 interface CommunityDashboard {
@@ -44,6 +46,7 @@ function formatCount(n: number): string {
 function timeAgo(dateStr: string): string {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
+  if (isNaN(then)) return 'unknown';
   const seconds = Math.floor((now - then) / 1000);
 
   if (seconds < 60) return 'just now';
@@ -309,6 +312,8 @@ export default function CommunityDashboardsPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
+      <FreeNavbar />
+      <Breadcrumb />
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* ─── Back link ─── */}
         <Link

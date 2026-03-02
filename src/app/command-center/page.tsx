@@ -806,9 +806,9 @@ function WatchlistRow({
           </div>
         </td>
         <td className={`py-2 px-3 text-right font-mono ${st.textPrimary}`}>
-          ${m.current_price >= 1
-            ? m.current_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : m.current_price.toFixed(6)}
+          ${(m.current_price ?? 0) >= 1
+            ? (m.current_price ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : (m.current_price ?? 0).toFixed(6)}
         </td>
         <td className={`py-2 px-3 text-right font-mono ${ch24 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {ch24 >= 0 ? '+' : ''}{ch24.toFixed(2)}%
@@ -826,7 +826,7 @@ function WatchlistRow({
           )}
         </td>
         <td className={`py-2 px-3 text-right ${st.textSecondary}`}>
-          ${(m.market_cap / 1e9).toFixed(1)}B
+          ${((m.market_cap ?? 0) / 1e9).toFixed(1)}B
         </td>
       </tr>
       {isExpanded && (
@@ -912,9 +912,9 @@ function HoldingsRow({
           </div>
         </td>
         <td className={`py-2 px-2 text-right font-mono ${st.textPrimary}`}>
-          ${row.price >= 1
-            ? row.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-            : row.price.toFixed(6)}
+          ${(row.price ?? 0) >= 1
+            ? (row.price ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : (row.price ?? 0).toFixed(6)}
         </td>
         <td className={`py-2 px-2 text-right font-mono ${row.ch24 >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
           {row.ch24 >= 0 ? '+' : ''}{row.ch24.toFixed(2)}%
