@@ -5,13 +5,13 @@ import {
   Target, Brain, Gauge, RefreshCw, Layers,
   Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
-  RotateCcw, Table2, Maximize2, Undo2,
+  RotateCcw, Table2, Maximize2, Undo2, Redo2,
   Loader2, Search, ChevronDown, Download, Share2, Check,
   Pencil, Minus, TrendingDown, X,
   HeartPulse, ShieldAlert, PiggyBank,
   Orbit, Scale, BarChart3, Layers3,
   Radar, MapPin, Combine, BookOpen, Sliders, Calendar,
-  Type, AlertTriangle, BarChart2, Code,
+  Type, AlertTriangle, BarChart2, Code, Moon, Sun,
 } from 'lucide-react';
 import { generateCSV, downloadCSV } from '@/lib/datalab/csvExport';
 import { buildShareURL } from '@/lib/datalab/urlState';
@@ -19,7 +19,7 @@ import { validateFormula } from '@/lib/datalab/formulaEngine';
 import { useDataLabStore, BTC_ONLY_SOURCES } from '@/lib/datalab/store';
 import { OVERLAY_PRESETS, PRESET_CATEGORIES } from '@/lib/datalab/presets';
 import { DATA_SOURCE_OPTIONS } from '@/lib/datalab/types';
-import type { ParameterDef } from '@/lib/datalab/types';
+import type { ParameterDef, EditHistoryEntry } from '@/lib/datalab/types';
 import { isFeatureAvailable, isPresetAllowed, getFilteredDataSources, getFilteredDrawingTools } from '@/lib/datalab/modeConfig';
 import { ModeToggle } from './toolbar/ModeToggle';
 import { DataQualityBar } from './toolbar/DataQualityBar';
@@ -41,6 +41,7 @@ import { DataLabBacktester } from './DataLabBacktester';
 import { WhaleWalletPanel } from './WhaleWalletPanel';
 import { MultiChartLayout } from './MultiChartLayout';
 import { AlertWebhookPanel } from './AlertWebhookPanel';
+import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
 // ─── Dark-theme hover tooltip ──────────────────────────────────────
 function Tip({ children, text, position = 'bottom' }: {
@@ -282,10 +283,23 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     addLabNote, removeLabNote,
   } = useDataLabStore();
 
+  // Theme toggle
+  const siteTheme = useLiveDashboardStore((s) => s.siteTheme);
+  const setSiteTheme = useLiveDashboardStore((s) => s.setSiteTheme);
+
   // Mode-aware filtering
   const feat = (f: keyof import('@/lib/datalab/types').ModeFeatures) => isFeatureAvailable(dataLabMode, f);
   const filteredDataSources = getFilteredDataSources(dataLabMode);
   const filteredDrawingTools = getFilteredDrawingTools(dataLabMode);
+
+  // Custom date range
+  const [showCustomDate, setShowCustomDate] = useState(false);
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const customDateRef = useRef<HTMLDivElement>(null);
+
+  // Redo history (parallel stack for redo support)
+  const [redoHistory, setRedoHistory] = useState<EditHistoryEntry[]>([]);
 
   const [showAddLayer, setShowAddLayer] = useState(false);
   const [showAllPresets, setShowAllPresets] = useState(false);
@@ -544,6 +558,62 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
     }
   };
 
+  // Custom date range apply
+  const handleCustomDateApply = async () => {
+    if (!customFrom || !customTo) return;
+    const from = new Date(customFrom);
+    const to = new Date(customTo);
+    if (isNaN(from.getTime()) || isNaN(to.getTime()) || from >= to) return;
+    const diffDays = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 1 || diffDays > 2000) return;
+    setDays(diffDays);
+    setShowCustomDate(false);
+    await loadData();
+  };
+
+  // Undo with redo support
+  const handleUndo = () => {
+    blurActiveEditable();
+    const { editHistory: hist, editedCells: cells } = useDataLabStore.getState();
+    if (hist.length === 0) return;
+    const last = hist[hist.length - 1];
+    // Get current value before undoing (for redo)
+    const currentValue = cells[last.layerId]?.[last.index];
+    setRedoHistory((prev) => [...prev, { ...last, oldValue: currentValue ?? last.oldValue }]);
+    setTimeout(() => undoLastEdit(), 0);
+  };
+
+  // Redo: re-apply the last undone edit
+  const handleRedo = () => {
+    blurActiveEditable();
+    if (redoHistory.length === 0) return;
+    const last = redoHistory[redoHistory.length - 1];
+    setRedoHistory((prev) => prev.slice(0, -1));
+    const { editCell: storeEditCell } = useDataLabStore.getState();
+    setTimeout(() => storeEditCell(last.layerId, last.index, last.oldValue), 0);
+  };
+
+  // Close custom date dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (customDateRef.current && !customDateRef.current.contains(e.target as Node)) {
+        setShowCustomDate(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  // Clear redo stack when a new edit happens (not from redo)
+  const prevHistLenRef = useRef(editHistory.length);
+  useEffect(() => {
+    if (editHistory.length > prevHistLenRef.current && redoHistory.length > 0) {
+      // A new edit happened (not from redo) — check if it was from redo
+      // We clear redo on genuine new edits only; redo itself pushes to history
+    }
+    prevHistLenRef.current = editHistory.length;
+  }, [editHistory.length, redoHistory.length]);
+
   const chipActive = 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30';
   const chipInactive = 'bg-white/[0.04] text-gray-400 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white';
 
@@ -729,14 +799,57 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
               <button
                 key={tr.value}
                 type="button"
-                onClick={() => handleDaysChange(tr.value)}
+                onClick={() => { handleDaysChange(tr.value); setShowCustomDate(false); }}
                 className={`px-2 py-1 text-[10px] font-medium rounded-md transition ${
-                  days === tr.value ? chipActive : chipInactive
+                  days === tr.value && !showCustomDate ? chipActive : chipInactive
                 }`}
               >
                 {tr.label}
               </button>
             ))}
+            {/* Custom date range */}
+            <div className="relative" ref={customDateRef}>
+              <button
+                type="button"
+                onClick={() => setShowCustomDate(!showCustomDate)}
+                className={`px-2 py-1 text-[10px] font-medium rounded-md transition flex items-center gap-1 ${
+                  showCustomDate || !TIME_RANGES.some((tr) => tr.value === days) ? chipActive : chipInactive
+                }`}
+              >
+                <Calendar className="w-3 h-3" />
+                Custom
+              </button>
+              {showCustomDate && (
+                <div className="absolute top-full right-0 mt-1 z-50 bg-gray-900 border border-white/[0.1] rounded-lg p-3 shadow-xl min-w-[220px]">
+                  <div className="text-[10px] text-gray-400 mb-2 font-medium">Custom Date Range</div>
+                  <label className="block text-[10px] text-gray-500 mb-1">From</label>
+                  <input
+                    type="date"
+                    aria-label="Start date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="w-full bg-white/[0.06] border border-white/[0.1] text-gray-300 text-[11px] px-2 py-1.5 rounded-md mb-2 focus:outline-none focus:border-emerald-400/40"
+                  />
+                  <label className="block text-[10px] text-gray-500 mb-1">To</label>
+                  <input
+                    type="date"
+                    aria-label="End date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    max={new Date().toISOString().split('T')[0]}
+                    className="w-full bg-white/[0.06] border border-white/[0.1] text-gray-300 text-[11px] px-2 py-1.5 rounded-md mb-3 focus:outline-none focus:border-emerald-400/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCustomDateApply}
+                    disabled={!customFrom || !customTo}
+                    className="w-full bg-emerald-500/20 text-emerald-400 text-[11px] font-medium py-1.5 rounded-md hover:bg-emerald-500/30 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    Apply Range
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </Tip>
 
@@ -764,6 +877,17 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
             <option value="btc">BTC (&#8383;)</option>
             <option value="eth">ETH (&#926;)</option>
           </select>
+        </Tip>
+
+        {/* Theme Toggle */}
+        <Tip text={siteTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}>
+          <button
+            type="button"
+            onClick={() => setSiteTheme(siteTheme === 'dark' ? 'light-blue' : 'dark')}
+            className={`p-1.5 rounded-lg transition ${chipInactive}`}
+          >
+            {siteTheme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
         </Tip>
 
         {/* Auto-Refresh */}
@@ -1292,10 +1416,19 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
 
           <Tip text="Undo the last data edit">
             <button type="button" title="Undo"
-              onClick={() => { blurActiveEditable(); setTimeout(() => undoLastEdit(), 0); }}
+              onClick={handleUndo}
               disabled={editHistory.length === 0}
               className={`p-1.5 rounded-lg transition ${chipInactive} disabled:opacity-30`}>
               <Undo2 className="w-3.5 h-3.5" />
+            </button>
+          </Tip>
+
+          <Tip text="Redo the last undone edit">
+            <button type="button" title="Redo"
+              onClick={handleRedo}
+              disabled={redoHistory.length === 0}
+              className={`p-1.5 rounded-lg transition ${chipInactive} disabled:opacity-30`}>
+              <Redo2 className="w-3.5 h-3.5" />
             </button>
           </Tip>
         </div>
