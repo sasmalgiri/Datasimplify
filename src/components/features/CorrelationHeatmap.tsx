@@ -275,7 +275,11 @@ export function CorrelationHeatmapDemo({ showBeginnerTips = true }: { showBeginn
             const json = await res.json();
             const prices: number[] = Array.isArray(json?.prices)
               ? json.prices
-                  .map((p: any) => p?.close ?? p?.price)
+                  .map((p: any) => {
+                    // Handle both tuple format [timestamp, price] and object format {close, price}
+                    if (Array.isArray(p)) return p[1];
+                    return p?.close ?? p?.price;
+                  })
                   .filter((v: any) => typeof v === 'number')
               : [];
 

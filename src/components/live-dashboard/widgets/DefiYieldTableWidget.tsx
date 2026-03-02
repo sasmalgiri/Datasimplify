@@ -13,7 +13,7 @@ function formatTVL(n: number): string {
 }
 
 function formatApy(n: number | null | undefined): string {
-  if (n == null || isNaN(n)) return '\u2014';
+  if (n == null || typeof n !== 'number' || isNaN(n)) return '\u2014';
   return `${n.toFixed(2)}%`;
 }
 

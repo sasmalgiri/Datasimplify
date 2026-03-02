@@ -51,7 +51,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
 
   const currentPrice = closes[closes.length - 1];
   const startPrice = closes[0];
-  const changePercent = ((currentPrice - startPrice) / startPrice) * 100;
+  const changePercent = startPrice !== 0 ? ((currentPrice - startPrice) / startPrice) * 100 : 0;
 
   const formatDate = (ts: number) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 

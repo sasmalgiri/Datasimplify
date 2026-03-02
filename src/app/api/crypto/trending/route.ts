@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
       cachedData = {
         data: marketDataTrending,
         timestamp: now,
-        source: 'coingecko',
+        source: 'market-data',
       };
 
       const trending = marketDataTrending.coins.map((coin) => ({
@@ -198,8 +198,8 @@ export async function GET(request: NextRequest) {
           categories: [],
         },
         cached: false,
-        source: 'coingecko',
-        attribution: 'Data provided by CoinGecko (trending approximation)',
+        source: 'market-data',
+        attribution: 'Data derived from market overview (trending approximation)',
       });
     }
 

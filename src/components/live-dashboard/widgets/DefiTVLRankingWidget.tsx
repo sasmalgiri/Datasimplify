@@ -33,7 +33,7 @@ export function DefiTVLRankingWidget() {
     if (!protocols || !Array.isArray(protocols)) return { rows: null, insight: null };
 
     const sorted = [...protocols]
-      .sort((a, b) => b.tvl - a.tvl)
+      .sort((a, b) => (b.tvl ?? 0) - (a.tvl ?? 0))
       .slice(0, 20);
 
     if (sorted.length === 0) return { rows: null, insight: null };

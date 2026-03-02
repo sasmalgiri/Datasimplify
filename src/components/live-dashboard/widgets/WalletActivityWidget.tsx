@@ -65,8 +65,8 @@ export function WalletActivityWidget() {
   const sortedTransfers = useMemo(() => {
     if (!transfers?.transfers) return [];
     return [...transfers.transfers].sort((a, b) => {
-      const aBlock = parseInt(a.blockNum, 16) || 0;
-      const bBlock = parseInt(b.blockNum, 16) || 0;
+      const aBlock = a.blockNum ? parseInt(a.blockNum, 16) || 0 : 0;
+      const bBlock = b.blockNum ? parseInt(b.blockNum, 16) || 0 : 0;
       return bBlock - aBlock;
     });
   }, [transfers]);

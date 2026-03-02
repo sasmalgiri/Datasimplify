@@ -46,7 +46,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
     // Normalize sparkline prices to percentage change from first value
     const boxData = coins.map((c) => {
       const prices = c.sparkline_in_7d!.price;
-      const base = prices[0];
+      const base = prices[0] || 1;
       const pctChanges = prices.map((p) => ((p - base) / base) * 100);
       return computeBoxStats(pctChanges);
     });
@@ -55,7 +55,7 @@ export function BoxPlotWidget({ coinIds, limit = 10 }: BoxPlotWidgetProps) {
     const outliers: [number, number][] = [];
     coins.forEach((c, idx) => {
       const prices = c.sparkline_in_7d!.price;
-      const base = prices[0];
+      const base = prices[0] || 1;
       const pctChanges = prices.map((p) => ((p - base) / base) * 100);
       const [, q1, , q3] = boxData[idx];
       const iqr = q3 - q1;

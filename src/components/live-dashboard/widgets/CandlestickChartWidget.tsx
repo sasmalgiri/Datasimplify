@@ -35,10 +35,12 @@ export function CandlestickChartWidget({ coinId = 'bitcoin', days = 30 }: Candle
       return { value: Math.abs(d[4] - d[1]) * 1000, itemStyle: { color: isUp ? themeColors.fill : 'rgba(239,68,68,0.3)' } };
     });
 
-    const bullish = ohlcData.filter((d) => d[4] >= d[1]).length;
-    const periodHigh = Math.max(...ohlcData.map((d) => d[2]));
-    const periodLow = Math.min(...ohlcData.map((d) => d[3]));
-    const lastClose = ohlcData[ohlcData.length - 1][4];
+    const bullish = ohlcData.filter((d) => d[4] != null && d[1] != null && d[4] >= d[1]).length;
+    const highs = ohlcData.map((d) => d[2]).filter((v): v is number => v != null && isFinite(v));
+    const lows = ohlcData.map((d) => d[3]).filter((v): v is number => v != null && isFinite(v));
+    const periodHigh = highs.length > 0 ? Math.max(...highs) : 0;
+    const periodLow = lows.length > 0 ? Math.min(...lows) : 0;
+    const lastClose = ohlcData[ohlcData.length - 1]?.[4] ?? 0;
     const insightText = `${bullish}/${ohlcData.length} candles bullish · Last close: $${lastClose.toLocaleString()} · Range: $${periodLow.toLocaleString()}–$${periodHigh.toLocaleString()}`;
 
     return { insight: insightText, option: {

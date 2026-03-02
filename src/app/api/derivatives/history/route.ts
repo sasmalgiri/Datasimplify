@@ -197,7 +197,7 @@ async function fetchTopTraderHistory(symbol: string, period: string = '1h', limi
 
 export async function GET(request: Request) {
   try {
-    assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/derivatives/history' });
+    assertRedistributionAllowed('binance', { purpose: 'chart', route: '/api/derivatives/history' });
 
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol') || 'BTC';

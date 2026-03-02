@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         const blockchain = type === 'btc-whales' ? 'bitcoin' : type === 'eth-whales' ? 'ethereum' : undefined;
         const cached = await getWhaleTransactionsFromCache({
           blockchain,
-          minAmountUsd: minValue * 1000000, // Convert to USD
+          minAmountUsd: minValue,
           limit: 50
         });
 

@@ -79,8 +79,9 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
-    // Filter to coins that are likely recently added (no market cap rank or very high rank)
-    // and sort by ATH date (newer = more recently added)
+    // Note: CoinGecko free API lacks a direct listing date field.
+    // We use ath_date as a rough proxy — coins that hit ATH recently are often newer listings.
+    // This is approximate and may include established coins with recent ATHs.
     const recentCoins = data
       .filter((coin: RecentCoin) => coin.ath_date)
       .sort((a: RecentCoin, b: RecentCoin) => {
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
         market_cap_rank: coin.market_cap_rank,
         total_volume: coin.total_volume || 0,
         price_change_percentage_24h: coin.price_change_percentage_24h || 0,
-        listed_date: coin.ath_date,
+        ath_date: coin.ath_date,
       }));
 
     // Update cache

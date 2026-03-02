@@ -141,11 +141,12 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
           const formattedChains: Chain[] = chainsData.data.chains.map((c: {
             name: string;
             tvl: number;
-          }, index: number) => ({
+            protocols?: number;
+          }) => ({
             id: c.name.toLowerCase().replace(/\s+/g, '-'),
             name: c.name,
             tvl: c.tvl || 0,
-            protocols: Math.max(50, 850 - index * 80), // Estimate based on rank
+            protocols: c.protocols ?? 0,
             change_24h: 0 // DefiLlama doesn't provide this in chains endpoint
           }));
           setChains(formattedChains);

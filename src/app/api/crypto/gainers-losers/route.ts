@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
       cachedData.gainers = fallbackData.gainers;
       cachedData.losers = fallbackData.losers;
       cachedData.timestamp = now;
-      cachedData.source = 'coingecko';
+      cachedData.source = 'market-data';
 
       const responseData: {
         gainers?: NormalizedCoin[];
@@ -217,8 +217,8 @@ export async function GET(request: NextRequest) {
         success: true,
         data: responseData,
         cached: false,
-        source: 'coingecko',
-        attribution: 'Data provided by CoinGecko',
+        source: 'market-data',
+        attribution: 'Data derived from market overview',
       });
     }
 

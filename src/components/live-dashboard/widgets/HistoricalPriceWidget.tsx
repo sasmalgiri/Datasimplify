@@ -136,7 +136,7 @@ export function HistoricalPriceWidget({ coinId = 'bitcoin', days, metric = 'all'
     const periodLow = Math.min(...priceValues);
     const firstPrice = priceValues[0];
     const lastPrice = priceValues[priceValues.length - 1];
-    const periodReturn = ((lastPrice - firstPrice) / firstPrice) * 100;
+    const periodReturn = firstPrice !== 0 ? ((lastPrice - firstPrice) / firstPrice) * 100 : 0;
     const sign = periodReturn >= 0 ? '+' : '';
     const insightText = `Period return: ${sign}${periodReturn.toFixed(2)}% · High: $${periodHigh.toLocaleString()} · Low: $${periodLow.toLocaleString()}`;
 

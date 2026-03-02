@@ -16,7 +16,7 @@ interface RecentCoin {
   market_cap_rank: number | null;
   total_volume: number;
   price_change_percentage_24h: number;
-  listed_date?: string;
+  ath_date?: string;
 }
 
 export default function RecentlyAddedPage() {
@@ -205,10 +205,10 @@ export default function RecentlyAddedPage() {
                   </div>
                 </div>
 
-                {coin.listed_date && (
+                {coin.ath_date && (
                   <div className="mt-3 pt-3 border-t border-gray-700 flex items-center gap-2 text-sm text-gray-400">
                     <Clock className="w-4 h-4" />
-                    <span>Listed: {formatDate(coin.listed_date)}</span>
+                    <span>ATH: {formatDate(coin.ath_date)}</span>
                   </div>
                 )}
               </Link>

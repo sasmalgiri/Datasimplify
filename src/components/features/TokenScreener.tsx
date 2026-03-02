@@ -92,7 +92,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                     : 0;
 
                 // RSI estimate based on real price change (simplified)
-                const estimatedRsi = Math.max(20, Math.min(80, 50 + change24h * 2));
+                const estimatedRsi = Math.max(0, Math.min(100, 50 + change24h * 2));
 
                 // Deterministic volatility estimate from observed % changes
                 const volatility = Math.round((Math.abs(change24h) + Math.abs(change7d) / 3) * 10) / 10;

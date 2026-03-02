@@ -75,7 +75,7 @@ export function DataLabCanvas() {
 
     const instance = chartInstanceRef.current;
     const pointInPixel = [params.event?.offsetX, params.event?.offsetY];
-    if (!pointInPixel[0] || !pointInPixel[1]) return;
+    if (pointInPixel[0] == null || pointInPixel[1] == null) return;
 
     const pointInData = instance.convertFromPixel({ gridIndex: 0 }, pointInPixel);
     if (!pointInData) return;

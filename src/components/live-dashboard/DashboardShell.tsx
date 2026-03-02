@@ -167,6 +167,8 @@ export function DashboardShell({ definition, onOpenKeyModal }: DashboardShellPro
     }
     fetchData(definition.requiredEndpoints, params).then(() => {
       handleAutoSnapshot();
+    }).catch((err) => {
+      console.error('Dashboard fetch error:', err);
     });
   }, [definition, fetchData, handleAutoSnapshot]);
 
