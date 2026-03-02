@@ -117,7 +117,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
           animationDelay: (idx: number) => idx * 30 + 100,
         },
         {
-          name: '~7d (sparkline)',
+          name: 'Recent Trend',
           type: 'bar' as const,
           data: returns30d,
           barMaxWidth: 16,

@@ -140,7 +140,7 @@ export default function CommunityPage() {
           </p>
           <div className="flex items-center gap-6 mt-6 text-sm text-gray-400">
             <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-emerald-400" /> Community</span>
-            <span className="flex items-center gap-1.5"><MessageCircle className="w-4 h-4 text-emerald-400" /> 6 forums</span>
+            <span className="flex items-center gap-1.5"><MessageCircle className="w-4 h-4 text-emerald-400" /> {FORUM_CATEGORIES.length} forums</span>
             <span className="flex items-center gap-1.5"><TrendingUp className="w-4 h-4 text-emerald-400" /> Active daily</span>
           </div>
         </div>

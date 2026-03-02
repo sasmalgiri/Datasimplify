@@ -95,9 +95,9 @@ export function MiniSparklineGrid({ limit = 20 }: MiniSparklineGridProps) {
     const weakest = sorted[sorted.length - 1];
 
     if (sorted.length >= 2) {
-      return `${upCount}/${coinTrends.length} coins with upward 7d trend · Strongest: ${strongest.symbol} · Weakest: ${weakest.symbol}`;
+      return `${upCount}/${coinTrends.length} coins trending up · Strongest: ${strongest.symbol} · Weakest: ${weakest.symbol}`;
     } else if (sorted.length === 1) {
-      return `${strongest.symbol}: ${strongest.change >= 0 ? '+' : ''}${strongest.change.toFixed(1)}% over 7d`;
+      return `${strongest.symbol}: ${strongest.change >= 0 ? '+' : ''}${strongest.change.toFixed(1)}% recently`;
     }
     return '';
   }, [coins]);

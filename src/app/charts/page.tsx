@@ -818,9 +818,12 @@ function ChartsContent() {
     }
 
     if (chartData.length === 0) {
+      const coinName = availableCoins.find(c => c.id === selectedCoin)?.name || selectedCoin;
+      const rangeLabel = TIME_RANGES.find(t => t.value === timeRange)?.label || timeRange;
       return (
-        <div className="flex flex-col items-center justify-center h-96 gap-4">
-          <span className="text-gray-400">No data available</span>
+        <div className="flex flex-col items-center justify-center h-96 gap-2">
+          <span className="text-gray-400">No data available for {coinName} ({rangeLabel})</span>
+          <span className="text-xs text-gray-500">CoinGecko may not have historical data for this coin and time range. Try a different combination.</span>
           <CoinGeckoAttribution variant="compact" />
         </div>
       );
@@ -1339,13 +1342,25 @@ function ChartsContent() {
         {
           const candles = candlestickData as Array<{ close: number; volume: number }>;
           if (!Array.isArray(candles) || candles.length < 2) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+            const coinName = availableCoins.find(c => c.id === selectedCoin)?.name || selectedCoin;
+            const rangeLabel = TIME_RANGES.find(t => t.value === timeRange)?.label || timeRange;
+            return (
+              <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2">
+                <span>No candlestick data available for {coinName} ({rangeLabel})</span>
+                <span className="text-xs text-gray-500">Try a different coin or shorter time range. CoinGecko may not have complete data for this combination.</span>
+              </div>
+            );
           }
 
           const prices = candles.map(c => c.close).filter((p) => typeof p === 'number' && p > 0);
           const volumes = candles.map(c => c.volume).filter((v) => typeof v === 'number' && v >= 0);
           if (prices.length < 2 || volumes.length < 2) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+            return (
+              <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2">
+                <span>Insufficient price/volume data for volume profile</span>
+                <span className="text-xs text-gray-500">The data returned has too few valid points. Try a different time range.</span>
+              </div>
+            );
           }
 
           const vpHigh = Math.max(...prices);
@@ -1353,7 +1368,12 @@ function ChartsContent() {
           const bins = 20;
           const diff = vpHigh - vpLow;
           if (!diff) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">No volume profile data available</div>;
+            return (
+              <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2">
+                <span>Price range too narrow for volume profile</span>
+                <span className="text-xs text-gray-500">All prices in this range are the same. Try a longer time range for more variation.</span>
+              </div>
+            );
           }
 
           const bucketVolumes = Array.from({ length: bins }, () => 0);
@@ -1429,7 +1449,7 @@ function ChartsContent() {
           }) || [];
 
           if (typeof rate !== 'number' && fundingChartData.length === 0) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">No funding rate data available</div>;
+            return <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2"><span>No funding rate data available</span><span className="text-xs text-gray-500">Derivatives data requires real-time exchange feeds. This may be temporarily unavailable.</span></div>;
           }
 
           return (
@@ -1533,7 +1553,7 @@ function ChartsContent() {
           })) || [];
 
           if (typeof oi !== 'number' && oiChartData.length === 0) {
-            return <div className="flex items-center justify-center h-96 text-gray-400">No open interest data available</div>;
+            return <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2"><span>No open interest data available</span><span className="text-xs text-gray-500">Open interest data requires real-time exchange feeds. This may be temporarily unavailable.</span></div>;
           }
 
           return (
@@ -1619,7 +1639,7 @@ function ChartsContent() {
         }
 
         if (!Array.isArray(whaleFlows) || whaleFlows.length === 0) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">No whale flow data available</div>;
+          return <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2"><span>No whale flow data available</span><span className="text-xs text-gray-500">On-chain whale flow data is simulated from market trends. Check back when market data loads.</span></div>;
         }
 
         const flowRows = whaleFlows
@@ -1711,7 +1731,7 @@ function ChartsContent() {
         }
 
         if (!Array.isArray(fearGreedHistory) || fearGreedHistory.length === 0) {
-          return <div className="flex items-center justify-center h-96 text-gray-400">No fear & greed data available</div>;
+          return <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-2"><span>No Fear &amp; Greed data available</span><span className="text-xs text-gray-500">The Fear &amp; Greed Index is fetched from alternative.me. This may be temporarily unavailable.</span></div>;
         }
 
         const priceByDate = new Map<string, number>();

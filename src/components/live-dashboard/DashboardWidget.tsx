@@ -241,23 +241,23 @@ export const WIDGET_DESCRIPTIONS: Record<string, string> = {
   CoinCompareWidget: 'Side-by-side coin metrics table — compare fundamentals like MCap, volume, supply at a glance.',
   CorrelationWidget: 'How coins move together — 1.0 = perfect correlation, -1.0 = inverse. Helps diversify portfolios.',
   RadarChartWidget: 'Multi-metric radar — larger area = stronger across all metrics. Compare coin "shapes" visually.',
-  BoxPlotWidget: '7-day price distribution — box = typical range, whiskers = extremes. Spot which coins are most volatile.',
+  BoxPlotWidget: 'Recent price distribution — box = typical range, whiskers = extremes. Spot which coins are most volatile.',
   ReturnsBarWidget: 'Returns across timeframes — compare 24h, 7d, 30d performance. Spot trend acceleration or reversal.',
   BubbleChartWidget: 'X = market cap, Y = performance, bubble size = volume. Top-right = large & gaining. Bottom-left = small & losing.',
 
   // Stacked & Area
-  AreaChartWidget: 'Stacked volume/mcap over 7 days — see how coins contribute to total. Growing area = gaining share.',
+  AreaChartWidget: 'Stacked volume/mcap trend — see how coins contribute to total. Growing area = gaining share.',
   DominanceAreaWidget: 'Market dominance over time — see BTC/ETH/alt shares shift. Rising alt share = "altseason" building.',
 
   // Advanced Analytics
   WaterfallChartWidget: 'Cumulative impact — see how each coin adds or subtracts from total 24h change. Identifies market movers.',
-  DrawdownChartWidget: 'Drop from 7-day peak — deeper dip = more pain. Coins at 0% = currently at their 7d high.',
+  DrawdownChartWidget: 'Drop from recent peak — deeper dip = more pain. Coins at 0% = currently at their high.',
   ReturnHistogramWidget: 'Distribution of 24h returns — bell shape = normal market. Skewed right = more winners than losers.',
 
   // Sentiment
   AltseasonWidget: 'Altseason Index — above 75% = altcoins outperforming BTC (altseason). Below 25% = BTC dominates.',
   PerformanceHeatmapWidget: 'Multi-timeframe heatmap — green cells = gaining, red = losing. Spot which coins are consistently strong.',
-  MiniSparklineGrid: 'Sparkline grid — mini 7-day charts at a glance. Spot trends without needing detailed charts.',
+  MiniSparklineGrid: 'Sparkline grid — mini trend charts at a glance. Spot trends without needing detailed charts.',
 
   // Advanced Charts
   SankeyFlowWidget: 'Capital flow from market cap tiers to performance. Thick bands = more capital moving in that direction.',
