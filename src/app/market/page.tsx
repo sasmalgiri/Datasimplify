@@ -314,6 +314,7 @@ export default function MarketPage() {
       setSortBy(field);
       setSortOrder('desc');
     }
+    setCurrentPage(1);
   };
 
   return (

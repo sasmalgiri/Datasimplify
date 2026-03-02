@@ -29,8 +29,8 @@ export function BubbleChartWidget({ limit = 30, coinIds }: BubbleChartWidgetProp
 
     // Normalize volume to bubble size (10–60 range)
     const volumes = coins.map((c) => c.total_volume);
-    const maxVol = Math.max(...volumes);
-    const minVol = Math.min(...volumes);
+    const maxVol = volumes.length > 0 ? Math.max(...volumes) : 0;
+    const minVol = volumes.length > 0 ? Math.min(...volumes) : 0;
     const volRange = maxVol - minVol || 1;
 
     const seriesData = coins.map((c) => {

@@ -20,7 +20,9 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const plan = searchParams.get('plan');
-  const redirect = searchParams.get('redirect') || '/home';
+  const rawRedirect = searchParams.get('redirect') || '/home';
+  // Prevent open redirect — only allow relative paths
+  const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/home';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

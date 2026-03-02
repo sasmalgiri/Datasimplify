@@ -59,7 +59,7 @@ export function Footer() {
               {user && (
                 <>
                   <li><Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link></li>
-                  <li><Link href="/download" className="hover:text-white transition-colors">Customize Templates</Link></li>
+                  <li><Link href="/downloads" className="hover:text-white transition-colors">Customize Templates</Link></li>
                 </>
               )}
               <li><Link href="/live-dashboards" className="hover:text-white transition-colors">Live Dashboards</Link></li>

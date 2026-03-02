@@ -54,9 +54,11 @@ function alignTimeSeries(
       if (sorted[mid][0] < ts) lo = mid + 1;
       else hi = mid;
     }
-    let closest = sorted[lo];
-    if (lo > 0) {
-      const prev = sorted[lo - 1];
+    // Clamp lo to valid index range (binary search can push lo past end)
+    const idx = Math.min(lo, sorted.length - 1);
+    let closest = sorted[idx];
+    if (idx > 0) {
+      const prev = sorted[idx - 1];
       if (Math.abs(prev[0] - ts) < Math.abs(closest[0] - ts)) {
         closest = prev;
       }

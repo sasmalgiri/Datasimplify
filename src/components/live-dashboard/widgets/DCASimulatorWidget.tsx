@@ -141,6 +141,10 @@ export function DCASimulatorWidget() {
       currentDate = addInterval(currentDate, interval);
     }
 
+    if (intervals.length === 0) {
+      return null;
+    }
+
     const totalInvested = intervals.length * amount;
     const firstPrice = priceAtDate(priceHistory, intervals[0]);
     const lumpQty = firstPrice && firstPrice > 0 ? totalInvested / firstPrice : 0;
