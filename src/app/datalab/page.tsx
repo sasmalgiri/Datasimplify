@@ -76,6 +76,10 @@ function DataLabPage() {
             useDataLabStore.getState().loadData();
           }
         }
+      }).catch((err: unknown) => {
+        console.error('Failed to load preset from URL:', err);
+        // Fall back to default preset
+        loadPreset('confluence-zones');
       });
     } else if (!activePreset) {
       loadPreset('confluence-zones');

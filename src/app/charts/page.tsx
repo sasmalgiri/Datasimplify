@@ -252,8 +252,7 @@ const INITIAL_COINS = SUPPORTED_COINS.map(coin => ({
   symbol: coin.symbol,
 }));
 
-// This will be populated dynamically - use INITIAL_COINS as fallback
-let COINS = INITIAL_COINS;
+// INITIAL_COINS is used as the fallback until dynamic coins are loaded into availableCoins state
 
 const TIME_RANGES = [
   { value: '1', label: '24H' },
@@ -332,8 +331,6 @@ function ChartsContent() {
             symbol: c.symbol,
           }));
           setAvailableCoins(coinsList);
-          // Update module-level COINS for backwards compatibility
-          COINS = coinsList;
         }
       } catch (error) {
         console.error('Failed to fetch coins:', error);
@@ -360,7 +357,7 @@ function ChartsContent() {
     }
 
     const coin = searchParams.get('coin');
-    if (coin && COINS.some(c => c.id === coin)) {
+    if (coin && availableCoins.some(c => c.id === coin)) {
       setSelectedCoin(coin);
     }
 
@@ -672,9 +669,9 @@ function ChartsContent() {
 
   const buildCorrelationMatrix = useCallback(async () => {
     try {
-      const selectedCoinData = COINS.find(c => c.id === selectedCoin);
-      const otherCoins = COINS.filter(c => c.id !== selectedCoin).slice(0, 5);
-      const correlationCoins = selectedCoinData ? [selectedCoinData, ...otherCoins] : COINS.slice(0, 6);
+      const selectedCoinData = availableCoins.find(c => c.id === selectedCoin);
+      const otherCoins = availableCoins.filter(c => c.id !== selectedCoin).slice(0, 5);
+      const correlationCoins = selectedCoinData ? [selectedCoinData, ...otherCoins] : availableCoins.slice(0, 6);
 
       const histories = await Promise.all(
         correlationCoins.map(async (coin) => {
@@ -709,7 +706,7 @@ function ChartsContent() {
       console.error('Error building correlation matrix:', e);
       setCorrelationMatrix([]);
     }
-  }, [selectedCoin, timeRange]);
+  }, [selectedCoin, timeRange, availableCoins]);
 
   useEffect(() => {
     if (selectedChart === 'correlation') {
@@ -1114,11 +1111,11 @@ function ChartsContent() {
         type CorrelationCell = number | null;
         type CorrelationRow = { name: string } & Record<string, CorrelationCell>;
         // Build dynamic coin list: selected coin + top coins (up to 6 total)
-        const selectedCoinData = COINS.find(c => c.id === selectedCoin);
-        const otherCoins = COINS.filter(c => c.id !== selectedCoin).slice(0, 5);
+        const selectedCoinData = availableCoins.find(c => c.id === selectedCoin);
+        const otherCoins = availableCoins.filter(c => c.id !== selectedCoin).slice(0, 5);
         const correlationCoins = selectedCoinData
           ? [selectedCoinData, ...otherCoins]
-          : COINS.slice(0, 6);
+          : availableCoins.slice(0, 6);
 
         const matrix = correlationMatrix as CorrelationRow[] | null;
 
@@ -1275,7 +1272,7 @@ function ChartsContent() {
             tron: 'trx',
           };
 
-          const dominanceData = COINS.slice(0, 8)
+          const dominanceData = availableCoins.slice(0, 8)
             .map((coin, i) => {
               const key = idToGlobalKey[coin.id];
               const value = key ? marketCapPct[key] : undefined;
@@ -1839,7 +1836,7 @@ function ChartsContent() {
             { name: 'Bearish', value: communityData.sentiment_down, color: '#EF4444' },
           ];
 
-          const selectedCoinName = COINS.find(c => c.id === selectedCoin)?.name || selectedCoin;
+          const selectedCoinName = availableCoins.find(c => c.id === selectedCoin)?.name || selectedCoin;
           const hasSentiment = communityData.sentiment_up > 0 || communityData.sentiment_down > 0;
 
           // Fallback if no data available

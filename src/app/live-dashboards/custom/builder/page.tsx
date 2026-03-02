@@ -203,8 +203,9 @@ function BuilderContent() {
       if (!res.ok) throw new Error('Failed to publish');
       setPublishSuccess(true);
       setTimeout(() => { setPublishOpen(false); setPublishSuccess(false); }, 2000);
-    } catch {
-      // Silently handle — user can retry
+    } catch (err) {
+      console.error('Publish failed:', err);
+      alert('Publishing failed. Please check your connection and try again.');
     } finally {
       setPublishing(false);
     }

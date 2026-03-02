@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
@@ -129,10 +129,12 @@ export default function MultiChartPage() {
 
   const updateCell = (id: string, updates: Partial<ChartCell>) => {
     setCells(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    // Fetch data only for the changed cell (avoid re-fetching all cells)
+    const updatedCell = { ...cells.find(c => c.id === id)!, ...updates };
+    fetchCellData(updatedCell);
   };
 
   const fetchCellData = useCallback(async (cell: ChartCell) => {
-    const key = `${cell.coinId}-${cell.days}`;
     setCellDataMap(prev => ({ ...prev, [cell.id]: { ...prev[cell.id], loading: true, error: null, data: prev[cell.id]?.data || [], coinName: cell.coinId } }));
 
     try {
@@ -144,15 +146,15 @@ export default function MultiChartPage() {
       if (!res.ok) throw new Error('Fetch failed');
       const json = await res.json();
 
-      const prices: [number, number][] = json.prices || [];
-      const volumes: [number, number][] = json.total_volumes || [];
-      const firstPrice = prices[0]?.[1] || 1;
+      // API returns { prices: Array<{ timestamp, price, volume?, ... }> }
+      const prices: { timestamp: number; price: number; volume?: number }[] = json.prices || [];
+      const firstPrice = prices[0]?.price || 1;
 
-      const data = prices.map((p, i) => ({
-        date: new Date(p[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        price: p[1],
-        volume: volumes[i]?.[1] || 0,
-        change: ((p[1] - firstPrice) / firstPrice) * 100,
+      const data = prices.map((p) => ({
+        date: new Date(p.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        price: p.price,
+        volume: p.volume || 0,
+        change: ((p.price - firstPrice) / firstPrice) * 100,
       }));
 
       setCellDataMap(prev => ({ ...prev, [cell.id]: { data, loading: false, error: null, coinName } }));
@@ -161,8 +163,19 @@ export default function MultiChartPage() {
     }
   }, []);
 
+  // Only fetch on initial mount and layout changes (new cells added)
+  const prevCellIdsRef = useRef<string>('');
   useEffect(() => {
-    cells.forEach(cell => fetchCellData(cell));
+    const currentIds = cells.map(c => `${c.id}-${c.coinId}-${c.days}`).join(',');
+    if (prevCellIdsRef.current === currentIds) return;
+    const prevIds = prevCellIdsRef.current ? prevCellIdsRef.current.split(',').map(s => s.split('-')[0]) : [];
+    prevCellIdsRef.current = currentIds;
+    // Only fetch cells that are new (not already fetched)
+    cells.forEach(cell => {
+      if (!prevIds.includes(cell.id) || !cellDataMap[cell.id]) {
+        fetchCellData(cell);
+      }
+    });
   }, [cells, fetchCellData]);
 
   const { cols } = LAYOUT_CONFIGS[layout];

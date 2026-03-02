@@ -82,6 +82,11 @@ export default function PriceChart({
       </div>
 
       {/* Chart */}
+      {chartData.length === 0 ? (
+        <div className="flex items-center justify-center text-gray-400 text-sm" style={{ height }}>
+          No price data available for this time range
+        </div>
+      ) : (
       <ResponsiveContainer width="100%" height={height}>
         <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
           <defs>
@@ -133,6 +138,7 @@ export default function PriceChart({
           />
         </AreaChart>
       </ResponsiveContainer>
+      )}
     </div>
   );
 }

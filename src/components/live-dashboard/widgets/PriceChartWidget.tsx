@@ -26,8 +26,19 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
   }
 
   // Simple SVG line chart from OHLC close prices
-  const closes = ohlcData.map((d) => d[4]); // [timestamp, open, high, low, close]
-  const timestamps = ohlcData.map((d) => d[0]);
+  // Filter out malformed entries that don't have all 5 values [timestamp, open, high, low, close]
+  const validOhlc = ohlcData.filter((d) => Array.isArray(d) && d.length >= 5 && typeof d[4] === 'number');
+
+  if (validOhlc.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+        No valid OHLC data available
+      </div>
+    );
+  }
+
+  const closes = validOhlc.map((d) => d[4]); // [timestamp, open, high, low, close]
+  const timestamps = validOhlc.map((d) => d[0]);
   const min = Math.min(...closes);
   const max = Math.max(...closes);
   const range = max - min || 1;

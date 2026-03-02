@@ -20,7 +20,7 @@ export function VolumeChartWidget({ limit = 15 }: VolumeChartWidgetProps) {
   const themeColors = getThemeColors(customization.colorTheme);
 
   const { option, insight } = useMemo(() => {
-    if (!data.markets) return { option: null, insight: null };
+    if (!data.markets || data.markets.length === 0) return { option: null, insight: null };
 
     const coins = data.markets.slice(0, limit);
     const names = coins.map((c) => c.symbol.toUpperCase());

@@ -22,7 +22,7 @@ export function PieChartWidget({ mode = 'dominance' }: PieChartWidgetProps) {
   const { option, insight } = useMemo(() => {
     let chartData: { name: string; value: number }[] = [];
 
-    if (mode === 'dominance' && data.global) {
+    if (mode === 'dominance' && data.global?.market_cap_percentage) {
       const pcts = data.global.market_cap_percentage;
       const entries = Object.entries(pcts)
         .sort(([, a], [, b]) => b - a)

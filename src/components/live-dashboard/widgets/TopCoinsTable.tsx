@@ -95,7 +95,7 @@ export function TopCoinsTable({ limit = 20 }: TopCoinsTableProps) {
               <td className={`${density.py} ${density.px}`}>
                 <div className="flex items-center gap-2">
                   {coin.image && (
-                    <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" />
+                    <Image src={coin.image} alt={coin.name} width={24} height={24} className="rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                   )}
                   <div>
                     <span className="text-white font-medium">{coin.name}</span>

@@ -144,11 +144,12 @@ export default function BacktestPage() {
       if (!res.ok) throw new Error('Failed to fetch price data');
       const json = await res.json();
 
-      const rawPrices: [number, number][] = json.prices || [];
+      // API returns { prices: Array<{ timestamp, price, ... }> }
+      const rawPrices: { timestamp: number; price: number }[] = json.prices || [];
       if (rawPrices.length < 50) throw new Error('Not enough price data for backtesting');
 
-      const prices = rawPrices.map(p => p[1]);
-      const dates = rawPrices.map(p => new Date(p[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      const prices = rawPrices.map(p => p.price);
+      const dates = rawPrices.map(p => new Date(p.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
 
       const trades: Trade[] = [];
       let cash = config.initialCapital;

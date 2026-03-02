@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -97,6 +98,7 @@ function parseCSV(text: string): CsvTransaction[] {
 }
 
 export default function PortfolioBuilderPage() {
+  const router = useRouter();
   const [investmentAmount, setInvestmentAmount] = useState(1000);
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
   const [allocations, setAllocations] = useState<Allocation[]>([]);
@@ -104,6 +106,8 @@ export default function PortfolioBuilderPage() {
   const [coinPrices, setCoinPrices] = useState<Record<string, CoinPrice>>({});
   const [pricesLoading, setPricesLoading] = useState(true);
   const [presetLoading, setPresetLoading] = useState(false);
+  const [presetError, setPresetError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [mode, setMode] = useState<'builder' | 'import'>('builder');
   const [csvTransactions, setCsvTransactions] = useState<CsvTransaction[]>([]);
   const [csvHoldings, setCsvHoldings] = useState<CoinHolding[]>([]);
@@ -184,7 +188,7 @@ export default function PortfolioBuilderPage() {
       setStep(2);
     } catch (err) {
       console.error('Failed to fetch portfolio preset:', err);
-      alert('Unable to load portfolio preset from live data. Please try again.');
+      setPresetError('Unable to load portfolio preset from live data. Please try again.');
     } finally {
       setPresetLoading(false);
     }
@@ -267,8 +271,8 @@ https://cryptoreportkit.com
     localStorage.setItem('savedPortfolios', JSON.stringify(savedPortfolios));
     localStorage.setItem('activePortfolio', JSON.stringify(portfolioData));
 
-    alert('Portfolio saved! You can track it from your Dashboard.');
-    window.location.href = '/dashboard';
+    setSaveSuccess(true);
+    setTimeout(() => router.push('/dashboard'), 1500);
   };
 
   // ── CSV Import Logic ──
@@ -677,10 +681,14 @@ https://cryptoreportkit.com
                 </ul>
               </button>
             </div>
+
+            {presetError && (
+              <div className="mt-4 p-3 bg-red-900/40 border border-red-700 rounded-lg text-red-300 text-sm">
+                {presetError}
+              </div>
+            )}
           </div>
         )}
-
-        {/* Step 2: Customize */}
         {step === 2 && (
           <div className="space-y-6">
             {/* Investment Amount */}
@@ -740,6 +748,7 @@ https://cryptoreportkit.com
                           fill="none"
                           stroke={alloc.color}
                           strokeWidth="20"
+                          pathLength={100}
                           strokeDasharray={dashArray}
                           strokeDashoffset={dashOffset}
                           className="transition-all duration-300"
@@ -978,9 +987,10 @@ https://cryptoreportkit.com
               <button
                 type="button"
                 onClick={trackPortfolio}
-                className="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700"
+                disabled={saveSuccess}
+                className="px-8 py-4 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50"
               >
-                📊 Track This Portfolio
+                {saveSuccess ? '✅ Saved! Redirecting...' : '📊 Track This Portfolio'}
               </button>
             </div>
           </div>

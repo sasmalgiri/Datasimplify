@@ -184,15 +184,19 @@ export async function GET(request: NextRequest) {
     console.error('Crypto API error:', error);
     // On error, try stale cache (all cached data is from CoinGecko which is redistributable)
     if (isSupabaseConfigured) {
-      const staleCache = await getBulkMarketDataFromCache(limit);
-      if (staleCache && staleCache.length > 0) {
-        return NextResponse.json({
-          success: true,
-          data: staleCache,
-          total: staleCache.length,
-          source: 'stale-cache',
-          updated: new Date().toISOString(),
-        });
+      try {
+        const staleCache = await getBulkMarketDataFromCache(limit);
+        if (staleCache && staleCache.length > 0) {
+          return NextResponse.json({
+            success: true,
+            data: staleCache,
+            total: staleCache.length,
+            source: 'stale-cache',
+            updated: new Date().toISOString(),
+          });
+        }
+      } catch (cacheError) {
+        console.error('Stale cache fallback also failed:', cacheError);
       }
     }
     return internalError('Unable to fetch market data. Please try again later.');
