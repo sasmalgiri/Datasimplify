@@ -43,6 +43,7 @@ export function ReturnsBarWidget({ coinIds, limit = 10 }: ReturnsBarWidgetProps)
       if (!spark || spark.length < 2) return 0;
       const first = spark[0];
       const last = spark[spark.length - 1];
+      if (first === 0) return 0;
       return parseFloat(((last - first) / first * 100).toFixed(2));
     });
 

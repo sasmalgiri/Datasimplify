@@ -38,10 +38,10 @@ export function DefiTVLRankingWidget() {
 
     if (sorted.length === 0) return { rows: null, insight: null };
 
-    const totalTVL = sorted.reduce((s, p) => s + p.tvl, 0);
+    const totalTVL = sorted.reduce((s, p) => s + (p.tvl ?? 0), 0);
     const greenCount = sorted.filter((p) => (p.change_1d ?? 0) >= 0).length;
     const topProtocol = sorted[0];
-    const topShare = totalTVL > 0 ? ((topProtocol.tvl / totalTVL) * 100).toFixed(1) : '0';
+    const topShare = totalTVL > 0 ? (((topProtocol.tvl ?? 0) / totalTVL) * 100).toFixed(1) : '0';
 
     const insightText = `Top 20 TVL: ${formatTVL(totalTVL)} \u00B7 ${greenCount}/${sorted.length} protocols positive (1d) \u00B7 #1 ${topProtocol.name} (${topShare}% share)`;
 
@@ -115,7 +115,7 @@ export function DefiTVLRankingWidget() {
                   </div>
                 </td>
                 <td className={`${density.py} ${density.px} text-right ${st.textPrimary} font-medium tabular-nums`}>
-                  {formatTVL(protocol.tvl)}
+                  {formatTVL(protocol.tvl ?? 0)}
                 </td>
                 <td className={`${density.py} ${density.px} text-right`}>
                   <span className={`font-medium tabular-nums ${changeColor(protocol.change_1d)}`}>

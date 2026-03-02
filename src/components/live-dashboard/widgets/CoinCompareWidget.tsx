@@ -29,13 +29,13 @@ export function CoinCompareWidget({ coinIds = ['bitcoin', 'ethereum'] }: CoinCom
   }
 
   const metrics = [
-    { label: 'Price', render: (c: any) => `$${c.current_price.toLocaleString()}` },
-    { label: 'Market Cap', render: (c: any) => formatCompact(c.market_cap) },
-    { label: '24h Volume', render: (c: any) => formatCompact(c.total_volume) },
-    { label: '24h Change', render: (c: any) => formatPercent(c.price_change_percentage_24h), isPercent: true },
-    { label: '7d Change', render: (c: any) => formatPercent(c.price_change_percentage_7d_in_currency), isPercent: true },
-    { label: 'Rank', render: (c: any) => `#${c.market_cap_rank}` },
-    { label: 'ATH Change', render: (c: any) => formatPercent(c.ath_change_percentage), isPercent: true },
+    { label: 'Price', render: (c: any) => `$${(c.current_price ?? 0).toLocaleString()}` },
+    { label: 'Market Cap', render: (c: any) => formatCompact(c.market_cap ?? 0) },
+    { label: '24h Volume', render: (c: any) => formatCompact(c.total_volume ?? 0) },
+    { label: '24h Change', render: (c: any) => formatPercent(c.price_change_percentage_24h ?? 0), isPercent: true },
+    { label: '7d Change', render: (c: any) => formatPercent(c.price_change_percentage_7d_in_currency ?? 0), isPercent: true },
+    { label: 'Rank', render: (c: any) => `#${c.market_cap_rank ?? '-'}` },
+    { label: 'ATH Change', render: (c: any) => formatPercent(c.ath_change_percentage ?? 0), isPercent: true },
   ];
 
   return (
@@ -64,9 +64,9 @@ export function CoinCompareWidget({ coinIds = ['bitcoin', 'ethereum'] }: CoinCom
                 const val = m.render(coin);
                 const colorClass = m.isPercent
                   ? percentColor(
-                      m.label === '24h Change' ? coin.price_change_percentage_24h
-                      : m.label === '7d Change' ? coin.price_change_percentage_7d_in_currency
-                      : coin.ath_change_percentage
+                      m.label === '24h Change' ? (coin.price_change_percentage_24h ?? 0)
+                      : m.label === '7d Change' ? (coin.price_change_percentage_7d_in_currency ?? 0)
+                      : (coin.ath_change_percentage ?? 0)
                     )
                   : 'text-white';
                 return (

@@ -54,9 +54,10 @@ export function AreaChartWidget({ coinIds, limit = 8, mode = 'volume' }: AreaCha
 
     const series = coinsWithSparkline.map((coin, idx) => {
       const sparkline = coin.sparkline_in_7d!.price;
+      const safePrice = coin.current_price || 1;
       const values = mode === 'volume'
-        ? sparkline.map((p) => Math.round(p * (coin.total_volume / coin.current_price)))
-        : sparkline.map((p) => Math.round(p * (coin.market_cap / coin.current_price)));
+        ? sparkline.map((p) => Math.round(p * (coin.total_volume / safePrice)))
+        : sparkline.map((p) => Math.round(p * (coin.market_cap / safePrice)));
 
       return {
         name: coin.symbol.toUpperCase(),

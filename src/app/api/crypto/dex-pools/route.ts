@@ -75,10 +75,12 @@ let cachedData: {
   pools: CachedPool[] | null;
   timestamp: number;
   network: string;
+  type: string;
 } = {
   pools: null,
   timestamp: 0,
   network: '',
+  type: '',
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -91,12 +93,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const network = searchParams.get('network') || 'eth'; // eth, bsc, polygon, arbitrum, etc.
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    const rawLimit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(Number.isNaN(rawLimit) ? 20 : rawLimit, 50);
     const type = searchParams.get('type') || 'trending'; // trending, new, top_gainers
 
-    // Check cache first
+    // Check cache first (include type in cache check to avoid serving wrong data)
     const now = Date.now();
-    if (cachedData.pools && cachedData.network === network && now - cachedData.timestamp < CACHE_TTL) {
+    if (cachedData.pools && cachedData.network === network && cachedData.type === type && now - cachedData.timestamp < CACHE_TTL) {
       return NextResponse.json({
         success: true,
         data: cachedData.pools.slice(0, limit),
@@ -164,6 +167,7 @@ export async function GET(request: NextRequest) {
       pools: transformedPools,
       timestamp: now,
       network,
+      type,
     };
 
     return NextResponse.json({

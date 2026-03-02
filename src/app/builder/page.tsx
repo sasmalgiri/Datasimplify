@@ -531,7 +531,7 @@ export default function BuilderPage() {
                                 >
                                   <span className="text-white uppercase">{mover.coin}</span>
                                   <span className="text-green-400">
-                                    +{mover.change_24h.toFixed(2)}%
+                                    +{(mover.change_24h ?? 0).toFixed(2)}%
                                   </span>
                                 </div>
                               ))}
@@ -552,7 +552,7 @@ export default function BuilderPage() {
                                 >
                                   <span className="text-white uppercase">{mover.coin}</span>
                                   <span className="text-red-400">
-                                    {mover.change_24h.toFixed(2)}%
+                                    {(mover.change_24h ?? 0).toFixed(2)}%
                                   </span>
                                 </div>
                               ))}

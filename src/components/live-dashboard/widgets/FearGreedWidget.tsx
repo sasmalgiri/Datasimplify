@@ -21,7 +21,8 @@ export function FearGreedWidget() {
   const themeColors = getThemeColors(customization.colorTheme);
   const fg = data.fearGreed?.[0];
 
-  const value = fg ? parseInt(fg.value, 10) : 0;
+  const rawValue = fg ? parseInt(fg.value, 10) : 0;
+  const value = Number.isNaN(rawValue) ? 0 : rawValue;
   const color = fg ? getColor(value) : '#374151';
   const label = fg ? getLabel(fg.value_classification) : '';
 
@@ -79,7 +80,7 @@ export function FearGreedWidget() {
       </div>
       <span className="text-lg font-semibold mt-2" style={{ color }}>{label}</span>
       <span className="text-xs text-gray-500 mt-1">
-        {new Date(parseInt(fg.timestamp, 10) * 1000).toLocaleDateString()}
+        {new Date((Number.isNaN(parseInt(fg.timestamp, 10)) ? 0 : parseInt(fg.timestamp, 10)) * 1000).toLocaleDateString()}
       </span>
       {insight && <p className="text-[10px] text-gray-400 mt-1 text-center italic">{insight}</p>}
     </div>

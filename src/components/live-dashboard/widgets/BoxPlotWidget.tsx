@@ -17,6 +17,7 @@ interface BoxPlotWidgetProps {
 }
 
 function computeBoxStats(arr: number[]): [number, number, number, number, number] {
+  if (arr.length === 0) return [0, 0, 0, 0, 0];
   const sorted = [...arr].sort((a, b) => a - b);
   const n = sorted.length;
   const q1 = sorted[Math.floor(n * 0.25)];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { BeginnerTip, InfoButton, RiskMeter } from '@/components/ui/BeginnerHelpers';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -35,6 +35,67 @@ interface CoinPrice {
   change_24h: number;
 }
 
+interface CsvTransaction {
+  date: string;
+  coin: string;
+  type: 'buy' | 'sell';
+  amount: number;
+  price: number;
+  total: number;
+}
+
+interface CoinHolding {
+  symbol: string;
+  totalBought: number;
+  totalSold: number;
+  totalCostBasis: number;
+  totalSellProceeds: number;
+  netHolding: number;
+  avgBuyPrice: number;
+  currentPrice: number;
+  currentValue: number;
+  unrealizedPnL: number;
+  realizedPnL: number;
+}
+
+function parseCSV(text: string): CsvTransaction[] {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+
+  const header = lines[0].toLowerCase().replace(/['"]/g, '');
+  const cols = header.split(/[,\t;]/);
+
+  // Find column indices flexibly
+  const dateIdx = cols.findIndex(c => c.includes('date') || c.includes('time'));
+  const coinIdx = cols.findIndex(c => c.includes('coin') || c.includes('symbol') || c.includes('asset') || c.includes('currency') || c.includes('token'));
+  const typeIdx = cols.findIndex(c => c.includes('type') || c.includes('side') || c.includes('action'));
+  const amountIdx = cols.findIndex(c => c.includes('amount') || c.includes('quantity') || c.includes('qty') || c.includes('size'));
+  const priceIdx = cols.findIndex(c => c.includes('price') || c.includes('rate'));
+  const totalIdx = cols.findIndex(c => c.includes('total') || c.includes('cost') || c.includes('value') || c.includes('usd'));
+
+  const transactions: CsvTransaction[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].replace(/['"]/g, '').trim();
+    if (!line) continue;
+    const vals = line.split(/[,\t;]/);
+
+    const date = dateIdx >= 0 ? vals[dateIdx]?.trim() || '' : '';
+    const coin = coinIdx >= 0 ? (vals[coinIdx]?.trim() || '').toUpperCase() : '';
+    const typeRaw = typeIdx >= 0 ? (vals[typeIdx]?.trim() || '').toLowerCase() : 'buy';
+    const type: 'buy' | 'sell' = typeRaw.includes('sell') ? 'sell' : 'buy';
+    const amount = amountIdx >= 0 ? Math.abs(parseFloat(vals[amountIdx]) || 0) : 0;
+    const price = priceIdx >= 0 ? Math.abs(parseFloat(vals[priceIdx]) || 0) : 0;
+    const total = totalIdx >= 0 ? Math.abs(parseFloat(vals[totalIdx]) || 0) : amount * price;
+
+    if (coin && amount > 0) {
+      transactions.push({ date, coin, type, amount, price: price || (total / amount), total: total || (amount * price) });
+    }
+  }
+
+  return transactions;
+}
+
 export default function PortfolioBuilderPage() {
   const [investmentAmount, setInvestmentAmount] = useState(1000);
   const [riskTolerance, setRiskTolerance] = useState<'conservative' | 'balanced' | 'aggressive'>('balanced');
@@ -43,6 +104,11 @@ export default function PortfolioBuilderPage() {
   const [coinPrices, setCoinPrices] = useState<Record<string, CoinPrice>>({});
   const [pricesLoading, setPricesLoading] = useState(true);
   const [presetLoading, setPresetLoading] = useState(false);
+  const [mode, setMode] = useState<'builder' | 'import'>('builder');
+  const [csvTransactions, setCsvTransactions] = useState<CsvTransaction[]>([]);
+  const [csvHoldings, setCsvHoldings] = useState<CoinHolding[]>([]);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch real coin prices
   useEffect(() => {
@@ -205,6 +271,83 @@ https://cryptoreportkit.com
     window.location.href = '/dashboard';
   };
 
+  // ── CSV Import Logic ──
+  const handleCsvUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvError(null);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        const transactions = parseCSV(text);
+        if (transactions.length === 0) {
+          setCsvError('No valid transactions found. Expected columns: date, coin/symbol, type (buy/sell), amount, price');
+          return;
+        }
+        setCsvTransactions(transactions);
+
+        // Calculate holdings
+        const holdingMap: Record<string, { bought: number; sold: number; costBasis: number; sellProceeds: number }> = {};
+        transactions.forEach(tx => {
+          if (!holdingMap[tx.coin]) holdingMap[tx.coin] = { bought: 0, sold: 0, costBasis: 0, sellProceeds: 0 };
+          if (tx.type === 'buy') {
+            holdingMap[tx.coin].bought += tx.amount;
+            holdingMap[tx.coin].costBasis += tx.total;
+          } else {
+            holdingMap[tx.coin].sold += tx.amount;
+            holdingMap[tx.coin].sellProceeds += tx.total;
+          }
+        });
+
+        const holdings: CoinHolding[] = Object.entries(holdingMap).map(([symbol, data]) => {
+          const netHolding = data.bought - data.sold;
+          const avgBuyPrice = data.bought > 0 ? data.costBasis / data.bought : 0;
+          const currentPrice = coinPrices[symbol]?.price || 0;
+          const currentValue = netHolding * currentPrice;
+          const unrealizedPnL = currentValue - (netHolding * avgBuyPrice);
+          const realizedPnL = data.sellProceeds - (data.sold * avgBuyPrice);
+
+          return {
+            symbol,
+            totalBought: data.bought,
+            totalSold: data.sold,
+            totalCostBasis: data.costBasis,
+            totalSellProceeds: data.sellProceeds,
+            netHolding,
+            avgBuyPrice,
+            currentPrice,
+            currentValue,
+            unrealizedPnL,
+            realizedPnL,
+          };
+        }).sort((a, b) => b.currentValue - a.currentValue);
+
+        setCsvHoldings(holdings);
+      } catch {
+        setCsvError('Failed to parse CSV file. Check the format and try again.');
+      }
+    };
+    reader.readAsText(file);
+  }, [coinPrices]);
+
+  const exportHoldingsCSV = useCallback(() => {
+    const header = 'Symbol,Net Holding,Avg Buy Price,Current Price,Current Value,Unrealized P&L,Realized P&L\n';
+    const rows = csvHoldings.map(h =>
+      `${h.symbol},${h.netHolding.toFixed(8)},${h.avgBuyPrice.toFixed(2)},${h.currentPrice.toFixed(2)},${h.currentValue.toFixed(2)},${h.unrealizedPnL.toFixed(2)},${h.realizedPnL.toFixed(2)}`
+    ).join('\n');
+    const blob = new Blob([header + rows], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `portfolio-holdings-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [csvHoldings]);
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
@@ -223,6 +366,217 @@ https://cryptoreportkit.com
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Mode Toggle: Builder vs Import */}
+        <div className="flex gap-2 mb-6">
+          <button
+            type="button"
+            onClick={() => setMode('builder')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              mode === 'builder' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            🏗️ Build Portfolio
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('import')}
+            className={`px-4 py-2 rounded-lg font-medium transition ${
+              mode === 'import' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            }`}
+          >
+            📤 Import CSV
+          </button>
+        </div>
+
+        {/* ── CSV Import Mode ── */}
+        {mode === 'import' && (
+          <div className="space-y-6">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+                📤 Import Transaction History
+                <InfoButton explanation="Upload a CSV file with your trade history. Supported columns: date, coin/symbol, type (buy/sell), amount/quantity, price, total. Most exchange exports work automatically." />
+              </h2>
+
+              <div className="bg-gray-700/50 rounded-lg p-4 mb-4 text-sm text-gray-400">
+                <p className="font-medium text-gray-300 mb-2">Expected CSV format:</p>
+                <code className="block bg-gray-900 rounded p-3 text-xs overflow-x-auto">
+                  date,coin,type,amount,price,total<br/>
+                  2024-01-15,BTC,buy,0.5,42000,21000<br/>
+                  2024-03-20,ETH,buy,10,3200,32000<br/>
+                  2024-06-01,BTC,sell,0.1,65000,6500
+                </code>
+                <p className="mt-2 text-xs">Works with exports from Binance, Coinbase, Kraken, and most exchanges.</p>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.tsv,.txt"
+                  onChange={handleCsvUpload}
+                  className="hidden"
+                  aria-label="Upload CSV file"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition"
+                >
+                  📁 Choose CSV File
+                </button>
+                {csvTransactions.length > 0 && (
+                  <span className="text-sm text-gray-400">
+                    {csvTransactions.length} transactions loaded
+                  </span>
+                )}
+              </div>
+
+              {csvError && (
+                <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
+                  {csvError}
+                </div>
+              )}
+            </div>
+
+            {/* Holdings Summary */}
+            {csvHoldings.length > 0 && (
+              <>
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold">📊 Portfolio Holdings</h2>
+                    <button
+                      type="button"
+                      onClick={exportHoldingsCSV}
+                      className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition"
+                    >
+                      📥 Export Holdings
+                    </button>
+                  </div>
+
+                  {/* Summary Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div className="bg-blue-900/30 border border-blue-800 rounded-lg p-3">
+                      <p className="text-xs text-blue-400">Total Invested</p>
+                      <p className="text-lg font-bold">
+                        ${csvHoldings.reduce((s, h) => s + h.totalCostBasis, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                    <div className="bg-emerald-900/30 border border-emerald-800 rounded-lg p-3">
+                      <p className="text-xs text-emerald-400">Current Value</p>
+                      <p className="text-lg font-bold">
+                        ${csvHoldings.reduce((s, h) => s + h.currentValue, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                    <div className={`rounded-lg p-3 border ${
+                      csvHoldings.reduce((s, h) => s + h.unrealizedPnL, 0) >= 0
+                        ? 'bg-green-900/30 border-green-800' : 'bg-red-900/30 border-red-800'
+                    }`}>
+                      <p className="text-xs text-gray-400">Unrealized P&amp;L</p>
+                      <p className={`text-lg font-bold ${
+                        csvHoldings.reduce((s, h) => s + h.unrealizedPnL, 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        ${csvHoldings.reduce((s, h) => s + h.unrealizedPnL, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                    <div className={`rounded-lg p-3 border ${
+                      csvHoldings.reduce((s, h) => s + h.realizedPnL, 0) >= 0
+                        ? 'bg-green-900/30 border-green-800' : 'bg-red-900/30 border-red-800'
+                    }`}>
+                      <p className="text-xs text-gray-400">Realized P&amp;L</p>
+                      <p className={`text-lg font-bold ${
+                        csvHoldings.reduce((s, h) => s + h.realizedPnL, 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        ${csvHoldings.reduce((s, h) => s + h.realizedPnL, 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Holdings Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-600 text-gray-400">
+                          <th className="text-left py-2 px-2">Asset</th>
+                          <th className="text-right py-2 px-2">Holding</th>
+                          <th className="text-right py-2 px-2">Avg Buy</th>
+                          <th className="text-right py-2 px-2">Current</th>
+                          <th className="text-right py-2 px-2">Value</th>
+                          <th className="text-right py-2 px-2">P&amp;L</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvHoldings.map(h => (
+                          <tr key={h.symbol} className="border-b border-gray-700/50">
+                            <td className="py-2 px-2 font-medium">{h.symbol}</td>
+                            <td className="py-2 px-2 text-right text-gray-400">
+                              {h.netHolding < 0.001 ? h.netHolding.toFixed(8) : h.netHolding.toFixed(4)}
+                            </td>
+                            <td className="py-2 px-2 text-right text-gray-400">
+                              ${h.avgBuyPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            </td>
+                            <td className="py-2 px-2 text-right">
+                              {h.currentPrice > 0
+                                ? `$${h.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                                : <span className="text-gray-500">N/A</span>}
+                            </td>
+                            <td className="py-2 px-2 text-right font-medium">
+                              ${h.currentValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </td>
+                            <td className={`py-2 px-2 text-right font-medium ${
+                              h.unrealizedPnL >= 0 ? 'text-green-400' : 'text-red-400'
+                            }`}>
+                              {h.unrealizedPnL >= 0 ? '+' : ''}{h.unrealizedPnL.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Transaction History */}
+                <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+                  <h2 className="text-lg font-bold mb-4">📝 Transaction History ({csvTransactions.length})</h2>
+                  <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-gray-800">
+                        <tr className="border-b border-gray-600 text-gray-400">
+                          <th className="text-left py-2 px-2">Date</th>
+                          <th className="text-left py-2 px-2">Coin</th>
+                          <th className="text-center py-2 px-2">Type</th>
+                          <th className="text-right py-2 px-2">Amount</th>
+                          <th className="text-right py-2 px-2">Price</th>
+                          <th className="text-right py-2 px-2">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvTransactions.map((tx, i) => (
+                          <tr key={i} className="border-b border-gray-700/30">
+                            <td className="py-1.5 px-2 text-gray-400">{tx.date || '-'}</td>
+                            <td className="py-1.5 px-2 font-medium">{tx.coin}</td>
+                            <td className="py-1.5 px-2 text-center">
+                              <span className={`px-2 py-0.5 rounded text-xs ${
+                                tx.type === 'buy' ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
+                              }`}>
+                                {tx.type.toUpperCase()}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-2 text-right">{tx.amount < 0.001 ? tx.amount.toFixed(8) : tx.amount.toFixed(4)}</td>
+                            <td className="py-1.5 px-2 text-right">${tx.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                            <td className="py-1.5 px-2 text-right font-medium">${tx.total.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Builder Mode ── */}
+        {mode === 'builder' && (<>
         {/* Progress Steps */}
         <div className="flex justify-between items-center mb-8">
           {[1, 2, 3].map((s) => (
@@ -631,6 +985,7 @@ https://cryptoreportkit.com
             </div>
           </div>
         )}
+        </>)}
       </div>
     </div>
   );

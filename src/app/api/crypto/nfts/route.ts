@@ -48,9 +48,11 @@ interface CachedNFT {
 let cachedData: {
   nfts: CachedNFT[] | null;
   timestamp: number;
+  order: string;
 } = {
   nfts: null,
   timestamp: 0,
+  order: '',
 };
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -85,12 +87,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
+    const parsedLimit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(Number.isNaN(parsedLimit) ? 20 : parsedLimit, 50);
     const order = searchParams.get('order') || 'market_cap_usd_desc';
 
-    // Check cache first
+    // Check cache first (must match the requested order)
     const now = Date.now();
-    if (cachedData.nfts && now - cachedData.timestamp < CACHE_TTL) {
+    if (cachedData.nfts && cachedData.order === order && now - cachedData.timestamp < CACHE_TTL) {
       return NextResponse.json({
         success: true,
         data: cachedData.nfts.slice(0, limit),
@@ -157,10 +160,11 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    // Update cache
+    // Update cache (keyed by order so different orderings don't collide)
     cachedData = {
       nfts: detailedNfts,
       timestamp: now,
+      order,
     };
 
     return NextResponse.json({

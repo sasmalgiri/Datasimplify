@@ -107,11 +107,15 @@ export function DCASimulatorWidget() {
     // Build price history from store or mock
     let priceHistory: { date: Date; price: number }[] = [];
 
-    if (data.coinHistory && data.coinHistory[coin]) {
-      // coinHistory format: { prices: [[timestamp, price], ...] }
-      const raw = data.coinHistory[coin];
-      const prices: number[][] = raw.prices || raw;
-      if (Array.isArray(prices) && prices.length > 0) {
+    // coinHistory is the raw CoinGecko /market_chart response:
+    // { prices: [[timestamp, price], ...], market_caps: [...], total_volumes: [...] }
+    // It may also be keyed by coin id: { bitcoin: { prices: [...] } }
+    if (data.coinHistory) {
+      const raw = data.coinHistory as any;
+      // Try keyed-by-coin first (e.g. raw[coin].prices), then flat (raw.prices)
+      const coinEntry = raw[coin] ?? raw;
+      const prices: unknown = coinEntry?.prices ?? coinEntry;
+      if (Array.isArray(prices) && prices.length > 0 && Array.isArray(prices[0])) {
         priceHistory = prices.map((p: number[]) => ({
           date: new Date(p[0]),
           price: p[1],
@@ -180,7 +184,7 @@ export function DCASimulatorWidget() {
       finalLumpValue,
       dcaReturn,
       vsLumpDiff,
-      isMock: priceHistory.length > 0 && !(data.coinHistory && data.coinHistory[coin]),
+      isMock: priceHistory.length > 0 && !data.coinHistory,
     };
   }, [data.coinHistory, coin, startDateStr, amount, interval]);
 

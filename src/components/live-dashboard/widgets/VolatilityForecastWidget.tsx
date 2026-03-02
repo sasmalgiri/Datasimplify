@@ -48,7 +48,8 @@ export function VolatilityForecastWidget() {
     }
 
     // 3. Sentiment Extreme (25%) — |F&G - 50| → extremes predict vol
-    const fgValue = fg?.[0] ? parseInt(fg[0].value, 10) : 50;
+    const fgRaw = fg?.[0] ? parseInt(fg[0].value, 10) : 50;
+    const fgValue = Number.isNaN(fgRaw) ? 50 : fgRaw;
     const sentimentExtreme = (Math.abs(fgValue - 50) / 50) * 100;
 
     // 4. Range Tightening (20%) — avg (high-low)/price for top 20

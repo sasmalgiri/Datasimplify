@@ -97,7 +97,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'both'; // 'gainers', 'losers', or 'both'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+    const parsedLimit = parseInt(searchParams.get('limit') || '10');
+    const limit = Math.min(Number.isNaN(parsedLimit) ? 10 : parsedLimit, 50);
     const currency = searchParams.get('currency') || 'usd';
 
     // Check cache first

@@ -20,6 +20,7 @@ const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 // In-memory cache for quick access (fallback when Supabase not available)
 const coinCache = new Map<string, { data: unknown; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes for API route cache
+const CACHE_MAX_SIZE = 200; // Prevent unbounded memory growth
 
 function getMemoryCache<T>(key: string): T | null {
   const cached = coinCache.get(key);
@@ -31,6 +32,13 @@ function getMemoryCache<T>(key: string): T | null {
 
 function setMemoryCache(key: string, data: unknown): void {
   coinCache.set(key, { data, timestamp: Date.now() });
+  // Evict oldest entry if cache exceeds size limit
+  if (coinCache.size > CACHE_MAX_SIZE) {
+    const oldestKey = coinCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      coinCache.delete(oldestKey);
+    }
+  }
 }
 
 // Try Supabase cache first, then memory cache

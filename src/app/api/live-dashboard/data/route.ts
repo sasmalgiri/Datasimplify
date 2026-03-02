@@ -300,11 +300,11 @@ export async function POST(req: NextRequest) {
           const ohlcParams = { vs_currency: params?.vsCurrency || 'usd', days: String(params?.days || 30) };
           const oKey = buildCacheKey(`ohlc:${coinId}`, ohlcParams);
           const oCached = usingServerKey ? getCached(oKey) : null;
-          if (oCached) { result.ohlc = { ...(result.ohlc || {}), [coinId]: oCached }; }
+          if (oCached) { if (!result.ohlc) result.ohlc = {}; result.ohlc[coinId] = oCached; }
           else {
             fetchers.push(
               fetchCoinGecko(`/coins/${coinId}/ohlc`, effectiveKey, effectiveKeyType, ohlcParams)
-                .then((data) => { result.ohlc = { ...(result.ohlc || {}), [coinId]: data }; if (usingServerKey) setCache(oKey, data, 'ohlc'); })
+                .then((data) => { if (!result.ohlc) result.ohlc = {}; result.ohlc[coinId] = data; if (usingServerKey) setCache(oKey, data, 'ohlc'); })
                 .catch((err) => { result.ohlcError = err.message; }),
             );
           }
@@ -319,11 +319,11 @@ export async function POST(req: NextRequest) {
             const omParams = { vs_currency: params?.vsCurrency || 'usd', days: String(params?.days || 30) };
             const omKey = buildCacheKey(`ohlc:${cid}`, omParams);
             const omCached = usingServerKey ? getCached(omKey) : null;
-            if (omCached) { result.ohlc = { ...(result.ohlc || {}), [cid]: omCached }; }
+            if (omCached) { if (!result.ohlc) result.ohlc = {}; result.ohlc[cid] = omCached; }
             else {
               fetchers.push(
                 fetchCoinGecko(`/coins/${cid}/ohlc`, effectiveKey, effectiveKeyType, omParams)
-                  .then((data) => { result.ohlc = { ...(result.ohlc || {}), [cid]: data }; if (usingServerKey) setCache(omKey, data, 'ohlc'); })
+                  .then((data) => { if (!result.ohlc) result.ohlc = {}; result.ohlc[cid] = data; if (usingServerKey) setCache(omKey, data, 'ohlc'); })
                   .catch((err) => { if (!result.ohlcMultiErrors) result.ohlcMultiErrors = {}; result.ohlcMultiErrors[cid] = err.message; }),
               );
             }

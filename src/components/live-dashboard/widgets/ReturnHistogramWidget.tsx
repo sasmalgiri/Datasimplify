@@ -29,7 +29,9 @@ export function ReturnHistogramWidget({ limit = 50 }: ReturnHistogramWidgetProps
     // Create histogram bins
     const binSize = 2; // 2% bins
     const minVal = Math.floor(Math.min(...changes) / binSize) * binSize;
-    const maxVal = Math.ceil(Math.max(...changes) / binSize) * binSize;
+    const rawMaxVal = Math.ceil(Math.max(...changes) / binSize) * binSize;
+    // Guard: when all values are the same, minVal === rawMaxVal and the loop produces zero bins
+    const maxVal = rawMaxVal <= minVal ? minVal + binSize : rawMaxVal;
 
     const bins: { range: string; count: number; from: number; to: number }[] = [];
     for (let v = minVal; v < maxVal; v += binSize) {

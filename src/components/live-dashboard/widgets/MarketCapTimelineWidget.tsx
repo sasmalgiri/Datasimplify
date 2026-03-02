@@ -25,10 +25,14 @@ export function MarketCapTimelineWidget({ coinId = 'bitcoin', days = 90 }: Marke
     let values: number[] = [];
 
     // Try coin_history data first
+    // coinHistory is the raw CoinGecko /market_chart response:
+    // { prices: [...], market_caps: [[timestamp, mcap], ...], total_volumes: [...] }
+    // It may also be keyed by coin id: { bitcoin: { market_caps: [...] } }
     if (data.coinHistory) {
-      const history = data.coinHistory as Record<string, [number, number][]>;
-      const mcaps = history.market_caps;
-      if (mcaps && Array.isArray(mcaps)) {
+      const raw = data.coinHistory as any;
+      const entry = raw[coinId] ?? raw;
+      const mcaps: unknown = entry?.market_caps;
+      if (Array.isArray(mcaps) && mcaps.length > 0 && Array.isArray(mcaps[0])) {
         dates = mcaps.map((d: [number, number]) =>
           new Date(d[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         );

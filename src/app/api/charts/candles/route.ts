@@ -20,8 +20,8 @@ import { enforceDisplayOnly } from '@/lib/apiSecurity';
 
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 
-// Analyst plan limit: 2 years of historical data
-const MAX_HISTORICAL_DAYS = 730;
+// Analyst plan limit: 5 years for major coins, 2 years for others
+const MAX_HISTORICAL_DAYS = 1825; // 5 years
 
 type MarketChart = {
   prices: [number, number][];
@@ -102,9 +102,11 @@ export async function GET(request: NextRequest) {
     // Limit to Analyst plan max (2 years = 730 days)
     const days = Math.min(parseInt(searchParams.get('days') || '30'), MAX_HISTORICAL_DAYS);
     const requestedInterval = searchParams.get('interval');
-    const interval = (requestedInterval === '1h' || requestedInterval === '4h' || requestedInterval === '1d' || requestedInterval === '1w')
-      ? requestedInterval
-      : (days <= 1 ? '1h' : days <= 7 ? '4h' : '1d');
+    const VALID_INTERVALS = ['5m', '15m', '1h', '4h', '1d', '1w'] as const;
+    type CandleInterval = typeof VALID_INTERVALS[number];
+    const interval: CandleInterval = (VALID_INTERVALS as readonly string[]).includes(requestedInterval || '')
+      ? (requestedInterval as CandleInterval)
+      : (days <= 1 ? '15m' : days <= 7 ? '4h' : '1d');
 
     if (!isFeatureEnabled('coingecko')) {
       return NextResponse.json({
@@ -120,13 +122,15 @@ export async function GET(request: NextRequest) {
     // Serving CoinGecko data in charts is a form of redistribution.
     assertRedistributionAllowed('coingecko', { purpose: 'chart', route: '/api/charts/candles' });
 
-    const bucketMs = interval === '1h'
-      ? 60 * 60 * 1000
-      : interval === '4h'
-        ? 4 * 60 * 60 * 1000
-        : interval === '1w'
-          ? 7 * 24 * 60 * 60 * 1000
-          : 24 * 60 * 60 * 1000;
+    const BUCKET_MS: Record<string, number> = {
+      '5m': 5 * 60 * 1000,
+      '15m': 15 * 60 * 1000,
+      '1h': 60 * 60 * 1000,
+      '4h': 4 * 60 * 60 * 1000,
+      '1d': 24 * 60 * 60 * 1000,
+      '1w': 7 * 24 * 60 * 60 * 1000,
+    };
+    const bucketMs = BUCKET_MS[interval] || 24 * 60 * 60 * 1000;
 
     const chart = await fetchCoinGeckoMarketChart(coin, days);
     const candles = chart ? bucketOHLCV(chart.prices, chart.total_volumes, bucketMs) : [];

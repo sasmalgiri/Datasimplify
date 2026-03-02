@@ -686,7 +686,7 @@ export const PACK_RECIPES: Record<string, PackRecipe> = {
     version: '1.0.0',
     coins: [
       'bitcoin', 'ethereum', 'tether', 'solana', 'ripple',
-      'ripple', 'usd-coin', 'cardano', 'avalanche-2', 'dogecoin',
+      'usd-coin', 'cardano', 'avalanche-2', 'dogecoin', 'tron',
       'chainlink', 'polkadot', 'polygon', 'litecoin', 'bitcoin-cash',
       'uniswap', 'stellar', 'cosmos', 'ethereum-classic', 'monero',
     ],

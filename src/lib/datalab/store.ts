@@ -610,7 +610,8 @@ export const useDataLabStore = create<DataLabStore>()(
           const dashData = useLiveDashboardStore.getState().data;
           const ohlcData = dashData.ohlc?.[coin];
 
-          if (!ohlcData || ohlcData.length === 0) {
+          // Only bail if OHLC was actually requested and came back empty
+          if (endpointsSet.has('ohlc') && (!ohlcData || ohlcData.length === 0)) {
             set({
               isLoading: false,
               error: `No OHLC data returned for "${coin}". Check your API key or try a different coin.`,
@@ -618,12 +619,11 @@ export const useDataLabStore = create<DataLabStore>()(
             return;
           }
 
-          const timestamps = ohlcData.map((d: number[]) => d[0]);
-          const closes = ohlcData.map((d: number[]) => d[4]);
-          const opens = ohlcData.map((d: number[]) => d[1]);
-
-          const highs = ohlcData.map((d: number[]) => d[2]);
-          const lows = ohlcData.map((d: number[]) => d[3]);
+          const timestamps = ohlcData ? ohlcData.map((d: number[]) => d[0]) : [];
+          const closes = ohlcData ? ohlcData.map((d: number[]) => d[4]) : [];
+          const opens = ohlcData ? ohlcData.map((d: number[]) => d[1]) : [];
+          const highs = ohlcData ? ohlcData.map((d: number[]) => d[2]) : [];
+          const lows = ohlcData ? ohlcData.map((d: number[]) => d[3]) : [];
 
           const raw: Record<string, (number | null)[]> = {
             price: closes,

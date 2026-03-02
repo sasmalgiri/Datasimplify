@@ -86,7 +86,7 @@ export function DominanceAreaWidget() {
     });
 
     // Compute insight
-    const topAlt = topAltDom.length > 0 ? topAltDom.sort((a, b) => b.value - a.value)[0] : null;
+    const topAlt = topAltDom.length > 0 ? [...topAltDom].sort((a, b) => b.value - a.value)[0] : null;
     const combinedAltShare = (100 - btcDom).toFixed(1);
     const insightText = `BTC: ${btcDom.toFixed(1)}% \u00B7 ETH: ${ethDom.toFixed(1)}%${topAlt ? ` \u00B7 Top alt: ${topAlt.name} ${topAlt.value.toFixed(1)}%` : ''} \u00B7 Combined alt share: ${combinedAltShare}%`;
 

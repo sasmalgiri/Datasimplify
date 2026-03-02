@@ -261,6 +261,16 @@ const TIME_RANGES = [
   { value: '30', label: '30D' },
   { value: '90', label: '90D' },
   { value: '365', label: '1Y' },
+  { value: '1825', label: '5Y' },
+];
+
+const INTERVAL_OPTIONS = [
+  { value: '5m', label: '5m', maxDays: 1 },
+  { value: '15m', label: '15m', maxDays: 7 },
+  { value: '1h', label: '1H', maxDays: 90 },
+  { value: '4h', label: '4H', maxDays: 365 },
+  { value: '1d', label: '1D', maxDays: 1825 },
+  { value: '1w', label: '1W', maxDays: 1825 },
 ];
 
 const CHART_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
@@ -436,7 +446,7 @@ function ChartsContent() {
           const ma30 = i >= 29 ? arr.slice(i - 29, i + 1).reduce((sum: number, d: { price: number }) => sum + d.price, 0) / 30 : null;
 
           // Calculate volatility (simplified)
-          const volatility = i > 0 ? Math.abs((p.price - arr[i-1].price) / arr[i-1].price * 100) : 0;
+          const volatility = i > 0 && arr[i-1].price !== 0 ? Math.abs((p.price - arr[i-1].price) / arr[i-1].price * 100) : 0;
 
           return {
             date: new Date(p.timestamp).toLocaleDateString(),
@@ -524,7 +534,7 @@ function ChartsContent() {
           setWhaleFlows(null);
         }
 
-        if (selectedChart === 'btc_dominance') {
+        if (selectedChart === 'btc_dominance' || selectedChart === 'market_dominance') {
           const res = await fetch('/api/crypto/global', { signal: controller.signal });
           const json = await res.json();
           setGlobalStats(json?.data ? (json.data as Record<string, unknown>) : null);
@@ -802,6 +812,7 @@ function ChartsContent() {
 
   // Format numbers for display
   const formatValue = (value: number, type: 'price' | 'volume' | 'percent' = 'price') => {
+    if (!Number.isFinite(value)) return '---';
     if (type === 'percent') return `${value.toFixed(2)}%`;
     if (type === 'volume') {
       if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -1235,7 +1246,7 @@ function ChartsContent() {
             <input
               type="range"
               min={0}
-              max={racingData.length - 1}
+              max={Math.max(0, racingData.length - 1)}
               value={racingFrame}
               onChange={(e) => setRacingFrame(parseInt(e.target.value))}
               className="w-full mt-4"

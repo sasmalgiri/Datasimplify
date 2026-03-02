@@ -37,7 +37,7 @@ export function PriceChartWidget({ coinId = 'bitcoin' }: PriceChartWidgetProps) 
   const padding = 20;
 
   const points = closes.map((p, i) => {
-    const x = padding + (i / (closes.length - 1)) * (w - padding * 2);
+    const x = padding + (closes.length > 1 ? i / (closes.length - 1) : 0.5) * (w - padding * 2);
     const y = padding + (1 - (p - min) / range) * (h - padding * 2);
     return `${x},${y}`;
   }).join(' ');

@@ -393,7 +393,10 @@ export const useLiveDashboardStore = create<LiveDashboardStore>()(
       setAlchemyKey: (key) => set({ alchemyKey: key }),
       setWalletAddress: (address) => set({ walletAddress: address }),
       setAlchemyChain: (chain) => set({ alchemyChain: chain }),
-      clearAlchemyKey: () => set({ alchemyKey: null, walletAddress: null, alchemyChain: 'eth-mainnet', data: { ...emptyData, walletBalances: null, walletTransfers: null } }),
+      clearAlchemyKey: () => set((state) => ({
+        alchemyKey: null, walletAddress: null, alchemyChain: 'eth-mainnet',
+        data: { ...state.data, walletBalances: null, walletTransfers: null },
+      })),
 
       data: emptyData,
       isLoading: false,

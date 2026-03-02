@@ -27,6 +27,8 @@ export function BubbleChartWidget({ limit = 30, coinIds }: BubbleChartWidgetProp
       ? data.markets.filter((c) => coinIds.includes(c.id))
       : data.markets.slice(0, limit);
 
+    if (coins.length === 0) return { option: null, insight: 'No coin data available' };
+
     // Normalize volume to bubble size (10–60 range)
     const volumes = coins.map((c) => c.total_volume);
     const maxVol = volumes.length > 0 ? Math.max(...volumes) : 0;

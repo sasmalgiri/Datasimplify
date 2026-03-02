@@ -72,14 +72,19 @@ export function PerformanceHeatmapWidget({ limit = 20 }: PerformanceHeatmapWidge
       const change7d = coin.price_change_percentage_7d_in_currency ?? null;
       const change30d = calc30dChange(coin.sparkline_in_7d);
 
+      // Guard: if any price_change value slipped through as NaN, treat as null/zero
+      const safe24h = (change24h != null && !isNaN(change24h)) ? change24h : 0;
+      const safe7d = (change7d != null && !isNaN(change7d)) ? change7d : null;
+      const safe30d = (change30d != null && !isNaN(change30d)) ? change30d : null;
+
       return {
         id: coin.id,
         name: coin.name,
         symbol: coin.symbol,
         image: coin.image,
-        change24h,
-        change7d,
-        change30d,
+        change24h: safe24h,
+        change7d: safe7d,
+        change30d: safe30d,
       };
     });
 
