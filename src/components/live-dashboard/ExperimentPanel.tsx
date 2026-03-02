@@ -159,7 +159,7 @@ function extractSparklineSeries(
       const step = (7 * 24 * 60 * 60 * 1000) / prices.length;
       result.push({
         key: `sparkline:${coin.id}`,
-        label: `${coin.symbol.toUpperCase()} 7d`,
+        label: coin.symbol.toUpperCase(),
         timestamps: prices.map((_, i) => now - (prices.length - 1 - i) * step),
         data: prices,
       });
