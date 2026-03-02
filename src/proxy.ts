@@ -73,6 +73,8 @@ const PUBLIC_ROUTES = new Set([
   '/datalab',
   '/portfolio',
   '/command-center',
+  '/blog',
+  '/community',
 
   // Ensure base listing route is public (prefix below only covers /live-dashboards/*)
   '/live-dashboards',
@@ -98,6 +100,8 @@ const PUBLIC_PREFIXES = [
   '/charts/',
   '/tools/',
   '/demo/',
+  '/blog/',
+  '/community/',
 ];
 
 function isPublicRoute(pathname: string): boolean {
