@@ -261,7 +261,7 @@ export default function TaxReportPage() {
           </p>
 
           <div className="flex flex-wrap items-center gap-4">
-            <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} className="hidden" />
+            <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} className="hidden" aria-label="Upload CSV" />
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
@@ -302,6 +302,7 @@ export default function TaxReportPage() {
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Tax Year</label>
                 <select
+                  title="Tax year"
                   value={taxYear}
                   onChange={(e) => setTaxYear(Number(e.target.value))}
                   className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"

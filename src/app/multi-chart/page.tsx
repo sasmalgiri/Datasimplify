@@ -198,8 +198,13 @@ export default function MultiChartPage() {
 
         {/* Chart Grid */}
         <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+          className={`grid gap-4 ${
+            cols === 1
+              ? 'grid-cols-1'
+              : cols === 2
+                ? 'grid-cols-2'
+                : 'grid-cols-3'
+          }`}
         >
           {cells.map((cell, idx) => {
             const cellData = cellDataMap[cell.id] || { data: [], loading: true, error: null, coinName: cell.coinId };
@@ -210,13 +215,19 @@ export default function MultiChartPage() {
             return (
               <div
                 key={cell.id}
-                className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden flex flex-col"
-                style={{ minHeight: layout === '1x1' ? '500px' : layout === '3x3' ? '220px' : '280px' }}
+                className={`bg-gray-800 rounded-xl border border-gray-700 overflow-hidden flex flex-col ${
+                  layout === '1x1'
+                    ? 'min-h-[500px]'
+                    : layout === '3x3'
+                      ? 'min-h-[220px]'
+                      : 'min-h-[280px]'
+                }`}
               >
                 {/* Cell Header */}
                 <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-800/80">
                   <div className="flex items-center gap-2">
                     <select
+                      title="Select coin"
                       value={cell.coinId}
                       onChange={(e) => updateCell(cell.id, { coinId: e.target.value })}
                       className="bg-gray-700 text-white text-xs rounded px-2 py-1 border-none"
@@ -249,6 +260,7 @@ export default function MultiChartPage() {
                       </button>
                     ))}
                     <select
+                      title="Select range"
                       value={cell.days}
                       onChange={(e) => updateCell(cell.id, { days: Number(e.target.value) })}
                       className="bg-gray-700 text-gray-300 text-[10px] rounded px-1 py-0.5 ml-1"

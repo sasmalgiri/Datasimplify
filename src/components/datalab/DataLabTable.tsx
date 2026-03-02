@@ -119,6 +119,7 @@ export function DataLabTable() {
             type="button"
             onClick={toggleTable}
             className="text-gray-500 hover:text-white transition p-1"
+            title="Close table"
           >
             <X className="w-3.5 h-3.5" />
           </button>

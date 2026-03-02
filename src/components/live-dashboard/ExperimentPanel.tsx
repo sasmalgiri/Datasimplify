@@ -508,6 +508,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
             type="button"
             onClick={onClose}
             className={`p-1 ${st.textDim} hover:${st.textPrimary} transition`}
+            title="Close experiment panel"
           >
             <X className="w-4 h-4" />
           </button>
@@ -528,6 +529,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                 type="button"
                 onClick={() => setShowAddMenu(!showAddMenu)}
                 className="text-emerald-400 hover:text-emerald-300 transition"
+                title="Add data series"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -619,6 +621,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                     type="button"
                     onClick={() => toggleSeries(s.id)}
                     className={`${st.textDim} hover:${st.textPrimary} transition`}
+                    title={s.visible ? `Hide ${s.label}` : `Show ${s.label}`}
                   >
                     {s.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                   </button>
@@ -626,6 +629,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                     type="button"
                     onClick={() => removeSeries(s.id)}
                     className={`${st.textFaint} hover:text-red-400 transition`}
+                    title={`Remove ${s.label}`}
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -660,6 +664,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                       value={smaWindow}
                       onChange={(e) => handleParamChange('sma', Number(e.target.value))}
                       className="w-full h-1 bg-white/[0.1] rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      title="SMA window"
                     />
                   </div>
                 )}
@@ -677,6 +682,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                       value={emaWindow}
                       onChange={(e) => handleParamChange('ema', Number(e.target.value))}
                       className="w-full h-1 bg-white/[0.1] rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      title="EMA window"
                     />
                   </div>
                 )}
@@ -694,6 +700,7 @@ export function ExperimentPanel({ isOpen, onClose }: ExperimentPanelProps) {
                       value={rsiPeriod}
                       onChange={(e) => handleParamChange('rsi', Number(e.target.value))}
                       className="w-full h-1 bg-white/[0.1] rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      title="RSI period"
                     />
                   </div>
                 )}

@@ -326,6 +326,7 @@ export default function BacktestPage() {
 
               <label className="block text-xs text-gray-500 mb-1">Asset</label>
               <select
+                title="Asset"
                 value={config.coinId}
                 onChange={(e) => setConfig(prev => ({ ...prev, coinId: e.target.value }))}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3"
@@ -335,6 +336,7 @@ export default function BacktestPage() {
 
               <label className="block text-xs text-gray-500 mb-1">Period</label>
               <select
+                title="Period"
                 value={config.days}
                 onChange={(e) => setConfig(prev => ({ ...prev, days: Number(e.target.value) }))}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3"
@@ -349,6 +351,7 @@ export default function BacktestPage() {
               <label className="block text-xs text-gray-500 mb-1">Starting Capital</label>
               <input
                 type="number"
+                title="Starting capital"
                 value={config.initialCapital}
                 onChange={(e) => setConfig(prev => ({ ...prev, initialCapital: Number(e.target.value) || 1000 }))}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
@@ -381,20 +384,20 @@ export default function BacktestPage() {
               {config.strategy === 'ma_crossover' && (
                 <>
                   <label className="block text-xs text-gray-500 mb-1">Fast MA Period</label>
-                  <input type="number" value={config.maFast} onChange={(e) => setConfig(prev => ({ ...prev, maFast: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
+                  <input type="number" title="Fast MA period" value={config.maFast} onChange={(e) => setConfig(prev => ({ ...prev, maFast: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
                   <label className="block text-xs text-gray-500 mb-1">Slow MA Period</label>
-                  <input type="number" value={config.maSlow} onChange={(e) => setConfig(prev => ({ ...prev, maSlow: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" title="Slow MA period" value={config.maSlow} onChange={(e) => setConfig(prev => ({ ...prev, maSlow: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                 </>
               )}
 
               {config.strategy === 'rsi' && (
                 <>
                   <label className="block text-xs text-gray-500 mb-1">RSI Period</label>
-                  <input type="number" value={config.rsiPeriod} onChange={(e) => setConfig(prev => ({ ...prev, rsiPeriod: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
+                  <input type="number" title="RSI period" value={config.rsiPeriod} onChange={(e) => setConfig(prev => ({ ...prev, rsiPeriod: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
                   <label className="block text-xs text-gray-500 mb-1">Buy Below RSI</label>
-                  <input type="number" value={config.rsiBuy} onChange={(e) => setConfig(prev => ({ ...prev, rsiBuy: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
+                  <input type="number" title="Buy below RSI" value={config.rsiBuy} onChange={(e) => setConfig(prev => ({ ...prev, rsiBuy: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
                   <label className="block text-xs text-gray-500 mb-1">Sell Above RSI</label>
-                  <input type="number" value={config.rsiSell} onChange={(e) => setConfig(prev => ({ ...prev, rsiSell: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" title="Sell above RSI" value={config.rsiSell} onChange={(e) => setConfig(prev => ({ ...prev, rsiSell: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                 </>
               )}
 
@@ -405,9 +408,9 @@ export default function BacktestPage() {
               {config.strategy === 'dca' && (
                 <>
                   <label className="block text-xs text-gray-500 mb-1">Buy Every (days)</label>
-                  <input type="number" value={config.dcaInterval} onChange={(e) => setConfig(prev => ({ ...prev, dcaInterval: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
+                  <input type="number" title="DCA interval (days)" value={config.dcaInterval} onChange={(e) => setConfig(prev => ({ ...prev, dcaInterval: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm mb-3" />
                   <label className="block text-xs text-gray-500 mb-1">Amount Per Purchase ($)</label>
-                  <input type="number" value={config.dcaAmount} onChange={(e) => setConfig(prev => ({ ...prev, dcaAmount: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                  <input type="number" title="DCA amount per purchase" value={config.dcaAmount} onChange={(e) => setConfig(prev => ({ ...prev, dcaAmount: Number(e.target.value) }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
                 </>
               )}
             </div>

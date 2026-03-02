@@ -237,6 +237,7 @@ export function PortfolioInputWidget() {
               </label>
               <input
                 type="date"
+                title="Buy date"
                 value={buyDate}
                 onChange={(e) => setBuyDate(e.target.value)}
                 className={`w-full ${st.inputBg} rounded-lg px-3 py-2 text-xs focus:outline-none transition-colors`}

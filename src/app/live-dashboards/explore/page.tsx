@@ -333,6 +333,7 @@ export default function ExplorePage() {
                 value={sortKey}
                 onChange={(e) => setSortKey(e.target.value as SortKey)}
                 className="bg-white/[0.04] border border-white/[0.1] text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-emerald-400/40 cursor-pointer"
+                title="Sort dashboards"
               >
                 <option value="tvl" className="bg-gray-900">
                   TVL (High to Low)

@@ -115,7 +115,7 @@ export function WorkspaceCreateModal({
           <h2 className={`text-lg font-semibold ${st.textPrimary}`}>
             {isEditing ? 'Edit Workspace' : 'Create Workspace'}
           </h2>
-          <button onClick={onClose} className={`p-1.5 rounded-lg ${st.buttonSecondary}`}>
+          <button onClick={onClose} className={`p-1.5 rounded-lg ${st.buttonSecondary}`} title="Close modal">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -169,6 +169,7 @@ export function WorkspaceCreateModal({
             value={vsCurrency}
             onChange={(e) => setVsCurrency(e.target.value)}
             className={`w-full px-3 py-2 rounded-lg text-sm ${st.inputBg} focus:ring-1 focus:ring-emerald-400/50 focus:outline-none`}
+            title="Select currency"
           >
             <option value="usd" className={st.selectOptionBg}>USD</option>
             <option value="eur" className={st.selectOptionBg}>EUR</option>

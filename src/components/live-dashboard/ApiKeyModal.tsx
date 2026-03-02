@@ -88,6 +88,8 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
       <div className="relative bg-gray-800 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
+          title="Close modal"
+          aria-label="Close modal"
           className="absolute top-4 right-4 text-gray-500 hover:text-white transition"
         >
           <X className="w-5 h-5" />

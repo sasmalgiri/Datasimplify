@@ -351,6 +351,7 @@ export function DCATrackerWidget() {
               </label>
               <input
                 type="date"
+                title="Purchase date"
                 value={formDate}
                 max={new Date().toISOString().split('T')[0]}
                 onChange={(e) => setFormDate(e.target.value)}

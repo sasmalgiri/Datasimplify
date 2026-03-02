@@ -313,6 +313,7 @@ export function DCASimulatorWidget() {
             value={amount}
             onChange={(e) => setAmount(Math.max(1, Number(e.target.value) || 1))}
             className={inputClasses + ' w-full'}
+            title="DCA amount"
           />
         </div>
 
@@ -325,6 +326,7 @@ export function DCASimulatorWidget() {
             value={interval}
             onChange={(e) => setInterval(e.target.value as 'weekly' | 'biweekly' | 'monthly')}
             className={inputClasses + ' w-full appearance-none'}
+            title="DCA interval"
           >
             <option value="weekly" className={st.selectOptionBg}>Weekly</option>
             <option value="biweekly" className={st.selectOptionBg}>Biweekly</option>
@@ -343,6 +345,7 @@ export function DCASimulatorWidget() {
             max={toDateStr(new Date())}
             onChange={(e) => setStartDateStr(e.target.value)}
             className={inputClasses + ' w-full'}
+            title="DCA start date"
           />
         </div>
 
@@ -357,6 +360,7 @@ export function DCASimulatorWidget() {
             onChange={(e) => setCoin(e.target.value.toLowerCase().trim())}
             placeholder="bitcoin"
             className={inputClasses + ' w-full'}
+            title="Coin id"
           />
         </div>
       </div>

@@ -1022,7 +1022,9 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                     : 'bg-white/[0.02] text-gray-600 border-white/[0.04] line-through'
                 }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: layer.visible ? layer.color : '#555' }} />
+                <svg className="w-1.5 h-1.5 flex-shrink-0" viewBox="0 0 10 10" aria-hidden="true">
+                  <circle cx="5" cy="5" r="5" fill={layer.visible ? layer.color : '#555'} />
+                </svg>
                 <span className="truncate max-w-[72px]">{layer.label}</span>
                 <Trash2
                   className="w-2.5 h-2.5 text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ml-0.5"
@@ -1091,7 +1093,9 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
                             : 'text-gray-400 hover:bg-white/[0.06] hover:text-white'
                         }`}
                       >
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
+                        <svg className="w-2 h-2 flex-shrink-0" viewBox="0 0 10 10" aria-hidden="true">
+                          <circle cx="5" cy="5" r="5" fill={opt.color} />
+                        </svg>
                         {opt.label}
                       </button>
                     </Tip>
@@ -1640,8 +1644,10 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           <span className="text-[10px] text-gray-500 font-medium">Regimes:</span>
           {(['trend', 'chop', 'high-vol', 'risk-off'] as MarketRegime[]).map((r) => (
             <span key={r} className="flex items-center gap-1 text-[10px]">
-              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: REGIME_COLORS[r], opacity: 0.7 }} />
-              <span style={{ color: REGIME_COLORS[r] }}>{REGIME_LABELS[r]}</span>
+              <svg className="w-2 h-2" viewBox="0 0 10 10" aria-hidden="true">
+                <rect x="0" y="0" width="10" height="10" rx="2" fill={REGIME_COLORS[r]} opacity={0.7} />
+              </svg>
+              <span className="text-gray-300">{REGIME_LABELS[r]}</span>
             </span>
           ))}
           <span className="text-[9px] text-gray-600 ml-2">

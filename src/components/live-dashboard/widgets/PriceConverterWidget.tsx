@@ -92,6 +92,7 @@ export function PriceConverterWidget() {
           {/* Coin selector */}
           <div className="relative">
             <select
+              title="Select coin"
               value={selectedCoin?.id ?? ''}
               onChange={(e) => setSelectedCoinId(e.target.value)}
               className="appearance-none bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 pr-7 text-sm text-white outline-none focus:border-white/[0.2] transition-colors cursor-pointer"

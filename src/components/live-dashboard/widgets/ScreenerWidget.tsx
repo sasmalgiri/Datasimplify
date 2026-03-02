@@ -283,6 +283,7 @@ export function ScreenerWidget() {
           >
             {/* Field dropdown */}
             <select
+              title="Field"
               value={condition.field}
               onChange={(e) =>
                 updateCondition(condition.id, {
@@ -300,6 +301,7 @@ export function ScreenerWidget() {
 
             {/* Operator dropdown */}
             <select
+              title="Operator"
               value={condition.operator}
               onChange={(e) =>
                 updateCondition(condition.id, {

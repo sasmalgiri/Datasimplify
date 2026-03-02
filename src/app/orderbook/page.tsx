@@ -64,6 +64,7 @@ export default function OrderbookPage() {
 
           <div className="flex gap-3">
             <select
+              title="Trading pair"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"
@@ -71,6 +72,7 @@ export default function OrderbookPage() {
               {TOP_COINS.map(c => <option key={c.symbol} value={c.symbol}>{c.symbol}/USDT</option>)}
             </select>
             <select
+              title="Depth levels"
               value={levels}
               onChange={(e) => setLevels(Number(e.target.value) as 5 | 10 | 20)}
               className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"

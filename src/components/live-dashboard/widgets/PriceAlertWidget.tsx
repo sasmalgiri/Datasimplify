@@ -185,6 +185,7 @@ export function PriceAlertWidget() {
               Coin
             </label>
             <select
+              title="Select coin"
               value={selectedCoinId}
               onChange={(e) => setSelectedCoinId(e.target.value)}
               className="w-full bg-white/[0.06] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400/40 transition-colors appearance-none"
