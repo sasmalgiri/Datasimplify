@@ -145,6 +145,10 @@ export default function RoadmapPage() {
   const fetchRequests = async () => {
     try {
       const response = await fetch('/api/template-request');
+      if (!response.ok) {
+        console.error('Failed to fetch requests:', response.status);
+        return;
+      }
       const data = await response.json();
       setRequests(data.requests || []);
     } catch (error) {
@@ -154,13 +158,33 @@ export default function RoadmapPage() {
     }
   };
 
+  const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+
+  // Load voted IDs from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('crk-roadmap-votes');
+      if (stored) setVotedIds(new Set(JSON.parse(stored)));
+    } catch { /* ignore */ }
+  }, []);
+
   const handleVote = async (requestId: string) => {
+    // Prevent duplicate votes
+    if (votedIds.has(requestId)) return;
+
     // Optimistic update
     setRequests((prev) =>
       prev.map((r) =>
         r.id === requestId ? { ...r, votesCount: r.votesCount + 1 } : r
       )
     );
+
+    // Mark as voted immediately to prevent rapid double-clicks
+    const newVotedIds = new Set(votedIds).add(requestId);
+    setVotedIds(newVotedIds);
+    try {
+      localStorage.setItem('crk-roadmap-votes', JSON.stringify([...newVotedIds]));
+    } catch { /* ignore */ }
 
     try {
       const response = await fetch('/api/template-request', {
@@ -176,6 +200,8 @@ export default function RoadmapPage() {
             r.id === requestId ? { ...r, votesCount: r.votesCount - 1 } : r
           )
         );
+        newVotedIds.delete(requestId);
+        setVotedIds(new Set(newVotedIds));
       }
     } catch {
       // Revert on error
@@ -184,6 +210,8 @@ export default function RoadmapPage() {
           r.id === requestId ? { ...r, votesCount: r.votesCount - 1 } : r
         )
       );
+      newVotedIds.delete(requestId);
+      setVotedIds(new Set(newVotedIds));
     }
   };
 
@@ -324,9 +352,14 @@ export default function RoadmapPage() {
                         {/* Vote Button */}
                         <button
                           onClick={() => handleVote(request.id)}
-                          className="flex flex-col items-center gap-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors"
+                          disabled={votedIds.has(request.id)}
+                          className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+                            votedIds.has(request.id)
+                              ? 'bg-emerald-500/20 cursor-default'
+                              : 'bg-gray-700/50 hover:bg-gray-700'
+                          }`}
                         >
-                          <ChevronUp className="w-5 h-5 text-emerald-400" />
+                          <ChevronUp className={`w-5 h-5 ${votedIds.has(request.id) ? 'text-emerald-300' : 'text-emerald-400'}`} />
                           <span className="text-sm font-medium text-white">
                             {request.votesCount}
                           </span>

@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') || 'dashboard';
   const minValueParam = searchParams.get('minValue');
-  const apiKey = searchParams.get('apiKey');
+  // Prefer API key from header to avoid URL logging; fall back to query param
+  const apiKey = request.headers.get('x-etherscan-key') || searchParams.get('apiKey');
 
   // Validate type parameter
   const typeError = validateEnum(type, VALID_TYPES, 'Type');

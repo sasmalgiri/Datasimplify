@@ -71,9 +71,14 @@ export default function PricingPage() {
 
   useEffect(() => {
     fetch('/api/geo')
-      .then((r) => r.json())
-      .then((data: GeoInfo) => {
-        if (data.currency && data.currency !== 'USD') setGeo(data);
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json();
+      })
+      .then((data: GeoInfo | null) => {
+        if (data && data.currency && data.currency !== 'USD' && typeof data.rate === 'number' && data.rate > 0) {
+          setGeo(data);
+        }
       })
       .catch(() => {});
   }, []);

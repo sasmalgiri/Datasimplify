@@ -88,18 +88,24 @@ export default function ThreadDetailPage() {
   const handleVote = async (targetType: 'thread' | 'reply', targetId: string, voteType: 'like' | 'dislike') => {
     if (!user) return;
 
-    // Optimistic update
+    // Save pre-vote state for rollback
+    const prevThreadVote = threadVote;
+    const prevThread = thread;
+    const prevReplyVotes = { ...replyVotes };
+    const prevReplies = [...replies];
+
+    // Optimistic update (clamp to >= 0 to prevent negative counts)
     if (targetType === 'thread' && thread) {
       const currentVote = threadVote;
       if (currentVote === voteType) {
         setThreadVote(null);
-        setThread({ ...thread, likes: thread.likes - (voteType === 'like' ? 1 : 0), dislikes: thread.dislikes - (voteType === 'dislike' ? 1 : 0) });
+        setThread({ ...thread, likes: Math.max(0, thread.likes - (voteType === 'like' ? 1 : 0)), dislikes: Math.max(0, thread.dislikes - (voteType === 'dislike' ? 1 : 0)) });
       } else {
         setThreadVote(voteType);
         setThread({
           ...thread,
-          likes: thread.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
-          dislikes: thread.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0),
+          likes: Math.max(0, thread.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0)),
+          dislikes: Math.max(0, thread.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)),
         });
       }
     } else if (targetType === 'reply') {
@@ -118,36 +124,49 @@ export default function ThreadDetailPage() {
           if (r.id !== targetId) return r;
           return {
             ...r,
-            likes: r.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0),
-            dislikes: r.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0),
+            likes: Math.max(0, r.likes + (voteType === 'like' ? 1 : 0) - (currentVote === 'like' ? 1 : 0)),
+            dislikes: Math.max(0, r.dislikes + (voteType === 'dislike' ? 1 : 0) - (currentVote === 'dislike' ? 1 : 0)),
           };
         })
       );
     }
 
-    // Fire API call
-    await fetch('/api/forum/interact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'vote',
-        ...(targetType === 'thread' ? { threadId: targetId } : { replyId: targetId }),
-        voteType,
-      }),
-    });
+    // Fire API call with rollback on failure
+    try {
+      const res = await fetch('/api/forum/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'vote',
+          ...(targetType === 'thread' ? { threadId: targetId } : { replyId: targetId }),
+          voteType,
+        }),
+      });
+      if (!res.ok) throw new Error('Vote failed');
+    } catch {
+      // Rollback optimistic update
+      setThreadVote(prevThreadVote);
+      if (prevThread) setThread(prevThread);
+      setReplyVotes(prevReplyVotes);
+      setReplies(prevReplies);
+    }
   };
 
   // Pin handler
   const handlePin = async () => {
     if (!thread) return;
-    const res = await fetch('/api/forum/interact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'pin', threadId: thread.id, pin: !thread.is_pinned }),
-    });
-    const json = await res.json();
-    if (json.success) {
-      setThread({ ...thread, is_pinned: !thread.is_pinned });
+    try {
+      const res = await fetch('/api/forum/interact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pin', threadId: thread.id, pin: !thread.is_pinned }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setThread({ ...thread, is_pinned: !thread.is_pinned });
+      }
+    } catch {
+      // Silently fail — pin state unchanged
     }
   };
 

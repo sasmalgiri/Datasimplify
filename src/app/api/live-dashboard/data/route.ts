@@ -43,6 +43,14 @@ const rateLimits = new Map<string, { count: number; resetAt: number }>();
 function checkRateLimit(ip: string, isServerKey: boolean): boolean {
   const limit = isServerKey ? 10 : 30;
   const now = Date.now();
+
+  // Periodic cleanup: remove expired entries to prevent memory leak
+  if (rateLimits.size > 10000) {
+    for (const [key, val] of rateLimits) {
+      if (now > val.resetAt) rateLimits.delete(key);
+    }
+  }
+
   const entry = rateLimits.get(ip);
   if (!entry || now > entry.resetAt) {
     rateLimits.set(ip, { count: 1, resetAt: now + 60_000 });
@@ -164,6 +172,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { apiKey, alchemyKey, walletAddress, alchemyChain, endpoints, params } = body;
+
+  // Validate wallet address format if provided (must be 0x-prefixed hex)
+  if (walletAddress && (typeof walletAddress !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress))) {
+    return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 });
+  }
 
   if (!endpoints || !Array.isArray(endpoints) || endpoints.length === 0) {
     return NextResponse.json({ error: 'At least one endpoint required' }, { status: 400 });

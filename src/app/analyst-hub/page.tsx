@@ -109,16 +109,8 @@ export default function AnalystHubPage() {
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const [
-        globalRes,
-        trendingRes,
-        gainersLosersRes,
-        recentRes,
-        nftRes,
-        exchangeRes,
-        categoryRes,
-        dexPoolsRes,
-      ] = await Promise.all([
+      // Use allSettled to prevent one failed fetch from killing all data
+      const results = await Promise.allSettled([
         fetch('/api/crypto/global'),
         fetch('/api/crypto/trending'),
         fetch('/api/crypto/gainers-losers?type=both&limit=5'),
@@ -128,6 +120,30 @@ export default function AnalystHubPage() {
         fetch('/api/crypto/categories?limit=6'),
         fetch('/api/crypto/dex-pools?network=eth&type=trending&limit=5'),
       ]);
+
+      const toRes = (r: PromiseSettledResult<Response>): Response | null =>
+        r.status === 'fulfilled' ? r.value : null;
+
+      const [
+        globalRes,
+        trendingRes,
+        gainersLosersRes,
+        recentRes,
+        nftRes,
+        exchangeRes,
+        categoryRes,
+        dexPoolsRes,
+      ] = results.map(toRes);
+
+      // Parse each response individually to prevent one failure from killing all data
+      const safeJson = async (res: Response | null) => {
+        try {
+          if (!res || !res.ok) return null;
+          return await res.json();
+        } catch {
+          return null;
+        }
+      };
 
       const [
         globalData,
@@ -139,27 +155,27 @@ export default function AnalystHubPage() {
         categoryData,
         dexPoolsData,
       ] = await Promise.all([
-        globalRes.json(),
-        trendingRes.json(),
-        gainersLosersRes.json(),
-        recentRes.json(),
-        nftRes.json(),
-        exchangeRes.json(),
-        categoryRes.json(),
-        dexPoolsRes.json(),
+        safeJson(globalRes),
+        safeJson(trendingRes),
+        safeJson(gainersLosersRes),
+        safeJson(recentRes),
+        safeJson(nftRes),
+        safeJson(exchangeRes),
+        safeJson(categoryRes),
+        safeJson(dexPoolsRes),
       ]);
 
-      if (globalData.success) setGlobalStats(globalData.data);
-      if (trendingData.success) setTrending(trendingData.data.coins?.slice(0, 5) || []);
-      if (gainersLosersData.success) {
+      if (globalData?.success) setGlobalStats(globalData.data);
+      if (trendingData?.success) setTrending(trendingData.data.coins?.slice(0, 5) || []);
+      if (gainersLosersData?.success) {
         setGainers(gainersLosersData.data.gainers || []);
         setLosers(gainersLosersData.data.losers || []);
       }
-      if (recentData.success) setRecentCoins(recentData.data || []);
-      if (nftData.success) setNfts(nftData.data || []);
-      if (exchangeData.success) setExchanges(exchangeData.data || []);
-      if (categoryData.success) setCategories(categoryData.data || []);
-      if (dexPoolsData.success) setDexPools(dexPoolsData.data || []);
+      if (recentData?.success) setRecentCoins(recentData.data || []);
+      if (nftData?.success) setNfts(nftData.data || []);
+      if (exchangeData?.success) setExchanges(exchangeData.data || []);
+      if (categoryData?.success) setCategories(categoryData.data || []);
+      if (dexPoolsData?.success) setDexPools(dexPoolsData.data || []);
 
       setLastUpdated(new Date());
     } catch (err) {

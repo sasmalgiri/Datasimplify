@@ -188,6 +188,19 @@ function EmbedContent() {
 
   const [initialized, setInitialized] = useState(false);
 
+  // Prevent API key from leaking via Referer header
+  useEffect(() => {
+    if (apiKey) {
+      let meta = document.querySelector('meta[name="referrer"]') as HTMLMetaElement | null;
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'referrer';
+        document.head.appendChild(meta);
+      }
+      meta.content = 'no-referrer';
+    }
+  }, [apiKey]);
+
   // Initialize store with embed params
   useEffect(() => {
     // Set theme
