@@ -19,17 +19,15 @@ export const maxDuration = 60; // allow up to 60s for AI generation
 /* ------------------------------------------------------------------ */
 
 function isAuthorized(request: NextRequest): boolean {
+  // Vercel Hobby plan crons send this UA (can't set custom headers on Hobby)
+  const ua = request.headers.get('user-agent') || '';
+  if (ua.includes('vercel-cron')) return true;
+
+  // Manual/Pro trigger with Bearer token
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return false;
-
   const authHeader = request.headers.get('authorization');
-  if (authHeader === `Bearer ${cronSecret}`) return true;
-
-  // Fallback: Vercel Hobby plan UA check
-  const ua = request.headers.get('user-agent') || '';
-  if (ua.includes('vercel-cron/1.0')) return true;
-
-  return false;
+  return authHeader === `Bearer ${cronSecret}`;
 }
 
 /* ------------------------------------------------------------------ */

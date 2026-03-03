@@ -179,7 +179,279 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     );
   }
 
-  // ─── Default / Alerts Summary / Compare: full market table ───
+  // ─── Portfolio Tracker: allocation-focused view ───
+  if (templateId === 'portfolio_tracker') {
+    const portfolio = ['bitcoin', 'ethereum', 'solana', 'binancecoin', 'ripple', 'cardano', 'polkadot', 'chainlink', 'avalanche-2', 'dogecoin'];
+    const portCoins = portfolio.map((id) => markets.find((c) => c.id === id)).filter(Boolean) as typeof markets;
+    const totalMcap = portCoins.reduce((s, c) => s + (c.market_cap ?? 0), 0);
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-xs text-gray-400">Sample Portfolio — Top 10 assets by market cap</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-gray-500">
+                  <th className="text-left px-3 py-2.5 font-medium">Asset</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Price</th>
+                  <th className="text-right px-3 py-2.5 font-medium">24h %</th>
+                  <th className="text-right px-3 py-2.5 font-medium">7d %</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Market Cap</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Allocation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portCoins.map((c) => {
+                  const alloc = totalMcap > 0 ? (c.market_cap / totalMcap) * 100 : 0;
+                  return (
+                    <tr key={c.id} className={`border-b border-white/[0.03] hover:bg-white/[0.02] ${c.id === coin ? 'bg-emerald-400/5' : ''}`}>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
+                          <span className="text-white font-medium">{c.name}</span>
+                          <span className="text-gray-500 uppercase">{c.symbol}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${pctColor(c.price_change_percentage_24h)}`}>{formatPct(c.price_change_percentage_24h)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${pctColor(c.price_change_percentage_7d_in_currency)}`}>{formatPct(c.price_change_percentage_7d_in_currency)}</td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(c.market_cap)}</td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="w-12 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-400/60 rounded-full" style={{ width: `${alloc}%` }} />
+                          </div>
+                          <span className="text-emerald-400 font-mono text-[10px]">{alloc.toFixed(1)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Compare: side-by-side comparison ───
+  if (templateId === 'compare') {
+    const compareIds = ['bitcoin', 'ethereum', 'solana', 'binancecoin', 'ripple'];
+    const compareCoins = compareIds.map((id) => markets.find((c) => c.id === id)).filter(Boolean) as typeof markets;
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-4">Side-by-Side Comparison</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+            {compareCoins.map((c) => (
+              <div key={c.id} className={`border rounded-xl p-4 text-center ${c.id === coin ? 'border-emerald-400/30 bg-emerald-400/5' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+                {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-10 h-10 rounded-full mx-auto mb-2" />}
+                <div className="text-sm font-bold text-white">{c.symbol?.toUpperCase()}</div>
+                <div className="text-white font-mono text-sm mt-1">${formatPrice(c.current_price)}</div>
+                <div className={`text-xs font-mono mt-1 ${pctColor(c.price_change_percentage_24h)}`}>{formatPct(c.price_change_percentage_24h)}</div>
+                <div className="mt-3 space-y-1.5 text-left">
+                  <div className="flex justify-between text-[10px]"><span className="text-gray-500">MCap</span><span className="text-gray-300 font-mono">{formatLarge(c.market_cap)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-gray-500">Volume</span><span className="text-gray-300 font-mono">{formatLarge(c.total_volume)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-gray-500">7d</span><span className={`font-mono ${pctColor(c.price_change_percentage_7d_in_currency)}`}>{formatPct(c.price_change_percentage_7d_in_currency)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-gray-500">ATH %</span><span className={`font-mono ${pctColor(c.ath_change_percentage)}`}>{formatPct(c.ath_change_percentage)}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Risk Dashboard: risk metrics ───
+  if (templateId === 'risk_dashboard') {
+    const riskCoins = markets.slice(0, 20);
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-xs text-gray-400">Risk metrics for top 20 coins — ATH drawdown &amp; volatility proxy</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-gray-500">
+                  <th className="text-left px-3 py-2.5 font-medium">#</th>
+                  <th className="text-left px-3 py-2.5 font-medium">Coin</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Price</th>
+                  <th className="text-right px-3 py-2.5 font-medium">ATH</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Drawdown</th>
+                  <th className="text-right px-3 py-2.5 font-medium">24h %</th>
+                  <th className="text-right px-3 py-2.5 font-medium">7d %</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Vol/MCap</th>
+                </tr>
+              </thead>
+              <tbody>
+                {riskCoins.map((c) => {
+                  const volMcap = c.market_cap > 0 ? (c.total_volume / c.market_cap) * 100 : 0;
+                  return (
+                    <tr key={c.id} className={`border-b border-white/[0.03] hover:bg-white/[0.02] ${c.id === coin ? 'bg-emerald-400/5' : ''}`}>
+                      <td className="px-3 py-2 text-gray-500">{c.market_cap_rank}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
+                          <span className="text-white font-medium">{c.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                      <td className="px-3 py-2 text-right text-gray-400 font-mono">${formatPrice(c.ath)}</td>
+                      <td className="px-3 py-2 text-right text-red-400 font-mono">{formatPct(c.ath_change_percentage)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${pctColor(c.price_change_percentage_24h)}`}>{formatPct(c.price_change_percentage_24h)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${pctColor(c.price_change_percentage_7d_in_currency)}`}>{formatPct(c.price_change_percentage_7d_in_currency)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${volMcap > 20 ? 'text-yellow-400' : 'text-gray-400'}`}>{volMcap.toFixed(1)}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Correlation Matrix: price change correlation ───
+  if (templateId === 'correlation_matrix') {
+    const corrIds = ['bitcoin', 'ethereum', 'solana', 'binancecoin', 'ripple', 'cardano', 'dogecoin', 'polkadot'];
+    const corrCoins = corrIds.map((id) => markets.find((c) => c.id === id)).filter(Boolean) as typeof markets;
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-white mb-1">Price Change Comparison Matrix</h3>
+          <p className="text-[10px] text-gray-500 mb-4">Comparing 24h and 7d price movements across major assets</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-gray-500">
+                  <th className="text-left px-2 py-2 font-medium">Asset</th>
+                  <th className="text-right px-2 py-2 font-medium">Price</th>
+                  <th className="text-right px-2 py-2 font-medium">24h %</th>
+                  <th className="text-right px-2 py-2 font-medium">7d %</th>
+                  <th className="text-right px-2 py-2 font-medium">MCap Rank</th>
+                  <th className="text-right px-2 py-2 font-medium">ATH %</th>
+                  <th className="text-center px-2 py-2 font-medium">24h Direction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {corrCoins.map((c) => (
+                  <tr key={c.id} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-1.5">
+                        {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-4 h-4 rounded-full" />}
+                        <span className="text-white font-medium">{c.symbol?.toUpperCase()}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                    <td className={`px-2 py-2 text-right font-mono ${pctColor(c.price_change_percentage_24h)}`}>{formatPct(c.price_change_percentage_24h)}</td>
+                    <td className={`px-2 py-2 text-right font-mono ${pctColor(c.price_change_percentage_7d_in_currency)}`}>{formatPct(c.price_change_percentage_7d_in_currency)}</td>
+                    <td className="px-2 py-2 text-right text-gray-400">#{c.market_cap_rank}</td>
+                    <td className={`px-2 py-2 text-right font-mono ${pctColor(c.ath_change_percentage)}`}>{formatPct(c.ath_change_percentage)}</td>
+                    <td className="px-2 py-2 text-center">
+                      <span className={`inline-block w-6 h-3 rounded ${(c.price_change_percentage_24h ?? 0) >= 0 ? 'bg-emerald-400/30' : 'bg-red-400/30'}`} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Whale Tracker: top by volume (whale proxy) ───
+  if (templateId === 'whale_tracker') {
+    const byVolume = [...markets].sort((a, b) => (b.total_volume ?? 0) - (a.total_volume ?? 0)).slice(0, 20);
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-xs text-gray-400">Top 20 coins by 24h volume — high volume indicates whale activity</span>
+          </div>
+          <CoinTable coins={byVolume} highlight={coin} columns={['rank', 'coin', 'price', '24h', 'vol', 'mcap']} />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Backtest Results: historical return summary ───
+  if (templateId === 'backtest_results') {
+    const top20 = markets.slice(0, 20);
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-xs text-gray-400">Performance snapshot — 24h &amp; 7d returns for top 20 assets</span>
+          </div>
+          <CoinTable coins={top20} highlight={coin} columns={['rank', 'coin', 'price', '24h', '7d', 'ath_pct', 'mcap']} />
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Alerts Summary: price levels & thresholds ───
+  if (templateId === 'alerts_summary') {
+    const alertCoins = markets.slice(0, 15);
+    return (
+      <div className="space-y-6">
+        {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
+        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-xs text-gray-400">Price levels &amp; alert thresholds for top coins</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/[0.06] text-gray-500">
+                  <th className="text-left px-3 py-2.5 font-medium">Coin</th>
+                  <th className="text-right px-3 py-2.5 font-medium">Price</th>
+                  <th className="text-right px-3 py-2.5 font-medium">24h Low</th>
+                  <th className="text-right px-3 py-2.5 font-medium">24h High</th>
+                  <th className="text-right px-3 py-2.5 font-medium">ATH</th>
+                  <th className="text-right px-3 py-2.5 font-medium">ATL</th>
+                  <th className="text-right px-3 py-2.5 font-medium">24h %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {alertCoins.map((c) => (
+                  <tr key={c.id} className={`border-b border-white/[0.03] hover:bg-white/[0.02] ${c.id === coin ? 'bg-emerald-400/5' : ''}`}>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
+                        <span className="text-white font-medium">{c.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                    <td className="px-3 py-2 text-right text-gray-400 font-mono">${formatPrice(c.low_24h)}</td>
+                    <td className="px-3 py-2 text-right text-gray-400 font-mono">${formatPrice(c.high_24h)}</td>
+                    <td className="px-3 py-2 text-right text-gray-400 font-mono">${formatPrice(c.ath)}</td>
+                    <td className="px-3 py-2 text-right text-gray-400 font-mono">${formatPrice(c.atl)}</td>
+                    <td className={`px-3 py-2 text-right font-mono ${pctColor(c.price_change_percentage_24h)}`}>{formatPct(c.price_change_percentage_24h)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Default fallback: full market table ───
   return (
     <div className="space-y-6">
       {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}

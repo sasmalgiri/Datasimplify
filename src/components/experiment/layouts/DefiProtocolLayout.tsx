@@ -8,7 +8,7 @@ interface LayoutProps {
   templateId?: string;
 }
 
-export function DefiProtocolLayout({}: LayoutProps) {
+export function DefiProtocolLayout({ templateId }: LayoutProps) {
   const protocols = useLiveDashboardStore((s) => s.data.defiProtocols);
   const chains = useLiveDashboardStore((s) => s.data.defiChains);
   const tvlHistory = useLiveDashboardStore((s) => s.data.defiTvlHistory);
@@ -16,9 +16,131 @@ export function DefiProtocolLayout({}: LayoutProps) {
   const totalTvl = protocols?.reduce((sum, p) => sum + (p.tvl || 0), 0) ?? 0;
   const topProtocols = protocols?.slice(0, 30) ?? [];
 
+  // ─── DeFi Yields: protocol performance focus ───
+  if (templateId === 'defi_yields') {
+    // Sort by daily change to show yield/performance
+    const byChange = protocols
+      ? [...protocols].filter((p) => p.change_1d != null).sort((a, b) => (b.change_1d ?? 0) - (a.change_1d ?? 0))
+      : [];
+    const topPerformers = byChange.slice(0, 15);
+    const bottomPerformers = byChange.slice(-15).reverse();
+
+    // Protocols by category
+    const categoryMap: Record<string, { count: number; tvl: number }> = {};
+    protocols?.forEach((p) => {
+      const cat = p.category || 'Unknown';
+      if (!categoryMap[cat]) categoryMap[cat] = { count: 0, tvl: 0 };
+      categoryMap[cat].count++;
+      categoryMap[cat].tvl += p.tvl || 0;
+    });
+    const sortedCategories = Object.entries(categoryMap).sort((a, b) => b[1].tvl - a[1].tvl).slice(0, 10);
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KPI label="Total DeFi TVL" value={formatLarge(totalTvl)} />
+          <KPI label="Protocols" value={`${protocols?.length ?? 0}`} />
+          <KPI label="Categories" value={`${Object.keys(categoryMap).length}`} />
+          <KPI label="Chains" value={`${chains?.length ?? 0}`} />
+        </div>
+
+        {/* Top Performers by 1d change */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-emerald-400">Top Gainers (1d TVL Change)</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">Protocol</th>
+                    <th className="text-right px-3 py-2 font-medium">TVL</th>
+                    <th className="text-right px-3 py-2 font-medium">1d %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topPerformers.map((p) => (
+                    <tr key={p.name} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {p.logo && <img src={p.logo} alt={`${p.name} logo`} className="w-4 h-4 rounded-full" />}
+                          <span className="text-white font-medium">{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(p.tvl)}</td>
+                      <td className="px-3 py-2 text-right text-emerald-400 font-mono font-bold">+{(p.change_1d ?? 0).toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-red-400">Top Losers (1d TVL Change)</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">Protocol</th>
+                    <th className="text-right px-3 py-2 font-medium">TVL</th>
+                    <th className="text-right px-3 py-2 font-medium">1d %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bottomPerformers.map((p) => (
+                    <tr key={p.name} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {p.logo && <img src={p.logo} alt={`${p.name} logo`} className="w-4 h-4 rounded-full" />}
+                          <span className="text-white font-medium">{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(p.tvl)}</td>
+                      <td className="px-3 py-2 text-right text-red-400 font-mono font-bold">{(p.change_1d ?? 0).toFixed(2)}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Category breakdown */}
+        {sortedCategories.length > 0 && (
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-white mb-3">DeFi Categories by TVL</h3>
+            <div className="space-y-2">
+              {sortedCategories.map(([cat, data]) => {
+                const pct = totalTvl > 0 ? (data.tvl / totalTvl) * 100 : 0;
+                return (
+                  <div key={cat} className="flex items-center gap-3">
+                    <span className="text-xs text-white w-28 truncate font-medium">{cat}</span>
+                    <div className="flex-1 h-4 bg-white/[0.04] rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-400/40 rounded-full" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-400 font-mono w-12 text-right">{pct.toFixed(1)}%</span>
+                    <span className="text-xs text-gray-300 font-mono w-20 text-right">{formatLarge(data.tvl)}</span>
+                    <span className="text-[10px] text-gray-500 w-8 text-right">{data.count}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!protocols && (
+          <div className="text-center py-16 text-gray-500 text-sm">No DeFi data available</div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Default: DeFi TVL (original view) ───
   return (
     <div className="space-y-6">
-      {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <KPI label="Total DeFi TVL" value={formatLarge(totalTvl)} />
         <KPI label="Protocols Tracked" value={`${protocols?.length ?? 0}`} />
@@ -32,7 +154,6 @@ export function DefiProtocolLayout({}: LayoutProps) {
         />
       </div>
 
-      {/* Chain breakdown */}
       {chains && chains.length > 0 && (
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
           <h3 className="text-sm font-semibold text-white mb-3">Top Chains by TVL</h3>
@@ -47,7 +168,6 @@ export function DefiProtocolLayout({}: LayoutProps) {
         </div>
       )}
 
-      {/* Protocol table */}
       {topProtocols.length > 0 && (
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/[0.06]">
@@ -91,7 +211,6 @@ export function DefiProtocolLayout({}: LayoutProps) {
         </div>
       )}
 
-      {/* TVL History */}
       {tvlHistory && tvlHistory.length > 0 && (
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
           <h3 className="text-sm font-semibold text-white mb-3">TVL History (last {tvlHistory.length} days)</h3>

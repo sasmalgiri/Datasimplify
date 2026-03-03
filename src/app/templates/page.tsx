@@ -10,7 +10,7 @@ import {
   getTemplatesGroupedByCategory,
   type TemplateCategoryId,
 } from '@/lib/templates/templateConfig';
-import { TEMPLATE_LAYOUT_MAP, LAYOUT_META } from '@/lib/templates/experimentLayouts';
+// Layout maps used by experiment pages, not needed for listing
 
 export default function TemplatesHubPage() {
   const [activeCategory, setActiveCategory] = useState<TemplateCategoryId | 'all'>('all');
@@ -120,8 +120,6 @@ export default function TemplatesHubPage() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {group.templates.map((t) => {
-                      const layout = TEMPLATE_LAYOUT_MAP[group.category.id];
-                      const layoutMeta = LAYOUT_META[layout];
                       return (
                         <Link
                           key={t.id}
@@ -141,7 +139,7 @@ export default function TemplatesHubPage() {
                           </div>
 
                           <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/[0.04]">
-                            <span className="text-[10px] text-gray-600">{layoutMeta.title}</span>
+                            <span className="text-[10px] text-gray-600">{group.category.name}</span>
                             <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-emerald-400 transition" />
                           </div>
                         </Link>

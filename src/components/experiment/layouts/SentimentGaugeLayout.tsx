@@ -8,7 +8,7 @@ interface LayoutProps {
   templateId?: string;
 }
 
-export function SentimentGaugeLayout({}: LayoutProps) {
+export function SentimentGaugeLayout({ templateId }: LayoutProps) {
   const fearGreed = useLiveDashboardStore((s) => s.data.fearGreed);
   const markets = useLiveDashboardStore((s) => s.data.markets);
   const categories = useLiveDashboardStore((s) => s.data.categories);
@@ -18,7 +18,6 @@ export function SentimentGaugeLayout({}: LayoutProps) {
   const fgValue = fgRawValue != null ? Number(fgRawValue) : null;
   const fgLabel = current?.value_classification ?? '';
 
-  // Gauge color based on value
   const gaugeColor =
     fgValue == null || Number.isNaN(fgValue) ? 'text-gray-500' :
     fgValue <= 25 ? 'text-red-500' :
@@ -35,7 +34,6 @@ export function SentimentGaugeLayout({}: LayoutProps) {
     fgValue <= 75 ? 'bg-lime-400/10' :
     'bg-emerald-400/10';
 
-  // Top movers from markets
   const topGainers = markets
     ?.filter((c) => c.price_change_percentage_24h != null)
     .sort((a, b) => (b.price_change_percentage_24h ?? 0) - (a.price_change_percentage_24h ?? 0))
@@ -46,6 +44,267 @@ export function SentimentGaugeLayout({}: LayoutProps) {
     .sort((a, b) => (a.price_change_percentage_24h ?? 0) - (b.price_change_percentage_24h ?? 0))
     .slice(0, 5) ?? [];
 
+  // ─── Social Sentiment: focus on market movers & categories ───
+  if (templateId === 'social_sentiment') {
+    const topByVol = markets
+      ?.filter((c) => c.total_volume != null)
+      .sort((a, b) => (b.total_volume ?? 0) - (a.total_volume ?? 0))
+      .slice(0, 10) ?? [];
+
+    return (
+      <div className="space-y-6">
+        {/* Mini gauge at top */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KPI label="Market Mood" value={fgRawValue != null ? `${fgRawValue} — ${fgLabel}` : '—'}
+            color={gaugeColor} />
+          <KPI label="BTC 24h" value={(() => {
+            const btc = markets?.find((c) => c.id === 'bitcoin');
+            return btc ? `${(btc.price_change_percentage_24h ?? 0) >= 0 ? '+' : ''}${(btc.price_change_percentage_24h ?? 0).toFixed(2)}%` : '—';
+          })()}
+            color={(() => {
+              const btc = markets?.find((c) => c.id === 'bitcoin');
+              return btc ? ((btc.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400') : undefined;
+            })()} />
+          <KPI label="Gainers/Losers" value={markets ? `${markets.filter((c) => (c.price_change_percentage_24h ?? 0) > 0).length} / ${markets.filter((c) => (c.price_change_percentage_24h ?? 0) < 0).length}` : '—'} />
+          <KPI label="Categories" value={`${categories?.length ?? 0}`} />
+        </div>
+
+        {/* Market Movers */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-emerald-400 mb-3">Bullish Sentiment (Top Gainers)</h3>
+            {topGainers.length > 0 ? (
+              <div className="space-y-2.5">
+                {topGainers.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {c.image && <img src={c.image} alt={`${c.symbol?.toUpperCase()} logo`} className="w-5 h-5 rounded-full" />}
+                      <div>
+                        <span className="text-xs text-white font-medium">{c.name}</span>
+                        <span className="text-[10px] text-gray-500 ml-1.5">{c.symbol?.toUpperCase()}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-emerald-400 font-mono font-bold">+{(c.price_change_percentage_24h ?? 0).toFixed(2)}%</span>
+                      <div className="text-[10px] text-gray-500 font-mono">${formatPrice(c.current_price)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500">No data</div>
+            )}
+          </div>
+
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-red-400 mb-3">Bearish Sentiment (Top Losers)</h3>
+            {topLosers.length > 0 ? (
+              <div className="space-y-2.5">
+                {topLosers.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {c.image && <img src={c.image} alt={`${c.symbol?.toUpperCase()} logo`} className="w-5 h-5 rounded-full" />}
+                      <div>
+                        <span className="text-xs text-white font-medium">{c.name}</span>
+                        <span className="text-[10px] text-gray-500 ml-1.5">{c.symbol?.toUpperCase()}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-red-400 font-mono font-bold">{(c.price_change_percentage_24h ?? 0).toFixed(2)}%</span>
+                      <div className="text-[10px] text-gray-500 font-mono">${formatPrice(c.current_price)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500">No data</div>
+            )}
+          </div>
+        </div>
+
+        {/* Trending by Volume */}
+        {topByVol.length > 0 && (
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white">Trending by Volume (Social Interest Proxy)</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">#</th>
+                    <th className="text-left px-3 py-2 font-medium">Coin</th>
+                    <th className="text-right px-3 py-2 font-medium">Price</th>
+                    <th className="text-right px-3 py-2 font-medium">24h Volume</th>
+                    <th className="text-right px-3 py-2 font-medium">Vol/MCap %</th>
+                    <th className="text-right px-3 py-2 font-medium">24h %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topByVol.map((c, i) => {
+                    const ratio = c.market_cap > 0 ? (c.total_volume / c.market_cap) * 100 : 0;
+                    return (
+                      <tr key={c.id} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                        <td className="px-3 py-2 text-gray-500">{i + 1}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
+                            <span className="text-white font-medium">{c.name}</span>
+                            <span className="text-gray-500 uppercase text-[10px]">{c.symbol}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                        <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(c.total_volume)}</td>
+                        <td className={`px-3 py-2 text-right font-mono ${ratio > 20 ? 'text-yellow-400' : 'text-gray-400'}`}>{ratio.toFixed(1)}%</td>
+                        <td className={`px-3 py-2 text-right font-mono ${(c.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {(c.price_change_percentage_24h ?? 0) >= 0 ? '+' : ''}{(c.price_change_percentage_24h ?? 0).toFixed(2)}%
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Categories */}
+        {categories && categories.length > 0 && (
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white">Sector Sentiment (Category Performance)</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">Category</th>
+                    <th className="text-right px-3 py-2 font-medium">Market Cap</th>
+                    <th className="text-right px-3 py-2 font-medium">24h %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.slice(0, 15).map((cat) => (
+                    <tr key={cat.id} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                      <td className="px-3 py-2 text-white font-medium">{cat.name}</td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(cat.market_cap)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${(cat.market_cap_change_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {cat.market_cap_change_24h != null ? `${cat.market_cap_change_24h >= 0 ? '+' : ''}${cat.market_cap_change_24h.toFixed(2)}%` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── NFT Collections: NFT-related categories ───
+  if (templateId === 'nft_collections') {
+    const nftCategories = categories?.filter((c) =>
+      c.name.toLowerCase().includes('nft') ||
+      c.name.toLowerCase().includes('metaverse') ||
+      c.name.toLowerCase().includes('gaming') ||
+      c.name.toLowerCase().includes('collectible') ||
+      c.name.toLowerCase().includes('art'),
+    ) ?? [];
+
+    const nftCoins = markets?.filter((c) =>
+      ['axie-infinity', 'the-sandbox', 'decentraland', 'enjincoin', 'flow', 'immutable-x', 'gala', 'apecoin', 'illuvium', 'ronin'].includes(c.id),
+    ) ?? [];
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <KPI label="NFT/Gaming Categories" value={`${nftCategories.length}`} />
+          <KPI label="NFT Tokens Tracked" value={`${nftCoins.length}`} />
+          <KPI label="Market Mood" value={fgRawValue != null ? `${fgRawValue} — ${fgLabel}` : '—'} color={gaugeColor} />
+          <KPI label="Total NFT MCap" value={formatLarge(nftCoins.reduce((s, c) => s + (c.market_cap ?? 0), 0))} />
+        </div>
+
+        {nftCoins.length > 0 && (
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white">NFT &amp; Gaming Tokens</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">#</th>
+                    <th className="text-left px-3 py-2 font-medium">Token</th>
+                    <th className="text-right px-3 py-2 font-medium">Price</th>
+                    <th className="text-right px-3 py-2 font-medium">Market Cap</th>
+                    <th className="text-right px-3 py-2 font-medium">24h %</th>
+                    <th className="text-right px-3 py-2 font-medium">Volume</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nftCoins.map((c, i) => (
+                    <tr key={c.id} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                      <td className="px-3 py-2 text-gray-500">{i + 1}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          {c.image && <img src={c.image} alt={`${c.name} logo`} className="w-5 h-5 rounded-full" />}
+                          <span className="text-white font-medium">{c.name}</span>
+                          <span className="text-gray-500 uppercase text-[10px]">{c.symbol}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 text-right text-white font-mono">${formatPrice(c.current_price)}</td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(c.market_cap)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${(c.price_change_percentage_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {(c.price_change_percentage_24h ?? 0) >= 0 ? '+' : ''}{(c.price_change_percentage_24h ?? 0).toFixed(2)}%
+                      </td>
+                      <td className="px-3 py-2 text-right text-gray-400 font-mono">{formatLarge(c.total_volume)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {nftCategories.length > 0 && (
+          <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-white/[0.06]">
+              <h3 className="text-sm font-semibold text-white">NFT &amp; Gaming Categories</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.06] text-gray-500">
+                    <th className="text-left px-3 py-2 font-medium">Category</th>
+                    <th className="text-right px-3 py-2 font-medium">Market Cap</th>
+                    <th className="text-right px-3 py-2 font-medium">24h %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nftCategories.map((cat) => (
+                    <tr key={cat.id} className="border-b border-white/[0.02] hover:bg-white/[0.02]">
+                      <td className="px-3 py-2 text-white font-medium">{cat.name}</td>
+                      <td className="px-3 py-2 text-right text-gray-300 font-mono">{formatLarge(cat.market_cap)}</td>
+                      <td className={`px-3 py-2 text-right font-mono ${(cat.market_cap_change_24h ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {cat.market_cap_change_24h != null ? `${cat.market_cap_change_24h >= 0 ? '+' : ''}${cat.market_cap_change_24h.toFixed(2)}%` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {nftCoins.length === 0 && nftCategories.length === 0 && (
+          <div className="text-center py-12 text-gray-500 text-sm">No NFT/gaming data found in current market data</div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Default: Fear & Greed (original view) ───
   return (
     <div className="space-y-6">
       {/* Fear & Greed Gauge */}
@@ -58,7 +317,6 @@ export function SentimentGaugeLayout({}: LayoutProps) {
             Updated: {new Date(Number(current.timestamp) * 1000).toLocaleDateString()}
           </div>
         )}
-        {/* Scale bar */}
         <div className="mt-4 max-w-md mx-auto">
           <div className="h-2 rounded-full bg-gradient-to-r from-red-500 via-yellow-400 to-emerald-400 relative">
             {fgValue != null && !Number.isNaN(fgValue) && (
@@ -122,7 +380,6 @@ export function SentimentGaugeLayout({}: LayoutProps) {
 
       {/* Market Mood - Top Movers */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Top Gainers */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
           <h3 className="text-sm font-semibold text-emerald-400 mb-3">Top Gainers (24h)</h3>
           {topGainers.length > 0 ? (
@@ -144,7 +401,6 @@ export function SentimentGaugeLayout({}: LayoutProps) {
           )}
         </div>
 
-        {/* Top Losers */}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
           <h3 className="text-sm font-semibold text-red-400 mb-3">Top Losers (24h)</h3>
           {topLosers.length > 0 ? (
@@ -214,10 +470,27 @@ export function SentimentGaugeLayout({}: LayoutProps) {
   );
 }
 
+// ─── Helpers ───
+
+function KPI({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
+      <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{label}</div>
+      <div className={`text-lg font-bold ${color ?? 'text-white'}`}>{value}</div>
+    </div>
+  );
+}
+
 function formatLarge(n: number | null | undefined): string {
   if (n == null) return '—';
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
   if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
   return `$${n.toLocaleString()}`;
+}
+
+function formatPrice(n: number | null | undefined): string {
+  if (n == null) return '—';
+  if (n >= 1) return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toPrecision(4);
 }

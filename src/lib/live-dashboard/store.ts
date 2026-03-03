@@ -20,6 +20,7 @@ export interface MarketCoin {
   max_supply?: number;
   ath?: number;
   ath_change_percentage?: number;
+  atl?: number;
   sparkline_in_7d?: { price: number[] };
 }
 
@@ -68,6 +69,7 @@ export interface DerivativeTicker {
   market: string;
   symbol: string;
   price: string;
+  last?: number | string;
   price_percentage_change_24h: number;
   contract_type: string;
   funding_rate: number;
