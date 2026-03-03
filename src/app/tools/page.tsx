@@ -230,24 +230,31 @@ export default function ToolsPage() {
           </Link>
         </div>
 
-        {/* Coming Soon */}
+        {/* Available Tools */}
         <section className="mt-12">
-          <h2 className="text-xl font-bold text-gray-500 mb-4">🔮 Coming Soon</h2>
+          <h2 className="text-xl font-bold text-gray-400 mb-4">🔧 More Tools</h2>
           <div className="grid md:grid-cols-4 gap-4">
             {[
-              { name: 'Price Alerts', emoji: '🔔' },
-              { name: 'Tax Calculator', emoji: '📝' },
-              { name: 'DeFi Tracker', emoji: '🏦' },
-              { name: 'NFT Analytics', emoji: '🖼️' },
+              { name: 'Price Alerts', emoji: '🔔', href: '/alerts' },
+              { name: 'Tax Calculator', emoji: '📝', href: '/tax-report' },
+              { name: 'DeFi Tracker', emoji: '🏦', href: '/defi' },
             ].map((item) => (
-              <div
+              <Link
                 key={item.name}
-                className="bg-gray-800 rounded-lg p-4 text-center opacity-60 border border-gray-700"
+                href={item.href}
+                className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700 hover:border-gray-500 hover:shadow-lg transition-all"
               >
                 <span className="text-3xl">{item.emoji}</span>
-                <p className="text-sm text-gray-500 mt-2">{item.name}</p>
-              </div>
+                <p className="text-sm text-gray-300 mt-2">{item.name}</p>
+              </Link>
             ))}
+            <div
+              className="bg-gray-800 rounded-lg p-4 text-center opacity-60 border border-gray-700"
+            >
+              <span className="text-3xl">🖼️</span>
+              <p className="text-sm text-gray-500 mt-2">NFT Analytics</p>
+              <p className="text-xs text-gray-600 mt-1">Coming Soon</p>
+            </div>
           </div>
         </section>
       </div>

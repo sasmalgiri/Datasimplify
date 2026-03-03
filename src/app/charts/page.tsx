@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { FreeNavbar } from '@/components/FreeNavbar';
 import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
@@ -169,6 +170,7 @@ interface ChartConfig {
   description: string;
   icon: string;
   category: 'historical' | 'volatility' | 'comparison' | 'onchain' | 'derivatives' | 'sentiment';
+  comingSoon?: string; // Reason why data is unavailable, e.g. "Requires premium on-chain data provider"
 }
 
 const CHART_CONFIGS: ChartConfig[] = [
@@ -192,12 +194,12 @@ const CHART_CONFIGS: ChartConfig[] = [
   // Derivatives Charts
   { type: 'funding_rate', title: 'Funding Rate History', description: 'Futures funding rates over time', icon: '💹', category: 'derivatives' },
   { type: 'open_interest', title: 'Open Interest', description: 'OI changes with price overlay', icon: '📋', category: 'derivatives' },
-  { type: 'liquidation_heatmap', title: 'Liquidation Heatmap', description: 'Predicted liquidation levels', icon: '🔥', category: 'derivatives' },
+  { type: 'liquidation_heatmap', title: 'Liquidation Heatmap', description: 'Predicted liquidation levels', icon: '🔥', category: 'derivatives', comingSoon: 'Liquidation data requires a premium exchange data feed (e.g. Coinalyze, Laevitas). Not available from free public APIs.' },
 
   // On-Chain Charts
   { type: 'whale_flow', title: 'Whale Flow', description: 'Exchange in/out flows by whales', icon: '🐋', category: 'onchain' },
   { type: 'wallet_distribution', title: 'Wallet Distribution', description: 'BTC holder distribution treemap', icon: '🐳', category: 'onchain' },
-  { type: 'active_addresses', title: 'Active Addresses', description: 'Network activity over time', icon: '👥', category: 'onchain' },
+  { type: 'active_addresses', title: 'Active Addresses', description: 'Network activity over time', icon: '👥', category: 'onchain', comingSoon: 'Active address data requires a dedicated on-chain analytics provider (e.g. Glassnode, IntoTheBlock). Not available from free public APIs.' },
 
   // Sentiment Charts
   { type: 'fear_greed_history', title: 'Fear & Greed History', description: 'Historical fear/greed index', icon: '😱', category: 'sentiment' },
@@ -1650,8 +1652,19 @@ function ChartsContent() {
 
       case 'liquidation_heatmap':
         return (
-          <div className="flex items-center justify-center h-96 text-gray-400">
-            Liquidation heatmap is not available from free public APIs
+          <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-700/50 flex items-center justify-center text-3xl">
+              🔒
+            </div>
+            <div className="text-center max-w-md">
+              <h3 className="text-lg font-semibold text-gray-300 mb-2">Data Source Required</h3>
+              <p className="text-sm text-gray-500">
+                Liquidation heatmap data requires a premium exchange data feed (e.g. Coinalyze, Laevitas) and is not available from free public APIs.
+              </p>
+              <span className="inline-block mt-3 px-3 py-1 bg-gray-700/60 text-gray-400 text-xs rounded-full border border-gray-600">
+                Coming Soon
+              </span>
+            </div>
           </div>
         );
 
@@ -1742,8 +1755,19 @@ function ChartsContent() {
 
       case 'active_addresses':
         return (
-          <div className="flex items-center justify-center h-96 text-gray-400">
-            Active address history is not available from free public APIs
+          <div className="flex flex-col items-center justify-center h-96 text-gray-400 gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-700/50 flex items-center justify-center text-3xl">
+              🔒
+            </div>
+            <div className="text-center max-w-md">
+              <h3 className="text-lg font-semibold text-gray-300 mb-2">Data Source Required</h3>
+              <p className="text-sm text-gray-500">
+                Active address data requires a dedicated on-chain analytics provider (e.g. Glassnode, IntoTheBlock) and is not available from free public APIs.
+              </p>
+              <span className="inline-block mt-3 px-3 py-1 bg-gray-700/60 text-gray-400 text-xs rounded-full border border-gray-600">
+                Coming Soon
+              </span>
+            </div>
           </div>
         );
 
@@ -2021,23 +2045,8 @@ function ChartsContent() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-blue-400">
-              CryptoReportKit
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/charts/advanced" className="text-purple-400 hover:text-purple-300 font-medium">
-                Advanced Charts ✨
-              </Link>
-              <Link href="/compare" className="text-gray-400 hover:text-white">Compare</Link>
-              <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Navigation */}
+      <FreeNavbar />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -2064,13 +2073,18 @@ function ChartsContent() {
                   </div>
                   {categoryCharts.map(config => {
                     const excelConfig = CHART_EXCEL_CONFIG[config.type];
+                    const isUnavailable = !!config.comingSoon;
                     return (
                     <div
                       key={config.type}
                       className={`flex items-center gap-1 rounded-lg mb-1 transition ${
-                        selectedChart === config.type
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
+                        isUnavailable
+                          ? selectedChart === config.type
+                            ? 'bg-gray-600/60 text-gray-400 opacity-70'
+                            : 'bg-gray-700/30 text-gray-500 opacity-60'
+                          : selectedChart === config.type
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
                       }`}
                     >
                       <button
@@ -2079,18 +2093,23 @@ function ChartsContent() {
                         className="flex-1 text-left p-3"
                       >
                         <div className="flex items-center gap-2">
-                          <span>{config.icon}</span>
-                          <span className="text-sm font-medium">{config.title}</span>
-                          {excelConfig?.tier === 'pro' && (
+                          <span className={isUnavailable ? 'opacity-50' : ''}>{config.icon}</span>
+                          <span className={`text-sm font-medium ${isUnavailable ? 'line-through decoration-gray-500/50' : ''}`}>{config.title}</span>
+                          {isUnavailable && (
+                            <span className="text-[8px] px-1 py-0.5 bg-gray-600/50 text-gray-400 rounded border border-gray-600" title={config.comingSoon}>N/A</span>
+                          )}
+                          {!isUnavailable && excelConfig?.tier === 'pro' && (
                             <span className="text-[8px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">PRO</span>
                           )}
                         </div>
                       </button>
-                      <ChartExcelButton
-                        chartType={config.type}
-                        chartTitle={config.title}
-                        onClick={() => setExcelModalChart({ type: config.type, title: config.title })}
-                      />
+                      {!isUnavailable && (
+                        <ChartExcelButton
+                          chartType={config.type}
+                          chartTitle={config.title}
+                          onClick={() => setExcelModalChart({ type: config.type, title: config.title })}
+                        />
+                      )}
                     </div>
                   )})}
                 </div>

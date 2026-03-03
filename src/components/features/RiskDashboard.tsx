@@ -44,19 +44,19 @@ export function RiskDashboard({
 
   // Get risk color
   const getRiskColor = (level: number) => {
-    const colors = ['text-green-600', 'text-green-500', 'text-yellow-600', 'text-orange-500', 'text-red-600'];
+    const colors = ['text-green-400', 'text-green-400', 'text-yellow-400', 'text-orange-400', 'text-red-400'];
     return colors[level - 1];
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
           ⚠️ Risk Analytics Dashboard
           <InfoButton explanation="This dashboard shows how risky different cryptocurrencies are. Use it to understand how much money you could potentially lose and make smarter investment decisions." />
         </h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-400 text-sm mt-1">
           Understand the risk before you invest
         </p>
       </div>
@@ -70,21 +70,21 @@ export function RiskDashboard({
       )}
 
       {/* Investment Amount Input */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="mb-6 p-4 bg-gray-700/50 rounded-lg">
+        <label className="block text-sm font-medium text-gray-300 mb-2">
           How much are you thinking of investing?
         </label>
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">$</span>
+          <span className="text-gray-400">$</span>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value) || 0)}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter amount"
           />
         </div>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-gray-400 mt-1">
           We&apos;ll show you potential losses based on this amount
         </p>
       </div>
@@ -92,8 +92,8 @@ export function RiskDashboard({
       {/* Risk Comparison Table */}
       <div className="overflow-x-auto mb-6">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-white">
-            <tr className="border-b border-gray-200">
+          <thead className="sticky top-0 z-10 bg-gray-800">
+            <tr className="border-b border-gray-700/50">
               <th className="text-left py-3 px-2">Coin</th>
               <th className="text-center py-3 px-2">
                 Risk Level
@@ -118,13 +118,13 @@ export function RiskDashboard({
               <tr 
                 key={coin.id}
                 onClick={() => setSelectedCoin(coin)}
-                className={`border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedCoin?.id === coin.id ? 'bg-blue-50' : ''
+                className={`border-b border-gray-700/50 cursor-pointer hover:bg-gray-700 transition-colors ${
+                  selectedCoin?.id === coin.id ? 'bg-gray-700/50' : ''
                 }`}
               >
                 <td className="py-3 px-2">
-                  <div className="font-medium">{coin.symbol}</div>
-                  <div className="text-xs text-gray-500">{coin.name}</div>
+                  <div className="font-medium text-white">{coin.symbol}</div>
+                  <div className="text-xs text-gray-400">{coin.name}</div>
                 </td>
                 <td className="text-center py-3 px-2">
                   <span className={`font-bold ${getRiskColor(coin.risk_level)}`}>
@@ -134,11 +134,11 @@ export function RiskDashboard({
                 <td className="text-center py-3 px-2">
                   ±{coin.volatility.toFixed(1)}%
                 </td>
-                <td className="text-center py-3 px-2 text-red-600 font-medium">
+                <td className="text-center py-3 px-2 text-red-400 font-medium">
                   -${calculateLoss(coin.var_95)}
                 </td>
                 <td className="text-center py-3 px-2">
-                  <span className={coin.sharpe_ratio >= 1 ? 'text-green-600' : 'text-gray-600'}>
+                  <span className={coin.sharpe_ratio >= 1 ? 'text-green-400' : 'text-gray-400'}>
                     {coin.sharpe_ratio.toFixed(2)}
                   </span>
                 </td>
@@ -146,25 +146,25 @@ export function RiskDashboard({
             ))}
           </tbody>
         </table>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           *Based on ${amount.toLocaleString()} investment. Click any row for details.
         </p>
       </div>
 
       {/* Selected Coin Details */}
       {selectedCoin && (
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-bold mb-4">
+        <div className="border-t border-gray-700/50 pt-6">
+          <h3 className="text-lg font-bold text-white mb-4">
             {selectedCoin.name} ({selectedCoin.symbol}) Risk Analysis
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Risk Meter */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-semibold mb-3">Overall Risk Level</h4>
+            <div className="bg-gray-700/50 p-4 rounded-lg">
+              <h4 className="font-semibold text-white mb-3">Overall Risk Level</h4>
               <RiskMeter level={selectedCoin.risk_level} />
-              
-              <div className="mt-4 text-sm text-gray-600">
+
+              <div className="mt-4 text-sm text-gray-400">
                 {selectedCoin.risk_level <= 2 && (
                   <p>✅ This coin is relatively safe for crypto. Good for beginners!</p>
                 )}
@@ -178,38 +178,38 @@ export function RiskDashboard({
             </div>
 
             {/* Potential Losses */}
-            <div className="bg-red-50 p-4 rounded-lg">
-              <h4 className="font-semibold mb-3 text-red-800">
+            <div className="bg-red-500/10 p-4 rounded-lg">
+              <h4 className="font-semibold mb-3 text-red-400">
                 Potential Losses (${amount.toLocaleString()} investment)
               </h4>
-              
+
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-red-700">Bad day (95% confidence)</span>
-                    <span className="font-bold text-red-700">-${calculateLoss(selectedCoin.var_95)}</span>
+                    <span className="text-red-400">Bad day (95% confidence)</span>
+                    <span className="font-bold text-red-400">-${calculateLoss(selectedCoin.var_95)}</span>
                   </div>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-xs text-red-400/70 mt-1">
                     On most bad days, you won&apos;t lose more than this
                   </p>
                 </div>
-                
+
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-red-800">Very bad day (99% confidence)</span>
-                    <span className="font-bold text-red-800">-${calculateLoss(selectedCoin.var_99)}</span>
+                    <span className="text-red-300">Very bad day (99% confidence)</span>
+                    <span className="font-bold text-red-300">-${calculateLoss(selectedCoin.var_99)}</span>
                   </div>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-xs text-red-400/70 mt-1">
                     In extreme cases (1 in 100 days), losses could be this much
                   </p>
                 </div>
 
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-red-900">Biggest historical drop</span>
-                    <span className="font-bold text-red-900">-{selectedCoin.max_drawdown.toFixed(0)}%</span>
+                    <span className="text-red-300">Biggest historical drop</span>
+                    <span className="font-bold text-red-300">-{selectedCoin.max_drawdown.toFixed(0)}%</span>
                   </div>
-                  <p className="text-xs text-red-600 mt-1">
+                  <p className="text-xs text-red-400/70 mt-1">
                     The worst decline ever recorded for this coin
                   </p>
                 </div>
@@ -219,59 +219,59 @@ export function RiskDashboard({
 
           {/* Detailed Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <p className="text-gray-500 text-sm flex items-center gap-1">
+            <div className="bg-gray-800/60 border border-gray-700/50 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm flex items-center gap-1">
                 Daily Volatility
                 <InfoButton explanation="How much the price typically swings each day. Higher = more unpredictable." />
               </p>
-              <p className="text-xl font-bold">±{selectedCoin.volatility.toFixed(1)}%</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xl font-bold text-white">±{selectedCoin.volatility.toFixed(1)}%</p>
+              <p className="text-xs text-gray-400 mt-1">
                 Price moves about {selectedCoin.volatility.toFixed(1)}% up or down daily
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <p className="text-gray-500 text-sm flex items-center gap-1">
+            <div className="bg-gray-800/60 border border-gray-700/50 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm flex items-center gap-1">
                 Sharpe Ratio
                 <InfoButton explanation="Risk-adjusted return. Measures return per unit of risk. Above 1.0 is good, above 2.0 is excellent." />
               </p>
-              <p className={`text-xl font-bold ${selectedCoin.sharpe_ratio >= 1 ? 'text-green-600' : 'text-gray-700'}`}>
+              <p className={`text-xl font-bold ${selectedCoin.sharpe_ratio >= 1 ? 'text-green-400' : 'text-gray-300'}`}>
                 {selectedCoin.sharpe_ratio.toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 {selectedCoin.sharpe_ratio >= 2 ? 'Excellent' : selectedCoin.sharpe_ratio >= 1 ? 'Good' : 'Below average'} risk-return
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <p className="text-gray-500 text-sm flex items-center gap-1">
+            <div className="bg-gray-800/60 border border-gray-700/50 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm flex items-center gap-1">
                 Sortino Ratio
                 <InfoButton explanation="Like Sharpe, but only considers downside risk. Focuses on bad volatility, not good volatility." />
               </p>
-              <p className={`text-xl font-bold ${selectedCoin.sortino_ratio >= 1 ? 'text-green-600' : 'text-gray-700'}`}>
+              <p className={`text-xl font-bold ${selectedCoin.sortino_ratio >= 1 ? 'text-green-400' : 'text-gray-300'}`}>
                 {selectedCoin.sortino_ratio.toFixed(2)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 Downside risk adjusted
               </p>
             </div>
 
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <p className="text-gray-500 text-sm flex items-center gap-1">
+            <div className="bg-gray-800/60 border border-gray-700/50 p-4 rounded-lg">
+              <p className="text-gray-400 text-sm flex items-center gap-1">
                 Max Drawdown
                 <InfoButton explanation="The largest peak-to-trough decline in history. Shows the worst-case scenario that actually happened." />
               </p>
-              <p className="text-xl font-bold text-red-600">-{selectedCoin.max_drawdown.toFixed(0)}%</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xl font-bold text-red-400">-{selectedCoin.max_drawdown.toFixed(0)}%</p>
+              <p className="text-xs text-gray-400 mt-1">
                 Worst historical decline
               </p>
             </div>
           </div>
 
           {/* Recommendation */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">💡 What Should You Do?</h4>
-            <div className="text-sm text-blue-900 space-y-2">
+          <div className="mt-6 p-4 bg-blue-500/10 rounded-lg">
+            <h4 className="font-semibold text-blue-400 mb-2">💡 What Should You Do?</h4>
+            <div className="text-sm text-blue-300 space-y-2">
               {selectedCoin.risk_level <= 2 ? (
                 <>
                   <p>✅ This is one of the <strong>safer</strong> cryptocurrencies.</p>
@@ -336,9 +336,9 @@ export function RiskDashboardDemo({ showBeginnerTips = true }: { showBeginnerTip
 
   if (loadError) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-bold mb-2">⚠️ Risk Analytics Dashboard</h2>
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+      <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6">
+        <h2 className="text-xl font-bold text-white mb-2">⚠️ Risk Analytics Dashboard</h2>
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-400">
           ⚠️ Risk analytics unavailable: {loadError}
         </div>
       </div>
@@ -347,9 +347,9 @@ export function RiskDashboardDemo({ showBeginnerTips = true }: { showBeginnerTip
 
   if (!coins) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-bold mb-2">⚠️ Risk Analytics Dashboard</h2>
-        <p className="text-sm text-gray-500">Loading real risk metrics…</p>
+      <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6">
+        <h2 className="text-xl font-bold text-white mb-2">⚠️ Risk Analytics Dashboard</h2>
+        <p className="text-sm text-gray-400">Loading real risk metrics…</p>
       </div>
     );
   }

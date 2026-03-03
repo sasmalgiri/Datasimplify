@@ -12,6 +12,7 @@ import {
   areAllSourcesRedistributableClient,
   isAnySourceRedistributableClient,
 } from '@/lib/redistributionPolicyClient';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 // Import echarts-gl after echarts core (must be in this order)
 import 'echarts-gl';
@@ -107,7 +108,7 @@ const CHART_CONFIGS: Array<{
   { type: 'sunburst', title: 'Sunburst', category: 'hierarchy', icon: '◔', description: 'Market structure by cap tiers (real market data)' },
   { type: 'graph_network', title: 'Network Graph', category: 'flow', icon: '◎', description: 'Coin network by market cap similarity (real market data)' },
   { type: 'funnel', title: 'Dominance Funnel', category: 'metrics', icon: '⏷', description: 'Dominance view by market cap (real market data)' },
-  { type: 'wallet_distribution', title: 'Wallet Distribution', category: 'special', icon: '₿', description: 'Unavailable (no free, reliable wallet distribution source wired)' },
+  { type: 'wallet_distribution', title: 'Wallet Distribution', category: 'special', icon: '₿', description: 'Bitcoin wallet distribution treemap (real on-chain data)' },
 
   // Disabled (no-fake-data policy): kept for navigation but will show Unavailable.
   { type: 'sankey', title: 'Sankey Flow', category: 'flow', icon: '⇄', description: 'Unavailable (requires real flow data source)' },
@@ -1046,22 +1047,7 @@ function AdvancedChartsContent() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-blue-400">
-              CryptoReportKit
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/charts" className="text-blue-400 hover:text-blue-300">
-                ← Basic Charts
-              </Link>
-              <Link href="/dashboard" className="text-gray-400 hover:text-white">Dashboard</Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <FreeNavbar />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
@@ -1085,7 +1071,9 @@ function AdvancedChartsContent() {
                        category === 'flow' ? 'Flow & Network' :
                        category === 'metrics' ? 'Metrics' : 'Special'}
                     </div>
-                    {AVAILABLE_CHART_CONFIGS.filter(c => c.category === category).map(config => (
+                    {AVAILABLE_CHART_CONFIGS.filter(c => c.category === category).map(config => {
+                      const isUnavailable = ['sankey', 'radar_advanced', 'parallel', 'globe_3d'].includes(config.type);
+                      return (
                       <button
                         type="button"
                         key={config.type}
@@ -1094,14 +1082,18 @@ function AdvancedChartsContent() {
                           selectedChart === config.type
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-700/50 hover:bg-gray-700 text-gray-300'
-                        }`}
+                        } ${isUnavailable ? 'opacity-60' : ''}`}
                       >
                         <div className="flex items-center gap-2">
                           <span>{config.icon}</span>
                           <span className="text-sm font-medium">{config.title}</span>
+                          {isUnavailable && (
+                            <span className="ml-1 text-[10px] px-1.5 py-0.5 bg-gray-600 text-gray-400 rounded">N/A</span>
+                          )}
                         </div>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
               </div>
@@ -1275,6 +1267,21 @@ function AdvancedChartsContent() {
                   <div className="h-full">
                     <WalletDistributionTreemap />
                   </div>
+                ) : ['sankey', 'radar_advanced', 'parallel', 'globe_3d'].includes(selectedChart) ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center max-w-md">
+                      <div className="mx-auto w-16 h-16 rounded-full bg-gray-700/60 flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-300 mb-2">Data Source Required</h3>
+                      <p className="text-sm text-gray-500 mb-4">{selectedConfig?.description}</p>
+                      <span className="inline-block px-3 py-1 bg-amber-600/20 text-amber-400 rounded-full text-xs font-medium">
+                        Coming Soon
+                      </span>
+                    </div>
+                  </div>
                 ) : filteredCoins.length === 0 ? (
                   <div className="h-full flex items-center justify-center">
                     <div className="text-center text-gray-400">
@@ -1319,7 +1326,7 @@ function AdvancedChartsContent() {
                 {selectedChart === 'calendar' && 'Calendar heatmap shows daily trading activity over the past 6 months. Darker colors indicate higher trading volume.'}
                 {selectedChart === 'globe_3d' && '3D Metrics visualization shows a rotating 3D bar chart comparing multiple metrics (Market Cap, Volume, Holders, Sentiment) across selected coins. Drag to rotate, scroll to zoom.'}
                 {selectedChart === 'whale_tracker' && 'Whale Tracker monitors large cryptocurrency transactions (>$1M USD). Bubble size represents transaction value. Green border = buy, Red border = sell, Gray border = transfer. Track whale movements between exchanges, wallets, and DeFi protocols.'}
-                {selectedChart === 'wallet_distribution' && 'Wallet Distribution is unavailable until a real public data source is integrated. (Hardcoded example buckets are not shown.)'}
+                {selectedChart === 'wallet_distribution' && 'Wallet Distribution shows the breakdown of Bitcoin holdings across different wallet size tiers using real on-chain data. The treemap visualizes how BTC is distributed from small retail holders to large whale wallets.'}
               </p>
             </div>
 

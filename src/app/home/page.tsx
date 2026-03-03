@@ -218,7 +218,7 @@ export default function HomePage() {
               href="/live-dashboards"
               className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
             >
-              See all 83 <ArrowRight className="w-3 h-3" />
+              See all {LIVE_DASHBOARDS.length} <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

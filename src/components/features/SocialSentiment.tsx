@@ -192,14 +192,14 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6">
       {/* Header */}
       <div className="mb-4">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
           📱 Social Sentiment Analysis
           <InfoButton explanation="This tracks what people are saying about crypto on Twitter, Reddit, YouTube, and news sites. High positive sentiment often (but not always) leads to price increases." />
         </h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-400 text-sm mt-1">
           See what the crowd is thinking about each coin
         </p>
       </div>
@@ -223,14 +223,14 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
       {loading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading sentiment data...</span>
+          <span className="ml-3 text-gray-400">Loading sentiment data...</span>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-600">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+          <p className="text-red-400">{error}</p>
         </div>
       )}
 
@@ -248,7 +248,7 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               sortBy === option.id
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-700/50 text-gray-400 hover:bg-gray-700'
             }`}
           >
             {option.label}
@@ -267,8 +267,8 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
               onClick={() => setSelectedCoin(coin)}
               className={`w-full p-4 rounded-lg border text-left transition-all ${
                 selectedCoin?.id === coin.id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-500 bg-gray-700/50'
+                  : 'border-gray-700/50 hover:border-gray-600'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -281,16 +281,16 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
                     </span>
                   )}
                   <div>
-                    <span className="font-bold">{coin.symbol}</span>
-                    <span className="text-gray-500 text-sm ml-1">{coin.name}</span>
+                    <span className="font-bold text-white">{coin.symbol}</span>
+                    <span className="text-gray-400 text-sm ml-1">{coin.name}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">{getSentimentEmoji(coin.sentiment_score)}</span>
                   <div className="text-right">
                     <div className={`font-bold ${
-                      coin.sentiment_score >= 60 ? 'text-green-600' : 
-                      coin.sentiment_score >= 40 ? 'text-yellow-600' : 'text-red-600'
+                      coin.sentiment_score >= 60 ? 'text-green-400' :
+                      coin.sentiment_score >= 40 ? 'text-yellow-400' : 'text-red-400'
                     }`}>
                       {coin.sentiment_score}%
                     </div>
@@ -308,7 +308,7 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
               {/* Mini sentiment bar */}
               <div className="flex h-2 mt-2 rounded-full overflow-hidden">
                 <SentimentBarSegment width={coin.bullish_percent} className="bg-green-500" />
-                <SentimentBarSegment width={coin.neutral_percent} className="bg-gray-300" />
+                <SentimentBarSegment width={coin.neutral_percent} className="bg-gray-500" />
                 <SentimentBarSegment width={coin.bearish_percent} className="bg-red-500" />
               </div>
             </button>
@@ -334,33 +334,33 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
             </div>
 
             {/* Sentiment Breakdown */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold mb-3">Sentiment Breakdown</h4>
+            <div className="bg-gray-700/50 rounded-lg p-4">
+              <h4 className="font-semibold text-white mb-3">Sentiment Breakdown</h4>
               <div className="space-y-2">
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-green-600">😊 Bullish</span>
-                    <span className="font-bold">{selectedCoin.bullish_percent}%</span>
+                    <span className="text-green-400">😊 Bullish</span>
+                    <span className="font-bold text-white">{selectedCoin.bullish_percent}%</span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-600 rounded-full overflow-hidden">
                     <SentimentBarSegment width={selectedCoin.bullish_percent} className="h-full bg-green-500" />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">😐 Neutral</span>
-                    <span className="font-bold">{selectedCoin.neutral_percent}%</span>
+                    <span className="text-gray-400">😐 Neutral</span>
+                    <span className="font-bold text-white">{selectedCoin.neutral_percent}%</span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-600 rounded-full overflow-hidden">
                     <SentimentBarSegment width={selectedCoin.neutral_percent} className="h-full bg-gray-400" />
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-red-600">😟 Bearish</span>
-                    <span className="font-bold">{selectedCoin.bearish_percent}%</span>
+                    <span className="text-red-400">😟 Bearish</span>
+                    <span className="font-bold text-white">{selectedCoin.bearish_percent}%</span>
                   </div>
-                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-600 rounded-full overflow-hidden">
                     <SentimentBarSegment width={selectedCoin.bearish_percent} className="h-full bg-red-500" />
                   </div>
                 </div>
@@ -368,66 +368,70 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
             </div>
 
             {/* Social Volume */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="font-semibold mb-3">Where People Are Talking</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-blue-500">
-                    <span>🐦</span>
-                    <span className="text-sm">Twitter/X</span>
+            <div className="bg-gray-700/50 rounded-lg p-4">
+              {(selectedCoin.twitter_mentions !== null || selectedCoin.reddit_posts !== null || selectedCoin.youtube_videos !== null || selectedCoin.news_articles !== null) && (
+                <>
+                  <h4 className="font-semibold text-white mb-3">Where People Are Talking</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-800/60 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-blue-400">
+                        <span>🐦</span>
+                        <span className="text-sm">Twitter/X</span>
+                      </div>
+                      <div className="font-bold text-lg text-white">{formatNumber(selectedCoin.twitter_mentions)}</div>
+                    </div>
+                    <div className="bg-gray-800/60 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-orange-400">
+                        <span>📱</span>
+                        <span className="text-sm">Reddit</span>
+                      </div>
+                      <div className="font-bold text-lg text-white">{formatNumber(selectedCoin.reddit_posts)}</div>
+                    </div>
+                    <div className="bg-gray-800/60 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-red-400">
+                        <span>▶️</span>
+                        <span className="text-sm">YouTube</span>
+                      </div>
+                      <div className="font-bold text-lg text-white">{formatNumber(selectedCoin.youtube_videos)}</div>
+                    </div>
+                    <div className="bg-gray-800/60 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <span>📰</span>
+                        <span className="text-sm">News</span>
+                      </div>
+                      <div className="font-bold text-lg text-white">{formatNumber(selectedCoin.news_articles)}</div>
+                    </div>
                   </div>
-                  <div className="font-bold text-lg">{formatNumber(selectedCoin.twitter_mentions)}</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-orange-500">
-                    <span>📱</span>
-                    <span className="text-sm">Reddit</span>
-                  </div>
-                  <div className="font-bold text-lg">{formatNumber(selectedCoin.reddit_posts)}</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-500">
-                    <span>▶️</span>
-                    <span className="text-sm">YouTube</span>
-                  </div>
-                  <div className="font-bold text-lg">{formatNumber(selectedCoin.youtube_videos)}</div>
-                </div>
-                <div className="bg-white p-3 rounded-lg">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <span>📰</span>
-                    <span className="text-sm">News</span>
-                  </div>
-                  <div className="font-bold text-lg">{formatNumber(selectedCoin.news_articles)}</div>
-                </div>
-              </div>
-              
-              <div className="mt-3 pt-3 border-t border-gray-200">
+                </>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-gray-600/50">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Social Volume</span>
-                  <span className="font-bold text-lg">{formatNumber(selectedCoin.social_volume)} mentions</span>
+                  <span className="text-gray-400">Total Social Volume</span>
+                  <span className="font-bold text-lg text-white">{formatNumber(selectedCoin.social_volume)} mentions</span>
                 </div>
                 <div className="flex justify-between items-center mt-1">
-                  <span className="text-gray-600">Influencer Mentions</span>
-                  <span className="font-bold">{formatNumber(selectedCoin.influencer_mentions)}</span>
+                  <span className="text-gray-400">Influencer Mentions</span>
+                  <span className="font-bold text-white">{formatNumber(selectedCoin.influencer_mentions)}</span>
                 </div>
               </div>
             </div>
 
             {/* Galaxy Score */}
-            <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg p-4">
               <div className="flex justify-between items-center">
                 <div>
-                  <h4 className="font-semibold">🌟 Galaxy Score</h4>
-                  <p className="text-xs text-gray-500">Combined social + price performance</p>
+                  <h4 className="font-semibold text-white">🌟 Galaxy Score</h4>
+                  <p className="text-xs text-gray-400">Combined social + price performance</p>
                 </div>
                 <div className={`text-3xl font-bold ${
                   selectedCoin.galaxy_score === null || selectedCoin.galaxy_score === undefined
-                    ? 'text-gray-600'
+                    ? 'text-gray-400'
                     : selectedCoin.galaxy_score >= 70
-                      ? 'text-green-600'
+                      ? 'text-green-400'
                       : selectedCoin.galaxy_score >= 50
-                        ? 'text-yellow-600'
-                        : 'text-red-600'
+                        ? 'text-yellow-400'
+                        : 'text-red-400'
                 }`}>
                   {selectedCoin.galaxy_score === null || selectedCoin.galaxy_score === undefined ? 'N/A' : selectedCoin.galaxy_score}
                 </div>
@@ -436,29 +440,29 @@ export function SocialSentiment({ showBeginnerTips = true }: { showBeginnerTips?
 
             {/* Interpretation */}
             <div className={`p-4 rounded-lg ${
-              selectedCoin.sentiment_score >= 70 ? 'bg-green-50 border border-green-200' :
-              selectedCoin.sentiment_score >= 40 ? 'bg-yellow-50 border border-yellow-200' :
-              'bg-red-50 border border-red-200'
+              selectedCoin.sentiment_score >= 70 ? 'bg-green-500/10 border border-green-500/30' :
+              selectedCoin.sentiment_score >= 40 ? 'bg-yellow-500/10 border border-yellow-500/30' :
+              'bg-red-500/10 border border-red-500/30'
             }`}>
-              <h4 className="font-semibold mb-2">💡 What This Means</h4>
+              <h4 className="font-semibold text-white mb-2">💡 What This Means</h4>
               {selectedCoin.sentiment_score >= 80 ? (
-                <p className="text-sm text-green-800">
+                <p className="text-sm text-green-400">
                   <strong>Very High Excitement!</strong> Everyone is talking positively about {selectedCoin.symbol}.
-                  ⚠️ Be careful - extreme excitement often means prices are already high. 
+                  ⚠️ Be careful - extreme excitement often means prices are already high.
                   Don&apos;t FOMO buy at the top!
                 </p>
               ) : selectedCoin.sentiment_score >= 60 ? (
-                <p className="text-sm text-green-800">
+                <p className="text-sm text-green-400">
                   <strong>Positive Sentiment.</strong> People are generally bullish on {selectedCoin.symbol}.
                   This could support price growth, but always do your own research.
                 </p>
               ) : selectedCoin.sentiment_score >= 40 ? (
-                <p className="text-sm text-yellow-800">
+                <p className="text-sm text-yellow-400">
                   <strong>Mixed Feelings.</strong> The crowd is uncertain about {selectedCoin.symbol}.
                   Wait for clearer signals before making decisions.
                 </p>
               ) : (
-                <p className="text-sm text-red-800">
+                <p className="text-sm text-red-400">
                   <strong>Negative Sentiment.</strong> People are bearish on {selectedCoin.symbol}.
                   Could be a buying opportunity OR a warning sign. Research why people are negative.
                 </p>

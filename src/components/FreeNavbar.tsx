@@ -246,12 +246,20 @@ export function FreeNavbar() {
                 My Account
               </Link>
             ) : (
-              <Link
-                href="/login"
-                className="px-4 py-2 text-gray-300 hover:text-white transition"
-              >
-                Login
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-gray-300 hover:text-white transition"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/signup"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition"
+                >
+                  Sign Up
+                </Link>
+              </>
             )}
           </div>
 
@@ -295,13 +303,22 @@ export function FreeNavbar() {
                   My Account
                 </Link>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex-1 py-2 text-center text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition"
-                >
-                  Login
-                </Link>
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 py-2 text-center text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 py-2 text-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
           </div>

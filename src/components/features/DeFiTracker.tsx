@@ -398,9 +398,13 @@ export function DeFiTracker({ showBeginnerTips = true }: { showBeginnerTips?: bo
               </div>
               <div className="text-right">
                 <p className="font-bold">{formatTVL(chain.tvl)}</p>
-                <p className={`text-xs ${chain.change_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {chain.change_24h >= 0 ? '+' : ''}{chain.change_24h}%
-                </p>
+                {chain.change_24h === 0 ? (
+                  <p className="text-xs text-gray-400">--</p>
+                ) : (
+                  <p className={`text-xs ${chain.change_24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {chain.change_24h >= 0 ? '+' : ''}{chain.change_24h}%
+                  </p>
+                )}
               </div>
               <div className="w-32">
                 <div className="h-2 bg-gray-200 rounded-full overflow-hidden">

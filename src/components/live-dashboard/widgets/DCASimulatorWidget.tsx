@@ -32,21 +32,6 @@ function addInterval(date: Date, interval: 'weekly' | 'biweekly' | 'monthly'): D
   return d;
 }
 
-/** Build a simple simulated BTC price series for the fallback case */
-function generateMockPriceHistory(startDate: Date, endDate: Date): { date: Date; price: number }[] {
-  const points: { date: Date; price: number }[] = [];
-  let price = 28000 + Math.random() * 5000;
-  const d = new Date(startDate);
-  while (d <= endDate) {
-    // Random walk with slight upward bias
-    price *= 1 + (Math.random() - 0.48) * 0.03;
-    price = Math.max(price, 5000);
-    points.push({ date: new Date(d), price });
-    d.setDate(d.getDate() + 1);
-  }
-  return points;
-}
-
 /** Interpolate the price for a given date from a sorted price history */
 function priceAtDate(
   history: { date: Date; price: number }[],
@@ -104,7 +89,7 @@ export function DCASimulatorWidget() {
     const startDate = new Date(startDateStr);
     if (isNaN(startDate.getTime()) || startDate >= now) return null;
 
-    // Build price history from store or mock
+    // Build price history from store data
     let priceHistory: { date: Date; price: number }[] = [];
 
     // coinHistory is the raw CoinGecko /market_chart response:
@@ -123,9 +108,9 @@ export function DCASimulatorWidget() {
       }
     }
 
-    // If no real data, generate mock
+    // If no real price data is available, signal empty state
     if (priceHistory.length === 0) {
-      priceHistory = generateMockPriceHistory(startDate, now);
+      return { noData: true as const } as any;
     }
 
     // DCA simulation
@@ -184,7 +169,7 @@ export function DCASimulatorWidget() {
       finalLumpValue,
       dcaReturn,
       vsLumpDiff,
-      isMock: priceHistory.length > 0 && !data.coinHistory,
+      isMock: false,
     };
   }, [data.coinHistory, coin, startDateStr, amount, interval]);
 
@@ -366,7 +351,7 @@ export function DCASimulatorWidget() {
       </div>
 
       {/* KPI Row */}
-      {simulation && (
+      {simulation && !simulation.noData && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {kpiItems.map((kpi) => (
             <div
@@ -385,21 +370,21 @@ export function DCASimulatorWidget() {
       )}
 
       {/* Chart */}
-      {option ? (
-        <div>
-          <ReactEChartsCore
-            echarts={echarts}
-            option={option}
-            style={{ height, width: '100%' }}
-            opts={{ renderer: 'canvas' }}
-            notMerge
-          />
-          {simulation?.isMock && (
-            <p className={`text-[10px] ${st.textDim} mt-1 text-center italic`}>
-              Simulated prices — connect API key and load coin history for real data
-            </p>
-          )}
+      {simulation?.noData ? (
+        <div className={`flex flex-col items-center justify-center h-40 ${st.textDim} text-sm text-center px-4 gap-2`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+          </svg>
+          <p>No price history available. This dashboard needs coin history data to run the DCA simulation.</p>
         </div>
+      ) : option ? (
+        <ReactEChartsCore
+          echarts={echarts}
+          option={option}
+          style={{ height, width: '100%' }}
+          opts={{ renderer: 'canvas' }}
+          notMerge
+        />
       ) : (
         <div className={`flex items-center justify-center h-40 ${st.textDim} text-sm`}>
           Adjust parameters above to run DCA simulation

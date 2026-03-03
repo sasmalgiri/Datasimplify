@@ -28,6 +28,7 @@ import { CoinMarketData } from '@/types/crypto';
 import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChangeColor } from '@/lib/utils';
 import { fetchWithCache, CACHE_TTL } from '@/lib/clientCache';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 // Calculate support/resistance levels using pivot points from OHLC data
 function calculateSupportResistance(high: number, low: number, close: number): {
@@ -429,6 +430,7 @@ export default function CoinDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900">
+        <FreeNavbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
@@ -447,6 +449,7 @@ export default function CoinDetailPage() {
   if (!coin) {
     return (
       <div className="min-h-screen bg-gray-900">
+        <FreeNavbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-20">
             <h1 className="text-2xl font-bold text-white mb-4">Coin not found</h1>
@@ -472,6 +475,7 @@ export default function CoinDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      <FreeNavbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back link */}
         <Link

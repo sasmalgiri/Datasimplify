@@ -619,7 +619,13 @@ export default function LandingPage() {
           <p className="text-lg md:text-xl font-semibold text-white mb-2">
             {IS_BETA_MODE
               ? 'Free during beta — all features unlocked.'
-              : 'Free for 30 days starting today 26.02.2026 to 25.03.2026'}
+              : (() => {
+                  const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+                  const today = new Date();
+                  const end = new Date(today);
+                  end.setDate(end.getDate() + 30);
+                  return `Free for 30 days starting today ${fmt(today)} to ${fmt(end)}`;
+                })()}
           </p>
           {!IS_BETA_MODE && (
             <p className="text-gray-400 text-base mb-6">

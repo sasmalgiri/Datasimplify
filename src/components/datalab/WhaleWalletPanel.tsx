@@ -20,26 +20,6 @@ interface WhaleWalletPanelProps {
   onClose: () => void;
 }
 
-/** Generate simulated whale data for fallback */
-function generateSimulatedWhaleData(): WhaleTransaction[] {
-  const now = Date.now();
-  const types: ('buy' | 'sell' | 'transfer')[] = ['buy', 'sell', 'transfer', 'buy', 'sell'];
-  return Array.from({ length: 8 }, (_, i) => {
-    const type = types[i % types.length];
-    const amount = Math.round(50 + Math.random() * 500);
-    const price = 85000 + Math.random() * 10000;
-    return {
-      id: `sim-${i}`,
-      timestamp: now - i * 3600000 * (2 + Math.random() * 10),
-      type,
-      amount,
-      valueUsd: amount * price,
-      signal: type === 'buy' ? 'bullish' : type === 'sell' ? 'bearish' : 'neutral',
-      label: `${type} ${amount} BTC ($${((amount * price) / 1e6).toFixed(1)}M)`,
-    };
-  });
-}
-
 const SIGNAL_COLORS = {
   bullish: { bg: 'bg-emerald-400/10', text: 'text-emerald-400', border: 'border-emerald-400/20' },
   bearish: { bg: 'bg-red-400/10', text: 'text-red-400', border: 'border-red-400/20' },
@@ -81,7 +61,7 @@ export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
       setTransactions(txs);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Error fetching whale data');
-      setTransactions(generateSimulatedWhaleData());
+      setTransactions([]);
     } finally {
       setLoading(false);
     }
@@ -123,16 +103,18 @@ export function WhaleWalletPanel({ show, onClose }: WhaleWalletPanelProps) {
         </div>
 
         {error && (
-          <p className="text-[10px] text-amber-400/70 mb-2">
-            Using simulated data &mdash; whale API unavailable
+          <p className="text-[11px] text-amber-400/70 mb-2 text-center py-3">
+            Unable to load whale data. Check your API configuration or try again later.
           </p>
         )}
 
-        {transactions.length === 0 && !loading ? (
+        {!error && transactions.length === 0 && !loading && (
           <p className="text-[11px] text-gray-600 text-center py-3">
             No whale transactions detected.
           </p>
-        ) : (
+        )}
+
+        {!error && transactions.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
             {transactions.map((tx) => {
               const colors = SIGNAL_COLORS[tx.signal];

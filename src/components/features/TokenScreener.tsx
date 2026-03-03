@@ -42,8 +42,8 @@ const FILTER_FIELDS = [
   { key: 'market_cap', label: 'Market Cap', group: 'Market', step: 1000000 },
   { key: 'volume_24h', label: '24h Volume', group: 'Market', step: 1000000 },
   { key: 'volume_mcap_ratio', label: 'Volume/MCap Ratio', group: 'Market', step: 0.01 },
-  { key: 'rsi', label: 'RSI (14)', group: 'Technical', step: 1 },
-  { key: 'volatility', label: 'Volatility', group: 'Technical', step: 0.1 },
+  { key: 'rsi', label: 'Est. RSI', group: 'Technical', step: 1 },
+  { key: 'volatility', label: 'Volatility (est.)', group: 'Technical', step: 0.1 },
 ] as const;
 
 const OPERATOR_LABELS: Record<string, string> = {
@@ -196,11 +196,11 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
     {
       category: 'Technical',
       presets: [
-        { id: 'oversold', name: '💰 Oversold (RSI < 30)', filters: [{ id: '1', field: 'rsi', operator: 'lt' as const, value: 30 }] },
-        { id: 'overbought', name: '⚠️ Overbought (RSI > 70)', filters: [{ id: '1', field: 'rsi', operator: 'gt' as const, value: 70 }] },
-        { id: 'neutral_rsi', name: '⚖️ Neutral RSI (40-60)', filters: [{ id: '1', field: 'rsi', operator: 'between' as const, value: 40, value2: 60 }] },
-        { id: 'lowvolatility', name: '🛡️ Low Volatility (<3)', filters: [{ id: '1', field: 'volatility', operator: 'lt' as const, value: 3 }] },
-        { id: 'highvolatility', name: '🎢 High Volatility (>10)', filters: [{ id: '1', field: 'volatility', operator: 'gt' as const, value: 10 }] },
+        { id: 'oversold', name: '💰 Oversold (Est. RSI < 30)', filters: [{ id: '1', field: 'rsi', operator: 'lt' as const, value: 30 }] },
+        { id: 'overbought', name: '⚠️ Overbought (Est. RSI > 70)', filters: [{ id: '1', field: 'rsi', operator: 'gt' as const, value: 70 }] },
+        { id: 'neutral_rsi', name: '⚖️ Neutral Est. RSI (40-60)', filters: [{ id: '1', field: 'rsi', operator: 'between' as const, value: 40, value2: 60 }] },
+        { id: 'lowvolatility', name: '🛡️ Low Est. Volatility (<3)', filters: [{ id: '1', field: 'volatility', operator: 'lt' as const, value: 3 }] },
+        { id: 'highvolatility', name: '🎢 High Est. Volatility (>10)', filters: [{ id: '1', field: 'volatility', operator: 'gt' as const, value: 10 }] },
       ],
     },
     {
@@ -619,9 +619,9 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                 V/MC {sortBy === 'volume_mcap_ratio' && (sortOrder === 'desc' ? '↓' : '↑')}
                 <InfoButton explanation="Volume to Market Cap ratio. Higher values indicate unusual trading activity relative to the coin's size. Values above 0.15 often signal significant interest." />
               </th>
-              <th className="text-center py-3 px-2">
-                RSI
-                <InfoButton explanation="RSI (Relative Strength Index) measures if a coin is overbought (>70) or oversold (<30)." />
+              <th className="text-center py-3 px-2" title="Estimated RSI based on recent price change. Not a real 14-period RSI calculation.">
+                RSI (est.)
+                <InfoButton explanation="Estimated RSI based on recent 24h price change. This is NOT a real 14-period RSI calculation — it is a simplified approximation for quick screening only." />
               </th>
               <th className="text-center py-3 px-2">Category</th>
             </tr>
@@ -655,7 +655,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                     {token.volume_mcap_ratio.toFixed(3)}
                   </span>
                 </td>
-                <td className="py-3 px-2 text-center">
+                <td className="py-3 px-2 text-center" title="Estimated RSI — not a real 14-period calculation">
                   <span className={`px-2 py-1 rounded text-xs font-bold ${getRSIColor(token.rsi)}`}>
                     {token.rsi}
                   </span>
@@ -681,7 +681,10 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
       {/* RSI Legend */}
       {showBeginnerTips && (
         <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-          <h3 className="font-semibold mb-2">📊 Understanding RSI</h3>
+          <h3 className="font-semibold mb-2">📊 Understanding RSI (Estimated)</h3>
+          <p className="text-xs text-yellow-400/80 mb-3">
+            Note: These RSI values are estimated from recent 24h price changes. They are not real 14-period RSI calculations and should be used for quick screening only.
+          </p>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="text-center">
               <span className="inline-block px-3 py-1 bg-green-500/10 text-green-400 rounded-full font-bold">0-30</span>
