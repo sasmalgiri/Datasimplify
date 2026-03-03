@@ -2064,3 +2064,84 @@ export async function getUserForumVotes(
     return { replyVotes: {} };
   }
 }
+
+// ============================================
+// BLOG POSTS (AI-generated, stored in Supabase)
+// ============================================
+
+export interface DBBlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  keywords: string[];
+  publish_date: string;
+  updated_date: string | null;
+  author: string;
+  category: string;
+  reading_time_minutes: number;
+  cover_emoji: string;
+  excerpt: string;
+  sections: any; // JSONB -> BlogSection[]
+  related_posts: string[];
+  cta_href: string;
+  cta_label: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getPublishedBlogPosts(): Promise<DBBlogPost[]> {
+  const db = checkSupabase();
+  const { data, error } = await (db.from('blog_posts') as any)
+    .select('*')
+    .eq('is_published', true)
+    .order('publish_date', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as DBBlogPost[];
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<DBBlogPost | null> {
+  const db = checkSupabase();
+  const { data, error } = await (db.from('blog_posts') as any)
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as DBBlogPost) || null;
+}
+
+export async function getAllBlogSlugs(): Promise<string[]> {
+  const db = checkSupabase();
+  const { data, error } = await (db.from('blog_posts') as any)
+    .select('slug')
+    .eq('is_published', true);
+
+  if (error) throw error;
+  return (data || []).map((row: any) => row.slug);
+}
+
+export async function insertBlogPost(
+  post: Omit<DBBlogPost, 'id' | 'created_at' | 'updated_at' | 'is_published'>
+): Promise<DBBlogPost> {
+  const db = checkSupabase();
+  const { data, error } = await (db.from('blog_posts') as any)
+    .insert(post)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as DBBlogPost;
+}
+
+export async function blogSlugExists(slug: string): Promise<boolean> {
+  const db = checkSupabase();
+  const { data } = await (db.from('blog_posts') as any)
+    .select('id')
+    .eq('slug', slug)
+    .maybeSingle();
+  return !!data;
+}

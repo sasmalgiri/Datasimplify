@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { LIVE_DASHBOARDS } from '@/lib/live-dashboard/definitions';
 import { getAllPosts } from '@/lib/blog/posts';
+import { getPublishedBlogPosts } from '@/lib/supabaseData';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -8,7 +9,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com
 // Update this date when you deploy meaningful content changes.
 const LAST_UPDATED = '2026-02-26T00:00:00.000Z';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const mainPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 1.0 },
@@ -89,14 +90,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/refund`, lastModified: LAST_UPDATED, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
+  // Static blog posts
+  const staticBlogPages = getAllPosts().map((post) => ({
+    url: `${BASE_URL}/blog/${post.slug}`,
+    lastModified: post.updatedDate ?? post.publishDate,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  // DB blog posts (AI-generated)
+  let dbBlogPages: MetadataRoute.Sitemap = [];
+  try {
+    const dbPosts = await getPublishedBlogPosts();
+    const staticSlugs = new Set(getAllPosts().map((p) => p.slug));
+    dbBlogPages = dbPosts
+      .filter((p) => !staticSlugs.has(p.slug))
+      .map((post) => ({
+        url: `${BASE_URL}/blog/${post.slug}`,
+        lastModified: post.updated_date ?? post.publish_date,
+        changeFrequency: 'weekly' as const,
+        priority: 0.65,
+      }));
+  } catch {
+    // If DB fails, sitemap still works with static posts
+  }
+
   const blogPages: MetadataRoute.Sitemap = [
-    { url: `${BASE_URL}/blog`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.75 },
-    ...getAllPosts().map((post) => ({
-      url: `${BASE_URL}/blog/${post.slug}`,
-      lastModified: post.updatedDate ?? post.publishDate,
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
+    { url: `${BASE_URL}/blog`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.75 },
+    ...staticBlogPages,
+    ...dbBlogPages,
   ];
 
   return [...mainPages, ...blogPages, ...dashboardPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];

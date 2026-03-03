@@ -2,10 +2,13 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
-import { getPostBySlug, getAllSlugs } from '@/lib/blog/posts';
+import { getPostBySlugMerged, getAllSlugs } from '@/lib/blog/posts';
 import type { BlogPost } from '@/lib/blog/posts';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import type { Metadata } from 'next';
+
+export const revalidate = 3600;
+export const dynamicParams = true;
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -16,7 +19,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugMerged(slug);
   if (!post) return { title: 'Post Not Found' };
 
   return {
@@ -108,7 +111,7 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlugMerged(slug);
   if (!post) notFound();
 
   const formattedDate = format(new Date(post.publishDate), 'MMMM d, yyyy');
@@ -118,31 +121,33 @@ export default async function BlogPostPage({
       <ArticleJsonLdScript post={post} />
       <BreadcrumbJsonLdScript post={post} />
 
-      <div className="min-h-screen bg-gray-50 text-gray-900">
+      <div className="min-h-screen bg-gray-900 text-white">
         <FreeNavbar />
 
         {/* Article Header */}
-        <div className="bg-white border-b border-gray-200 py-10 px-4">
+        <div className="bg-gray-800/50 border-b border-gray-700/50 py-10 px-4">
           <div className="max-w-3xl mx-auto">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-400 mb-4">
               <Link
                 href="/blog"
-                className="flex items-center gap-1 hover:text-emerald-600 transition-colors"
+                className="flex items-center gap-1 hover:text-emerald-400 transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Blog
               </Link>
               <span>&middot;</span>
-              <span>{post.category}</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium uppercase bg-emerald-400/10 text-emerald-400">
+                {post.category}
+              </span>
               <span>&middot;</span>
               <span>{post.readingTimeMinutes} min read</span>
               <span>&middot;</span>
               <time dateTime={post.publishDate}>{formattedDate}</time>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
               {post.title}
             </h1>
-            <p className="text-lg text-gray-600 leading-relaxed">{post.description}</p>
+            <p className="text-lg text-gray-400 leading-relaxed">{post.description}</p>
           </div>
         </div>
 
@@ -150,14 +155,14 @@ export default async function BlogPostPage({
         <article className="max-w-3xl mx-auto px-4 py-10">
           {/* Table of Contents */}
           {post.sections.length > 2 && (
-            <nav className="bg-white border border-gray-200 rounded-xl p-5 mb-10">
-              <p className="font-semibold text-gray-900 mb-3">Contents</p>
+            <nav className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 mb-10">
+              <p className="font-semibold text-white mb-3">Contents</p>
               <ol className="space-y-1.5 list-decimal list-inside text-sm">
                 {post.sections.map((s) => (
-                  <li key={s.id}>
+                  <li key={s.id} className="text-gray-400">
                     <a
                       href={`#${s.id}`}
-                      className="text-emerald-600 hover:text-emerald-700 transition-colors"
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors"
                     >
                       {s.heading}
                     </a>
@@ -170,16 +175,16 @@ export default async function BlogPostPage({
           {/* Sections */}
           {post.sections.map((section) => (
             <section id={section.id} key={section.id} className="mb-10 scroll-mt-20">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">{section.heading}</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">{section.heading}</h2>
 
               {section.body.map((para, i) => (
-                <p key={i} className="text-gray-700 leading-relaxed mb-4">
+                <p key={i} className="text-gray-300 leading-relaxed mb-4">
                   {para}
                 </p>
               ))}
 
               {section.bullets && (
-                <ul className="list-disc ml-5 space-y-2 text-gray-700 mb-4">
+                <ul className="list-disc ml-5 space-y-2 text-gray-300 mb-4">
                   {section.bullets.map((b, i) => (
                     <li key={i} className="leading-relaxed">
                       {b}
@@ -189,8 +194,8 @@ export default async function BlogPostPage({
               )}
 
               {section.note && (
-                <div className="bg-emerald-50 border-l-4 border-emerald-400 p-4 rounded-r-lg mb-4">
-                  <p className="text-emerald-800 text-sm leading-relaxed">{section.note}</p>
+                <div className="bg-emerald-400/5 border-l-4 border-emerald-400/50 p-4 rounded-r-lg mb-4">
+                  <p className="text-emerald-300/90 text-sm leading-relaxed">{section.note}</p>
                 </div>
               )}
 
@@ -198,11 +203,11 @@ export default async function BlogPostPage({
                 <div className="overflow-x-auto mb-4">
                   <table className="w-full border-collapse text-sm">
                     <thead>
-                      <tr className="bg-gray-100">
+                      <tr className="bg-white/[0.04]">
                         {section.table.headers.map((h) => (
                           <th
                             key={h}
-                            className="text-left px-4 py-2.5 font-semibold text-gray-900 border-b border-gray-200"
+                            className="text-left px-4 py-2.5 font-semibold text-white border-b border-white/[0.06]"
                           >
                             {h}
                           </th>
@@ -211,9 +216,9 @@ export default async function BlogPostPage({
                     </thead>
                     <tbody>
                       {section.table.rows.map((row, ri) => (
-                        <tr key={ri} className="border-b border-gray-100">
+                        <tr key={ri} className="border-b border-white/[0.04]">
                           {row.map((cell, ci) => (
-                            <td key={ci} className="px-4 py-2.5 text-gray-700">
+                            <td key={ci} className="px-4 py-2.5 text-gray-300">
                               {cell}
                             </td>
                           ))}
@@ -227,10 +232,10 @@ export default async function BlogPostPage({
           ))}
 
           {/* CTA Box */}
-          <div className="bg-gray-900 text-white rounded-2xl p-8 text-center mt-12">
-            <p className="text-2xl font-bold mb-3">{post.ctaLabel}</p>
+          <div className="bg-emerald-400/10 border border-emerald-400/20 rounded-2xl p-8 text-center mt-12">
+            <p className="text-2xl font-bold text-white mb-3">{post.ctaLabel}</p>
             <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">
-              See real-time sentiment data alongside BTC price, market cap, and dominance on our live dashboard.
+              {post.excerpt.slice(0, 120)}...
             </p>
             <Link
               href={post.ctaHref}
@@ -241,10 +246,10 @@ export default async function BlogPostPage({
           </div>
 
           {/* Back to Blog */}
-          <div className="mt-10 pt-8 border-t border-gray-200">
+          <div className="mt-10 pt-8 border-t border-white/[0.06]">
             <Link
               href="/blog"
-              className="flex items-center gap-2 text-emerald-600 hover:text-emerald-700 text-sm font-medium transition-colors"
+              className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to all articles

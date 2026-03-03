@@ -641,3 +641,72 @@ export function getPostBySlug(slug: string): BlogPost | undefined {
 export function getAllSlugs(): string[] {
   return POSTS.map((p) => p.slug);
 }
+
+// ============================================
+// Merged functions: static posts + Supabase DB posts
+// ============================================
+
+import {
+  getPublishedBlogPosts,
+  getBlogPostBySlug as getDBPostBySlug,
+  getAllBlogSlugs,
+  type DBBlogPost,
+} from '@/lib/supabaseData';
+
+function dbPostToBlogPost(db: DBBlogPost): BlogPost {
+  return {
+    slug: db.slug,
+    title: db.title,
+    description: db.description,
+    keywords: db.keywords,
+    publishDate: db.publish_date,
+    updatedDate: db.updated_date ?? undefined,
+    author: db.author,
+    category: db.category,
+    readingTimeMinutes: db.reading_time_minutes,
+    coverEmoji: db.cover_emoji,
+    excerpt: db.excerpt,
+    sections: db.sections as BlogSection[],
+    relatedPosts: db.related_posts,
+    ctaHref: db.cta_href,
+    ctaLabel: db.cta_label,
+  };
+}
+
+export async function getAllPostsMerged(): Promise<BlogPost[]> {
+  const staticPosts = [...POSTS];
+  try {
+    const dbPosts = await getPublishedBlogPosts();
+    const dbBlogPosts = dbPosts.map(dbPostToBlogPost);
+    const staticSlugs = new Set(staticPosts.map((p) => p.slug));
+    const uniqueDbPosts = dbBlogPosts.filter((p) => !staticSlugs.has(p.slug));
+    return [...staticPosts, ...uniqueDbPosts].sort(
+      (a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime(),
+    );
+  } catch {
+    return staticPosts.sort(
+      (a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime(),
+    );
+  }
+}
+
+export async function getPostBySlugMerged(slug: string): Promise<BlogPost | undefined> {
+  const staticPost = POSTS.find((p) => p.slug === slug);
+  if (staticPost) return staticPost;
+  try {
+    const dbPost = await getDBPostBySlug(slug);
+    return dbPost ? dbPostToBlogPost(dbPost) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getAllSlugsMerged(): Promise<string[]> {
+  const staticSlugs = POSTS.map((p) => p.slug);
+  try {
+    const dbSlugs = await getAllBlogSlugs();
+    return [...new Set([...staticSlugs, ...dbSlugs])];
+  } catch {
+    return staticSlugs;
+  }
+}

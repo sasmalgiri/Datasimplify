@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ArrowRight, Clock } from 'lucide-react';
-import { getAllPosts } from '@/lib/blog/posts';
+import { getAllPostsMerged } from '@/lib/blog/posts';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import type { Metadata } from 'next';
+
+export const revalidate = 3600;
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -20,8 +22,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogListingPage() {
-  const posts = getAllPosts();
+export default async function BlogListingPage() {
+  const posts = await getAllPostsMerged();
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
