@@ -358,7 +358,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
   const getRSIColor = (rsi: number) => {
     if (rsi >= 70) return 'text-red-600 bg-red-50';
     if (rsi <= 30) return 'text-green-600 bg-green-50';
-    return 'text-gray-600 bg-gray-50';
+    return 'text-gray-400 bg-gray-700/50';
   };
 
   const allCategories = Array.from(new Set(tokens.map(t => t.category))).sort();
@@ -367,7 +367,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
     : presetGroups.filter(g => g.category === presetCategory);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 text-white">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -383,7 +383,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           <button
             onClick={() => setShowFilterBuilder(!showFilterBuilder)}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-              showFilterBuilder ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              showFilterBuilder ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             {showFilterBuilder ? '✕ Hide Builder' : '⚙ Custom Filters'}
@@ -391,7 +391,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           {(filters.length > 0 || categoryFilter !== 'all' || searchQuery) && (
             <button
               onClick={clearFilters}
-              className="px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-600 hover:bg-red-200"
+              className="px-3 py-2 rounded-lg text-sm font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30"
             >
               ✕ Clear All
             </button>
@@ -413,13 +413,13 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
       {loading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading token data...</span>
+          <span className="ml-3 text-gray-400">Loading token data...</span>
         </div>
       )}
 
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-600">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+          <p className="text-red-400">{error}</p>
         </div>
       )}
 
@@ -430,12 +430,12 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           placeholder="Search by name or symbol..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-gray-200 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 rounded-lg border border-gray-600 bg-gray-700/50 text-sm text-white w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
         />
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setActivePreset(null); }}
-          className="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"
+          className="px-3 py-2 rounded-lg border border-gray-600 bg-gray-700/50 text-sm text-white"
           title="Filter by category"
         >
           <option value="all">All Categories</option>
@@ -447,7 +447,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
       {/* Preset Category Tabs + Preset Buttons */}
       <div className="mb-4">
-        <div className="flex gap-1 mb-2 border-b border-gray-200">
+        <div className="flex gap-1 mb-2 border-b border-gray-700">
           {['all', ...presetGroups.map(g => g.category)].map(cat => (
             <button
               key={cat}
@@ -455,7 +455,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
               className={`px-3 py-1.5 text-xs font-medium transition-colors border-b-2 ${
                 presetCategory === cat
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  : 'border-transparent text-gray-400 hover:text-gray-200'
               }`}
             >
               {cat === 'all' ? 'All Presets' : cat}
@@ -471,7 +471,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                   activePreset === preset.id
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {preset.name}
@@ -483,9 +483,9 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
       {/* Custom Filter Builder */}
       {showFilterBuilder && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="mb-6 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-sm text-gray-700">Custom Filter Builder (AND logic)</h3>
+            <h3 className="font-semibold text-sm text-gray-300">Custom Filter Builder (AND logic)</h3>
             <button onClick={addFilter} className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700">
               + Add Condition
             </button>
@@ -497,12 +497,12 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
           <div className="space-y-2">
             {filters.map((filter, idx) => (
-              <div key={filter.id} className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg border border-gray-200">
+              <div key={filter.id} className="flex flex-wrap items-center gap-2 bg-gray-800/60 p-2 rounded-lg border border-gray-600">
                 {idx > 0 && <span className="text-xs font-bold text-blue-600 px-1">AND</span>}
                 <select
                   value={filter.field}
                   onChange={(e) => updateFilter(filter.id, { field: e.target.value })}
-                  className="px-2 py-1 text-sm border border-gray-200 rounded bg-white"
+                  className="px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700/50 text-white"
                   title="Filter field"
                 >
                   {FILTER_FIELDS.map(f => (
@@ -512,7 +512,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                 <select
                   value={filter.operator}
                   onChange={(e) => updateFilter(filter.id, { operator: e.target.value as Filter['operator'] })}
-                  className="px-2 py-1 text-sm border border-gray-200 rounded bg-white"
+                  className="px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700/50 text-white"
                   title="Filter operator"
                 >
                   {Object.entries(OPERATOR_LABELS).map(([k, v]) => (
@@ -524,7 +524,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                   step={FILTER_FIELDS.find(f => f.key === filter.field)?.step || 1}
                   value={filter.value}
                   onChange={(e) => updateFilter(filter.id, { value: parseFloat(e.target.value) || 0 })}
-                  className="px-2 py-1 text-sm border border-gray-200 rounded w-28"
+                  className="px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700/50 text-white w-28"
                   title="Filter value"
                 />
                 {filter.operator === 'between' && (
@@ -535,7 +535,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                       step={FILTER_FIELDS.find(f => f.key === filter.field)?.step || 1}
                       value={filter.value2 || 0}
                       onChange={(e) => updateFilter(filter.id, { value2: parseFloat(e.target.value) || 0 })}
-                      className="px-2 py-1 text-sm border border-gray-200 rounded w-28"
+                      className="px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700/50 text-white w-28"
                       title="Filter upper bound value"
                     />
                   </>
@@ -553,18 +553,18 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
           {/* Save Query */}
           {filters.length > 0 && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-600">
               <input
                 type="text"
                 value={queryName}
                 onChange={(e) => setQueryName(e.target.value)}
                 placeholder="Name this filter set..."
-                className="px-2 py-1 text-sm border border-gray-200 rounded flex-1"
+                className="px-2 py-1 text-sm border border-gray-600 rounded bg-gray-700/50 text-white flex-1 placeholder-gray-400"
               />
               <button
                 onClick={saveQuery}
                 disabled={!queryName.trim()}
-                className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:bg-gray-300"
+                className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:bg-gray-600"
               >
                 💾 Save
               </button>
@@ -573,15 +573,15 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
           {/* Saved Queries */}
           {savedQueries.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="mt-3 pt-3 border-t border-gray-600">
               <p className="text-xs font-medium text-gray-500 mb-2">Saved Queries:</p>
               <div className="flex flex-wrap gap-2">
                 {savedQueries.map((q, i) => (
-                  <div key={i} className="flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg px-2 py-1">
-                    <button onClick={() => loadQuery(q)} className="text-xs font-medium text-yellow-800 hover:underline">
+                  <div key={i} className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-2 py-1">
+                    <button onClick={() => loadQuery(q)} className="text-xs font-medium text-yellow-300 hover:underline">
                       {q.name}
                     </button>
-                    <button onClick={() => deleteSavedQuery(i)} className="text-yellow-600 hover:text-red-600 text-xs ml-1">✕</button>
+                    <button onClick={() => deleteSavedQuery(i)} className="text-yellow-400 hover:text-red-400 text-xs ml-1">✕</button>
                   </div>
                 ))}
               </div>
@@ -593,29 +593,29 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
       {/* Results Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-white">
-            <tr className="border-b border-gray-200">
+          <thead className="sticky top-0 z-10 bg-gray-800">
+            <tr className="border-b border-gray-700">
               <th className="text-left py-3 px-2">#</th>
               <th className="text-left py-3 px-2">Token</th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('price')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('price')}>
                 Price {sortBy === 'price' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('change_1h')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('change_1h')}>
                 1h % {sortBy === 'change_1h' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('change_24h')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('change_24h')}>
                 24h % {sortBy === 'change_24h' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('change_7d')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('change_7d')}>
                 7d % {sortBy === 'change_7d' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('market_cap')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('market_cap')}>
                 Market Cap {sortBy === 'market_cap' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('volume_24h')}>
+              <th className="text-right py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('volume_24h')}>
                 Volume {sortBy === 'volume_24h' && (sortOrder === 'desc' ? '↓' : '↑')}
               </th>
-              <th className="text-center py-3 px-2 cursor-pointer hover:bg-gray-50" onClick={() => toggleSort('volume_mcap_ratio')}>
+              <th className="text-center py-3 px-2 cursor-pointer hover:bg-gray-700" onClick={() => toggleSort('volume_mcap_ratio')}>
                 V/MC {sortBy === 'volume_mcap_ratio' && (sortOrder === 'desc' ? '↓' : '↑')}
                 <InfoButton explanation="Volume to Market Cap ratio. Higher values indicate unusual trading activity relative to the coin's size. Values above 0.15 often signal significant interest." />
               </th>
@@ -628,7 +628,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           </thead>
           <tbody>
             {sortedTokens.map((token, index) => (
-              <tr key={token.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr key={token.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                 <td className="py-3 px-2 text-gray-500">{index + 1}</td>
                 <td className="py-3 px-2">
                   <div className="font-bold">{token.symbol}</div>
@@ -650,7 +650,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                 <td className="py-3 px-2 text-right">{formatNumber(token.volume_24h)}</td>
                 <td className="py-3 px-2 text-center">
                   <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                    token.volume_mcap_ratio > 0.15 ? 'text-amber-700 bg-amber-50' : 'text-gray-500'
+                    token.volume_mcap_ratio > 0.15 ? 'text-amber-400 bg-amber-500/10' : 'text-gray-400'
                   }`}>
                     {token.volume_mcap_ratio.toFixed(3)}
                   </span>
@@ -661,7 +661,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
                   </span>
                 </td>
                 <td className="py-3 px-2 text-center">
-                  <span className="px-2 py-1 bg-gray-100 rounded text-xs">
+                  <span className="px-2 py-1 bg-gray-700 rounded text-xs">
                     {token.category}
                   </span>
                 </td>
@@ -685,17 +685,17 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="text-center">
               <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold">0-30</span>
-              <p className="mt-1 text-gray-600">Oversold</p>
+              <p className="mt-1 text-gray-400">Oversold</p>
               <p className="text-xs text-gray-500">Might bounce up</p>
             </div>
             <div className="text-center">
-              <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-bold">30-70</span>
-              <p className="mt-1 text-gray-600">Neutral</p>
+              <span className="inline-block px-3 py-1 bg-gray-700 text-gray-300 rounded-full font-bold">30-70</span>
+              <p className="mt-1 text-gray-400">Neutral</p>
               <p className="text-xs text-gray-500">Normal range</p>
             </div>
             <div className="text-center">
               <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full font-bold">70-100</span>
-              <p className="mt-1 text-gray-600">Overbought</p>
+              <p className="mt-1 text-gray-400">Overbought</p>
               <p className="text-xs text-gray-500">Might drop down</p>
             </div>
           </div>

@@ -107,9 +107,9 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
   const totalIndicators = Math.max(1, indicators.length);
 
   const getTrendColor = (trend: string) => {
-    if (trend.includes('Bullish')) return 'text-green-600 bg-green-50';
-    if (trend.includes('Bearish')) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-gray-50';
+    if (trend.includes('Bullish')) return 'text-green-400 bg-green-500/10';
+    if (trend.includes('Bearish')) return 'text-red-400 bg-red-500/10';
+    return 'text-gray-400 bg-gray-700/50';
   };
 
   const getStateEmoji = (state: 'bullish' | 'bearish' | 'neutral') => {
@@ -119,7 +119,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 text-white">
       {/* Header */}
       <div className="mb-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
@@ -150,14 +150,14 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       {loading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Calculating indicators...</span>
+          <span className="ml-3 text-gray-400">Calculating indicators...</span>
         </div>
       )}
 
       {/* Error State */}
       {error && !loading && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-red-600">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
+          <p className="text-red-400">{error}</p>
         </div>
       )}
 
@@ -171,7 +171,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               timeframe === tf
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             {tf === '1h' ? '1 Hour' : tf === '4h' ? '4 Hours' : tf === '1d' ? '1 Day' : '1 Week'}
@@ -209,7 +209,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       <div className="mb-6">
         <div className="flex h-4 rounded-full overflow-hidden">
           <StateBarSegment width={(bullishCount / totalIndicators) * 100} className="bg-green-500" />
-          <StateBarSegment width={(neutralCount / totalIndicators) * 100} className="bg-gray-300" />
+          <StateBarSegment width={(neutralCount / totalIndicators) * 100} className="bg-gray-600" />
           <StateBarSegment width={(bearishCount / totalIndicators) * 100} className="bg-red-500" />
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -225,15 +225,15 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
           <div
             key={indicator.shortName}
             className={`p-4 rounded-lg border ${
-              indicator.state === 'bullish' ? 'border-green-200 bg-green-50' :
-              indicator.state === 'bearish' ? 'border-red-200 bg-red-50' :
-              'border-gray-200 bg-gray-50'
+              indicator.state === 'bullish' ? 'border-green-500/30 bg-green-500/10' :
+              indicator.state === 'bearish' ? 'border-red-500/30 bg-red-500/10' :
+              'border-gray-700 bg-gray-700/50'
             }`}
           >
             <div className="flex justify-between items-start mb-2">
               <div>
                 <p className="font-bold">{indicator.shortName}</p>
-                <p className="text-xs text-gray-500">{indicator.name}</p>
+                <p className="text-xs text-gray-400">{indicator.name}</p>
               </div>
               <div className="text-right">
                 <span className="text-xl">{getStateEmoji(indicator.state)}</span>
@@ -241,7 +241,7 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
               </div>
             </div>
             {showBeginnerTips && (
-              <p className="text-xs text-gray-600 mt-2 pt-2 border-t border-gray-200">
+              <p className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-700">
                 💡 {indicator.interpretation}
               </p>
             )}
@@ -251,32 +251,32 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
 
       {/* Moving Average Summary */}
       {summary && !loading && (
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-bold text-blue-800 mb-3">📈 Moving Average Analysis</h3>
+        <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+          <h3 className="font-bold text-blue-300 mb-3">📈 Moving Average Analysis</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-sm text-blue-600">Short-term</p>
+              <p className="text-sm text-blue-400">Short-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma20 ? '🟢' : '🔴'}</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-blue-300">
                 SMA 20: {summary.currentPrice > summary.sma20 ? 'Above' : 'Below'}
               </p>
-              <p className="text-xs text-gray-500">${summary.sma20.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className="text-xs text-gray-400">${summary.sma20.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Medium-term</p>
+              <p className="text-sm text-blue-400">Medium-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma50 ? '🟢' : '🔴'}</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-blue-300">
                 SMA 50: {summary.currentPrice > summary.sma50 ? 'Above' : 'Below'}
               </p>
-              <p className="text-xs text-gray-500">${summary.sma50.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className="text-xs text-gray-400">${summary.sma50.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
             <div>
-              <p className="text-sm text-blue-600">Long-term</p>
+              <p className="text-sm text-blue-400">Long-term</p>
               <p className="text-xl">{summary.currentPrice > summary.sma200 ? '🟢' : '🔴'}</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-blue-300">
                 SMA 200: {summary.currentPrice > summary.sma200 ? 'Above' : 'Below'}
               </p>
-              <p className="text-xs text-gray-500">${summary.sma200.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className="text-xs text-gray-400">${summary.sma200.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
             </div>
           </div>
         </div>

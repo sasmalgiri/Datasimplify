@@ -963,7 +963,7 @@ https://cryptoreportkit.com
                 onClick={downloadPortfolioPDF}
                 className="flex-1 px-8 py-4 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700"
               >
-                📥 Download Portfolio Plan (PDF)
+                📥 Download Portfolio Plan
               </button>
               <TemplateDownloadButton
                 pageContext={{
