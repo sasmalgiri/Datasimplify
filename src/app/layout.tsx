@@ -14,11 +14,11 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 export const metadata: Metadata = {
   // Basic SEO
   title: {
-    default: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
+    default: 'CryptoReportKit: 83+ Live Crypto Dashboards & Analytics',
     template: '%s | CryptoReportKit'
   },
-  description: '83+ live crypto dashboards with real-time data, coin comparison, DCA simulator, tax tools & more. Free BYOK — your API key never leaves your browser.',
-  keywords: ['crypto analytics', 'crypto dashboards', 'bitcoin dashboard', 'cryptocurrency visualization', 'live crypto data', 'crypto market analysis', 'DeFi analytics', 'BYOK crypto', 'coin comparison', 'crypto tax tools', 'crypto report kit', 'crypto data download', 'crypto report', 'cryptocurrency analysis tool', 'bitcoin analysis'],
+  description: 'Explore 83+ live crypto dashboards with real-time data. Features coin comparison, DCA simulator, tax tools, and BYOK for enhanced privacy. Free to start.',
+  keywords: ['crypto analytics', 'crypto dashboards', 'bitcoin dashboard', 'cryptocurrency visualization', 'live crypto data', 'crypto market analysis', 'DeFi analytics', 'BYOK crypto', 'coin comparison', 'crypto tax tools', 'crypto report kit', 'crypto data download', 'crypto report', 'cryptocurrency analysis tool', 'bitcoin analysis', 'crypto portfolio tracker', 'crypto screener', 'on-chain data', 'crypto charts', 'blockchain analytics'],
 
   // Favicon & Icons
   icons: {
@@ -38,8 +38,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: siteUrl,
     siteName: 'CryptoReportKit',
-    title: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
-    description: '83+ interactive crypto dashboards, real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK.',
+    title: 'CryptoReportKit: 83+ Live Crypto Dashboards & Analytics',
+    description: 'Explore 83+ interactive crypto dashboards with real-time market data, coin comparison, DCA simulator, tax tools, and more. Free to start with BYOK.',
     images: [
       {
         url: `${siteUrl}/api/og`,
@@ -53,8 +53,8 @@ export const metadata: Metadata = {
   // Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'CryptoReportKit - 83+ Live Crypto Dashboards & Analytics',
-    description: '83+ interactive crypto dashboards, real-time market data, coin comparison, and more. Free to start with BYOK.',
+    title: 'CryptoReportKit: 83+ Live Crypto Dashboards & Analytics',
+    description: 'Explore 83+ interactive crypto dashboards with real-time market data, coin comparison, and more. Free to start with BYOK.',
     images: [`${siteUrl}/api/og`],
     creator: '@sasmalgiri',
   },
