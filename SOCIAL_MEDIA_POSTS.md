@@ -12,7 +12,7 @@
 
 ### LinkedIn Post 1 — Launch Announcement
 
-**Title:** We just launched CryptoReportKit — 71 live crypto dashboards for $0–$19/mo
+**Title:** We just launched CryptoReportKit — 80 pages of crypto analytics for $0–$19/mo
 
 ---
 
@@ -22,8 +22,8 @@ Most crypto data platforms charge $129–$799/month. And they still make you tru
 
 So I built CryptoReportKit — an all-in-one crypto analytics toolkit with a fundamentally different approach:
 
-→ 71 live interactive dashboards  
-→ 75+ chart widgets  
+→ 80 pages with 90+ widgets  
+→ 90+ chart widgets  
 → Built-in tax report export (Form 8949)  
 → DCA tracker & simulator  
 → **DataLab**: interactive overlays + data manipulation + research experiments  
@@ -74,7 +74,7 @@ Real privacy is structural. It's about making it technically impossible for us t
 
 This is what BYOK means. Your keys. Your browser. Your data.
 
-71 live dashboards. Zero middlemen.
+80 pages of analytics. Zero middlemen.
 
 → https://cryptoreportkit.com
 
@@ -150,7 +150,7 @@ Here's what you pay today:
 | CryptoReportKit Pro | **$19** |
 
 And CryptoReportKit includes:
-→ 71 live dashboards  
+→ 80 pages of analytics  
 → Tax export (Form 8949)  
 → DCA tracker  
 → Screeners + heatmaps + comparisons  
@@ -175,7 +175,7 @@ Just useful tools at fair prices.
 **Tweet 1/7:**  
 Just launched CryptoReportKit 🚀
 
-71 live crypto dashboards. $19/mo. Free tier available.
+80 pages of crypto analytics. $19/mo. Free tier available.
 
 Here's why I built it and why it's different from everything else out there 🧵👇
 
@@ -200,8 +200,8 @@ Privacy by architecture, not by promise.
 **Tweet 4/7:**  
 What's included:
 
-• 71 interactive dashboards  
-• 75+ chart widgets  
+• 80 interactive pages  
+• 90+ chart widgets  
 • Tax export (Form 8949 CSV)  
 • DCA tracker & simulator  
 • Heatmaps + screeners  

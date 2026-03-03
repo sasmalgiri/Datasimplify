@@ -2,9 +2,9 @@
 
 _Not legal advice. This file intentionally contains ONLY what still needs to be done before production._
 
-## Status (Jan 15, 2026)
+## Status (March 4, 2026)
 
-✅ No further code/content changes were found that block a Paddle-safe launch under the **“templates-only + display-only market data”** posture.
+✅ No further code/content changes were found that block a safe launch under the **”templates-only + display-only market data”** posture. Current checkout uses FastSpring; Paddle migration is planned.
 
 ## Global legal note (cannot be auto-verified)
 
@@ -43,7 +43,7 @@ Ask your CA/accountant to confirm (deliverables):
 Artifacts to hand them (from this repo/site):
 - Live pricing page
 - Terms, Privacy, Refund, Disclaimer pages
-- Checkout screenshots/flow (Razorpay/Paddle)
+- Checkout screenshots/flow (FastSpring/Paddle)
 
 ## Required production configuration (do not skip)
 

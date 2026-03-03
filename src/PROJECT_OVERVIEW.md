@@ -1,4 +1,4 @@
-# CryptoReportKit — Project Overview (as of 2026-01-07)
+# CryptoReportKit — Project Overview (as of 2026-03-04)
 
 This document is a **repo-level map** of what exists in the current workspace: the stack, major folders, pages, API surface, data sources, and how the current **free-only mode** works.
 
@@ -130,12 +130,14 @@ Important behavior:
 
 ### 4.5 Payments
 
-- Payment integration to be added (coming soon)
+- FastSpring checkout (current): `cryptoreportkit.onfastspring.com`
+- FastSpring webhook: `/api/webhooks/fastspring`
+- Paddle env vars defined in `.env.example` (planned migration)
 
 ### 4.6 External integrations
 
 - Template generation uses CryptoSheets formula patterns
-- No AI/LLM keys required (AI features removed)
+- AI Ask: Groq (llama-3.3-70b) via `GROQ_API_KEY`
 
 ---
 
@@ -183,89 +185,85 @@ This is a **code-level view** of upstream providers referenced in `src/lib/*` an
 
 ---
 
-## 6) UI pages (App Router)
+## 6) UI pages (App Router) — 80 pages total
 
-Representative pages (not exhaustive):
+Key routes:
 
-- `/` and `/(main)`
-- `/dashboard`
-- `/templates`
-- `/charts` and `/charts/advanced`
-- `/market`, `/compare`, `/coin/[id]`
-- `/sentiment`, `/social`
-- `/defi`, `/whales`, `/onchain`, `/risk`, `/etf`, `/technical`, `/correlation`
-- `/research`
-- `/pricing` (feature-flagged), `/login`, `/signup`
-- `/tools`, `/smart-contract-verifier`, `/community`
+- `/` — Landing page
+- `/home`, `/dashboard` — Home and user dashboard
+- `/market`, `/screener`, `/heatmap`, `/gainers-losers`, `/trending`, `/recently-added`
+- `/charts`, `/charts/advanced`, `/multi-chart`
+- `/compare`, `/correlation`, `/coin/[id]`
+- `/technical`, `/risk`, `/backtest`, `/portfolio`
+- `/sentiment`, `/social`, `/community`, `/community/thread/[threadId]`
+- `/defi`, `/dex-pools`, `/etf`, `/rwa`
+- `/live-dashboards` (hub + `/[slug]`, `/coin/[id]`, `/explore`, `/community`, `/ai-builder`, `/custom/builder`, `/custom/[id]`, `/protocol/[slug]`, `/taxonomy`)
+- `/templates`, `/templates/[slug]/experiment` — Experiment Lab (27 templates)
+- `/datalab` — DataLab
+- `/command-center`, `/analyst-hub`, `/builder`, `/monitor`
+- `/pricing`, `/login`, `/signup`, `/account`, `/account/keys`, `/admin`
+- `/tools`, `/tools/verify`, `/smart-contract-verifier`
+- `/learn`, `/glossary`, `/faq`, `/blog`, `/blog/[slug]`, `/research`
+- `/about`, `/contact`, `/terms`, `/privacy`, `/refund`, `/disclaimer`
+- `/embed/[widget]`, `/status`, `/roadmap`, `/data-sources`
 
 Notes:
 
-- Several pages already contain “feature disabled” fallbacks based on `isFeatureEnabled(...)`.
+- Several pages contain “feature disabled” fallbacks based on `isFeatureEnabled(...)`.
 - Templates UI provides CryptoSheets formula-based Excel files (no data redistribution).
+- Live Dashboards include 90+ customizable widgets.
 
 ---
 
-## 7) API routes (52 total)
+## 7) API routes (112 total)
 
 Below is a grouped list of API endpoints present under `src/app/api/**/route.ts`.
 
 ### 7.1 Core data
-
-- `/api/crypto`
-- `/api/crypto/[id]`
-- `/api/crypto/[id]/history`
-- `/api/crypto/global`
-- `/api/crypto/search`
+- `/api/crypto`, `/api/crypto/[id]`, `/api/crypto/[id]/history`, `/api/crypto/global`, `/api/crypto/search`
+- `/api/crypto/categories`, `/api/crypto/coins-by-category`, `/api/crypto/exchanges`
+- `/api/crypto/nft-collections`, `/api/crypto/recently-added`, `/api/crypto/trending`
 
 ### 7.2 Charts
+- `/api/charts/candles`, `/api/charts/history`
 
-- `/api/charts/candles`
-- `/api/charts/history`
-
-### 7.3 Templates
-
-- `/api/templates/download` (CryptoSheets formula templates)
+### 7.3 Templates & Downloads
+- `/api/templates/download`, `/api/templates/requirements`
+- `/api/downloads/[slug]`
 
 ### 7.4 Cached/Supabase data
-
-- `/api/cached` (reads cached tables from Supabase)
-- `/api/sync` (populates Supabase cache; protected by secret)
-- `/api/data/sync` (additional sync endpoint)
+- `/api/cached`, `/api/sync`
 
 ### 7.5 Domain APIs
+- `/api/derivatives`, `/api/technical`, `/api/risk`, `/api/predict`, `/api/etf`
+- `/api/macro`, `/api/sentiment`, `/api/sentiment-full`
+- `/api/defi/llama`, `/api/unlocks`, `/api/onchain`, `/api/onchain/fear-greed-history`
+- `/api/whales`, `/api/rwa`, `/api/smart-contract/*`
 
-- `/api/derivatives`
-- `/api/technical`
-- `/api/risk`
-- `/api/predict`
-- `/api/etf`
-- `/api/macro`
-- `/api/sentiment`
-- `/api/sentiment-full`
-- `/api/defi/llama`
-- `/api/unlocks`
-- `/api/onchain`
-- `/api/onchain/fear-greed-history`
-- `/api/whales`
+### 7.6 Live Dashboard
+- `/api/live-dashboard/*` (6 routes for widget data, layouts, saves)
 
-### 7.6 Users, community
+### 7.7 Forum
+- `/api/forum` (threads listing + create)
+- `/api/forum/[threadId]` (thread detail + replies)
+- `/api/forum/interact` (votes, pin/unpin)
 
-- `/api/user/register`
-- `/api/user/delete`
-- `/api/user/templates` (template generation tracking)
-- `/api/user/export`
-- `/api/community`
-- `/api/community/interact`
+### 7.8 Users & Community
+- `/api/user/*` (register, delete, templates, export, keys, profile, settings, stats, subscription)
+- `/api/community`, `/api/community/interact`
+- `/api/auth/*`
 
-### 7.7 Payments
+### 7.9 Payments & Webhooks
+- `/api/webhooks/fastspring` (purchase events + entitlements)
 
-- Payment API endpoints (coming soon)
+### 7.10 v1 API (Excel Add-in) — 48 routes
+- `/api/v1/*` (price, market, history, portfolio, alerts, AI, wallet, exchange, tax, templates)
 
-### 7.8 Maintenance
-
-- `/api/cleanup` (manual stats + POST cleanup; protected)
-- `/api/cleanup/run` (cron cleanup endpoint; protected)
-- `/api/diagnostics` (internal/ops endpoint)
+### 7.11 Maintenance & Admin
+- `/api/cleanup`, `/api/cleanup/run`
+- `/api/diagnostics`, `/api/health`
+- `/api/admin/*`, `/api/cron/*`
+- `/api/feedback`, `/api/geo`
 
 ---
 
@@ -275,12 +273,15 @@ The Supabase client setup is in `src/lib/supabase.ts`.
 
 Known table interfaces defined in code:
 
-- `market_data`
-- `klines`
-- `coin_sentiment`
-- `sentiment_posts`
-- `whale_transactions`
-- `defi_protocols`
+- `market_data`, `klines` — Cached market/candle data
+- `coin_sentiment`, `sentiment_posts` — Sentiment data
+- `whale_transactions` — Whale tracking
+- `defi_protocols` — DeFi protocol cache
+- `user_profiles`, `user_prediction_stats` — User data
+- `forum_threads`, `forum_replies`, `forum_thread_votes` — Forum system
+- `community_predictions`, `prediction_votes` — Community predictions
+- `download_events`, `template_releases`, `product_entitlements` — Downloads
+- `feedback`, `template_requests` — User feedback
 
 Caching behavior:
 

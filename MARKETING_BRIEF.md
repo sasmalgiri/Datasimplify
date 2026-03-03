@@ -12,7 +12,7 @@
 
 CryptoReportKit (CRK) is an all-in-one crypto analytics platform that combines:
 
-1. **71 Live Interactive Dashboards** — real-time crypto dashboards with 75+ chart widgets
+1. **80 Pages with 90+ Widgets** — real-time crypto dashboards, analytics, and tools
 2. **8 Pro Tools** — tax reports, DCA tracker, custom dashboard builder, P&L tracker, smart screener, multi-exchange portfolio, BTC cycle comparison, 60+ currency support
 3. **8 Smart Intelligence Widgets** — algorithmic signals, health scores, risk radar, alpha finder
 
@@ -24,8 +24,11 @@ CryptoReportKit (CRK) is an all-in-one crypto analytics platform that combines:
 
 | Metric | Count |
 |--------|-------|
-| Live Dashboards | 71 (23 free, 48 pro) |
-| Dashboard Widgets | 75+ |
+| Total Pages | 80 |
+| API Routes | 112 |
+| Components | 211 |
+| Dashboard Widgets | 90+ |
+| Experiment Templates | 27 (9 categories) |
 | Pro Tools | 8 |
 | Widget Categories | 13 |
 | Currency Support | 60+ |
@@ -56,7 +59,7 @@ This is the hook. Users get genuine value without paying:
 - 5 widgets per dashboard
 - 60+ currency support
 - 2-coin comparison tool
-- 3 downloads/month
+- 5 downloads/month
 - 30-day price history
 - Learn center + crypto glossary
 
@@ -68,7 +71,7 @@ This is the hook. Users get genuine value without paying:
 
 The upgrade pitch focuses on unlocking everything + exclusive pro tools:
 
-### All 71 Dashboards Unlocked
+### All 80 Pages Unlocked
 Including pro-exclusive dashboards like:
 - **Risk-On / Risk-Off Regime** — answers "be aggressive or defensive?" daily
 - **Accumulation Zone Finder** — spot bottoms via drawdown + volume analysis
@@ -89,7 +92,7 @@ Including pro-exclusive dashboards like:
 - And 30+ more
 
 ### 8 Pro Tools
-1. **Custom Dashboard Builder** — build your own from 75+ widgets
+1. **Custom Dashboard Builder** — build your own from 90+ widgets
 2. **Tax Report Export** — FIFO/LIFO/AVG cost basis, Form 8949 CSV export
 3. **DCA Tracker & Simulator** — "what if you DCA'd $X since DATE" + real purchase log
 4. **P&L Dashboard** — unrealized P&L, allocation pie chart, gains bar chart
@@ -109,7 +112,7 @@ Including pro-exclusive dashboards like:
 - **MoneyFlowIndex** — buying vs selling pressure indicator
 
 ### Additional Pro Perks
-- All 75+ widgets unlocked on every dashboard
+- All 90+ widgets unlocked on every dashboard
 - 300 downloads/month
 - 10-coin compare + head-to-head
 - Full price history (all timeframes)
@@ -124,8 +127,8 @@ Use this table in comparison content, landing pages, and ads:
 
 | Feature | CryptoReportKit | Others (CoinGecko Pro, Messari, CryptoQuant, etc.) |
 |---------|----------------|-----------------------------------------------------|
-| Live dashboards | 71+ | Limited or none |
-| Dashboard widgets | 75+ | 5-15 |
+| Pages / dashboards | 80 | Limited |
+| Dashboard widgets | 90+ | 5-15 |
 | Intelligence widgets | 8 built-in | Basic alerts only |
 | Custom dashboard builder | Yes | Not available |
 | BYOK (keys stay local) | Yes | Keys stored on their servers |
@@ -139,7 +142,7 @@ Use this table in comparison content, landing pages, and ads:
 **Key messaging:**
 - "More features at 1/3 the price"
 - "Your keys never leave your device"
-- "71 dashboards, 75+ widgets, 8 pro tools — for $19/month"
+- "80 pages, 90+ widgets, 8 pro tools — for $19/month"
 
 ---
 
@@ -188,16 +191,16 @@ Use this table in comparison content, landing pages, and ads:
 7. "Understanding Funding Rates: Free Money or Hidden Risk?" (target: crypto funding rate)
 8. "Market Breadth Analysis for Crypto: An Institutional Approach" (target: crypto market analysis)
 9. "BYOK Crypto Tools: Why Your API Keys Should Stay on Your Device" (target: crypto privacy, BYOK)
-10. "71 Crypto Dashboards You Can Use Today (23 Are Free)" (target: crypto analytics tools)
+10. "80 Pages of Crypto Analytics You Can Use Today (Free Tier Available)" (target: crypto analytics tools)
 
 ### Social Media (Twitter/X, Reddit, YouTube)
-- **Twitter threads:** "I built 71 crypto dashboards. Here are the 5 that changed how I trade:" (dashboard screenshots)
-- **Reddit posts:** r/cryptocurrency, r/CryptoMarkets — "I built 71 crypto dashboards with tax tools, DCA tracker, and whale radar — 23 are free"
+- **Twitter threads:** "I built 80 pages of crypto analytics. Here are the 5 dashboards that changed how I trade:" (dashboard screenshots)
+- **Reddit posts:** r/cryptocurrency, r/CryptoMarkets — "I built 80 pages of crypto analytics with tax tools, DCA tracker, and whale radar — free tier available"
 - **YouTube:** "My Free Crypto Dashboard Setup for 2026" — walkthrough of free tier dashboards
 - **Short-form video (TikTok/Reels):** 30-second dashboard showcase — "This free tool has 23 crypto dashboards"
 
 ### Email Campaign Sequence (Post-Signup)
-1. Day 0: Welcome + "Here are your 23 free dashboards" (highlight top 5)
+1. Day 0: Welcome + "Here are your free dashboards and tools" (highlight top 5)
 2. Day 2: "Set up your first watchlist + price alert" (engagement)
 3. Day 5: "Try the DCA Simulator — see what $100/week into BTC would return" (tool showcase)
 4. Day 7: "What Pro users are doing: Custom dashboards, tax exports, whale tracking" (soft upgrade)
@@ -209,18 +212,18 @@ Use this table in comparison content, landing pages, and ads:
 ## 8. Ad Copy Examples
 
 ### Google Ads
-**Headline 1:** Free Crypto Dashboard — 71+ Live Dashboards
-**Headline 2:** Crypto Analytics for $19/mo | 23 Dashboards Free
+**Headline 1:** Free Crypto Analytics — 80 Pages + 90+ Widgets
+**Headline 2:** Crypto Analytics for $19/mo | Free Tier Available
 **Headline 3:** Tax Tools + DCA Tracker | Built-In
-**Description:** 71 live dashboards, 75+ widgets, tax tools, DCA tracker, custom builder. BYOK — your API keys never leave your device. Start free, upgrade for $19/mo.
+**Description:** 80 pages of analytics, 90+ widgets, tax tools, DCA tracker, custom builder. BYOK — your API keys never leave your device. Start free, upgrade for $19/mo.
 
 ### Facebook/Instagram Ads
 **Hook:** "Stop paying $50/month for basic crypto charts."
-**Body:** CryptoReportKit gives you 71 interactive dashboards, a tax calculator, DCA tracker, whale radar, and custom dashboard builder — for $19/month. Or start with 23 free dashboards. No credit card needed.
+**Body:** CryptoReportKit gives you 80 pages of analytics, 90+ widgets, a tax calculator, DCA tracker, whale radar, and custom dashboard builder — for $19/month. Free tier available. No credit card needed.
 **CTA:** Explore Free Dashboards
 
 ### Twitter/X Promoted
-"I use 71 crypto dashboards daily. BTC dominance timer, accumulation zone finder, whale tracker, divergence spotter. 23 of them are completely free. The rest are $19/mo. My API keys never leave my device. cryptoreportkit.com"
+"I use 80 pages of crypto analytics daily. BTC dominance timer, accumulation zone finder, whale tracker, divergence spotter. Free tier included. Pro is $19/mo. My API keys never leave my device. cryptoreportkit.com"
 
 ---
 
@@ -229,7 +232,7 @@ Use this table in comparison content, landing pages, and ads:
 1. **Price** — $19/mo vs $19-49/mo competitors (undercuts many)
 2. **Free tier** — 23 genuine dashboards, not a trial (builds trust, drives word of mouth)
 3. **BYOK privacy** — API keys never leave the device (unique differentiator)
-4. **Volume** — 71 dashboards, 75+ widgets, 8 pro tools (overwhelms competitors on quantity)
+4. **Volume** — 80 pages, 90+ widgets, 8 pro tools (overwhelms competitors on quantity)
 5. **Tax tools** — FIFO/LIFO/AVG + CSV export (captures tax season traffic)
 6. **Custom builder** — build your own dashboard (pro retention driver)
 7. **Multi-exchange** — 6 exchanges in one view (reduces tool sprawl for traders)
@@ -252,7 +255,7 @@ Use this table in comparison content, landing pages, and ads:
 
 ## 11. Technical Specs (for developer-focused marketing)
 
-- **Built with:** Next.js 14, React, TypeScript, Tailwind CSS, ECharts
+- **Built with:** Next.js 16, React 19, TypeScript, Tailwind CSS, Recharts
 - **Data source:** CoinGecko API (free + pro tiers)
 - **Auth:** Supabase (email/password, magic link)
 - **Payments:** FastSpring (global merchant of record)
@@ -276,7 +279,7 @@ Use this table in comparison content, landing pages, and ads:
 ## 13. FAQ for Marketer
 
 **Q: Is the free tier actually usable or just a teaser?**
-A: Fully usable. 23 dashboards with 5 widgets each, DCA simulator, BTC cycle comparison, 60+ currencies. No trial period, no credit card.
+A: Fully usable. 5 dashboard widgets, DCA simulator, BTC cycle comparison, 60+ currencies. No trial period, no credit card.
 
 **Q: What's the refund policy?**
 A: 30-day money-back guarantee on Pro.

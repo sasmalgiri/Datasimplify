@@ -1,6 +1,6 @@
 # DataSimplify - Page Data Report
 
-> **Generated:** January 2026
+> **Generated:** January 2026 | **Updated:** March 2026
 > **Platform:** DataSimplify Crypto Analytics
 > **Data Sources:** Binance, CoinGecko, Alternative.me, DeFiLlama, BlockchainInfo
 

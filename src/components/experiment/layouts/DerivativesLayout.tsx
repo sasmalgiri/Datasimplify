@@ -351,6 +351,9 @@ export function DerivativesLayout({ templateId }: LayoutProps) {
             </div>
           </div>
         )}
+        <div className="bg-amber-500/[0.06] border border-amber-500/20 rounded-xl p-4 text-[11px] text-amber-400">
+          Actual exchange inflow/outflow and reserve data requires on-chain analytics providers like CryptoQuant or Glassnode. This view uses 24h trading volume as a proxy for exchange flow activity.
+        </div>
       </div>
     );
   }
@@ -477,6 +480,9 @@ export function DerivativesLayout({ templateId }: LayoutProps) {
             </div>
           </div>
         )}
+        <div className="bg-amber-500/[0.06] border border-amber-500/20 rounded-xl p-4 text-[11px] text-amber-400">
+          Actual token unlock schedules with vesting dates and amounts require specialized providers like Token Unlocks or CryptoRank. This view shows circulating vs. maximum supply ratios.
+        </div>
       </div>
     );
   }

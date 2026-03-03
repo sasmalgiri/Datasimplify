@@ -1,7 +1,7 @@
 # CryptoReportKit Data Sources Matrix
 ## Legal & Rights Reference Table
 
-**Last Updated:** January 23, 2026
+**Last Updated:** March 4, 2026
 **Status:** 🔴 MANDATORY - No feature can ship without entry in this table
 
 ---
@@ -198,24 +198,21 @@ If a feature isn't listed here, it cannot be shipped to production.
 - Basic Excel functions
 - Web display access
 
-### Pro Tier ($19/mo)
+### Pro Tier ($19/mo or $190/yr)
 - All Free features
+- 90+ dashboard widgets
+- 10-coin compare + head-to-head
+- Full price history (all timeframes)
 - BYOK with premium providers (Etherscan, Reddit)
-- 50 template downloads/month
-- Scheduled exports (daily)
-- Price alerts
-- 5m/15m intervals
+- 300 template downloads/month
+- All template packs
+- Advanced charts & filters
+- Technical indicators (RSI, MACD, Bollinger, etc.)
+- AI Ask (Groq)
+- Price alerts (email notifications)
+- Priority email support
 
-### Premium Tier ($79/mo)
-- All Pro features
-- BYOK with enterprise providers (Nansen, Deribit)
-- Unlimited downloads
-- Scheduled exports (hourly)
-- Advanced alerts (indicators, funding)
-- 1m intervals
-- Priority support
-- API access
-- White-label option
+> **Note:** Premium tier ($79/mo) items in the matrix above are roadmap features not yet implemented. They will be gated under a future Premium tier when available.
 
 ---
 

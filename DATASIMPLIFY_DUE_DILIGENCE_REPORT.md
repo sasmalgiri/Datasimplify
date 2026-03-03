@@ -1,7 +1,7 @@
 # DataSimplify Due-Diligence Report
 
-**Version:** 1.5
-**Date:** January 2026
+**Version:** 2.0
+**Date:** March 2026
 **Status:** Pre-Launch / Pending Compliance Review
 
 ---
@@ -11,14 +11,14 @@
 **DataSimplify** is a professional cryptocurrency analytics platform with Excel template generation via CryptoSheets integration, targeting retail traders and analysts who need affordable workflow tools for crypto analysis.
 
 ### Value Proposition
-- **Price Point:** $0-79/mo (Free, Pro $29, Premium $79)
+- **Price Point:** Free ($0) + Pro ($19/mo or $190/yr)
 - **Unique Feature:** Excel templates with CryptoSheets formulas for live crypto data
 - **Target Market:** Retail traders, financial analysts, crypto researchers
 - **Competitive Moat:** Excel integration + Report Assistant
 
 ### Technical Summary
-- **92 pages** built and functional
-- **48 API routes** serving market, DeFi, on-chain, and sentiment data
+- **80 pages** built and functional
+- **112 API routes** serving market, DeFi, on-chain, sentiment, forum, live dashboard, and Excel add-in data
 - **2400+ coins** available (441 Binance primary + 2000 CoinGecko fallback, no duplicates)
 - **Browser-origin gated + rate-limited endpoints** (good-faith controls, not hard anti-scraping)
 - **3 content types** for Excel templates (Interactive, Native Charts, Formula-only)
@@ -98,7 +98,7 @@ This matrix defines what each tier can access and what data sources power each f
 
 ### Tier Feature Access
 
-| Feature | Free ($0) | Pro ($29) | Premium ($79) | Launch* |
+| Feature | Free ($0) | Pro ($19/mo) | Launch* |
 |---------|:---------:|:---------:|:-------------:|:-------:|
 | **Market Data (Website Display)** |
 | Live prices (200+ coins) | 5 coins | Unlimited | Unlimited | Yes |
@@ -457,9 +457,8 @@ Natural language interface for template selection:
 
 | Tier | Monthly | Key Features |
 |------|---------|--------------|
-| **Free** | $0 | 5 templates/mo, Low-Quota Mode (5-10 assets), basic dashboards |
-| **Pro** | $29 | 50 templates/mo, Pro Mode (100 assets), all template types, email support |
-| **Premium** | $79 | Unlimited templates, priority generation, API access, priority support |
+| **Free** | $0 | 5 downloads/mo, 5 widgets, 2-coin compare, 30-day history |
+| **Pro** | $19 ($190/yr) | 300 downloads/mo, 90+ widgets, 10-coin compare, full history, AI Ask, alerts |
 
 ### Important Clarification
 **We sell template software and workflows, not data.**
@@ -470,14 +469,15 @@ Natural language interface for template selection:
 
 ### Feature Entitlements Detail
 
-| Feature | Free | Pro ($29) | Premium ($79) |
-|---------|------|-----------|---------------|
-| Templates per month | 5 | 50 | Unlimited |
-| Template modes | Low-Quota only | Low-Quota + Pro | All modes |
-| Max assets in templates | 10 | 100 | 100 |
-| Timeframe options | Daily only | All (1h, 4h, 1d, 1w) | All |
-| Template types | Basic XLSX | All types | All types |
-| Report Assistant | Yes | Yes | Yes |
+| Feature | Free | Pro ($19/mo) |
+|---------|------|-------------|
+| Downloads per month | 5 | 300 |
+| Dashboard widgets | 5 | 90+ |
+| Coin compare | 2 | 10 + head-to-head |
+| Price history | 30 days | Full (all timeframes) |
+| Template types | Basic | All types |
+| AI Ask (Groq) | No | Yes |
+| Alerts (email) | No | Yes |
 | Website dashboards | Basic | Advanced | Advanced |
 | Support | Community | Email (24-48hr) | Priority (4hr) |
 | API access (authenticated)* | No | No | Yes |
@@ -615,7 +615,7 @@ All analytics pages include:
 datasimplify/
 ├── src/
 │   ├── app/                      # Next.js App Router
-│   │   ├── api/                  # 48 API routes
+│   │   ├── api/                  # 112 API routes
 │   │   │   ├── crypto/           # Market data (9 routes)
 │   │   │   ├── charts/           # OHLCV data (2 routes)
 │   │   │   ├── defi/             # DeFi data (1 route)
@@ -625,7 +625,7 @@ datasimplify/
 │   │   │   ├── templates/        # CryptoSheets (1 route)
 │   │   │   ├── paddle/           # Payments (2 routes)
 │   │   │   └── user/             # User management (5 routes)
-│   │   └── [92 page routes]
+│   │   └── [80 page routes]
 │   │
 │   ├── components/
 │   │   ├── features/             # Feature components
@@ -765,7 +765,7 @@ export async function GET(request: NextRequest) {
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Core features complete | Done | 92 pages, 48 API routes |
+| Core features complete | Done | 80 pages, 112 API routes |
 | CryptoSheets working | Done | 4 content types |
 | API security | Done | 24+ protected routes |
 | Paddle integration | Ready | paddle_safe mode available |
@@ -1118,6 +1118,13 @@ interface TemplateCatalogEntry {
 - Clarified API access is for template generation automation, not data redistribution
 
 ---
+
+### Changelog v2.0 (March 2026)
+
+**Stats Updated:**
+- 80 pages (was 92), 112 API routes (was 48), 211 components
+- Pricing unified to 2 tiers: Free ($0) + Pro ($19/mo or $190/yr)
+- Payment processor: FastSpring (active), Paddle (planned migration)
 
 ### Changelog v1.2
 

@@ -2,6 +2,15 @@
 
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
+function DataDisclaimer({ text }: { text: string }) {
+  return (
+    <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl px-4 py-3 flex items-start gap-2">
+      <span className="text-amber-400 mt-0.5 flex-shrink-0">⚠️</span>
+      <p className="text-[11px] text-amber-200/80 leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
 interface LayoutProps {
   coin: string;
   days: number;
@@ -53,6 +62,7 @@ export function SentimentGaugeLayout({ templateId }: LayoutProps) {
 
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view uses price movements and trading volume as sentiment proxies. Actual social sentiment analysis (Twitter/X mentions, Reddit activity, NLP scores) requires specialized social analytics APIs." />
         {/* Mini gauge at top */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <KPI label="Market Mood" value={fgRawValue != null ? `${fgRawValue} — ${fgLabel}` : '—'}
@@ -218,6 +228,7 @@ export function SentimentGaugeLayout({ templateId }: LayoutProps) {
 
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows NFT/gaming-related fungible tokens and categories from CoinGecko. Actual NFT collection data (floor prices, sales volume, unique holders) requires marketplace APIs like OpenSea or Reservoir." />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <KPI label="NFT/Gaming Categories" value={`${nftCategories.length}`} />
           <KPI label="NFT Tokens Tracked" value={`${nftCoins.length}`} />

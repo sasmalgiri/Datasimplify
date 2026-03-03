@@ -1,6 +1,6 @@
 # Unpopulated Fields / Unavailable Features Report
 
-Date: 2026-01-03
+Date: 2026-01-03 | Updated: 2026-03-04
 
 This report lists **fields/features that are not populated with live data** (or are intentionally disabled) in the current codebase. Per the "no fake data" policy, these areas should show **"Unavailable"** / `null` or return truthful API errors (e.g., 501/503) rather than placeholders.
 

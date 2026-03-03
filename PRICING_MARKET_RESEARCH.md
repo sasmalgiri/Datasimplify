@@ -2,8 +2,8 @@
 
 ## 1) What you’re selling (as implemented today)
 Your public pricing page currently presents a **2-tier subscription**:
-- **Free**: “3 downloads/month”, 5 widgets, 2-coin compare, 30-day history
-- **Pro**: **$19/mo** or **$190/yr** (shown as “Save 17%”), “300 downloads/month”, 47 widgets, 10-coin compare, “full price history (all timeframes)”, exports without watermark, etc.
+- **Free**: 5 downloads/month, 5 widgets, 2-coin compare, 30-day history
+- **Pro**: **$19/mo** or **$190/yr** (shown as “Save 17%”), 300 downloads/month, 90+ widgets, 10-coin compare, full price history (all timeframes), AI Ask, alerts, etc.
 
 Important implementation note (impacts trust + conversion): the repo has multiple conflicting “sources of truth” for limits/copy (Free download limit and Pro history limit differ across UI vs enforcement). Resolve those before spending effort on pricing tests.
 

@@ -1,6 +1,12 @@
 # Monetization Setup (Gated Downloads + Entitlements)
 
+_Last updated: March 2026_
+
 This project supports selling template files (e.g. Power Query packs) while keeping **paid assets off public URLs**.
+
+**Current pricing:** Free ($0) + Pro ($19/mo or $190/yr)
+**Checkout:** FastSpring (`cryptoreportkit.onfastspring.com`)
+**Planned migration:** Paddle (env vars defined in `.env.example`)
 
 ## 1) Supabase Storage
 

@@ -131,17 +131,23 @@ ollama pull llama3.2
 
 ---
 
-## Pages You Can Visit:
+## Pages You Can Visit (80 pages total):
 
 | Page | URL |
 |------|-----|
-| Dashboard | http://localhost:3000 |
-| Compare Coins | http://localhost:3000/compare |
-| Download Center | http://localhost:3000/download |
-| AI Chat | http://localhost:3000/chat |
-| Fear & Greed | http://localhost:3000/sentiment |
-| DeFi Data | http://localhost:3000/defi |
-| Learn Crypto | http://localhost:3000/learn |
+| Home | http://localhost:3000 |
+| Market | http://localhost:3000/market |
+| Screener | http://localhost:3000/screener |
+| Heatmap | http://localhost:3000/heatmap |
+| Compare | http://localhost:3000/compare |
+| Charts | http://localhost:3000/charts |
+| Sentiment | http://localhost:3000/sentiment |
+| DeFi | http://localhost:3000/defi |
+| Live Dashboards | http://localhost:3000/live-dashboards |
+| Experiment Lab | http://localhost:3000/templates |
+| DataLab | http://localhost:3000/datalab |
+| Community | http://localhost:3000/community |
+| Learn | http://localhost:3000/learn |
 | Glossary | http://localhost:3000/glossary |
 
 ---
@@ -152,5 +158,4 @@ If you see errors:
 1. Make sure you ran `npm install`
 2. Make sure `.env.local` exists (it should!)
 3. Check that Supabase schema was created
-
-Your Supabase URL: https://gadspittitmuqmysiawu.supabase.co
+4. Check your Supabase project URL in `.env.local`

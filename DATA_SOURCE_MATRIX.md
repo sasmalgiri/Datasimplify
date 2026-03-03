@@ -1,6 +1,6 @@
 # Data Source Matrix (Nodes vs Free APIs vs Paid)
 
-Date: 2026-01-03
+Date: 2026-01-03 | Updated: 2026-03-04
 
 This document answers:
 - “If we run nodes (even for ‘top 200’), what data is still not covered by free APIs?”

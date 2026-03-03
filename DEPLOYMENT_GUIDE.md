@@ -1,6 +1,8 @@
 # DataSimplify Deployment Guide
 
-Complete guide for deploying to Vercel with Supabase authentication and Paddle payments.
+_Last updated: March 2026_
+
+Complete guide for deploying to Vercel with Supabase authentication. Checkout is currently handled by FastSpring; Paddle migration is planned.
 
 ---
 
@@ -158,9 +160,11 @@ Should return `{"success":true,"id":"..."}` and appear in Supabase.
 
 ---
 
-## 5. Paddle Submission Checklist
+## 5. Payment Processor Submission Checklist
 
-Before applying for Paddle approval, ensure:
+> **Current state:** Checkout uses FastSpring (`cryptoreportkit.onfastspring.com`). Paddle migration is planned. The checklist below applies to either processor.
+
+Before applying for payment processor approval, ensure:
 
 ### 5.1 Website Requirements
 
@@ -195,14 +199,19 @@ Before applying for Paddle approval, ensure:
 - [ ] Mobile responsive
 - [ ] No console errors
 
-### 5.5 Paddle Application Steps
+### 5.5 FastSpring (Current)
+
+Checkout URL: `cryptoreportkit.onfastspring.com`
+Webhook: `POST /api/webhooks/fastspring`
+See `MONETIZATION_SETUP.md` for webhook auth and entitlement flow.
+
+### 5.6 Paddle (Planned Migration)
 
 1. Go to [paddle.com](https://paddle.com) and sign up
 2. Complete business verification
 3. Add your website URL
 4. Configure products:
-   - **Pro Plan**: $19/month
-   - **Premium Plan**: $79/month
+   - **Pro Plan**: $19/month or $190/year
 5. Set up webhooks:
    - URL: `https://cryptoreportkit.com/api/paddle/webhook`
    - Events: `subscription.created`, `subscription.updated`, `subscription.canceled`

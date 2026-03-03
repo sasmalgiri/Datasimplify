@@ -1,7 +1,7 @@
 # DataSimplify - Professional Crypto Analytics Platform
 
 > **Democratizing Financial Data for Everyone**
-> All-in-one crypto analytics with CryptoSheets Excel integration at $19-49/mo (vs competitors at $100-1,299/mo)
+> All-in-one crypto analytics with CryptoSheets Excel integration at $19/mo (vs competitors at $100-1,299/mo)
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Feature | DataSimplify | CoinGecko Pro | Glassnode | TradingView |
 |---------|--------------|---------------|-----------|-------------|
-| Price | **$19-49/mo** | $129/mo | $799/mo | $599/mo |
+| Price | **Free / $19/mo** | $129/mo | $799/mo | $599/mo |
 | Excel Templates | **Yes (CryptoSheets)** | No | No | No |
 | Historical Data | **2 years** | 2 years | Limited | Limited |
 | On-Chain Metrics | **Yes** | Basic | Yes | No |
@@ -38,21 +38,23 @@ Download professional Excel templates that pull live crypto data:
 - **CoinGecko Analyst** integration (500K API calls/month)
 - **2 years historical data** (daily, hourly, 5-minute intervals)
 
-### 92 Pages Built
+### 80 Pages Built
 
 | Category | Pages |
 |----------|-------|
-| Market Data | Market, Screener, Gainers/Losers, Trending, Recently Added |
-| Charts | Advanced Charts, Candlesticks, Price History |
-| Analytics | Technical Analysis, Correlation, Risk Dashboard |
-| On-Chain | Whale Tracker, On-Chain Metrics, DEX Pools |
-| Sentiment | Fear & Greed, Social Sentiment, Community |
-| DeFi | DeFi Dashboard, Global Market, Categories |
-| Tools | Portfolio, Backtest, Alerts, Compare, Predictions |
-| Learn | Academy, Glossary, Research, FAQ |
-| Downloads | CryptoSheets Templates |
+| Market Data | Market, Screener, Gainers/Losers, Trending, Recently Added, Heatmap |
+| Charts | Advanced Charts, Multi-Chart, Price History |
+| Analytics | Technical Analysis, Correlation, Risk Dashboard, Backtest |
+| On-Chain | Whale Tracker, On-Chain Metrics, DEX Pools, RWA |
+| Sentiment | Fear & Greed, Social Sentiment, Community (Forum) |
+| DeFi | DeFi Dashboard, Global Market, Categories, ETF |
+| Tools | Portfolio, Alerts, Compare, Command Center, DataLab |
+| Templates | Experiment Lab (27 templates), Template Hub |
+| Dashboards | Live Dashboards, AI Builder, Custom Builder, Explore |
+| Learn | Academy, Glossary, Research, FAQ, Blog |
+| Auth & Account | Login, Signup, Account, Admin, Pricing |
 
-### 24+ Protected API Endpoints
+### 112 API Routes
 
 All external data APIs are protected against scraping:
 - `/api/crypto/*` - Market data (protected; display-only posture)
@@ -62,6 +64,10 @@ All external data APIs are protected against scraping:
 - `/api/whales/*` - Whale transaction tracking
 - `/api/technical/*` - Technical indicators
 - `/api/onchain/*` - On-chain metrics
+- `/api/live-dashboard/*` - Live dashboard data
+- `/api/forum/*` - Community forum
+- `/api/user/*` - User management
+- `/api/v1/*` - Excel add-in API (48 routes)
 
 ---
 
@@ -195,7 +201,7 @@ REDISTRIBUTABLE_SOURCES=binance,alternativeme,defillama
 | UI Components | shadcn/ui + Custom |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth |
-| Payments | Paddle (MoR) |
+| Payments | FastSpring / Paddle |
 | AI | Groq / OpenAI / Ollama |
 | Charts | Recharts, Lightweight Charts |
 
@@ -206,8 +212,8 @@ REDISTRIBUTABLE_SOURCES=binance,alternativeme,defillama
 ```
 datasimplify/
 ├── src/
-│   ├── app/                    # Next.js App Router (92 pages)
-│   │   ├── api/               # 24+ API routes
+│   ├── app/                    # Next.js App Router (80 pages)
+│   │   ├── api/               # 112 API routes
 │   │   │   ├── crypto/        # Market data endpoints
 │   │   │   ├── charts/        # Candlestick/history data
 │   │   │   ├── defi/          # DeFi protocol data
@@ -276,10 +282,8 @@ datasimplify/
 
 | Tier | Price | Key Features |
 |------|-------|--------------|
-| **Free** | $0 | 5 downloads/mo, Basic market data |
-| **Starter** | $19/mo | 50 downloads, CryptoSheets, Screener |
-| **Pro** | $49/mo | Unlimited, Technical, Whales, AI |
-| **Business** | $99/mo | API access, Alerts, Priority support |
+| **Free** | $0 | 5 widgets, 2-coin compare, 5 downloads/mo, 30-day history |
+| **Pro** | $19/mo ($190/yr) | 90+ widgets, 10-coin compare, 300 downloads/mo, full history, AI Ask, alerts |
 
 ---
 

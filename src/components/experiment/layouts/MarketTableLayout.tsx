@@ -3,6 +3,15 @@
 import { useMemo } from 'react';
 import { useLiveDashboardStore } from '@/lib/live-dashboard/store';
 
+function DataDisclaimer({ text }: { text: string }) {
+  return (
+    <div className="bg-amber-400/5 border border-amber-400/20 rounded-xl px-4 py-3 flex items-start gap-2">
+      <span className="text-amber-400 mt-0.5 flex-shrink-0">⚠️</span>
+      <p className="text-[11px] text-amber-200/80 leading-relaxed">{text}</p>
+    </div>
+  );
+}
+
 interface LayoutProps {
   coin: string;
   days: number;
@@ -130,6 +139,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const btcCoin = markets.find((c) => c.id === 'bitcoin');
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows market data for ETF-eligible crypto assets. Actual ETF AUM, inflow/outflow data, and premium/discount metrics require specialized data providers (e.g., SoSoValue, Farside)." />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <KPI label="BTC Price" value={btcCoin ? `$${formatPrice(btcCoin.current_price)}` : '—'} />
           <KPI label="BTC 24h Change" value={btcCoin ? formatPct(btcCoin.price_change_percentage_24h) : '—'}
@@ -153,6 +163,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const topByMcap = markets.slice(0, 10);
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows crypto market-wide metrics as macro indicators. Traditional macro data (Fed rates, DXY, CPI, bond yields, S&P 500) requires specialized financial APIs." />
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <KPI label="Total Market Cap" value={formatLarge(global?.total_market_cap?.usd)} />
           <KPI label="24h Volume" value={formatLarge(global?.total_volume?.usd)} />
@@ -186,6 +197,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const totalMcap = portCoins.reduce((s, c) => s + (c.market_cap ?? 0), 0);
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This is a sample portfolio based on top assets by market cap. Allocation percentages reflect relative market cap weights, not actual holdings. Use the Portfolio page for custom portfolio tracking with P&L." />
         {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/[0.06]">
@@ -327,6 +339,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const corrCoins = corrIds.map((id) => markets.find((c) => c.id === id)).filter(Boolean) as typeof markets;
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows a price change comparison across major assets. For actual Pearson correlation coefficients and heatmap visualization, visit the Correlation page from the Tools menu." />
         {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4">
           <h3 className="text-sm font-semibold text-white mb-1">Price Change Comparison Matrix</h3>
@@ -376,6 +389,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const byVolume = [...markets].sort((a, b) => (b.total_volume ?? 0) - (a.total_volume ?? 0)).slice(0, 20);
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view uses 24h trading volume as a proxy for whale activity. Actual on-chain whale tracking (large transactions, wallet balances) requires blockchain analytics APIs like Arkham or Nansen." />
         {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/[0.06]">
@@ -392,6 +406,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const top20 = markets.slice(0, 20);
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows a current performance snapshot. For full backtesting with strategy signals, equity curves, and Sharpe ratios, visit the Backtest page from the Tools menu." />
         {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/[0.06]">
@@ -408,6 +423,7 @@ export function MarketTableLayout({ coin, templateId }: LayoutProps) {
     const alertCoins = markets.slice(0, 15);
     return (
       <div className="space-y-6">
+        <DataDisclaimer text="This view shows current price levels and key thresholds (24h range, ATH, ATL) for top coins. Use these as reference points for setting price alerts." />
         {global && <GlobalKPIs global={global} fgRawValue={fgRawValue} fgValue={fgValue} fgLabel={fgLabel} />}
         <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/[0.06]">

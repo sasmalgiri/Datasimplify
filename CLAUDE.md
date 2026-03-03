@@ -2,87 +2,94 @@
 
 ## What is this project?
 
-DataSimplify is a **crypto data platform** that democratizes financial data access for non-technical users. Users can download real-time crypto data in Excel/CSV format without coding.
+DataSimplify (public brand: **CryptoReportKit**) is a **crypto data platform** that democratizes financial data access. It provides real-time market dashboards, analytics tools, live dashboards with 90+ widgets, an Experiment Lab with 27 templates, and CryptoSheets Excel integration.
 
-**Live URL:** https://datasimplify-nediidei9-sasmalgiris-projects.vercel.app
+**Live URL:** https://cryptoreportkit.com
 
 ## Tech Stack
 
-- **Frontend:** Next.js 14 + TypeScript + Tailwind CSS
+- **Frontend:** Next.js 16 + React 19 + TypeScript + Tailwind CSS
 - **Database:** Supabase (PostgreSQL + Auth)
-- **Payments:** Paddle (not Stripe)
+- **Payments:** FastSpring (checkout), Paddle (planned migration)
 - **AI:** Groq API (llama-3.3-70b-versatile)
-- **Data Sources:** CoinGecko API, Binance API, Alternative.me, DeFiLlama
+- **Data Sources:** CoinGecko API, Binance API, Alternative.me, DeFiLlama, Etherscan, Blockchair
 - **Deployment:** Vercel
 
 ## Project Structure
 
 ```
 src/
-├── app/
-│   ├── market/page.tsx      # Market overview with 100 coins
-│   ├── compare/page.tsx     # Compare up to 10 coins side-by-side
-│   ├── download/page.tsx    # Download center with toggleable fields
-│   ├── chat/page.tsx        # AI chat interface
-│   ├── glossary/page.tsx    # 60+ crypto terms explained
-│   ├── learn/page.tsx       # Educational content
-│   ├── pricing/page.tsx     # Subscription plans
-│   ├── login/page.tsx       # Email/password login
-│   ├── signup/page.tsx      # Account creation
-│   └── api/
-│       ├── crypto/          # CoinGecko proxy endpoints
-│       ├── download/        # Excel/CSV generation
-│       ├── ai/chat/         # Groq AI endpoint
-│       └── paddle/          # Payment webhooks
-├── components/
-│   ├── FreeNavbar.tsx       # Navigation for free pages
-│   ├── ui/BeginnerHelpers.tsx # Tooltips, tips, info buttons
-│   └── features/            # Feature components (14 total)
+├── app/                         # 80 pages (Next.js App Router)
+│   ├── market/page.tsx          # Market overview (500+ coins)
+│   ├── compare/page.tsx         # Compare up to 10 coins side-by-side
+│   ├── screener/page.tsx        # Token screener with filters
+│   ├── heatmap/page.tsx         # Market cap treemap
+│   ├── charts/page.tsx          # Charts + advanced charts
+│   ├── technical/page.tsx       # Technical analysis (RSI, MACD, etc.)
+│   ├── correlation/page.tsx     # Correlation matrix
+│   ├── risk/page.tsx            # Risk dashboard (VaR, Sharpe, etc.)
+│   ├── sentiment/page.tsx       # Fear & Greed + social sentiment
+│   ├── defi/page.tsx            # DeFi TVL + protocols
+│   ├── community/page.tsx       # Forum (Supabase-backed)
+│   ├── live-dashboards/         # Live dashboards (90+ widgets)
+│   ├── datalab/page.tsx         # DataLab (custom data exploration)
+│   ├── templates/page.tsx       # Experiment Lab (27 templates)
+│   ├── pricing/page.tsx         # Free + Pro ($19/mo)
+│   └── api/                     # 112 API routes
+│       ├── crypto/              # Market data endpoints
+│       ├── charts/              # OHLCV candlestick data
+│       ├── defi/                # DeFi protocol data
+│       ├── sentiment/           # Fear & Greed
+│       ├── whales/              # Whale tracking
+│       ├── technical/           # Technical indicators
+│       ├── forum/               # Community forum CRUD
+│       ├── live-dashboard/      # Dashboard data
+│       ├── v1/                  # Excel add-in API (48 routes)
+│       └── templates/           # CryptoSheets downloads
+├── components/                  # 211 components
+│   ├── features/                # 16 feature components
+│   ├── live-dashboard/widgets/  # 88 dashboard widgets
+│   ├── experiment/layouts/      # 5 experiment layout types
+│   ├── forum/                   # Forum UI components
+│   └── ui/                      # UI helpers
 └── lib/
-    ├── supabase.ts          # Supabase client
-    ├── auth.tsx             # Auth context
-    ├── glossary.ts          # 60+ crypto term definitions
-    ├── dataTypes.ts         # Data categories & supported coins
-    └── aiProvider.ts        # Groq AI integration
+    ├── supabase.ts              # Supabase client
+    ├── auth.tsx                 # Auth context
+    ├── featureFlags.ts          # Feature toggles
+    ├── apiSecurity.ts           # Display-only enforcement
+    ├── redistributionPolicy.ts  # Data licensing
+    ├── coingecko/               # CoinGecko client + budget
+    └── live-dashboard/          # Dashboard store + data layer
 ```
 
-## Current Status (December 2024)
+## Current Status (March 2026)
 
-### ✅ Completed
-- Landing page with professional design
-- Market page with 100 coins, sorting, search, CSV download
-- Compare page with 16 pre-configured coins, best performer highlighting
-- Download page with 8 data types, toggleable fields, live preview
-- AI Chat with Groq integration (API key configured)
-- Glossary with 60+ terms
-- Learn page with beginner guides
-- Pricing page (Free, Starter $19, Pro $49, Business $99)
-- Supabase Auth (email/password only, no Google OAuth)
-- Dark theme throughout
-- Responsive design
-- User Dashboard UI (stats, download history, quick actions, upgrade prompts)
-- Paddle checkout API endpoint
-- Paddle webhook handlers (all subscription events)
-
-### 🔄 In Progress
-- Paddle payment integration (needs API credentials in .env.local)
-- User download tracking (works for logged-in users)
-
-### ❌ Not Started
-- Subscription management (cancel/change plan UI)
-- Email notifications
+### Completed
+- 80 pages, 112 API routes, 211 components
+- Live Dashboards with 90+ customizable widgets
+- Experiment Lab with 27 differentiated templates across 9 categories
+- Community Forum (Supabase-backed with threads, replies, votes)
+- DataLab (custom data exploration + export)
+- Market, Screener, Heatmap, Gainers/Losers, Trending
+- Technical Analysis (RSI, MACD, Bollinger, SMA/EMA, ATR)
+- Correlation matrix, Risk dashboard (VaR, Sharpe, Sortino)
+- DeFi, On-Chain, Sentiment, Whale tracking
+- AI Ask (Groq), Price Alerts with email
+- CryptoSheets Excel templates (3 content types)
+- Excel Add-in with 85+ custom functions (BYOK)
+- Dark theme with emerald accent throughout
+- Supabase Auth (email/password)
+- FastSpring checkout + webhook handlers
+- Feature flag system (free vs full modes)
+- Display-only data enforcement + redistribution policy
 
 ## Key Design Decisions
 
-1. **No login required for free features** - Users can access Market, Compare, Download, AI Chat, Glossary, Learn without creating an account
-
-2. **Free tier limits:** 5 downloads/month
-
+1. **No login required for free features** - Public pages show cached data
+2. **Free tier:** 5 downloads/month, 5 widgets, 2-coin compare
 3. **Color scheme:** Dark theme with emerald (#10b981) as primary accent
-
-4. **Navigation order:** Market, Compare, Download, AI Chat, Glossary, Learn, Pricing, Login
-
-5. **Hover tooltips:** Emerald dotted underline indicates hoverable elements
+4. **BYOK model:** Users provide their own API keys for live data
+5. **Display-only enforcement:** CoinGecko data cannot be exported/scraped
 
 ## Environment Variables
 
@@ -95,64 +102,27 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 GROQ_API_KEY=your-groq-api-key
-OPENAI_API_KEY=your-openai-api-key
-CRYPTOPANIC_API_KEY=your-cryptopanic-api-key
+COINGECKO_API_KEY=your-coingecko-api-key
 ```
 
 ## Database Schema (Supabase)
 
 Key tables:
 - `user_profiles` - User subscription info, download counts
-- `crypto_prices` - Cached price data
-- `crypto_metadata` - Coin info
-- `embeddings` - RAG vectors for AI
+- `user_prediction_stats` - Community prediction stats + display names
+- `forum_threads` / `forum_replies` / `forum_thread_votes` - Forum system
+- `market_data` / `klines` - Cached market data
+- `coin_sentiment` / `sentiment_posts` - Sentiment data
+- `whale_transactions` - Whale tracking
+- `defi_protocols` - DeFi protocol cache
 
-## API Endpoints
+## Pricing
 
-| Endpoint | Description |
-|----------|-------------|
-| GET /api/crypto | List coins from CoinGecko |
-| GET /api/crypto/global | Global market stats |
-| GET /api/crypto/[id] | Single coin details |
-| GET /api/download | Generate Excel/CSV/JSON |
-| POST /api/ai/chat | AI chat with Groq |
-| GET /api/sentiment | Fear & Greed index |
-
-## Recent Changes
-
-1. **Hover tooltips fixed** - z-index increased, emerald underline added
-2. **Download page** - Toggleable fields with live preview
-3. **Usage display** - Shows "5 downloads/month" instead of "Unlimited"
-4. **Navigation** - Download link added to all pages
-5. **Dashboard fixed** - Changed Stripe API calls to Paddle
-6. **Dependencies cleaned** - Removed unused Stripe/Razorpay packages
-7. **Types updated** - Changed stripe_* fields to paddle_* in types
-8. **Groq API key** - Configured in .env.local
-
-## Common Issues & Solutions
-
-### "Invalid API key" error
-- Check `.env.local` has correct Supabase keys
-- Ensure no extra whitespace in env values
-- Use `.trim()` when reading env vars
-
-### Tooltips not showing
-- Check z-index is 100+
-- Ensure parent doesn't have `overflow: hidden`
-
-### Download not working
-- Check Binance API is accessible
-- Verify CORS settings
-
-## Business Model
-
-| Tier | Price | Downloads | Features |
-|------|-------|-----------|----------|
-| Free | $0 | 5/month | Basic data, 3 templates |
-| Starter | $19/mo | 50/month | All data, 10 templates |
-| Pro | $49/mo | Unlimited | AI analysis, all templates |
-| Business | $99/mo | Unlimited | API access, custom templates |
+| Tier | Price | Key Features |
+|------|-------|--------------|
+| Free | $0 | 5 widgets, 2-coin compare, 5 downloads/mo, 30-day history |
+| Pro | $19/mo ($190/yr) | 90+ widgets, 10-coin compare, 300 downloads/mo, full history, AI, alerts |
 
 ## Contact
 
-This project is being built for DataSimplify startup. The goal is to be a "Bloomberg alternative" for retail crypto investors at 1/100th the cost.
+This project is built for DataSimplify (brand: CryptoReportKit). The goal is to be a "Bloomberg alternative" for retail crypto investors at 1/100th the cost.
