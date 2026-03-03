@@ -36,6 +36,21 @@ const nextConfig: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self' vercel.live",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' c.static-clone.com va.vercel-scripts.com *.googletagmanager.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' blob: data: assets.coingecko.com coin-images.coingecko.com",
+              "font-src 'self'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "connect-src *",
+            ].join('; '),
+          },
+          {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
