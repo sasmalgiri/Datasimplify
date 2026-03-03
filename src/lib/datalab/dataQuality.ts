@@ -31,22 +31,35 @@ export function analyzeDataQuality(
     const data = layer.data;
     if (!data || data.length === 0) continue;
 
-    // 2. Data gaps: 3+ consecutive nulls
-    let maxConsecutiveNulls = 0;
-    let currentNulls = 0;
-    for (const val of data) {
+    // 2. Data gaps: 3+ consecutive nulls in the INTERIOR of the data.
+    //    Leading nulls are expected for indicators (SMA-50 has 49 leading nulls).
+    //    Trailing nulls are expected for some indicators (Ichimoku chikou is shifted back).
+    //    Only flag gaps that appear between two non-null values.
+    let maxInteriorGap = 0;
+    let currentGap = 0;
+    let seenNonNull = false;
+    // Find last non-null index to exclude trailing nulls
+    let lastNonNullIdx = -1;
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i] !== null && data[i] !== undefined) { lastNonNullIdx = i; break; }
+    }
+    for (let i = 0; i < data.length; i++) {
+      const val = data[i];
       if (val === null || val === undefined) {
-        currentNulls++;
-        maxConsecutiveNulls = Math.max(maxConsecutiveNulls, currentNulls);
+        if (seenNonNull && i < lastNonNullIdx) {
+          currentGap++;
+          maxInteriorGap = Math.max(maxInteriorGap, currentGap);
+        }
       } else {
-        currentNulls = 0;
+        seenNonNull = true;
+        currentGap = 0;
       }
     }
-    if (maxConsecutiveNulls >= 3) {
+    if (maxInteriorGap >= 3) {
       warnings.push({
         type: 'data_gaps',
-        severity: maxConsecutiveNulls >= 10 ? 'warning' : 'info',
-        message: `${layer.label}: ${maxConsecutiveNulls} consecutive missing data points detected.`,
+        severity: maxInteriorGap >= 10 ? 'warning' : 'info',
+        message: `${layer.label}: ${maxInteriorGap} consecutive missing data points detected.`,
         affectedLayer: layer.id,
       });
     }
@@ -72,8 +85,10 @@ export function analyzeDataQuality(
     if (required && nonNullCount < required) {
       warnings.push({
         type: 'insufficient_candles',
-        severity: 'warning',
-        message: `${layer.label}: needs ${required} data points but only ${nonNullCount} available. Results may be inaccurate.`,
+        severity: nonNullCount === 0 ? 'info' : 'warning',
+        message: nonNullCount === 0
+          ? `${layer.label}: requires ${required}+ data points. Try increasing the time range (e.g. 90d or 1y).`
+          : `${layer.label}: needs ${required} data points but only ${nonNullCount} available. Try a longer time range.`,
         affectedLayer: layer.id,
       });
     }
