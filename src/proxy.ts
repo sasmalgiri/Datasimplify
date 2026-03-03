@@ -46,7 +46,7 @@ const PUBLIC_ROUTES = new Set([
   '/screener',
   '/compare',
   '/download',
-  '/downloads',
+  '/templates',
   '/charts',
   '/glossary',
   '/learn',

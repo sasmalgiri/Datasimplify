@@ -381,7 +381,7 @@ export function ChartExcelModal({ chartType, chartTitle, isOpen, onClose }: Char
             <p className="text-xs text-gray-500">
               Powered by{' '}
               <Link
-                href="/downloads"
+                href="/templates"
                 className="text-blue-400 hover:underline"
               >
                 CryptoReportKit

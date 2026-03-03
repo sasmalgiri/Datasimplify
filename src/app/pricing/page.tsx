@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -66,6 +67,7 @@ const FEATURE_EXPLANATIONS: Record<string, string> = {
 export default function PricingPage() {
   const pricingEnabled = isFeatureEnabled('pricing');
   const { user, profile } = useAuth();
+  const router = useRouter();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const [geo, setGeo] = useState<GeoInfo | null>(null);
 
@@ -98,7 +100,7 @@ export default function PricingPage() {
             All powered by BYOK (Bring Your Own Key) — your CoinGecko API key, your data.
           </p>
           <div className="mt-6 flex gap-4">
-            <Link href="/downloads" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
+            <Link href="/templates" className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
               Get Templates →
             </Link>
             <Link href="/template-requirements" className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium">
@@ -113,7 +115,7 @@ export default function PricingPage() {
   const handleSubscribe = (tier: string, period: 'monthly' | 'yearly') => {
     // Redirect to signup first if not logged in
     if (!user) {
-      window.location.assign(`/signup?plan=${tier}-${period}`);
+      router.push(`/signup?plan=${tier}-${period}`);
       return;
     }
 

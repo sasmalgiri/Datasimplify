@@ -234,7 +234,7 @@ export default function BYOKPage() {
             </Link>
 
             <Link
-              href="/downloads"
+              href="/templates"
               className="p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition border border-gray-600"
             >
               <div className="flex items-center gap-2 mb-2">
@@ -293,7 +293,7 @@ export default function BYOKPage() {
         {/* CTA */}
         <div className="mt-12 text-center">
           <Link
-            href="/downloads"
+            href="/templates"
             className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition"
           >
             <Key className="w-5 h-5" />

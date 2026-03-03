@@ -69,7 +69,7 @@ export default function TemplateRequirementsPage() {
               <li>&bull; Ready to analyze the moment you open</li>
             </ul>
             <Link
-              href="/downloads"
+              href="/templates"
               className="inline-block mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition-colors"
             >
               Browse Excel Templates &rarr;
@@ -198,7 +198,7 @@ export default function TemplateRequirementsPage() {
         {/* CTA */}
         <div className="flex flex-wrap gap-4">
           <Link
-            href="/downloads"
+            href="/templates"
             className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-lg font-medium transition-colors"
           >
             Download Excel Templates

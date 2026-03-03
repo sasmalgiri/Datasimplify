@@ -118,7 +118,7 @@ function ComingSoonContent() {
                 <div className="text-white group-hover:text-blue-400 transition-colors">Market Data</div>
               </Link>
               <Link
-                href="/downloads"
+                href="/templates"
                 className="p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
               >
                 <div className="text-2xl mb-2">📊</div>

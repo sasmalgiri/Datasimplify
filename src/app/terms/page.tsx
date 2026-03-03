@@ -3,14 +3,17 @@
 import Link from 'next/link';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 export default function TermsPage() {
   const paymentsEnabled = isFeatureEnabled('payments');
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
+    <>
+      <FreeNavbar />
+      <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
         <p className="text-gray-600 mb-8">Last updated: January 2026</p>
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
@@ -497,5 +500,6 @@ export default function TermsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

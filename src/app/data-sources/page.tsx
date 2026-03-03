@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { ExternalLink, Shield, Info } from 'lucide-react';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 export default function DataSourcesPage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-4">Data Sources & Attribution</h1>
+    <>
+      <FreeNavbar />
+      <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">Data Sources & Attribution</h1>
         <p className="text-gray-600 mb-8">
           CryptoReportKit aggregates cryptocurrency data from multiple trusted providers. This page provides
           full attribution, usage context, and links to each provider&apos;s terms of service.
@@ -260,7 +263,8 @@ export default function DataSourcesPage() {
           <span className="text-gray-400">|</span>
           <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700">Privacy Policy</Link>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { X, FileSpreadsheet, ChevronRight, Check, ExternalLink } from 'lucide-react';
 import { PageContext, getTemplatesForPage, PAGE_META } from '@/lib/templates/pageMapping';
 import { TEMPLATES, TemplateType } from '@/lib/templates/templateConfig';
@@ -21,14 +22,15 @@ export function TemplateSelectionModal({
   onClose,
   pageContext,
 }: TemplateSelectionModalProps) {
+  const router = useRouter();
+
   if (!isOpen) return null;
 
   const availableTemplates = getTemplatesForPage(pageContext.pageId);
   const pageMeta = PAGE_META[pageContext.pageId];
 
   const handleTemplateSelect = (templateType: TemplateType) => {
-    // Navigate to the experiment page for this template
-    window.location.href = `/templates/${templateType}/experiment`;
+    router.push(`/templates/${templateType}/experiment`);
   };
 
   return (

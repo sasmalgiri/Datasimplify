@@ -338,7 +338,7 @@ export const PERSONA_DEFINITIONS: Record<PersonaId, PersonaDefinition> = {
       },
       {
         label: 'Download Templates',
-        href: '/downloads',
+        href: '/templates',
         icon: 'Download',
         description: 'Pre-formatted Excel kits for client deliverables',
       },

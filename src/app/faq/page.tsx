@@ -226,7 +226,7 @@ export default function FAQPage() {
         {/* Quick Links */}
         <div className="mt-12 grid md:grid-cols-3 gap-4">
           <Link
-            href="/downloads"
+            href="/templates"
             className="p-4 bg-gray-800/50 border border-gray-700 rounded-xl hover:border-emerald-500/50 transition text-center"
           >
             <div className="text-2xl mb-2">📊</div>

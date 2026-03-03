@@ -259,7 +259,7 @@ export default function HomePage() {
               Recommended Templates
             </h2>
             <Link
-              href="/downloads"
+              href="/templates"
               className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
             >
               All templates <ArrowRight className="w-3 h-3" />

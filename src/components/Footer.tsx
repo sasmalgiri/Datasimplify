@@ -58,8 +58,8 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               {user && (
                 <>
-                  <li><Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link></li>
-                  <li><Link href="/downloads" className="hover:text-white transition-colors">Customize Templates</Link></li>
+                  <li><Link href="/templates" className="hover:text-white transition-colors">Templates</Link></li>
+                  <li><Link href="/templates" className="hover:text-white transition-colors">Customize Templates</Link></li>
                 </>
               )}
               <li><Link href="/live-dashboards" className="hover:text-white transition-colors">Live Dashboards</Link></li>

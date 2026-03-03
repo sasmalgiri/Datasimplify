@@ -1,9 +1,13 @@
 'use client';
 
+import { FreeNavbar } from '@/components/FreeNavbar';
+
 export default function SimplifiedDemoPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-3xl mx-auto">
+    <>
+      <FreeNavbar />
+      <div className="min-h-screen bg-gray-900 text-white p-8">
+        <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Simplified Demo</h1>
         <p className="text-gray-400 mb-6">A beginner-friendly UI showcase</p>
 
@@ -17,7 +21,8 @@ export default function SimplifiedDemoPage() {
             Use the main pages (Dashboard / Market / On-chain / Technical) for real data.
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

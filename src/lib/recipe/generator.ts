@@ -197,7 +197,7 @@ async function createDashboardSheet(
   sheet.getCell('B25').font = { size: 10, color: { argb: 'FF9ca3af' } };
 
   // Instructions
-  sheet.getCell('A27').value = 'To get fresh data: Download a new template from cryptoreportkit.com/downloads';
+  sheet.getCell('A27').value = 'To get fresh data: Download a new template from cryptoreportkit.com/templates';
   sheet.getCell('A27').font = { size: 10, italic: true, color: { argb: 'FF10b981' } };
   sheet.mergeCells('A27:F27');
 }

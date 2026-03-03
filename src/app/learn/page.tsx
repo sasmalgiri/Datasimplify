@@ -142,7 +142,7 @@ const SECTIONS: LearnSection[] = [
     takeaway:
       'On-chain data gives you a transparent look at what is actually happening on a blockchain. Active addresses, hash rate, and exchange flows are among the most actionable metrics.',
     links: [
-      { label: 'On-Chain Analytics', href: '/onchain' },
+      { label: 'On-Chain Analytics', href: '/charts' },
       { label: 'Correlation Matrix', href: '/correlation' },
     ],
   },

@@ -412,9 +412,7 @@ export default function AnalystHubPage() {
                   <Gem className="w-4 h-4 text-purple-500" />
                   <span className="font-semibold text-white text-sm">Top NFTs</span>
                 </div>
-                <Link href="/nft" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
-                  More <ChevronRight className="w-3 h-3" />
-                </Link>
+                <span className="text-xs text-gray-500">Top 5</span>
               </div>
               <div className="divide-y divide-gray-800">
                 {nfts.map((nft, i) => (
@@ -498,9 +496,7 @@ export default function AnalystHubPage() {
                   <Building2 className="w-4 h-4 text-blue-500" />
                   <span className="font-semibold text-white text-sm">Top Exchanges</span>
                 </div>
-                <Link href="/exchanges" className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
-                  More <ChevronRight className="w-3 h-3" />
-                </Link>
+                <span className="text-xs text-gray-500">Top 5</span>
               </div>
               <div className="divide-y divide-gray-800">
                 {exchanges.map((ex, i) => (

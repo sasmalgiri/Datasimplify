@@ -90,7 +90,7 @@ export function ComingSoon({
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Link
-              href="/downloads"
+              href="/templates"
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
             >
               Excel Data Templates

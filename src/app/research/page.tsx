@@ -10,6 +10,7 @@ import {
   Zap,
   Search,
 } from 'lucide-react';
+import { FreeNavbar } from '@/components/FreeNavbar';
 
 const researchTools = [
   {
@@ -101,8 +102,10 @@ const colorClasses: Record<string, { bg: string; icon: string; border: string }>
 
 export default function ResearchPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950">
-      <div className="max-w-6xl mx-auto px-4 py-12">
+    <>
+      <FreeNavbar />
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950">
+        <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm mb-4">
@@ -218,5 +221,6 @@ export default function ResearchPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
