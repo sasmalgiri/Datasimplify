@@ -139,7 +139,13 @@ export default function TemplatesHubPage() {
                           </div>
 
                           <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/[0.04]">
-                            <span className="text-[10px] text-gray-600">{group.category.name}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                              t.tier === 'free'
+                                ? 'bg-emerald-400/10 text-emerald-400'
+                                : 'bg-amber-400/10 text-amber-400'
+                            }`}>
+                              {t.tier === 'free' ? 'Free' : 'Pro'}
+                            </span>
                             <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-emerald-400 transition" />
                           </div>
                         </Link>
