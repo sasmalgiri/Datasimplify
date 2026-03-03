@@ -59,7 +59,7 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
   // Get text color for contrast
   const getTextColor = (change: number) => {
     if (Math.abs(change) >= 5) return 'text-white';
-    return 'text-gray-800';
+    return 'text-white';
   };
 
   // Format market cap
@@ -71,7 +71,7 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 text-white">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -79,7 +79,7 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
             🗺️ Crypto Market Map
             <InfoButton explanation="This treemap shows the relative size of cryptocurrencies. Bigger boxes = larger market cap. Colors show price change (green = up, red = down)." />
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-400 text-sm mt-1">
             Visual overview of the top 50 cryptocurrencies by market cap
           </p>
         </div>
@@ -88,19 +88,19 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-lg text-sm ${filter === 'all' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm ${filter === 'all' ? 'bg-blue-500/10 text-blue-300' : 'bg-gray-700/50 text-gray-400'}`}
           >
             All
           </button>
           <button
             onClick={() => setFilter('gainers')}
-            className={`px-3 py-1 rounded-lg text-sm ${filter === 'gainers' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm ${filter === 'gainers' ? 'bg-green-500/10 text-green-300' : 'bg-gray-700/50 text-gray-400'}`}
           >
             🟢 Gainers
           </button>
           <button
             onClick={() => setFilter('losers')}
-            className={`px-3 py-1 rounded-lg text-sm ${filter === 'losers' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-3 py-1 rounded-lg text-sm ${filter === 'losers' ? 'bg-red-500/10 text-red-300' : 'bg-gray-700/50 text-gray-400'}`}
           >
             🔴 Losers
           </button>
@@ -155,7 +155,7 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-4 mt-4 text-xs text-gray-500">
+      <div className="flex justify-center gap-4 mt-4 text-xs text-gray-400">
         <div className="flex items-center gap-1">
           <div className="w-4 h-4 bg-green-500 rounded"></div>
           <span>Price Up</span>
@@ -165,14 +165,14 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
           <span>Price Down</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-8 h-4 bg-gray-300 rounded"></div>
+          <div className="w-8 h-4 bg-gray-500 rounded"></div>
           <span>Bigger = Larger Market Cap</span>
         </div>
       </div>
 
       {/* Selected Coin Details */}
       {selectedCoin && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="mt-6 p-4 bg-gray-700/50 rounded-lg border border-gray-700/50">
           <div className="flex justify-between items-start">
             <div>
               <h3 className="font-bold text-lg">{selectedCoin.name} ({selectedCoin.symbol.toUpperCase()})</h3>
@@ -185,17 +185,17 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
                 {selectedCoin.price_change_percentage_24h >= 0 ? '+' : ''}
                 {selectedCoin.price_change_percentage_24h.toFixed(2)}%
               </p>
-              <p className="text-sm text-gray-500">24h Change</p>
+              <p className="text-sm text-gray-400">24h Change</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
-              <p className="text-gray-500 text-sm">Market Cap</p>
+              <p className="text-gray-400 text-sm">Market Cap</p>
               <p className="font-semibold">{formatMarketCap(selectedCoin.market_cap)}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-sm">What This Means</p>
+              <p className="text-gray-400 text-sm">What This Means</p>
               <p className="text-sm">
                 {selectedCoin.price_change_percentage_24h >= 5 
                   ? '🟢 Strong bullish movement today!'
@@ -217,7 +217,7 @@ export function Treemap({ coins, showBeginnerTips = true }: TreemapProps) {
             </a>
             <button 
               onClick={() => setSelectedCoin(null)}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
             >
               Close
             </button>

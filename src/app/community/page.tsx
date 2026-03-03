@@ -327,12 +327,14 @@ export default function CommunityPage() {
               'Crypto Staking', 'NFT Market', 'Bitcoin ETF', 'Meme Coins', 'On-Chain Analytics',
               'Whale Tracking', 'Liquidation Heatmap', 'Confluence Trading',
             ].map((tag) => (
-              <span
+              <button
+                type="button"
                 key={tag}
+                onClick={() => router.push(`/community?search=${encodeURIComponent(tag)}`)}
                 className="px-3 py-1.5 bg-gray-700/50 border border-gray-600/30 rounded-full text-xs text-gray-300 hover:border-emerald-400/40 hover:text-emerald-300 cursor-pointer transition-colors"
               >
                 {tag}
-              </span>
+              </button>
             ))}
           </div>
         </div>

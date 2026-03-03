@@ -268,6 +268,32 @@ export default function CommunityDashboardsPage() {
   // ─── Fork handler ───
   const handleFork = async (dashboard: CommunityDashboard) => {
     setForkingId(dashboard.id);
+
+    // Build a proper CustomDashboardDef that the builder page expects
+    const now = Date.now();
+    const forkedId = `custom-${now}`;
+    const forkedDashboard = {
+      id: forkedId,
+      name: `${dashboard.dashboard_name} (Fork)`,
+      icon: dashboard.icon || '📊',
+      gridColumns: dashboard.grid_columns,
+      widgets: dashboard.widget_config,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Read existing dashboards, append the fork, and save back
+    const STORAGE_KEY = 'crk-custom-dashboards';
+    let existing: any[] = [];
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      existing = raw ? JSON.parse(raw) : [];
+    } catch {
+      existing = [];
+    }
+    existing.push(forkedDashboard);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+
     try {
       // Increment fork count on server
       await fetch('/api/live-dashboard/community', {
@@ -275,32 +301,13 @@ export default function CommunityDashboardsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: dashboard.id, action: 'fork' }),
       });
-
-      // Save config to localStorage for builder
-      localStorage.setItem(
-        'crk-custom-builder',
-        JSON.stringify({
-          widgets: dashboard.widget_config,
-          gridColumns: dashboard.grid_columns,
-          forkedFrom: dashboard.id,
-        })
-      );
-
-      router.push('/live-dashboards/custom/builder');
     } catch {
-      // Still navigate even if the PATCH fails — the fork data is saved locally
-      localStorage.setItem(
-        'crk-custom-builder',
-        JSON.stringify({
-          widgets: dashboard.widget_config,
-          gridColumns: dashboard.grid_columns,
-          forkedFrom: dashboard.id,
-        })
-      );
-      router.push('/live-dashboards/custom/builder');
+      // Navigate even if the PATCH fails — the fork data is already saved locally
     } finally {
       setForkingId(null);
     }
+
+    router.push(`/live-dashboards/custom/builder?edit=${forkedId}`);
   };
 
   // ─── View handler ───

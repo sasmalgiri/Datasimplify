@@ -7,7 +7,7 @@ import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
 import { UniversalExport } from '@/components/UniversalExport';
-import { SUPPORTED_COINS } from '@/lib/dataTypes';
+import { SUPPORTED_COINS, getCoinGeckoId } from '@/lib/dataTypes';
 import {
   areAllSourcesRedistributableClient,
   isAnySourceRedistributableClient,
@@ -247,7 +247,7 @@ const AVAILABLE_CHART_CONFIGS: ChartConfig[] = CHART_CONFIGS.filter(c => isChart
 
 // Initial coin list from static config (will be replaced with dynamic list)
 const INITIAL_COINS = SUPPORTED_COINS.map(coin => ({
-  id: coin.symbol.toLowerCase(),
+  id: getCoinGeckoId(coin.symbol),
   name: coin.name,
   symbol: coin.symbol,
 }));
@@ -260,7 +260,7 @@ const TIME_RANGES = [
   { value: '30', label: '30D' },
   { value: '90', label: '90D' },
   { value: '365', label: '1Y' },
-  { value: '1825', label: '5Y' },
+  { value: '730', label: '2Y' },
 ];
 
 const INTERVAL_OPTIONS = [
@@ -2220,6 +2220,17 @@ function ChartsContent() {
                 {selectedChart === 'correlation' && 'Correlation matrix showing how different cryptocurrencies move in relation to each other.'}
                 {selectedChart === 'racing_bar' && 'Animated visualization of market cap rankings over time. Click Play to start the animation.'}
                 {selectedChart === 'market_dominance' && 'Pie chart showing the relative market share of top cryptocurrencies.'}
+                {selectedChart === 'fibonacci' && 'Fibonacci retracement levels overlaid on price data to identify potential support and resistance zones.'}
+                {selectedChart === 'volume_profile' && 'Volume distribution across different price levels to identify areas of high trading activity.'}
+                {selectedChart === 'funding_rate' && 'Funding rates for perpetual futures contracts, indicating market sentiment in the derivatives market.'}
+                {selectedChart === 'open_interest' && 'Total open interest in futures/options markets, showing the amount of outstanding derivative contracts.'}
+                {selectedChart === 'liquidation_heatmap' && 'Heatmap of estimated liquidation levels across major exchanges.'}
+                {selectedChart === 'whale_flow' && 'Track large transactions and exchange flows to understand whale activity and market movements.'}
+                {selectedChart === 'wallet_distribution' && 'Distribution of coin holdings across different wallet sizes, from small holders to whales.'}
+                {selectedChart === 'active_addresses' && 'Number of unique active addresses over time, indicating network usage and adoption.'}
+                {selectedChart === 'fear_greed_history' && 'Historical Fear & Greed Index values showing market sentiment over time.'}
+                {selectedChart === 'social_volume' && 'Social media mention volume and sentiment trends across platforms.'}
+                {selectedChart === 'btc_dominance' && 'Bitcoin\'s market share relative to the total cryptocurrency market capitalization over time.'}
                               </p>
             </div>
           </div>

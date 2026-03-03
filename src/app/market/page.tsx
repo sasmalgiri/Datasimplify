@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -119,6 +120,7 @@ interface FearGreed {
 }
 
 export default function MarketPage() {
+  const router = useRouter();
   const [coins, setCoins] = useState<Coin[]>([]);
   const [globalData, setGlobalData] = useState<GlobalData | null>(null);
   const [fearGreed, setFearGreed] = useState<FearGreed | null>(null);
@@ -549,7 +551,7 @@ export default function MarketPage() {
                   <tr
                     key={coin.id}
                     className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors group cursor-pointer"
-                    onClick={() => window.location.href = `/coin/${coin.id}`}
+                    onClick={() => router.push(`/coin/${coin.id}`)}
                   >
                     <td className="px-4 py-4 text-gray-400">{(currentPage - 1) * coinsPerPage + index + 1}</td>
                     <td className="px-4 py-4">

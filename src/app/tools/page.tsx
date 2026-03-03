@@ -13,7 +13,7 @@ export default function ToolsPage() {
       name: 'Excel Data Templates',
       emoji: '📊',
       description: 'Excel templates with prefetched crypto data (BYOK)',
-      href: '/downloads',
+      href: '/templates',
       color: 'from-green-500 to-teal-500',
       forBeginner: true,
       features: ['Prefetched data', 'Ready to use', 'BYOK available']
@@ -43,10 +43,10 @@ export default function ToolsPage() {
       name: 'On-Chain Analytics',
       emoji: '⛓️',
       description: 'Explore network activity and on-chain metrics',
-      href: '/onchain',
+      href: '/charts',
       color: 'from-violet-500 to-purple-500',
       forBeginner: false,
-      features: ['On-chain indicators', 'Availability varies by config', 'Template-ready']
+      features: ['On-chain charts', 'Availability varies by config', 'Template-ready']
     },
     {
       id: 'charts',

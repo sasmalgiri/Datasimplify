@@ -354,8 +354,8 @@ export default function GlossaryPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Beginner Tip */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-blue-700 text-sm flex items-start gap-2">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+          <p className="text-blue-300 text-sm flex items-start gap-2">
             <span>💡</span>
             <span>
               <strong>How to use:</strong> Search for any crypto term or click a category below to filter.
@@ -374,7 +374,7 @@ export default function GlossaryPage() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 selectedCategory === cat.id
                   ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
               }`}
             >
               {cat.emoji} {cat.label}
@@ -383,7 +383,7 @@ export default function GlossaryPage() {
         </div>
 
         {/* Results Count */}
-        <p className="text-gray-500 mb-4">
+        <p className="text-gray-400 mb-4">
           Showing {filteredTerms.length} term{filteredTerms.length !== 1 ? 's' : ''}
         </p>
 
@@ -392,16 +392,16 @@ export default function GlossaryPage() {
           {filteredTerms.map((term) => (
             <div
               key={term.term}
-              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+              className="bg-gray-800/60 rounded-lg border border-gray-700/50 overflow-hidden"
             >
               <button
                 onClick={() => setExpandedTerm(expandedTerm === term.term ? null : term.term)}
-                className="w-full p-4 text-left hover:bg-gray-50 transition-colors"
+                className="w-full p-4 text-left hover:bg-gray-700/50 transition-colors"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{term.term}</h3>
-                    <p className="text-gray-600 mt-1">{term.simple}</p>
+                    <h3 className="text-lg font-bold text-white">{term.term}</h3>
+                    <p className="text-gray-400 mt-1">{term.simple}</p>
                   </div>
                   <span className={`text-2xl transition-transform ${expandedTerm === term.term ? 'rotate-180' : ''}`}>
                     ▼
@@ -410,23 +410,23 @@ export default function GlossaryPage() {
               </button>
               
               {expandedTerm === term.term && (
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-gray-700/50">
                   <div className="pt-4 space-y-4">
                     <div>
-                      <h4 className="font-semibold text-gray-700 mb-1">📝 Detailed Explanation</h4>
-                      <p className="text-gray-600">{term.detailed}</p>
+                      <h4 className="font-semibold text-gray-300 mb-1">📝 Detailed Explanation</h4>
+                      <p className="text-gray-400">{term.detailed}</p>
                     </div>
                     
                     {term.example && (
-                      <div className="bg-blue-50 p-3 rounded-lg">
-                        <h4 className="font-semibold text-blue-800 mb-1">💡 Example</h4>
-                        <p className="text-blue-700">{term.example}</p>
+                      <div className="bg-blue-500/10 p-3 rounded-lg">
+                        <h4 className="font-semibold text-blue-300 mb-1">💡 Example</h4>
+                        <p className="text-blue-400">{term.example}</p>
                       </div>
                     )}
                     
                     {term.related && term.related.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-700 mb-2">🔗 Related Terms</h4>
+                        <h4 className="font-semibold text-gray-300 mb-2">🔗 Related Terms</h4>
                         <div className="flex flex-wrap gap-2">
                           {term.related.map((related) => (
                             <button
@@ -435,7 +435,7 @@ export default function GlossaryPage() {
                                 setSearchQuery(related);
                                 setExpandedTerm(related);
                               }}
-                              className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm hover:bg-gray-200"
+                              className="px-3 py-1 bg-gray-700/50 text-gray-400 rounded-full text-sm hover:bg-gray-700"
                             >
                               {related}
                             </button>
@@ -455,7 +455,7 @@ export default function GlossaryPage() {
           <div className="text-center py-12">
             <span className="text-6xl">🤔</span>
             <h3 className="text-xl font-bold mt-4">No terms found</h3>
-            <p className="text-gray-500 mt-2">
+            <p className="text-gray-400 mt-2">
               Try a different search or category
             </p>
           </div>

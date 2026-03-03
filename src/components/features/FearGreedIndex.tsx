@@ -83,23 +83,23 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-        <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 animate-pulse">
+        <div className="h-6 bg-gray-700 rounded w-48 mb-4"></div>
+        <div className="h-32 bg-gray-700 rounded"></div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 text-white">
         <div className="flex justify-between items-start mb-2">
           <div>
             <h2 className="text-xl font-bold flex items-center gap-2">
               😱 Fear &amp; Greed Index
               <InfoButton explanation="This index measures the overall sentiment in the crypto market. It combines volatility, market momentum, social media, surveys, and more to determine if investors are fearful or greedy." />
             </h2>
-            <p className="text-gray-500 text-sm mt-1">How the market is feeling right now</p>
+            <p className="text-gray-400 text-sm mt-1">How the market is feeling right now</p>
           </div>
         </div>
 
@@ -109,7 +109,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
           </BeginnerTip>
         )}
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 text-sm text-amber-300">
           ⚠️ <strong>Unavailable:</strong> {loadError || 'Fear & Greed data could not be loaded.'}
         </div>
       </div>
@@ -122,7 +122,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
   const getEmoji = (val: number) => {
     if (val <= 20) return { emoji: '😨', label: 'Extreme Fear', color: 'text-red-600' };
     if (val <= 40) return { emoji: '😟', label: 'Fear', color: 'text-orange-500' };
-    if (val <= 60) return { emoji: '😐', label: 'Neutral', color: 'text-gray-600' };
+    if (val <= 60) return { emoji: '😐', label: 'Neutral', color: 'text-gray-300' };
     if (val <= 80) return { emoji: '😊', label: 'Greed', color: 'text-green-500' };
     return { emoji: '🤑', label: 'Extreme Greed', color: 'text-green-600' };
   };
@@ -133,7 +133,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
   const needleRotation = (value / 100) * 180 - 90;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 text-white">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -141,7 +141,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
             😱 Fear & Greed Index
             <InfoButton explanation="This index measures the overall sentiment in the crypto market. It combines volatility, market momentum, social media, surveys, and more to determine if investors are fearful or greedy." />
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-400 text-sm mt-1">
             How the market is feeling right now
           </p>
         </div>
@@ -215,7 +215,7 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
       </div>
 
       {/* Scale Labels */}
-      <div className="flex justify-between text-xs text-gray-500 mb-6 px-4">
+      <div className="flex justify-between text-xs text-gray-400 mb-6 px-4">
         <span>😨 Extreme Fear</span>
         <span>😟 Fear</span>
         <span>😐 Neutral</span>
@@ -224,50 +224,50 @@ export function FearGreedIndex({ showBeginnerTips = true }: { showBeginnerTips?:
       </div>
 
       {/* What It Means */}
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-gray-700/50 rounded-lg p-4">
         <h3 className="font-semibold mb-2 flex items-center gap-2">
           💡 What does this mean for you?
         </h3>
         {value <= 30 ? (
           <div className="space-y-2 text-sm">
-            <p className="text-red-700">
+            <p className="text-red-400">
               <strong>Extreme Fear:</strong> People are very scared about crypto right now.
             </p>
-            <p className="text-gray-700">
+            <p className="text-gray-300">
               📜 <em>&quot;Be greedy when others are fearful&quot;</em> - Warren Buffett
             </p>
-            <p className="text-gray-600">
-              This could be a good time to buy, as prices might be lower than usual. 
+            <p className="text-gray-400">
+              This could be a good time to buy, as prices might be lower than usual.
               But always do your own research!
             </p>
           </div>
         ) : value <= 50 ? (
           <div className="space-y-2 text-sm">
-            <p className="text-orange-700">
+            <p className="text-orange-400">
               <strong>Cautious:</strong> The market is uncertain. People are nervous.
             </p>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               Consider waiting for clearer signals before making big moves.
             </p>
           </div>
         ) : value <= 70 ? (
           <div className="space-y-2 text-sm">
-            <p className="text-green-700">
+            <p className="text-green-400">
               <strong>Optimistic:</strong> People are feeling good about crypto.
             </p>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               The market is healthy, but don&apos;t let FOMO (fear of missing out) make you overpay.
             </p>
           </div>
         ) : (
           <div className="space-y-2 text-sm">
-            <p className="text-green-700">
+            <p className="text-green-400">
               <strong>Extreme Greed:</strong> Everyone is very excited about crypto!
             </p>
-            <p className="text-gray-700">
+            <p className="text-gray-300">
               📜 <em>&quot;Be fearful when others are greedy&quot;</em> - Warren Buffett
             </p>
-            <p className="text-gray-600">
+            <p className="text-gray-400">
               ⚠️ Prices might be too high. Consider taking some profits or waiting before buying more.
             </p>
           </div>

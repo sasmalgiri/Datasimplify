@@ -356,8 +356,8 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
   };
 
   const getRSIColor = (rsi: number) => {
-    if (rsi >= 70) return 'text-red-600 bg-red-50';
-    if (rsi <= 30) return 'text-green-600 bg-green-50';
+    if (rsi >= 70) return 'text-red-400 bg-red-500/10';
+    if (rsi <= 30) return 'text-green-400 bg-green-500/10';
     return 'text-gray-400 bg-gray-700/50';
   };
 
@@ -680,11 +680,11 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
 
       {/* RSI Legend */}
       {showBeginnerTips && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
           <h3 className="font-semibold mb-2">📊 Understanding RSI</h3>
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div className="text-center">
-              <span className="inline-block px-3 py-1 bg-green-100 text-green-700 rounded-full font-bold">0-30</span>
+              <span className="inline-block px-3 py-1 bg-green-500/10 text-green-400 rounded-full font-bold">0-30</span>
               <p className="mt-1 text-gray-400">Oversold</p>
               <p className="text-xs text-gray-500">Might bounce up</p>
             </div>
@@ -694,7 +694,7 @@ export function TokenScreener({ showBeginnerTips = true }: { showBeginnerTips?: 
               <p className="text-xs text-gray-500">Normal range</p>
             </div>
             <div className="text-center">
-              <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full font-bold">70-100</span>
+              <span className="inline-block px-3 py-1 bg-red-500/10 text-red-400 rounded-full font-bold">70-100</span>
               <p className="mt-1 text-gray-400">Overbought</p>
               <p className="text-xs text-gray-500">Might drop down</p>
             </div>

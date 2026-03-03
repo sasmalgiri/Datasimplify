@@ -307,7 +307,7 @@ export default function TaxReportPage() {
                   onChange={(e) => setTaxYear(Number(e.target.value))}
                   className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm"
                 >
-                  {[2024, 2023, 2022, 2021].map(y => <option key={y} value={y}>{y}</option>)}
+                  {[2026, 2025, 2024, 2023, 2022, 2021].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
             </div>

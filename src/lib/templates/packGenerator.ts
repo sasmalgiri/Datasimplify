@@ -687,7 +687,7 @@ export const PACK_RECIPES: Record<string, PackRecipe> = {
     coins: [
       'bitcoin', 'ethereum', 'tether', 'solana', 'ripple',
       'usd-coin', 'cardano', 'avalanche-2', 'dogecoin', 'tron',
-      'chainlink', 'polkadot', 'polygon', 'litecoin', 'bitcoin-cash',
+      'chainlink', 'polkadot', 'matic-network', 'litecoin', 'bitcoin-cash',
       'uniswap', 'stellar', 'cosmos', 'ethereum-classic', 'monero',
     ],
     metrics: ['price', 'change_24h', 'market_cap', 'volume', 'movers'],
@@ -707,7 +707,7 @@ export const PACK_RECIPES: Record<string, PackRecipe> = {
       'uniswap', 'aave', 'chainlink', 'maker', 'compound-governance-token',
       'yearn-finance', 'curve-dao-token', 'synthetix-network-token', 'sushi',
       '1inch', 'pancakeswap-token', 'lido-dao', 'rocket-pool', 'frax-share',
-      'convex-finance', 'balancer', 'gmx', 'dydx', 'ribbon-finance', 'perpetual-protocol',
+      'convex-finance', 'balancer', 'gmx', 'dydx', 'aevo-exchange', 'perpetual-protocol',
     ],
     metrics: ['price', 'change_24h', 'market_cap', 'volume', 'movers'],
     currency: 'usd',

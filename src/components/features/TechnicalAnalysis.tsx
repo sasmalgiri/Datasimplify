@@ -283,8 +283,8 @@ export function TechnicalAnalysis({ coin = 'BTC', showBeginnerTips = true }: Tec
       )}
 
       {/* Disclaimer */}
-      <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <p className="text-xs text-yellow-800">
+      <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+        <p className="text-xs text-yellow-300">
           ⚠️ <strong>Disclaimer:</strong> Technical indicators are for <em>educational purposes only</em>.
           They are based on historical data and do not predict future performance.
           This is not financial advice. Always do your own research.
