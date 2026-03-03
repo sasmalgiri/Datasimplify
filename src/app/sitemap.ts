@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com
 
 // Use a fixed build date so lastModified doesn't change on every crawl.
 // Update this date when you deploy meaningful content changes.
-const LAST_UPDATED = '2026-02-26T00:00:00.000Z';
+const LAST_UPDATED = new Date().toISOString();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
