@@ -799,7 +799,13 @@ function WatchlistRow({
         <td className={`py-2 px-3 ${st.textDim}`}>{m.market_cap_rank || '--'}</td>
         <td className={`py-2 px-3 font-medium ${st.textPrimary}`}>
           <div className="flex items-center gap-2">
-            {m.image && <img src={m.image} alt="" className="w-5 h-5 rounded-full" />}
+            {m.image && (
+              <img
+                src={m.image}
+                alt={`${m.name}${m.symbol ? ` (${m.symbol.toUpperCase()})` : ''} logo`}
+                className="w-5 h-5 rounded-full"
+              />
+            )}
             <span>{m.name}</span>
             <span className={`text-xs ${st.textDim}`}>{m.symbol.toUpperCase()}</span>
             {isExpanded ? <ChevronDown className="w-3 h-3 text-gray-500 ml-auto" /> : <ChevronRight className="w-3 h-3 text-gray-700 ml-auto" />}
@@ -905,7 +911,13 @@ function HoldingsRow({
         </td>
         <td className={`py-2 px-2 font-medium ${st.textPrimary}`}>
           <div className="flex items-center gap-2">
-            {row.image && <img src={row.image} alt="" className="w-5 h-5 rounded-full" />}
+            {row.image && (
+              <img
+                src={row.image}
+                alt={`${row.name}${row.symbol ? ` (${String(row.symbol).toUpperCase()})` : ''} logo`}
+                className="w-5 h-5 rounded-full"
+              />
+            )}
             <span>{row.name}</span>
             <span className={`text-xs ${st.textDim}`}>{row.symbol}</span>
             {isExpanded ? <ChevronDown className="w-3 h-3 text-gray-500 ml-auto" /> : <ChevronRight className="w-3 h-3 text-gray-700 ml-auto" />}

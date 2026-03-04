@@ -26,7 +26,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Getting Started',
     question: 'What is BYOK (Bring Your Own Key)?',
-    answer: 'BYOK means you provide your own data provider API key (e.g., CoinGecko free or Pro). Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For current data, use our web dashboards with YOUR key.',
+    answer: 'BYOK means you provide your own data provider API key (e.g., CoinGecko Demo or Pro). For Excel templates, you can keep the key in your workbook. For web dashboards, the key is stored locally in your browser and sent to our backend only to fetch live data from CoinGecko.',
   },
   // Templates
   {
@@ -47,7 +47,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Templates',
     question: 'Why do I need my own API key?',
-    answer: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, and your key stays in your Excel file. For live dashboards, your key stays in browser sessionStorage.',
+    answer: 'The BYOK architecture ensures compliance and gives you control. You get a CoinGecko API key, and you control where it lives: in your Excel workbook for templates, or locally in your browser for web dashboards. Web dashboards send the key to our backend only to fetch CoinGecko data for you.',
   },
   // Data & Accuracy
   {
@@ -112,7 +112,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Support',
     question: 'Is my data private?',
-    answer: 'Yes! With Excel templates, data is prefetched server-side. With live dashboards, your API key stays in your browser - it never touches our servers. We don\'t store or see your keys.',
+    answer: 'Yes. With Excel templates, templates ship with prefetched data. With web dashboards, your API key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.',
   },
 ];
 

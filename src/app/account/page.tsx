@@ -324,8 +324,8 @@ export default function AccountPage() {
               </h3>
               <p className="text-emerald-200/80 text-sm mb-3">
                 CryptoReportKit uses a true BYOK architecture. Your CoinGecko API key stays in your
-                browser - we never see, store, or transmit your keys. You maintain full control
-                and privacy over your data access.
+                browser. When you load dashboards, your browser sends the key to our backend only to fetch CoinGecko data for you.
+                You maintain control over your key and can clear it at any time.
               </p>
               <Link
                 href="/byok"

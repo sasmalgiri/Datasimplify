@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -135,26 +135,42 @@ const CHANGELOG = [
 export default function RoadmapPage() {
   const [requests, setRequests] = useState<FeatureRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'requests' | 'changelog'>('requests');
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
     fetchRequests();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const fetchRequests = async () => {
+    setIsLoading(true);
+    setError(null);
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     try {
-      const response = await fetch('/api/template-request');
-      if (!response.ok) {
-        console.error('Failed to fetch requests:', response.status);
-        return;
-      }
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 10_000);
+      const response = await fetch('/api/template-request', { signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      setRequests(data.requests || []);
+      if (isMountedRef.current) setRequests(data.requests || []);
     } catch (error) {
-      console.error('Failed to fetch requests:', error);
+      if (!isMountedRef.current) return;
+      if (error instanceof Error && error.name === 'AbortError') {
+        setError('Request timed out');
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to fetch requests');
+      }
     } finally {
-      setIsLoading(false);
+      if (timeout) clearTimeout(timeout);
+      if (isMountedRef.current) setIsLoading(false);
     }
   };
 
@@ -329,6 +345,18 @@ export default function RoadmapPage() {
             {/* Requests List */}
             {isLoading ? (
               <div className="text-center py-12 text-gray-400">Loading...</div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-gray-300 mb-2">Failed to load feature requests</p>
+                <p className="text-gray-500 text-sm mb-4">{error}</p>
+                <button
+                  type="button"
+                  onClick={() => fetchRequests()}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-sm transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
             ) : filteredRequests.length === 0 ? (
               <div className="text-center py-12">
                 <FileSpreadsheet className="w-12 h-12 text-gray-600 mx-auto mb-4" />

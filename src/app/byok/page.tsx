@@ -22,8 +22,9 @@ export default function BYOKPage() {
           </h1>
 
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            CryptoReportKit uses a true BYOK model: your CoinGecko API key stays on your computer.
-            We never see, store, or proxy your API key. All API calls go directly to CoinGecko.
+            CryptoReportKit uses a BYOK model: you bring your own CoinGecko API key.
+            For web dashboards, your key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.
+            For Excel templates, you can keep your key in the workbook and connect directly.
           </p>
         </div>
 
@@ -36,11 +37,11 @@ export default function BYOKPage() {
           <ul className="space-y-2 text-gray-300">
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>True privacy:</strong> Your API key is stored locally - it never leaves your computer</span>
+              <span><strong>Your key:</strong> Stored locally in your browser for web dashboards (and in your workbook for Excel)</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>No middleman:</strong> API calls go directly to CoinGecko, not through our servers</span>
+              <span><strong>BYOK:</strong> You use your own CoinGecko plan (Demo or Pro) under CoinGecko&apos;s terms</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -48,12 +49,12 @@ export default function BYOKPage() {
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-              <span><strong>Zero server storage:</strong> We never see, store, or have access to your API keys</span>
+              <span><strong>Control:</strong> You can clear your stored key any time from your browser</span>
             </li>
           </ul>
           <p className="mt-4 text-sm text-gray-400 border-t border-gray-600 pt-4">
             <strong>Two options:</strong> Use our <strong>Excel templates</strong> (with prefetched data) or the
-            <strong> live dashboards</strong> on the website (key in browser sessionStorage). Both methods keep your key 100% local.
+            <strong> live dashboards</strong> on the website (key in browser localStorage). For web dashboards, requests are made via our backend to fetch CoinGecko data.
           </p>
         </div>
 
@@ -261,7 +262,8 @@ export default function BYOKPage() {
             <div>
               <h3 className="font-medium text-white mb-1">Does CryptoReportKit store my API key?</h3>
               <p className="text-sm text-gray-400">
-                No! Your API key is stored only on your computer. With live dashboards, it stays in your browser&apos;s sessionStorage. We never see, transmit, or store your keys on our servers.
+                For web dashboards, your API key is stored in your browser&apos;s localStorage. When you load data, the key is sent to our backend so it can fetch CoinGecko data for you.
+                For Excel templates, you can keep the key inside the workbook.
               </p>
             </div>
 

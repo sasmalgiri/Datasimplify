@@ -78,9 +78,13 @@ export default function StatusPage() {
     setIsLoading(true);
     setError(null);
 
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 10_000);
       const response = await fetch('/api/health', {
         cache: 'no-store',
+        signal: controller.signal,
       });
 
       if (!response.ok && response.status !== 503) {
@@ -91,8 +95,13 @@ export default function StatusPage() {
       setHealth(data);
       setLastRefresh(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch status');
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Request timed out');
+      } else {
+        setError(err instanceof Error ? err.message : 'Failed to fetch status');
+      }
     } finally {
+      if (timeout) clearTimeout(timeout);
       setIsLoading(false);
     }
   }, []);
@@ -289,7 +298,7 @@ export default function StatusPage() {
               </h3>
               <p className="text-emerald-800 text-sm mb-3">
                 CryptoReportKit uses BYOK (Bring Your Own Key) architecture.
-                Excel templates ship with prefetched data. Your API key stays local - we never see or store your keys.
+                Excel templates ship with prefetched data. For web dashboards, your key is stored locally in your browser and sent to our backend only to fetch provider data for you.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link

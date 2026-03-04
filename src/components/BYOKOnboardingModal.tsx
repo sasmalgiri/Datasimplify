@@ -111,7 +111,7 @@ export function BYOKOnboardingModal({ onClose, onSkip }: BYOKOnboardingModalProp
           <div className="flex items-start gap-2">
             <Shield className="w-3.5 h-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
             <p className="text-[10px] text-gray-500 leading-relaxed">
-              Your key stays in your browser&apos;s local storage. We never store or see your API key on our servers.
+              Your key is stored in your browser&apos;s local storage. When you load data, your browser sends the key to our backend, which fetches data from CoinGecko and returns it to you.
             </p>
           </div>
         </div>

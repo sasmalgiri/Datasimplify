@@ -67,21 +67,22 @@ export default function PrivacyPage() {
 
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.4 API Keys (BYOK)</h3>
             <p className="mb-4">
-              We use a <strong>true Bring Your Own Key (BYOK)</strong> architecture. You obtain your own API key from
-              CoinGecko (or other providers) and store it directly in your Excel file.
-              <strong> We never see, store, or transmit your API keys.</strong>
+              We use a <strong>Bring Your Own Key (BYOK)</strong> architecture. You obtain your own API key from
+              CoinGecko (or other providers) under their terms. Depending on the feature you use, your key may be stored locally
+              on your device (e.g., inside an Excel workbook or in your browser storage) and may be transmitted to our servers
+              to fetch third-party data on your behalf.
             </p>
             <ul className="list-disc list-inside space-y-2 mb-4">
               <li><strong>Your Keys, Your Responsibility:</strong> You obtain API keys directly from data providers
                 under their terms. We have no relationship with your provider account.</li>
-              <li><strong>Client-Side Storage Only:</strong> Your API key is stored in your Excel file (in a Settings
-                sheet or named cell). It never leaves your computer or touches our servers.</li>
-              <li><strong>Direct API Calls:</strong> Excel connects directly to CoinGecko using your key. We do not
-                proxy, intercept, or log any of your API requests.</li>
+              <li><strong>Local Storage:</strong> For Excel templates, you can store your API key in a Settings
+                sheet or named cell. For web dashboards, your key may be stored locally in your browser.</li>
+              <li><strong>Service Requests:</strong> When you use web dashboards, your browser may send your API key to our backend
+                so we can fetch data from the provider and return the results to you.</li>
               <li><strong>No Access Provision:</strong> We do not &quot;provide access&quot; to any data provider. You maintain
                 your own provider account and are solely responsible for compliance with their terms.</li>
-              <li><strong>Full Control:</strong> Your key is in your Excel file. You can change or remove it at any time.
-                When you delete the file, your key is gone - we have nothing stored.</li>
+              <li><strong>Full Control:</strong> You can change or remove your key at any time (e.g., by editing your workbook or clearing it from your browser storage).
+                You can also rotate keys in your provider dashboard if you believe a key has been exposed.</li>
             </ul>
             <p className="mb-4">
               <strong>Disclaimer:</strong> By using BYOK, you acknowledge that (a) you obtained your API keys directly

@@ -241,10 +241,13 @@ export function CoinSelector({
             >
               {coin.symbol}
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeCoin(coin.id);
                 }}
+                aria-label={`Remove ${coin.name ?? coin.symbol} from selection`}
+                title={`Remove ${coin.name ?? coin.symbol}`}
                 className="hover:text-emerald-300"
               >
                 <X className="w-3 h-3" />
@@ -424,7 +427,7 @@ export function CoinSelector({
                             {coin.thumb && (
                               <img
                                 src={coin.thumb}
-                                alt={coin.symbol}
+                                alt={`${coin.name} (${coin.symbol.toUpperCase()}) logo`}
                                 className="w-4 h-4 rounded-full"
                               />
                             )}

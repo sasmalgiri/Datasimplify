@@ -193,7 +193,11 @@ export function WorkspaceContextBar({ onDismiss, onSyncCoins }: WorkspaceContext
               className={`flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${st.subtleBg} border ${st.subtleBorder} hover:border-emerald-400/20 transition`}
             >
               {coin.image && (
-                <img src={coin.image} alt={coin.symbol} className="w-4 h-4 rounded-full" />
+                <img
+                  src={coin.image}
+                  alt={`${coin.name} (${coin.symbol.toUpperCase()}) logo`}
+                  className="w-4 h-4 rounded-full"
+                />
               )}
               <span className={`font-medium ${st.textPrimary}`}>
                 {coin.symbol.toUpperCase()}

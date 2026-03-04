@@ -89,7 +89,7 @@ function DashboardCard({
               {dashboard.author_avatar ? (
                 <img
                   src={dashboard.author_avatar}
-                  alt={dashboard.author_name}
+                  alt={`${dashboard.author_name} avatar`}
                   className="w-4 h-4 rounded-full"
                 />
               ) : (

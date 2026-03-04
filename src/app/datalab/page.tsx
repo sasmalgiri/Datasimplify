@@ -159,7 +159,7 @@ function DataLabPage() {
               </div>
               <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
                 <p className="text-xs font-medium text-emerald-400 mb-1">Your Key, Your Control</p>
-                <p className="text-[11px] text-gray-500">Key stays in your browser only. Never stored on our servers.</p>
+                <p className="text-[11px] text-gray-500">Key is stored locally in your browser. It&apos;s sent to our backend only to fetch CoinGecko data for you.</p>
               </div>
               <div className="bg-white/[0.03] border border-white/[0.06] rounded-lg p-3">
                 <p className="text-xs font-medium text-emerald-400 mb-1">2-Minute Setup</p>
@@ -175,7 +175,7 @@ function DataLabPage() {
 
             <div className="mt-6 flex items-center justify-center gap-2 text-[11px] text-gray-600">
               <Shield className="w-3 h-3" />
-              <span>BYOK (Bring Your Own Key) — calls go direct to CoinGecko from your browser</span>
+              <span>BYOK (Bring Your Own Key) — dashboards fetch CoinGecko data via our backend</span>
             </div>
           </div>
         </main>

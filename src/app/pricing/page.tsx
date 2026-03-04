@@ -193,7 +193,7 @@ export default function PricingPage() {
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-sm text-emerald-400">
             <span>🔑</span>
             <span>
-              <strong>BYOK:</strong> You use your own API key. Your key stays in your browser — we never see or store it.
+              <strong>BYOK:</strong> You use your own API key. It&apos;s stored locally in your browser and sent to our backend only to fetch provider data for you.
             </span>
           </div>
         </div>
@@ -341,7 +341,7 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">What is BYOK?</h3>
-              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. Your key stays local in your browser for live dashboards. If you save a key in the app, it&apos;s stored encrypted. Get a key at <a href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>.</p>
+              <p className="text-gray-400 text-sm">BYOK (Bring Your Own Key) means you provide your own CoinGecko API key. The key is stored locally in your browser; when you load a dashboard, it&apos;s sent to our backend only to fetch CoinGecko data for you. Get a key at <a href="https://www.coingecko.com/en/api/pricing?ref=cryptoreportkit" target="_blank" rel="noopener noreferrer" className="text-emerald-400 underline">coingecko.com</a>.</p>
             </div>
             <div className="bg-gray-800/50 rounded-lg p-6 border border-gray-700">
               <h3 className="font-bold mb-2 text-white">Can I cancel anytime?</h3>

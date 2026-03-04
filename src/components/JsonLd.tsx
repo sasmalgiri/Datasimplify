@@ -128,7 +128,7 @@ export function FAQJsonLd() {
     {
       question: 'What is BYOK (Bring Your Own Key)?',
       answer:
-        'BYOK means you provide your own CoinGecko API key (free to get). Your key stays in your browser — we never see, store, or transmit it. All API calls go directly from your device to CoinGecko.',
+        'BYOK means you provide your own CoinGecko API key (free to get). Your key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.',
     },
     {
       question: 'How is this different from CoinGecko or CoinMarketCap?',

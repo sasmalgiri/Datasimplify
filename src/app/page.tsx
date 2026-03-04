@@ -161,7 +161,7 @@ const COMPARISON_ROWS = [
   { feature: 'Dashboard widgets', crk: '90+', others: '5-15' },
   { feature: 'Smart intelligence widgets', crk: '8 built-in', others: 'Basic alerts only' },
   { feature: 'Custom dashboard builder', crk: true, others: 'Not available' },
-  { feature: 'BYOK — your keys stay local', crk: true, others: 'Keys stored on their servers' },
+  { feature: 'BYOK — you bring your own key', crk: true, others: 'Keys bundled into their platform' },
   { feature: 'Tax report with CSV export', crk: true, others: 'Separate paid tool ($49+)' },
   { feature: 'Multi-exchange portfolio', crk: '6 exchanges', others: 'Manual tracking' },
   { feature: 'DCA simulator + tracker', crk: true, others: 'Basic or none' },
@@ -180,7 +180,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'What is BYOK and do I need a CoinGecko key?',
-    a: 'BYOK means "Bring Your Own Key." You get a free API key from CoinGecko (takes 30 seconds) and paste it into the dashboard. Your key stays in your browser — we never see, store, or transmit it. All requests go directly from your device to CoinGecko.',
+    a: 'BYOK means "Bring Your Own Key." You get a free API key from CoinGecko (takes 30 seconds) and paste it into the dashboard. Your key is stored locally in your browser, and it is sent to our backend only to fetch CoinGecko data for you.',
   },
   {
     q: 'How is this different from CoinGecko or CoinMarketCap?',
@@ -222,7 +222,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-lg text-gray-400 mb-3 max-w-xl mx-auto leading-relaxed">
-            83+ live dashboards powered by your own CoinGecko API key. Nothing stored on our servers.
+            83+ live dashboards powered by your own CoinGecko API key. Your key is stored locally in your browser.
           </p>
 
           <p className="text-sm text-emerald-400 font-medium mb-8">
@@ -596,7 +596,7 @@ export default function LandingPage() {
               Get a key in 30 seconds, paste it once, and unlock real-time data across all dashboards.
             </p>
             <p className="text-gray-500 text-xs max-w-lg mx-auto leading-relaxed mb-4">
-              Your key stays in your browser. We never see, store, or transmit it. All requests go directly from your device to CoinGecko.
+              Your key is stored locally in your browser. When you load dashboards, your browser sends the key to our backend only to fetch CoinGecko data for you.
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-xs">
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400">
@@ -606,7 +606,7 @@ export default function LandingPage() {
                 <Lock className="w-3 h-3" /> Stays in your browser
               </span>
               <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-400">
-                <Globe className="w-3 h-3" /> Direct to CoinGecko
+                <Globe className="w-3 h-3" /> Fetched via backend
               </span>
             </div>
           </div>

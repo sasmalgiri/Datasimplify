@@ -66,7 +66,7 @@ const faqSchema = {
       name: 'What is BYOK (Bring Your Own Key)?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: "BYOK means you provide your own CoinGecko API key. Your key stays in Excel - it never touches our servers. Templates come with prefetched data. For current data, use our web dashboards with YOUR key.",
+        text: 'BYOK means you provide your own CoinGecko API key (Demo or Pro). For Excel templates, you can keep the key in your workbook. For web dashboards, the key is stored locally in your browser and sent to our backend only to fetch live CoinGecko data for you.',
       },
     },
     {
@@ -154,7 +154,7 @@ const faqSchema = {
       name: 'Is my data private?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes! With Excel templates, data is prefetched server-side. With web dashboards, your API key stays in your browser - it never touches our servers.',
+        text: 'Yes. With Excel templates, templates ship with prefetched data. With web dashboards, your API key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.',
       },
     },
   ],
