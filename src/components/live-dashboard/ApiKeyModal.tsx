@@ -38,7 +38,7 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
     setError(null);
 
     try {
-      // Validate by making a simple ping-like request through our proxy
+      // Validate by making a simple ping-like request via our backend
       const res = await fetch('/api/live-dashboard/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -240,7 +240,7 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
         <div className="mt-4 flex items-start gap-2 text-xs text-gray-500">
           <Shield className="w-4 h-4 mt-0.5 text-emerald-600 shrink-0" />
           <span>
-            Your keys stay in your browser&apos;s local storage. They are never stored on our servers.
+            Your keys are stored in your browser&apos;s local storage. When you load data, your browser sends the key to our backend, which fetches data from CoinGecko and returns it to you.
             By connecting, you agree to{' '}
             <a href="https://www.coingecko.com/en/api_terms" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
               CoinGecko&apos;s API Terms

@@ -128,18 +128,18 @@ export default function AboutPage() {
               <div>
                 <h3 className="font-medium text-white">BYOK Architecture</h3>
                 <p className="text-gray-400 text-sm">
-                  True Bring Your Own Key model: your CoinGecko API key stays in your Excel file.
-                  We never see, store, or transmit your keys - you maintain full control.
+                  Bring Your Own Key model: you use your own CoinGecko API key under CoinGecko&apos;s terms.
+                  For Excel templates, you can keep the key in your workbook. For web dashboards, the key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-emerald-400 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-medium text-white">No Data Storage</h3>
+                <h3 className="font-medium text-white">No Data Resale</h3>
                 <p className="text-gray-400 text-sm">
-                  We don&apos;t store market data. When you refresh a template, data flows directly
-                  from your data provider to your Excel workbook through our proxy.
+                  We don&apos;t package or resell market data. Excel templates connect directly to CoinGecko.
+                  For web dashboards, your browser sends your API key to our backend to fetch data on your behalf — we may cache responses briefly for performance, but we never store your key permanently.
                 </p>
               </div>
             </div>
@@ -148,8 +148,8 @@ export default function AboutPage() {
               <div>
                 <h3 className="font-medium text-white">Open Pricing</h3>
                 <p className="text-gray-400 text-sm">
-                  Our pricing is transparent. Free tier available. Paid plans coming soon with
-                  clear feature differences - no hidden fees.
+                  Our pricing is transparent. Free tier with 32+ dashboards, or Pro at $19/month
+                  for all 83+ dashboards, 90+ widgets, and 8 pro tools. No hidden fees.
                 </p>
               </div>
             </div>
