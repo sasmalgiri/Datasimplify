@@ -6,14 +6,16 @@ import {
   Activity, TrendingUp, Zap,
   Trash2, Plus, Camera, FlaskConical,
   RotateCcw, Table2, Maximize2, Undo2, Redo2,
-  Loader2, Search, ChevronDown, Download, Share2, Check,
-  Pencil, Minus, TrendingDown, X,
+  Loader2, Search, ChevronDown, Download, Upload, Share2, Check,
+  Pencil, Minus, TrendingDown, X, FileSpreadsheet,
   HeartPulse, ShieldAlert, PiggyBank,
   Orbit, Scale, BarChart3, Layers3,
   Radar, MapPin, Combine, BookOpen, Sliders, Calendar,
   Type, AlertTriangle, BarChart2, Code, Moon, Sun,
 } from 'lucide-react';
 import { generateCSV, downloadCSV } from '@/lib/datalab/csvExport';
+import { exportDataLabAsExcel } from '@/lib/datalab/excelExport';
+import { ExcelUploadModal } from './ExcelUploadModal';
 import { buildShareURL } from '@/lib/datalab/urlState';
 import { validateFormula } from '@/lib/datalab/formulaEngine';
 import { useDataLabStore, BTC_ONLY_SOURCES } from '@/lib/datalab/store';
@@ -349,6 +351,15 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
   // Code export dropdown
   const [showCodeExport, setShowCodeExport] = useState(false);
   const codeExportRef = useRef<HTMLDivElement>(null);
+
+  // Excel upload
+  const [showExcelUpload, setShowExcelUpload] = useState(false);
+  const [excelUpload, setExcelUpload] = useState<{
+    id: string; filename: string; sheet_name: string;
+    columns: Array<{ key: string; label: string; source: string }>;
+    row_count: number; coin: string | null; days: number | null;
+    preset: string | null; created_at: string;
+  } | null>(null);
 
   // Advanced mode panels
   const [showBacktester, setShowBacktester] = useState(false);
@@ -906,6 +917,35 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">CSV</span>
+          </button>
+        </Tip>
+
+        {/* Excel Download */}
+        <Tip text="Download as Excel (.xlsx) — edit in Excel and re-upload">
+          <button
+            type="button"
+            onClick={() => exportDataLabAsExcel(timestamps, layers, editedCells, coin, days, activePreset)}
+            disabled={timestamps.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] transition disabled:opacity-30"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Excel</span>
+          </button>
+        </Tip>
+
+        {/* Upload Excel */}
+        <Tip text="Upload a customized CRK Excel file to display online">
+          <button
+            type="button"
+            onClick={() => setShowExcelUpload(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-xs transition ${
+              excelUpload
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'
+                : 'bg-white/[0.04] border-white/[0.06] text-gray-400 hover:text-white hover:bg-white/[0.08]'
+            }`}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{excelUpload ? 'Connected' : 'Upload'}</span>
           </button>
         </Tip>
 
@@ -2048,6 +2088,22 @@ export function DataLabToolbar({ onScreenshot }: DataLabToolbarProps) {
           </div>
         </div>
       )}
+
+      {/* Excel Upload Modal */}
+      <ExcelUploadModal
+        isOpen={showExcelUpload}
+        onClose={() => setShowExcelUpload(false)}
+        onUploadComplete={(upload) => {
+          setExcelUpload(upload);
+          // Dispatch custom event so DataLabTable can pick it up
+          window.dispatchEvent(new CustomEvent('crk-excel-upload', { detail: upload }));
+        }}
+        currentUpload={excelUpload}
+        onClearUpload={() => {
+          setExcelUpload(null);
+          window.dispatchEvent(new CustomEvent('crk-excel-upload', { detail: null }));
+        }}
+      />
     </div>
   );
 }
