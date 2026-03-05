@@ -138,7 +138,7 @@ function DataLabPage() {
             <FlaskConical className="w-12 h-12 text-emerald-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white mb-3">Connect Your CoinGecko API Key</h1>
             <p className="text-gray-400 mb-6">
-              DataLab fetches live market data directly from CoinGecko.
+              DataLab fetches live market data from CoinGecko via our backend.
               You need a free Demo API key to get started — no credit card required.
             </p>
 

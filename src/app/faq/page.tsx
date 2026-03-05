@@ -80,7 +80,7 @@ const faqs: FAQItem[] = [
   {
     category: 'Pricing & Limits',
     question: 'Is CryptoReportKit free?',
-    answer: 'CryptoReportKit offers a free tier with limited downloads. Paid plans (coming soon) unlock more templates and features. Note: You also need a data provider API key - CoinGecko offers a free Demo API tier. See coingecko.com/api/pricing for current limits.',
+    answer: 'CryptoReportKit offers a free tier with 32+ dashboards and 5 downloads/month. The Pro plan ($19/month) unlocks all 83+ dashboards, 90+ widgets, and 300 downloads/month. During the free beta, all features are unlocked at no cost. You also need a CoinGecko API key (Demo tier is free). See coingecko.com/api/pricing for current limits.',
   },
   {
     category: 'Pricing & Limits',

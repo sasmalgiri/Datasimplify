@@ -58,7 +58,7 @@ const faqSchema = {
       name: 'Where does CryptoReportKit store my API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'With Excel templates, your API key stays in your workbook - it never leaves your computer or touches our servers. This is the most private approach possible.',
+        text: 'For Excel templates, your API key stays in your workbook. For web dashboards, your key is stored locally in your browser and sent to our backend only to fetch CoinGecko data for you.',
       },
     },
     {

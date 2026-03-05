@@ -1126,7 +1126,7 @@ function buildNavButtonDefs(
  * - Documentation sheet
  *
  * The user pastes their own CoinGecko API key for data refresh.
- * All data flows directly from CoinGecko to Excel. Server never touches data.
+ * Data is fetched from CoinGecko via the CryptoReportKit backend using the user's API key.
  */
 export async function generateBYOKExcel(options: GenerateOptions): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();

@@ -122,8 +122,8 @@ export default function TermsPage() {
             <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
               <li><strong>Your Own API Keys:</strong> You provide your own API keys from data providers (e.g., CoinGecko)</li>
               <li><strong>Prefetched Data:</strong> Excel templates ship with prefetched market data for immediate analysis</li>
-              <li><strong>Client-Side Architecture:</strong> Your API key stays in Excel - data flows directly from CoinGecko
-                to your workbook without passing through our servers</li>
+              <li><strong>Client-Side Architecture:</strong> For Excel templates, your API key stays in your workbook.
+                For web dashboards, your key is stored locally in your browser and sent to our backend to fetch data on your behalf</li>
               <li><strong>Your Responsibility:</strong> You must comply with your data provider&apos;s terms of use,
                 rate limits, and acceptable use policies</li>
               <li><strong>Data Ownership:</strong> Data fetched via your API keys belongs to you and the provider,

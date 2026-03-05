@@ -98,7 +98,7 @@ const faqSchema = {
       name: 'Why do I need my own API key?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'The BYOK architecture ensures compliance and gives you control. You get a free CoinGecko API key, and your key stays in your Excel file. For web dashboards, your key stays in browser sessionStorage.',
+        text: 'The BYOK architecture ensures compliance and gives you control. You get a CoinGecko API key, and you control where it lives: in your Excel workbook for templates, or locally in your browser for web dashboards. Web dashboards send the key to our backend only to fetch CoinGecko data for you.',
       },
     },
     {
