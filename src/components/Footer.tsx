@@ -128,6 +128,7 @@ export function Footer() {
               <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/cookies" className="hover:text-white transition-colors">Cookie Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
               <li><Link href="/refund" className="hover:text-white transition-colors">Refund Policy</Link></li>
             </ul>
@@ -165,6 +166,8 @@ export function Footer() {
               <Link href="/terms" className="hover:text-white">Terms</Link>
               <span>|</span>
               <Link href="/privacy" className="hover:text-white">Privacy</Link>
+              <span>|</span>
+              <Link href="/cookies" className="hover:text-white">Cookies</Link>
               <span>|</span>
               <CookieSettingsButton />
               <span>|</span>

@@ -176,6 +176,7 @@ export function DCASimulatorWidget() {
   // ---- Chart option ----
   const option = useMemo(() => {
     if (!simulation) return null;
+    if ('noData' in simulation && simulation.noData) return null;
 
     return {
       ...echartsTheme,
@@ -255,6 +256,7 @@ export function DCASimulatorWidget() {
   // ---- KPI formatting ----
   const kpiItems = useMemo(() => {
     if (!simulation) return [];
+    if ('noData' in simulation && simulation.noData) return [];
     return [
       {
         label: 'Total Invested',

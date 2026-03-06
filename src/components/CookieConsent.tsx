@@ -167,7 +167,7 @@ export default function CookieConsent() {
                 <div className="flex-1 pr-4">
                   <h4 className="text-white font-medium">Marketing Cookies</h4>
                   <p className="text-gray-400 text-sm mt-1">
-                    Used to deliver personalized advertisements and track campaigns.
+                    Reserved for future campaign measurement or advertising features. These are currently not active on the public site.
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">

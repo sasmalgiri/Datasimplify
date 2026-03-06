@@ -14,7 +14,7 @@ export default function TermsPage() {
       <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
-        <p className="text-gray-600 mb-8">Last updated: January 2026</p>
+        <p className="text-gray-600 mb-8">Last updated: March 2026</p>
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
           
@@ -221,6 +221,12 @@ export default function TermsPage() {
                 <strong className="text-amber-600"> Note: Paid plans and payment processing are coming soon.</strong>
               )}
             </p>
+            <p className="mb-4">
+              If paid plans are enabled, checkout, payment processing, tax calculation, charge handling,
+              and certain subscription operations may be performed by our merchant of record or payment partner,
+              currently FastSpring unless we notify you otherwise. Your purchase may also be subject to that
+              provider&apos;s checkout terms, privacy practices, and billing systems.
+            </p>
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.2 Automatic Renewal</h3>
             <p className="mb-4">
@@ -233,6 +239,9 @@ export default function TermsPage() {
             <p className="mb-4">
               We reserve the right to modify Subscription prices. Any price changes will be communicated 
               to you in advance and will apply to subsequent billing periods.
+            </p>
+            <p>
+              Displayed prices may exclude taxes, VAT, GST, or similar charges unless explicitly stated at checkout.
             </p>
             
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">7.4 Refund Policy</h3>
@@ -291,9 +300,40 @@ export default function TermsPage() {
             </ul>
           </section>
 
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Community Content, Uploads, and User Responsibility</h2>
+            <p className="mb-4">
+              If you post content, upload files, submit prompts, create dashboards, or otherwise contribute material,
+              you remain responsible for that content and represent that you have the right to submit it.
+            </p>
+            <ul className="list-disc list-inside space-y-2 mb-4">
+              <li>You must not upload unlawful, infringing, abusive, deceptive, or malicious content.</li>
+              <li>You must not upload personal or sensitive third-party data unless you have a valid legal basis and authorization to do so.</li>
+              <li>You grant us a limited license to host, process, store, display, and moderate submitted content solely to operate and improve the Services.</li>
+              <li>We may remove or restrict access to content that violates these Terms, applicable law, or platform safety requirements.</li>
+              <li>We may preserve logs or copies where reasonably necessary for compliance, dispute handling, or abuse prevention.</li>
+            </ul>
+            <p>
+              If you find scam, abusive, or infringing content, contact <span className="text-emerald-600">support@cryptoreportkit.com</span>.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. AI Features and Generated Output</h2>
+            <p className="mb-4">
+              Some features may generate responses, layouts, or summaries using third-party AI models. AI output is
+              probabilistic and may be inaccurate, incomplete, biased, or unsuitable for your specific use case.
+            </p>
+            <ul className="list-disc list-inside space-y-2">
+              <li>AI output is provided for informational assistance only and is not professional advice.</li>
+              <li>You are responsible for reviewing and validating any AI-generated output before relying on it.</li>
+              <li>You must not use AI features in violation of law, third-party rights, or provider usage restrictions.</li>
+            </ul>
+          </section>
+
           {/* Intellectual Property */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Intellectual Property</h2>
             <p className="mb-4">
               All Content, features, and functionality of our Services, including but not limited to 
               text, graphics, logos, data, software, and analytics, are owned by CryptoReportKit or our 
@@ -308,7 +348,7 @@ export default function TermsPage() {
 
           {/* Data Accuracy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Data Accuracy and Third-Party Sources</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Data Accuracy and Third-Party Sources</h2>
             <p className="mb-4">
               Our Content is compiled from various third-party sources including cryptocurrency exchanges, 
               market data providers, and public blockchain data. While we strive to provide accurate 
@@ -324,7 +364,7 @@ export default function TermsPage() {
 
           {/* Limitation of Liability */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Limitation of Liability</h2>
             <p className="mb-4">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, CRYPTOREPORTKIT SHALL NOT BE LIABLE FOR ANY 
               INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT 
@@ -345,7 +385,7 @@ export default function TermsPage() {
 
           {/* Indemnification */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Indemnification</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Indemnification</h2>
             <p>
               You agree to indemnify, defend, and hold harmless CryptoReportKit and its officers, directors, 
               employees, and agents from any claims, damages, losses, costs, and expenses (including 
@@ -356,7 +396,7 @@ export default function TermsPage() {
 
           {/* Disclaimer of Warranties */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Disclaimer of Warranties</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Disclaimer of Warranties</h2>
             <p className="mb-4">
               THE SERVICES ARE PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, 
               EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF 
@@ -370,7 +410,7 @@ export default function TermsPage() {
 
           {/* Termination */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Termination</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Termination</h2>
             <p className="mb-4">
               We may suspend or terminate your access to the Services at any time, with or without 
               cause, and with or without notice. You may terminate your account at any time by 
@@ -385,7 +425,7 @@ export default function TermsPage() {
 
           {/* Modifications */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Modifications to Terms</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Modifications to Terms</h2>
             <p>
               We reserve the right to modify these Terms at any time. We will notify you of material 
               changes by posting the updated Terms on our website or by email. Your continued use of 
@@ -396,7 +436,7 @@ export default function TermsPage() {
 
           {/* Governing Law */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law & Venue</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Governing Law & Venue</h2>
             <p className="mb-4">
               These Terms shall be governed by and construed in accordance with the laws of India,
               without regard to conflict of law principles.
@@ -410,7 +450,7 @@ export default function TermsPage() {
 
           {/* Severability */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Severability</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">19. Severability</h2>
             <p>
               If any provision of these Terms is found to be unenforceable or invalid, that provision 
               shall be limited or eliminated to the minimum extent necessary, and the remaining 
@@ -420,7 +460,7 @@ export default function TermsPage() {
 
           {/* Third-Party Content & Advertisements */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Third-Party Content & Advertisements</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Third-Party Content & Advertisements</h2>
             <p className="mb-4">
               Our Services may display advertisements, sponsored content, or links to third-party websites,
               products, or services. You acknowledge and agree that:
@@ -445,7 +485,7 @@ export default function TermsPage() {
 
           {/* DMCA / Copyright Policy */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">19. DMCA / Copyright Policy</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">21. DMCA / Copyright Policy</h2>
             <p className="mb-4">
               We respect intellectual property rights and expect our users to do the same. If you believe
               that content on our Services infringes your copyright, please submit a DMCA takedown notice
@@ -470,7 +510,7 @@ export default function TermsPage() {
 
           {/* Entire Agreement */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">20. Entire Agreement</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">22. Entire Agreement</h2>
             <p>
               These Terms, together with our Privacy Policy and any other agreements expressly incorporated
               by reference, constitute the entire agreement between you and CryptoReportKit regarding your use
@@ -482,7 +522,7 @@ export default function TermsPage() {
 
           {/* Contact */}
           <section>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">22. Contact Us</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">23. Contact Us</h2>
             <p className="mb-4">
               If you have any questions about these Terms, please contact us:
             </p>
@@ -497,6 +537,8 @@ export default function TermsPage() {
           <Link href="/" className="text-emerald-600 hover:text-emerald-700">← Back to Home</Link>
           <span className="text-gray-400">|</span>
           <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700">Privacy Policy</Link>
+          <span className="text-gray-400">|</span>
+          <Link href="/cookies" className="text-emerald-600 hover:text-emerald-700">Cookie Policy</Link>
         </div>
       </div>
     </div>

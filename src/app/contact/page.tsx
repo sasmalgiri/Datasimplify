@@ -40,6 +40,20 @@ export default function ContactPage() {
                     We aim to respond to all inquiries within 24-48 business hours.
                   </p>
                 </div>
+
+                <div>
+                  <h3 className="font-medium text-white">Privacy & Compliance Requests</h3>
+                  <p className="text-gray-400">
+                    For privacy, deletion, export, grievance, copyright, or compliance matters, email{' '}
+                    <a
+                      href="mailto:support@cryptoreportkit.com"
+                      className="text-emerald-400 hover:text-emerald-300 font-medium"
+                    >
+                      support@cryptoreportkit.com
+                    </a>{' '}
+                    and include a clear subject such as “Privacy Request”, “DMCA Notice”, or “Account Deletion”.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -58,6 +72,10 @@ export default function ContactPage() {
                 <p>
                   <strong className="text-white">Country:</strong><br />
                   India
+                </p>
+                <p>
+                  <strong className="text-white">Registered Office Region:</strong><br />
+                  West Bengal, India
                 </p>
               </div>
             </div>
@@ -128,6 +146,9 @@ export default function ContactPage() {
             </Link>
             <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300">
               Privacy Policy
+            </Link>
+            <Link href="/cookies" className="text-emerald-400 hover:text-emerald-300">
+              Cookie Policy
             </Link>
             <Link href="/refund" className="text-emerald-400 hover:text-emerald-300">
               Refund Policy

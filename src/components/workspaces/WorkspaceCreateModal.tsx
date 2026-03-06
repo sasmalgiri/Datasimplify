@@ -54,25 +54,30 @@ export function WorkspaceCreateModal({
     }));
   };
 
+  const resetForm = () => {
+    if (editingWorkspace) {
+      setName(editingWorkspace.name);
+      setMode(editingWorkspace.mode);
+      setCoins(editingWorkspace.config?.coins ?? []);
+      setVsCurrency(editingWorkspace.config?.vsCurrency ?? 'usd');
+      setHoldings(editingWorkspace.config?.holdings ?? {});
+    } else {
+      setName('');
+      setMode('watchlist');
+      setCoins([]);
+      setVsCurrency('usd');
+      setHoldings({});
+    }
+    setIsSaving(false);
+  };
+
   // Re-sync form state when modal opens or editWorkspaceId changes
   useEffect(() => {
     if (isOpen) {
-      if (editingWorkspace) {
-        setName(editingWorkspace.name);
-        setMode(editingWorkspace.mode);
-        setCoins(editingWorkspace.config?.coins ?? []);
-        setVsCurrency(editingWorkspace.config?.vsCurrency ?? 'usd');
-        setHoldings(editingWorkspace.config?.holdings ?? {});
-      } else {
-        setName('');
-        setMode('watchlist');
-        setCoins([]);
-        setVsCurrency('usd');
-        setHoldings({});
-      }
-      setIsSaving(false);
+      const timer = window.setTimeout(resetForm, 0);
+      return () => window.clearTimeout(timer);
     }
-  }, [isOpen, editWorkspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isOpen, editWorkspaceId, editingWorkspace]);
 
   const handleSubmit = async () => {
     if (!name.trim() || coins.length === 0) return;

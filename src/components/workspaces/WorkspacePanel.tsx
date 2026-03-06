@@ -94,6 +94,8 @@ export function WorkspacePanel({ isOpen, onClose, onCreateNew }: WorkspacePanelP
             <button
               onClick={onClose}
               className={`p-1.5 rounded-lg ${st.buttonSecondary}`}
+              title="Close workspaces panel"
+              aria-label="Close workspaces panel"
             >
               <X className="w-4 h-4" />
             </button>
@@ -152,7 +154,7 @@ export function WorkspacePanel({ isOpen, onClose, onCreateNew }: WorkspacePanelP
                   {/* Delete Confirmation */}
                   {isDeleting && (
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm ${st.textPrimary}`}>Delete "{ws.name}"?</p>
+                      <p className={`text-sm ${st.textPrimary}`}>Delete &quot;{ws.name}&quot;?</p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDelete(ws.id)}
@@ -206,6 +208,8 @@ export function WorkspacePanel({ isOpen, onClose, onCreateNew }: WorkspacePanelP
                                   className={`flex-1 px-2 py-1 text-sm rounded ${st.inputBg}`}
                                   autoFocus
                                   onClick={(e) => e.stopPropagation()}
+                                  title="Workspace name"
+                                  aria-label="Workspace name"
                                 />
                                 <button
                                   onClick={(e) => {
@@ -213,6 +217,8 @@ export function WorkspacePanel({ isOpen, onClose, onCreateNew }: WorkspacePanelP
                                     handleSaveEdit(ws.id);
                                   }}
                                   className="p-1 text-emerald-400 hover:text-emerald-300"
+                                  title="Save workspace name"
+                                  aria-label="Save workspace name"
                                 >
                                   <Check className="w-4 h-4" />
                                 </button>

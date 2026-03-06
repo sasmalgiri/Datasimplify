@@ -315,6 +315,19 @@ export default function PricingPage() {
           Renews automatically. Cancel anytime.
         </p>
 
+        <div className="max-w-3xl mx-auto mt-6 bg-blue-500/10 border border-blue-500/30 rounded-xl p-5">
+          <h3 className="font-semibold text-white mb-2">Billing & legal disclosure</h3>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            If paid plans are enabled, checkout and recurring billing may be processed by our payment partner
+            and merchant of record, currently FastSpring. Prices may be shown before applicable taxes,
+            VAT, or GST depending on your location. Renewals continue until cancelled. You can review the
+            full billing, cancellation, and refund terms in our{' '}
+            <Link href="/terms" className="text-emerald-400 underline hover:text-emerald-300">Terms of Service</Link>{' '}
+            and{' '}
+            <Link href="/refund" className="text-emerald-400 underline hover:text-emerald-300">Refund Policy</Link>.
+          </p>
+        </div>
+
         {/* 30-Day Guarantee */}
         <div className="max-w-xl mx-auto mt-10">
           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 flex items-center gap-4">
@@ -393,6 +406,7 @@ export default function PricingPage() {
         {/* Footer Links */}
         <div className="mt-8 pt-8 border-t border-gray-800 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
           <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
+          <Link href="/cookies" className="hover:text-white">Cookie Policy</Link>
           <Link href="/terms" className="hover:text-white">Terms of Service</Link>
           <Link href="/refund" className="hover:text-white">Refund Policy</Link>
           <Link href="/contact" className="hover:text-white">Contact</Link>

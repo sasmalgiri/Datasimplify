@@ -22,7 +22,8 @@ export default function DisclaimerBanner() {
   useEffect(() => {
     const accepted = window.localStorage.getItem(DISCLAIMER_KEY);
     if (!accepted) {
-      setIsVisible(true);
+      const timer = window.setTimeout(() => setIsVisible(true), 0);
+      return () => window.clearTimeout(timer);
     }
   }, []);
 

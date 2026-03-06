@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <div className="min-h-screen bg-gray-50 text-gray-900 py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-        <p className="text-gray-600 mb-8">Last updated: January 2026</p>
+        <p className="text-gray-600 mb-8">Last updated: March 2026</p>
 
         <div className="space-y-8 text-gray-700 leading-relaxed">
           
@@ -45,6 +45,10 @@ export default function PrivacyPage() {
                 <em className="text-gray-500"> (Note: Payments are not currently enabled.)</em></li>
               <li><strong>Portfolio Data:</strong> Cryptocurrency holdings and investments you choose to enter</li>
               <li><strong>Communications:</strong> Messages, feedback, and support requests you send us</li>
+              <li><strong>Uploads and Workspace Data:</strong> Files, spreadsheet content, prompts, dashboard settings,
+                and other content you intentionally upload or generate when using DataLab, builder, export,
+                or community-style features</li>
+              <li><strong>AI Interactions:</strong> Questions, prompts, and related output generated when you use AI-powered features</li>
               <li><strong>API Keys (BYOK):</strong> If you use our Bring Your Own Key (BYOK) feature, you may
                 provide API keys from third-party data providers (e.g., CoinGecko).
                 See Section 2.4 below for details on how we handle these keys.</li>
@@ -63,6 +67,19 @@ export default function PrivacyPage() {
             <p className="mb-4">
               We may receive information from third-party services if you connect them to your account,
               such as wallet addresses (if you choose to link them) or social login providers.
+            </p>
+
+            <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.5 Uploaded Files, DataLab Content, and AI Prompts</h3>
+            <p className="mb-4">
+              Some features let you upload files, save parsed spreadsheet data, or submit prompts to AI-powered
+              tools. Please do not upload unlawful content or personal data that you do not have the right to share.
+              Uploaded files and derived data may be stored in our backend systems to provide the feature,
+              sync your workspace, support exports, and allow later retrieval or deletion by you.
+            </p>
+            <p>
+              If you use AI features, your prompt and relevant context may be transmitted to our AI infrastructure
+              or model providers to generate a response. AI outputs may be inaccurate, incomplete, or outdated and
+              should be independently verified.
             </p>
 
             <h3 className="text-xl font-medium text-gray-900 mt-4 mb-2">2.4 API Keys (BYOK)</h3>
@@ -121,8 +138,10 @@ export default function PrivacyPage() {
                   <li><strong>Payment Processor:</strong> Once payments are enabled, payment processing and subscription management
                     will be handled by a third-party payment processor. Payment details will be shared directly with that processor.
                     <em className="text-gray-500"> (Note: Payments are not currently enabled.)</em></li>
-                  <li><strong>Supabase:</strong> Database and authentication services</li>
-                  <li><strong>Vercel:</strong> Website hosting and content delivery</li>
+                  <li><strong>Supabase:</strong> Database, storage, and authentication services</li>
+                  <li><strong>Vercel:</strong> Website hosting, deployment, and analytics infrastructure</li>
+                  <li><strong>Resend:</strong> Transactional email delivery</li>
+                  <li><strong>Groq or other model providers:</strong> AI-response generation for AI-enabled features</li>
                   <li><strong>Data Providers:</strong> Market data aggregation services (CoinGecko, etc.)</li>
                 </ul>
               </li>
@@ -157,6 +176,7 @@ export default function PrivacyPage() {
               <li><strong>Essential Cookies:</strong> Keep you signed in and remember your preferences</li>
               <li><strong>Analytics Cookies:</strong> Understand how users interact with our Services</li>
               <li><strong>Functional Cookies:</strong> Enable enhanced features and personalization</li>
+              <li><strong>Consent Storage:</strong> Save your cookie choices in browser local storage</li>
             </ul>
             <p className="mb-4">
               You can control cookies through your browser settings. Disabling certain cookies may
@@ -169,6 +189,10 @@ export default function PrivacyPage() {
             </p>
             <p>
               We do not use advertising cookies or sell your data to advertisers.
+            </p>
+            <p className="mt-4">
+              For more detail, including current categories and controls, see our{' '}
+              <Link href="/cookies" className="text-emerald-600 underline">Cookie Policy</Link>.
             </p>
           </section>
 
@@ -189,6 +213,13 @@ export default function PrivacyPage() {
               If you delete your account, we will delete or anonymize your personal data within 30 days, 
               except where retention is required for legal or legitimate business purposes.
             </p>
+            <ul className="list-disc list-inside space-y-2 mt-4">
+              <li><strong>Account and profile data:</strong> retained while your account is active, then deleted or anonymized within a reasonable period</li>
+              <li><strong>Uploaded spreadsheet/workspace data:</strong> retained until you delete it, close your account, or we remove stale content under our retention rules</li>
+              <li><strong>Support communications:</strong> retained for support, audit, and dispute-resolution purposes</li>
+              <li><strong>Billing and tax records:</strong> retained for the period required by applicable law if payments are enabled</li>
+              <li><strong>Security and access logs:</strong> retained for fraud prevention, abuse detection, and security investigation</li>
+            </ul>
           </section>
 
           {/* Your Rights */}
@@ -314,12 +345,16 @@ export default function PrivacyPage() {
           {/* International Transfers */}
           <section>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. International Data Transfers</h2>
-            <p>
+            <p className="mb-4">
               Our Services are operated globally, and your data may be processed in countries other 
               than your own. By using our Services, you consent to the transfer of your information 
               to countries which may have different data protection laws than your jurisdiction. 
               We take appropriate measures to ensure your data remains protected in accordance with 
               this Privacy Policy.
+            </p>
+            <p>
+              Where required, we rely on contractual safeguards, provider security commitments, and access controls
+              designed to protect personal data during cross-border transfers.
             </p>
           </section>
 
@@ -354,6 +389,7 @@ export default function PrivacyPage() {
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
               <p className="text-emerald-600 font-semibold">CryptoReportKit</p>
               <p>Email: support@cryptoreportkit.com</p>
+              <p>For privacy or grievance requests, use the subject line: Privacy Request</p>
             </div>
           </section>
 
@@ -371,7 +407,7 @@ export default function PrivacyPage() {
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Who we share with:</p>
-                <p className="text-gray-600">Only essential service providers (Supabase, Vercel)</p>
+                <p className="text-gray-600">Essential service providers such as Supabase, Vercel, Resend, and AI vendors where relevant</p>
               </div>
               <div>
                 <p className="text-emerald-600 font-semibold">✓ Your rights:</p>

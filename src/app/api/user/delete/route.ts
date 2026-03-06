@@ -170,7 +170,7 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Account deletion error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete account. Please contact support at sasmalgiri@gmail.com' },
+      { error: 'Failed to delete account. Please contact support at support@cryptoreportkit.com' },
       { status: 500 }
     );
   }

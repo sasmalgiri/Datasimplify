@@ -155,7 +155,7 @@ export async function GET(request: Request) {
     // Add GDPR/CCPA compliance notice
     exportData.privacyNotice = {
       purpose: 'This data export is provided in compliance with GDPR Article 20 (Right to Data Portability) and CCPA Section 1798.100 (Right to Know).',
-      contact: 'sasmalgiri@gmail.com',
+      contact: 'support@cryptoreportkit.com',
       requestDeletion: 'To request account deletion, visit your Dashboard > Settings > Delete Account',
     };
 

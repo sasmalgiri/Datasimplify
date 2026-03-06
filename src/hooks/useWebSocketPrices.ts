@@ -41,6 +41,7 @@ export function useWebSocketPrices(
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectCount = useRef(0);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const connectRef = useRef<() => void>(() => {});
 
   const cleanup = useCallback(() => {
     if (reconnectTimer.current) {
@@ -116,13 +117,17 @@ export function useWebSocketPrices(
         if (reconnectCount.current < maxReconnects) {
           const delay = Math.min(1000 * Math.pow(2, reconnectCount.current), 30000);
           reconnectCount.current++;
-          reconnectTimer.current = setTimeout(connect, delay);
+          reconnectTimer.current = setTimeout(() => connectRef.current(), delay);
         }
       };
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
     }
   }, [enabled, symbols, maxReconnects, cleanup]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     connect();
