@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, MessageCircle, Eye, Pin, Loader2, Send, Lock } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Eye, Pin, Loader2, Send, Lock, Flag, X } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { VoteButtons } from '@/components/forum/VoteButtons';
@@ -41,6 +41,11 @@ export default function ThreadDetailPage() {
   const [replyBody, setReplyBody] = useState('');
   const [submittingReply, setSubmittingReply] = useState(false);
   const [replyError, setReplyError] = useState('');
+  const [reportTarget, setReportTarget] = useState<{ threadId?: string; replyId?: string } | null>(null);
+  const [reportReason, setReportReason] = useState('spam');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reporting, setReporting] = useState(false);
+  const [reportMessage, setReportMessage] = useState('');
 
   const threadId = params.threadId;
 
@@ -204,6 +209,38 @@ export default function ThreadDetailPage() {
     }
   };
 
+  const submitReport = async () => {
+    if (!user || !reportTarget) return;
+    setReporting(true);
+    setReportMessage('');
+    try {
+      const res = await fetch('/api/forum/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...reportTarget,
+          reason: reportReason,
+          details: reportDetails,
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) {
+        setReportMessage(json.error || 'Failed to submit report');
+        return;
+      }
+      setReportMessage('Report submitted for moderator review.');
+      setReportDetails('');
+      setTimeout(() => {
+        setReportTarget(null);
+        setReportMessage('');
+      }, 1200);
+    } catch {
+      setReportMessage('Failed to submit report');
+    } finally {
+      setReporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
@@ -305,6 +342,16 @@ export default function ThreadDetailPage() {
                   {thread.is_pinned ? 'Unpin' : 'Pin'}
                 </button>
               )}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setReportTarget({ threadId: thread.id })}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Flag className="w-3.5 h-3.5" />
+                  Report
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -341,6 +388,16 @@ export default function ThreadDetailPage() {
                     onVote={(vt) => handleVote('reply', reply.id, vt)}
                     disabled={!user}
                   />
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={() => setReportTarget({ replyId: reply.id })}
+                      className="mt-2 flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      <Flag className="w-3 h-3" />
+                      Report reply
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -386,6 +443,89 @@ export default function ThreadDetailPage() {
             >
               Sign In
             </Link>
+          </div>
+        )}
+
+        {reportTarget && user && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-md rounded-xl border border-gray-700 bg-gray-800 p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">Report content</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportTarget(null);
+                    setReportMessage('');
+                  }}
+                  className="text-gray-400 hover:text-white"
+                  aria-label="Close report dialog"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-400">Reason</label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    title="Report reason"
+                    aria-label="Report reason"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-700/50 px-3 py-2 text-sm text-white"
+                  >
+                    <option value="spam">Spam</option>
+                    <option value="scam">Scam / phishing</option>
+                    <option value="harassment">Harassment</option>
+                    <option value="hate">Hate / abuse</option>
+                    <option value="copyright">Copyright</option>
+                    <option value="privacy">Privacy / personal data</option>
+                    <option value="misinformation">Dangerous misinformation</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-400">Details (optional)</label>
+                  <textarea
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    rows={4}
+                    maxLength={2000}
+                    className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700/50 px-3 py-2 text-sm text-white"
+                    placeholder="Add context for moderators"
+                  />
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  Reports are reviewed manually under our{' '}
+                  <Link href="/community-guidelines" className="text-emerald-400 underline hover:text-emerald-300">
+                    community guidelines
+                  </Link>
+                  .
+                </p>
+
+                {reportMessage && <p className="text-sm text-emerald-400">{reportMessage}</p>}
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setReportTarget(null)}
+                    className="px-4 py-2 text-sm text-gray-300 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submitReport}
+                    disabled={reporting}
+                    className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
+                  >
+                    {reporting ? 'Submitting...' : 'Submit report'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

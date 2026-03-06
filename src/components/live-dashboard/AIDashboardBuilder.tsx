@@ -189,6 +189,12 @@ export default function AIDashboardBuilder() {
           <p className={`text-base ${st.textMuted}`}>
             Describe the dashboard you want and AI will generate it for you.
           </p>
+          <p className={`text-xs ${st.textDim}`}>
+            AI output may be incomplete or inaccurate. Review before relying on it.{' '}
+            <a href="/ai-disclosure" className="text-emerald-400 underline hover:text-emerald-300">
+              AI disclosure
+            </a>
+          </p>
         </div>
 
         {/* Text input area */}

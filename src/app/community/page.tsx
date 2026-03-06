@@ -281,6 +281,14 @@ export default function CommunityPage() {
                 <span>Use the correct forum for your topic</span>
               </li>
             </ul>
+            <div className="mt-4 flex flex-wrap gap-4 text-sm">
+              <Link href="/community-guidelines" className="text-emerald-400 underline hover:text-emerald-300">
+                Full guidelines & moderation policy
+              </Link>
+              <a href="mailto:support@cryptoreportkit.com?subject=Community%20Report" className="text-emerald-400 underline hover:text-emerald-300">
+                Report abuse by email
+              </a>
+            </div>
           </div>
 
           <div className="bg-gray-900 border border-emerald-400/20 rounded-xl p-6 flex flex-col justify-between">

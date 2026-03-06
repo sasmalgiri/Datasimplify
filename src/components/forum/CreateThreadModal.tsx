@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import Link from 'next/link';
 import { FORUM_CATEGORIES } from '@/lib/forumCategories';
 
 interface CreateThreadModalProps {
@@ -15,6 +16,7 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
   const [category, setCategory] = useState(defaultCategory || FORUM_CATEGORIES[0].id);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [acceptedGuidelines, setAcceptedGuidelines] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,6 +32,10 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
     }
     if (body.length < 10) {
       setError('Body must be at least 10 characters');
+      return;
+    }
+    if (!acceptedGuidelines) {
+      setError('Please confirm that your post follows the community guidelines');
       return;
     }
 
@@ -49,6 +55,7 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
 
       setTitle('');
       setBody('');
+      setAcceptedGuidelines(false);
       onCreated(json.data.id);
     } catch {
       setError('Network error. Please try again.');
@@ -63,7 +70,7 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">New Thread</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors" title="Close create thread dialog" aria-label="Close create thread dialog">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -76,6 +83,8 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
+              title="Thread category"
+              aria-label="Thread category"
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400"
             >
               {FORUM_CATEGORIES.map((cat) => (
@@ -117,6 +126,22 @@ export function CreateThreadModal({ isOpen, onClose, defaultCategory, onCreated 
           {error && (
             <p className="text-sm text-red-400">{error}</p>
           )}
+
+          <label className="flex items-start gap-3 text-sm text-gray-400">
+            <input
+              type="checkbox"
+              checked={acceptedGuidelines}
+              onChange={(e) => setAcceptedGuidelines(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              I confirm this post follows the{' '}
+              <Link href="/community-guidelines" className="text-emerald-400 underline hover:text-emerald-300" target="_blank">
+                community guidelines
+              </Link>{' '}
+              and does not contain scams, abuse, or unlawful content.
+            </span>
+          </label>
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
