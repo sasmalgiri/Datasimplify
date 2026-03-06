@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com
 
 // Use a fixed build date so lastModified doesn't change on every crawl.
 // Update this date when you deploy meaningful content changes.
-const LAST_UPDATED = new Date().toISOString();
+const LAST_UPDATED = '2026-03-06T00:00:00.000Z';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
@@ -28,6 +28,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'daily' as const,
     priority: 0.7,
   }));
+
+  // Live-dashboards sub-pages
+  const dashboardSubPages: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/live-dashboards/taxonomy`, lastModified: LAST_UPDATED, changeFrequency: 'weekly' as const, priority: 0.6 },
+    { url: `${BASE_URL}/live-dashboards/explore`, lastModified: LAST_UPDATED, changeFrequency: 'weekly' as const, priority: 0.6 },
+    { url: `${BASE_URL}/live-dashboards/community`, lastModified: LAST_UPDATED, changeFrequency: 'daily' as const, priority: 0.55 },
+  ];
 
   // Top coin pages — static list of highest-traffic coins
   const topCoins = [
@@ -77,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/template-requirements`, lastModified: LAST_UPDATED, changeFrequency: 'monthly', priority: 0.55 },
     { url: `${BASE_URL}/roadmap`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.55 },
     { url: `${BASE_URL}/data-sources`, lastModified: LAST_UPDATED, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${BASE_URL}/status`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.4 },
+    // /status removed — has noindex, should not be in sitemap
     { url: `${BASE_URL}/community`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
   ];
 
@@ -121,5 +128,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...dbBlogPages,
   ];
 
-  return [...mainPages, ...blogPages, ...dashboardPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];
+  return [...mainPages, ...blogPages, ...dashboardPages, ...dashboardSubPages, ...coinPages, ...featurePages, ...infoPages, ...legalPages];
 }

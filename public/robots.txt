@@ -12,23 +12,24 @@ Disallow: /api/
 Disallow: /auth/
 
 # Disallow internal/demo pages
-Disallow: /demo/
-Disallow: /coming-soon/
+Disallow: /demo
+Disallow: /coming-soon
 
 # Disallow user account pages
-Disallow: /dashboard/
-Disallow: /account/
-Disallow: /checkout/
-Disallow: /admin/
+Disallow: /dashboard
+Disallow: /account
+Disallow: /checkout
+Disallow: /admin
+Disallow: /home
 
 # Disallow auth pages
-Disallow: /login/
-Disallow: /signup/
-Disallow: /addin-auth/
+Disallow: /login
+Disallow: /signup
+Disallow: /addin-auth
 
 # Disallow utility/app pages
-Disallow: /builder/
-Disallow: /monitor/
+Disallow: /builder
+Disallow: /monitor
 
 # Allow main product pages (explicit for clarity)
 Allow: /live-dashboards
@@ -56,7 +57,15 @@ Allow: /roadmap
 Allow: /tools
 Allow: /about
 Allow: /byok
-Allow: /status
+Allow: /analyst-hub
+Allow: /research
+Allow: /rwa
+Allow: /risk
+Allow: /dex-pools
+Allow: /recently-added
+Allow: /community
+Allow: /command-center
+Allow: /blog
 
 # Crawl delay for rate limiting
 Crawl-delay: 1

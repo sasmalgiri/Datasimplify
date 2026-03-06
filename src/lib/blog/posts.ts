@@ -626,6 +626,419 @@ const POSTS: BlogPost[] = [
       },
     ],
   },
+
+  // ── Post 7: Bitcoin Halving ──
+  {
+    slug: 'bitcoin-halving-2028-what-to-expect',
+    title: 'Bitcoin Halving 2028: What to Expect and How to Prepare',
+    description:
+      'Everything you need to know about the next Bitcoin halving in 2028 — what it is, how previous halvings impacted price, and strategies investors are considering.',
+    keywords: [
+      'bitcoin halving 2028',
+      'btc halving explained',
+      'bitcoin supply schedule',
+      'bitcoin halving price impact',
+      'crypto halving strategy',
+      'bitcoin block reward',
+    ],
+    publishDate: '2026-03-05',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 9,
+    coverEmoji: '\u{1F4C9}',
+    excerpt:
+      'Bitcoin halvings cut the block reward in half roughly every four years. With the next halving expected in 2028, here\'s what history tells us about post-halving price action and how to position yourself.',
+    ctaHref: '/coin/bitcoin',
+    ctaLabel: 'Track Bitcoin Metrics Live',
+    relatedPosts: ['bitcoin-crash-2026-technical-analysis'],
+    sections: [
+      {
+        id: 'what-is-halving',
+        heading: 'What Is a Bitcoin Halving?',
+        body: [
+          'A Bitcoin halving is a programmatic event hard-coded into Bitcoin\'s protocol that reduces the mining reward by 50% approximately every 210,000 blocks — roughly every four years. After the April 2024 halving, the reward dropped from 6.25 BTC to 3.125 BTC per block. The next halving, expected in early 2028, will reduce it further to 1.5625 BTC.',
+          'Halvings are the mechanism that enforces Bitcoin\'s fixed supply cap of 21 million coins. By reducing the rate of new supply entering the market, each halving creates a supply shock — the same (or growing) demand chasing a shrinking flow of new coins.',
+          'There will only ever be 32 halvings in total. After the final one (estimated around 2140), miners will earn only transaction fees. We are currently past the fourth halving.',
+        ],
+      },
+      {
+        id: 'history',
+        heading: 'What Happened After Previous Halvings?',
+        body: [
+          'History doesn\'t repeat, but it often rhymes. Here\'s what followed each of the four completed halvings:',
+        ],
+        table: {
+          headers: ['Halving', 'Date', 'Block Reward After', 'Price at Halving', 'Peak After (~12-18 mo)'],
+          rows: [
+            ['1st', 'Nov 2012', '25 BTC', '~$12', '~$1,100 (Dec 2013)'],
+            ['2nd', 'Jul 2016', '12.5 BTC', '~$650', '~$19,700 (Dec 2017)'],
+            ['3rd', 'May 2020', '6.25 BTC', '~$8,700', '~$69,000 (Nov 2021)'],
+            ['4th', 'Apr 2024', '3.125 BTC', '~$64,000', 'Cycle still unfolding'],
+          ],
+        },
+        note: 'Past performance does not guarantee future results. Each cycle has unique macro conditions, regulatory environments, and market participants.',
+      },
+      {
+        id: 'supply-economics',
+        heading: 'The Supply Shock Thesis',
+        body: [
+          'The core thesis behind halving-driven price increases is simple economics: if demand stays constant or grows while new supply is cut in half, price should rise.',
+          'After the 2024 halving, only ~450 BTC are mined per day (down from ~900). By 2028, that drops to ~225 BTC/day. Meanwhile, institutional demand from ETFs, corporate treasuries, and sovereign wealth funds continues to grow. This creates what analysts call a "supply squeeze."',
+          'However, it\'s important to note that as the block reward shrinks, the halving\'s relative impact on total supply diminishes. Over 19.5 million of 21 million BTC have already been mined. The halving\'s psychological and narrative effect may matter more than the actual supply reduction.',
+        ],
+      },
+      {
+        id: 'preparing',
+        heading: 'How to Prepare for the 2028 Halving',
+        body: [
+          'Whether you\'re a long-term holder or an active trader, here are strategies investors commonly consider around halving cycles:',
+        ],
+        bullets: [
+          'Dollar-cost average (DCA) — Accumulate Bitcoin gradually in the 12-18 months before the halving rather than trying to time the bottom.',
+          'Monitor on-chain metrics — Watch metrics like exchange reserves, long-term holder supply, and miner revenue on CryptoReportKit to spot accumulation patterns.',
+          'Set profit targets — Previous cycles peaked 12-18 months after the halving. Have a plan for taking profits rather than riding the full cycle.',
+          'Diversify across the cycle — Some altcoins historically outperform Bitcoin in the late stages of halving-driven bull runs, though they also carry higher risk.',
+          'Stay informed — Follow CryptoReportKit\'s blog and dashboard for real-time halving countdown, miner data, and market analysis.',
+        ],
+      },
+      {
+        id: 'risks-halving',
+        heading: 'Risks and Counterarguments',
+        body: [
+          'Not everyone agrees halvings guarantee price increases:',
+        ],
+        bullets: [
+          'Priced in — Markets are more efficient in 2026. Institutional players may front-run the halving, reducing its impact on price.',
+          'Macro dominance — Interest rates, inflation, and geopolitical events may overwhelm the halving\'s supply-side effect.',
+          'Miner capitulation — A lower block reward could force marginal miners offline, temporarily increasing selling pressure as struggling miners liquidate reserves.',
+          'Diminishing returns — Each halving removes a smaller absolute amount of new supply, potentially weakening the effect over time.',
+        ],
+      },
+      {
+        id: 'track-halving',
+        heading: 'Track the Halving on CryptoReportKit',
+        body: [
+          'CryptoReportKit provides real-time Bitcoin supply data, miner revenue charts, and historical halving analysis. Use our dashboard to monitor the metrics that matter as we approach the 2028 halving.',
+        ],
+      },
+    ],
+  },
+
+  // ── Post 8: DeFi Yield Farming ──
+  {
+    slug: 'defi-yield-farming-guide-2026',
+    title: 'DeFi Yield Farming in 2026: A Beginner\'s Guide to Earning Passive Income',
+    description:
+      'Learn how DeFi yield farming works in 2026, including liquidity pools, impermanent loss, top protocols, and risk management strategies for passive crypto income.',
+    keywords: [
+      'defi yield farming 2026',
+      'how to yield farm crypto',
+      'liquidity pool explained',
+      'impermanent loss',
+      'defi passive income',
+      'best yield farming protocols',
+    ],
+    publishDate: '2026-03-03',
+    author: 'CryptoReportKit Team',
+    category: 'DeFi & Yield',
+    readingTimeMinutes: 10,
+    coverEmoji: '\u{1F33E}',
+    excerpt:
+      'Yield farming lets you earn returns by providing liquidity to DeFi protocols. This guide explains how it works, the risks involved, and how to get started safely in 2026.',
+    ctaHref: '/defi',
+    ctaLabel: 'Explore DeFi Yields on CryptoReportKit',
+    relatedPosts: ['what-is-rwa-tokenization-crypto'],
+    sections: [
+      {
+        id: 'what-is-yield-farming',
+        heading: 'What Is DeFi Yield Farming?',
+        body: [
+          'Yield farming is the practice of depositing your crypto assets into decentralised finance (DeFi) protocols in exchange for rewards — typically paid in the protocol\'s native token or a share of trading fees. Think of it as earning interest, but instead of a bank, you\'re supplying liquidity to an automated market maker (AMM) or lending platform.',
+          'When you provide liquidity to a DEX like Uniswap or Curve, you deposit a pair of tokens (e.g., ETH + USDC) into a pool. Traders swap between those tokens, and you earn a percentage of every trade fee. Some protocols add bonus token rewards on top, boosting yields further.',
+          'In 2026, yield farming has matured significantly. The "1000% APY" farms of 2021 are mostly gone, replaced by sustainable yields in the 3-15% range backed by real revenue — trading fees, borrowing interest, and staking rewards.',
+        ],
+      },
+      {
+        id: 'how-it-works',
+        heading: 'How Yield Farming Works Step by Step',
+        body: [
+          'Here\'s a simplified walkthrough of how yield farming typically works:',
+        ],
+        bullets: [
+          'Choose a protocol — Pick a reputable DeFi platform like Aave, Uniswap, Curve, or Lido. Check that it has been audited.',
+          'Select a pool — Protocols offer multiple pools with different token pairs and risk profiles. Stablecoin pools (USDC/USDT) are lower risk; volatile pairs (ETH/ALT) offer higher yield with more risk.',
+          'Deposit tokens — Supply the required tokens to the pool. For AMMs, you typically need equal value of both tokens. For lending protocols, you deposit a single asset.',
+          'Receive LP tokens — The protocol gives you LP (liquidity provider) tokens representing your share of the pool.',
+          'Earn rewards — Trading fees and/or bonus tokens accrue to your LP position. You can claim rewards periodically or let them compound.',
+          'Withdraw — When you want to exit, return your LP tokens to retrieve your original tokens plus earned rewards.',
+        ],
+      },
+      {
+        id: 'impermanent-loss',
+        heading: 'Understanding Impermanent Loss',
+        body: [
+          'Impermanent loss (IL) is the most misunderstood concept in yield farming. It occurs when the price ratio between the two tokens in your liquidity pool changes after you deposit. The larger the price divergence, the greater the loss compared to simply holding the tokens.',
+          'For example, if you deposit equal values of ETH and USDC into a pool, and ETH doubles in price, the pool automatically rebalances. You end up with more USDC and less ETH than you started with. The "loss" is the difference between your pool value and what you\'d have if you just held both tokens.',
+          'It\'s called "impermanent" because if prices return to where they were when you deposited, the loss disappears. But if you withdraw while prices are diverged, the loss becomes permanent.',
+        ],
+        note: 'Stablecoin-to-stablecoin pools (e.g., USDC/USDT) have minimal impermanent loss because both tokens maintain roughly the same price. They\'re a good starting point for beginners.',
+      },
+      {
+        id: 'top-protocols',
+        heading: 'Top Yield Farming Protocols in 2026',
+        body: [
+          'The DeFi landscape has consolidated around protocols with proven track records and real revenue:',
+        ],
+        table: {
+          headers: ['Protocol', 'Type', 'Typical APY', 'Best For'],
+          rows: [
+            ['Aave v4', 'Lending/Borrowing', '2-8%', 'Single-asset deposits, stable yields'],
+            ['Uniswap v4', 'DEX / AMM', '5-20%', 'Concentrated liquidity, active management'],
+            ['Curve Finance', 'Stablecoin DEX', '3-12%', 'Low-IL stablecoin farming'],
+            ['Lido', 'Liquid Staking', '3-5%', 'ETH staking with liquidity'],
+            ['Pendle', 'Yield Trading', '5-25%', 'Fixed-rate yield, yield speculation'],
+            ['Eigenlayer', 'Restaking', '4-10%', 'Leveraged staking rewards'],
+          ],
+        },
+      },
+      {
+        id: 'risk-management',
+        heading: 'Risk Management for Yield Farmers',
+        body: [
+          'Yield farming is not risk-free. Here\'s how to protect yourself:',
+        ],
+        bullets: [
+          'Audit check — Only use protocols that have been audited by reputable firms (Trail of Bits, OpenZeppelin, Spearbit). Check the audit date — an audit from 2022 may not cover recent code changes.',
+          'Start small — Test with a small amount before committing significant capital. Understand the withdrawal process before you need it.',
+          'Diversify across protocols — Don\'t put all your capital in one pool or one protocol. Smart contract risk is real.',
+          'Monitor your positions — Use CryptoReportKit\'s DeFi dashboard to track your yields, IL, and pool health in one place.',
+          'Understand the rewards — If a farm offers 50%+ APY, ask where the yield comes from. Sustainable yield comes from fees and real economic activity, not just token emissions.',
+          'Watch gas costs — On Ethereum mainnet, gas fees can eat into profits on small positions. Consider L2s like Arbitrum or Base for smaller amounts.',
+        ],
+      },
+      {
+        id: 'get-started',
+        heading: 'Get Started with DeFi on CryptoReportKit',
+        body: [
+          'CryptoReportKit\'s DeFi section tracks yields across top protocols, monitors liquidity pools, and helps you compare risk-adjusted returns. Use it to find the best opportunities before committing your capital.',
+        ],
+      },
+    ],
+  },
+
+  // ── Post 9: Crypto Portfolio Diversification ──
+  {
+    slug: 'crypto-portfolio-diversification-strategy',
+    title: 'How to Build a Diversified Crypto Portfolio in 2026',
+    description:
+      'A practical guide to crypto portfolio diversification — asset allocation frameworks, risk tiers, rebalancing strategies, and common mistakes to avoid.',
+    keywords: [
+      'crypto portfolio diversification',
+      'how to diversify crypto',
+      'crypto asset allocation',
+      'bitcoin portfolio strategy',
+      'crypto investment strategy 2026',
+      'altcoin portfolio',
+    ],
+    publishDate: '2026-03-01',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 8,
+    coverEmoji: '\u{1F4BC}',
+    excerpt:
+      'Putting all your crypto in one coin is a recipe for sleepless nights. Learn how to build a diversified portfolio across risk tiers, sectors, and chains — with practical allocation frameworks.',
+    ctaHref: '/portfolio',
+    ctaLabel: 'Build Your Portfolio on CryptoReportKit',
+    relatedPosts: ['crypto-chart-strategies-beginners-guide'],
+    sections: [
+      {
+        id: 'why-diversify',
+        heading: 'Why Diversification Matters in Crypto',
+        body: [
+          'Crypto is one of the most volatile asset classes in existence. A single coin can drop 50% in a week or 10x in a year. Diversification doesn\'t eliminate risk — nothing does — but it prevents a single bad bet from wiping out your portfolio.',
+          'The principle is the same as in traditional investing: spread your capital across assets that don\'t all move in the same direction at the same time. In crypto, this means diversifying across market caps, sectors, chains, and risk profiles.',
+          'Data shows that while Bitcoin returned ~150% from the 2024 halving to early 2026, a diversified portfolio including ETH, SOL, and select DeFi tokens returned ~220% with only moderately higher volatility. Diversification doesn\'t just reduce risk — done right, it can improve returns.',
+        ],
+      },
+      {
+        id: 'risk-tiers',
+        heading: 'The Three Risk Tiers',
+        body: [
+          'A practical way to think about crypto allocation is to divide assets into three risk tiers:',
+        ],
+        table: {
+          headers: ['Tier', 'Asset Types', 'Allocation Range', 'Risk Level'],
+          rows: [
+            ['Core (Tier 1)', 'BTC, ETH', '40-60%', 'Lower — established, liquid, institutional adoption'],
+            ['Growth (Tier 2)', 'Top 20 alts (SOL, LINK, AVAX, etc.)', '20-35%', 'Medium — proven utility but more volatile'],
+            ['Speculative (Tier 3)', 'Small caps, new launches, memecoins', '5-20%', 'High — potentially huge returns, but can go to zero'],
+          ],
+        },
+        note: 'These ranges are guidelines, not rules. Your actual allocation depends on your risk tolerance, time horizon, and financial situation. Never invest more than you can afford to lose.',
+      },
+      {
+        id: 'sector-diversification',
+        heading: 'Diversify Across Sectors',
+        body: [
+          'Crypto isn\'t just "digital money" anymore. The ecosystem spans multiple sectors, each with different growth drivers:',
+        ],
+        bullets: [
+          'Store of value — Bitcoin remains the dominant "digital gold" narrative. It benefits from macro uncertainty and institutional adoption.',
+          'Smart contract platforms — Ethereum, Solana, Avalanche compete to be the backbone of decentralised applications. Pick based on developer activity and TVL.',
+          'DeFi — Protocols like Aave, Uniswap, and Maker generate real revenue from lending, trading, and stablecoin issuance.',
+          'Infrastructure — Chainlink (oracles), The Graph (indexing), and Filecoin (storage) provide essential plumbing for the ecosystem.',
+          'RWA (Real-World Assets) — The fastest-growing sector in 2026, tokenising bonds, real estate, and commodities.',
+          'AI and crypto — Projects at the intersection of AI and blockchain are attracting significant capital, though many are still speculative.',
+        ],
+      },
+      {
+        id: 'rebalancing',
+        heading: 'Rebalancing Your Portfolio',
+        body: [
+          'Markets move, and allocations drift. A portfolio that starts as 50% BTC / 30% ETH / 20% alts might become 70% BTC / 15% ETH / 15% alts after a Bitcoin rally. Rebalancing means periodically selling what\'s overweight and buying what\'s underweight to return to your target allocation.',
+          'Common rebalancing approaches:',
+        ],
+        bullets: [
+          'Calendar rebalancing — Rebalance monthly or quarterly regardless of market conditions. Simple and removes emotion.',
+          'Threshold rebalancing — Rebalance when any asset drifts more than 5-10% from its target. More responsive but requires monitoring.',
+          'Hybrid approach — Check monthly, but only trade if allocations have drifted beyond your threshold. Best of both worlds.',
+        ],
+        note: 'Remember that every rebalance is a taxable event in most jurisdictions. Factor in capital gains tax when deciding how frequently to rebalance.',
+      },
+      {
+        id: 'common-mistakes',
+        heading: 'Common Portfolio Mistakes to Avoid',
+        body: [
+          'Even experienced investors make these errors:',
+        ],
+        bullets: [
+          'Over-diversification — Holding 50+ coins means you can\'t track any of them properly. 8-15 carefully chosen assets is usually sufficient.',
+          'Correlation blindness — Many altcoins are 90%+ correlated with Bitcoin. Holding 20 altcoins might give you less diversification than you think.',
+          'Ignoring stablecoins — Keeping 10-20% in stablecoins gives you dry powder to buy dips and reduces overall portfolio volatility.',
+          'Recency bias — Buying whatever pumped last week and selling whatever dropped. Stick to your allocation plan.',
+          'No exit strategy — Decide in advance when you\'ll take profits. "When it goes up" is not a strategy.',
+        ],
+      },
+      {
+        id: 'portfolio-tools',
+        heading: 'Track Your Portfolio on CryptoReportKit',
+        body: [
+          'CryptoReportKit\'s portfolio tracker lets you monitor your allocation across tiers and sectors in real time. Set target allocations, get rebalancing alerts, and track performance against Bitcoin and the total market cap. Start building your diversified portfolio today.',
+        ],
+      },
+    ],
+  },
+
+  // ── Post 10: Crypto Tax Guide ──
+  {
+    slug: 'crypto-tax-guide-2026-what-you-need-to-know',
+    title: 'Crypto Tax Guide 2026: What Every Investor Needs to Know',
+    description:
+      'A practical guide to crypto taxes in 2026 — taxable events, reporting requirements, DeFi tax implications, and tools to simplify your crypto tax filing.',
+    keywords: [
+      'crypto tax guide 2026',
+      'bitcoin tax rules',
+      'how to report crypto taxes',
+      'defi tax implications',
+      'crypto capital gains tax',
+      'cryptocurrency tax reporting',
+    ],
+    publishDate: '2026-03-06',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 11,
+    coverEmoji: '\u{1F4CB}',
+    excerpt:
+      'Crypto taxes are complicated but unavoidable. This guide breaks down what\'s taxable, what\'s not, and how to stay compliant — including DeFi, staking, and NFT-specific rules for 2026.',
+    ctaHref: '/tax-report',
+    ctaLabel: 'Generate Your Crypto Tax Report',
+    relatedPosts: ['crypto-portfolio-diversification-strategy'],
+    sections: [
+      {
+        id: 'why-crypto-taxes-matter',
+        heading: 'Why Crypto Taxes Matter More Than Ever',
+        body: [
+          'Tax authorities worldwide have dramatically increased their focus on cryptocurrency in 2026. The IRS in the US, HMRC in the UK, and tax agencies across the EU now receive data directly from centralised exchanges through mandatory reporting requirements.',
+          'In the US, the Infrastructure Investment and Jobs Act\'s broker reporting provisions are now fully in effect. Exchanges like Coinbase, Kraken, and Gemini issue 1099-DA forms to both users and the IRS. If you earned crypto income or realised capital gains, the tax authority likely already knows about it.',
+          'Failing to report crypto taxes can result in penalties ranging from 20% of unpaid tax to criminal prosecution in extreme cases. The good news: if you understand the rules and keep decent records, crypto tax compliance is manageable.',
+        ],
+      },
+      {
+        id: 'taxable-events',
+        heading: 'What Is (and Isn\'t) a Taxable Event',
+        body: [
+          'Not every crypto transaction triggers a tax obligation. Here\'s a clear breakdown:',
+        ],
+        table: {
+          headers: ['Taxable Event', 'Not Taxable'],
+          rows: [
+            ['Selling crypto for fiat (USD, EUR, etc.)', 'Buying crypto with fiat'],
+            ['Trading one crypto for another (BTC → ETH)', 'Transferring between your own wallets'],
+            ['Using crypto to buy goods/services', 'Holding (unrealised gains)'],
+            ['Receiving mining/staking rewards', 'Donating to a registered charity (may get deduction)'],
+            ['Getting paid in crypto (salary/freelance)', 'Receiving a gift (under annual exclusion)'],
+            ['Earning DeFi yield/interest', 'Wrapping/unwrapping tokens (jurisdiction-dependent)'],
+          ],
+        },
+        note: 'Tax laws vary by country and change frequently. This guide focuses on US rules but the general principles apply broadly. Always consult a qualified tax professional for your specific situation.',
+      },
+      {
+        id: 'capital-gains',
+        heading: 'Short-Term vs. Long-Term Capital Gains',
+        body: [
+          'When you sell or trade crypto at a profit, the gain is classified as either short-term or long-term based on how long you held the asset:',
+          'Short-term gains (held less than 1 year) are taxed as ordinary income — at your regular income tax rate, which can be as high as 37% in the US.',
+          'Long-term gains (held more than 1 year) are taxed at preferential rates: 0%, 15%, or 20% depending on your total taxable income. For most people, this is 15%.',
+          'This distinction creates a powerful tax planning opportunity: if you\'re close to the one-year mark, waiting a few extra weeks to sell can cut your tax rate by more than half.',
+        ],
+      },
+      {
+        id: 'defi-taxes',
+        heading: 'DeFi-Specific Tax Considerations',
+        body: [
+          'Decentralised finance creates unique tax challenges because there\'s no centralised entity issuing tax forms. You\'re responsible for tracking everything yourself.',
+        ],
+        bullets: [
+          'Liquidity pool deposits — Adding/removing liquidity may be treated as a taxable swap depending on jurisdiction. The IRS has not issued definitive guidance, but the conservative approach is to treat LP token minting as a taxable event.',
+          'Yield farming rewards — Tokens received as farming rewards are generally treated as ordinary income at their fair market value when received.',
+          'Staking rewards — Similar to mining income: taxable as ordinary income when received, then subject to capital gains when sold.',
+          'Governance token airdrops — Taxable as ordinary income at the time you gain dominion and control over the tokens.',
+          'Token swaps on DEXs — Every swap (e.g., ETH → USDC on Uniswap) is a taxable event, just like a trade on a centralised exchange.',
+          'Bridge transactions — Moving tokens across chains via bridges may or may not be taxable. Track your cost basis carefully.',
+        ],
+      },
+      {
+        id: 'record-keeping',
+        heading: 'Record-Keeping Best Practices',
+        body: [
+          'Good records are your best defence in a tax audit and your best tool for minimising tax legally:',
+        ],
+        bullets: [
+          'Track every transaction — Date, amount, token, price at time of transaction, fees paid, and wallet/exchange involved.',
+          'Export data regularly — Don\'t wait until tax season. Export CSV files from exchanges monthly or quarterly.',
+          'Track cost basis — Know what you paid for each asset. Use FIFO, LIFO, or specific identification consistently.',
+          'Save wallet addresses — Document which addresses belong to you. This helps prove transfers between your own wallets are not taxable.',
+          'Use crypto tax software — Tools like CoinTracker, Koinly, or CryptoReportKit\'s tax report feature can automate most of the heavy lifting.',
+        ],
+      },
+      {
+        id: 'tax-loss-harvesting',
+        heading: 'Tax-Loss Harvesting in Crypto',
+        body: [
+          'Tax-loss harvesting is the practice of selling assets at a loss to offset gains elsewhere in your portfolio. In crypto, this is particularly powerful because (as of 2026) the wash sale rule — which prevents you from claiming a loss if you rebuy the same asset within 30 days — does not definitively apply to crypto in the US, though legislation to close this loophole has been proposed.',
+          'Strategy: if you hold a coin that\'s down significantly, consider selling it to realise the loss, then using that loss to offset gains from profitable trades. You can potentially rebuy the same coin immediately (unlike with stocks), though you should monitor regulatory changes closely.',
+        ],
+        note: 'The wash sale rule may be extended to crypto in future legislation. Check the current rules before implementing this strategy. This is not tax advice.',
+      },
+      {
+        id: 'crk-tax-tools',
+        heading: 'Simplify Your Crypto Taxes with CryptoReportKit',
+        body: [
+          'CryptoReportKit\'s Tax Report tool helps you generate transaction summaries, calculate capital gains and losses, and export tax-ready reports. Connect your wallets and exchanges to get a complete picture of your crypto tax obligations for 2026.',
+        ],
+      },
+    ],
+  },
 ];
 
 export function getAllPosts(): BlogPost[] {

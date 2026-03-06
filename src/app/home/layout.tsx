@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
+
 export const metadata: Metadata = {
   title: 'Your Dashboard | CryptoReportKit',
   description:
     'Your personalized crypto dashboard. Access dashboards, tools, and templates curated for your workflow.',
+  alternates: { canonical: siteUrl },
+  robots: { index: false, follow: false },
 };
 
 export default function HomeLayout({
