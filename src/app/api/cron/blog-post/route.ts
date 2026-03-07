@@ -98,6 +98,31 @@ function generateSlug(title: string): string {
     .slice(0, 80);
 }
 
+async function ensureUniqueSlug(baseSlug: string): Promise<string> {
+  const staticSlugs = new Set(getAllSlugs());
+  let slug = baseSlug;
+
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const isStaticDuplicate = staticSlugs.has(slug);
+    const { data: existing, error } = await (supabaseAdmin!.from('blog_posts') as any)
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!isStaticDuplicate && !existing) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${attempt + 1}`.slice(0, 80);
+  }
+
+  return `${baseSlug}-${Date.now()}`.slice(0, 80);
+}
+
 /* ------------------------------------------------------------------ */
 /*  Groq AI content generation                                         */
 /* ------------------------------------------------------------------ */
@@ -239,23 +264,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to generate blog post' }, { status: 500 });
     }
 
-    // Generate slug and check for duplicates
-    let slug = generateSlug(post.title);
-
-    // Check against static slugs
-    const staticSlugs = getAllSlugs();
-    if (staticSlugs.includes(slug)) {
-      slug = `${slug}-ai`;
-    }
-
-    // Check against DB slugs
-    const { data: existing } = await (supabaseAdmin.from('blog_posts') as any)
-      .select('id')
-      .eq('slug', slug)
-      .maybeSingle();
-    if (existing) {
-      slug = `${slug}-${new Date().toISOString().split('T')[0]}`;
-    }
+    // Generate slug and ensure it is unique across static + DB posts
+    const slug = await ensureUniqueSlug(generateSlug(post.title));
 
     // Insert into DB
     const { data: inserted, error: insertError } = await (
@@ -283,6 +293,20 @@ export async function GET(request: NextRequest) {
 
     if (insertError) {
       console.error('[Blog Cron] Insert error:', insertError);
+
+      if (
+        typeof insertError.message === 'string' &&
+        (insertError.message.includes('relation "blog_posts" does not exist') ||
+          insertError.message.includes("Could not find the table 'public.blog_posts'"))
+      ) {
+        return NextResponse.json(
+          {
+            error: 'blog_posts table is missing. Run supabase/migrations/20260304_blog_posts.sql in Supabase first.',
+          },
+          { status: 500 },
+        );
+      }
+
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
