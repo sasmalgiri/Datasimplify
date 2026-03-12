@@ -155,20 +155,6 @@ const PRO_TOOLS = [
   },
 ];
 
-/* ─── Competitor Comparison ─── */
-const COMPARISON_ROWS = [
-  { feature: 'Live interactive dashboards', crk: '83+', others: 'Limited or none' },
-  { feature: 'Dashboard widgets', crk: '90+', others: '5-15' },
-  { feature: 'Smart intelligence widgets', crk: '8 built-in', others: 'Basic alerts only' },
-  { feature: 'Custom dashboard builder', crk: true, others: 'Not available' },
-  { feature: 'BYOK — you bring your own key', crk: true, others: 'Keys bundled into their platform' },
-  { feature: 'Tax report with CSV export', crk: true, others: 'Separate paid tool ($49+)' },
-  { feature: 'Multi-exchange portfolio', crk: '6 exchanges', others: 'Manual tracking' },
-  { feature: 'DCA simulator + tracker', crk: true, others: 'Basic or none' },
-  { feature: 'Currency support', crk: '60+', others: 'USD only or 5-7' },
-  { feature: 'Price alerts with email', crk: true, others: 'Pro only ($29+/mo)' },
-  { feature: 'Starting price', crk: IS_BETA_MODE ? 'Free beta' : '$0 free / $19 pro', others: '$19-49/mo' },
-];
 
 /* ─── FAQ Items ─── */
 const FAQ_ITEMS = [
@@ -221,6 +207,31 @@ export default function LandingPage() {
             </span>
           </h1>
 
+          {/* Quick-action buttons */}
+          <div className="flex flex-wrap gap-3 justify-center mb-6">
+            <Link
+              href="/datalab"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.12] rounded-lg text-sm font-medium transition-all hover:border-emerald-500/40 hover:text-emerald-400"
+            >
+              <BarChart2 className="w-4 h-4" />
+              Customize &amp; Download Data
+            </Link>
+            <Link
+              href="/compare"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.12] rounded-lg text-sm font-medium transition-all hover:border-blue-500/40 hover:text-blue-400"
+            >
+              <ArrowLeftRight className="w-4 h-4" />
+              Coin Compare
+            </Link>
+            <Link
+              href="/smart-contract-verifier"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.12] rounded-lg text-sm font-medium transition-all hover:border-purple-500/40 hover:text-purple-400"
+            >
+              <Shield className="w-4 h-4" />
+              Verify with Z3
+            </Link>
+          </div>
+
           <p className="text-lg text-gray-400 mb-3 max-w-xl mx-auto leading-relaxed">
             83+ live dashboards powered by your own CoinGecko API key. Your key is stored locally in your browser.
           </p>
@@ -237,7 +248,7 @@ export default function LandingPage() {
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-semibold text-base shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02]"
             >
               <Layout className="w-5 h-5" />
-              {IS_BETA_MODE ? 'Explore Dashboards' : 'Start Free Trial'}
+              Explore Analytics
             </Link>
             <Link
               href="/pricing"
@@ -248,35 +259,6 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Product teasers — Experiment Lab + DataLab */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-            <Link
-              href="/templates"
-              className="flex items-center gap-3 px-4 py-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-emerald-500/30 rounded-xl transition-all group"
-            >
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                <FlaskConical className="w-4.5 h-4.5 text-emerald-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">Experiment Lab</p>
-                <p className="text-[11px] text-gray-500">Edit values & test templates with live data</p>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-emerald-400 transition-colors ml-auto flex-shrink-0" />
-            </Link>
-            <Link
-              href="/datalab"
-              className="flex items-center gap-3 px-4 py-3 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-blue-500/30 rounded-xl transition-all group"
-            >
-              <div className="w-9 h-9 rounded-lg bg-blue-500/15 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-4.5 h-4.5 text-blue-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors">DataLab</p>
-                <p className="text-[11px] text-gray-500">Edit, overlay & manipulate chart data freely</p>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-gray-600 group-hover:text-blue-400 transition-colors ml-auto flex-shrink-0" />
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -538,52 +520,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════ 9. COMPARISON TABLE ═══════ */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              Why <span className="text-emerald-400">CryptoReportKit</span>?
-            </h2>
-            <p className="text-gray-400 text-base max-w-xl mx-auto">
-              More features, lower cost, and your API keys never leave your device.
-            </p>
-          </div>
-
-          <div className="bg-gray-800/40 border border-gray-700/50 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-3 bg-gray-800/60 border-b border-gray-700/50 px-5 py-3 text-sm font-semibold">
-              <div className="text-gray-400">Feature</div>
-              <div className="text-emerald-400 text-center">CryptoReportKit</div>
-              <div className="text-gray-500 text-center">Others</div>
-            </div>
-
-            {COMPARISON_ROWS.map((row, i) => (
-              <div
-                key={row.feature}
-                className={`grid grid-cols-3 px-5 py-3 text-sm ${i < COMPARISON_ROWS.length - 1 ? 'border-b border-gray-700/30' : ''}`}
-              >
-                <div className="text-gray-300">{row.feature}</div>
-                <div className="text-center">
-                  {row.crk === true ? (
-                    <Check className="w-5 h-5 text-emerald-400 mx-auto" />
-                  ) : (
-                    <span className="text-emerald-400 font-medium">{row.crk}</span>
-                  )}
-                </div>
-                <div className="text-center">
-                  {row.others === 'Limited or none' || row.others === 'Single theme' || row.others === 'CSV export only' ? (
-                    <span className="text-gray-500 text-xs">{row.others}</span>
-                  ) : row.others.includes('stored on') || row.others.includes('Separate') ? (
-                    <span className="text-red-400/70 text-xs">{row.others}</span>
-                  ) : (
-                    <span className="text-gray-500 text-xs">{row.others}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════ 10. BYOK TRUST ═══════ */}
       <section className="py-12 px-4 bg-gradient-to-b from-gray-800/30 to-transparent">
