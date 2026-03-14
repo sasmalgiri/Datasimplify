@@ -19,6 +19,7 @@ import {
   FlaskConical,
   FileText,
   Users,
+  Monitor,
 } from 'lucide-react';
 
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
@@ -113,7 +114,7 @@ export function FreeNavbar() {
     compare: {
       label: 'Tools',
       icon: <Scale className="w-4 h-4" />,
-      paths: ['/compare', '/datalab', '/alerts', '/charts', '/multi-chart', '/orderbook', '/backtest', '/tax-report'],
+      paths: ['/compare', '/datalab', '/alerts', '/charts', '/multi-chart', '/orderbook', '/backtest', '/tax-report', '/desktop'],
       items: [
         { href: '/compare', label: 'Coin Comparison', description: 'Compare 2-5 coins side-by-side', icon: <Scale className="w-4 h-4" /> },
         { href: '/datalab', label: 'DataLab', description: 'Interactive overlays, edit data & experiment', icon: <FlaskConical className="w-4 h-4" /> },
@@ -123,6 +124,7 @@ export function FreeNavbar() {
         { href: '/orderbook', label: 'Live Orderbook', description: 'Real-time bid/ask depth from Binance', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/backtest', label: 'Backtester', description: 'Test trading strategies on historical data', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/tax-report', label: 'Tax Report', description: 'Generate crypto tax reports (Form 8949)', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/desktop', label: 'Desktop App', description: 'Privacy-first native app for Win/Mac/Linux', icon: <Monitor className="w-4 h-4" /> },
       ],
     },
     verify: {
@@ -176,6 +178,7 @@ export function FreeNavbar() {
     { href: '/orderbook', label: 'Orderbook', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/backtest', label: 'Backtester', icon: <BarChart3 className="w-4 h-4" /> },
     { href: '/tax-report', label: 'Tax Report', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { href: '/desktop', label: 'Desktop App', icon: <Monitor className="w-4 h-4" /> },
     ...(isFeatureEnabled('smartContractVerifier')
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]
       : []),

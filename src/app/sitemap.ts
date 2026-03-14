@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/datalab`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.85 },
     { url: `${BASE_URL}/etf`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.8 },
     { url: `${BASE_URL}/global-market`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${BASE_URL}/desktop`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.85 },
   ];
 
   // Dynamic dashboard pages — generated from definitions
