@@ -12,7 +12,7 @@ import {
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
-  Key, ChevronDown, FlaskConical,
+  Key, ChevronDown, FlaskConical, Monitor, Download, Wifi, WifiOff,
 } from 'lucide-react';
 
 /* ─── Dashboard Preview Tiles (8 showcased out of 83+) ─── */
@@ -257,6 +257,47 @@ export default function LandingPage() {
               See Pricing
               <ArrowRight className="w-5 h-5" />
             </Link>
+          </div>
+
+          {/* ── Desktop App CTA ── */}
+          <div className="relative max-w-2xl mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-blue-500/10 rounded-2xl blur-xl" />
+            <div className="relative bg-gray-800/60 backdrop-blur-sm border border-gray-700/60 rounded-2xl p-6 md:p-8">
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Icon + Info */}
+                <div className="flex-shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-blue-500/20 flex items-center justify-center">
+                    <Monitor className="w-8 h-8 text-blue-400" />
+                  </div>
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                    <h3 className="text-lg font-bold text-white">Desktop App</h3>
+                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full">New</span>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-3">
+                    True offline analytics. API keys stored in your OS keychain — never touches a server. 22 tools including charts, backtester, risk analysis &amp; AI.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-gray-500">
+                    <span className="flex items-center gap-1"><WifiOff className="w-3 h-3" /> Works Offline</span>
+                    <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> OS Keychain</span>
+                    <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 3.3 MB Install</span>
+                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Zero Telemetry</span>
+                  </div>
+                </div>
+                {/* CTA */}
+                <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                  <Link
+                    href="/desktop"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:scale-[1.02] whitespace-nowrap"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Free
+                  </Link>
+                  <span className="text-emerald-400 text-xs font-medium">30-day Pro trial included</span>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
