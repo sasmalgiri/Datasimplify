@@ -4,6 +4,7 @@ import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
 
 export default function CorrelationPage() {
   return (
@@ -20,6 +21,14 @@ export default function CorrelationPage() {
           </div>
           <UniversalExport name="Correlation-Analysis" compact />
         </div>
+
+        <EducationBanner
+          youtubeMyth="'Diversify by buying 10 different altcoins!' — YouTubers call this diversification."
+          reality="If all your coins have 0.90+ correlation, they'll all crash together. Real diversification means holding assets that DON'T move in sync. Use this matrix to find truly uncorrelated assets."
+          learnLink="/learn/path"
+          learnLabel="Learn: Correlation & Diversification (Level 3)"
+          storageKey="correlation"
+        />
 
         <CorrelationHeatmapDemo showBeginnerTips={true} />
       </div>

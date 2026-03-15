@@ -138,6 +138,8 @@ const routeNames: Record<string, string> = {
   coin: 'Coin',
   advanced: 'Advanced Charts',
   'live-dashboards': 'Live Dashboards',
+  myths: 'Myth Busters',
+  path: 'Learning Path',
 };
 
 interface BreadcrumbProps {

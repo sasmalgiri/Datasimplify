@@ -4,6 +4,8 @@ import { DeFiTracker } from '@/components/features/DeFiTracker';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
+import { WhatsNext } from '@/components/WhatsNext';
 
 export default function DeFiPage() {
   return (
@@ -21,7 +23,18 @@ export default function DeFiPage() {
           <UniversalExport name="DeFi-Dashboard" compact />
         </div>
 
+        <EducationBanner
+          youtubeMyth="'1,000% APY — it's like a savings account but way better! Passive income!' — YouTubers promoted Anchor Protocol's 19.5% APY as 'the best savings account in crypto.'"
+          reality="Sustainable DeFi yields on stablecoins are 2-8%. Anything above 15-20% carries significant risk. If you can't explain where the yield comes from in one sentence, you are the yield. Anchor collapsed and wiped out $17 billion."
+          mythId="defi-yield-fantasy"
+          learnLink="/learn/path"
+          learnLabel="Learn: DeFi & Beyond (Level 4)"
+          storageKey="defi"
+        />
+
         <DeFiTracker showBeginnerTips={true} />
+
+        <WhatsNext contextLabel="Understand DeFi risks before chasing yield" />
       </div>
     </div>
   );

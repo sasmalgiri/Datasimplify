@@ -19,6 +19,10 @@ import {
   Wrench,
   ArrowRight,
   BookOpen,
+  CheckCircle2,
+  XCircle,
+  Map,
+  Clock,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -29,9 +33,12 @@ interface LearnSection {
   id: string;
   icon: React.ReactNode;
   title: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  readTime: string;
   paragraphs: string[];
   takeaway: string;
   links?: { label: string; href: string }[];
+  tryTool?: { label: string; href: string };
 }
 
 const SECTIONS: LearnSection[] = [
@@ -39,6 +46,8 @@ const SECTIONS: LearnSection[] = [
     id: 'what-is-crypto',
     icon: <Coins className="w-5 h-5 text-emerald-400" />,
     title: 'What is Cryptocurrency?',
+    difficulty: 'Beginner',
+    readTime: '3 min',
     paragraphs: [
       'A cryptocurrency is a digital asset secured by cryptography and recorded on a blockchain — a distributed ledger maintained by thousands of computers worldwide. Because no single entity controls the network, cryptocurrencies are often described as "decentralized."',
       'Bitcoin, launched in 2009 by the pseudonymous Satoshi Nakamoto, was the first cryptocurrency. It introduced the idea that value can be transferred peer-to-peer without banks. Ethereum followed in 2015, adding programmable "smart contracts" that power an entire ecosystem of applications.',
@@ -50,11 +59,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'Browse the Glossary', href: '/glossary' },
       { label: 'View Market Data', href: '/market' },
     ],
+    tryTool: { label: 'Explore Market Data', href: '/market' },
   },
   {
     id: 'market-data',
     icon: <BarChart3 className="w-5 h-5 text-blue-400" />,
     title: 'Understanding Market Data',
+    difficulty: 'Beginner',
+    readTime: '4 min',
     paragraphs: [
       'Market capitalization (market cap) is the total value of a cryptocurrency\'s circulating supply — calculated as price times circulating coins. It is the most common way to rank and compare cryptocurrencies. A higher market cap generally indicates a more established project.',
       'Trading volume measures how much of a coin has been traded in a given period (usually 24 hours). High volume means strong interest and usually tighter spreads, while unusually low volume can signal declining interest. Circulating supply tells you how many coins are currently available, while total and max supply indicate potential future inflation.',
@@ -66,11 +78,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'Live Market Overview', href: '/market' },
       { label: 'Sentiment Dashboard', href: '/sentiment' },
     ],
+    tryTool: { label: 'Open Sentiment Dashboard', href: '/sentiment' },
   },
   {
     id: 'reading-charts',
     icon: <CandlestickChart className="w-5 h-5 text-amber-400" />,
     title: 'Reading Charts',
+    difficulty: 'Intermediate',
+    readTime: '5 min',
     paragraphs: [
       'Candlestick charts are the standard way to visualize price action. Each candle represents a time period and shows four prices: open, high, low, and close. A green (or hollow) candle means the price closed higher than it opened; a red (or filled) candle means it closed lower.',
       'Support and resistance are price levels where buying or selling pressure tends to concentrate. Support is a "floor" where falling prices often bounce; resistance is a "ceiling" where rising prices stall. Identifying these levels helps traders set entry and exit points.',
@@ -82,11 +97,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'Interactive Charts', href: '/charts' },
       { label: 'Technical Analysis', href: '/technical' },
     ],
+    tryTool: { label: 'Try Technical Analysis', href: '/technical' },
   },
   {
     id: 'defi-explained',
     icon: <Boxes className="w-5 h-5 text-purple-400" />,
     title: 'DeFi Explained',
+    difficulty: 'Intermediate',
+    readTime: '5 min',
     paragraphs: [
       'Decentralized Finance (DeFi) recreates traditional financial services — lending, borrowing, trading — using smart contracts on blockchains like Ethereum and Solana. Instead of a bank acting as intermediary, code enforces the rules automatically.',
       'A decentralized exchange (DEX) like Uniswap lets you swap tokens directly from your wallet. Liquidity pools are the engine behind DEXs: users deposit token pairs into a pool and earn trading fees in return. This is called "providing liquidity."',
@@ -98,11 +116,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'DeFi Dashboard', href: '/defi' },
       { label: 'DEX Pool Explorer', href: '/dex-pools' },
     ],
+    tryTool: { label: 'Open DeFi Dashboard', href: '/defi' },
   },
   {
     id: 'security',
     icon: <ShieldCheck className="w-5 h-5 text-red-400" />,
     title: 'Security Best Practices',
+    difficulty: 'Beginner',
+    readTime: '4 min',
     paragraphs: [
       'Your crypto is only as safe as your wallet security. Hot wallets (browser extensions like MetaMask) are convenient but always connected to the internet. Cold wallets (hardware devices like Ledger or Trezor) keep your private keys offline and are recommended for storing significant amounts.',
       'Enable two-factor authentication (2FA) on every exchange and service. Use an authenticator app rather than SMS, which is vulnerable to SIM-swap attacks. Never share your seed phrase with anyone — legitimate services will never ask for it. Write it down on paper and store it in a secure location.',
@@ -113,11 +134,14 @@ const SECTIONS: LearnSection[] = [
     links: [
       { label: 'Risk Analysis Tools', href: '/risk' },
     ],
+    tryTool: { label: 'Open Risk Analysis', href: '/risk' },
   },
   {
     id: 'trading-terms',
     icon: <MessageSquareText className="w-5 h-5 text-teal-400" />,
     title: 'Trading Terminology',
+    difficulty: 'Beginner',
+    readTime: '3 min',
     paragraphs: [
       'Crypto has its own language. A "bull market" is a prolonged period of rising prices; a "bear market" is the opposite. "HODL" (a famous misspelling of "hold") means keeping your coins long-term regardless of short-term volatility. "FUD" stands for Fear, Uncertainty, and Doubt — negative sentiment that can drive panic selling.',
       '"FOMO" (Fear Of Missing Out) describes the urge to buy when prices are already surging. "ATH" is All-Time High — the highest price a coin has ever reached. "Whale" refers to an individual or entity holding a very large amount of a cryptocurrency, whose trades can move the market.',
@@ -129,11 +153,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'Full Crypto Glossary', href: '/glossary' },
       { label: 'Whale Tracker', href: '/whales' },
     ],
+    tryTool: { label: 'Browse Glossary', href: '/glossary' },
   },
   {
     id: 'onchain-data',
     icon: <Activity className="w-5 h-5 text-orange-400" />,
     title: 'Understanding On-Chain Data',
+    difficulty: 'Advanced',
+    readTime: '5 min',
     paragraphs: [
       'On-chain data is information recorded directly on the blockchain — every transaction, address balance, and smart-contract interaction is publicly verifiable. Analysts use this data to gauge network health and predict market trends.',
       'Key metrics include active addresses (how many unique wallets transacted recently), hash rate (the computational power securing a proof-of-work network like Bitcoin), and transaction volume (the total value moved on-chain). Rising active addresses and hash rate generally signal a healthy, growing network.',
@@ -145,11 +172,14 @@ const SECTIONS: LearnSection[] = [
       { label: 'On-Chain Analytics', href: '/charts' },
       { label: 'Correlation Matrix', href: '/correlation' },
     ],
+    tryTool: { label: 'View Correlation Matrix', href: '/correlation' },
   },
   {
     id: 'getting-started-crk',
     icon: <Wrench className="w-5 h-5 text-emerald-400" />,
     title: 'Getting Started with CryptoReportKit',
+    difficulty: 'Beginner',
+    readTime: '3 min',
     paragraphs: [
       'CryptoReportKit (CRK) brings professional-grade crypto data directly into your workflow. The web dashboard gives you real-time market data, interactive charts, portfolio tracking, DeFi analytics, and on-chain metrics — all in one place.',
       'Use the Market page to browse thousands of coins, the Charts page for detailed technical analysis, and the Screener to filter coins by custom criteria. The Portfolio Builder lets you track your holdings and performance over time, while the Alerts system notifies you when prices hit your targets.',
@@ -163,8 +193,166 @@ const SECTIONS: LearnSection[] = [
       { label: 'Screener', href: '/screener' },
       { label: 'Portfolio Builder', href: '/portfolio' },
     ],
+    tryTool: { label: 'Explore Live Dashboards', href: '/live-dashboards' },
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  Knowledge Quiz                                                     */
+/* ------------------------------------------------------------------ */
+
+const QUIZ_QUESTIONS = [
+  {
+    question: 'A coin costs $0.001 with 100 billion supply. A coin costs $100 with 1 million supply. Which one is "cheaper"?',
+    options: [
+      'The $0.001 coin — it costs less per unit',
+      'They have the same market cap ($100M) — neither is cheaper',
+      'The $100 coin — higher price means more valuable',
+    ],
+    correct: 1,
+    explanation: 'Both have the same $100M market cap (price x supply). Unit price alone tells you nothing about value. This is the #1 beginner trap.',
+  },
+  {
+    question: 'A DeFi protocol offers 1,000% APY on stablecoin deposits. What should you think?',
+    options: [
+      'Amazing! Way better than a bank savings account',
+      'Probably sustainable if the protocol is popular',
+      'Extremely risky — sustainable stablecoin yields are 2-8%',
+    ],
+    correct: 2,
+    explanation: 'If you can\'t explain where the yield comes from in one sentence, you are the yield. Anchor Protocol offered ~20% and collapsed, wiping out $17 billion.',
+  },
+  {
+    question: 'The Fear & Greed Index hits "Extreme Fear." What should you do?',
+    options: [
+      'Buy immediately — fear means cheap prices',
+      'Sell everything — the market is crashing',
+      'Use it as one data point alongside other analysis',
+    ],
+    correct: 2,
+    explanation: 'Extreme fear can persist for months. Buying at first sign of fear in 2022 led to further 50% losses. Use sentiment as context, not a standalone signal.',
+  },
+];
+
+function KnowledgeQuiz() {
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [answered, setAnswered] = useState(false);
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const q = QUIZ_QUESTIONS[current];
+
+  function handleSelect(idx: number) {
+    if (answered) return;
+    setSelected(idx);
+    setAnswered(true);
+    if (idx === q.correct) setScore((s) => s + 1);
+  }
+
+  function handleNext() {
+    if (current < QUIZ_QUESTIONS.length - 1) {
+      setCurrent((c) => c + 1);
+      setSelected(null);
+      setAnswered(false);
+    } else {
+      setDone(true);
+    }
+  }
+
+  if (done) {
+    const level = score === 3 ? 'advanced' : score >= 1 ? 'intermediate' : 'beginner';
+    return (
+      <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-6 text-center">
+        <h3 className="text-xl font-bold text-white mb-2">
+          {score}/{QUIZ_QUESTIONS.length} Correct
+        </h3>
+        <p className="text-gray-400 text-sm mb-5">
+          {level === 'advanced'
+            ? 'You know your stuff! Dive into advanced tools below.'
+            : level === 'intermediate'
+            ? 'Solid foundation — a few myths still got you. Check out our myth-busting guide.'
+            : 'No worries — everyone starts somewhere. Our learning path will guide you step by step.'}
+        </p>
+        <div className="flex flex-wrap gap-3 justify-center">
+          {level !== 'advanced' && (
+            <Link
+              href="/learn/path"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Map className="w-4 h-4" />
+              Start Learning Path
+            </Link>
+          )}
+          <Link
+            href="/myths"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors"
+          >
+            Read Myth Busters
+          </Link>
+          {level === 'advanced' && (
+            <Link
+              href="/live-dashboards"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition-colors"
+            >
+              Explore Dashboards
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+          Question {current + 1} of {QUIZ_QUESTIONS.length}
+        </span>
+        <span className="text-xs text-emerald-400">{score} correct so far</span>
+      </div>
+      <p className="text-white font-medium mb-4">{q.question}</p>
+      <div className="space-y-2">
+        {q.options.map((opt, idx) => {
+          let cls = 'w-full text-left p-3.5 rounded-lg border text-sm transition-colors ';
+          if (!answered) {
+            cls += 'bg-gray-700/30 border-gray-700/50 hover:border-gray-600 cursor-pointer';
+          } else if (idx === q.correct) {
+            cls += 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300';
+          } else if (idx === selected) {
+            cls += 'bg-red-500/10 border-red-500/30 text-red-300';
+          } else {
+            cls += 'bg-gray-700/20 border-gray-700/30 text-gray-500';
+          }
+          return (
+            <button type="button" key={idx} onClick={() => handleSelect(idx)} className={cls}>
+              <span className="flex items-center gap-2">
+                {answered && idx === q.correct && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+                {answered && idx === selected && idx !== q.correct && <XCircle className="w-4 h-4 text-red-400 shrink-0" />}
+                {opt}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {answered && (
+        <div className="mt-4 space-y-3">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+            <p className="text-sm text-blue-300">{q.explanation}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition-colors"
+          >
+            {current < QUIZ_QUESTIONS.length - 1 ? 'Next Question' : 'See Results'}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Expandable section component                                       */
@@ -187,11 +375,24 @@ function SectionCard({
         onClick={onToggle}
         className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left cursor-pointer group"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {section.icon}
           <h3 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
             {section.title}
           </h3>
+          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shrink-0 ${
+            section.difficulty === 'Beginner'
+              ? 'bg-emerald-500/15 text-emerald-400'
+              : section.difficulty === 'Intermediate'
+              ? 'bg-amber-500/15 text-amber-400'
+              : 'bg-red-500/15 text-red-400'
+          }`}>
+            {section.difficulty}
+          </span>
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-gray-500 shrink-0">
+            <Clock className="w-3 h-3" />
+            {section.readTime}
+          </span>
         </div>
         {isOpen ? (
           <ChevronUp className="w-5 h-5 text-gray-400 shrink-0" />
@@ -219,6 +420,17 @@ function SectionCard({
               <p className="text-sm text-gray-200 mt-1">{section.takeaway}</p>
             </div>
           </div>
+
+          {/* Try this tool — learn-to-doing bridge */}
+          {section.tryTool && (
+            <Link
+              href={section.tryTool.href}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 hover:border-emerald-500/50 rounded-lg text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors group"
+            >
+              {section.tryTool.label}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )}
 
           {/* Related links */}
           {section.links && section.links.length > 0 && (
@@ -288,6 +500,16 @@ export default function LearnPage() {
             learning.
           </p>
         </div>
+      </div>
+
+      {/* Knowledge Quiz */}
+      <div className="max-w-4xl mx-auto px-4 pt-10 pb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Lightbulb className="w-5 h-5 text-amber-400" />
+          <h2 className="text-xl font-bold">Test Your Knowledge</h2>
+          <span className="text-xs text-gray-500 ml-1">3 quick questions</span>
+        </div>
+        <KnowledgeQuiz />
       </div>
 
       {/* Content */}

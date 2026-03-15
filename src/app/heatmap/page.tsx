@@ -5,6 +5,8 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { SectorHeatmap } from '@/components/features/SectorHeatmap';
 import { Treemap } from '@/components/features/Treemap';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
+import { WhatsNext } from '@/components/WhatsNext';
 import { useState, useEffect, useCallback } from 'react';
 import { Grid3X3, Layers, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
@@ -50,6 +52,14 @@ export default function HeatmapPage() {
       <Breadcrumb />
 
       <main className="container mx-auto px-4 py-8">
+        <EducationBanner
+          youtubeMyth="Big green boxes mean a coin is 'winning' — buy whatever is greenest!"
+          reality="Heatmaps show short-term price changes, not value. A coin up 20% today could be down 80% from its all-time high. Always check market cap and longer timeframes before making decisions."
+          mythId="cheap-coin-fallacy"
+          learnLink="/learn/path"
+          learnLabel="Learn: Market Cap basics"
+          storageKey="heatmap"
+        />
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -153,6 +163,8 @@ export default function HeatmapPage() {
             </div>
           </div>
         </div>
+
+        <WhatsNext contextLabel="Understand what heatmap colors really mean" />
 
         {/* Attribution */}
         <div className="mt-8 text-center text-sm text-gray-500">

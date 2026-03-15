@@ -4,6 +4,8 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FEATURES } from '@/lib/featureFlags';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
+import { WhatsNext } from '@/components/WhatsNext';
 
 // Check feature flag at build/request time - return 404 if disabled
 export default function RiskPage() {
@@ -27,7 +29,18 @@ export default function RiskPage() {
           <UniversalExport name="Risk-Analysis" compact />
         </div>
 
+        <EducationBanner
+          youtubeMyth="'Crypto always goes up long term — just hold and you can't lose!' — YouTubers treat all coins like Bitcoin."
+          reality="Bitcoin has recovered from 80% drawdowns, but thousands of altcoins have gone to zero permanently. Risk management (position sizing, stop-losses, diversification) is what separates investing from gambling. Check these metrics BEFORE you buy."
+          mythId="guaranteed-returns"
+          learnLink="/learn/path"
+          learnLabel="Learn: Risk Management (Level 3)"
+          storageKey="risk"
+        />
+
         <RiskDashboardDemo showBeginnerTips={true} />
+
+        <WhatsNext contextLabel="Learn how to manage risk before committing real money" />
       </div>
     </div>
   );

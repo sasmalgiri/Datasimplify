@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
+import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import {
@@ -12,7 +13,7 @@ import {
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
-  Key, ChevronDown, FlaskConical, Monitor, Download,
+  Key, ChevronDown, FlaskConical, Monitor, Download, BookOpen, GraduationCap,
 } from 'lucide-react';
 
 /* ─── Dashboard Preview Tiles (8 showcased out of 83+) ─── */
@@ -191,6 +192,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       <FreeNavbar />
       <StickySignupButton />
+      <WelcomeOverlay />
 
       {/* ═══════ 1. HERO ═══════ */}
       <section className="pt-20 pb-14 px-4 relative overflow-hidden">
@@ -279,6 +281,18 @@ export default function LandingPage() {
             <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-400 transition-colors" />
           </Link>
 
+          {/* ── New to Crypto? CTA ── */}
+          <div className="mt-5">
+            <Link
+              href="/learn/path"
+              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-emerald-400 transition-colors group"
+            >
+              <GraduationCap className="w-4 h-4" />
+              <span>New to crypto? <span className="underline underline-offset-2 decoration-gray-600 group-hover:decoration-emerald-500">Start your free learning path</span></span>
+              <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            </Link>
+          </div>
+
         </div>
       </section>
 
@@ -303,6 +317,28 @@ export default function LandingPage() {
               <div className="text-gray-400 text-xs">BYOK — keys never leave your device</div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ═══════ TRUST SIGNALS ═══════ */}
+      <section className="py-8 px-4">
+        <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { icon: Shield, color: 'text-emerald-400', bg: 'bg-emerald-500/10', title: 'Risk-First Approach', desc: 'Every tool shows risk alongside opportunity' },
+            { icon: BookOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', title: 'Education, Not Hype', desc: '100+ glossary terms, learning path, myth-busting guides' },
+            { icon: Eye, color: 'text-purple-400', bg: 'bg-purple-500/10', title: 'Transparent Data', desc: 'CoinGecko source with freshness badges' },
+            { icon: Lock, color: 'text-amber-400', bg: 'bg-amber-500/10', title: 'Your Keys, Your Control', desc: 'API keys stored locally, never on our servers' },
+          ].map((item) => (
+            <div key={item.title} className="flex items-start gap-3 p-3 rounded-lg bg-gray-800/40 border border-gray-700/30">
+              <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                <item.icon className={`w-4 h-4 ${item.color}`} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white">{item.title}</div>
+                <div className="text-xs text-gray-500 mt-0.5">{item.desc}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

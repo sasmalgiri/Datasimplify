@@ -1340,6 +1340,442 @@ const POSTS: BlogPost[] = [
       },
     ],
   },
+
+  // =============== Education: Myth-Busting Blog Posts ===============
+
+  {
+    slug: 'cheap-coin-fallacy-market-cap-math',
+    title: 'The Cheap Coin Fallacy: Why a $0.001 Token Won\'t Make You a Millionaire',
+    description:
+      'Why a low coin price doesn\'t mean cheap. Market cap math shows why most "penny crypto" moonshot dreams are mathematically impossible.',
+    keywords: [
+      'cheap coin fallacy',
+      'unit bias crypto',
+      'penny crypto',
+      'market cap math',
+      'shiba inu market cap',
+      'crypto for beginners',
+      'can shiba reach one dollar',
+    ],
+    publishDate: '2026-03-15',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 8,
+    coverEmoji: '\u{1F4B0}',
+    excerpt:
+      'A coin priced at $0.001 feels like a bargain. But price per token tells you nothing about value. Here\'s the market cap math that YouTube influencers leave out.',
+    ctaHref: '/screener',
+    ctaLabel: 'Screen Coins by Market Cap',
+    relatedPosts: ['market-cap-explained-why-shiba-cant-reach-one-dollar'],
+    sections: [
+      {
+        id: 'the-myth',
+        heading: 'The Myth: "It\'s Only $0.001 — Imagine When It Hits $1!"',
+        body: [
+          'Every crypto beginner has heard this pitch: "This coin is only a fraction of a penny. If it reaches just $1, you\'ll be a millionaire!" It sounds logical. If Bitcoin went from $1 to $60,000, why can\'t this coin go from $0.001 to $1?',
+          'The answer lies in a concept called unit bias — our brains prefer owning 1 million of something over 0.01 of something, even when the 0.01 is worth more. YouTube influencers exploit this bias constantly.',
+        ],
+      },
+      {
+        id: 'market-cap-reality',
+        heading: 'The Reality: Market Cap Is What Matters',
+        body: [
+          'Market cap = Price × Circulating Supply. This single formula destroys the cheap coin narrative.',
+          'A coin priced at $0.001 with 100 billion tokens already has a $100 million market cap. For it to reach $1, its market cap would need to be $100 billion — that\'s roughly Solana\'s entire market cap. For a random meme coin.',
+        ],
+        table: {
+          headers: ['Coin', 'Price', 'Supply', 'Market Cap', 'Price to Reach $1T Market Cap'],
+          rows: [
+            ['Bitcoin', '$60,000', '21M', '$1.26T', 'Already near $1T'],
+            ['Shiba Inu', '$0.00001', '589T', '$5.9B', '$0.0017 (170x)'],
+            ['Random Meme Coin', '$0.001', '100B', '$100M', '$10 (10,000x)'],
+          ],
+        },
+        note: 'The supply of a coin fundamentally limits its realistic price ceiling. Always check market cap before buying.',
+      },
+      {
+        id: 'shiba-math',
+        heading: 'The Shiba Inu $1 Dream: A Math Problem',
+        body: [
+          'Shiba Inu has roughly 589 trillion tokens in circulation. At a price of $1 per token, its market cap would be $589 trillion. For reference, the entire world\'s GDP is about $105 trillion. The total value of all assets on Earth is estimated at $900 trillion.',
+          'For SHIB to reach $1, it would need to be worth more than half of everything on Earth. This is not a matter of opinion — it\'s arithmetic.',
+        ],
+      },
+      {
+        id: 'how-influencers-exploit',
+        heading: 'How Influencers Exploit Unit Bias',
+        body: [
+          'The playbook is predictable: find a coin with a very low unit price, point to Bitcoin\'s historical returns, ignore the supply difference, and tell viewers they\'re "early." The influencer often holds tokens before promoting and sells into the buying wave from their audience.',
+        ],
+        bullets: [
+          'They compare unit prices between coins with vastly different supplies',
+          'They use phrases like "still early" and "ground floor opportunity"',
+          'They rarely mention market cap, fully diluted valuation, or token unlock schedules',
+          'They profit from the buying pressure their promotion creates',
+        ],
+      },
+      {
+        id: 'what-to-do',
+        heading: 'What to Do Instead',
+        body: [
+          'Before buying any coin, check three numbers: circulating supply, market cap, and fully diluted valuation (FDV). Compare the market cap to established projects. Ask yourself: "Is it realistic for this project to be worth more than [comparable project]?"',
+          'Use CryptoReportKit\'s screener to filter by market cap, volume, and actual metrics. The data doesn\'t lie — but influencers do.',
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'market-cap-explained-why-shiba-cant-reach-one-dollar',
+    title: 'Market Cap Explained: Why Comparing Coin Prices Is Meaningless',
+    description:
+      'Why comparing the price of XRP to Ethereum makes no sense. Market cap is the only honest way to compare cryptocurrencies.',
+    keywords: [
+      'market cap explained',
+      'crypto market cap',
+      'market cap vs price',
+      'xrp vs ethereum price',
+      'circulating supply crypto',
+      'fully diluted valuation',
+      'how to compare crypto',
+    ],
+    publishDate: '2026-03-14',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 7,
+    coverEmoji: '\u{1F4CA}',
+    excerpt:
+      'XRP at $0.50 vs Ethereum at $3,000 — doesn\'t mean XRP has "more room to grow." Here\'s why market cap is the only honest metric for comparing cryptocurrencies.',
+    ctaHref: '/compare',
+    ctaLabel: 'Compare Coins by Market Cap',
+    relatedPosts: ['cheap-coin-fallacy-market-cap-math'],
+    sections: [
+      {
+        id: 'the-trap',
+        heading: 'The Trap: Comparing Prices Across Coins',
+        body: [
+          '"XRP is only $0.50 but Ethereum is $3,000. Imagine when XRP catches up!" This comparison sounds intuitive but is completely meaningless. It\'s like saying a pizza slice at $3 is cheaper than a car at $30,000 — they\'re entirely different things with different quantities.',
+          'The unit price of a cryptocurrency depends on an arbitrary decision: how many tokens to create. If Ethereum had been launched with 120 billion tokens instead of 120 million, each ETH would be priced at $3 instead of $3,000. Nothing about Ethereum\'s value would have changed.',
+        ],
+      },
+      {
+        id: 'what-market-cap-is',
+        heading: 'What Market Cap Actually Tells You',
+        body: [
+          'Market cap = Price × Circulating Supply. It represents the total value the market assigns to a cryptocurrency. This is the apples-to-apples comparison between any two coins.',
+        ],
+        table: {
+          headers: ['Coin', 'Price', 'Circulating Supply', 'Market Cap'],
+          rows: [
+            ['Ethereum', '$3,000', '120 million', '$360 billion'],
+            ['XRP', '$0.50', '53 billion', '$26.5 billion'],
+            ['Dogecoin', '$0.08', '140 billion', '$11.2 billion'],
+          ],
+        },
+        note: 'XRP at $0.50 is not "cheaper" than ETH at $3,000. XRP\'s market cap is $26.5B vs ETH\'s $360B. The price per unit is irrelevant.',
+      },
+      {
+        id: 'impossible-math',
+        heading: 'The Impossible Math of Price Comparisons',
+        body: [
+          'For XRP to reach Ethereum\'s price of $3,000 per token, with 53 billion tokens in circulation, its market cap would need to be $159 trillion. That\'s larger than the GDP of every country on Earth combined.',
+          'For Dogecoin to reach Bitcoin\'s price of $60,000, with 140 billion tokens, its market cap would be $8.4 quadrillion — roughly 80x all wealth on Earth. These are not "moonshots." They are mathematical impossibilities.',
+        ],
+      },
+      {
+        id: 'fdv-matters',
+        heading: 'Fully Diluted Valuation: The Hidden Supply',
+        body: [
+          'Circulating supply is only part of the picture. Many tokens have unvested allocations, staking rewards, or governance-approved inflation. Fully Diluted Valuation (FDV) = Price × Max Supply. A coin with a $500M market cap but a $5B FDV has 90% of its tokens still to be released — each unlock adds selling pressure.',
+          'Always check the gap between market cap and FDV. A large gap means significant dilution is coming.',
+        ],
+      },
+      {
+        id: 'how-to-compare',
+        heading: 'How to Actually Compare Cryptocurrencies',
+        body: [
+          'Use CryptoReportKit\'s comparison tool to see coins side by side with market cap, volume, supply metrics, and price history. The right question is never "can this $0.50 coin reach $3,000?" — it\'s "can this $26 billion project grow to a $360 billion valuation, and what would justify that?"',
+        ],
+        bullets: [
+          'Compare market caps, not unit prices',
+          'Check the ratio of circulating supply to max supply',
+          'Look at FDV — if it\'s much higher than market cap, dilution is coming',
+          'Ask: "What market cap would this need to reach my target price?"',
+          'Use the screener to filter by market cap tiers',
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'defi-yield-farming-risks-beginners',
+    title: 'DeFi Yield Farming: What 1,000% APY Actually Means (Spoiler: Risk)',
+    description:
+      'Why high DeFi yields aren\'t free money. Impermanent loss, smart contract risk, token dilution, and the Anchor Protocol collapse explained.',
+    keywords: [
+      'defi yield farming risks',
+      'impermanent loss explained',
+      'anchor protocol collapse',
+      'defi for beginners',
+      'crypto yield farming',
+      'defi apy risks',
+      'is defi safe',
+      'terra luna collapse',
+    ],
+    publishDate: '2026-03-13',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 9,
+    coverEmoji: '\u{1F33E}',
+    excerpt:
+      'A 1,000% APY sounds like a savings account on steroids. In reality, it\'s a flashing warning sign. Here\'s what DeFi yields really are, where they come from, and why Anchor Protocol\'s 19.5% "safe" yield wiped out $17 billion.',
+    ctaHref: '/defi',
+    ctaLabel: 'Explore DeFi Protocols Safely',
+    relatedPosts: [],
+    sections: [
+      {
+        id: 'the-pitch',
+        heading: 'The Pitch: "Better Than a Savings Account"',
+        body: [
+          'Traditional savings accounts offer 0.5-5% interest. Then you discover DeFi protocols advertising 100%, 500%, even 1,000%+ APY. YouTube influencers frame this as "the banks don\'t want you to know about this." It feels like a cheat code for money.',
+          'It\'s not. High yields exist because high risk exists. The yield is compensation for risks that traditional savings accounts don\'t have. If you can\'t explain where the yield comes from in one sentence, you are the yield.',
+        ],
+      },
+      {
+        id: 'where-yield-comes-from',
+        heading: 'Where Does DeFi Yield Actually Come From?',
+        body: [
+          'Legitimate DeFi yields have clear sources. Understanding these sources is the difference between informed investing and gambling.',
+        ],
+        bullets: [
+          'Trading fees — DEXs pay liquidity providers a share of swap fees. Sustainable but modest (2-15% on stablecoin pairs)',
+          'Lending interest — Borrowers pay interest to use your crypto as collateral. Similar to traditional banking but with smart contract risk',
+          'Token emissions — The protocol prints new tokens and distributes them to users. This is NOT real yield — it\'s inflation. The tokens are often worthless',
+          'Ponzi mechanics — New deposits fund old depositors\' returns. Works until new money stops flowing in, then collapses instantly',
+        ],
+        note: 'Sustainable yields on stablecoins are typically 2-8%. Anything above 15-20% carries significant risk. Above 50% is almost certainly unsustainable.',
+      },
+      {
+        id: 'impermanent-loss',
+        heading: 'Impermanent Loss: The Tax You Didn\'t Know You Were Paying',
+        body: [
+          'When you provide liquidity to a DEX pool (e.g., ETH/USDC), you deposit equal values of both tokens. If ETH\'s price changes significantly in either direction, the pool rebalances — and you end up with less total value than if you had simply held both tokens separately.',
+          'This "impermanent" loss becomes permanent when you withdraw. On volatile pairs, impermanent loss can easily exceed the trading fees you earn, resulting in a net loss despite the pool showing positive APY.',
+        ],
+      },
+      {
+        id: 'anchor-collapse',
+        heading: 'Case Study: Anchor Protocol — $17 Billion Gone',
+        body: [
+          'Anchor Protocol offered 19.5% APY on UST, a so-called "stablecoin." YouTube influencers called it "the best savings account in crypto." It attracted $17 billion in deposits from people who treated it like a bank account.',
+          'In May 2022, UST lost its peg to the dollar. The algorithmic mechanism that was supposed to maintain the peg failed catastrophically. Luna, the backing token, entered a death spiral — going from $119 to $0.00001 in 72 hours. Anchor depositors lost everything.',
+          'People had moved retirement savings, children\'s education funds, and life savings into Anchor. The 19.5% yield was never sustainable — it was subsidized by Luna Foundation Guard reserves that eventually ran out.',
+        ],
+      },
+      {
+        id: 'smart-contract-risk',
+        heading: 'Smart Contract Risk: Code Can Have Bugs',
+        body: [
+          'Every DeFi protocol is a smart contract — code running on a blockchain. If that code has a bug, an attacker can drain all deposited funds. This has happened repeatedly: Wormhole ($320M), Ronin Bridge ($625M), Euler Finance ($197M).',
+          'Audits reduce but don\'t eliminate this risk. Even audited protocols have been exploited. The more complex the protocol, the larger the attack surface.',
+        ],
+      },
+      {
+        id: 'how-to-approach-defi',
+        heading: 'How to Approach DeFi Safely',
+        body: [
+          'DeFi is a powerful financial innovation, but it requires understanding. Here\'s a framework for beginners.',
+        ],
+        bullets: [
+          'Start with established protocols only (Aave, Compound, Uniswap, Curve)',
+          'Stick to stablecoin pools to minimize impermanent loss',
+          'If APY is above 20%, find out exactly where it comes from',
+          'Never put more than 5-10% of your portfolio in any single protocol',
+          'Check if the smart contract has been audited by a reputable firm',
+          'Use CryptoReportKit\'s DeFi dashboard to monitor TVL trends — falling TVL is an early warning',
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'buy-the-dip-strategy-dangers',
+    title: 'Buy the Dip: When It Works, When It Kills Your Portfolio',
+    description:
+      'Why blindly buying every price drop is not a strategy. How to distinguish healthy corrections from structural collapse, with real examples.',
+    keywords: [
+      'buy the dip crypto',
+      'buy the dip strategy',
+      'crypto dip buying',
+      'luna crash buy the dip',
+      'when to buy the dip',
+      'crypto bear market strategy',
+      'dca vs buying dips',
+    ],
+    publishDate: '2026-03-12',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 7,
+    coverEmoji: '\u{1F4C9}',
+    excerpt:
+      '"Buy the dip!" is crypto\'s favorite slogan. But people who bought Luna\'s dip at $50 watched it fall to $0.00001. Here\'s how to tell a healthy dip from a death spiral.',
+    ctaHref: '/risk',
+    ctaLabel: 'Analyze Risk Before Buying',
+    relatedPosts: ['crypto-portfolio-diversification-strategy'],
+    sections: [
+      {
+        id: 'the-meme',
+        heading: '"Buy the Dip" Has Become a Meme That Replaces Thinking',
+        body: [
+          'Every time a coin drops 20%, 30%, or 50%, social media fills with "buy the dip" posts. The phrase has become a reflexive response to any price decline, removing the critical thinking that should precede every investment decision.',
+          'YouTubers use it as default content: "Bitcoin drops 15%? Buy the dip! Altcoin crashes 50%? Buy the dip! Everything is red? FIRE SALE!" No analysis, no context, no risk assessment. Just a slogan.',
+        ],
+      },
+      {
+        id: 'three-types-of-dips',
+        heading: 'Three Types of Dips — Only One Is Worth Buying',
+        body: [
+          'Not all price drops are the same. Understanding which type you\'re looking at is the difference between a profitable entry and catching a falling knife.',
+        ],
+        bullets: [
+          'Healthy correction in a bull market — Bitcoin drops 20-30% during an overall uptrend. Fundamentals unchanged. Volume stabilizes. This is often a genuine opportunity.',
+          'Bear market decline — The entire market is trending down over months. A 50% drop can easily become 80%. "Buying the dip" here means catching a falling knife unless you\'re DCA-ing with a multi-year horizon.',
+          'Structural collapse — The project has a fundamental problem: hack, fraud, broken mechanism, team exit. Recovery is impossible. Luna, FTT, Celsius, Voyager — all structurally collapsed. Every "dip buy" was throwing money away.',
+        ],
+      },
+      {
+        id: 'luna-case-study',
+        heading: 'Case Study: Luna — The Dip That Kept Dipping',
+        body: [
+          'Luna traded at $119 in April 2022. In May, UST began depegging. Luna dropped to $50 — "buy the dip!" crowd entered. Then $10 — more "discounted" buying. Then $1. Then $0.01. Then $0.00001.',
+          'People who bought the dip at $50 (thinking they got a "58% discount") lost 99.99% of their investment. The drop wasn\'t a dip — it was a structural collapse. The algorithmic stablecoin mechanism was broken. No amount of buying could fix broken code.',
+        ],
+      },
+      {
+        id: 'when-dip-buying-works',
+        heading: 'When Dip Buying Actually Works',
+        body: [
+          'Buying dips works when: the asset is fundamentally sound, the drop is caused by market-wide sentiment (not asset-specific problems), volume is showing accumulation, and you have a pre-defined plan.',
+        ],
+        bullets: [
+          'Bitcoin at $30,000 in 2022 (down from $69,000) — fundamentals intact, eventually recovered to new highs',
+          'Market-wide corrections of 20-30% in established assets during bull markets',
+          'DCA (Dollar Cost Averaging) into top assets during bear markets with a 3-5 year time horizon',
+        ],
+        note: 'The key distinction: are you buying a temporary price dip in a healthy asset, or are you buying a structural decline in a broken one?',
+      },
+      {
+        id: 'framework',
+        heading: 'A Framework Before You "Buy the Dip"',
+        body: [
+          'Before buying any dip, answer these questions. If you can\'t answer them all, you\'re not investing — you\'re gambling.',
+        ],
+        bullets: [
+          'Why did the price drop? (Market-wide correction vs project-specific problem)',
+          'Are the fundamentals unchanged? (Revenue, users, development activity)',
+          'What\'s the maximum I\'m willing to lose on this position?',
+          'What\'s my time horizon? (Days, months, years)',
+          'What would make me sell? (Have an exit plan before entering)',
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'crypto-influencer-pump-schemes-protect-yourself',
+    title: 'Crypto Influencer Pump Schemes: How to Protect Yourself',
+    description:
+      'How crypto influencers get paid to promote tokens, the on-chain evidence of their selling, and how to spot pump-and-dump schemes before losing money.',
+    keywords: [
+      'crypto influencer scams',
+      'pump and dump crypto',
+      'youtube crypto scams',
+      'crypto promotion paid',
+      'how influencers pump tokens',
+      'bitboy crypto controversy',
+      'faze clan crypto',
+      'crypto due diligence',
+    ],
+    publishDate: '2026-03-11',
+    author: 'CryptoReportKit Team',
+    category: 'Education',
+    readingTimeMinutes: 8,
+    coverEmoji: '\u{1F3AD}',
+    excerpt:
+      '"This YouTuber wouldn\'t risk their reputation on a bad project!" Actually, many are paid $50,000-500,000 per promotion. Here\'s how the scheme works and how to protect yourself.',
+    ctaHref: '/myths',
+    ctaLabel: 'Read All 10 Crypto Myths',
+    relatedPosts: ['buy-the-dip-strategy-dangers', 'cheap-coin-fallacy-market-cap-math'],
+    sections: [
+      {
+        id: 'the-playbook',
+        heading: 'The Influencer Promotion Playbook',
+        body: [
+          'The crypto influencer promotion ecosystem follows a predictable pattern. Understanding it is your best defense.',
+        ],
+        bullets: [
+          'Step 1 — Project team contacts influencer (or an agency brokers the deal)',
+          'Step 2 — Influencer receives payment: cash ($50K-500K+), tokens at a discount, or both',
+          'Step 3 — Influencer creates "organic-looking" content: "I just discovered this gem..."',
+          'Step 4 — Audience buys, creating buying pressure that drives up the price',
+          'Step 5 — Influencer (and project insiders) sell into the demand their promotion created',
+          'Step 6 — Price crashes once buying pressure subsides. Audience is left holding the bag',
+        ],
+        note: 'The "not financial advice" disclaimer at the start of videos is a legal shield, not an ethical one. It doesn\'t change the fact that paid promotion without disclosure is deceptive.',
+      },
+      {
+        id: 'documented-cases',
+        heading: 'Documented Cases',
+        body: [
+          'These aren\'t conspiracy theories — they\'re documented incidents with on-chain evidence and legal proceedings.',
+        ],
+        bullets: [
+          'SaveTheKids Token — FaZe Clan members promoted a charity token. On-chain data showed their wallets selling within hours of promotion. Multiple members faced lawsuits.',
+          'BitBoy Crypto — One of the largest crypto YouTubers was sued by investors and eventually removed from his own brand over paid promotions and conflicts of interest.',
+          'Solana Meme Coins (2024-2025) — Hundreds of promoted meme coins on Solana followed the exact same pattern: influencer promotion → price spike → insider dump → 95%+ crash.',
+          'Logan Paul / CryptoZoo — Promoted a blockchain game that was never functional. Investors lost millions on tokens that became worthless.',
+        ],
+      },
+      {
+        id: 'red-flags',
+        heading: 'Red Flags: How to Spot a Paid Promotion',
+        body: [
+          'Not every influencer recommendation is a scam, but treat every one with healthy skepticism. Here are the warning signs.',
+        ],
+        bullets: [
+          'Urgency language: "get in NOW before it\'s too late" — real opportunities don\'t need pressure tactics',
+          'No risk discussion: a legitimate analysis always mentions downside risk',
+          'Vague "partnership" or no disclosure: in most countries, paid promotions must be disclosed',
+          'Focus on price potential, never fundamentals: "this could 100x!" with no discussion of what the project actually does',
+          'The influencer promotes a new "gem" every week — real conviction means holding, not rotating',
+          'Comment section is full of bots and suspiciously positive comments',
+        ],
+      },
+      {
+        id: 'on-chain-verification',
+        heading: 'Verify on the Blockchain',
+        body: [
+          'The blockchain is a public ledger. When an influencer promotes a token, you can often check their wallet activity. Tools like Etherscan, Solscan, and blockchain explorers let you see if the promoter\'s wallet received tokens before the promotion and sold after.',
+          'If an influencer won\'t share their wallet address when asked, that\'s a significant red flag. Those who have nothing to hide are transparent about their holdings.',
+        ],
+      },
+      {
+        id: 'protect-yourself',
+        heading: 'How to Protect Yourself',
+        body: [
+          'Develop a simple due diligence checklist for any crypto recommendation. This 5-minute process can save you thousands.',
+        ],
+        bullets: [
+          'Assume every recommendation has a financial incentive behind it until proven otherwise',
+          'Check the token\'s market cap, supply, and trading volume independently',
+          'Look at the smart contract: is it audited? Is ownership renounced? Is liquidity locked?',
+          'Search for the project on crypto forums and Twitter outside the influencer\'s audience',
+          'Check the token\'s holder distribution — if top 10 wallets hold 80%+, insiders control the price',
+          'Wait 48 hours before buying any promoted token. If it\'s a pump scheme, it will often crash within that window',
+        ],
+      },
+    ],
+  },
 ];
 
 export function getAllPosts(): BlogPost[] {

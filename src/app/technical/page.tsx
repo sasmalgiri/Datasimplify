@@ -6,6 +6,8 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
+import { WhatsNext } from '@/components/WhatsNext';
 
 const COINS = [
   { symbol: 'BTC', name: 'Bitcoin' },
@@ -36,6 +38,15 @@ export default function TechnicalPage() {
           <UniversalExport name="Technical-Analysis" compact />
         </div>
 
+        <EducationBanner
+          youtubeMyth="'This head-and-shoulders pattern means Bitcoin hits $100K by Tuesday!' — YouTubers present TA as if it predicts the future."
+          reality="Technical indicators show momentum and trends, NOT predictions. RSI overbought doesn't mean 'sell now' — it means 'be cautious.' No indicator works in isolation. External events (regulation, hacks, macro) override chart patterns every time."
+          mythId="ta-theater"
+          learnLink="/learn/path"
+          learnLabel="Learn: Reading Charts (Level 2)"
+          storageKey="technical"
+        />
+
         {/* Display Only Badge */}
         <DisplayOnlyBadge pageId="technical" variant="card" className="mb-6" />
 
@@ -58,6 +69,8 @@ export default function TechnicalPage() {
         </div>
 
         <TechnicalAnalysis coin={selectedCoin} showBeginnerTips={true} />
+
+        <WhatsNext contextLabel="Now that you've seen the indicators, deepen your understanding" />
       </div>
     </div>
   );

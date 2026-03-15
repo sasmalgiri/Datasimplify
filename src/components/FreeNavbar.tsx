@@ -20,6 +20,8 @@ import {
   FileText,
   Users,
   Monitor,
+  AlertTriangle,
+  Map,
 } from 'lucide-react';
 
 import { isFeatureEnabled, FEATURES } from '@/lib/featureFlags';
@@ -147,9 +149,11 @@ export function FreeNavbar() {
     more: {
       label: 'Learn',
       icon: <BookOpen className="w-4 h-4" />,
-      paths: ['/learn', '/glossary', '/faq', '/data-sources', '/blog', '/community'],
+      paths: ['/learn', '/glossary', '/faq', '/data-sources', '/blog', '/community', '/myths', '/learn/path'],
       items: [
         { href: '/learn', label: 'Academy', description: 'Crypto education & guides', icon: <GraduationCap className="w-4 h-4" /> },
+        { href: '/myths', label: 'Myth Busters', description: '10 myths debunked with math', icon: <AlertTriangle className="w-4 h-4" /> },
+        { href: '/learn/path', label: 'Learning Path', description: 'Zero to research pro in 6 levels', icon: <Map className="w-4 h-4" /> },
         { href: '/blog', label: 'Blog', description: 'Crypto guides & market insights', icon: <FileText className="w-4 h-4" /> },
         { href: '/community', label: 'Community', description: 'Crypto forums & discussions', icon: <Users className="w-4 h-4" /> },
         { href: '/glossary', label: 'Glossary', description: 'Crypto terms explained', icon: <BookOpen className="w-4 h-4" /> },
@@ -183,6 +187,8 @@ export function FreeNavbar() {
       ? [{ href: '/smart-contract-verifier', label: 'Verify Contract', icon: <Shield className="w-4 h-4" /> }]
       : []),
     { href: '/learn', label: 'Learn', icon: <GraduationCap className="w-4 h-4" /> },
+    { href: '/myths', label: 'Myth Busters', icon: <AlertTriangle className="w-4 h-4" /> },
+    { href: '/learn/path', label: 'Learning Path', icon: <Map className="w-4 h-4" /> },
     { href: '/blog', label: 'Blog', icon: <FileText className="w-4 h-4" /> },
     { href: '/community', label: 'Community', icon: <Users className="w-4 h-4" /> },
     { href: '/faq', label: 'FAQ', icon: <HelpCircle className="w-4 h-4" /> },

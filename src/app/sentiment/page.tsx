@@ -6,6 +6,8 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { UniversalExport } from '@/components/UniversalExport';
+import { EducationBanner } from '@/components/EducationBanner';
+import { WhatsNext } from '@/components/WhatsNext';
 
 export default function SentimentPage() {
   return (
@@ -22,6 +24,15 @@ export default function SentimentPage() {
           </div>
           <UniversalExport name="Market-Sentiment" compact />
         </div>
+
+        <EducationBanner
+          youtubeMyth="'Extreme Fear = buy everything! Extreme Greed = sell everything!' — YouTubers treat the Fear & Greed Index as a simple buy/sell signal."
+          reality="Extreme fear can persist for months during bear markets. Buying at the first sign of fear in 2022 would have led to further 50% losses. Use this as ONE input alongside fundamentals, not as a standalone trigger."
+          mythId="buy-the-dip-danger"
+          learnLink="/learn/path"
+          learnLabel="Learn: Fear & Greed Index (Level 1)"
+          storageKey="sentiment"
+        />
 
         {/* Display Only Badge */}
         <DisplayOnlyBadge pageId="sentiment" variant="card" className="mb-6" />
@@ -90,6 +101,8 @@ export default function SentimentPage() {
             </div>
           </div>
         </div>
+
+        <WhatsNext contextLabel="Understand what drives sentiment and how to use it wisely" />
 
         {/* Historical Context */}
         <div className="mt-8 bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 shadow-sm">
