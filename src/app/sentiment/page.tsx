@@ -8,18 +8,22 @@ import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
 import { WhatsNext } from '@/components/WhatsNext';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
+import { DataTrustStrip } from '@/components/DataFreshness';
+import { GuidedTour, TOUR_SENTIMENT } from '@/components/GuidedTour';
 
 export default function SentimentPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
+      <GuidedTour tourId="sentiment" pageTitle="Sentiment" steps={TOUR_SENTIMENT} nextPage={{ label: 'Try Technical Analysis', href: '/technical' }} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">Market Sentiment</h1>
             <p className="text-gray-400">
-              Measure the overall mood of the crypto market.
+              <AutoJargon text="Measure market sentiment with the Fear & Greed Index and social sentiment indicators." />
             </p>
           </div>
           <UniversalExport name="Market-Sentiment" compact />
@@ -33,6 +37,8 @@ export default function SentimentPage() {
           learnLabel="Learn: Fear & Greed Index (Level 1)"
           storageKey="sentiment"
         />
+
+        <DataTrustStrip source="Alternative.me" />
 
         {/* Display Only Badge */}
         <DisplayOnlyBadge pageId="sentiment" variant="card" className="mb-6" />

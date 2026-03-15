@@ -6,18 +6,22 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
 import { WhatsNext } from '@/components/WhatsNext';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
+import { DataTrustStrip } from '@/components/DataFreshness';
+import { GuidedTour, TOUR_SCREENER } from '@/components/GuidedTour';
 
 export default function ScreenerPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
+      <GuidedTour tourId="screener" pageTitle="Screener" steps={TOUR_SCREENER} nextPage={{ label: 'Try Risk Analysis', href: '/risk' }} />
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Token Screener</h1>
             <p className="text-gray-400">
-              Filter and find cryptocurrencies that match your criteria.
+              <AutoJargon text="Filter and find cryptocurrencies by market cap, volume, price change, and more." />
             </p>
           </div>
           <UniversalExport name="Token-Screener" compact />
@@ -31,6 +35,8 @@ export default function ScreenerPage() {
           learnLabel="Read: Cheap Coin Fallacy"
           storageKey="screener"
         />
+
+        <DataTrustStrip />
 
         <TokenScreener showBeginnerTips={true} />
 

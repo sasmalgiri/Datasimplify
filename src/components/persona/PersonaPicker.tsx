@@ -10,11 +10,13 @@ import {
   Building2,
   Video,
   Check,
+  GraduationCap,
 } from 'lucide-react';
 import { PERSONA_LIST } from '@/lib/persona/definitions';
 import type { PersonaId } from '@/lib/persona/types';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  GraduationCap,
   TrendingUp,
   CandlestickChart,
   Layers,
@@ -26,6 +28,11 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 // Short bullet points per persona for the picker
 const PERSONA_BULLETS: Record<PersonaId, string[]> = {
+  'beginner-learner': [
+    'Guided learning path (zero to pro)',
+    'YouTube myth busters with math',
+    'Plain-English glossary & tooltips',
+  ],
   'casual-investor': [
     'Portfolio tracking & P&L',
     'Price alerts & watchlist',

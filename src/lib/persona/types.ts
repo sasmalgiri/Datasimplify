@@ -1,4 +1,5 @@
 export type PersonaId =
+  | 'beginner-learner'
   | 'casual-investor'
   | 'active-trader'
   | 'defi-explorer'

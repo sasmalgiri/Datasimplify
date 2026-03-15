@@ -5,6 +5,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
 
 export default function CorrelationPage() {
   return (
@@ -16,7 +17,7 @@ export default function CorrelationPage() {
           <div>
             <h1 className="text-3xl font-bold mb-2">Correlation Analysis</h1>
             <p className="text-gray-400">
-              See how different cryptocurrencies move in relation to each other.
+              <AutoJargon text="See how different cryptocurrencies correlate. High correlation means they move together; low correlation helps with diversification." />
             </p>
           </div>
           <UniversalExport name="Correlation-Analysis" compact />

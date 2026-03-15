@@ -6,18 +6,22 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
 import { WhatsNext } from '@/components/WhatsNext';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
+import { DataTrustStrip } from '@/components/DataFreshness';
+import { GuidedTour, TOUR_DEFI } from '@/components/GuidedTour';
 
 export default function DeFiPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
+      <GuidedTour tourId="defi" pageTitle="DeFi" steps={TOUR_DEFI} nextPage={{ label: 'Learn: DeFi & Beyond', href: '/learn/path' }} />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">DeFi Dashboard</h1>
             <p className="text-gray-400">
-              Track decentralized finance protocols, TVL, and yield opportunities.
+              <AutoJargon text="Track decentralized finance protocols, TVL, yield farming, and liquidity pool opportunities." />
             </p>
           </div>
           <UniversalExport name="DeFi-Dashboard" compact />
@@ -31,6 +35,8 @@ export default function DeFiPage() {
           learnLabel="Learn: DeFi & Beyond (Level 4)"
           storageKey="defi"
         />
+
+        <DataTrustStrip source="DeFiLlama" />
 
         <DeFiTracker showBeginnerTips={true} />
 

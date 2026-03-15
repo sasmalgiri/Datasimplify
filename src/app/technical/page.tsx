@@ -8,6 +8,8 @@ import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
 import { WhatsNext } from '@/components/WhatsNext';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
+import { GuidedTour, TOUR_TECHNICAL } from '@/components/GuidedTour';
 
 const COINS = [
   { symbol: 'BTC', name: 'Bitcoin' },
@@ -27,12 +29,13 @@ export default function TechnicalPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
+      <GuidedTour tourId="technical" pageTitle="Technical" steps={TOUR_TECHNICAL} nextPage={{ label: 'Try Risk Analysis', href: '/risk' }} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">Technical Analysis</h1>
             <p className="text-gray-400">
-              See what technical indicators are saying about the market.
+              <AutoJargon text="See what RSI, MACD, moving averages, and Bollinger Bands are saying about the market." />
             </p>
           </div>
           <UniversalExport name="Technical-Analysis" compact />

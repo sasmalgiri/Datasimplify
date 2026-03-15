@@ -29,6 +29,7 @@ import { useAuth } from '@/lib/auth';
 import { usePersonaStore } from '@/lib/persona/personaStore';
 import { getPersonaDefinition } from '@/lib/persona/helpers';
 import { Star } from 'lucide-react';
+import { ViewModeToggle } from '@/components/ViewModeToggle';
 
 interface NavDropdownProps {
   label: string;
@@ -247,6 +248,7 @@ export function FreeNavbar() {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
+            <ViewModeToggle compact />
             {user ? (
               <Link
                 href="/account"

@@ -1,6 +1,73 @@
 import type { PersonaId, PersonaDefinition } from './types';
 
 export const PERSONA_DEFINITIONS: Record<PersonaId, PersonaDefinition> = {
+  'beginner-learner': {
+    id: 'beginner-learner',
+    name: 'Beginner / Learner',
+    tagline: 'Learn crypto from zero — no jargon, no hype',
+    description:
+      'You are new to crypto or have picked up bits from YouTube. You want plain-English explanations, guided learning, and tools that teach while you explore.',
+    icon: 'GraduationCap',
+    color: 'emerald',
+    primaryDashboards: [
+      'market-overview',
+      'bitcoin',
+      'morning-snapshot',
+      'quick-pulse',
+      'crypto-indices',
+    ],
+    secondaryDashboards: [
+      'ethereum',
+      'performance-overview',
+      'watchlist',
+      'portfolio',
+      'altcoin-radar',
+      'btc-dominance-timer',
+    ],
+    primaryTools: ['/learn/path', '/myths', '/glossary', '/market', '/sentiment'],
+    primaryTemplates: ['portfolio-starter', 'market-overview'],
+    quickActions: [
+      {
+        label: 'Start Learning Path',
+        href: '/learn/path',
+        icon: 'Map',
+        description: '6 levels from zero to research pro — track your progress',
+      },
+      {
+        label: 'Bust Crypto Myths',
+        href: '/myths',
+        icon: 'AlertTriangle',
+        description: '15 myths YouTubers won\'t tell you, debunked with math',
+      },
+      {
+        label: 'Explore the Market',
+        href: '/market',
+        icon: 'BarChart3',
+        description: 'See top 500+ coins with price, volume, and market cap',
+      },
+    ],
+    suggestedWorkflow: [
+      {
+        step: 1,
+        title: 'Start the learning path',
+        description: 'Build your foundation with guided lessons from zero',
+        href: '/learn/path',
+      },
+      {
+        step: 2,
+        title: 'Read the myth busters',
+        description: 'Correct common YouTube misinformation before it costs you',
+        href: '/myths',
+      },
+      {
+        step: 3,
+        title: 'Explore market data',
+        description: 'Browse coins and learn what market cap actually means',
+        href: '/market',
+      },
+    ],
+  },
+
   'casual-investor': {
     id: 'casual-investor',
     name: 'Casual Investor',

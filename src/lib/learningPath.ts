@@ -467,6 +467,34 @@ export function getLevelProgress(level: LearningLevel): {
   return { completed, total, percent: total > 0 ? Math.round((completed / total) * 100) : 0 };
 }
 
+export function markTopicComplete(topicId: string): void {
+  const progress = getProgress();
+  if (!progress[topicId]) {
+    progress[topicId] = true;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+  }
+}
+
+/**
+ * Map from page pathnames to learning path topic IDs.
+ * When a user visits a tool page, auto-mark the related topic as complete.
+ */
+export const PAGE_TO_TOPICS: Record<string, string[]> = {
+  '/market': ['market-cap-matters'],
+  '/charts': ['reading-basic-charts', 'volume-analysis'],
+  '/technical': ['rsi-explained', 'macd-explained', 'bollinger-bands', 'moving-averages'],
+  '/sentiment': ['fear-greed-intro'],
+  '/risk': ['volatility-reality', 'drawdown-explained', 'sharpe-sortino'],
+  '/correlation': ['correlation-basics'],
+  '/defi': ['smart-contracts', 'tvl-explained'],
+  '/dex-pools': ['dex-basics'],
+  '/screener': ['tokenomics-analysis'],
+  '/compare': ['fundamental-analysis'],
+  '/glossary': ['wallets-explained'],
+  '/myths': ['scam-awareness-101'],
+  '/learn/path': [],
+};
+
 export function getOverallProgress(): {
   completed: number;
   total: number;

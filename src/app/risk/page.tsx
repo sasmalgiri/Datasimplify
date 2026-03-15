@@ -6,6 +6,9 @@ import { FEATURES } from '@/lib/featureFlags';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
 import { WhatsNext } from '@/components/WhatsNext';
+import { AutoJargon } from '@/components/ui/SimplifiedUI';
+import { DataTrustStrip } from '@/components/DataFreshness';
+import { GuidedTour, TOUR_RISK } from '@/components/GuidedTour';
 
 // Check feature flag at build/request time - return 404 if disabled
 export default function RiskPage() {
@@ -18,12 +21,13 @@ export default function RiskPage() {
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
+      <GuidedTour tourId="risk" pageTitle="Risk" steps={TOUR_RISK} nextPage={{ label: 'Try DeFi Dashboard', href: '/defi' }} />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Risk Analysis</h1>
             <p className="text-gray-400">
-              Understand how risky different cryptocurrencies are before investing.
+              <AutoJargon text="Understand volatility, drawdown, Sharpe ratio, and risk metrics before investing in any cryptocurrency." />
             </p>
           </div>
           <UniversalExport name="Risk-Analysis" compact />
@@ -37,6 +41,8 @@ export default function RiskPage() {
           learnLabel="Learn: Risk Management (Level 3)"
           storageKey="risk"
         />
+
+        <DataTrustStrip />
 
         <RiskDashboardDemo showBeginnerTips={true} />
 

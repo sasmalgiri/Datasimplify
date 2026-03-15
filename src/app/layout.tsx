@@ -8,6 +8,7 @@ import { AllJsonLd } from '@/components/JsonLd';
 import AnalyticsGate from '@/components/AnalyticsGate';
 import { FeedbackWrapper } from '@/components/FeedbackWrapper';
 import { Footer } from '@/components/Footer';
+import { ProgressTracker } from '@/components/ProgressTracker';
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com';
 
@@ -110,6 +111,7 @@ export default function RootLayout({
           <Footer />
           <CookieConsent />
           <FeedbackWrapper />
+          <ProgressTracker />
         </Providers>
         <AnalyticsGate />
       </body>
