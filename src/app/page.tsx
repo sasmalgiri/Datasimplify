@@ -12,7 +12,7 @@ import {
   Eye, Lock, ChevronRight, Check, Sparkles, Globe, Sun, Moon,
   PieChart, Activity, Target, LineChart, Layers, Cpu,
   Calculator, Repeat, Search, BarChart2, ArrowLeftRight, Hammer,
-  Key, ChevronDown, FlaskConical, Monitor, Download, Wifi, WifiOff,
+  Key, ChevronDown, FlaskConical, Monitor, Download,
 } from 'lucide-react';
 
 /* ─── Dashboard Preview Tiles (8 showcased out of 83+) ─── */
@@ -236,19 +236,26 @@ export default function LandingPage() {
             83+ live dashboards powered by your own CoinGecko API key. Your key is stored locally in your browser.
           </p>
 
-          <p className="text-sm text-emerald-400 font-medium mb-8">
+          <p className="text-sm text-emerald-400 font-medium mb-6">
             {IS_BETA_MODE
               ? 'Free during beta — no credit card required.'
               : 'Free for 30 days — no credit card required.'}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-10">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
             <Link
               href="/live-dashboards"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-semibold text-base shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02]"
             >
               <Layout className="w-5 h-5" />
               Explore Analytics
+            </Link>
+            <Link
+              href="/desktop"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl font-semibold text-base shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:scale-[1.02]"
+            >
+              <Download className="w-5 h-5" />
+              Download Desktop App
             </Link>
             <Link
               href="/pricing"
@@ -259,46 +266,18 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* ── Desktop App CTA ── */}
-          <div className="relative max-w-2xl mx-auto">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-emerald-500/10 to-blue-500/10 rounded-2xl blur-xl" />
-            <div className="relative bg-gray-800/60 backdrop-blur-sm border border-gray-700/60 rounded-2xl p-6 md:p-8">
-              <div className="flex flex-col md:flex-row items-center gap-6">
-                {/* Icon + Info */}
-                <div className="flex-shrink-0">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-blue-500/20 flex items-center justify-center">
-                    <Monitor className="w-8 h-8 text-blue-400" />
-                  </div>
-                </div>
-                <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
-                    <h3 className="text-lg font-bold text-white">Desktop App</h3>
-                    <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full">New</span>
-                  </div>
-                  <p className="text-gray-400 text-sm mb-3">
-                    True offline analytics. API keys stored in your OS keychain — never touches a server. 22 tools including charts, backtester, risk analysis &amp; AI.
-                  </p>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs text-gray-500">
-                    <span className="flex items-center gap-1"><WifiOff className="w-3 h-3" /> Works Offline</span>
-                    <span className="flex items-center gap-1"><Lock className="w-3 h-3" /> OS Keychain</span>
-                    <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> 3.3 MB Install</span>
-                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Zero Telemetry</span>
-                  </div>
-                </div>
-                {/* CTA */}
-                <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                  <Link
-                    href="/desktop"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 rounded-xl font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all hover:shadow-blue-500/40 hover:scale-[1.02] whitespace-nowrap"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download Free
-                  </Link>
-                  <span className="text-emerald-400 text-xs font-medium">30-day Pro trial included</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* ── Desktop App Inline Banner ── */}
+          <Link
+            href="/desktop"
+            className="inline-flex items-center gap-3 px-5 py-2.5 bg-blue-500/[0.08] hover:bg-blue-500/[0.14] border border-blue-500/20 hover:border-blue-500/40 rounded-full text-sm transition-all group"
+          >
+            <Monitor className="w-4 h-4 text-blue-400" />
+            <span className="text-gray-300 group-hover:text-white transition-colors">
+              <span className="font-semibold text-blue-400">NEW</span> Desktop App — offline analytics, OS keychain, 3.3 MB
+            </span>
+            <span className="text-emerald-400 text-xs font-medium border-l border-gray-700 pl-3">30-day free trial</span>
+            <ChevronRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-blue-400 transition-colors" />
+          </Link>
 
         </div>
       </section>
