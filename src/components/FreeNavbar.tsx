@@ -117,7 +117,7 @@ export function FreeNavbar() {
     compare: {
       label: 'Tools',
       icon: <Scale className="w-4 h-4" />,
-      paths: ['/compare', '/datalab', '/alerts', '/charts', '/multi-chart', '/orderbook', '/backtest', '/tax-report', '/desktop'],
+      paths: ['/compare', '/datalab', '/alerts', '/charts', '/multi-chart', '/orderbook', '/backtest', '/tax-report', '/exchange-import', '/wallet', '/nft-portfolio', '/defi-positions', '/desktop'],
       items: [
         { href: '/compare', label: 'Coin Comparison', description: 'Compare 2-5 coins side-by-side', icon: <Scale className="w-4 h-4" /> },
         { href: '/datalab', label: 'DataLab', description: 'Interactive overlays, edit data & experiment', icon: <FlaskConical className="w-4 h-4" /> },
@@ -127,6 +127,10 @@ export function FreeNavbar() {
         { href: '/orderbook', label: 'Live Orderbook', description: 'Real-time bid/ask depth from Binance', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/backtest', label: 'Backtester', description: 'Test trading strategies on historical data', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/tax-report', label: 'Tax Report', description: 'Generate crypto tax reports (Form 8949)', icon: <FileSpreadsheet className="w-4 h-4" /> },
+        { href: '/exchange-import', label: 'Exchange Import', description: 'Auto-import trades from Binance, Coinbase, Kraken', icon: <BarChart3 className="w-4 h-4" /> },
+        { href: '/wallet', label: 'Multi-Chain Wallet', description: 'View balances across 8 blockchains', icon: <Shield className="w-4 h-4" /> },
+        { href: '/nft-portfolio', label: 'NFT Portfolio', description: 'Track NFT holdings with floor prices', icon: <BarChart3 className="w-4 h-4" /> },
+        { href: '/defi-positions', label: 'DeFi Positions', description: 'Track LP, staking & lending positions', icon: <BarChart3 className="w-4 h-4" /> },
         { href: '/desktop', label: 'Desktop App', description: 'Privacy-first native app for Win/Mac/Linux', icon: <Monitor className="w-4 h-4" /> },
       ],
     },

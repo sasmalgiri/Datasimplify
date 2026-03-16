@@ -223,6 +223,40 @@ export default function TaxReportPage() {
     URL.revokeObjectURL(url);
   }, [summary, taxYear, method]);
 
+  const exportForm8949PDF = useCallback(async () => {
+    if (!summary) return;
+    const yearEvents = summary.events.filter(e => new Date(e.sellDate).getFullYear() === taxYear);
+    const shortTerm = yearEvents.filter(e => e.holdingPeriod === 'short').map(e => ({
+      description: `${e.amount.toFixed(8)} ${e.coin}`,
+      dateAcquired: e.buyDate,
+      dateSold: e.sellDate,
+      proceeds: e.proceeds,
+      costBasis: e.costBasis,
+      adjustmentCode: '',
+      adjustmentAmount: 0,
+      gainOrLoss: e.gainLoss,
+    }));
+    const longTerm = yearEvents.filter(e => e.holdingPeriod === 'long').map(e => ({
+      description: `${e.amount.toFixed(8)} ${e.coin}`,
+      dateAcquired: e.buyDate,
+      dateSold: e.sellDate,
+      proceeds: e.proceeds,
+      costBasis: e.costBasis,
+      adjustmentCode: '',
+      adjustmentAmount: 0,
+      gainOrLoss: e.gainLoss,
+    }));
+
+    const { downloadForm8949PDF } = await import('@/lib/form8949-pdf');
+    downloadForm8949PDF({
+      taxYear,
+      taxpayerName: '',
+      taxpayerSSN: '',
+      shortTermTransactions: shortTerm,
+      longTermTransactions: longTerm,
+    });
+  }, [summary, taxYear]);
+
   const exportTurboTax = useCallback(() => {
     if (!summary) return;
 
@@ -359,6 +393,12 @@ export default function TaxReportPage() {
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium transition"
               >
                 📥 TurboTax Format
+              </button>
+              <button
+                onClick={exportForm8949PDF}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition"
+              >
+                📄 Form 8949 PDF
               </button>
             </div>
 
