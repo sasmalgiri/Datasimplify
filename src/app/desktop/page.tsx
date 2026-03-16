@@ -216,6 +216,22 @@ export default function DesktopDownloadPage() {
                   </span>
                 ))}
               </p>
+              <p className="text-xs text-gray-600 mt-2 flex items-center gap-1.5">
+                <Shield className="w-3 h-3 text-emerald-500/60" />
+                Signed via{' '}
+                <a
+                  href="https://signpath.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400/70 hover:text-emerald-400 transition"
+                >
+                  SignPath Foundation
+                </a>
+                {' '}&middot;{' '}
+                <Link href="/code-signing-policy" className="text-emerald-400/70 hover:text-emerald-400 transition">
+                  Signing Policy
+                </Link>
+              </p>
             </div>
 
             {/* App mockup */}

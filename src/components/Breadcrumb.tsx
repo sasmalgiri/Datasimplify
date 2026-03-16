@@ -140,6 +140,8 @@ const routeNames: Record<string, string> = {
   'live-dashboards': 'Live Dashboards',
   myths: 'Myth Busters',
   path: 'Learning Path',
+  desktop: 'Desktop App',
+  'code-signing-policy': 'Code Signing Policy',
 };
 
 interface BreadcrumbProps {
