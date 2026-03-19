@@ -91,7 +91,7 @@ function writeSessionCookies(sessionJson: string) {
 
   const key = `sb-${ref}-auth-token`;
   const encoded = `base64-${toBase64URL(sessionJson)}`;
-  const maxAge = 400 * 24 * 60 * 60; // ~400 days
+  const maxAge = 7 * 24 * 60 * 60; // 7 days
   const opts = `path=/;max-age=${maxAge};SameSite=Lax`;
 
   // Remove any old chunks first (up to 10)
