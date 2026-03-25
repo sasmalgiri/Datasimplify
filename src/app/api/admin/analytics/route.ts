@@ -114,7 +114,6 @@ export async function GET(request: NextRequest) {
         .limit(5000),
       db.from('page_feedback')
         .select('id, page_path, page_title, helpful, reason, message, created_at')
-        .gte('created_at', sinceISO)
         .order('created_at', { ascending: false })
         .limit(100),
     ]);
