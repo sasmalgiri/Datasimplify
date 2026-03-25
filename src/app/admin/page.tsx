@@ -57,6 +57,15 @@ interface AnalyticsData {
     helpful: number;
     unhelpful: number;
     score: string;
+    entries: {
+      id: string;
+      page_path: string;
+      page_title: string;
+      helpful: boolean;
+      reason: string | null;
+      message: string | null;
+      created_at: string;
+    }[];
   };
   range: string;
 }
@@ -588,22 +597,55 @@ export default function AdminPage() {
                 </div>
 
                 {/* Feedback */}
-                <div className="bg-gray-800 rounded-lg border border-gray-700 p-4">
-                  <p className="text-sm text-gray-400 mb-3">User Feedback</p>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-white">{analytics.feedback.total}</p>
-                      <p className="text-xs text-gray-500">Total Responses</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-400">{analytics.feedback.helpful}</p>
-                      <p className="text-xs text-gray-500">Helpful</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-red-400">{analytics.feedback.unhelpful}</p>
-                      <p className="text-xs text-gray-500">Not Helpful</p>
+                <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+                    <p className="text-sm font-medium text-gray-300">User Feedback</p>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="text-white">{analytics.feedback.total} total</span>
+                      <span className="text-green-400">{analytics.feedback.helpful} helpful</span>
+                      <span className="text-red-400">{analytics.feedback.unhelpful} not helpful</span>
+                      <span className="text-emerald-400 font-medium">{analytics.feedback.score}% score</span>
                     </div>
                   </div>
+                  {analytics.feedback.entries.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-gray-500">No feedback entries yet</div>
+                  ) : (
+                    <table className="w-full">
+                      <thead className="bg-gray-800/50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs text-gray-400 uppercase">Date</th>
+                          <th className="px-4 py-2 text-left text-xs text-gray-400 uppercase">Page</th>
+                          <th className="px-4 py-2 text-center text-xs text-gray-400 uppercase">Helpful?</th>
+                          <th className="px-4 py-2 text-left text-xs text-gray-400 uppercase">Reason</th>
+                          <th className="px-4 py-2 text-left text-xs text-gray-400 uppercase">Message</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700">
+                        {analytics.feedback.entries.map((fb) => (
+                          <tr key={fb.id} className="hover:bg-gray-700/50">
+                            <td className="px-4 py-2 text-xs text-gray-400 whitespace-nowrap">
+                              {new Date(fb.created_at).toLocaleDateString()}{' '}
+                              <span className="text-gray-600">{new Date(fb.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </td>
+                            <td className="px-4 py-2 text-sm text-gray-300 max-w-[200px] truncate" title={fb.page_path}>
+                              {fb.page_title || fb.page_path}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded ${fb.helpful ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                {fb.helpful ? 'Yes' : 'No'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-sm text-gray-400 max-w-[160px] truncate" title={fb.reason || ''}>
+                              {fb.reason || '-'}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-gray-300 max-w-[250px] truncate" title={fb.message || ''}>
+                              {fb.message || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </>
             ) : (

@@ -113,8 +113,10 @@ export async function GET(request: NextRequest) {
         .not('user_id', 'is', null)
         .limit(5000),
       db.from('page_feedback')
-        .select('helpful, created_at')
-        .gte('created_at', sinceISO),
+        .select('id, page_path, page_title, helpful, reason, message, created_at')
+        .gte('created_at', sinceISO)
+        .order('created_at', { ascending: false })
+        .limit(100),
     ]);
 
     // Aggregate top endpoints
@@ -220,6 +222,7 @@ export async function GET(request: NextRequest) {
         score: feedbackData.length > 0
           ? (helpfulCount / feedbackData.length * 100).toFixed(1)
           : '0.0',
+        entries: feedbackData,
       },
       range,
     });
