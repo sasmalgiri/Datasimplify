@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   title: 'Your Dashboard | CryptoReportKit',
   description:
     'Your personalized crypto dashboard. Access dashboards, tools, and templates curated for your workflow.',
-  alternates: { canonical: siteUrl },
   robots: { index: false, follow: false },
 };
 

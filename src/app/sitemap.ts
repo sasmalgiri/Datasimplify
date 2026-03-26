@@ -7,7 +7,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com
 
 // Use a fixed build date so lastModified doesn't change on every crawl.
 // Update this date when you deploy meaningful content changes.
-const LAST_UPDATED = '2026-03-06T00:00:00.000Z';
+const LAST_UPDATED = '2026-03-26T00:00:00.000Z';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
@@ -15,8 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE_URL, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 1.0 },
     { url: `${BASE_URL}/live-dashboards`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.95 },
     { url: `${BASE_URL}/pricing`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${BASE_URL}/compare`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.85 },
-    { url: `${BASE_URL}/datalab`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.85 },
+    // /compare and /datalab removed — require auth, redirect Googlebot to /login
     { url: `${BASE_URL}/etf`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.8 },
     { url: `${BASE_URL}/global-market`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.8 },
     { url: `${BASE_URL}/desktop`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.85 },
@@ -59,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/correlation`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/heatmap`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
     { url: `${BASE_URL}/technical`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
-    { url: `${BASE_URL}/portfolio`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.7 },
+    // /portfolio removed — requires auth, redirect Googlebot to /login
     { url: `${BASE_URL}/smart-contract-verifier`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.65 },
     { url: `${BASE_URL}/trending`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/gainers-losers`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.65 },
@@ -74,7 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/analyst-hub`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.65 },
     { url: `${BASE_URL}/research`, lastModified: LAST_UPDATED, changeFrequency: 'daily', priority: 0.6 },
     { url: `${BASE_URL}/templates`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.6 },
-    { url: `${BASE_URL}/command-center`, lastModified: LAST_UPDATED, changeFrequency: 'weekly', priority: 0.55 },
+    // /command-center removed — requires auth, redirect Googlebot to /login
   ];
 
   const infoPages: MetadataRoute.Sitemap = [

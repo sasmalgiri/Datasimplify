@@ -31,19 +31,22 @@ Disallow: /addin-auth
 Disallow: /builder
 Disallow: /monitor
 
+# Disallow auth-protected pages (redirect to /login, waste crawl budget)
+Disallow: /compare
+Disallow: /datalab
+Disallow: /portfolio
+Disallow: /command-center
+
 # Allow main product pages (explicit for clarity)
 Allow: /live-dashboards
 Allow: /templates
 Allow: /pricing
 Allow: /market
-Allow: /compare
-Allow: /datalab
 Allow: /screener
 Allow: /sentiment
 Allow: /technical
 Allow: /correlation
 Allow: /heatmap
-Allow: /portfolio
 Allow: /charts
 Allow: /coin/
 Allow: /trending
@@ -64,7 +67,6 @@ Allow: /risk
 Allow: /dex-pools
 Allow: /recently-added
 Allow: /community
-Allow: /command-center
 Allow: /blog
 
 # Crawl delay for rate limiting
