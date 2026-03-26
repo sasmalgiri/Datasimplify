@@ -91,7 +91,7 @@ function writeSessionCookies(sessionJson: string) {
 
   const key = `sb-${ref}-auth-token`;
   const encoded = `base64-${toBase64URL(sessionJson)}`;
-  const maxAge = 7 * 24 * 60 * 60; // 7 days
+  const maxAge = 12 * 60 * 60; // 12 hours
   const opts = `path=/;max-age=${maxAge};SameSite=Lax`;
 
   // Remove any old chunks first (up to 10)
@@ -305,9 +305,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const lastSignIn = currentSession.user.last_sign_in_at;
           if (lastSignIn) {
             const sessionAge = Date.now() - new Date(lastSignIn).getTime();
-            const MAX_SESSION_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+            const MAX_SESSION_AGE = 12 * 60 * 60 * 1000; // 12 hours
             if (sessionAge > MAX_SESSION_AGE) {
-              console.log('[auth] Session expired (>7 days since last sign-in), forcing re-login');
+              console.log('[auth] Session expired (>12 hours since last sign-in), forcing re-login');
               currentSession = null;
               // Clear stale session data
               clearSessionCookies();
