@@ -43,7 +43,7 @@ const PLATFORMS = [
     name: 'Windows',
     icon: Monitor,
     ext: '.exe',
-    size: '~3.3 MB',
+    size: '~91 MB',
     req: 'Windows 10 or later',
     downloadUrl: 'https://github.com/sasmalgiri/cryptoreportkit-desktop/releases/download/v1.0.0/CryptoReportKit_1.0.0_x64-setup.exe',
   },
@@ -86,7 +86,7 @@ const FEATURES = [
     icon: Zap,
     title: 'Lightning Fast',
     description:
-      'Built with Tauri (Rust + WebView). ~10 MB installed, native performance, minimal memory usage. No Electron bloat.',
+      'Built with Electron + React. Native performance with local SQLite database and OS keychain integration.',
     color: 'amber',
   },
 ];
@@ -100,7 +100,7 @@ const COMPARISON = [
   { feature: 'Authentication', web: 'Email / password', desktop: 'License key' },
   { feature: 'System Tray', web: 'N/A', desktop: 'BTC/ETH price ticker' },
   { feature: 'Auto-Update', web: 'Always latest', desktop: 'Built-in updater' },
-  { feature: 'Install Size', web: 'None (browser)', desktop: '~10-12 MB' },
+  { feature: 'Install Size', web: 'None (browser)', desktop: '~91 MB' },
 ];
 
 const FAQ_ITEMS = [
@@ -392,7 +392,7 @@ export default function DesktopDownloadPage() {
               step: '1',
               icon: Download,
               title: 'Download & Install',
-              desc: 'Download the installer for your OS. Under 15 MB, installs in seconds.',
+              desc: 'Download the installer for your OS. Installs in seconds.',
             },
             {
               step: '2',
