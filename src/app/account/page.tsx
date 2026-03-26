@@ -50,11 +50,10 @@ export default function AccountPage() {
     }
   }, [user, authLoading, timedOut, router]);
 
-  const handleSignOut = () => {
-    // Fire-and-forget: signOut clears state/cookies/localStorage synchronously
-    // first, then calls Supabase API (async, non-blocking).
-    signOut();
-    // Hard redirect immediately — don't wait for the Supabase API call.
+  const handleSignOut = async () => {
+    // Await signOut to ensure Supabase revokes refresh tokens on the server
+    // before redirecting — prevents session from being restored on next visit.
+    await signOut();
     window.location.href = '/login';
   };
 

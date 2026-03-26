@@ -300,6 +300,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        // Enforce session max age: force re-login after 7 days
+        if (currentSession?.user) {
+          const lastSignIn = currentSession.user.last_sign_in_at;
+          if (lastSignIn) {
+            const sessionAge = Date.now() - new Date(lastSignIn).getTime();
+            const MAX_SESSION_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+            if (sessionAge > MAX_SESSION_AGE) {
+              console.log('[auth] Session expired (>7 days since last sign-in), forcing re-login');
+              currentSession = null;
+              // Clear stale session data
+              clearSessionCookies();
+              const ref = getProjectRef();
+              if (ref) {
+                try { localStorage.removeItem(`sb-${ref}-auth-token`); } catch {}
+              }
+              try {
+                if (supabase) supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+              } catch {}
+            }
+          }
+        }
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -546,15 +568,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sign out
   const signOut = async () => {
-    // 1. Clear React state immediately
+    // 1. Call Supabase signOut FIRST (scope: global revokes ALL refresh tokens
+    // so no other tab/device can restore the session)
+    try {
+      if (supabase) {
+        await Promise.race([
+          supabase.auth.signOut({ scope: 'global' }),
+          new Promise((resolve) => setTimeout(resolve, 5000)),
+        ]);
+      }
+    } catch {
+      // Continue with local cleanup even if server call fails
+    }
+
+    // 2. Clear React state
     setUser(null);
     setProfile(null);
     setSession(null);
 
-    // 2. Clear cookies
+    // 3. Clear cookies
     clearSessionCookies();
 
-    // 3. Clear Supabase session from localStorage (where the SDK persists it)
+    // 4. Clear Supabase session from localStorage (where the SDK persists it)
     const ref = getProjectRef();
     if (ref) {
       try {
@@ -562,17 +597,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch { /* SSR or storage blocked */ }
     }
 
-    // 4. Call Supabase signOut with a 3s timeout to avoid hanging forever
+    // 5. Clear any other Supabase-related storage
     try {
-      if (supabase) {
-        await Promise.race([
-          supabase.auth.signOut(),
-          new Promise((resolve) => setTimeout(resolve, 3000)),
-        ]);
+      const keys = Object.keys(localStorage);
+      for (const k of keys) {
+        if (k.startsWith('sb-') || k.startsWith('supabase')) {
+          localStorage.removeItem(k);
+        }
       }
-    } catch {
-      // Ignore — everything is already cleared
-    }
+    } catch { /* ignore */ }
   };
 
   // Refresh profile
