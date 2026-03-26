@@ -1,6 +1,7 @@
 'use client';
 
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { SectorHeatmap } from '@/components/features/SectorHeatmap';
 import { Treemap } from '@/components/features/Treemap';
@@ -47,6 +48,7 @@ export default function HeatmapPage() {
   }, [fetchCoins]);
 
   return (
+    <AuthGate redirectPath="/heatmap" featureName="Heatmap">
     <div className="min-h-screen bg-gray-950">
       <FreeNavbar />
       <Breadcrumb />
@@ -183,5 +185,6 @@ export default function HeatmapPage() {
         </div>
       </main>
     </div>
+    </AuthGate>
   );
 }

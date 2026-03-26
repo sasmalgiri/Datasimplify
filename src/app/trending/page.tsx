@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { TrendingCoins } from '@/components/TrendingCoins';
 import { GainersLosers } from '@/components/GainersLosers';
@@ -10,6 +11,7 @@ import { Flame, TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function TrendingPage() {
   return (
+    <AuthGate redirectPath="/trending" featureName="Trending">
     <div className="min-h-screen bg-gray-950">
       <FreeNavbar />
       <Breadcrumb />
@@ -117,5 +119,6 @@ export default function TrendingPage() {
         </div>
       </main>
     </div>
+    </AuthGate>
   );
 }

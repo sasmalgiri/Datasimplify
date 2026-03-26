@@ -212,12 +212,6 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* Back to free features */}
-      <div className="mt-6 text-center">
-        <Link href="/market" className="text-gray-600 hover:text-gray-900 text-sm">
-          ← Back to free features
-        </Link>
-      </div>
     </div>
   );
 }

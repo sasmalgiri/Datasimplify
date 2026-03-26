@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import html2canvas from 'html2canvas';
 import { WalletDistributionTreemap } from '@/components/features/WalletDistributionTreemap';
 import { ChartExcelModal, ChartExcelButton, CHART_EXCEL_CONFIG } from '@/components/ChartExcelModal';
@@ -2270,8 +2271,10 @@ function ChartsContent() {
 // Default export wrapped in Suspense for useSearchParams
 export default function ChartsPage() {
   return (
-    <Suspense fallback={<ChartLoading />}>
-      <ChartsContent />
-    </Suspense>
+    <AuthGate redirectPath="/charts" featureName="Charts">
+      <Suspense fallback={<ChartLoading />}>
+        <ChartsContent />
+      </Suspense>
+    </AuthGate>
   );
 }

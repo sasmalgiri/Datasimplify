@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Database } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { TrendingCoins } from '@/components/TrendingCoins';
@@ -320,6 +321,7 @@ export default function MarketPage() {
   };
 
   return (
+    <AuthGate redirectPath="/market" featureName="Market Overview">
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Navigation */}
       <FreeNavbar />
@@ -648,5 +650,6 @@ export default function MarketPage() {
         </div>
       </div>
     </div>
+    </AuthGate>
   );
 }

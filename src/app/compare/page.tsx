@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { CoinGeckoAttribution } from '@/components/CoinGeckoAttribution';
 import { SUPPORTED_COINS } from '@/lib/dataTypes';
@@ -663,6 +664,7 @@ export default function ComparePage() {
   }, [coins]);
 
   return (
+    <AuthGate redirectPath="/compare" featureName="Compare">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -1510,5 +1512,6 @@ export default function ComparePage() {
         </div>
       </div>
     </div>
+    </AuthGate>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { DisplayOnlyBadge } from '@/components/DisplayOnlyBadge';
 import { UniversalExport } from '@/components/UniversalExport';
@@ -26,6 +27,7 @@ export default function TechnicalPage() {
   const [selectedCoin, setSelectedCoin] = useState('BTC');
 
   return (
+    <AuthGate redirectPath="/technical" featureName="Technical Analysis">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -76,5 +78,6 @@ export default function TechnicalPage() {
         <WhatsNext contextLabel="Now that you've seen the indicators, deepen your understanding" />
       </div>
     </div>
+    </AuthGate>
   );
 }

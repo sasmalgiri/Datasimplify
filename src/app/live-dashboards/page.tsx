@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { LIVE_DASHBOARDS, type LiveDashboardDefinition } from '@/lib/live-dashboard/definitions';
 import { BarChart3, ArrowRight, Key, FileSpreadsheet, Sparkles, Download, Share2, Shield, Users, Wrench, Search, Brain, Globe, Coins, TrendingUp, Zap, GitBranch, Star } from 'lucide-react';
@@ -53,6 +54,7 @@ export default function LiveDashboardsPage() {
   const sortedDashboards = sortDashboardsByPersona(LIVE_DASHBOARDS, persona);
 
   return (
+    <AuthGate redirectPath="/live-dashboards" featureName="Live Dashboards">
     <div className="min-h-screen bg-[#0a0a0f]">
       <FreeNavbar />
       <Breadcrumb />
@@ -269,5 +271,6 @@ export default function LiveDashboardsPage() {
         </div>
       </main>
     </div>
+    </AuthGate>
   );
 }

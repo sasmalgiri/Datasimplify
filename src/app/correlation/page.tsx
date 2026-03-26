@@ -2,6 +2,7 @@
 
 import { CorrelationHeatmapDemo } from '@/components/features/CorrelationHeatmap';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
@@ -9,6 +10,7 @@ import { AutoJargon } from '@/components/ui/SimplifiedUI';
 
 export default function CorrelationPage() {
   return (
+    <AuthGate redirectPath="/correlation" featureName="Correlation Matrix">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -34,5 +36,6 @@ export default function CorrelationPage() {
         <CorrelationHeatmapDemo showBeginnerTips={true} />
       </div>
     </div>
+    </AuthGate>
   );
 }

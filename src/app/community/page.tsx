@@ -8,6 +8,7 @@ import {
   BookOpen, Users, ChevronRight, Plus, Loader2,
 } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { useAuth } from '@/lib/auth';
 import { FORUM_CATEGORIES } from '@/lib/forumCategories';
@@ -113,6 +114,7 @@ export default function CommunityPage() {
   };
 
   return (
+    <AuthGate redirectPath="/community" featureName="Community Forum">
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
       <FreeNavbar />
 
@@ -363,5 +365,6 @@ export default function CommunityPage() {
         </div>
       )}
     </div>
+    </AuthGate>
   );
 }

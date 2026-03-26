@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import {
   GraduationCap,
@@ -483,6 +484,7 @@ export default function LearnPage() {
   };
 
   return (
+    <AuthGate redirectPath="/learn" featureName="Learn">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -567,5 +569,6 @@ export default function LearnPage() {
         </div>
       </div>
     </div>
+    </AuthGate>
   );
 }

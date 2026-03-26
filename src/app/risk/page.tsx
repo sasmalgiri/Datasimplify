@@ -1,6 +1,9 @@
+'use client';
+
 import { notFound } from 'next/navigation';
 import { RiskDashboardDemo } from '@/components/features/RiskDashboard';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { FEATURES } from '@/lib/featureFlags';
 import { UniversalExport } from '@/components/UniversalExport';
@@ -18,6 +21,7 @@ export default function RiskPage() {
   }
 
   return (
+    <AuthGate redirectPath="/risk" featureName="Risk Analysis">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -49,5 +53,6 @@ export default function RiskPage() {
         <WhatsNext contextLabel="Learn how to manage risk before committing real money" />
       </div>
     </div>
+    </AuthGate>
   );
 }

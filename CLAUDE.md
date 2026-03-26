@@ -85,7 +85,7 @@ src/
 
 ## Key Design Decisions
 
-1. **No login required for free features** - Public pages show cached data
+1. **Login required for all features** - All feature pages are behind AuthGate (market, compare, screener, heatmap, charts, technical, correlation, risk, defi, trending, live-dashboards, learn, community, sentiment). Only landing page, pricing, about, blog, login, and signup are public.
 2. **Free tier:** 5 downloads/month, 5 widgets, 2-coin compare
 3. **Color scheme:** Dark theme with emerald (#10b981) as primary accent
 4. **BYOK model:** Users provide their own API keys for live data

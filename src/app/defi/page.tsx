@@ -2,6 +2,7 @@
 
 import { DeFiTracker } from '@/components/features/DeFiTracker';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
@@ -12,6 +13,7 @@ import { GuidedTour, TOUR_DEFI } from '@/components/GuidedTour';
 
 export default function DeFiPage() {
   return (
+    <AuthGate redirectPath="/defi" featureName="DeFi Dashboard">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -43,5 +45,6 @@ export default function DeFiPage() {
         <WhatsNext contextLabel="Understand DeFi risks before chasing yield" />
       </div>
     </div>
+    </AuthGate>
   );
 }

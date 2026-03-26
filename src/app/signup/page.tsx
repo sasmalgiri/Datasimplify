@@ -317,12 +317,6 @@ function SignupForm() {
         <span className="flex items-center gap-1">&#128176; Cancel anytime</span>
       </div>
 
-      {/* Back to free features */}
-      <div className="mt-4 text-center">
-        <Link href="/live-dashboards" className="text-gray-400 hover:text-white text-sm">
-          ← Explore dashboards first
-        </Link>
-      </div>
 
       {/* Terms */}
       <p className="mt-4 text-center text-gray-500 text-xs">
@@ -380,12 +374,6 @@ function SignupFormFallback() {
         </div>
       </div>
 
-      {/* Back link */}
-      <div className="mt-6 text-center">
-        <Link href="/market" className="text-gray-400 hover:text-white text-sm">
-          ← Back to free features
-        </Link>
-      </div>
     </div>
   );
 }

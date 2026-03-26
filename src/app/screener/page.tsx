@@ -2,6 +2,7 @@
 
 import { TokenScreener } from '@/components/features/TokenScreener';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { AuthGate } from '@/components/AuthGate';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UniversalExport } from '@/components/UniversalExport';
 import { EducationBanner } from '@/components/EducationBanner';
@@ -12,6 +13,7 @@ import { GuidedTour, TOUR_SCREENER } from '@/components/GuidedTour';
 
 export default function ScreenerPage() {
   return (
+    <AuthGate redirectPath="/screener" featureName="Token Screener">
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
       <Breadcrumb />
@@ -43,5 +45,6 @@ export default function ScreenerPage() {
         <WhatsNext contextLabel="Learn to evaluate coins beyond just price" />
       </div>
     </div>
+    </AuthGate>
   );
 }
