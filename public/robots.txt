@@ -37,37 +37,4 @@ Disallow: /datalab
 Disallow: /portfolio
 Disallow: /command-center
 
-# Allow main product pages (explicit for clarity)
-Allow: /live-dashboards
-Allow: /templates
-Allow: /pricing
-Allow: /market
-Allow: /screener
-Allow: /sentiment
-Allow: /technical
-Allow: /correlation
-Allow: /heatmap
-Allow: /charts
-Allow: /coin/
-Allow: /trending
-Allow: /gainers-losers
-Allow: /categories
-Allow: /glossary
-Allow: /learn
-Allow: /faq
-Allow: /contact
-Allow: /roadmap
-Allow: /tools
-Allow: /about
-Allow: /byok
-Allow: /analyst-hub
-Allow: /research
-Allow: /rwa
-Allow: /risk
-Allow: /dex-pools
-Allow: /recently-added
-Allow: /community
-Allow: /blog
-
-# Crawl delay for rate limiting
-Crawl-delay: 1
+# All other pages are allowed by default (Allow: /)
