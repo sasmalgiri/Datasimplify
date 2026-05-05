@@ -300,7 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Enforce session max age: force re-login after 7 days
+        // Enforce session max age: force re-login after 12 hours (client-side check;
+        // server-side enforcement still relies on Supabase's own refresh-token TTL).
         if (currentSession?.user) {
           const lastSignIn = currentSession.user.last_sign_in_at;
           if (lastSignIn) {
@@ -468,11 +469,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!res.ok) {
         const msg = data?.error_description || data?.msg || data?.error || 'Login failed';
-        if (msg.includes('Invalid login credentials')) {
-          return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
-        }
-        if (msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
+        const errorCode = (data?.error_code || data?.code || '').toString().toLowerCase();
+
+        // Detect unverified email by response code first (resilient to message-text changes),
+        // then by message-text fallback for older Supabase versions.
+        if (errorCode === 'email_not_confirmed' || msg.includes('Email not confirmed') || msg.includes('email_not_confirmed')) {
           return { error: new Error('EMAIL_NOT_VERIFIED') };
+        }
+        if (errorCode === 'invalid_credentials' || msg.includes('Invalid login credentials')) {
+          return { error: new Error('Invalid email or password. Please check your credentials and try again.') };
         }
         return { error: new Error(msg) };
       }
