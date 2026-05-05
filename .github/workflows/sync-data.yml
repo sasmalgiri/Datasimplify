@@ -6,8 +6,8 @@ name: Sync Crypto Data
 
 on:
   schedule:
-    # CoinGecko sync every 5 minutes (primary cache source)
-    - cron: "*/5 * * * *"
+    - cron: "*/5 * * * *"            # CoinGecko fast sync
+    - cron: "0,15,30,45 * * * *"     # Full sync every 15 min
   workflow_dispatch:
     inputs:
       sync_type:
@@ -24,87 +24,87 @@ on:
           - whales
           - onchain
 
+concurrency:
+  group: sync-crypto-data-${{ github.event.schedule || github.event.inputs.sync_type || 'manual' }}
+  cancel-in-progress: false
+
 jobs:
-  # CoinGecko sync runs every 5 minutes
   sync-coingecko:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.sync_type == 'coingecko' || github.event.inputs.sync_type == 'all'))
+    timeout-minutes: 8
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *') ||
+      (github.event_name == 'workflow_dispatch' &&
+        (github.event.inputs.sync_type == 'coingecko' || github.event.inputs.sync_type == 'all'))
     steps:
       - name: Sync CoinGecko Market Data
         run: |
-          echo "🪙 Syncing CoinGecko data..."
+          echo "Syncing CoinGecko data..."
           response=$(curl -s -w "\n%{http_code}" \
-            -X GET "${{ secrets.SITE_URL }}/api/sync?type=coingecko&secret=${{ secrets.SYNC_SECRET }}" \
+            -X GET "${{ secrets.SITE_URL }}/api/sync?type=coingecko" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
             -H "Content-Type: application/json" \
-            --max-time 120 \
-            --retry 2 \
-            --retry-delay 30)
+            --max-time 90 \
+            --retry 1 \
+            --retry-delay 15)
 
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | sed '$d')
-
+          echo "HTTP $http_code"
           echo "Response: $body"
 
           if [ "$http_code" = "200" ]; then
-            echo "✅ CoinGecko sync complete"
+            echo "CoinGecko sync complete"
           else
-            echo "⚠️ CoinGecko sync returned $http_code (may be rate limited)"
+            echo "CoinGecko sync returned $http_code (may be rate limited)"
           fi
 
-  # Full sync runs every 15 minutes (at 0, 15, 30, 45)
   sync-full:
     runs-on: ubuntu-latest
-    if: (github.event_name == 'schedule' && contains('0,15,30,45', format('{0}', github.run_number))) || (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_type == 'all')
+    timeout-minutes: 12
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0,15,30,45 * * * *') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_type == 'all')
     steps:
       - name: Sync Market Data (Binance)
         run: |
-          echo "📊 Syncing Binance market data..."
-          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=market&secret=${{ secrets.SYNC_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 60 \
-            --retry 2 \
-            --retry-delay 10
-          echo "✅ Market sync complete"
+          echo "Syncing Binance market data..."
+          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=market" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
+            --max-time 60 --retry 1 --retry-delay 10
+          echo "Market sync complete"
 
       - name: Sync DeFi Data
         run: |
-          echo "🏦 Syncing DeFi data..."
-          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=defi&secret=${{ secrets.SYNC_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 60 \
-            --retry 2 \
-            --retry-delay 10
-          echo "✅ DeFi sync complete"
+          echo "Syncing DeFi data..."
+          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=defi" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
+            --max-time 60 --retry 1 --retry-delay 10
+          echo "DeFi sync complete"
 
       - name: Sync Sentiment Data
         run: |
-          echo "💬 Syncing sentiment data..."
-          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=sentiment&secret=${{ secrets.SYNC_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 120 \
-            --retry 2 \
-            --retry-delay 10
-          echo "✅ Sentiment sync complete"
+          echo "Syncing sentiment data..."
+          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=sentiment" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
+            --max-time 90 --retry 1 --retry-delay 10
+          echo "Sentiment sync complete"
 
       - name: Sync Whale Data
         run: |
-          echo "🐋 Syncing whale data..."
-          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=whales&secret=${{ secrets.SYNC_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 60 \
-            --retry 2 \
-            --retry-delay 10
-          echo "✅ Whale sync complete"
+          echo "Syncing whale data..."
+          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=whales" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
+            --max-time 60 --retry 1 --retry-delay 10
+          echo "Whale sync complete"
 
       - name: Sync On-Chain Data
         run: |
-          echo "⛓️ Syncing on-chain data..."
-          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=onchain&secret=${{ secrets.SYNC_SECRET }}" \
-            -H "Content-Type: application/json" \
-            --max-time 60 \
-            --retry 2 \
-            --retry-delay 10
-          echo "✅ On-chain sync complete"
+          echo "Syncing on-chain data..."
+          curl -s -X GET "${{ secrets.SITE_URL }}/api/sync?type=onchain" \
+            -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}" \
+            --max-time 60 --retry 1 --retry-delay 10
+          echo "On-chain sync complete"
 
       - name: Log Completion
-        run: echo "🎉 All syncs completed at $(date -u)"
+        run: echo "All syncs completed at $(date -u)"
