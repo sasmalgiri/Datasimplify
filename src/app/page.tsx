@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import HeroVideo from '@/components/HeroVideo';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import {
@@ -264,6 +265,9 @@ export default function LandingPage() {
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
+
+          {/* ── Hero Video Tutorial (CoinGecko key onboarding) ── */}
+          <HeroVideo />
 
           {/* ── Desktop App Inline Banner ── */}
           <Link
