@@ -234,9 +234,6 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <p className="text-lg text-gray-400 mb-3 max-w-xl mx-auto leading-relaxed">
-            83+ live dashboards powered by your own CoinGecko API key. Your key is stored locally in your browser.
-          </p>
 
           <p className="text-sm text-emerald-400 font-medium mb-6">
             {IS_BETA_MODE
