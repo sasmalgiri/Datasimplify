@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildCacheKey, getCached, setCache } from './response-cache';
+import { getAuthUser } from '@/lib/supabase/api-auth';
 
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const COINGECKO_PRO_API = 'https://pro-api.coingecko.com/api/v3';
@@ -36,12 +37,15 @@ const KEY_FREE_ENDPOINTS = new Set([
   'blockchain_onchain',
 ]);
 
-// Tiered in-memory rate limiter per IP
-// BYOK users: 30 req/min — Server (shared) key users: 10 req/min
+// Tiered in-memory rate limiter, keyed per-user when authenticated, per-IP otherwise.
+// Authenticated BYOK:    60 req/min (per user)
+// Anonymous BYOK:        30 req/min (per IP — shared by NAT)
+// Authenticated + shared server key: 30 req/min (per user)
+// Anonymous + shared server key:      5 req/min (per IP)
 const rateLimits = new Map<string, { count: number; resetAt: number }>();
 
-function checkRateLimit(ip: string, isServerKey: boolean): boolean {
-  const limit = isServerKey ? 10 : 30;
+function checkRateLimit(rateKey: string, isServerKey: boolean, isAuthed: boolean): boolean {
+  const limit = isServerKey ? (isAuthed ? 30 : 5) : (isAuthed ? 60 : 30);
   const now = Date.now();
 
   // Periodic cleanup: remove expired entries to prevent memory leak
@@ -51,9 +55,9 @@ function checkRateLimit(ip: string, isServerKey: boolean): boolean {
     }
   }
 
-  const entry = rateLimits.get(ip);
+  const entry = rateLimits.get(rateKey);
   if (!entry || now > entry.resetAt) {
-    rateLimits.set(ip, { count: 1, resetAt: now + 60_000 });
+    rateLimits.set(rateKey, { count: 1, resetAt: now + 60_000 });
     return true;
   }
   if (entry.count >= limit) return false;
@@ -164,6 +168,18 @@ async function fetchAlchemy(
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
 
+  // Identify user (cookie or Bearer); rate-limit by user.id when present, else by IP.
+  // Failures are non-fatal — anon users still get the BYOK path with the IP-keyed limit.
+  let userId: string | null = null;
+  try {
+    const auth = await getAuthUser(req);
+    userId = auth.user?.id || null;
+  } catch {
+    userId = null;
+  }
+  const rateKey = userId ? `u:${userId}` : `ip:${ip}`;
+  const isAuthed = !!userId;
+
   let body: any;
   try {
     body = await req.json();
@@ -195,8 +211,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Valid CoinGecko API key required' }, { status: 400 });
   }
 
-  // Tiered rate limit: stricter for shared server key, relaxed for BYOK users
-  if (!checkRateLimit(ip, usingServerKey)) {
+  // Tiered rate limit: stricter for shared server key, relaxed for BYOK users.
+  // Authenticated users get a higher limit and are isolated from NAT-mates.
+  if (!checkRateLimit(rateKey, usingServerKey, isAuthed)) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Please wait a moment.' },
       { status: 429 },
