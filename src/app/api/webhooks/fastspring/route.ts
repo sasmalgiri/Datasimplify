@@ -190,12 +190,35 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     const purchases = normalizeToPurchases(payload);
 
+    const eventType = pickString(payload?.type) || pickString(payload?.eventType) || null;
+    const topOrderId = extractOrderId(payload);
+    const topEmail = extractEmail(payload);
+
+    // Idempotency: if we've already logged this exact (event_type, external_order_id, email),
+    // assume FastSpring re-delivered the same event and skip side-effects.
+    // (Race-condition window is small; for hard guarantees add a UNIQUE index on
+    //  purchase_events(provider, event_type, external_order_id, external_customer_email).)
+    if (topOrderId && eventType) {
+      const { data: prior } = await supabaseAdmin
+        .from('purchase_events')
+        .select('id')
+        .eq('provider', 'fastspring')
+        .eq('event_type', eventType)
+        .eq('external_order_id', topOrderId)
+        .eq('external_customer_email', topEmail)
+        .limit(1);
+
+      if (prior && prior.length > 0) {
+        return NextResponse.json({ ok: true, deduped: true });
+      }
+    }
+
     // Always log the webhook
     await supabaseAdmin.from('purchase_events').insert({
       provider: 'fastspring',
-      event_type: pickString(payload?.type) || pickString(payload?.eventType),
-      external_order_id: null,
-      external_customer_email: extractEmail(payload),
+      event_type: eventType,
+      external_order_id: topOrderId,
+      external_customer_email: topEmail,
       product_key: pickString(payload?.product_key) || pickString(payload?.productKey) || null,
       raw_payload: payload,
     });
