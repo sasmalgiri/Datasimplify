@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { isFeatureEnabled } from '@/lib/featureFlags';
+import { isRazorpayCheckoutEnabled, startProCheckout } from '@/lib/razorpayCheckout';
 
 interface GeoInfo {
   country: string;
@@ -112,13 +113,27 @@ export default function PricingPage() {
     );
   }
 
-  const handleSubscribe = (tier: string, period: 'monthly' | 'yearly') => {
+  const handleSubscribe = async (tier: string, period: 'monthly' | 'yearly') => {
     // Redirect to signup first if not logged in
     if (!user) {
       router.push(`/signup?plan=${tier}-${period}`);
       return;
     }
 
+    // Preferred path: Razorpay recurring subscription (when configured).
+    if (tier === 'pro' && isRazorpayCheckoutEnabled()) {
+      const result = await startProCheckout({
+        period,
+        email: user.email || '',
+        onSuccess: () => router.push('/dashboard?upgraded=1'),
+      });
+      if (!result.ok) {
+        alert(result.error || 'Could not start checkout. Please try again.');
+      }
+      return;
+    }
+
+    // Fallback: existing hosted checkout.
     const productPaths: Record<string, string> = {
       'pro-monthly': 'pro-monthly',
       'pro-yearly': 'pro-yearly',
@@ -126,7 +141,6 @@ export default function PricingPage() {
 
     const productPath = productPaths[`${tier}-${period}`];
     if (productPath) {
-      // Replace with your FastSpring store URL
       window.location.assign(`https://cryptoreportkit.onfastspring.com/${productPath}`);
     }
   };
