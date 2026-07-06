@@ -42,6 +42,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' c.static-clone.com va.vercel-scripts.com *.googletagmanager.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' blob: data: assets.coingecko.com coin-images.coingecko.com",
+              "media-src 'self' blob: data: https://*.supabase.co",
               "font-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
