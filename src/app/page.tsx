@@ -6,6 +6,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import HeroVideo from '@/components/HeroVideo';
+import HeroBackgroundVideo from '@/components/HeroBackgroundVideo';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import {
@@ -197,9 +198,12 @@ export default function LandingPage() {
 
       {/* ═══════ 1. HERO ═══════ */}
       <section className="pt-20 pb-14 px-4 relative overflow-hidden">
+        {/* Autoplay muted background video (renders behind the hero content) */}
+        <HeroBackgroundVideo />
+
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-3xl mx-auto text-center relative">
+        <div className="max-w-3xl mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight tracking-tight">
             <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               Real-Time Crypto Analytics
