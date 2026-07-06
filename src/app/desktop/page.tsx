@@ -26,8 +26,11 @@ import {
 } from 'lucide-react';
 import { FreeNavbar } from '@/components/FreeNavbar';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { useAuth } from '@/lib/auth';
 
 const APP_VERSION = '1.0.0';
+// Where non-Pro users are sent when they try to download (Pro-gated).
+const UPGRADE_HREF = '/pricing?from=desktop';
 
 function detectOS(): 'windows' | 'macos' | 'linux' {
   if (typeof navigator === 'undefined') return 'windows';
@@ -106,7 +109,7 @@ const COMPARISON = [
 const FAQ_ITEMS = [
   {
     q: 'Is the desktop app free?',
-    a: 'The desktop app is free to download and includes core features (dashboard, watchlist, charts). Portfolio tracking and advanced features require a Pro license, which is included with your CryptoReportKit Pro subscription.',
+    a: 'The desktop app is part of CryptoReportKit Pro. You need an active Pro subscription to download and use it. Once you upgrade, you can install it on Windows, macOS, and Linux and unlock every feature.',
   },
   {
     q: 'Does it phone home?',
@@ -154,12 +157,16 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 
 export default function DesktopDownloadPage() {
   const [detectedOS, setDetectedOS] = useState<'windows' | 'macos' | 'linux'>('windows');
+  const { profile, isAdmin } = useAuth();
 
   useEffect(() => {
     setDetectedOS(detectOS());
   }, []);
 
   const primaryPlatform = PLATFORMS.find((p) => p.id === detectedOS) ?? PLATFORMS[0];
+  // Desktop app is a Pro feature — only Pro subscribers (and admins) can download.
+  const canDownload = Boolean(isAdmin || profile?.subscription_tier === 'pro');
+  const hrefFor = (url: string) => (canDownload ? url : UPGRADE_HREF);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -190,18 +197,30 @@ export default function DesktopDownloadPage() {
               </p>
 
               <div className="flex flex-wrap gap-3 mb-8">
-                <a
-                  href={primaryPlatform.downloadUrl}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
-                >
-                  <Download className="w-5 h-5" />
-                  Download for {primaryPlatform.name}
-                  <span className="text-emerald-200 text-sm">
-                    ({primaryPlatform.size})
-                  </span>
-                </a>
+                {canDownload ? (
+                  <a
+                    href={primaryPlatform.downloadUrl}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
+                  >
+                    <Download className="w-5 h-5" />
+                    Download for {primaryPlatform.name}
+                    <span className="text-emerald-200 text-sm">
+                      ({primaryPlatform.size})
+                    </span>
+                  </a>
+                ) : (
+                  <Link
+                    href={UPGRADE_HREF}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
+                  >
+                    <Lock className="w-5 h-5" />
+                    Unlock with Pro
+                  </Link>
+                )}
                 <span className="text-xs text-gray-600 self-center">
-                  v{APP_VERSION} &middot; {primaryPlatform.req}
+                  {canDownload
+                    ? `v${APP_VERSION} · ${primaryPlatform.req}`
+                    : 'Desktop app is a Pro feature'}
                 </span>
               </div>
 
@@ -210,7 +229,7 @@ export default function DesktopDownloadPage() {
                 {PLATFORMS.filter((p) => p.id !== detectedOS).map((p, i) => (
                   <span key={p.id}>
                     {i > 0 && ' and '}
-                    <a href={p.downloadUrl} className="text-emerald-400/70 hover:text-emerald-400 transition">
+                    <a href={hrefFor(p.downloadUrl)} className="text-emerald-400/70 hover:text-emerald-400 transition">
                       {p.name}
                     </a>
                   </span>
@@ -357,7 +376,7 @@ export default function DesktopDownloadPage() {
           {PLATFORMS.map((p) => (
             <a
               key={p.id}
-              href={p.downloadUrl}
+              href={hrefFor(p.downloadUrl)}
               className={`bg-gray-800/50 border rounded-xl p-6 text-center hover:border-emerald-400/30 transition group ${
                 p.id === detectedOS
                   ? 'border-emerald-400/30 bg-emerald-400/5'
@@ -368,8 +387,17 @@ export default function DesktopDownloadPage() {
               <h3 className="font-semibold text-white mb-1">{p.name}</h3>
               <p className="text-xs text-gray-500 mb-3">{p.req}</p>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-sm font-medium">
-                <Download className="w-4 h-4" />
-                {p.ext} &middot; {p.size}
+                {canDownload ? (
+                  <>
+                    <Download className="w-4 h-4" />
+                    {p.ext} &middot; {p.size}
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Pro only
+                  </>
+                )}
               </div>
               {p.id === detectedOS && (
                 <p className="text-[10px] text-emerald-400/60 mt-2">
@@ -486,16 +514,27 @@ export default function DesktopDownloadPage() {
             Ready for True Privacy?
           </h2>
           <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
-            Download CryptoReportKit Desktop and take full control of your
-            crypto analytics. No accounts, no cloud dependency, no compromises.
+            {canDownload
+              ? 'Download CryptoReportKit Desktop and take full control of your crypto analytics — direct API calls, local storage, no compromises.'
+              : 'CryptoReportKit Desktop is included with Pro. Upgrade to unlock the native app for Windows, macOS, and Linux.'}
           </p>
-          <a
-            href={primaryPlatform.downloadUrl}
-            className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
-          >
-            <Download className="w-5 h-5" />
-            Download for {primaryPlatform.name}
-          </a>
+          {canDownload ? (
+            <a
+              href={primaryPlatform.downloadUrl}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
+            >
+              <Download className="w-5 h-5" />
+              Download for {primaryPlatform.name}
+            </a>
+          ) : (
+            <Link
+              href={UPGRADE_HREF}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-semibold transition"
+            >
+              <Lock className="w-5 h-5" />
+              Unlock with Pro
+            </Link>
+          )}
         </div>
       </section>
 
