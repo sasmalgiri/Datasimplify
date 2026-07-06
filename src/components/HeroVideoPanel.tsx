@@ -9,9 +9,12 @@ import { useEffect, useRef } from 'react';
  * so the video shows on every deployment (preview + production) with no env-var
  * setup. Override with NEXT_PUBLIC_HERO_BG_VIDEO_URL to swap it without a redeploy.
  */
-const VIDEO_SRC =
+const RAW_VIDEO_SRC =
   process.env.NEXT_PUBLIC_HERO_BG_VIDEO_URL ||
   'https://gadspittitmuqmysiawu.supabase.co/storage/v1/object/public/marketing/hero-bg.mp4';
+// Cache-bust: the clip is served with a 1-year cache header, so bump this token
+// whenever the video is replaced to force browsers to re-fetch instead of reusing a stale copy.
+const VIDEO_SRC = RAW_VIDEO_SRC + (RAW_VIDEO_SRC.includes('?') ? '&' : '?') + 'v=2';
 const VIDEO_POSTER = process.env.NEXT_PUBLIC_HERO_BG_VIDEO_POSTER || '';
 
 export default function HeroVideoPanel() {
