@@ -6,7 +6,7 @@ import { FreeNavbar } from '@/components/FreeNavbar';
 import StickySignupButton from '@/components/StickySignupButton';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 import HeroVideo from '@/components/HeroVideo';
-import HeroBackgroundVideo from '@/components/HeroBackgroundVideo';
+import HeroVideoPanel from '@/components/HeroVideoPanel';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { IS_BETA_MODE } from '@/lib/betaMode';
 import {
@@ -198,12 +198,12 @@ export default function LandingPage() {
 
       {/* ═══════ 1. HERO ═══════ */}
       <section className="pt-20 pb-14 px-4 relative overflow-hidden">
-        {/* Autoplay muted background video (renders behind the hero content) */}
-        <HeroBackgroundVideo />
-
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/[0.07] rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="max-w-3xl mx-auto text-center relative z-10">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+            {/* Left column — headline, actions, links */}
+            <div className="text-center lg:text-left">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-5 leading-tight tracking-tight">
             <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
               Real-Time Crypto Analytics
@@ -215,7 +215,7 @@ export default function LandingPage() {
           </h1>
 
           {/* Quick-action buttons */}
-          <div className="flex flex-wrap gap-3 justify-center mb-6">
+          <div className="flex flex-wrap gap-3 justify-center lg:justify-start mb-6">
             <Link
               href="/datalab"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.12] rounded-lg text-sm font-medium transition-all hover:border-emerald-500/40 hover:text-emerald-400"
@@ -246,7 +246,7 @@ export default function LandingPage() {
               : 'Free for 30 days — no credit card required.'}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-5">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start mb-5">
             <Link
               href="/live-dashboards"
               className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-semibold text-base shadow-lg shadow-emerald-500/25 transition-all hover:shadow-emerald-500/40 hover:scale-[1.02]"
@@ -297,7 +297,13 @@ export default function LandingPage() {
               <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
             </Link>
           </div>
+            </div>
 
+            {/* Right column — autoplaying product video */}
+            <div className="w-full">
+              <HeroVideoPanel />
+            </div>
+          </div>
         </div>
       </section>
 
