@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, Maximize2, Minimize2 } from 'lucide-react';
 
 /**
  * Visible, autoplaying, muted, looping product video for the hero's right column.
@@ -18,9 +18,13 @@ const RAW_VIDEO_SRC =
 const VIDEO_SRC = RAW_VIDEO_SRC + (RAW_VIDEO_SRC.includes('?') ? '&' : '?') + 'v=2';
 const VIDEO_POSTER = process.env.NEXT_PUBLIC_HERO_BG_VIDEO_POSTER || '';
 
+const CONTROL_BTN =
+  'flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:scale-105 hover:bg-black/70';
+
 export default function HeroVideoPanel() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -34,6 +38,12 @@ export default function HeroVideoPanel() {
     }
   }, []);
 
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
@@ -41,6 +51,19 @@ export default function HeroVideoPanel() {
       v.play().catch(() => {});
     } else {
       v.pause();
+    }
+  };
+
+  const toggleFullscreen = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else if (v.requestFullscreen) {
+      v.requestFullscreen().catch(() => {});
+    } else {
+      // iOS Safari only supports fullscreen on the <video> element itself.
+      (v as HTMLVideoElement & { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen?.();
     }
   };
 
@@ -58,6 +81,7 @@ export default function HeroVideoPanel() {
           loop
           playsInline
           preload="auto"
+          controls={isFullscreen}
           poster={VIDEO_POSTER || undefined}
           onClick={togglePlay}
           onPlay={() => setPlaying(true)}
@@ -66,15 +90,25 @@ export default function HeroVideoPanel() {
           <source src={VIDEO_SRC} type="video/mp4" />
         </video>
 
-        {/* Play / Pause control */}
-        <button
-          type="button"
-          onClick={togglePlay}
-          aria-label={playing ? 'Pause video' : 'Play video'}
-          className="absolute bottom-3 left-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/50 text-white ring-1 ring-white/15 backdrop-blur-sm transition hover:scale-105 hover:bg-black/70"
-        >
-          {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
-        </button>
+        {/* Controls */}
+        <div className="absolute bottom-3 left-3 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={togglePlay}
+            aria-label={playing ? 'Pause video' : 'Play video'}
+            className={CONTROL_BTN}
+          >
+            {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5 fill-current" />}
+          </button>
+          <button
+            type="button"
+            onClick={toggleFullscreen}
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Expand video to fullscreen'}
+            className={CONTROL_BTN}
+          >
+            {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
     </div>
   );
