@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { format } from 'date-fns';
 import { ArrowRight, Clock } from 'lucide-react';
 import { getAllPostsMerged } from '@/lib/blog/posts';
@@ -14,6 +15,27 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cryptoreportkit.com'
 // giant HTML document — that made the page ~1.1 MB / multi-second TTFB. Every
 // post is still listed in the sitemap and reachable via its own URL.
 const PER_PAGE = 24;
+
+// The index is dynamic (it reads ?page=), so it can't use the route-level
+// `revalidate` cache. Instead cache just the lightweight card fields for the
+// full post list — the DB query (which otherwise pulls every article body via
+// select('*')) then runs at most once an hour, shared across all requests.
+const getCachedPostCards = unstable_cache(
+  async () => {
+    const posts = await getAllPostsMerged();
+    return posts.map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt,
+      category: p.category,
+      coverEmoji: p.coverEmoji,
+      readingTimeMinutes: p.readingTimeMinutes,
+      publishDate: p.publishDate,
+    }));
+  },
+  ['blog-index-cards-v1'],
+  { revalidate: 3600, tags: ['blog-posts'] },
+);
 
 function parsePage(v: string | undefined): number {
   const n = Number(v);
@@ -50,7 +72,7 @@ export default async function BlogListingPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const { page: pageParam } = await searchParams;
-  const allPosts = await getAllPostsMerged();
+  const allPosts = await getCachedPostCards();
   const totalPages = Math.max(1, Math.ceil(allPosts.length / PER_PAGE));
   const page = Math.min(parsePage(pageParam), totalPages);
   const start = (page - 1) * PER_PAGE;
