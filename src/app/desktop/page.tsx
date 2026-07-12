@@ -32,6 +32,15 @@ const APP_VERSION = '1.0.0';
 // Where non-Pro users are sent when they try to download (Pro-gated).
 const UPGRADE_HREF = '/pricing?from=desktop';
 
+// --- Temporary switches -----------------------------------------------------
+// The desktop app promo (big hero + download) is switched off for now while we
+// focus the page on SEO. A slim H1 header is still rendered when the hero is
+// off so the page keeps its heading/content for search engines.
+// Flip these back to `true` to bring the app promo back.
+const SHOW_HERO = false;
+const DOWNLOAD_ENABLED = false;
+// ---------------------------------------------------------------------------
+
 function detectOS(): 'windows' | 'macos' | 'linux' {
   if (typeof navigator === 'undefined') return 'windows';
   const ua = navigator.userAgent.toLowerCase();
@@ -165,14 +174,16 @@ export default function DesktopDownloadPage() {
 
   const primaryPlatform = PLATFORMS.find((p) => p.id === detectedOS) ?? PLATFORMS[0];
   // Desktop app is a Pro feature — only Pro subscribers (and admins) can download.
-  const canDownload = Boolean(isAdmin || profile?.subscription_tier === 'pro');
+  // While DOWNLOAD_ENABLED is false, the download is switched off for everyone.
+  const canDownload = DOWNLOAD_ENABLED && Boolean(isAdmin || profile?.subscription_tier === 'pro');
   const hrefFor = (url: string) => (canDownload ? url : UPGRADE_HREF);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <FreeNavbar />
 
-      {/* Hero */}
+      {/* Hero (switched off — flip SHOW_HERO to bring it back) */}
+      {SHOW_HERO && (
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-600/10 via-transparent to-transparent" />
         <div className="max-w-6xl mx-auto px-4 pt-12 pb-16 relative">
@@ -335,6 +346,23 @@ export default function DesktopDownloadPage() {
           </div>
         </div>
       </section>
+      )}
+
+      {/* Slim SEO header (shown when the full hero is off) — keeps the H1 + intro */}
+      {!SHOW_HERO && (
+        <section className="max-w-6xl mx-auto px-4 pt-10 pb-4">
+          <Breadcrumb customTitle="Desktop App" />
+          <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight mt-6 mb-3">
+            CryptoReportKit <span className="text-emerald-400">Desktop</span>
+          </h1>
+          <p className="text-base text-gray-400 leading-relaxed max-w-2xl">
+            A privacy-first desktop app for crypto analytics. Your API keys stay in
+            your OS keychain, market-data calls go directly from your machine to
+            CoinGecko, and your portfolio lives in a local SQLite database — nothing
+            touches our servers.
+          </p>
+        </section>
+      )}
 
       {/* Features */}
       <section className="max-w-6xl mx-auto px-4 py-16">
@@ -367,7 +395,8 @@ export default function DesktopDownloadPage() {
         </div>
       </section>
 
-      {/* Platform Downloads */}
+      {/* Platform Downloads (switched off — flip DOWNLOAD_ENABLED to bring it back) */}
+      {DOWNLOAD_ENABLED && (
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="text-2xl font-bold text-center text-white mb-8">
           Download for Your Platform
@@ -408,6 +437,7 @@ export default function DesktopDownloadPage() {
           ))}
         </div>
       </section>
+      )}
 
       {/* How it works */}
       <section className="max-w-4xl mx-auto px-4 py-16">

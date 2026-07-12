@@ -29,6 +29,7 @@ import { formatCurrency, formatPercent, formatNumber, formatDate, getPriceChange
 import { fetchWithCache, CACHE_TTL } from '@/lib/clientCache';
 import { isFeatureEnabled } from '@/lib/featureFlags';
 import { FreeNavbar } from '@/components/FreeNavbar';
+import { formatCoinName, shortCoinName } from '@/lib/coinNames';
 
 // Calculate support/resistance levels using pivot points from OHLC data
 function calculateSupportResistance(high: number, low: number, close: number): {
@@ -428,12 +429,34 @@ export default function CoinDetailPage() {
   const onChainData = onchain;
 
   if (loading) {
+    // This branch is what gets server-rendered (data loads on the client), so
+    // give search engines a real <h1> + unique description instead of a bare
+    // skeleton. coinId comes from the route params and is available during SSR.
+    const coinName = formatCoinName(coinId);
+    const shortName = shortCoinName(coinId);
     return (
       <div className="min-h-screen bg-gray-900">
         <FreeNavbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-700 rounded w-48 mb-8" />
+          <header className="mb-8">
+            <Link
+              href="/market"
+              className="inline-flex items-center gap-1 text-sm text-emerald-400 hover:text-emerald-300 mb-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to market
+            </Link>
+            <h1 className="text-3xl font-bold text-white mb-3">
+              {coinName} Price, Chart &amp; Analysis
+            </h1>
+            <p className="text-gray-400 leading-relaxed max-w-3xl">
+              Track the live {shortName} price with interactive charts, technical
+              analysis (RSI, MACD, moving averages), on-chain metrics, developer
+              activity, and community sentiment — all in one place. Real-time market
+              data loads below.
+            </p>
+          </header>
+          <div className="animate-pulse" aria-hidden="true">
             <div className="h-64 bg-gray-800 rounded-xl mb-8" />
             <div className="grid md:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (

@@ -1,32 +1,5 @@
 import type { Metadata } from 'next';
-
-// Map of coin IDs to display names for SEO
-const COIN_NAMES: Record<string, string> = {
-  bitcoin: 'Bitcoin (BTC)',
-  ethereum: 'Ethereum (ETH)',
-  solana: 'Solana (SOL)',
-  ripple: 'XRP (Ripple)',
-  cardano: 'Cardano (ADA)',
-  dogecoin: 'Dogecoin (DOGE)',
-  polkadot: 'Polkadot (DOT)',
-  'avalanche-2': 'Avalanche (AVAX)',
-  chainlink: 'Chainlink (LINK)',
-  litecoin: 'Litecoin (LTC)',
-  stellar: 'Stellar (XLM)',
-  uniswap: 'Uniswap (UNI)',
-  cosmos: 'Cosmos (ATOM)',
-  near: 'NEAR Protocol (NEAR)',
-  'internet-computer': 'Internet Computer (ICP)',
-  'polygon-ecosystem-token': 'Polygon (POL)',
-  tron: 'TRON (TRX)',
-  'shiba-inu': 'Shiba Inu (SHIB)',
-  sui: 'Sui (SUI)',
-  aptos: 'Aptos (APT)',
-};
-
-function formatCoinName(id: string): string {
-  return COIN_NAMES[id] || id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-}
+import { formatCoinName } from '@/lib/coinNames';
 
 type Props = {
   params: Promise<{ id: string }>;

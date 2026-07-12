@@ -75,6 +75,10 @@ const PUBLIC_ROUTES = new Set([
   '/command-center',
   '/blog',
   '/community',
+  // Public marketing / data pages (were missing → redirected to /login and
+  // could not be indexed even though they're in the sitemap).
+  '/desktop',
+  '/global-market',
 
   // Ensure base listing route is public (prefix below only covers /live-dashboards/*)
   '/live-dashboards',
